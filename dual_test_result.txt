@@ -1,0 +1,51 @@
+﻿Initialized OpenRouter dense encoder: qwen/qwen3-embedding-8b
+======================================================================
+DUAL VECTOR SEARCH TEST
+======================================================================
+
+Query: 'sabir ve namaz'
+--------------------------------------------------
+Loading sparse encoder: Qdrant/bm25
+  1. [23:9] M³'min¹n
+     Score: 1.0000
+     Namazlar²na riayet ederler...
+  2. [17:78] ¦srÔ
+     Score: 0.7500
+     G³ne■in bat²ya y÷nelmesinden gecenin kararmas²na kadar namaz...
+  3. [70:34] MeÔric
+     Score: 0.6667
+     Namazlar²na riayet edenler...
+  4. [96:10] Alak
+     Score: 0.5433
+     Sen, namaz k²lan kulu bundan menedeni g÷rd³n m³...
+  5. [29:45] Ankeb¹t
+     Score: 0.5333
+     Kitap'tan sana vahyolunan² oku; namaz k²l; muhakkak ki namaz...
+.\venv\Scripts\python.exe : Traceback (most recent cal
+l last):
+At line:1 char:1
++ .\venv\Scripts\python.exe test_dual_search.py 2>&1 |
+ Out-File -FilePa ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Tracebac 
+   k (most recent call last)::String) [], RemoteExce  
+  ption
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\alioz\OneDrive\Documents\qdrant\test_
+dual_search.py", line 105, in <module>
+    test_search()
+    ~~~~~~~~~~~^^
+  File "C:\Users\alioz\OneDrive\Documents\qdrant\test_
+dual_search.py", line 101, in test_search
+    print(f"  --> Bakara 2:45: {status}")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\alioz\AppData\Local\Programs\Python\P
+ython313\Lib\encodings\cp1254.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,enc
+oding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode chara
+cter '\u274c' in position 19: character maps to <undef
+ined>

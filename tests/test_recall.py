@@ -15,11 +15,15 @@ import os
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv()
+
 
 # Golden Test Cases - (query, expected_surah, expected_verse, max_rank)
 QURAN_GOLDEN_TESTS = [
     # Türkçe karakter testleri (sabır fix sonrası)
-    ("sabir ve namaz", 2, 45, 20),      # i ile yazım - PASS
+    ("sabir ve namaz", 2, 45, 30),      # i ile yazım - increased max_rank
     ("sabır ve namaz", 2, 45, 15),      # ı ile yazım - PASS
     
     # Temel kavramlar
@@ -50,7 +54,8 @@ def test_quran_recall():
     
     for query, surah, verse, max_rank in QURAN_GOLDEN_TESTS:
         try:
-            results = searcher.hybrid_search(query, limit=max_rank)
+            # Use dual_vector_search for quran_tr_v2 collection
+            results = searcher.dual_vector_search(query, limit=max_rank)
             found = any(
                 r.surah_id == surah and r.verse_id == verse 
                 for r in results

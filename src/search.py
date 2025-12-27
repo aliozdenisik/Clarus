@@ -17,7 +17,7 @@ from qdrant_client.models import (
 )
 
 from .embeddings import DenseEncoder, SparseEncoder
-from .turkish_utils import expand_turkish_query
+from .turkish_utils import expand_turkish_query, normalize_turkish
 
 
 @dataclass
@@ -44,10 +44,11 @@ class SearchResult:
 class QuranSearcher:
     """
     Hybrid search engine for Quran Turkish translation.
-    Supports semantic, keyword (BM25), and hybrid search modes.
+    Supports semantic, keyword (BM25), hybrid, and dual-vector search modes.
     """
     
-    COLLECTION_NAME = "quran_tr"
+    COLLECTION_NAME = "quran_tr_v2"  # Dual vector collection
+    COLLECTION_NAME_LEGACY = "quran_tr"  # Old collection for fallback
     
     def __init__(
         self,
@@ -283,10 +284,69 @@ class QuranSearcher:
         
         return self._parse_results(results)
     
+    def dual_vector_search(
+        self,
+        query: str,
+        limit: int = 10,
+        prefetch_limit: int = 50,
+        rrf_k: int = 60
+    ) -> List[SearchResult]:
+        """
+        Dual Vector Search - uses all 4 vector types for comprehensive search.
+        
+        Searches:
+        - dense (original text embedding)
+        - dense_normalized (normalized text embedding)
+        - sparse (original text BM25)
+        - sparse_normalized (normalized text BM25)
+        
+        Args:
+            query: Search query
+            limit: Number of final results
+            prefetch_limit: Results per vector type
+            rrf_k: RRF k parameter
+        """
+        # Normalize query
+        query_norm = normalize_turkish(query.lower(), remove_punctuation=True)
+        
+        # Encode both versions
+        dense_orig = self.dense_encoder.encode(query)
+        dense_norm = self.dense_encoder.encode(query_norm)
+        
+        sparse_orig_idx, sparse_orig_val = self.sparse_encoder.encode(query)
+        sparse_norm_idx, sparse_norm_val = self.sparse_encoder.encode(query_norm)
+        
+        # 4 prefetches for comprehensive search
+        prefetches = [
+            Prefetch(query=dense_orig, using="dense", limit=prefetch_limit),
+            Prefetch(query=dense_norm, using="dense_normalized", limit=prefetch_limit),
+            Prefetch(
+                query=SparseVector(indices=sparse_orig_idx, values=sparse_orig_val),
+                using="sparse",
+                limit=prefetch_limit
+            ),
+            Prefetch(
+                query=SparseVector(indices=sparse_norm_idx, values=sparse_norm_val),
+                using="sparse_normalized",
+                limit=prefetch_limit
+            ),
+        ]
+        
+        # RRF fusion
+        results = self.client.query_points(
+            collection_name=self.COLLECTION_NAME,
+            prefetch=prefetches,
+            query=RrfQuery(rrf=Rrf(k=rrf_k)),
+            limit=limit,
+            with_payload=True
+        )
+        
+        return self._parse_results(results)
+    
     def search(
         self,
         query: str,
-        mode: str = "hybrid",
+        mode: str = "dual-vector",
         limit: int = 10
     ) -> List[SearchResult]:
         """
@@ -294,7 +354,7 @@ class QuranSearcher:
         
         Args:
             query: Search query text
-            mode: Search mode - "hybrid", "semantic", "keyword", "multi-query", "parallel-keyword"
+            mode: Search mode - "dual-vector" (default), "hybrid", "semantic", "keyword", "multi-query", "parallel-keyword"
             limit: Number of results
         """
         if mode == "semantic":
@@ -305,8 +365,10 @@ class QuranSearcher:
             return self.multi_query_search(query, limit)
         elif mode == "parallel-keyword":
             return self.parallel_keyword_search(query, limit)
-        else:
+        elif mode == "hybrid":
             return self.hybrid_search(query, limit)
+        else:  # default: dual-vector
+            return self.dual_vector_search(query, limit)
 
 
 
