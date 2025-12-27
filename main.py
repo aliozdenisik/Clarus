@@ -85,15 +85,40 @@ def cmd_search(args):
     mode = args.mode
     limit = args.limit
     
+    # Query enhancement
+    if args.enhance:
+        console.print("[yellow]Enhancing query with LLM...[/yellow]")
+        try:
+            from src.query_enhancer import QueryEnhancer
+            enhancer = QueryEnhancer()
+            enhanced_query = enhancer.expand_query(query)
+            console.print(f"[green]Enhanced:[/green] {enhanced_query}")
+            query = enhanced_query
+        except Exception as e:
+            console.print(f"[yellow]Warning: Could not enhance query: {e}[/yellow]")
+    
     console.print(f"\n[bold blue]Quran Hybrid Search[/bold blue]")
     console.print(f"[dim]Query: \"{query}\" | Mode: {mode} | Limit: {limit}[/dim]\n")
     
     try:
         searcher = QuranSearcher(qdrant_url=args.qdrant_url)
-        results = searcher.search(query, mode=mode, limit=limit)
+        # Get more results if reranking
+        search_limit = limit * 3 if args.rerank else limit
+        results = searcher.search(query, mode=mode, limit=search_limit)
     except Exception as e:
         console.print(f"[red][ERROR] Search error: {e}[/red]")
         return 1
+    
+    # Reranking
+    if args.rerank and results:
+        console.print("[yellow]Reranking with Qwen3-Reranker...[/yellow]")
+        try:
+            from src.reranker import Reranker
+            reranker = Reranker()
+            results = reranker.rerank(query, results, top_k=limit)
+            console.print("[green][OK][/green] Reranking complete\n")
+        except Exception as e:
+            console.print(f"[yellow]Warning: Reranking failed: {e}[/yellow]")
     
     if not results:
         console.print("[yellow]No results found.[/yellow]")
@@ -260,15 +285,39 @@ def cmd_search_bible(args):
     mode = args.mode
     limit = args.limit
     
+    # Query enhancement
+    if args.enhance:
+        console.print("[yellow]Enhancing query with LLM...[/yellow]")
+        try:
+            from src.query_enhancer import QueryEnhancer
+            enhancer = QueryEnhancer()
+            enhanced_query = enhancer.expand_query(query)
+            console.print(f"[green]Enhanced:[/green] {enhanced_query}")
+            query = enhanced_query
+        except Exception as e:
+            console.print(f"[yellow]Warning: Could not enhance query: {e}[/yellow]")
+    
     console.print(f"\n[bold blue]Bible Hybrid Search ({translation})[/bold blue]")
     console.print(f"[dim]Query: \"{query}\" | Mode: {mode} | Limit: {limit}[/dim]\n")
     
     try:
         searcher = BibleSearcher(translation=translation, qdrant_url=args.qdrant_url)
-        results = searcher.search(query, mode=mode, limit=limit)
+        search_limit = limit * 3 if args.rerank else limit
+        results = searcher.search(query, mode=mode, limit=search_limit)
     except Exception as e:
         console.print(f"[red][ERROR] Search error: {e}[/red]")
         return 1
+    
+    # Reranking
+    if args.rerank and results:
+        console.print("[yellow]Reranking with Qwen3-Reranker...[/yellow]")
+        try:
+            from src.reranker import Reranker
+            reranker = Reranker()
+            results = reranker.rerank(query, results, top_k=limit)
+            console.print("[green][OK][/green] Reranking complete\n")
+        except Exception as e:
+            console.print(f"[yellow]Warning: Reranking failed: {e}[/yellow]")
     
     if not results:
         console.print("[yellow]No results found.[/yellow]")
@@ -349,6 +398,16 @@ def main():
         action="store_true",
         help="Show detailed first result"
     )
+    search_parser.add_argument(
+        "--rerank",
+        action="store_true",
+        help="Rerank results with Qwen3-Reranker"
+    )
+    search_parser.add_argument(
+        "--enhance",
+        action="store_true",
+        help="Enhance query with LLM expansion"
+    )
     
     # Index Bible command
     index_bible_parser = subparsers.add_parser("index-bible", help="Index Bible data")
@@ -394,6 +453,16 @@ def main():
         "-v", "--verbose",
         action="store_true",
         help="Show detailed first result"
+    )
+    search_bible_parser.add_argument(
+        "--rerank",
+        action="store_true",
+        help="Rerank results with Qwen3-Reranker"
+    )
+    search_bible_parser.add_argument(
+        "--enhance",
+        action="store_true",
+        help="Enhance query with LLM expansion"
     )
     
     # Info command

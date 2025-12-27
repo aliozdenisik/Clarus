@@ -46,6 +46,15 @@ python main.py index-bible --translation kjva
 python main.py search "Allah'ın rahmeti"
 python main.py search "namaz kılmak" --limit 5
 
+# Reranking ile Daha Hassas Sonuçlar
+python main.py search "sabır ve namaz" --rerank
+
+# Query Enhancement ile Sorgu Genişletme
+python main.py search "şükür" --enhance
+
+# Reranking + Enhancement Birlikte
+python main.py search "doğru yol" --rerank --enhance
+
 # Sadece Semantik
 python main.py search "yardım isteme" --mode semantic
 

@@ -137,7 +137,7 @@ class QuranSearcher:
         limit: int = 10,
         prefetch_limit: int = 20,
         fusion: str = "rrf",
-        rrf_k: int = 2,
+        rrf_k: int = 60,
         normalize: bool = True
     ) -> List[SearchResult]:
         """
@@ -316,7 +316,7 @@ class BibleSearcher:
         limit: int = 10,
         prefetch_limit: int = 20,
         fusion: str = "rrf",
-        rrf_k: int = 2
+        rrf_k: int = 60
     ) -> List[BibleSearchResult]:
         """
         Perform hybrid search combining semantic and keyword search.
