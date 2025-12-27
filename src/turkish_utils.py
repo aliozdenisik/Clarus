@@ -40,9 +40,49 @@ def normalize_turkish(text: str) -> str:
     return result
 
 
+def generate_i_variants(word: str) -> set:
+    """
+    Generate all possible i/ı combinations for a word.
+    
+    Args:
+        word: Input word
+        
+    Returns:
+        Set of all i/ı variants
+        
+    Example:
+        >>> generate_i_variants("sabir")
+        {"sabir", "sabır"}
+    """
+    from itertools import product
+    
+    word_lower = word.lower()
+    
+    # Find positions of i and ı
+    positions = []
+    for idx, char in enumerate(word_lower):
+        if char in 'iı':
+            positions.append(idx)
+    
+    if not positions:
+        return {word_lower}
+    
+    # Generate all combinations
+    variants = set()
+    for combo in product(['i', 'ı'], repeat=len(positions)):
+        new_word = list(word_lower)
+        for pos, char in zip(positions, combo):
+            new_word[pos] = char
+        variants.add(''.join(new_word))
+    
+    return variants
+
+
 def expand_turkish_query(query: str) -> str:
     """
     Expand query to include both Turkish and ASCII variants.
+    
+    Improved version that correctly handles i/ı character combinations.
     
     Args:
         query: Search query
@@ -51,23 +91,41 @@ def expand_turkish_query(query: str) -> str:
         Query expanded with Turkish character variants
         
     Example:
+        >>> expand_turkish_query("sabir")
+        "sabir sabır"
         >>> expand_turkish_query("sukur")
         "sukur şükür"
     """
     words = query.split()
-    expanded_words = set(words)
+    expanded_words = set()
     
     for word in words:
-        # Add normalized version
-        normalized = normalize_turkish(word)
+        word_lower = word.lower()
+        
+        # Add original word
+        expanded_words.add(word_lower)
+        
+        # Add ASCII normalized version
+        normalized = normalize_turkish(word_lower)
         expanded_words.add(normalized)
         
-        # Add Turkish version (reverse)
-        turkish_version = word.lower()
+        # Generate all i/ı variants
+        i_variants = generate_i_variants(word_lower)
+        expanded_words.update(i_variants)
+        
+        # Also generate i/ı variants for normalized version
+        i_variants_norm = generate_i_variants(normalized)
+        expanded_words.update(i_variants_norm)
+        
+        # Add full Turkish version (all chars converted)
+        turkish_version = word_lower
         for ascii_char, tr_char in TURKISH_CHAR_REVERSE.items():
             turkish_version = turkish_version.replace(ascii_char, tr_char)
-        if turkish_version != word.lower():
+        if turkish_version != word_lower:
             expanded_words.add(turkish_version)
+            # Also generate i/ı variants for Turkish version
+            i_variants_tr = generate_i_variants(turkish_version)
+            expanded_words.update(i_variants_tr)
     
     return ' '.join(expanded_words)
 

@@ -135,7 +135,7 @@ class QuranSearcher:
         self, 
         query: str, 
         limit: int = 10,
-        prefetch_limit: int = 50,
+        prefetch_limit: int = 100,
         fusion: str = "rrf",
         rrf_k: int = 60,
         normalize: bool = True
