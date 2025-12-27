@@ -44,11 +44,10 @@ class SearchResult:
 class QuranSearcher:
     """
     Hybrid search engine for Quran Turkish translation.
-    Supports semantic, keyword (BM25), hybrid, and dual-vector search modes.
+    Supports semantic, keyword (BM25), and hybrid search modes.
     """
     
-    COLLECTION_NAME = "quran_tr_v2"  # Dual vector collection
-    COLLECTION_NAME_LEGACY = "quran_tr"  # Old collection for fallback
+    COLLECTION_NAME = "quran_tr"  # Main collection
     
     def __init__(
         self,
@@ -346,7 +345,7 @@ class QuranSearcher:
     def search(
         self,
         query: str,
-        mode: str = "dual-vector",
+        mode: str = "hybrid",
         limit: int = 10
     ) -> List[SearchResult]:
         """
@@ -354,7 +353,7 @@ class QuranSearcher:
         
         Args:
             query: Search query text
-            mode: Search mode - "dual-vector" (default), "hybrid", "semantic", "keyword", "multi-query", "parallel-keyword"
+            mode: Search mode - "hybrid" (default), "dual-vector", "semantic", "keyword", "multi-query", "parallel-keyword"
             limit: Number of results
         """
         if mode == "semantic":

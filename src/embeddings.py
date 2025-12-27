@@ -2,7 +2,8 @@
 Embedding Module for Dense and Sparse Vectors
 
 Provides both semantic (dense) and BM25 (sparse) embeddings for hybrid search.
-Uses OpenRouter API with Qwen3-Embedding-8B model for dense embeddings.
+Uses OpenRouter API with OpenAI text-embedding-3-large model for dense embeddings.
+This model has excellent multilingual support including Turkish.
 """
 from typing import List, Tuple, Optional, Any
 import numpy as np
@@ -13,13 +14,14 @@ from tqdm import tqdm
 
 class DenseEncoder:
     """
-    Dense vector encoder using OpenRouter API with Qwen3-Embedding-8B.
-    Provides semantic understanding of text with 4096-dimension embeddings.
+    Dense vector encoder using OpenRouter API with OpenAI text-embedding-3-large.
+    Provides semantic understanding of text with 3072-dimension embeddings.
+    This model has excellent multilingual and Turkish language support.
     """
     
     OPENROUTER_API_URL = "https://openrouter.ai/api/v1/embeddings"
-    DEFAULT_MODEL = "qwen/qwen3-embedding-8b"
-    EMBEDDING_DIMENSION = 4096
+    DEFAULT_MODEL = "openai/text-embedding-3-large"
+    EMBEDDING_DIMENSION = 3072
     
     def __init__(self, model_name: str = None, api_key: str = None):
         """
@@ -122,7 +124,7 @@ class DenseEncoder:
     
     @property
     def dimension(self) -> int:
-        """Get the embedding dimension (4096 for Qwen3-Embedding-8B)"""
+        """Get the embedding dimension (3072 for text-embedding-3-large)"""
         return self.EMBEDDING_DIMENSION
 
 
@@ -179,12 +181,12 @@ class SparseEncoder:
 class HybridEncoder:
     """
     Combined encoder for both dense and sparse embeddings.
-    Uses OpenRouter Qwen3-Embedding-8B for dense and BM25 for sparse.
+    Uses OpenRouter text-embedding-3-large for dense and BM25 for sparse.
     """
     
     def __init__(
         self, 
-        dense_model: str = None,  # Uses OpenRouter qwen/qwen3-embedding-8b by default
+        dense_model: str = None,  # Uses OpenRouter openai/text-embedding-3-large by default
         sparse_model: str = "Qdrant/bm25",
         api_key: str = None
     ):

@@ -24,8 +24,9 @@ class Reranker:
         reranked = reranker.rerank(query, results, top_k=5)
     """
     
-    # Qwen3-Reranker sequence classification versiyonu
-    # sentence-transformers CrossEncoder ile uyumlu
+    # Qwen3-Reranker-0.6B - hafif ve etkili reranker
+    # 100+ dil desteği, Türkçe için iyi performans
+    # Gerekirse 8B versiyonuna yükseltilebilir
     DEFAULT_MODEL = "tomaarsen/Qwen3-Reranker-0.6B-seq-cls"
     
     def __init__(self, model_name: str = None):
@@ -34,7 +35,7 @@ class Reranker:
         
         Args:
             model_name: HuggingFace model adı
-                       (default: tomaarsen/Qwen3-Reranker-0.6B-seq-cls)
+                       (default: tomaarsen/Qwen3-Reranker-8B-seq-cls)
         """
         self.model_name = model_name or self.DEFAULT_MODEL
         self._model = None

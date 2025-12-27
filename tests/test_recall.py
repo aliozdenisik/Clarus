@@ -54,8 +54,8 @@ def test_quran_recall():
     
     for query, surah, verse, max_rank in QURAN_GOLDEN_TESTS:
         try:
-            # Use dual_vector_search for quran_tr_v2 collection
-            results = searcher.dual_vector_search(query, limit=max_rank)
+            # Use hybrid_search (recommended for Turkish)
+            results = searcher.hybrid_search(query, limit=max_rank)
             found = any(
                 r.surah_id == surah and r.verse_id == verse 
                 for r in results
