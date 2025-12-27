@@ -130,23 +130,71 @@ def cmd_search(args):
 
 
 def cmd_info(args):
-    """Show collection info"""
+    """Show collection info for all or specific collections"""
+    from qdrant_client import QdrantClient
+    
     console.print("\n[bold blue]ℹ️  Collection Info[/bold blue]\n")
     
     try:
-        indexer = QuranIndexer(qdrant_url=args.qdrant_url)
-        info = indexer.get_collection_info()
+        client = QdrantClient(url=args.qdrant_url)
+        collections = client.get_collections().collections
         
-        table = Table()
-        table.add_column("Property", style="cyan")
-        table.add_column("Value", style="white")
+        if not collections:
+            console.print("[yellow]No collections found.[/yellow]")
+            return 0
         
-        for key, value in info.items():
-            table.add_row(key, str(value))
+        # Filter collections based on flags
+        show_quran = args.quran if hasattr(args, 'quran') else False
+        show_bible = args.bible if hasattr(args, 'bible') else False
+        show_all = not show_quran and not show_bible
         
-        console.print(table)
+        # Create main table
+        table = Table(title="Available Collections", show_lines=True)
+        table.add_column("Collection", style="cyan", width=20)
+        table.add_column("Type", style="magenta", width=12)
+        table.add_column("Points", style="green", justify="right", width=10)
+        table.add_column("Vectors", style="yellow", justify="right", width=10)
+        table.add_column("Status", style="white", width=10)
+        
+        found_any = False
+        for collection in collections:
+            name = collection.name
+            
+            # Determine collection type
+            if name == "quran_tr":
+                col_type = "📖 Quran"
+                if not show_all and not show_quran:
+                    continue
+            elif name.startswith("bible_"):
+                translation = name.replace("bible_", "")
+                col_type = f"✝️ Bible ({translation})"
+                if not show_all and not show_bible:
+                    continue
+            else:
+                col_type = "📚 Other"
+                if not show_all:
+                    continue
+            
+            # Get detailed info
+            info = client.get_collection(name)
+            points = info.points_count
+            vectors = getattr(info, 'vectors_count', points)
+            status = str(info.status).replace("CollectionStatus.", "")
+            
+            table.add_row(name, col_type, str(points), str(vectors), status)
+            found_any = True
+        
+        if found_any:
+            console.print(table)
+            
+            # Show summary
+            console.print("\n[dim]Tip: Use --quran or --bible to filter collections[/dim]")
+        else:
+            console.print("[yellow]No matching collections found.[/yellow]")
+            
     except Exception as e:
         console.print(f"[red]✗ Error: {e}[/red]")
+        console.print("[dim]Make sure Qdrant is running: docker run -p 6333:6333 qdrant/qdrant[/dim]")
         return 1
     
     return 0
@@ -349,7 +397,17 @@ def main():
     )
     
     # Info command
-    subparsers.add_parser("info", help="Show collection info")
+    info_parser = subparsers.add_parser("info", help="Show collection info")
+    info_parser.add_argument(
+        "--quran",
+        action="store_true",
+        help="Show only Quran collection"
+    )
+    info_parser.add_argument(
+        "--bible",
+        action="store_true",
+        help="Show only Bible collections"
+    )
     
     args = parser.parse_args()
     
