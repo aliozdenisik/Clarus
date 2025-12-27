@@ -23,6 +23,8 @@ class QuranChunk:
     verse_id: int
     arabic_text: str
     translation: str  # Turkish meal
+    translation_normalized: str = ""  # ASCII normalized for search
+    translation_lemma: str = ""  # Lemmatized for morphological search
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -35,6 +37,8 @@ class QuranChunk:
             "verse_id": self.verse_id,
             "arabic_text": self.arabic_text,
             "translation": self.translation,
+            "translation_normalized": self.translation_normalized,
+            "translation_lemma": self.translation_lemma,
         }
 
 
@@ -78,13 +82,36 @@ class QuranDataLoader:
         
         return self._data
     
-    def create_chunks(self, show_progress: bool = True) -> List[QuranChunk]:
+    def create_chunks(self, show_progress: bool = True, with_preprocessing: bool = True) -> List[QuranChunk]:
         """
         Create verse-based chunks for indexing.
         Each verse becomes a separate searchable chunk.
+        
+        Args:
+            show_progress: Show tqdm progress bar
+            with_preprocessing: If True, compute normalized and lemmatized fields
         """
         data = self.load_data()
         chunks: List[QuranChunk] = []
+        
+        # Lazy import preprocessing modules
+        normalize_fn = None
+        lemmatize_fn = None
+        
+        if with_preprocessing:
+            try:
+                from src.turkish_utils import normalize_turkish
+                normalize_fn = normalize_turkish
+                print("Turkish normalization enabled")
+            except ImportError:
+                print("Warning: turkish_utils not available")
+            
+            try:
+                from src.lemmatizer import lemmatize_text
+                lemmatize_fn = lemmatize_text
+                print("Lemmatization enabled (Zeyrek)")
+            except ImportError:
+                print("Warning: lemmatizer not available")
         
         iterator = tqdm(data, desc="Creating chunks") if show_progress else data
         
@@ -96,6 +123,18 @@ class QuranDataLoader:
             surah_type = surah["type"]
             
             for verse in surah["verses"]:
+                translation = verse["translation"]
+                
+                # Compute normalized version
+                translation_normalized = ""
+                if normalize_fn:
+                    translation_normalized = normalize_fn(translation.lower())
+                
+                # Compute lemmatized version
+                translation_lemma = ""
+                if lemmatize_fn:
+                    translation_lemma = lemmatize_fn(translation)
+                
                 chunk = QuranChunk(
                     id=f"{surah_id}:{verse['id']}",
                     surah_id=surah_id,
@@ -105,7 +144,9 @@ class QuranDataLoader:
                     surah_type=surah_type,
                     verse_id=verse["id"],
                     arabic_text=verse["text"],
-                    translation=verse["translation"],
+                    translation=translation,
+                    translation_normalized=translation_normalized,
+                    translation_lemma=translation_lemma,
                 )
                 chunks.append(chunk)
         
