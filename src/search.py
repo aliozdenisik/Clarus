@@ -12,9 +12,12 @@ from qdrant_client.models import (
     FusionQuery,
     Fusion,
     SparseVector,
+    RrfQuery,
+    Rrf,
 )
 
 from .embeddings import DenseEncoder, SparseEncoder
+from .turkish_utils import expand_turkish_query
 
 
 @dataclass
@@ -82,10 +85,15 @@ class QuranSearcher:
             search_results.append(result)
         return search_results
     
-    def semantic_search(self, query: str, limit: int = 10) -> List[SearchResult]:
+    def semantic_search(self, query: str, limit: int = 10, normalize: bool = True) -> List[SearchResult]:
         """
         Perform semantic search using dense vectors only.
         Good for conceptual/meaning-based queries.
+        
+        Args:
+            query: Search query text
+            limit: Number of results to return
+            normalize: If True, expand query with Turkish character variants
         """
         query_vector = self.dense_encoder.encode(query)
         
@@ -99,12 +107,19 @@ class QuranSearcher:
         
         return self._parse_results(results)
     
-    def keyword_search(self, query: str, limit: int = 10) -> List[SearchResult]:
+    def keyword_search(self, query: str, limit: int = 10, normalize: bool = True) -> List[SearchResult]:
         """
         Perform keyword search using sparse vectors (BM25).
         Good for exact term matching.
+        
+        Args:
+            query: Search query text
+            limit: Number of results to return
+            normalize: If True, expand query with Turkish character variants
         """
-        indices, values = self.sparse_encoder.query_embed(query)
+        # Expand query with Turkish character variants
+        search_query = expand_turkish_query(query) if normalize else query
+        indices, values = self.sparse_encoder.query_embed(search_query)
         
         results = self.client.query_points(
             collection_name=self.COLLECTION_NAME,
@@ -121,7 +136,9 @@ class QuranSearcher:
         query: str, 
         limit: int = 10,
         prefetch_limit: int = 20,
-        fusion: str = "rrf"
+        fusion: str = "rrf",
+        rrf_k: int = 2,
+        normalize: bool = True
     ) -> List[SearchResult]:
         """
         Perform hybrid search combining semantic and keyword search.
@@ -132,13 +149,20 @@ class QuranSearcher:
             limit: Number of final results
             prefetch_limit: Number of results to fetch from each search type
             fusion: Fusion method - "rrf" or "dbsf"
+            rrf_k: RRF k parameter (higher = more consensus-based ranking)
+            normalize: If True, expand query with Turkish character variants for keyword search
         """
         # Encode query for both dense and sparse
         dense_query = self.dense_encoder.encode(query)
-        sparse_indices, sparse_values = self.sparse_encoder.query_embed(query)
+        # Apply Turkish normalization for keyword search
+        keyword_query = expand_turkish_query(query) if normalize else query
+        sparse_indices, sparse_values = self.sparse_encoder.query_embed(keyword_query)
         
-        # Choose fusion method
-        fusion_method = Fusion.RRF if fusion.lower() == "rrf" else Fusion.DBSF
+        # Choose fusion method - use parameterized RRF or DBSF
+        if fusion.lower() == "rrf":
+            fusion_query = RrfQuery(rrf=Rrf(k=rrf_k))
+        else:
+            fusion_query = FusionQuery(fusion=Fusion.DBSF)
         
         results = self.client.query_points(
             collection_name=self.COLLECTION_NAME,
@@ -156,7 +180,7 @@ class QuranSearcher:
                     limit=prefetch_limit
                 )
             ],
-            query=FusionQuery(fusion=fusion_method),
+            query=fusion_query,
             limit=limit,
             with_payload=True
         )
@@ -291,7 +315,8 @@ class BibleSearcher:
         query: str, 
         limit: int = 10,
         prefetch_limit: int = 20,
-        fusion: str = "rrf"
+        fusion: str = "rrf",
+        rrf_k: int = 2
     ) -> List[BibleSearchResult]:
         """
         Perform hybrid search combining semantic and keyword search.
@@ -302,13 +327,17 @@ class BibleSearcher:
             limit: Number of final results
             prefetch_limit: Number of results to fetch from each search type
             fusion: Fusion method - "rrf" or "dbsf"
+            rrf_k: RRF k parameter (higher = more consensus-based ranking)
         """
         # Encode query for both dense and sparse
         dense_query = self.dense_encoder.encode(query)
         sparse_indices, sparse_values = self.sparse_encoder.query_embed(query)
         
-        # Choose fusion method
-        fusion_method = Fusion.RRF if fusion.lower() == "rrf" else Fusion.DBSF
+        # Choose fusion method - use parameterized RRF or DBSF
+        if fusion.lower() == "rrf":
+            fusion_query = RrfQuery(rrf=Rrf(k=rrf_k))
+        else:
+            fusion_query = FusionQuery(fusion=Fusion.DBSF)
         
         results = self.client.query_points(
             collection_name=self.collection_name,
@@ -326,7 +355,7 @@ class BibleSearcher:
                     limit=prefetch_limit
                 )
             ],
-            query=FusionQuery(fusion=fusion_method),
+            query=fusion_query,
             limit=limit,
             with_payload=True
         )
