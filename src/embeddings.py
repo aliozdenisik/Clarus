@@ -57,11 +57,20 @@ class DenseEncoder:
         data = response.json()
         return data["data"][0]["embedding"]
     
-    def encode_batch(self, texts: List[str], batch_size: int = 32, show_progress: bool = True) -> List[List[float]]:
+    def encode_batch(self, texts: List[str], batch_size: int = 32, show_progress: bool = True, max_retries: int = 3) -> List[List[float]]:
         """
         Encode multiple texts to dense vectors.
         Processes in batches to avoid API limits.
+        Includes retry logic for handling timeouts.
+        
+        Args:
+            texts: List of texts to encode
+            batch_size: Number of texts per API call
+            show_progress: Show progress bar
+            max_retries: Maximum retry attempts per batch
         """
+        import time
+        
         all_embeddings = []
         
         iterator = range(0, len(texts), batch_size)
@@ -70,22 +79,44 @@ class DenseEncoder:
         
         for i in iterator:
             batch = texts[i:i + batch_size]
-            response = requests.post(
-                self.OPENROUTER_API_URL,
-                headers=self._headers,
-                json={
-                    "model": self.model_name,
-                    "input": batch
-                },
-                timeout=120
-            )
-            response.raise_for_status()
-            data = response.json()
             
-            # Sort by index to maintain order
-            sorted_data = sorted(data["data"], key=lambda x: x["index"])
-            batch_embeddings = [item["embedding"] for item in sorted_data]
-            all_embeddings.extend(batch_embeddings)
+            # Retry logic with exponential backoff
+            for attempt in range(max_retries):
+                try:
+                    response = requests.post(
+                        self.OPENROUTER_API_URL,
+                        headers=self._headers,
+                        json={
+                            "model": self.model_name,
+                            "input": batch
+                        },
+                        timeout=180  # Increased timeout
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    
+                    # Sort by index to maintain order
+                    sorted_data = sorted(data["data"], key=lambda x: x["index"])
+                    batch_embeddings = [item["embedding"] for item in sorted_data]
+                    all_embeddings.extend(batch_embeddings)
+                    break  # Success, exit retry loop
+                    
+                except (requests.exceptions.Timeout, requests.exceptions.ReadTimeout) as e:
+                    if attempt < max_retries - 1:
+                        wait_time = 2 ** attempt * 5  # 5s, 10s, 20s
+                        print(f"\nTimeout error, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})")
+                        time.sleep(wait_time)
+                    else:
+                        print(f"\nFailed after {max_retries} attempts. Raising error.")
+                        raise
+                        
+                except requests.exceptions.RequestException as e:
+                    if attempt < max_retries - 1:
+                        wait_time = 2 ** attempt * 5
+                        print(f"\nAPI error: {e}, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})")
+                        time.sleep(wait_time)
+                    else:
+                        raise
         
         return all_embeddings
     
