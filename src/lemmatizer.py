@@ -63,6 +63,20 @@ def get_analyzer():
     return _analyzer
 
 
+# Known corrections for Zeyrek errors
+KNOWN_LEMMA_CORRECTIONS = {
+    # word: correct_lemma
+    "yardım": "yardım",  # Zeyrek incorrectly returns "yarmak"
+    "yardımı": "yardım",
+    "yardıma": "yardım",
+    "yardımla": "yardım",
+    "kavuşacaklarını": "kavuşmak",
+    "döneceklerini": "dönmek",
+    "umanlar": "ummak",
+    "huşu": "huşu",
+}
+
+
 def get_lemma(word: str) -> str:
     """
     Kelimeyi kök formuna (lemma) çevir.
@@ -82,20 +96,22 @@ def get_lemma(word: str) -> str:
     import sys
     import io
     
-    analyzer = get_analyzer()
-    if analyzer is None:
+    # Küçük harfe çevir ve temizle
+    word_lower = word.lower().strip()
+    word_clean = re.sub(r'[^\w\s]', '', word_lower)
+    
+    if not word_clean:
         return word
     
+    # Check known corrections first
+    if word_clean in KNOWN_LEMMA_CORRECTIONS:
+        return KNOWN_LEMMA_CORRECTIONS[word_clean]
+    
+    analyzer = get_analyzer()
+    if analyzer is None:
+        return word_clean
+    
     try:
-        # Küçük harfe çevir
-        word_lower = word.lower().strip()
-        
-        # Noktalama işaretlerini temizle
-        word_clean = re.sub(r'[^\w\s]', '', word_lower)
-        
-        if not word_clean:
-            return word
-        
         # Suppress Zeyrek debug output during lemmatize
         old_stdout = sys.stdout
         old_stderr = sys.stderr
@@ -109,14 +125,22 @@ def get_lemma(word: str) -> str:
             sys.stderr = old_stderr
         
         if results and results[0][1]:
-            # İlk lemma'yı al
-            lemma = results[0][1][0]
-            return lemma
+            # Get all lemmas and pick the best one
+            lemmas = results[0][1]
+            
+            # Prefer nouns over verbs for common words
+            for lemma in lemmas:
+                # If lemma looks like the original word (similar), prefer it
+                if lemma in word_clean or word_clean.startswith(lemma[:3]):
+                    return lemma
+            
+            # Otherwise return first lemma
+            return lemmas[0]
         
         return word_clean
         
     except Exception:
-        return word
+        return word_clean
 
 
 def lemmatize_text(text: str) -> str:

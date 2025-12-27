@@ -77,8 +77,8 @@ def preprocess_all_verses():
         verse_id = verse["id"]
         translation = verse["translation"]
         
-        # Normalize (quiet)
-        translation_normalized = normalize_turkish(translation.lower())
+        # Normalize (quiet) - remove punctuation for cleaner matching
+        translation_normalized = normalize_turkish(translation.lower(), remove_punctuation=True)
         
         # Lemmatize (quiet - suppress Zeyrek output)
         old_stdout = sys.stdout

@@ -20,12 +20,13 @@ TURKISH_CHAR_MAP = {
 TURKISH_CHAR_REVERSE = {v: k for k, v in TURKISH_CHAR_MAP.items() if v.islower()}
 
 
-def normalize_turkish(text: str) -> str:
+def normalize_turkish(text: str, remove_punctuation: bool = False) -> str:
     """
     Normalize Turkish characters to ASCII equivalents.
     
     Args:
         text: Input text with Turkish characters
+        remove_punctuation: If True, also removes apostrophes and common punctuation
         
     Returns:
         Text with Turkish characters replaced by ASCII equivalents
@@ -33,10 +34,17 @@ def normalize_turkish(text: str) -> str:
     Example:
         >>> normalize_turkish("şükür")
         "sukur"
+        >>> normalize_turkish("Allah'a", remove_punctuation=True)
+        "allaha"
     """
     result = text
     for tr_char, ascii_char in TURKISH_CHAR_MAP.items():
         result = result.replace(tr_char, ascii_char)
+    
+    if remove_punctuation:
+        # Remove apostrophes and common punctuation
+        result = result.replace("'", "").replace("'", "").replace(";", " ").replace(",", " ")
+    
     return result
 
 
