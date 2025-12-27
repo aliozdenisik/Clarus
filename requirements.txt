@@ -1,0 +1,6 @@
+qdrant-client>=1.7.0
+fastembed>=0.2.0
+sentence-transformers>=2.2.0
+requests>=2.28.0
+tqdm>=4.65.0
+rich>=13.0.0
