@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
-Quran Hybrid Search CLI
+Sacred Texts Hybrid Search CLI
 
-Command-line interface for indexing and searching Quran Turkish translation
+Command-line interface for indexing and searching Quran and Bible translations
 using Qdrant vector database with hybrid (semantic + BM25) search.
 
 Usage:
-    python main.py index [--recreate]
-    python main.py search "query" [--mode hybrid|semantic|keyword] [--limit 10]
+    python main.py index [--recreate]                    # Index Quran
+    python main.py search "query"                        # Search Quran
+    python main.py index-bible --translation turhadi     # Index Bible
+    python main.py search-bible "query"                  # Search Bible
     python main.py info
 """
 import argparse
@@ -23,8 +25,9 @@ from rich.panel import Panel
 from rich import print as rprint
 
 from src.data_loader import QuranDataLoader
-from src.indexer import QuranIndexer
-from src.search import QuranSearcher, print_results
+from src.indexer import QuranIndexer, BibleIndexer
+from src.search import QuranSearcher, BibleSearcher, print_results
+from src.bible_loader import BibleDataLoader
 
 console = Console()
 
@@ -145,9 +148,112 @@ def cmd_info(args):
     return 0
 
 
+def cmd_index_bible(args):
+    """Index Bible data into Qdrant"""
+    translation = args.translation
+    console.print(f"\n[bold blue]📖 Bible Hybrid Search Indexer ({translation})[/bold blue]\n")
+    
+    # Load data
+    console.print(f"[yellow]Loading Bible data ({translation})...[/yellow]")
+    try:
+        loader = BibleDataLoader(translation=translation, data_dir=Path("data"))
+        loader.download_data()
+    except Exception as e:
+        console.print(f"[red]✗ Error loading Bible data: {e}[/red]")
+        return 1
+    
+    # Show stats
+    stats = loader.get_stats()
+    console.print(f"[green]✓[/green] Loaded {stats['total_books']} books, {stats['total_verses']} verses")
+    console.print(f"  Translation: {stats['translation_name']}")
+    console.print(f"  Old Testament: {stats['old_testament_books']} books")
+    console.print(f"  New Testament: {stats['new_testament_books']} books")
+    if stats.get('has_apocrypha'):
+        console.print(f"  [dim]Includes Apocrypha[/dim]")
+    
+    # Create chunks
+    console.print("\n[yellow]Creating chunks...[/yellow]")
+    chunks = loader.create_chunks(show_progress=True)
+    console.print(f"[green]✓[/green] Created {len(chunks)} chunks")
+    
+    # Initialize indexer
+    console.print("\n[yellow]Initializing Qdrant...[/yellow]")
+    try:
+        indexer = BibleIndexer(translation=translation, qdrant_url=args.qdrant_url)
+        indexer.create_collection(recreate=args.recreate)
+    except Exception as e:
+        console.print(f"[red]✗ Error connecting to Qdrant: {e}[/red]")
+        console.print("\n[yellow]Make sure Qdrant is running:[/yellow]")
+        console.print("  docker run -p 6333:6333 qdrant/qdrant")
+        return 1
+    
+    # Index chunks
+    console.print("\n[yellow]Indexing chunks (this may take a while)...[/yellow]")
+    count = indexer.index_chunks(chunks, batch_size=args.batch_size)
+    
+    # Show info
+    info = indexer.get_collection_info()
+    console.print(f"\n[green]✓[/green] Successfully indexed {count} verses!")
+    console.print(f"  Collection: {info['name']}")
+    console.print(f"  Points: {info['points_count']}")
+    console.print(f"  Status: {info['status']}")
+    
+    return 0
+
+
+def cmd_search_bible(args):
+    """Search Bible data"""
+    query = args.query
+    translation = args.translation
+    mode = args.mode
+    limit = args.limit
+    
+    console.print(f"\n[bold blue]🔍 Bible Hybrid Search ({translation})[/bold blue]")
+    console.print(f"[dim]Query: \"{query}\" | Mode: {mode} | Limit: {limit}[/dim]\n")
+    
+    try:
+        searcher = BibleSearcher(translation=translation, qdrant_url=args.qdrant_url)
+        results = searcher.search(query, mode=mode, limit=limit)
+    except Exception as e:
+        console.print(f"[red]✗ Search error: {e}[/red]")
+        return 1
+    
+    if not results:
+        console.print("[yellow]No results found.[/yellow]")
+        return 0
+    
+    # Create results table
+    table = Table(title=f"Search Results ({len(results)} found)", show_lines=True)
+    table.add_column("#", style="dim", width=3)
+    table.add_column("Reference", style="cyan", width=20)
+    table.add_column("Score", style="green", width=8)
+    table.add_column("Text", style="white")
+    
+    for i, result in enumerate(results, 1):
+        ref = f"{result.book_name} {result.chapter}:{result.verse}\n({result.testament})"
+        score = f"{result.score:.3f}"
+        text = result.text[:150] + ("..." if len(result.text) > 150 else "")
+        table.add_row(str(i), ref, score, text)
+    
+    console.print(table)
+    
+    # Show detailed first result
+    if results and args.verbose:
+        first = results[0]
+        console.print(Panel(
+            f"[bold]{first.book_name} {first.chapter}:{first.verse}[/bold]\n"
+            f"{first.testament} | {first.translation}\n\n"
+            f"[dim]Text:[/dim]\n{first.text}",
+            title=f"[green]Top Result[/green]",
+            expand=False
+        ))
+    
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Quran Hybrid Search - Semantic + BM25 search for Turkish translation"
+        description="Sacred Texts Hybrid Search - Semantic + BM25 search for Quran and Bible"
     )
     parser.add_argument(
         "--qdrant-url", 
@@ -157,7 +263,7 @@ def main():
     
     subparsers = parser.add_subparsers(dest="command", help="Commands")
     
-    # Index command
+    # Index Quran command
     index_parser = subparsers.add_parser("index", help="Index Quran data")
     index_parser.add_argument(
         "--recreate", 
@@ -171,7 +277,7 @@ def main():
         help="Batch size for indexing"
     )
     
-    # Search command
+    # Search Quran command
     search_parser = subparsers.add_parser("search", help="Search Quran")
     search_parser.add_argument("query", help="Search query")
     search_parser.add_argument(
@@ -192,6 +298,52 @@ def main():
         help="Show detailed first result"
     )
     
+    # Index Bible command
+    index_bible_parser = subparsers.add_parser("index-bible", help="Index Bible data")
+    index_bible_parser.add_argument(
+        "--translation",
+        default="turhadi",
+        choices=["turhadi", "kjva", "kjv"],
+        help="Bible translation to index (default: turhadi)"
+    )
+    index_bible_parser.add_argument(
+        "--recreate", 
+        action="store_true",
+        help="Recreate collection (delete existing)"
+    )
+    index_bible_parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=100,
+        help="Batch size for indexing"
+    )
+    
+    # Search Bible command
+    search_bible_parser = subparsers.add_parser("search-bible", help="Search Bible")
+    search_bible_parser.add_argument("query", help="Search query")
+    search_bible_parser.add_argument(
+        "--translation",
+        default="turhadi",
+        help="Bible translation to search (default: turhadi)"
+    )
+    search_bible_parser.add_argument(
+        "--mode",
+        choices=["hybrid", "semantic", "keyword"],
+        default="hybrid",
+        help="Search mode"
+    )
+    search_bible_parser.add_argument(
+        "--limit",
+        type=int,
+        default=10,
+        help="Number of results"
+    )
+    search_bible_parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Show detailed first result"
+    )
+    
     # Info command
     subparsers.add_parser("info", help="Show collection info")
     
@@ -201,6 +353,10 @@ def main():
         return cmd_index(args)
     elif args.command == "search":
         return cmd_search(args)
+    elif args.command == "index-bible":
+        return cmd_index_bible(args)
+    elif args.command == "search-bible":
+        return cmd_search_bible(args)
     elif args.command == "info":
         return cmd_info(args)
     else:

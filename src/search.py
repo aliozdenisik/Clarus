@@ -185,6 +185,176 @@ class QuranSearcher:
             return self.hybrid_search(query, limit)
 
 
+@dataclass
+class BibleSearchResult:
+    """Represents a single Bible search result"""
+    id: str
+    score: float
+    translation: str
+    book_id: int
+    book_name: str
+    chapter: int
+    verse: int
+    text: str
+    testament: str
+    
+    def __str__(self) -> str:
+        return (
+            f"[{self.book_name} {self.chapter}:{self.verse}] "
+            f"({self.testament}) - Score: {self.score:.3f}\n"
+            f"  {self.text[:100]}{'...' if len(self.text) > 100 else ''}"
+        )
+
+
+class BibleSearcher:
+    """
+    Hybrid search engine for Bible translations.
+    Supports semantic, keyword (BM25), and hybrid search modes.
+    """
+    
+    def __init__(
+        self,
+        translation: str = "turhadi",
+        qdrant_url: str = "http://localhost:6333",
+        in_memory: bool = False,
+        client: Optional[QdrantClient] = None,
+        dense_encoder: Optional[DenseEncoder] = None,
+        sparse_encoder: Optional[SparseEncoder] = None
+    ):
+        self.translation = translation
+        self.collection_name = f"bible_{translation}"
+        
+        if client:
+            self.client = client
+        elif in_memory:
+            self.client = QdrantClient(location=":memory:")
+        else:
+            self.client = QdrantClient(url=qdrant_url)
+        self.dense_encoder = dense_encoder or DenseEncoder()
+        self.sparse_encoder = sparse_encoder or SparseEncoder()
+    
+    def _parse_results(self, results) -> List[BibleSearchResult]:
+        """Convert Qdrant results to BibleSearchResult objects"""
+        search_results = []
+        for point in results.points:
+            payload = point.payload
+            result = BibleSearchResult(
+                id=payload.get("id", ""),
+                score=point.score,
+                translation=payload.get("translation", ""),
+                book_id=payload.get("book_id", 0),
+                book_name=payload.get("book_name", ""),
+                chapter=payload.get("chapter", 0),
+                verse=payload.get("verse", 0),
+                text=payload.get("text", ""),
+                testament=payload.get("testament", ""),
+            )
+            search_results.append(result)
+        return search_results
+    
+    def semantic_search(self, query: str, limit: int = 10) -> List[BibleSearchResult]:
+        """
+        Perform semantic search using dense vectors only.
+        Good for conceptual/meaning-based queries.
+        """
+        query_vector = self.dense_encoder.encode(query)
+        
+        results = self.client.query_points(
+            collection_name=self.collection_name,
+            query=query_vector,
+            using="dense",
+            limit=limit,
+            with_payload=True
+        )
+        
+        return self._parse_results(results)
+    
+    def keyword_search(self, query: str, limit: int = 10) -> List[BibleSearchResult]:
+        """
+        Perform keyword search using sparse vectors (BM25).
+        Good for exact term matching.
+        """
+        indices, values = self.sparse_encoder.query_embed(query)
+        
+        results = self.client.query_points(
+            collection_name=self.collection_name,
+            query=SparseVector(indices=indices, values=values),
+            using="sparse",
+            limit=limit,
+            with_payload=True
+        )
+        
+        return self._parse_results(results)
+    
+    def hybrid_search(
+        self, 
+        query: str, 
+        limit: int = 10,
+        prefetch_limit: int = 20,
+        fusion: str = "rrf"
+    ) -> List[BibleSearchResult]:
+        """
+        Perform hybrid search combining semantic and keyword search.
+        Uses Reciprocal Rank Fusion (RRF) or DBSF to merge results.
+        
+        Args:
+            query: Search query text
+            limit: Number of final results
+            prefetch_limit: Number of results to fetch from each search type
+            fusion: Fusion method - "rrf" or "dbsf"
+        """
+        # Encode query for both dense and sparse
+        dense_query = self.dense_encoder.encode(query)
+        sparse_indices, sparse_values = self.sparse_encoder.query_embed(query)
+        
+        # Choose fusion method
+        fusion_method = Fusion.RRF if fusion.lower() == "rrf" else Fusion.DBSF
+        
+        results = self.client.query_points(
+            collection_name=self.collection_name,
+            prefetch=[
+                # Sparse (BM25) search
+                Prefetch(
+                    query=SparseVector(indices=sparse_indices, values=sparse_values),
+                    using="sparse",
+                    limit=prefetch_limit
+                ),
+                # Dense (semantic) search
+                Prefetch(
+                    query=dense_query,
+                    using="dense",
+                    limit=prefetch_limit
+                )
+            ],
+            query=FusionQuery(fusion=fusion_method),
+            limit=limit,
+            with_payload=True
+        )
+        
+        return self._parse_results(results)
+    
+    def search(
+        self,
+        query: str,
+        mode: str = "hybrid",
+        limit: int = 10
+    ) -> List[BibleSearchResult]:
+        """
+        Unified search interface.
+        
+        Args:
+            query: Search query text
+            mode: Search mode - "hybrid", "semantic", or "keyword"
+            limit: Number of results
+        """
+        if mode == "semantic":
+            return self.semantic_search(query, limit)
+        elif mode == "keyword":
+            return self.keyword_search(query, limit)
+        else:
+            return self.hybrid_search(query, limit)
+
+
 def print_results(results: List[SearchResult], title: str = "Search Results"):
     """Pretty print search results"""
     print(f"\n{'='*60}")
