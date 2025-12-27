@@ -38,7 +38,7 @@ console = Console()
 
 def cmd_index(args):
     """Index Quran data into Qdrant"""
-    console.print("\n[bold blue]📚 Quran Hybrid Search Indexer[/bold blue]\n")
+    console.print("\n[bold blue]Quran Hybrid Search Indexer[/bold blue]\n")
     
     # Load data
     console.print("[yellow]Loading Quran data...[/yellow]")
@@ -47,12 +47,12 @@ def cmd_index(args):
     
     # Show stats
     stats = loader.get_stats()
-    console.print(f"[green]✓[/green] Loaded {stats['total_surahs']} surahs, {stats['total_verses']} verses")
+    console.print(f"[green][OK][/green] Loaded {stats['total_surahs']} surahs, {stats['total_verses']} verses")
     
     # Create chunks
     console.print("\n[yellow]Creating chunks...[/yellow]")
     chunks = loader.create_chunks(show_progress=True)
-    console.print(f"[green]✓[/green] Created {len(chunks)} chunks")
+    console.print(f"[green][OK][/green] Created {len(chunks)} chunks")
     
     # Initialize indexer
     console.print("\n[yellow]Initializing Qdrant...[/yellow]")
@@ -60,7 +60,7 @@ def cmd_index(args):
         indexer = QuranIndexer(qdrant_url=args.qdrant_url)
         indexer.create_collection(recreate=args.recreate)
     except Exception as e:
-        console.print(f"[red]✗ Error connecting to Qdrant: {e}[/red]")
+        console.print(f"[red][ERROR] Error connecting to Qdrant: {e}[/red]")
         console.print("\n[yellow]Make sure Qdrant is running:[/yellow]")
         console.print("  docker run -p 6333:6333 qdrant/qdrant")
         return 1
@@ -71,7 +71,7 @@ def cmd_index(args):
     
     # Show info
     info = indexer.get_collection_info()
-    console.print(f"\n[green]✓[/green] Successfully indexed {count} verses!")
+    console.print(f"\n[green][OK][/green] Successfully indexed {count} verses!")
     console.print(f"  Collection: {info['name']}")
     console.print(f"  Points: {info['points_count']}")
     console.print(f"  Status: {info['status']}")
@@ -85,14 +85,14 @@ def cmd_search(args):
     mode = args.mode
     limit = args.limit
     
-    console.print(f"\n[bold blue]🔍 Quran Hybrid Search[/bold blue]")
+    console.print(f"\n[bold blue]Quran Hybrid Search[/bold blue]")
     console.print(f"[dim]Query: \"{query}\" | Mode: {mode} | Limit: {limit}[/dim]\n")
     
     try:
         searcher = QuranSearcher(qdrant_url=args.qdrant_url)
         results = searcher.search(query, mode=mode, limit=limit)
     except Exception as e:
-        console.print(f"[red]✗ Search error: {e}[/red]")
+        console.print(f"[red][ERROR] Search error: {e}[/red]")
         return 1
     
     if not results:
@@ -133,7 +133,7 @@ def cmd_info(args):
     """Show collection info for all or specific collections"""
     from qdrant_client import QdrantClient
     
-    console.print("\n[bold blue]ℹ️  Collection Info[/bold blue]\n")
+    console.print("\n[bold blue]Collection Info[/bold blue]\n")
     
     try:
         client = QdrantClient(url=args.qdrant_url)
@@ -162,16 +162,16 @@ def cmd_info(args):
             
             # Determine collection type
             if name == "quran_tr":
-                col_type = "📖 Quran"
+                col_type = "Quran"
                 if not show_all and not show_quran:
                     continue
             elif name.startswith("bible_"):
                 translation = name.replace("bible_", "")
-                col_type = f"✝️ Bible ({translation})"
+                col_type = f"Bible ({translation})"
                 if not show_all and not show_bible:
                     continue
             else:
-                col_type = "📚 Other"
+                col_type = "Other"
                 if not show_all:
                     continue
             
@@ -193,7 +193,7 @@ def cmd_info(args):
             console.print("[yellow]No matching collections found.[/yellow]")
             
     except Exception as e:
-        console.print(f"[red]✗ Error: {e}[/red]")
+        console.print(f"[red][ERROR] Error: {e}[/red]")
         console.print("[dim]Make sure Qdrant is running: docker run -p 6333:6333 qdrant/qdrant[/dim]")
         return 1
     
@@ -203,7 +203,7 @@ def cmd_info(args):
 def cmd_index_bible(args):
     """Index Bible data into Qdrant"""
     translation = args.translation
-    console.print(f"\n[bold blue]📖 Bible Hybrid Search Indexer ({translation})[/bold blue]\n")
+    console.print(f"\n[bold blue]Bible Hybrid Search Indexer ({translation})[/bold blue]\n")
     
     # Load data
     console.print(f"[yellow]Loading Bible data ({translation})...[/yellow]")
@@ -211,12 +211,12 @@ def cmd_index_bible(args):
         loader = BibleDataLoader(translation=translation, data_dir=Path("data"))
         loader.download_data()
     except Exception as e:
-        console.print(f"[red]✗ Error loading Bible data: {e}[/red]")
+        console.print(f"[red][ERROR] Error loading Bible data: {e}[/red]")
         return 1
     
     # Show stats
     stats = loader.get_stats()
-    console.print(f"[green]✓[/green] Loaded {stats['total_books']} books, {stats['total_verses']} verses")
+    console.print(f"[green][OK][/green] Loaded {stats['total_books']} books, {stats['total_verses']} verses")
     console.print(f"  Translation: {stats['translation_name']}")
     console.print(f"  Old Testament: {stats['old_testament_books']} books")
     console.print(f"  New Testament: {stats['new_testament_books']} books")
@@ -226,7 +226,7 @@ def cmd_index_bible(args):
     # Create chunks
     console.print("\n[yellow]Creating chunks...[/yellow]")
     chunks = loader.create_chunks(show_progress=True)
-    console.print(f"[green]✓[/green] Created {len(chunks)} chunks")
+    console.print(f"[green][OK][/green] Created {len(chunks)} chunks")
     
     # Initialize indexer
     console.print("\n[yellow]Initializing Qdrant...[/yellow]")
@@ -234,7 +234,7 @@ def cmd_index_bible(args):
         indexer = BibleIndexer(translation=translation, qdrant_url=args.qdrant_url)
         indexer.create_collection(recreate=args.recreate)
     except Exception as e:
-        console.print(f"[red]✗ Error connecting to Qdrant: {e}[/red]")
+        console.print(f"[red][ERROR] Error connecting to Qdrant: {e}[/red]")
         console.print("\n[yellow]Make sure Qdrant is running:[/yellow]")
         console.print("  docker run -p 6333:6333 qdrant/qdrant")
         return 1
@@ -245,7 +245,7 @@ def cmd_index_bible(args):
     
     # Show info
     info = indexer.get_collection_info()
-    console.print(f"\n[green]✓[/green] Successfully indexed {count} verses!")
+    console.print(f"\n[green][OK][/green] Successfully indexed {count} verses!")
     console.print(f"  Collection: {info['name']}")
     console.print(f"  Points: {info['points_count']}")
     console.print(f"  Status: {info['status']}")
@@ -260,14 +260,14 @@ def cmd_search_bible(args):
     mode = args.mode
     limit = args.limit
     
-    console.print(f"\n[bold blue]🔍 Bible Hybrid Search ({translation})[/bold blue]")
+    console.print(f"\n[bold blue]Bible Hybrid Search ({translation})[/bold blue]")
     console.print(f"[dim]Query: \"{query}\" | Mode: {mode} | Limit: {limit}[/dim]\n")
     
     try:
         searcher = BibleSearcher(translation=translation, qdrant_url=args.qdrant_url)
         results = searcher.search(query, mode=mode, limit=limit)
     except Exception as e:
-        console.print(f"[red]✗ Search error: {e}[/red]")
+        console.print(f"[red][ERROR] Search error: {e}[/red]")
         return 1
     
     if not results:

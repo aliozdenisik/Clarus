@@ -29,7 +29,7 @@ def print_header(title: str):
 
 def print_test(name: str, passed: bool, details: str = ""):
     """Print test result"""
-    status = "✅ PASS" if passed else "❌ FAIL"
+    status = "[PASS]" if passed else "[FAIL]"
     print(f"  {status} | {name}")
     if details:
         print(f"         └─ {details}")
@@ -323,7 +323,7 @@ def test_cli():
 
 def main():
     print("\n" + "=" * 70)
-    print("  🔬 COMPREHENSIVE TEST SUITE - Quran Hybrid Search Application")
+    print("  COMPREHENSIVE TEST SUITE - Quran Hybrid Search Application")
     print("=" * 70)
     
     results = {}
@@ -353,16 +353,16 @@ def main():
     passed = sum(1 for v in results.values() if v)
     
     for module, status in results.items():
-        icon = "✅" if status else "❌"
+        icon = "[PASS]" if status else "[FAIL]"
         print(f"  {icon} {module}")
     
     print(f"\n  Total: {passed}/{total} modules passed")
     
     if passed == total:
-        print("\n  🎉 ALL TESTS PASSED SUCCESSFULLY! 🎉")
+        print("\n  ALL TESTS PASSED SUCCESSFULLY!")
         return 0
     else:
-        print("\n  ⚠️  Some tests failed. Please review the output above.")
+        print("\n  Some tests failed. Please review the output above.")
         return 1
 
 
