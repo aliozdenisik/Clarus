@@ -135,7 +135,7 @@ class QuranSearcher:
         self, 
         query: str, 
         limit: int = 10,
-        prefetch_limit: int = 20,
+        prefetch_limit: int = 50,
         fusion: str = "rrf",
         rrf_k: int = 60,
         normalize: bool = True
@@ -187,6 +187,102 @@ class QuranSearcher:
         
         return self._parse_results(results)
     
+    def multi_query_search(
+        self,
+        query: str,
+        limit: int = 10,
+        prefetch_limit: int = 20,
+        n_queries: int = 3,
+        rrf_k: int = 60
+    ) -> List[SearchResult]:
+        """
+        Multi-Query RAG search (RAG-Fusion).
+        
+        Tek sorguyu birden fazla varyasyona dönüştürür, her biri için 
+        ayrı arama yapar, sonuçları RRF ile birleştirir.
+        
+        Args:
+            query: Original search query
+            limit: Number of final results
+            prefetch_limit: Results per query prefetch
+            n_queries: Number of query variations (3 optimal)
+            rrf_k: RRF k parameter
+        """
+        from src.multi_query import MultiQueryGenerator, create_multi_query_prefetches
+        
+        # Generate query variations
+        generator = MultiQueryGenerator()
+        queries = generator.generate(query, n=n_queries)
+        
+        # Create prefetches for all queries
+        prefetches = create_multi_query_prefetches(
+            queries=queries,
+            sparse_encoder=self.sparse_encoder,
+            dense_encoder=self.dense_encoder,
+            limit_per_query=prefetch_limit
+        )
+        
+        # RRF fusion
+        results = self.client.query_points(
+            collection_name=self.COLLECTION_NAME,
+            prefetch=prefetches,
+            query=RrfQuery(rrf=Rrf(k=rrf_k)),
+            limit=limit,
+            with_payload=True
+        )
+        
+        return self._parse_results(results)
+    
+    def parallel_keyword_search(
+        self,
+        query: str,
+        limit: int = 10,
+        prefetch_limit: int = 20,
+        rrf_k: int = 60
+    ) -> List[SearchResult]:
+        """
+        Parallel keyword search - her kelime için ayrı BM25 araması.
+        
+        "sabır ve namaz" -> "sabır" + "namaz" ayrı aranır, RRF ile birleştirilir.
+        
+        Args:
+            query: Search query
+            limit: Number of final results
+            prefetch_limit: Results per keyword prefetch
+            rrf_k: RRF k parameter
+        """
+        from src.multi_query import ParallelKeywordParser, create_parallel_keyword_prefetches
+        
+        # Parse keywords
+        parser = ParallelKeywordParser()
+        keywords = parser.parse(query)
+        
+        # Create keyword prefetches
+        keyword_prefetches = create_parallel_keyword_prefetches(
+            keywords=keywords,
+            sparse_encoder=self.sparse_encoder,
+            limit_per_keyword=prefetch_limit
+        )
+        
+        # Also add semantic search prefetch for the full query
+        dense_query = self.dense_encoder.encode(query)
+        keyword_prefetches.append(Prefetch(
+            query=dense_query,
+            using="dense",
+            limit=prefetch_limit
+        ))
+        
+        # RRF fusion
+        results = self.client.query_points(
+            collection_name=self.COLLECTION_NAME,
+            prefetch=keyword_prefetches,
+            query=RrfQuery(rrf=Rrf(k=rrf_k)),
+            limit=limit,
+            with_payload=True
+        )
+        
+        return self._parse_results(results)
+    
     def search(
         self,
         query: str,
@@ -198,15 +294,20 @@ class QuranSearcher:
         
         Args:
             query: Search query text
-            mode: Search mode - "hybrid", "semantic", or "keyword"
+            mode: Search mode - "hybrid", "semantic", "keyword", "multi-query", "parallel-keyword"
             limit: Number of results
         """
         if mode == "semantic":
             return self.semantic_search(query, limit)
         elif mode == "keyword":
             return self.keyword_search(query, limit)
+        elif mode == "multi-query":
+            return self.multi_query_search(query, limit)
+        elif mode == "parallel-keyword":
+            return self.parallel_keyword_search(query, limit)
         else:
             return self.hybrid_search(query, limit)
+
 
 
 @dataclass

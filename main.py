@@ -85,6 +85,10 @@ def cmd_search(args):
     mode = args.mode
     limit = args.limit
     
+    # Multi-query flag overrides mode
+    if hasattr(args, 'multi_query') and args.multi_query:
+        mode = "multi-query"
+    
     # Query enhancement
     if args.enhance:
         console.print("[yellow]Enhancing query with LLM...[/yellow]")
@@ -383,7 +387,7 @@ def main():
     search_parser.add_argument("query", help="Search query")
     search_parser.add_argument(
         "--mode",
-        choices=["hybrid", "semantic", "keyword"],
+        choices=["hybrid", "semantic", "keyword", "multi-query", "parallel-keyword"],
         default="hybrid",
         help="Search mode"
     )
@@ -407,6 +411,11 @@ def main():
         "--enhance",
         action="store_true",
         help="Enhance query with LLM expansion"
+    )
+    search_parser.add_argument(
+        "--multi-query",
+        action="store_true",
+        help="Use Multi-Query RAG (RAG-Fusion) - generates 3 query variations"
     )
     
     # Index Bible command

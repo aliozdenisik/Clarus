@@ -46,14 +46,20 @@ python main.py index-bible --translation kjva
 python main.py search "Allah'ın rahmeti"
 python main.py search "namaz kılmak" --limit 5
 
+# Multi-Query RAG (RAG-Fusion) - 3 sorgu varyasyonu ile arama
+python main.py search "sabır ve namaz" --multi-query
+
+# Parallel Keyword Search - her kelime ayrı aranır
+python main.py search "sabır ve namaz" --mode parallel-keyword
+
 # Reranking ile Daha Hassas Sonuçlar
 python main.py search "sabır ve namaz" --rerank
 
 # Query Enhancement ile Sorgu Genişletme
 python main.py search "şükür" --enhance
 
-# Reranking + Enhancement Birlikte
-python main.py search "doğru yol" --rerank --enhance
+# Tüm Özellikler Birlikte
+python main.py search "doğru yol" --multi-query --rerank
 
 # Sadece Semantik
 python main.py search "yardım isteme" --mode semantic
