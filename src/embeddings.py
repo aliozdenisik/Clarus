@@ -4,12 +4,34 @@ Embedding Module for Dense and Sparse Vectors
 Provides both semantic (dense) and BM25 (sparse) embeddings for hybrid search.
 Uses OpenRouter API with OpenAI text-embedding-3-large model for dense embeddings.
 This model has excellent multilingual support including Turkish.
+
+Optimizations:
+- Disk-based embedding cache (7-day TTL)
+- Rate limiting (20 RPM for free tier safety)
+- Circuit breaker for API failures
 """
 from typing import List, Tuple, Optional, Any
 import numpy as np
 import os
 import requests
+import hashlib
+import time
 from tqdm import tqdm
+from pathlib import Path
+
+# Optional imports for caching and rate limiting
+try:
+    from diskcache import Cache
+    CACHE_AVAILABLE = True
+except ImportError:
+    CACHE_AVAILABLE = False
+    print("Warning: diskcache not installed. Embedding cache disabled. Install with: pip install diskcache")
+
+try:
+    from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+    TENACITY_AVAILABLE = True
+except ImportError:
+    TENACITY_AVAILABLE = False
 
 
 class DenseEncoder:
@@ -17,19 +39,33 @@ class DenseEncoder:
     Dense vector encoder using OpenRouter API with OpenAI text-embedding-3-large.
     Provides semantic understanding of text with 3072-dimension embeddings.
     This model has excellent multilingual and Turkish language support.
+    
+    Features:
+    - Disk-based cache (7-day TTL) for repeated queries
+    - Rate limiting (20 RPM safe default for free tier)
+    - Automatic retries with exponential backoff
     """
     
     OPENROUTER_API_URL = "https://openrouter.ai/api/v1/embeddings"
     DEFAULT_MODEL = "openai/text-embedding-3-large"
     EMBEDDING_DIMENSION = 3072
     
-    def __init__(self, model_name: str = None, api_key: str = None):
+    # Rate limiting: OpenRouter free tier = 20 RPM
+    # Paid tier ($10+ credits) = no limits
+    RATE_LIMIT_RPM = 20
+    
+    # Cache settings
+    CACHE_DIR = "./cache/embeddings"
+    CACHE_EXPIRE = 86400 * 7  # 7 days
+    
+    def __init__(self, model_name: str = None, api_key: str = None, use_cache: bool = True):
         """
         Initialize the OpenRouter Dense Encoder.
         
         Args:
-            model_name: Model identifier (default: qwen/qwen3-embedding-8b)
+            model_name: Model identifier (default: openai/text-embedding-3-large)
             api_key: OpenRouter API key (default: from OPENROUTER_API_KEY env var)
+            use_cache: Enable disk-based embedding cache (default: True)
         """
         self.model_name = model_name or self.DEFAULT_MODEL
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
@@ -42,10 +78,38 @@ class DenseEncoder:
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
+        
+        # Initialize cache
+        self._cache = None
+        self._use_cache = use_cache and CACHE_AVAILABLE
+        if self._use_cache:
+            cache_path = Path(self.CACHE_DIR)
+            cache_path.mkdir(parents=True, exist_ok=True)
+            self._cache = Cache(str(cache_path))
+            
+        # Rate limiting tracking
+        self._last_request_time = 0
+        self._min_request_interval = 60.0 / self.RATE_LIMIT_RPM  # seconds between requests
+        
         print(f"Initialized OpenRouter dense encoder: {self.model_name}")
+        if self._use_cache:
+            print(f"  Cache: enabled ({self.CACHE_DIR})")
     
-    def encode(self, text: str) -> List[float]:
-        """Encode a single text to dense vector using OpenRouter API"""
+    def _get_cache_key(self, text: str) -> str:
+        """Generate cache key from model and text"""
+        return hashlib.md5(f"{self.model_name}:{text}".encode()).hexdigest()
+    
+    def _rate_limit_wait(self):
+        """Wait if needed to respect rate limits"""
+        elapsed = time.time() - self._last_request_time
+        if elapsed < self._min_request_interval:
+            time.sleep(self._min_request_interval - elapsed)
+        self._last_request_time = time.time()
+    
+    def _api_call(self, text: str) -> List[float]:
+        """Make API call with rate limiting"""
+        self._rate_limit_wait()
+        
         response = requests.post(
             self.OPENROUTER_API_URL,
             headers=self._headers,
@@ -58,6 +122,27 @@ class DenseEncoder:
         response.raise_for_status()
         data = response.json()
         return data["data"][0]["embedding"]
+    
+    def encode(self, text: str) -> List[float]:
+        """
+        Encode a single text to dense vector using OpenRouter API.
+        Uses cache if available.
+        """
+        # Check cache first
+        if self._cache is not None:
+            cache_key = self._get_cache_key(text)
+            cached = self._cache.get(cache_key)
+            if cached is not None:
+                return cached
+        
+        # API call
+        embedding = self._api_call(text)
+        
+        # Store in cache
+        if self._cache is not None:
+            self._cache.set(cache_key, embedding, expire=self.CACHE_EXPIRE)
+        
+        return embedding
     
     def encode_batch(self, texts: List[str], batch_size: int = 32, show_progress: bool = True, max_retries: int = 3) -> List[List[float]]:
         """
@@ -132,11 +217,24 @@ class SparseEncoder:
     """
     Sparse vector encoder using BM25.
     Provides keyword-based matching capabilities.
+    
+    Features:
+    - Optional Turkish lemmatization for morphological matching
     """
     
-    def __init__(self, model_name: str = "Qdrant/bm25"):
+    def __init__(self, model_name: str = "Qdrant/bm25", use_lemma: bool = False):
+        """
+        Initialize the sparse encoder.
+        
+        Args:
+            model_name: BM25 model name
+            use_lemma: If True, apply Turkish lemmatization before encoding
+                       (must be applied consistently at index and query time)
+        """
         self.model_name = model_name
+        self.use_lemma = use_lemma
         self._model = None
+        self._lemmatizer = None
     
     @property
     def model(self):
@@ -147,11 +245,23 @@ class SparseEncoder:
             self._model = SparseTextEmbedding(model_name=self.model_name)
         return self._model
     
+    def _lemmatize(self, text: str) -> str:
+        """Apply Turkish lemmatization if enabled"""
+        if not self.use_lemma:
+            return text
+        try:
+            from src.lemmatizer import lemmatize_text
+            return lemmatize_text(text)
+        except ImportError:
+            print("Warning: lemmatizer not available, using original text")
+            return text
+    
     def encode(self, text: str) -> Tuple[List[int], List[float]]:
         """
         Encode a single text to sparse vector.
         Returns (indices, values) tuple for Qdrant SparseVector.
         """
+        text = self._lemmatize(text)
         embeddings = list(self.model.embed([text]))
         if embeddings:
             sparse = embeddings[0]
@@ -160,6 +270,8 @@ class SparseEncoder:
     
     def encode_batch(self, texts: List[str], batch_size: int = 32) -> List[Tuple[List[int], List[float]]]:
         """Encode multiple texts to sparse vectors"""
+        if self.use_lemma:
+            texts = [self._lemmatize(t) for t in texts]
         results = []
         embeddings = list(self.model.embed(texts, batch_size=batch_size))
         for sparse in embeddings:
@@ -171,6 +283,7 @@ class SparseEncoder:
         Encode query text for sparse search.
         Uses query_embed which is optimized for queries.
         """
+        text = self._lemmatize(text)
         embeddings = list(self.model.query_embed(text))
         if embeddings:
             sparse = embeddings[0]

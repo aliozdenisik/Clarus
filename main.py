@@ -113,13 +113,15 @@ def cmd_search(args):
         console.print(f"[red][ERROR] Search error: {e}[/red]")
         return 1
     
-    # Reranking
+    # Reranking - limit to top-30 for efficiency
     if args.rerank and results:
         console.print("[yellow]Reranking with Qwen3-Reranker...[/yellow]")
         try:
             from src.reranker import Reranker
             reranker = Reranker()
-            results = reranker.rerank(query, results, top_k=limit)
+            # Only rerank top-30 for efficiency (optimization)
+            rerank_pool = min(30, len(results))
+            results = reranker.rerank(query, results[:rerank_pool], top_k=limit)
             console.print("[green][OK][/green] Reranking complete\n")
         except Exception as e:
             console.print(f"[yellow]Warning: Reranking failed: {e}[/yellow]")
@@ -312,13 +314,15 @@ def cmd_search_bible(args):
         console.print(f"[red][ERROR] Search error: {e}[/red]")
         return 1
     
-    # Reranking
+    # Reranking - limit to top-30 for efficiency
     if args.rerank and results:
         console.print("[yellow]Reranking with Qwen3-Reranker...[/yellow]")
         try:
             from src.reranker import Reranker
             reranker = Reranker()
-            results = reranker.rerank(query, results, top_k=limit)
+            # Only rerank top-30 for efficiency (optimization)
+            rerank_pool = min(30, len(results))
+            results = reranker.rerank(query, results[:rerank_pool], top_k=limit)
             console.print("[green][OK][/green] Reranking complete\n")
         except Exception as e:
             console.print(f"[yellow]Warning: Reranking failed: {e}[/yellow]")

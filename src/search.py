@@ -137,7 +137,7 @@ class QuranSearcher:
         limit: int = 10,
         prefetch_limit: int = 100,
         fusion: str = "rrf",
-        rrf_k: int = 60,
+        rrf_k: int = 40,  # Optimized from 60 based on tuning research
         normalize: bool = True
     ) -> List[SearchResult]:
         """

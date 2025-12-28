@@ -2,6 +2,11 @@
 Qdrant Indexer Module
 
 Handles collection creation and document indexing with hybrid vectors.
+
+Optimizations:
+- HNSW config (m=16, ef_construct=200) for better search quality
+- Scalar Quantization (int8) for 75% RAM savings
+- Payload indexes for fast filtered searches
 """
 from typing import List, Optional
 from tqdm import tqdm
@@ -14,6 +19,10 @@ from qdrant_client.models import (
     Distance,
     PointStruct,
     SparseVector,
+    HnswConfigDiff,
+    ScalarQuantization,
+    ScalarQuantizationConfig,
+    PayloadSchemaType,
 )
 
 from .data_loader import QuranChunk
@@ -23,6 +32,11 @@ from .embeddings import HybridEncoder
 class QuranIndexer:
     """
     Indexes Quran chunks into Qdrant with hybrid vectors.
+    
+    Optimized with:
+    - HNSW: m=16, ef_construct=200 for quality-speed balance
+    - Scalar Quantization: int8 for 75% RAM reduction
+    - Payload indexes: surah_id, surah_type for filtered search
     """
     
     COLLECTION_NAME = "quran_tr"
@@ -44,6 +58,8 @@ class QuranIndexer:
         """
         Create collection with dense and sparse vector configuration.
         
+        Includes HNSW optimization and Scalar Quantization for performance.
+        
         Args:
             recreate: If True, delete existing collection and create new
         """
@@ -63,13 +79,26 @@ class QuranIndexer:
         # Get dense vector dimension
         dense_dim = self.encoder.dense_dimension
         print(f"Creating collection with dense dimension: {dense_dim}")
+        print(f"  HNSW config: m=16, ef_construct=200")
+        print(f"  Quantization: Scalar int8 (75% RAM savings)")
         
         self.client.create_collection(
             collection_name=self.COLLECTION_NAME,
             vectors_config={
                 "dense": VectorParams(
                     size=dense_dim,
-                    distance=Distance.COSINE
+                    distance=Distance.COSINE,
+                    hnsw_config=HnswConfigDiff(
+                        m=16,
+                        ef_construct=200,
+                    ),
+                    quantization_config=ScalarQuantization(
+                        scalar=ScalarQuantizationConfig(
+                            type="int8",
+                            quantile=0.99,
+                            always_ram=True
+                        )
+                    )
                 )
             },
             sparse_vectors_config={
@@ -79,6 +108,19 @@ class QuranIndexer:
                     )
                 )
             }
+        )
+        
+        # Create payload indexes for fast filtered search
+        print("Creating payload indexes...")
+        self.client.create_payload_index(
+            collection_name=self.COLLECTION_NAME,
+            field_name="surah_id",
+            field_schema=PayloadSchemaType.INTEGER
+        )
+        self.client.create_payload_index(
+            collection_name=self.COLLECTION_NAME,
+            field_name="surah_type",
+            field_schema=PayloadSchemaType.KEYWORD
         )
         
         print(f"Created collection: {self.COLLECTION_NAME}")
@@ -208,13 +250,26 @@ class BibleIndexer:
         # Get dense vector dimension
         dense_dim = self.encoder.dense_dimension
         print(f"Creating collection with dense dimension: {dense_dim}")
+        print(f"  HNSW config: m=16, ef_construct=200")
+        print(f"  Quantization: Scalar int8 (75% RAM savings)")
         
         self.client.create_collection(
             collection_name=self.collection_name,
             vectors_config={
                 "dense": VectorParams(
                     size=dense_dim,
-                    distance=Distance.COSINE
+                    distance=Distance.COSINE,
+                    hnsw_config=HnswConfigDiff(
+                        m=16,
+                        ef_construct=200,
+                    ),
+                    quantization_config=ScalarQuantization(
+                        scalar=ScalarQuantizationConfig(
+                            type="int8",
+                            quantile=0.99,
+                            always_ram=True
+                        )
+                    )
                 )
             },
             sparse_vectors_config={
@@ -224,6 +279,24 @@ class BibleIndexer:
                     )
                 )
             }
+        )
+        
+        # Create payload indexes for fast filtered search
+        print("Creating payload indexes...")
+        self.client.create_payload_index(
+            collection_name=self.collection_name,
+            field_name="book_name",
+            field_schema=PayloadSchemaType.KEYWORD
+        )
+        self.client.create_payload_index(
+            collection_name=self.collection_name,
+            field_name="testament",
+            field_schema=PayloadSchemaType.KEYWORD
+        )
+        self.client.create_payload_index(
+            collection_name=self.collection_name,
+            field_name="chapter",
+            field_schema=PayloadSchemaType.INTEGER
         )
         
         print(f"Created collection: {self.collection_name}")

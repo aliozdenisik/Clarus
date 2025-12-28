@@ -8,3 +8,15 @@ tqdm>=4.65.0
 rich>=13.0.0
 python-dotenv>=1.0.0
 ranx>=0.3.0
+
+# RAG Optimizations (optional but recommended)
+diskcache>=5.6.0        # Embedding cache
+tenacity>=8.2.0         # Retry/rate limiting
+zeyrek>=0.1.0           # Turkish lemmatization
+
+# Advanced evaluation (optional)
+ragas>=0.1.0            # LLM-judge evaluation
+datasets>=2.14.0        # For RAGAS dataset handling
+
+# Observability (optional)
+prometheus-client>=0.17.0  # Prometheus metrics

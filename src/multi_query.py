@@ -3,22 +3,102 @@ Multi-Query RAG Module
 
 RAG-Fusion implementasyonu: Tek sorguyu birden fazla varyasyona 
 dönüştürür, her biri için ayrı arama yapar, sonuçları RRF ile birleştirir.
+
+Yeni: Adaptif sorgu sayısı - sorgu karmaşıklığına göre varyasyon sayısı belirlenir.
 """
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from dataclasses import dataclass
 from qdrant_client.models import Prefetch, SparseVector
 
 from src.query_enhancer import QueryEnhancer
 
 
+# Türkçe stop words
+TURKISH_STOP_WORDS = {
+    "ve", "ile", "için", "de", "da", "bir", "bu", "şu", 
+    "o", "onu", "onun", "olan", "gibi", "kadar", "ne",
+    "ki", "mi", "mı", "mu", "mü", "ya", "veya", "ama",
+    "fakat", "ancak", "hem", "çünkü", "eğer", "ise",
+    "nasıl", "neden", "hangi", "kim", "ne", "nerede"
+}
+
+
+def calculate_query_complexity(query: str) -> Tuple[int, str]:
+    """
+    Sorgu karmaşıklığını analiz et ve uygun varyasyon sayısını belirle.
+    
+    Complexity factors:
+    - Kelime sayısı
+    - Stop word oranı  
+    - Soru işareti/soru kelimeleri
+    - Kavram çeşitliliği
+    
+    Returns:
+        (n_queries, complexity_level): Önerilen sorgu sayısı ve seviye
+    """
+    words = query.lower().split()
+    word_count = len(words)
+    
+    # Stop word oranı
+    stop_count = sum(1 for w in words if w in TURKISH_STOP_WORDS)
+    stop_ratio = stop_count / max(word_count, 1)
+    
+    # Soru mu?
+    is_question = "?" in query or any(w in query.lower() for w in ["nasıl", "neden", "hangi", "kim", "nerede"])
+    
+    # Dini/özel terimler var mı?
+    special_terms = {"allah", "kuran", "incil", "isa", "muhammed", "peygamber", "cennet", "cehennem", "namaz", "oruç"}
+    has_special = any(w in query.lower() for w in special_terms)
+    
+    # Karmaşıklık skoru hesapla (0-10)
+    complexity_score = 0
+    
+    # Kelime sayısı etkisi
+    if word_count <= 2:
+        complexity_score += 1  # Basit, tek kelime
+    elif word_count <= 4:
+        complexity_score += 3  # Orta
+    else:
+        complexity_score += 5  # Karmaşık, çok kelimeli
+    
+    # Stop word oranı yüksekse belirsiz sorgu
+    if stop_ratio > 0.5:
+        complexity_score += 2
+    
+    # Soru ise daha fazla perspektif gerekebilir
+    if is_question:
+        complexity_score += 2
+    
+    # Özel terimler varsa daha az varyasyon yeterli
+    if has_special:
+        complexity_score -= 1
+    
+    # Skor -> varyasyon sayısı
+    if complexity_score <= 2:
+        return (1, "simple")      # Basit sorgu, varyasyon gereksiz
+    elif complexity_score <= 4:
+        return (2, "moderate")    # Orta, 2 varyasyon
+    elif complexity_score <= 6:
+        return (3, "complex")     # Karmaşık, 3 varyasyon (default)
+    else:
+        return (5, "very_complex") # Çok karmaşık, 5 varyasyon
+
+
 class MultiQueryGenerator:
     """
     LLM ile sorgu varyasyonları üretir.
     
+    Yeni: Adaptif mod - sorgu karmaşıklığına göre otomatik varyasyon sayısı.
+    
     Usage:
         generator = MultiQueryGenerator()
+        
+        # Manuel mod (eski davranış)
         queries = generator.generate("sabır ve namaz", n=3)
-        # ["sabır ve namaz", "sabır", "namaz kılmak", "tahammül ibadet"]
+        
+        # Adaptif mod (yeni)
+        queries, info = generator.generate_adaptive("sabır ve namaz")
+        # info = {"complexity": "moderate", "n_queries": 2}
     """
     
     def __init__(self):
@@ -30,6 +110,35 @@ class MultiQueryGenerator:
         if self._enhancer is None:
             self._enhancer = QueryEnhancer()
         return self._enhancer
+    
+    def generate_adaptive(self, query: str) -> Tuple[List[str], dict]:
+        """
+        Adaptif sorgu varyasyonu üret.
+        
+        Sorgu karmaşıklığını analiz eder ve uygun sayıda varyasyon üretir.
+        Basit sorgularda LLM çağrısından kaçınarak maliyet tasarrufu sağlar.
+        
+        Args:
+            query: Orijinal sorgu
+            
+        Returns:
+            (queries, info): Sorgu listesi ve analiz bilgisi
+        """
+        n_queries, complexity = calculate_query_complexity(query)
+        
+        info = {
+            "complexity": complexity,
+            "n_queries": n_queries,
+            "original_query": query
+        }
+        
+        # Basit sorgularda LLM çağrısı yapma
+        if n_queries == 1:
+            return [query], info
+        
+        # Karmaşık sorgularda varyasyon üret
+        queries = self.generate(query, n=n_queries)
+        return queries, info
     
     def generate(self, query: str, n: int = 3) -> List[str]:
         """
