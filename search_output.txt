@@ -1,0 +1,123 @@
+
+=== QDRANT HYBRID SEARCH VISUALIZER ===
+
+
+======================================================================
+  [ARAMA PIPELINE GORSELLESTIRME]
+======================================================================
+
+Sorgu: 'sabir ve namaz'
+Mod: hybrid
+Limit: 5
+
+[ADIM 1] [TR] TURKISH NORMALIZASYON
+--------------------------------------------------
+  Orijinal sorgu: sabir ve namaz
+  Normalize edilmis: sabir ve namaz
+  Genisletilmis sorgu: ve namaz sabır şabır şabir sabir
+
+  Kelime bazli varyantlar:
+    'sabir' -> {'sabir', 'sabır'}
+    've' -> {'ve'}
+    'namaz' -> {'namaz'}
+
+  Sure: 0.04ms
+
+[ADIM 2] [AI] DENSE ENCODING (SEMANTIC)
+--------------------------------------------------
+Initialized OpenRouter dense encoder: openai/text-embedding-3-large
+  Model: openai/text-embedding-3-large
+  API: OpenRouter
+
+  Encoding basliyor...
+  Dense Vector: [0.0021, 0.0039, 0.0091, 0.0371, 0.0258, 0.0509, -0.0358, -0.0041, ... ] (toplam 3072 boyut)
+  Boyut: 3072 dim
+  Min deger: -0.0811
+  Max deger: 0.0772
+  Ortalama: 0.0005
+
+  Sure: 944.75ms
+
+[ADIM 3] [TXT] SPARSE ENCODING (BM25)
+--------------------------------------------------
+  Model: Qdrant/bm25
+
+  Expanded query icin encoding:
+Loading sparse encoder: Qdrant/bm25
+  Indices (token IDs): [1253225348, 1302688106, 1846141227, 1071366926, 1622005583]
+  Values (TF-IDF weights): ['1.000', '1.000', '1.000', '1.000', '1.000']
+  Non-zero token sayisi: 5
+  Max weight: 1.0000
+  Min weight: 1.0000
+
+  Sure: 64.51ms
+
+[ADIM 4] [DB] QDRANT PARALLEL PREFETCH
+--------------------------------------------------
+  Collection: quran_tr
+  Qdrant URL: http://localhost:6333
+
+  Prefetch Konfigurasyonu:
+    +-- Sparse Prefetch (BM25): limit=100, using='sparse'
+    +-- Dense Prefetch (Semantic): limit=100, using='dense'
+
+  RRF Fusion:
+    +-- k=60 (normalization constant)
+
+  >> Qdrant sorgusu calistiriliyor...
+
+  Sure: 312.86ms
+
+[ADIM 5] [MERGE] RRF FUSION SONUCLARI
+--------------------------------------------------
+  RRF Formula: score = Sum 1/(k + rank)
+  k degeri: 60
+  Birlestirilen kaynaklar: Dense + Sparse
+
+  Toplam sonuc: 5
+
+[ADIM 6] [OUT] SONUCLAR
+--------------------------------------------------
+
+  --- Sonuc #1 ---
+  ID: 2:46
+  Score (RRF): 0.0331
+  Sure: Bakara (2:46)
+  Ceviri: Sabır ve namazla Allah'a sığınıp yardım isteyin; Rablerine kavuşacaklarını ve Ona döneceklerini umanlar ve huşu duyanlar...
+
+  --- Sonuc #2 ---
+  ID: 2:45
+  Score (RRF): 0.0331
+  Sure: Bakara (2:45)
+  Ceviri: Sabır ve namazla Allah'a sığınıp yardım isteyin; Rablerine kavuşacaklarını ve Ona döneceklerini umanlar ve huşu duyanlar...
+
+  --- Sonuc #3 ---
+  ID: 107:4
+  Score (RRF): 0.0306
+  Sure: Maûn (107:4)
+  Ceviri: Vay o namaz kılanların haline ki
+
+  --- Sonuc #4 ---
+  ID: 2:153
+  Score (RRF): 0.0289
+  Sure: Bakara (2:153)
+  Ceviri: Ey İnananlar! Sabır ve namazla yardım dileyin. Allah, muhakkak ki sabredenlerle beraberdir
+
+  --- Sonuc #5 ---
+  ID: 108:2
+  Score (RRF): 0.0287
+  Sure: Kevser (108:2)
+  Ceviri: Öyleyse Rabbin için namaz kıl, kurban kes
+
+======================================================================
+  [OZET]
+======================================================================
+
+  * Toplam sure: 2078.62ms
+  * Bulunan sonuc: 5
+  * Dense boyut: 3072
+  * Sparse token: 5
+  * Turkish varyant: 6 kelime
+
+======================================================================
+

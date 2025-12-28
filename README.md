@@ -91,20 +91,30 @@ python main.py info
 
 ```
 qdrant/
-├── main.py              # CLI entrypoint
-├── requirements.txt     # Dependencies
+├── main.py                    # CLI entrypoint
+├── requirements.txt           # Dependencies
 ├── README.md           
+├── user_guide.md              # Kullanıcı rehberi
+├── test_all.py                # Ana test dosyası
+├── compare_search_modes.py    # Arama modlarını karşılaştırma
+├── visualize_search_flow.py   # Arama pipeline görselleştirme
 ├── data/
-│   ├── quran_tr.json     # Kuran (Türkçe)
-│   ├── bible_turhadi.json # İncil (Türkçe)
-│   └── bible_kjva.json    # İncil (İngilizce + Apocrypha)
+│   ├── quran_tr.json          # Kuran (Türkçe)
+│   ├── bible_turhadi.json     # İncil (Türkçe)
+│   └── bible_kjva.json        # İncil (İngilizce + Apocrypha)
 └── src/
     ├── __init__.py
-    ├── data_loader.py    # Kuran veri yükleme
-    ├── bible_loader.py   # İncil veri yükleme
-    ├── embeddings.py     # Dense ve sparse embeddings
-    ├── indexer.py        # Qdrant indeksleme
-    └── search.py         # Hybrid search API
+    ├── data_loader.py         # Kuran veri yükleme
+    ├── bible_loader.py        # İncil veri yükleme
+    ├── embeddings.py          # Dense ve sparse embeddings (OpenRouter API)
+    ├── indexer.py             # Qdrant indeksleme
+    ├── search.py              # Hybrid search API
+    ├── multi_query.py         # RAG-Fusion (çoklu sorgu)
+    ├── reranker.py            # Cross-encoder reranking
+    ├── query_enhancer.py      # LLM ile sorgu genişletme
+    ├── evaluation.py          # Arama kalitesi değerlendirme
+    ├── turkish_utils.py       # Türkçe karakter normalizasyonu
+    └── lemmatizer.py          # Türkçe lemmatization (kök bulma)
 ```
 
 ## Ortam Değişkenleri
