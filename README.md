@@ -18,7 +18,7 @@ Query → ENHANCE → MULTI-QUERY → PARALLEL SEARCH → RRF FUSION → RERANK 
 | Aşama | Açıklama | Teknoloji |
 |-------|----------|-----------|
 | **1. Query Enhancement** | LLM ile sorgu genişletme | Gemini Flash |
-| **2. Multi-Query** | 3-5 farklı perspektif | LLM |
+| **2. Multi-Query** | 3-5 farklı perspektif | Gemini Flash |
 | **3. Parallel Search** | Tek ayet + Semantic chunk araması | OpenAI text-embedding-3-large |
 | **4. RRF Fusion** | Sonuçları birleştirme | Reciprocal Rank Fusion |
 | **5. Reranking** | Cross-encoder final sıralaması | Qwen3-Reranker |
