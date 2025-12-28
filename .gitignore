@@ -69,3 +69,10 @@ Thumbs.db
 qdrant_storage/
 data/
 *.bak
+cache/
+*.db
+
+# Environment variables (API keys, secrets)
+.env
+.env.local
+.env.*.local
