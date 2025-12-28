@@ -488,8 +488,15 @@ def main():
     build_chunks_parser.add_argument(
         "--threshold",
         type=float,
-        default=0.75,
-        help="Similarity threshold for chunk boundaries (default: 0.75)"
+        default=10,
+        help="Threshold value (meaning depends on --threshold-type, default: 10 for percentile)"
+    )
+    build_chunks_parser.add_argument(
+        "--threshold-type",
+        type=str,
+        default="percentile",
+        choices=["percentile", "gradient", "interquartile", "std", "fixed"],
+        help="Threshold strategy: percentile (default), gradient, interquartile, std, or fixed"
     )
     build_chunks_parser.add_argument(
         "--max-size",
@@ -734,18 +741,20 @@ def cmd_build_semantic_chunks(args):
     """Build semantic chunks from Quran verses"""
     console.print("\n[bold blue]Building Semantic Chunks[/bold blue]\n")
     
+    threshold_type = getattr(args, 'threshold_type', 'percentile')
+    
     try:
         # Initialize chunker
-        console.print(f"[yellow]Initializing chunker (threshold={args.threshold}, max_size={args.max_size})...[/yellow]")
+        console.print(f"[yellow]Initializing chunker (threshold={args.threshold}, type={threshold_type}, max_size={args.max_size})...[/yellow]")
         chunker = SemanticVerseChunker(
             similarity_threshold=args.threshold,
             max_chunk_size=args.max_size,
             respect_surah_boundary=True
         )
         
-        # Create chunks
+        # Create chunks with specified threshold type
         console.print("[yellow]Creating semantic chunks (this may take a while)...[/yellow]")
-        chunks = chunker.create_semantic_chunks(show_progress=True)
+        chunks = chunker.create_semantic_chunks(show_progress=True, threshold_type=threshold_type)
         
         # Show statistics
         stats = chunker.get_statistics()

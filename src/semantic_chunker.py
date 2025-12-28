@@ -226,17 +226,25 @@ class SemanticVerseChunker:
         self,
         similarities: Optional[np.ndarray] = None,
         threshold: Optional[float] = None,
+        threshold_type: str = "percentile",
     ) -> List[int]:
         """
         Detect chunk boundaries based on similarity threshold.
         
+        Supports multiple threshold strategies (like LangChain SemanticChunker):
+        - "percentile": Split at positions where similarity is below X percentile (default: 10)
+        - "gradient": Split where similarity gradient (change rate) is highest
+        - "interquartile": Split below Q1 - 1.5*IQR
+        - "fixed": Use the exact threshold value provided
+        
         A boundary is placed between verse[i] and verse[i+1] when:
-        - similarity[i] < threshold, OR
+        - similarity[i] < computed_threshold, OR
         - surah changes (if respect_surah_boundary is True)
         
         Args:
             similarities: Optional similarity array
-            threshold: Optional threshold override
+            threshold: Threshold value (interpretation depends on threshold_type)
+            threshold_type: "percentile", "gradient", "interquartile", or "fixed"
             
         Returns:
             List of boundary indices (positions where new chunks start)
@@ -249,16 +257,41 @@ class SemanticVerseChunker:
         
         threshold = threshold if threshold is not None else self.similarity_threshold
         
-        # Handle dynamic threshold strategies
-        if isinstance(threshold, str):
-            if threshold.startswith("percentile:"):
-                percentile = float(threshold.split(":")[1])
-                threshold = np.percentile(self._similarities, percentile)
-                print(f"Using percentile-based threshold: {threshold:.4f} (p={percentile})")
-            elif threshold.startswith("std:"):
-                k = float(threshold.split(":")[1])
-                threshold = np.mean(self._similarities) - k * np.std(self._similarities)
-                print(f"Using std-based threshold: {threshold:.4f} (k={k})")
+        # Compute threshold based on strategy
+        if threshold_type == "percentile":
+            # threshold is the percentile value (e.g., 10 means bottom 10%)
+            # Lower percentile = more chunks, higher = fewer chunks
+            percentile_value = threshold if threshold <= 100 else 10
+            computed_threshold = np.percentile(self._similarities, percentile_value)
+            print(f"Percentile-based threshold: {computed_threshold:.4f} (p={percentile_value})")
+            
+        elif threshold_type == "gradient":
+            # Find positions where similarity drops sharply
+            # Use gradient (rate of change) to detect boundaries
+            gradients = np.gradient(self._similarities)
+            # Threshold on negative gradients (drops in similarity)
+            grad_threshold = np.percentile(gradients, threshold if threshold <= 100 else 10)
+            computed_threshold = None  # We'll use gradient-based detection
+            print(f"Gradient-based detection: threshold={grad_threshold:.4f}")
+            
+        elif threshold_type == "interquartile":
+            # IQR-based: split below Q1 - k*IQR
+            q1 = np.percentile(self._similarities, 25)
+            q3 = np.percentile(self._similarities, 75)
+            iqr = q3 - q1
+            k = threshold if threshold < 10 else 1.5  # default k=1.5
+            computed_threshold = q1 - k * iqr
+            print(f"IQR-based threshold: {computed_threshold:.4f} (Q1={q1:.4f}, IQR={iqr:.4f}, k={k})")
+            
+        elif threshold_type == "std":
+            # Standard deviation based: mean - k*std
+            k = threshold if threshold < 10 else 1.0
+            computed_threshold = np.mean(self._similarities) - k * np.std(self._similarities)
+            print(f"Std-based threshold: {computed_threshold:.4f} (k={k})")
+            
+        else:  # "fixed" or unknown
+            computed_threshold = threshold
+            print(f"Fixed threshold: {computed_threshold:.4f}")
         
         boundaries = [0]  # First verse always starts a chunk
         
@@ -271,8 +304,13 @@ class SemanticVerseChunker:
                     boundaries.append(next_verse_idx)
                     continue
             
-            # Check similarity threshold
-            if sim < threshold:
+            # Gradient-based detection
+            if threshold_type == "gradient":
+                gradients = np.gradient(self._similarities)
+                if gradients[i] < grad_threshold:
+                    boundaries.append(next_verse_idx)
+            # Standard similarity threshold check
+            elif sim < computed_threshold:
                 boundaries.append(next_verse_idx)
         
         return boundaries
@@ -328,6 +366,7 @@ class SemanticVerseChunker:
         verses: Optional[List[QuranChunk]] = None,
         show_progress: bool = True,
         use_cache: bool = True,
+        threshold_type: str = "percentile",
     ) -> List[SemanticChunk]:
         """
         Main method to create semantic chunks from verses.
@@ -336,6 +375,7 @@ class SemanticVerseChunker:
             verses: Optional list of QuranChunk objects
             show_progress: Show progress bar
             use_cache: Use cached embeddings
+            threshold_type: "percentile" (default), "gradient", "interquartile", "std", or "fixed"
             
         Returns:
             List of SemanticChunk objects
@@ -350,8 +390,8 @@ class SemanticVerseChunker:
         self.compute_embeddings(show_progress=show_progress, use_cache=use_cache)
         self.compute_similarities()
         
-        # Detect boundaries
-        boundaries = self.detect_boundaries()
+        # Detect boundaries with specified threshold type
+        boundaries = self.detect_boundaries(threshold_type=threshold_type)
         
         # Apply size constraints
         boundaries = self._apply_size_constraints(boundaries, len(self._verses))
