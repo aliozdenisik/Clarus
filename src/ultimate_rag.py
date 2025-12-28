@@ -5,14 +5,15 @@ Bu modül tüm en iyi RAG metodolojilerini tek bir pipeline'da birleştirir:
 1. Query Enhancement (LLM ile sorgu genişletme) - ZORUNLU
 2. Multi-Query Generation (3 farklı perspektif) - OPSİYONEL
 3. Semantic Search (en iyi performans gösteren arama)
-4. Cross-Encoder Reranking (Qwen3-Reranker) - ZORUNLU
+4. Semantic Chunk Search (paralel - gruplu ayetleri arar) - OPSİYONEL
+5. Cross-Encoder Reranking (Qwen3-Reranker) - ZORUNLU
 
 Doğruluk odaklı - Süre önemli değil!
 
 Usage:
     from src.ultimate_rag import UltimateRAG
     
-    rag = UltimateRAG()
+    rag = UltimateRAG(enable_semantic_chunks=True)  # Parallel search
     results = rag.search("Kur'an'da şefaat kavramı nasıl açıklanır?")
 """
 import os
@@ -46,10 +47,13 @@ class UltimateRAG:
     1. ENHANCE: LLM ile sorguyu genişlet (eşanlamlılar, ilgili kavramlar)
     2. MULTI-QUERY: 3 farklı perspektiften sorgu varyasyonları üret
     3. SEARCH: Tüm sorgularla semantic arama yap, sonuçları birleştir (RRF)
+       - Single-verse collection (quran_tr)
+       - Semantic chunks collection (quran_semantic_chunks) - OPSİYONEL
     4. RERANK: Cross-encoder ile en alakalı sonuçları seçen final sıralama
     
     Ayarlar:
         enable_multi_query: Multi-query aşamasını aktif et (default: True)
+        enable_semantic_chunks: Semantic chunk aramasını paralel çalıştır (default: True)
         search_mode: Arama modu - "semantic" önerilen (default: "semantic")
         rerank_pool_size: Reranker'a gidecek max sonuç sayısı (default: 50)
         final_top_k: Final sonuç sayısı (default: 10)
@@ -59,6 +63,7 @@ class UltimateRAG:
         self,
         qdrant_url: str = "http://localhost:6333",
         enable_multi_query: bool = True,
+        enable_semantic_chunks: bool = True,  # Parallel semantic chunk search
         search_mode: str = "semantic",  # semantic performs best for Turkish
         rerank_pool_size: int = 50,
         final_top_k: int = 10,
@@ -66,6 +71,7 @@ class UltimateRAG:
     ):
         self.qdrant_url = qdrant_url
         self.enable_multi_query = enable_multi_query
+        self.enable_semantic_chunks = enable_semantic_chunks
         self.search_mode = search_mode
         self.rerank_pool_size = rerank_pool_size
         self.final_top_k = final_top_k
@@ -76,6 +82,7 @@ class UltimateRAG:
         self._reranker = None
         self._quran_searcher = None
         self._bible_searcher = None
+        self._semantic_chunk_searcher = None
         
     @property
     def enhancer(self):
@@ -113,6 +120,13 @@ class UltimateRAG:
                     qdrant_url=self.qdrant_url
                 )
             return self._bible_searcher
+    
+    def _get_semantic_chunk_searcher(self):
+        """Get semantic chunk searcher (lazy load)"""
+        if self._semantic_chunk_searcher is None:
+            from src.search import SemanticChunkSearcher
+            self._semantic_chunk_searcher = SemanticChunkSearcher(qdrant_url=self.qdrant_url)
+        return self._semantic_chunk_searcher
     
     def _log(self, message: str, style: str = "dim"):
         """Log message if verbose"""
@@ -172,6 +186,7 @@ class UltimateRAG:
         all_results = {}  # id -> (result, rrf_score)
         k = 60  # RRF constant
         
+        # Search single-verse collection
         for i, query in enumerate(queries):
             try:
                 results = searcher.search(query, mode=self.search_mode, limit=limit)
@@ -193,6 +208,43 @@ class UltimateRAG:
                         
             except Exception as e:
                 self._log(f"   Warning: Search failed for query: {e}", "yellow")
+        
+        # Parallel search: Semantic chunks (only for Quran)
+        if self.enable_semantic_chunks and source == "quran_tr":
+            try:
+                chunk_searcher = self._get_semantic_chunk_searcher()
+                if chunk_searcher.collection_exists():
+                    self._log("   📦 Including semantic chunks in search...")
+                    
+                    for i, query in enumerate(queries):
+                        try:
+                            chunk_results = chunk_searcher.search(query, mode=self.search_mode, limit=limit // 2)
+                            
+                            for rank, chunk_result in enumerate(chunk_results, 1):
+                                # For each verse in the semantic chunk, add to results
+                                # This expands the context while keeping individual verse scores
+                                chunk_id = chunk_result.chunk_id
+                                rrf_contribution = 1 / (k + rank)
+                                
+                                # Store chunk result with a unique ID
+                                if chunk_id in all_results:
+                                    existing_result, existing_score, matched = all_results[chunk_id]
+                                    all_results[chunk_id] = (
+                                        existing_result, 
+                                        existing_score + rrf_contribution,
+                                        matched + [query]
+                                    )
+                                else:
+                                    # Create a pseudo-result that works with reranker
+                                    # Use combined translation as the text to rerank
+                                    all_results[chunk_id] = (chunk_result, rrf_contribution, [query])
+                                    
+                        except Exception as e:
+                            self._log(f"   Warning: Chunk search failed: {e}", "yellow")
+                else:
+                    self._log("   [dim]Semantic chunks collection not found, skipping...[/dim]")
+            except Exception as e:
+                self._log(f"   Warning: Could not load semantic chunks: {e}", "yellow")
         
         # Sort by RRF score and return top results
         sorted_results = sorted(

@@ -29,9 +29,10 @@ from rich.panel import Panel
 from rich import print as rprint
 
 from src.data_loader import QuranDataLoader
-from src.indexer import QuranIndexer, BibleIndexer
-from src.search import QuranSearcher, BibleSearcher, print_results
+from src.indexer import QuranIndexer, BibleIndexer, SemanticChunkIndexer
+from src.search import QuranSearcher, BibleSearcher, SemanticChunkSearcher, print_results
 from src.bible_loader import BibleDataLoader
+from src.semantic_chunker import SemanticVerseChunker, analyze_surah_chunks
 
 console = Console()
 
@@ -479,6 +480,62 @@ def main():
         help="Enable graph-enhanced search (requires Neo4j)"
     )
     
+    # Semantic Chunking commands
+    build_chunks_parser = subparsers.add_parser(
+        "build-semantic-chunks",
+        help="Build semantic chunks from Quran verses"
+    )
+    build_chunks_parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.75,
+        help="Similarity threshold for chunk boundaries (default: 0.75)"
+    )
+    build_chunks_parser.add_argument(
+        "--max-size",
+        type=int,
+        default=10,
+        help="Maximum verses per chunk (default: 10)"
+    )
+    build_chunks_parser.add_argument(
+        "--recreate",
+        action="store_true",
+        help="Recreate collection (delete existing)"
+    )
+    build_chunks_parser.add_argument(
+        "--analyze-only",
+        action="store_true",
+        help="Only analyze chunks, don't index"
+    )
+    
+    search_semantic_parser = subparsers.add_parser(
+        "search-semantic",
+        help="Search using semantic chunks"
+    )
+    search_semantic_parser.add_argument("query", help="Search query")
+    search_semantic_parser.add_argument(
+        "--limit",
+        type=int,
+        default=5,
+        help="Number of results (default: 5)"
+    )
+    search_semantic_parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Show detailed results"
+    )
+    
+    analyze_chunks_parser = subparsers.add_parser(
+        "analyze-chunks",
+        help="Analyze semantic chunks for a surah"
+    )
+    analyze_chunks_parser.add_argument(
+        "--surah",
+        type=int,
+        default=1,
+        help="Surah number to analyze (default: 1)"
+    )
+    
     # Cache management commands
     cache_info_parser = subparsers.add_parser(
         "cache-info",
@@ -516,6 +573,12 @@ def main():
         return cmd_cache_info(args)
     elif args.command == "cache-clear":
         return cmd_cache_clear(args)
+    elif args.command == "build-semantic-chunks":
+        return cmd_build_semantic_chunks(args)
+    elif args.command == "search-semantic":
+        return cmd_search_semantic(args)
+    elif args.command == "analyze-chunks":
+        return cmd_analyze_chunks(args)
     else:
         parser.print_help()
         return 0
@@ -662,6 +725,154 @@ def cmd_graph_info(args):
     except ImportError as e:
         console.print(f"[red][ERROR] Neo4j not available: {e}[/red]")
         return 1
+    except Exception as e:
+        console.print(f"[red][ERROR] {e}[/red]")
+        return 1
+
+
+def cmd_build_semantic_chunks(args):
+    """Build semantic chunks from Quran verses"""
+    console.print("\n[bold blue]Building Semantic Chunks[/bold blue]\n")
+    
+    try:
+        # Initialize chunker
+        console.print(f"[yellow]Initializing chunker (threshold={args.threshold}, max_size={args.max_size})...[/yellow]")
+        chunker = SemanticVerseChunker(
+            similarity_threshold=args.threshold,
+            max_chunk_size=args.max_size,
+            respect_surah_boundary=True
+        )
+        
+        # Create chunks
+        console.print("[yellow]Creating semantic chunks (this may take a while)...[/yellow]")
+        chunks = chunker.create_semantic_chunks(show_progress=True)
+        
+        # Show statistics
+        stats = chunker.get_statistics()
+        console.print(f"\n[green][OK][/green] Created {len(chunks)} semantic chunks")
+        console.print(f"  Total verses: {stats['num_verses']}")
+        console.print(f"  Avg chunk size: {stats['num_verses'] / len(chunks):.2f} verses")
+        console.print(f"  Similarity mean: {stats['similarity_mean']:.4f}")
+        console.print(f"  Similarity std: {stats['similarity_std']:.4f}")
+        
+        if args.analyze_only:
+            # Just save and analyze
+            chunker.save_chunks(chunks)
+            console.print("\n[yellow]Analyzing first 3 surahs...[/yellow]")
+            for surah_id in [1, 2, 3]:
+                analyze_surah_chunks(chunks, surah_id)
+            return 0
+        
+        # Index chunks
+        console.print("\n[yellow]Indexing semantic chunks to Qdrant...[/yellow]")
+        indexer = SemanticChunkIndexer(qdrant_url=args.qdrant_url)
+        indexer.create_collection(recreate=args.recreate)
+        count = indexer.index_chunks(chunks, batch_size=50)
+        
+        # Save chunks for later use
+        chunker.save_chunks(chunks)
+        
+        # Show info
+        info = indexer.get_collection_info()
+        console.print(f"\n[green][OK][/green] Successfully indexed {count} semantic chunks!")
+        console.print(f"  Collection: {info['name']}")
+        console.print(f"  Points: {info['points_count']}")
+        console.print(f"  Status: {info['status']}")
+        
+        return 0
+        
+    except Exception as e:
+        console.print(f"[red][ERROR] {e}[/red]")
+        import traceback
+        traceback.print_exc()
+        return 1
+
+
+def cmd_search_semantic(args):
+    """Search using semantic chunks"""
+    query = args.query
+    limit = args.limit
+    
+    console.print(f"\n[bold magenta]🔍 Semantic Chunk Search[/bold magenta]")
+    console.print(f"[dim]Query: {query}[/dim]\n")
+    
+    try:
+        searcher = SemanticChunkSearcher(qdrant_url=args.qdrant_url)
+        
+        if not searcher.collection_exists():
+            console.print("[yellow]Semantic chunks collection not found.[/yellow]")
+            console.print("[dim]Run 'python main.py build-semantic-chunks' first.[/dim]")
+            return 1
+        
+        results = searcher.hybrid_search(query, limit=limit)
+        
+        if not results:
+            console.print("[yellow]No results found.[/yellow]")
+            return 0
+        
+        # Create results table
+        table = Table(title=f"Semantic Chunk Results ({len(results)} found)", show_lines=True)
+        table.add_column("#", style="dim", width=3)
+        table.add_column("Reference", style="cyan", width=18)
+        table.add_column("Score", style="green", width=8)
+        table.add_column("Verses", style="yellow", width=6)
+        table.add_column("Combined Translation", style="white")
+        
+        for i, result in enumerate(results, 1):
+            verse_range = f"{result.start_verse}-{result.end_verse}" if result.start_verse != result.end_verse else str(result.start_verse)
+            ref = f"{result.surah_id}:{verse_range}\n{result.surah_name}"
+            score = f"{result.score:.3f}"
+            verses = str(result.verse_count)
+            translation = result.combined_translation[:180] + ("..." if len(result.combined_translation) > 180 else "")
+            table.add_row(str(i), ref, score, verses, translation)
+        
+        console.print(table)
+        
+        # Show detailed first result
+        if args.verbose and results:
+            first = results[0]
+            console.print(Panel(
+                f"[bold]{first.surah_name}[/bold] ({first.surah_transliteration})\n"
+                f"Verses {first.start_verse}-{first.end_verse} | {first.surah_type.capitalize()}\n"
+                f"Verse IDs: {', '.join(first.verse_ids)}\n\n"
+                f"[dim]Arabic:[/dim]\n{first.combined_arabic}\n\n"
+                f"[dim]Translation:[/dim]\n{first.combined_translation}",
+                title=f"[green]Top Result ({first.verse_count} verses)[/green]",
+                expand=False
+            ))
+        
+        return 0
+        
+    except Exception as e:
+        console.print(f"[red][ERROR] {e}[/red]")
+        import traceback
+        traceback.print_exc()
+        return 1
+
+
+def cmd_analyze_chunks(args):
+    """Analyze semantic chunks for a specific surah"""
+    console.print(f"\n[bold blue]Analyzing Semantic Chunks - Surah {args.surah}[/bold blue]\n")
+    
+    try:
+        from pathlib import Path
+        
+        chunks_path = Path("data/semantic_chunks.json")
+        
+        if not chunks_path.exists():
+            console.print("[yellow]Semantic chunks file not found.[/yellow]")
+            console.print("[dim]Run 'python main.py build-semantic-chunks' first.[/dim]")
+            return 1
+        
+        # Load chunks
+        chunker = SemanticVerseChunker()
+        chunks = chunker.load_chunks(chunks_path)
+        
+        # Analyze specified surah
+        analyze_surah_chunks(chunks, args.surah)
+        
+        return 0
+        
     except Exception as e:
         console.print(f"[red][ERROR] {e}[/red]")
         return 1

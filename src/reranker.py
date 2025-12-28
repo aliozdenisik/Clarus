@@ -84,6 +84,8 @@ class Reranker:
             first = results[0]
             if hasattr(first, 'translation'):
                 text_field = 'translation'
+            elif hasattr(first, 'combined_translation'):
+                text_field = 'combined_translation'
             elif hasattr(first, 'text'):
                 text_field = 'text'
             else:
@@ -126,6 +128,8 @@ class Reranker:
             first = results[0]
             if hasattr(first, 'translation'):
                 text_field = 'translation'
+            elif hasattr(first, 'combined_translation'):
+                text_field = 'combined_translation'
             elif hasattr(first, 'text'):
                 text_field = 'text'
             else:

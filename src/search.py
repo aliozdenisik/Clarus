@@ -546,6 +546,214 @@ class BibleSearcher:
             return self.hybrid_search(query, limit)
 
 
+@dataclass
+class SemanticChunkSearchResult:
+    """Represents a semantic chunk search result (grouped verses)."""
+    chunk_id: str
+    score: float
+    verse_ids: List[str]
+    surah_id: int
+    surah_name: str
+    surah_transliteration: str
+    start_verse: int
+    end_verse: int
+    combined_translation: str
+    combined_arabic: str
+    verse_count: int
+    surah_type: str
+    
+    def __str__(self):
+        verse_range = f"{self.start_verse}-{self.end_verse}" if self.start_verse != self.end_verse else str(self.start_verse)
+        preview = self.combined_translation[:200] + "..." if len(self.combined_translation) > 200 else self.combined_translation
+        return f"[{self.surah_name} {verse_range}] (Score: {self.score:.4f}, {self.verse_count} verses)\n   {preview}"
+
+
+class SemanticChunkSearcher:
+    """
+    Search engine for semantic chunks (grouped verses).
+    
+    Provides context-aware search by searching grouped verses instead of
+    individual verses. Can be used alongside QuranSearcher for comprehensive results.
+    """
+    
+    COLLECTION_NAME = "quran_semantic_chunks"
+    
+    def __init__(
+        self,
+        qdrant_url: str = "http://localhost:6333",
+        in_memory: bool = False,
+        client: Optional[QdrantClient] = None,
+        dense_encoder: Optional[DenseEncoder] = None,
+        sparse_encoder: Optional[SparseEncoder] = None
+    ):
+        if client:
+            self.client = client
+        elif in_memory:
+            self.client = QdrantClient(location=":memory:")
+        else:
+            self.client = QdrantClient(url=qdrant_url)
+        
+        self.dense_encoder = dense_encoder or DenseEncoder()
+        self.sparse_encoder = sparse_encoder or SparseEncoder()
+    
+    def _parse_results(self, results) -> List[SemanticChunkSearchResult]:
+        """Convert Qdrant results to SemanticChunkSearchResult objects."""
+        parsed = []
+        for result in results:
+            payload = result.payload
+            parsed.append(SemanticChunkSearchResult(
+                chunk_id=payload.get("chunk_id", ""),
+                score=result.score,
+                verse_ids=payload.get("verse_ids", []),
+                surah_id=payload.get("surah_id", 0),
+                surah_name=payload.get("surah_name", ""),
+                surah_transliteration=payload.get("surah_transliteration", ""),
+                start_verse=payload.get("start_verse", 0),
+                end_verse=payload.get("end_verse", 0),
+                combined_translation=payload.get("combined_translation", ""),
+                combined_arabic=payload.get("combined_arabic", ""),
+                verse_count=payload.get("verse_count", 1),
+                surah_type=payload.get("surah_type", ""),
+            ))
+        return parsed
+    
+    def semantic_search(
+        self, 
+        query: str, 
+        limit: int = 10,
+        normalize: bool = True
+    ) -> List[SemanticChunkSearchResult]:
+        """
+        Perform semantic search on chunk collection.
+        
+        Args:
+            query: Search query text
+            limit: Number of results to return
+            normalize: If True, expand query with Turkish character variants
+        """
+        if normalize:
+            query = expand_turkish_query(query)
+        
+        query_vector = self.dense_encoder.encode(query)
+        
+        results = self.client.query_points(
+            collection_name=self.COLLECTION_NAME,
+            query=query_vector,
+            using="dense",
+            limit=limit
+        )
+        
+        return self._parse_results(results.points)
+    
+    def keyword_search(
+        self, 
+        query: str, 
+        limit: int = 10,
+        normalize: bool = True
+    ) -> List[SemanticChunkSearchResult]:
+        """
+        Perform keyword (BM25) search on chunk collection.
+        
+        Args:
+            query: Search query text
+            limit: Number of results to return
+            normalize: If True, normalize Turkish characters
+        """
+        if normalize:
+            query = normalize_turkish(query)
+        
+        sparse_indices, sparse_values = self.sparse_encoder.query_embed(query)
+        
+        results = self.client.query_points(
+            collection_name=self.COLLECTION_NAME,
+            query=SparseVector(indices=sparse_indices, values=sparse_values),
+            using="sparse",
+            limit=limit
+        )
+        
+        return self._parse_results(results.points)
+    
+    def hybrid_search(
+        self,
+        query: str,
+        limit: int = 10,
+        prefetch_limit: int = 50,
+        rrf_k: int = 40,
+        normalize: bool = True
+    ) -> List[SemanticChunkSearchResult]:
+        """
+        Perform hybrid search combining semantic and keyword search.
+        Uses Reciprocal Rank Fusion (RRF) to merge results.
+        
+        Args:
+            query: Search query text
+            limit: Number of final results
+            prefetch_limit: Results per search type
+            rrf_k: RRF k parameter (higher = more weight to lower ranks)
+            normalize: If True, apply Turkish normalization
+        """
+        # Prepare query vectors
+        if normalize:
+            expanded_query = expand_turkish_query(query)
+            normalized_query = normalize_turkish(query)
+        else:
+            expanded_query = query
+            normalized_query = query
+        
+        dense_vector = self.dense_encoder.encode(expanded_query)
+        sparse_indices, sparse_values = self.sparse_encoder.query_embed(normalized_query)
+        
+        # Hybrid search with RRF
+        results = self.client.query_points(
+            collection_name=self.COLLECTION_NAME,
+            prefetch=[
+                Prefetch(
+                    query=dense_vector,
+                    using="dense",
+                    limit=prefetch_limit
+                ),
+                Prefetch(
+                    query=SparseVector(indices=sparse_indices, values=sparse_values),
+                    using="sparse",
+                    limit=prefetch_limit
+                )
+            ],
+            query=RrfQuery(rrf=Rrf(k=rrf_k)),
+            limit=limit
+        )
+        
+        return self._parse_results(results.points)
+    
+    def search(
+        self,
+        query: str,
+        mode: str = "hybrid",
+        limit: int = 10
+    ) -> List[SemanticChunkSearchResult]:
+        """
+        Unified search interface.
+        
+        Args:
+            query: Search query text
+            mode: Search mode - "hybrid" (default), "semantic", or "keyword"
+            limit: Number of results
+        """
+        if mode == "semantic":
+            return self.semantic_search(query, limit)
+        elif mode == "keyword":
+            return self.keyword_search(query, limit)
+        else:
+            return self.hybrid_search(query, limit)
+    
+    def collection_exists(self) -> bool:
+        """Check if the semantic chunks collection exists."""
+        try:
+            collections = self.client.get_collections().collections
+            return any(c.name == self.COLLECTION_NAME for c in collections)
+        except Exception:
+            return False
+
+
 def print_results(results: List[SearchResult], title: str = "Search Results"):
     """Pretty print search results"""
     print(f"\n{'='*60}")

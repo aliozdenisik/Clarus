@@ -380,7 +380,188 @@ class BibleIndexer:
             "status": info.status,
         }
 
-if __name__ == "__main__":
+
+class SemanticChunkIndexer:
+    """
+    Indexes semantic chunks (grouped verses) into Qdrant.
+    
+    Creates a parallel collection that stores semantically grouped verses
+    for context-aware search alongside the single-verse collection.
+    
+    Optimized with:
+    - HNSW: m=16, ef_construct=200 for quality-speed balance
+    - Scalar Quantization: int8 for 75% RAM reduction
+    - Payload indexes: surah_id, verse_count for filtered search
+    """
+    
+    COLLECTION_NAME = "quran_semantic_chunks"
+    
+    def __init__(
+        self,
+        qdrant_url: str = "http://localhost:6333",
+        in_memory: bool = False,
+        encoder: Optional[HybridEncoder] = None
+    ):
+        if in_memory:
+            self.client = QdrantClient(location=":memory:")
+        else:
+            self.client = QdrantClient(url=qdrant_url)
+        self.encoder = encoder or HybridEncoder()
+        self._collection_exists = False
+    
+    def create_collection(self, recreate: bool = False) -> bool:
+        """
+        Create collection for semantic chunks.
+        
+        Args:
+            recreate: If True, delete existing collection and create new
+        """
+        # Check if collection exists
+        collections = self.client.get_collections().collections
+        exists = any(c.name == self.COLLECTION_NAME for c in collections)
+        
+        if exists:
+            if recreate:
+                print(f"Deleting existing collection: {self.COLLECTION_NAME}")
+                self.client.delete_collection(self.COLLECTION_NAME)
+            else:
+                print(f"Collection already exists: {self.COLLECTION_NAME}")
+                self._collection_exists = True
+                return False
+        
+        # Get dense vector dimension
+        dense_dim = self.encoder.dense_dimension
+        print(f"Creating semantic chunks collection with dense dimension: {dense_dim}")
+        print(f"  HNSW config: m=16, ef_construct=200")
+        print(f"  Quantization: Scalar int8 (75% RAM savings)")
+        
+        self.client.create_collection(
+            collection_name=self.COLLECTION_NAME,
+            vectors_config={
+                "dense": VectorParams(
+                    size=dense_dim,
+                    distance=Distance.COSINE,
+                    hnsw_config=HnswConfigDiff(
+                        m=16,
+                        ef_construct=200,
+                    ),
+                    quantization_config=ScalarQuantization(
+                        scalar=ScalarQuantizationConfig(
+                            type="int8",
+                            quantile=0.99,
+                            always_ram=True
+                        )
+                    )
+                )
+            },
+            sparse_vectors_config={
+                "sparse": SparseVectorParams(
+                    index=SparseIndexParams(
+                        on_disk=False
+                    )
+                )
+            }
+        )
+        
+        # Create payload indexes for fast filtered search
+        print("Creating payload indexes...")
+        self.client.create_payload_index(
+            collection_name=self.COLLECTION_NAME,
+            field_name="surah_id",
+            field_schema=PayloadSchemaType.INTEGER
+        )
+        self.client.create_payload_index(
+            collection_name=self.COLLECTION_NAME,
+            field_name="surah_type",
+            field_schema=PayloadSchemaType.KEYWORD
+        )
+        self.client.create_payload_index(
+            collection_name=self.COLLECTION_NAME,
+            field_name="verse_count",
+            field_schema=PayloadSchemaType.INTEGER
+        )
+        
+        print(f"Created collection: {self.COLLECTION_NAME}")
+        self._collection_exists = True
+        return True
+    
+    def index_chunks(
+        self,
+        chunks,  # List[SemanticChunk]
+        batch_size: int = 50,
+        show_progress: bool = True
+    ) -> int:
+        """
+        Index semantic chunks with both dense and sparse vectors.
+        
+        Args:
+            chunks: List of SemanticChunk objects
+            batch_size: Number of chunks to process at once
+            show_progress: Show progress bar
+            
+        Returns:
+            Number of indexed chunks
+        """
+        if not self._collection_exists:
+            self.create_collection()
+        
+        # Extract texts for encoding (combined translations)
+        texts = [chunk.combined_translation for chunk in chunks]
+        
+        # Encode all texts
+        print(f"Encoding {len(texts)} semantic chunks...")
+        dense_vectors, sparse_vectors = self.encoder.encode_batch(
+            texts, 
+            batch_size=batch_size,
+            show_progress=show_progress
+        )
+        
+        # Create points in batches
+        print("Indexing to Qdrant...")
+        total_indexed = 0
+        
+        for i in tqdm(range(0, len(chunks), batch_size), desc="Indexing semantic chunks"):
+            batch_chunks = chunks[i:i + batch_size]
+            batch_dense = dense_vectors[i:i + batch_size]
+            batch_sparse = sparse_vectors[i:i + batch_size]
+            
+            points = []
+            for j, chunk in enumerate(batch_chunks):
+                sparse_indices, sparse_values = batch_sparse[j]
+                
+                point = PointStruct(
+                    id=hash(chunk.chunk_id) % (2**63),  # Convert string ID to int
+                    vector={
+                        "dense": batch_dense[j],
+                        "sparse": SparseVector(
+                            indices=sparse_indices,
+                            values=sparse_values
+                        )
+                    },
+                    payload=chunk.to_dict()
+                )
+                points.append(point)
+            
+            self.client.upsert(
+                collection_name=self.COLLECTION_NAME,
+                points=points
+            )
+            total_indexed += len(points)
+        
+        print(f"Indexed {total_indexed} semantic chunks successfully!")
+        return total_indexed
+    
+    def get_collection_info(self) -> dict:
+        """Get information about the collection"""
+        info = self.client.get_collection(self.COLLECTION_NAME)
+        return {
+            "name": self.COLLECTION_NAME,
+            "vectors_count": getattr(info, 'vectors_count', info.points_count),
+            "points_count": info.points_count,
+            "status": info.status,
+        }
+
+
     from .data_loader import QuranDataLoader
     
     # Test indexing
