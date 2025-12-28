@@ -156,13 +156,16 @@ class SemanticCache:
             # Embed query
             query_vector = self.encoder.encode(query)
             
-            # Search for similar queries
-            results = self.client.search(
+            # Search for similar queries using query_points (newer API)
+            response = self.client.query_points(
                 collection_name=self.COLLECTION_NAME,
-                query_vector=query_vector,
+                query=query_vector,
                 limit=1,
-                score_threshold=self.similarity_threshold
+                score_threshold=self.similarity_threshold,
+                with_payload=True
             )
+            
+            results = response.points if response else []
             
             if not results:
                 self._misses += 1

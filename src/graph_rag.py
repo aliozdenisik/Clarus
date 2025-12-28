@@ -23,8 +23,12 @@ Usage:
     results = searcher.graph_enhanced_search("Hz. İbrahim", limit=10)
 """
 import os
+import re
 import json
-from typing import List, Dict, Any, Optional, Tuple
+import time
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import List, Dict, Any, Optional, Tuple, Set
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -126,7 +130,7 @@ class Neo4jConnection:
 class EntityExtractor:
     """
     Extracts entities and relationships from sacred text using LLM.
-    Uses existing QueryEnhancer for LLM calls.
+    Uses existing QueryEnhancer for LLM calls with retry logic.
     """
     
     # Entity types for religious texts
@@ -138,22 +142,31 @@ class EntityExtractor:
         "Command",    # Namaz, Oruç, Zekat, etc.
     ]
     
-    EXTRACTION_PROMPT = """Aşağıdaki kutsal metin ayetinden/pasajından önemli varlıkları ve ilişkileri çıkar.
+    # Improved prompt with format enforcement and example
+    EXTRACTION_PROMPT = """Aşağıdaki kutsal metin ayetinden önemli varlıkları ve ilişkileri çıkar.
 
 Metin: {text}
-Kaynak: {source_id}
 
-Lütfen JSON formatında döndür:
+SADECE geçerli JSON döndür, başka bir şey yazma:
+```json
 {{
     "entities": [
-        {{"name": "varlık adı", "type": "Prophet|Concept|Place|Event|Command"}}
+        {{"name": "Allah", "type": "Concept"}},
+        {{"name": "Hz. Musa", "type": "Prophet"}}
     ],
     "relationships": [
-        {{"source": "kaynak varlık", "target": "hedef varlık", "type": "MENTIONS|RELATES_TO|PART_OF"}}
+        {{"source": "Allah", "target": "Hz. Musa", "type": "MENTIONS"}}
     ]
 }}
+```
 
-Sadece JSON döndür, açıklama yapma. Boş ise boş liste döndür."""
+Varlık türleri: Prophet, Concept, Place, Event, Command
+İlişki türleri: MENTIONS, RELATES_TO, PART_OF
+
+Eğer varlık bulunamazsa boş listeler döndür: {{"entities": [], "relationships": []}}"""
+
+    MAX_RETRIES = 3
+    RETRY_BASE_DELAY = 1.0  # seconds
 
     def __init__(self):
         self._enhancer = None
@@ -166,6 +179,71 @@ Sadece JSON döndür, açıklama yapma. Boş ise boş liste döndür."""
             self._enhancer = QueryEnhancer()
         return self._enhancer
     
+    def _clean_json_response(self, response: str) -> str:
+        """
+        Clean LLM response to extract valid JSON.
+        Handles common issues: markdown fences, single quotes, extra text.
+        """
+        response = response.strip()
+        
+        # Remove markdown code fences (```json ... ``` or ``` ... ```)
+        if "```" in response:
+            match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', response)
+            if match:
+                response = match.group(1).strip()
+        
+        # Try to extract JSON object if surrounded by text
+        json_match = re.search(r'\{[\s\S]*\}', response)
+        if json_match:
+            response = json_match.group(0)
+        
+        # Fix single quotes to double quotes (common LLM error)
+        # Only if there are no double quotes at all (avoid breaking valid JSON)
+        if '"' not in response and "'" in response:
+            response = response.replace("'", '"')
+        
+        # Fix common issues: trailing commas before closing brackets
+        response = re.sub(r',\s*}', '}', response)
+        response = re.sub(r',\s*\]', ']', response)
+        
+        return response
+    
+    def _call_llm_with_retry(self, prompt: str) -> str:
+        """
+        Call LLM with exponential backoff retry.
+        Handles timeouts, rate limits, and transient errors.
+        """
+        import requests
+        
+        last_error = None
+        for attempt in range(self.MAX_RETRIES):
+            try:
+                return self.enhancer._call_llm(prompt)
+            except requests.exceptions.Timeout:
+                wait = self.RETRY_BASE_DELAY * (2 ** attempt)
+                last_error = f"Timeout (retry {attempt + 1}/{self.MAX_RETRIES})"
+                time.sleep(wait)
+            except requests.exceptions.HTTPError as e:
+                if hasattr(e, 'response') and e.response is not None:
+                    if e.response.status_code == 429:  # Rate limit
+                        wait = self.RETRY_BASE_DELAY * (2 ** attempt) * 2
+                        last_error = f"Rate limited (retry {attempt + 1}/{self.MAX_RETRIES})"
+                        time.sleep(wait)
+                    elif e.response.status_code >= 500:  # Server error
+                        wait = self.RETRY_BASE_DELAY * (2 ** attempt)
+                        last_error = f"Server error {e.response.status_code}"
+                        time.sleep(wait)
+                    else:
+                        raise
+                else:
+                    raise
+            except (requests.exceptions.ConnectionError, requests.exceptions.ChunkedEncodingError) as e:
+                wait = self.RETRY_BASE_DELAY * (2 ** attempt)
+                last_error = f"Connection error (retry {attempt + 1}/{self.MAX_RETRIES})"
+                time.sleep(wait)
+        
+        raise RuntimeError(f"LLM call failed after {self.MAX_RETRIES} retries: {last_error}")
+    
     def extract(self, text: str, source_id: str) -> Tuple[List[Entity], List[Relationship]]:
         """
         Extract entities and relationships from text.
@@ -177,41 +255,46 @@ Sadece JSON döndür, açıklama yapma. Boş ise boş liste döndür."""
         Returns:
             Tuple of (entities, relationships)
         """
-        prompt = self.EXTRACTION_PROMPT.format(text=text, source_id=source_id)
+        prompt = self.EXTRACTION_PROMPT.format(text=text)
         
         try:
-            response = self.enhancer._call_llm(prompt)
+            response = self._call_llm_with_retry(prompt)
             
-            # Parse JSON response
-            # Clean response if needed
-            response = response.strip()
-            if response.startswith("```"):
-                response = response.split("```")[1]
-                if response.startswith("json"):
-                    response = response[4:]
+            # Clean and parse JSON response
+            cleaned = self._clean_json_response(response)
             
-            data = json.loads(response)
+            try:
+                data = json.loads(cleaned)
+            except json.JSONDecodeError as e:
+                # Last resort: try to build minimal valid response
+                print(f"Warning: JSON parse failed for {source_id}, attempting recovery: {e}")
+                return [], []
             
             entities = []
             for e in data.get("entities", []):
-                entities.append(Entity(
-                    name=e["name"],
-                    entity_type=e["type"],
-                    source_id=source_id
-                ))
+                if isinstance(e, dict) and "name" in e and "type" in e:
+                    entities.append(Entity(
+                        name=str(e["name"]),
+                        entity_type=str(e["type"]),
+                        source_id=source_id
+                    ))
             
             relationships = []
             for r in data.get("relationships", []):
-                relationships.append(Relationship(
-                    source=r["source"],
-                    target=r["target"],
-                    rel_type=r["type"]
-                ))
+                if isinstance(r, dict) and all(k in r for k in ["source", "target", "type"]):
+                    relationships.append(Relationship(
+                        source=str(r["source"]),
+                        target=str(r["target"]),
+                        rel_type=str(r["type"])
+                    ))
             
             return entities, relationships
             
-        except Exception as e:
+        except RuntimeError as e:
             print(f"Warning: Entity extraction failed for {source_id}: {e}")
+            return [], []
+        except Exception as e:
+            print(f"Warning: Unexpected error for {source_id}: {e}")
             return [], []
 
 
@@ -221,9 +304,14 @@ class GraphRAGBuilder:
     
     Workflow:
     1. Fetch documents from Qdrant collection
-    2. Extract entities and relationships using LLM
+    2. Extract entities and relationships using LLM (with concurrent processing)
     3. Store in Neo4j graph database
+    4. Support checkpointing for resume capability
     """
+    
+    CHECKPOINT_DIR = Path(".")  # Store checkpoints in project root
+    DEFAULT_WORKERS = 4
+    DEFAULT_CHECKPOINT_INTERVAL = 100
     
     def __init__(
         self,
@@ -236,6 +324,7 @@ class GraphRAGBuilder:
         self.extractor = EntityExtractor()
         self.qdrant_url = qdrant_url
         self._qdrant_client = None
+        self._neo4j_lock = threading.Lock()  # Thread-safe Neo4j writes
     
     @property
     def qdrant_client(self):
@@ -244,6 +333,41 @@ class GraphRAGBuilder:
             from qdrant_client import QdrantClient
             self._qdrant_client = QdrantClient(url=self.qdrant_url)
         return self._qdrant_client
+    
+    def _get_checkpoint_path(self, collection_name: str) -> Path:
+        """Get checkpoint file path for a collection."""
+        return self.CHECKPOINT_DIR / f"graph_checkpoint_{collection_name}.json"
+    
+    def _load_checkpoint(self, collection_name: str) -> Set[str]:
+        """Load processed IDs from checkpoint file."""
+        path = self._get_checkpoint_path(collection_name)
+        if path.exists():
+            try:
+                data = json.loads(path.read_text(encoding='utf-8'))
+                return set(data.get('processed_ids', []))
+            except Exception as e:
+                print(f"Warning: Could not load checkpoint: {e}")
+        return set()
+    
+    def _save_checkpoint(self, collection_name: str, processed_ids: Set[str]):
+        """Save processed IDs to checkpoint file."""
+        path = self._get_checkpoint_path(collection_name)
+        try:
+            path.write_text(
+                json.dumps({
+                    'processed_ids': list(processed_ids),
+                    'count': len(processed_ids)
+                }, ensure_ascii=False),
+                encoding='utf-8'
+            )
+        except Exception as e:
+            print(f"Warning: Could not save checkpoint: {e}")
+    
+    def _clear_checkpoint(self, collection_name: str):
+        """Delete checkpoint file."""
+        path = self._get_checkpoint_path(collection_name)
+        if path.exists():
+            path.unlink()
     
     def setup_schema(self):
         """Create Neo4j indexes and constraints for better performance."""
@@ -270,54 +394,87 @@ class GraphRAGBuilder:
         print("Graph cleared")
     
     def add_entity(self, entity: Entity):
-        """Add or merge an entity into the graph."""
+        """Add or merge an entity into the graph (thread-safe)."""
         query = """
         MERGE (e:Entity {name: $name})
         SET e.type = $type,
             e.source_id = CASE WHEN e.source_id IS NULL THEN $source_id 
                           ELSE e.source_id + ', ' + $source_id END
         """
-        self.neo4j.run_write(query, {
-            "name": entity.name,
-            "type": entity.entity_type,
-            "source_id": entity.source_id
-        })
+        with self._neo4j_lock:
+            self.neo4j.run_write(query, {
+                "name": entity.name,
+                "type": entity.entity_type,
+                "source_id": entity.source_id
+            })
     
     def add_relationship(self, rel: Relationship):
-        """Add a relationship between entities."""
+        """Add a relationship between entities (thread-safe)."""
         query = f"""
         MATCH (a:Entity {{name: $source}})
         MATCH (b:Entity {{name: $target}})
         MERGE (a)-[r:{rel.rel_type}]->(b)
         """
         try:
-            self.neo4j.run_write(query, {
-                "source": rel.source,
-                "target": rel.target
-            })
+            with self._neo4j_lock:
+                self.neo4j.run_write(query, {
+                    "source": rel.source,
+                    "target": rel.target
+                })
         except Exception as e:
             print(f"Warning: Could not create relationship {rel.source} -> {rel.target}: {e}")
+    
+    def _process_document(self, point) -> Tuple[str, List[Entity], List[Relationship]]:
+        """
+        Process a single document: extract entities and relationships.
+        Returns (source_id, entities, relationships).
+        """
+        payload = point.payload
+        text = payload.get("translation") or payload.get("text", "")
+        source_id = str(point.id)
+        
+        entities, relationships = self.extractor.extract(text, source_id)
+        return source_id, entities, relationships
     
     def build_from_collection(
         self,
         collection_name: str,
         limit: int = None,
-        batch_size: int = 10,
-        show_progress: bool = True
-    ):
+        batch_size: int = 50,
+        show_progress: bool = True,
+        workers: int = None,
+        resume: bool = False,
+        checkpoint_interval: int = None
+    ) -> Tuple[List[Entity], List[Relationship]]:
         """
         Build knowledge graph from Qdrant collection.
         
         Args:
             collection_name: Name of Qdrant collection
             limit: Maximum documents to process (None = all)
-            batch_size: Documents to process per LLM batch
+            batch_size: Documents to fetch per Qdrant scroll
             show_progress: Show progress bar
+            workers: Number of concurrent workers (default: 4)
+            resume: Resume from last checkpoint
+            checkpoint_interval: Save checkpoint every N documents (default: 100)
+            
+        Returns:
+            Tuple of (all_entities, all_relationships)
         """
         from tqdm import tqdm
         
+        workers = workers or self.DEFAULT_WORKERS
+        checkpoint_interval = checkpoint_interval or self.DEFAULT_CHECKPOINT_INTERVAL
+        
         # Setup schema
         self.setup_schema()
+        
+        # Load checkpoint if resuming
+        processed_ids: Set[str] = set()
+        if resume:
+            processed_ids = self._load_checkpoint(collection_name)
+            if processed_ids:
+                print(f"Resuming from checkpoint: {len(processed_ids)} documents already processed")
         
         # Get collection info
         info = self.qdrant_client.get_collection(collection_name)
@@ -327,64 +484,103 @@ class GraphRAGBuilder:
             total_points = min(limit, total_points)
         
         print(f"Building graph from {total_points} documents in '{collection_name}'")
+        print(f"Using {workers} concurrent workers")
         
         # Scroll through collection
         offset = None
         processed = 0
         all_entities = []
         all_relationships = []
+        skipped = 0
         
         iterator = tqdm(total=total_points, desc="Extracting entities") if show_progress else None
         
-        while processed < total_points:
-            # Fetch batch
-            scroll_result = self.qdrant_client.scroll(
-                collection_name=collection_name,
-                limit=batch_size,
-                offset=offset,
-                with_payload=True,
-                with_vectors=False
-            )
-            
-            points, next_offset = scroll_result
-            
-            if not points:
-                break
-            
-            for point in points:
-                if processed >= total_points:
+        # If resuming, update progress bar for already processed
+        if resume and processed_ids and iterator:
+            skipped = len(processed_ids)
+            iterator.update(min(skipped, total_points))
+        
+        try:
+            while processed + skipped < total_points:
+                # Fetch batch from Qdrant
+                scroll_result = self.qdrant_client.scroll(
+                    collection_name=collection_name,
+                    limit=batch_size,
+                    offset=offset,
+                    with_payload=True,
+                    with_vectors=False
+                )
+                
+                points, next_offset = scroll_result
+                
+                if not points:
                     break
                 
-                # Get text and ID
-                payload = point.payload
-                text = payload.get("translation") or payload.get("text", "")
-                source_id = point.id
+                # Filter out already processed documents
+                points_to_process = [
+                    p for p in points 
+                    if str(p.id) not in processed_ids and processed + skipped < total_points
+                ]
                 
-                # Extract entities
-                entities, relationships = self.extractor.extract(text, str(source_id))
+                if not points_to_process:
+                    offset = next_offset
+                    if offset is None:
+                        break
+                    continue
                 
-                # Add to graph
-                for entity in entities:
-                    self.add_entity(entity)
-                    all_entities.append(entity)
+                # Process batch concurrently
+                with ThreadPoolExecutor(max_workers=workers) as executor:
+                    futures = {
+                        executor.submit(self._process_document, point): point 
+                        for point in points_to_process[:total_points - processed - skipped]
+                    }
+                    
+                    for future in as_completed(futures):
+                        try:
+                            source_id, entities, relationships = future.result()
+                            
+                            # Add to graph (thread-safe)
+                            for entity in entities:
+                                self.add_entity(entity)
+                                all_entities.append(entity)
+                            
+                            for rel in relationships:
+                                self.add_relationship(rel)
+                                all_relationships.append(rel)
+                            
+                            processed_ids.add(source_id)
+                            processed += 1
+                            
+                            if iterator:
+                                iterator.update(1)
+                            
+                            # Checkpoint periodically
+                            if processed % checkpoint_interval == 0:
+                                self._save_checkpoint(collection_name, processed_ids)
+                                
+                        except Exception as e:
+                            point = futures[future]
+                            print(f"Warning: Failed to process {point.id}: {e}")
                 
-                for rel in relationships:
-                    self.add_relationship(rel)
-                    all_relationships.append(rel)
+                offset = next_offset
                 
-                processed += 1
-                if iterator:
-                    iterator.update(1)
-            
-            offset = next_offset
-            
-            if offset is None:
-                break
+                if offset is None:
+                    break
+                    
+        except KeyboardInterrupt:
+            print(f"\n\nInterrupted! Saving checkpoint...")
+            self._save_checkpoint(collection_name, processed_ids)
+            print(f"Checkpoint saved. Resume with --resume flag.")
+            raise
         
         if iterator:
             iterator.close()
         
+        # Final checkpoint save
+        self._save_checkpoint(collection_name, processed_ids)
+        
         print(f"\nGraph built successfully!")
+        print(f"  Documents processed: {processed}")
         print(f"  Entities: {len(all_entities)}")
         print(f"  Relationships: {len(all_relationships)}")
         

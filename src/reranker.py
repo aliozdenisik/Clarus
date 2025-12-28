@@ -98,8 +98,12 @@ class Reranker:
         # Sonuçları skorlara göre sırala
         ranked = sorted(zip(results, scores), key=lambda x: x[1], reverse=True)
         
-        # Top-k sonuç döndür
-        return [r for r, s in ranked[:top_k]]
+        # Top-k sonuç döndür ve yeni skorları ata
+        top_results = []
+        for r, s in ranked[:top_k]:
+            r.score = float(s)  # Reranker skorunu ata
+            top_results.append(r)
+        return top_results
     
     def rerank_with_scores(
         self, 

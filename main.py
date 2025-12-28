@@ -174,13 +174,30 @@ def cmd_search(args):
         searcher = QuranSearcher(qdrant_url=args.qdrant_url)
         # Get more results if reranking
         search_limit = limit * 3 if args.rerank else limit
-        results = searcher.search(query, mode=mode, limit=search_limit)
+        
+        # Graph-enhanced search
+        if getattr(args, 'graph', False):
+            console.print("[yellow]Using graph-enhanced search...[/yellow]")
+            try:
+                from src.graph_rag import GraphRAGSearcher
+                graph_searcher = GraphRAGSearcher()
+                results = graph_searcher.graph_enhanced_search(
+                    query=query,
+                    base_searcher=searcher,
+                    limit=search_limit
+                )
+                console.print("[green][OK][/green] Graph search complete\\n")
+            except Exception as e:
+                console.print(f"[yellow]Warning: Graph search failed ({e}), falling back to hybrid[/yellow]")
+                results = searcher.search(query, mode=mode, limit=search_limit)
+        else:
+            results = searcher.search(query, mode=mode, limit=search_limit)
     except Exception as e:
         console.print(f"[red][ERROR] Search error: {e}[/red]")
         return 1
     
-    # Reranking - limit to top-30 for efficiency
-    if args.rerank and results:
+    # Reranking - always apply for better relevance
+    if results:
         console.print("[yellow]Reranking with Qwen3-Reranker...[/yellow]")
         try:
             from src.reranker import Reranker
@@ -381,14 +398,14 @@ def cmd_search_bible(args):
     
     try:
         searcher = BibleSearcher(translation=translation, qdrant_url=args.qdrant_url)
-        search_limit = limit * 3 if args.rerank else limit
+        search_limit = limit * 3  # Always fetch more for reranking
         results = searcher.search(query, mode=mode, limit=search_limit)
     except Exception as e:
         console.print(f"[red][ERROR] Search error: {e}[/red]")
         return 1
     
-    # Reranking - limit to top-30 for efficiency
-    if args.rerank and results:
+    # Reranking - always apply for better relevance
+    if results:
         console.print("[yellow]Reranking with Qwen3-Reranker...[/yellow]")
         try:
             from src.reranker import Reranker
@@ -591,6 +608,29 @@ def main():
         action="store_true",
         help="Clear existing graph before building"
     )
+    build_graph_parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume from last checkpoint"
+    )
+    build_graph_parser.add_argument(
+        "--workers",
+        type=int,
+        default=4,
+        help="Number of concurrent workers (default: 4)"
+    )
+    build_graph_parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=50,
+        help="Batch size for fetching from Qdrant (default: 50)"
+    )
+    build_graph_parser.add_argument(
+        "--checkpoint-interval",
+        type=int,
+        default=100,
+        help="Save checkpoint every N documents (default: 100)"
+    )
     
     graph_info_parser = subparsers.add_parser(
         "graph-info",
@@ -720,10 +760,19 @@ def cmd_build_graph(args):
             builder.clear_graph()
         
         console.print(f"[yellow]Building graph from '{args.collection}'...[/yellow]")
+        
+        # Get batch_size from args (argparse uses hyphen, we need to use getattr)
+        batch_size = getattr(args, 'batch_size', 50)
+        checkpoint_interval = getattr(args, 'checkpoint_interval', 100)
+        
         entities, relationships = builder.build_from_collection(
             collection_name=args.collection,
             limit=args.limit,
-            show_progress=True
+            batch_size=batch_size,
+            show_progress=True,
+            workers=args.workers,
+            resume=args.resume,
+            checkpoint_interval=checkpoint_interval
         )
         
         # Show stats
