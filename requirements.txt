@@ -14,6 +14,13 @@ diskcache>=5.6.0        # Embedding cache
 tenacity>=8.2.0         # Retry/rate limiting
 zeyrek>=0.1.0           # Turkish lemmatization
 
+# Async embedding generation
+aiohttp>=3.9.0          # Async HTTP client
+
+# GraphRAG (Neo4j)
+neo4j>=5.15.0           # Neo4j Python driver
+networkx>=3.2           # Graph algorithms and fallback
+
 # Advanced evaluation (optional)
 ragas>=0.1.0            # LLM-judge evaluation
 datasets>=2.14.0        # For RAGAS dataset handling

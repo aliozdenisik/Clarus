@@ -78,12 +78,48 @@ def cmd_index(args):
     
     return 0
 
+def display_quran_results(args, results, query):
+    """Display Quran search results in a formatted table."""
+    if not results:
+        console.print("[yellow]No results found.[/yellow]")
+        return 0
+    
+    # Create results table
+    table = Table(title=f"Search Results ({len(results)} found)", show_lines=True)
+    table.add_column("#", style="dim", width=3)
+    table.add_column("Reference", style="cyan", width=15)
+    table.add_column("Score", style="green", width=8)
+    table.add_column("Translation", style="white")
+    
+    for i, result in enumerate(results, 1):
+        ref = f"{result.surah_id}:{result.verse_id}\n{result.surah_name}"
+        score = f"{result.score:.3f}"
+        translation = result.translation[:150] + ("..." if len(result.translation) > 150 else "")
+        table.add_row(str(i), ref, score, translation)
+    
+    console.print(table)
+    
+    # Show detailed first result
+    if results and getattr(args, 'verbose', False):
+        first = results[0]
+        console.print(Panel(
+            f"[bold]{first.surah_name}[/bold] ({first.surah_transliteration})\n"
+            f"Ayet {first.verse_id} | {first.surah_type.capitalize()}\n\n"
+            f"[dim]Arabic:[/dim]\n{first.arabic_text}\n\n"
+            f"[dim]Translation:[/dim]\n{first.translation}",
+            title=f"[green]Top Result[/green]",
+            expand=False
+        ))
+    
+    return 0
+
 
 def cmd_search(args):
     """Search Quran data"""
     query = args.query
     mode = args.mode
     limit = args.limit
+    use_cache = not getattr(args, 'no_cache', False)
     
     # Multi-query flag overrides mode
     if hasattr(args, 'multi_query') and args.multi_query:
@@ -103,6 +139,36 @@ def cmd_search(args):
     
     console.print(f"\n[bold blue]Quran Hybrid Search[/bold blue]")
     console.print(f"[dim]Query: \"{query}\" | Mode: {mode} | Limit: {limit}[/dim]\n")
+    
+    # Check semantic cache first
+    cache = None
+    cached_result = None
+    if use_cache:
+        try:
+            from src.semantic_cache import SemanticCache
+            cache = SemanticCache(qdrant_url=args.qdrant_url)
+            cached_result = cache.get(query)
+            if cached_result:
+                console.print(f"[green][CACHE HIT][/green] Similarity: {cached_result.similarity:.3f}")
+                # Reconstruct results from cache
+                from src.search import SearchResult
+                results = []
+                for r in cached_result.response:
+                    results.append(SearchResult(
+                        id=r.get("id", ""),
+                        score=r.get("score", 0.0),
+                        surah_id=r.get("surah_id", 0),
+                        surah_name=r.get("surah_name", ""),
+                        surah_transliteration=r.get("surah_transliteration", ""),
+                        verse_id=r.get("verse_id", 0),
+                        arabic_text=r.get("arabic_text", ""),
+                        translation=r.get("translation", ""),
+                        surah_type=r.get("surah_type", "")
+                    ))
+                # Skip to display results
+                return display_quran_results(args, results[:limit], query)
+        except Exception as e:
+            console.print(f"[dim]Cache check skipped: {e}[/dim]")
     
     try:
         searcher = QuranSearcher(qdrant_url=args.qdrant_url)
@@ -125,6 +191,13 @@ def cmd_search(args):
             console.print("[green][OK][/green] Reranking complete\n")
         except Exception as e:
             console.print(f"[yellow]Warning: Reranking failed: {e}[/yellow]")
+    
+    # Store in cache
+    if cache and results and use_cache:
+        try:
+            cache.set(query, results[:limit], metadata={"mode": mode, "source": "quran"})
+        except Exception:
+            pass  # Silent fail for cache
     
     if not results:
         console.print("[yellow]No results found.[/yellow]")
@@ -421,6 +494,11 @@ def main():
         action="store_true",
         help="Use Multi-Query RAG (RAG-Fusion) - generates 3 query variations"
     )
+    search_parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Bypass semantic cache"
+    )
     
     # Index Bible command
     index_bible_parser = subparsers.add_parser("index-bible", help="Index Bible data")
@@ -491,6 +569,63 @@ def main():
         help="Show only Bible collections"
     )
     
+    # GraphRAG commands
+    build_graph_parser = subparsers.add_parser(
+        "build-graph",
+        help="Build knowledge graph from indexed data"
+    )
+    build_graph_parser.add_argument(
+        "--collection",
+        type=str,
+        default="quran_tr",
+        help="Qdrant collection to process (default: quran_tr)"
+    )
+    build_graph_parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Limit documents to process (default: all)"
+    )
+    build_graph_parser.add_argument(
+        "--clear",
+        action="store_true",
+        help="Clear existing graph before building"
+    )
+    
+    graph_info_parser = subparsers.add_parser(
+        "graph-info",
+        help="Show knowledge graph statistics"
+    )
+    
+    # Add --graph flag to search parsers
+    search_parser.add_argument(
+        "--graph",
+        action="store_true",
+        help="Enable graph-enhanced search (requires Neo4j)"
+    )
+    search_bible_parser.add_argument(
+        "--graph",
+        action="store_true",
+        help="Enable graph-enhanced search (requires Neo4j)"
+    )
+    
+    # Cache management commands
+    cache_info_parser = subparsers.add_parser(
+        "cache-info",
+        help="Show semantic cache statistics"
+    )
+    
+    cache_clear_parser = subparsers.add_parser(
+        "cache-clear",
+        help="Clear semantic cache"
+    )
+    cache_clear_parser.add_argument(
+        "--older-than",
+        type=int,
+        default=None,
+        help="Only clear entries older than N hours (default: clear all)"
+    )
+    
     args = parser.parse_args()
     
     if args.command == "index":
@@ -503,10 +638,156 @@ def main():
         return cmd_search_bible(args)
     elif args.command == "info":
         return cmd_info(args)
+    elif args.command == "build-graph":
+        return cmd_build_graph(args)
+    elif args.command == "graph-info":
+        return cmd_graph_info(args)
+    elif args.command == "cache-info":
+        return cmd_cache_info(args)
+    elif args.command == "cache-clear":
+        return cmd_cache_clear(args)
     else:
         parser.print_help()
         return 0
 
 
+def cmd_cache_info(args):
+    """Show semantic cache statistics"""
+    console.print("\n[bold blue]Semantic Cache Info[/bold blue]\n")
+    
+    try:
+        from src.semantic_cache import SemanticCache
+        
+        cache = SemanticCache(qdrant_url=args.qdrant_url)
+        stats = cache.get_stats()
+        
+        table = Table(title="Cache Statistics")
+        table.add_column("Metric", style="cyan")
+        table.add_column("Value", style="green", justify="right")
+        
+        table.add_row("Total Entries", str(stats.total_entries))
+        table.add_row("Session Hits", str(stats.hits))
+        table.add_row("Session Misses", str(stats.misses))
+        table.add_row("Hit Rate", f"{stats.hit_rate:.1%}")
+        table.add_row("Avg Similarity", f"{stats.avg_similarity:.3f}")
+        table.add_row("Oldest Entry", f"{stats.oldest_entry_hours:.1f} hours")
+        
+        console.print(table)
+        
+        return 0
+        
+    except Exception as e:
+        console.print(f"[red][ERROR] {e}[/red]")
+        return 1
+
+
+def cmd_cache_clear(args):
+    """Clear semantic cache"""
+    console.print("\n[bold blue]Clear Semantic Cache[/bold blue]\n")
+    
+    try:
+        from src.semantic_cache import SemanticCache
+        
+        cache = SemanticCache(qdrant_url=args.qdrant_url)
+        older_than = getattr(args, 'older_than', None)
+        
+        if older_than:
+            console.print(f"[yellow]Clearing entries older than {older_than} hours...[/yellow]")
+        else:
+            console.print("[yellow]Clearing all cache entries...[/yellow]")
+        
+        deleted = cache.clear(older_than_hours=older_than)
+        console.print(f"[green][OK][/green] Cleared {deleted} cache entries")
+        
+        return 0
+        
+    except Exception as e:
+        console.print(f"[red][ERROR] {e}[/red]")
+        return 1
+
+
+def cmd_build_graph(args):
+    """Build knowledge graph from indexed data"""
+    console.print("\n[bold blue]Building Knowledge Graph[/bold blue]\n")
+    
+    try:
+        from src.graph_rag import GraphRAGBuilder
+        
+        builder = GraphRAGBuilder(qdrant_url=args.qdrant_url)
+        
+        if args.clear:
+            console.print("[yellow]Clearing existing graph...[/yellow]")
+            builder.clear_graph()
+        
+        console.print(f"[yellow]Building graph from '{args.collection}'...[/yellow]")
+        entities, relationships = builder.build_from_collection(
+            collection_name=args.collection,
+            limit=args.limit,
+            show_progress=True
+        )
+        
+        # Show stats
+        stats = builder.get_graph_stats()
+        console.print(f"\n[green][OK][/green] Knowledge graph built!")
+        console.print(f"  Nodes: {stats['total_nodes']}")
+        console.print(f"  Relationships: {stats['total_relationships']}")
+        
+        if stats.get('entity_types'):
+            console.print("\n  Entity types:")
+            for etype, count in stats['entity_types'].items():
+                console.print(f"    - {etype}: {count}")
+        
+        return 0
+        
+    except ImportError as e:
+        console.print(f"[red][ERROR] Neo4j not available: {e}[/red]")
+        console.print("[dim]Install with: pip install neo4j[/dim]")
+        return 1
+    except Exception as e:
+        console.print(f"[red][ERROR] {e}[/red]")
+        console.print("[dim]Make sure Neo4j is running and NEO4J_PASSWORD is set[/dim]")
+        return 1
+
+
+def cmd_graph_info(args):
+    """Show knowledge graph statistics"""
+    console.print("\n[bold blue]Knowledge Graph Info[/bold blue]\n")
+    
+    try:
+        from src.graph_rag import GraphRAGBuilder
+        
+        builder = GraphRAGBuilder(qdrant_url=args.qdrant_url)
+        stats = builder.get_graph_stats()
+        
+        table = Table(title="Graph Statistics")
+        table.add_column("Metric", style="cyan")
+        table.add_column("Value", style="green", justify="right")
+        
+        table.add_row("Total Nodes", str(stats['total_nodes']))
+        table.add_row("Total Relationships", str(stats['total_relationships']))
+        
+        console.print(table)
+        
+        if stats.get('entity_types'):
+            type_table = Table(title="Entity Types")
+            type_table.add_column("Type", style="cyan")
+            type_table.add_column("Count", style="green", justify="right")
+            
+            for etype, count in stats['entity_types'].items():
+                type_table.add_row(etype, str(count))
+            
+            console.print(type_table)
+        
+        return 0
+        
+    except ImportError as e:
+        console.print(f"[red][ERROR] Neo4j not available: {e}[/red]")
+        return 1
+    except Exception as e:
+        console.print(f"[red][ERROR] {e}[/red]")
+        return 1
+
+
 if __name__ == "__main__":
     sys.exit(main())
+
