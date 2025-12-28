@@ -6,6 +6,10 @@ Tests all modules: data_loader, embeddings, indexer, and search.
 import sys
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Fix Windows console encoding
 if sys.platform == 'win32':
