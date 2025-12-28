@@ -79,20 +79,19 @@ class Reranker:
         if not results:
             return results
             
-        # Metin alanını tespit et
-        if text_field is None:
-            first = results[0]
-            if hasattr(first, 'translation'):
-                text_field = 'translation'
-            elif hasattr(first, 'combined_translation'):
-                text_field = 'combined_translation'
-            elif hasattr(first, 'text'):
-                text_field = 'text'
+        # Helper function to get text from any result type
+        def get_text(result):
+            if hasattr(result, 'translation'):
+                return result.translation
+            elif hasattr(result, 'combined_translation'):
+                return result.combined_translation
+            elif hasattr(result, 'text'):
+                return result.text
             else:
-                raise ValueError("Cannot determine text field from results")
+                return str(result)
         
-        # Query-document çiftleri oluştur
-        pairs = [(query, getattr(r, text_field)) for r in results]
+        # Query-document çiftleri oluştur (her sonuç için doğru alanı kullan)
+        pairs = [(query, get_text(r)) for r in results]
         
         # Skorları hesapla
         scores = self.model.predict(pairs, show_progress_bar=False)
@@ -123,19 +122,18 @@ class Reranker:
         if not results:
             return []
             
-        # Metin alanını tespit et
-        if text_field is None:
-            first = results[0]
-            if hasattr(first, 'translation'):
-                text_field = 'translation'
-            elif hasattr(first, 'combined_translation'):
-                text_field = 'combined_translation'
-            elif hasattr(first, 'text'):
-                text_field = 'text'
+        # Helper function to get text from any result type
+        def get_text(result):
+            if hasattr(result, 'translation'):
+                return result.translation
+            elif hasattr(result, 'combined_translation'):
+                return result.combined_translation
+            elif hasattr(result, 'text'):
+                return result.text
             else:
-                raise ValueError("Cannot determine text field from results")
+                return str(result)
         
-        pairs = [(query, getattr(r, text_field)) for r in results]
+        pairs = [(query, get_text(r)) for r in results]
         scores = self.model.predict(pairs, show_progress_bar=False)
         
         ranked = sorted(zip(results, scores), key=lambda x: x[1], reverse=True)

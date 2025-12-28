@@ -93,24 +93,46 @@ def display_quran_results(args, results, query):
     table.add_column("Translation", style="white")
     
     for i, result in enumerate(results, 1):
-        ref = f"{result.surah_id}:{result.verse_id}\n{result.surah_name}"
+        # Handle both regular SearchResult and SemanticChunkSearchResult
+        if hasattr(result, 'verse_id'):
+            # Regular single-verse result
+            ref = f"{result.surah_id}:{result.verse_id}\n{result.surah_name}"
+            translation = result.translation
+        else:
+            # SemanticChunkSearchResult (multi-verse)
+            verse_range = f"{result.start_verse}-{result.end_verse}" if result.start_verse != result.end_verse else str(result.start_verse)
+            ref = f"{result.surah_id}:{verse_range}\n{result.surah_name} ({result.verse_count}v)"
+            translation = result.combined_translation
+        
         score = f"{result.score:.3f}"
-        translation = result.translation[:150] + ("..." if len(result.translation) > 150 else "")
-        table.add_row(str(i), ref, score, translation)
+        translation_display = translation[:150] + ("..." if len(translation) > 150 else "")
+        table.add_row(str(i), ref, score, translation_display)
     
     console.print(table)
     
     # Show detailed first result
     if results and getattr(args, 'verbose', False):
         first = results[0]
-        console.print(Panel(
-            f"[bold]{first.surah_name}[/bold] ({first.surah_transliteration})\n"
-            f"Ayet {first.verse_id} | {first.surah_type.capitalize()}\n\n"
-            f"[dim]Arabic:[/dim]\n{first.arabic_text}\n\n"
-            f"[dim]Translation:[/dim]\n{first.translation}",
-            title=f"[green]Top Result[/green]",
-            expand=False
-        ))
+        if hasattr(first, 'verse_id'):
+            # Regular result
+            console.print(Panel(
+                f"[bold]{first.surah_name}[/bold] ({first.surah_transliteration})\n"
+                f"Ayet {first.verse_id} | {first.surah_type.capitalize()}\n\n"
+                f"[dim]Arabic:[/dim]\n{first.arabic_text}\n\n"
+                f"[dim]Translation:[/dim]\n{first.translation}",
+                title=f"[green]Top Result[/green]",
+                expand=False
+            ))
+        else:
+            # Semantic chunk result
+            console.print(Panel(
+                f"[bold]{first.surah_name}[/bold] ({first.surah_transliteration})\n"
+                f"Ayetler {first.start_verse}-{first.end_verse} ({first.verse_count} ayet) | {first.surah_type.capitalize()}\n\n"
+                f"[dim]Arabic:[/dim]\n{first.combined_arabic}\n\n"
+                f"[dim]Translation:[/dim]\n{first.combined_translation}",
+                title=f"[green]Top Result (Semantic Chunk)[/green]",
+                expand=False
+            ))
     
     return 0
 

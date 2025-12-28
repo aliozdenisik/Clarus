@@ -562,6 +562,7 @@ class SemanticChunkIndexer:
         }
 
 
+if __name__ == "__main__":
     from .data_loader import QuranDataLoader
     
     # Test indexing
