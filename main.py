@@ -115,139 +115,29 @@ def display_quran_results(args, results, query):
 
 
 def cmd_search(args):
-    """Search Quran data"""
+    """Search Quran data using Ultimate RAG Pipeline"""
     query = args.query
-    mode = args.mode
     limit = args.limit
-    use_cache = not getattr(args, 'no_cache', False)
     
-    # Multi-query flag overrides mode
-    if hasattr(args, 'multi_query') and args.multi_query:
-        mode = "multi-query"
-    
-    # Query enhancement
-    if args.enhance:
-        console.print("[yellow]Enhancing query with LLM...[/yellow]")
-        try:
-            from src.query_enhancer import QueryEnhancer
-            enhancer = QueryEnhancer()
-            enhanced_query = enhancer.expand_query(query)
-            console.print(f"[green]Enhanced:[/green] {enhanced_query}")
-            query = enhanced_query
-        except Exception as e:
-            console.print(f"[yellow]Warning: Could not enhance query: {e}[/yellow]")
-    
-    console.print(f"\n[bold blue]Quran Hybrid Search[/bold blue]")
-    console.print(f"[dim]Query: \"{query}\" | Mode: {mode} | Limit: {limit}[/dim]\n")
-    
-    # Check semantic cache first
-    cache = None
-    cached_result = None
-    if use_cache:
-        try:
-            from src.semantic_cache import SemanticCache
-            cache = SemanticCache(qdrant_url=args.qdrant_url)
-            cached_result = cache.get(query)
-            if cached_result:
-                console.print(f"[green][CACHE HIT][/green] Similarity: {cached_result.similarity:.3f}")
-                # Reconstruct results from cache
-                from src.search import SearchResult
-                results = []
-                for r in cached_result.response:
-                    results.append(SearchResult(
-                        id=r.get("id", ""),
-                        score=r.get("score", 0.0),
-                        surah_id=r.get("surah_id", 0),
-                        surah_name=r.get("surah_name", ""),
-                        surah_transliteration=r.get("surah_transliteration", ""),
-                        verse_id=r.get("verse_id", 0),
-                        arabic_text=r.get("arabic_text", ""),
-                        translation=r.get("translation", ""),
-                        surah_type=r.get("surah_type", "")
-                    ))
-                # Skip to display results
-                return display_quran_results(args, results[:limit], query)
-        except Exception as e:
-            console.print(f"[dim]Cache check skipped: {e}[/dim]")
+    console.print("\n[bold magenta]🚀 Ultimate RAG Pipeline[/bold magenta]")
+    console.print("[dim]Combining: Enhance + Multi-Query + Semantic + Rerank[/dim]\n")
     
     try:
-        searcher = QuranSearcher(qdrant_url=args.qdrant_url)
-        # Get more results if reranking
-        search_limit = limit * 3 if args.rerank else limit
-        
-        # Graph-enhanced search
-        if getattr(args, 'graph', False):
-            console.print("[yellow]Using graph-enhanced search...[/yellow]")
-            try:
-                from src.graph_rag import GraphRAGSearcher
-                graph_searcher = GraphRAGSearcher()
-                results = graph_searcher.graph_enhanced_search(
-                    query=query,
-                    base_searcher=searcher,
-                    limit=search_limit
-                )
-                console.print("[green][OK][/green] Graph search complete\\n")
-            except Exception as e:
-                console.print(f"[yellow]Warning: Graph search failed ({e}), falling back to hybrid[/yellow]")
-                results = searcher.search(query, mode=mode, limit=search_limit)
-        else:
-            results = searcher.search(query, mode=mode, limit=search_limit)
+        from src.ultimate_rag import UltimateRAG
+        rag = UltimateRAG(
+            qdrant_url=args.qdrant_url,
+            enable_multi_query=True,
+            search_mode="semantic",
+            final_top_k=limit,
+            verbose=True
+        )
+        results = rag.search_quran(query, top_k=limit)
+        return display_quran_results(args, results, query)
     except Exception as e:
-        console.print(f"[red][ERROR] Search error: {e}[/red]")
+        console.print(f"[red][ERROR] Ultimate RAG failed: {e}[/red]")
+        import traceback
+        traceback.print_exc()
         return 1
-    
-    # Reranking - always apply for better relevance
-    if results:
-        console.print("[yellow]Reranking with Qwen3-Reranker...[/yellow]")
-        try:
-            from src.reranker import Reranker
-            reranker = Reranker()
-            # Only rerank top-30 for efficiency (optimization)
-            rerank_pool = min(30, len(results))
-            results = reranker.rerank(query, results[:rerank_pool], top_k=limit)
-            console.print("[green][OK][/green] Reranking complete\n")
-        except Exception as e:
-            console.print(f"[yellow]Warning: Reranking failed: {e}[/yellow]")
-    
-    # Store in cache
-    if cache and results and use_cache:
-        try:
-            cache.set(query, results[:limit], metadata={"mode": mode, "source": "quran"})
-        except Exception:
-            pass  # Silent fail for cache
-    
-    if not results:
-        console.print("[yellow]No results found.[/yellow]")
-        return 0
-    
-    # Create results table
-    table = Table(title=f"Search Results ({len(results)} found)", show_lines=True)
-    table.add_column("#", style="dim", width=3)
-    table.add_column("Reference", style="cyan", width=15)
-    table.add_column("Score", style="green", width=8)
-    table.add_column("Translation", style="white")
-    
-    for i, result in enumerate(results, 1):
-        ref = f"{result.surah_id}:{result.verse_id}\n{result.surah_name}"
-        score = f"{result.score:.3f}"
-        translation = result.translation[:150] + ("..." if len(result.translation) > 150 else "")
-        table.add_row(str(i), ref, score, translation)
-    
-    console.print(table)
-    
-    # Show detailed first result
-    if results and args.verbose:
-        first = results[0]
-        console.print(Panel(
-            f"[bold]{first.surah_name}[/bold] ({first.surah_transliteration})\n"
-            f"Ayet {first.verse_id} | {first.surah_type.capitalize()}\n\n"
-            f"[dim]Arabic:[/dim]\n{first.arabic_text}\n\n"
-            f"[dim]Translation:[/dim]\n{first.translation}",
-            title=f"[green]Top Result[/green]",
-            expand=False
-        ))
-    
-    return 0
 
 
 def cmd_info(args):
@@ -375,79 +265,61 @@ def cmd_index_bible(args):
 
 
 def cmd_search_bible(args):
-    """Search Bible data"""
+    """Search Bible data using Ultimate RAG Pipeline"""
     query = args.query
     translation = args.translation
-    mode = args.mode
     limit = args.limit
     
-    # Query enhancement
-    if args.enhance:
-        console.print("[yellow]Enhancing query with LLM...[/yellow]")
-        try:
-            from src.query_enhancer import QueryEnhancer
-            enhancer = QueryEnhancer()
-            enhanced_query = enhancer.expand_query(query)
-            console.print(f"[green]Enhanced:[/green] {enhanced_query}")
-            query = enhanced_query
-        except Exception as e:
-            console.print(f"[yellow]Warning: Could not enhance query: {e}[/yellow]")
-    
-    console.print(f"\n[bold blue]Bible Hybrid Search ({translation})[/bold blue]")
-    console.print(f"[dim]Query: \"{query}\" | Mode: {mode} | Limit: {limit}[/dim]\n")
+    console.print("\n[bold magenta]🚀 Ultimate RAG Pipeline (Bible)[/bold magenta]")
+    console.print("[dim]Combining: Enhance + Multi-Query + Semantic + Rerank[/dim]\n")
     
     try:
-        searcher = BibleSearcher(translation=translation, qdrant_url=args.qdrant_url)
-        search_limit = limit * 3  # Always fetch more for reranking
-        results = searcher.search(query, mode=mode, limit=search_limit)
-    except Exception as e:
-        console.print(f"[red][ERROR] Search error: {e}[/red]")
-        return 1
-    
-    # Reranking - always apply for better relevance
-    if results:
-        console.print("[yellow]Reranking with Qwen3-Reranker...[/yellow]")
-        try:
-            from src.reranker import Reranker
-            reranker = Reranker()
-            # Only rerank top-30 for efficiency (optimization)
-            rerank_pool = min(30, len(results))
-            results = reranker.rerank(query, results[:rerank_pool], top_k=limit)
-            console.print("[green][OK][/green] Reranking complete\n")
-        except Exception as e:
-            console.print(f"[yellow]Warning: Reranking failed: {e}[/yellow]")
-    
-    if not results:
-        console.print("[yellow]No results found.[/yellow]")
+        from src.ultimate_rag import UltimateRAG
+        rag = UltimateRAG(
+            qdrant_url=args.qdrant_url,
+            enable_multi_query=True,
+            search_mode="semantic",
+            final_top_k=limit,
+            verbose=True
+        )
+        results = rag.search_bible(query, translation=translation, top_k=limit)
+        
+        if not results:
+            console.print("[yellow]No results found.[/yellow]")
+            return 0
+        
+        # Create results table
+        table = Table(title=f"Search Results ({len(results)} found)", show_lines=True)
+        table.add_column("#", style="dim", width=3)
+        table.add_column("Reference", style="cyan", width=20)
+        table.add_column("Score", style="green", width=8)
+        table.add_column("Text", style="white")
+        
+        for i, result in enumerate(results, 1):
+            ref = f"{result.book_name} {result.chapter}:{result.verse}\n({result.testament})"
+            score = f"{result.score:.3f}"
+            text = result.text[:150] + ("..." if len(result.text) > 150 else "")
+            table.add_row(str(i), ref, score, text)
+        
+        console.print(table)
+        
+        # Show detailed first result
+        if results and args.verbose:
+            first = results[0]
+            console.print(Panel(
+                f"[bold]{first.book_name} {first.chapter}:{first.verse}[/bold]\n"
+                f"{first.testament} | {first.translation}\n\n"
+                f"[dim]Text:[/dim]\n{first.text}",
+                title=f"[green]Top Result[/green]",
+                expand=False
+            ))
+        
         return 0
-    
-    # Create results table
-    table = Table(title=f"Search Results ({len(results)} found)", show_lines=True)
-    table.add_column("#", style="dim", width=3)
-    table.add_column("Reference", style="cyan", width=20)
-    table.add_column("Score", style="green", width=8)
-    table.add_column("Text", style="white")
-    
-    for i, result in enumerate(results, 1):
-        ref = f"{result.book_name} {result.chapter}:{result.verse}\n({result.testament})"
-        score = f"{result.score:.3f}"
-        text = result.text[:150] + ("..." if len(result.text) > 150 else "")
-        table.add_row(str(i), ref, score, text)
-    
-    console.print(table)
-    
-    # Show detailed first result
-    if results and args.verbose:
-        first = results[0]
-        console.print(Panel(
-            f"[bold]{first.book_name} {first.chapter}:{first.verse}[/bold]\n"
-            f"{first.testament} | {first.translation}\n\n"
-            f"[dim]Text:[/dim]\n{first.text}",
-            title=f"[green]Top Result[/green]",
-            expand=False
-        ))
-    
-    return 0
+    except Exception as e:
+        console.print(f"[red][ERROR] Ultimate RAG failed: {e}[/red]")
+        import traceback
+        traceback.print_exc()
+        return 1
 
 
 def main():
@@ -476,15 +348,9 @@ def main():
         help="Batch size for indexing"
     )
     
-    # Search Quran command
-    search_parser = subparsers.add_parser("search", help="Search Quran")
+    # Search Quran command (uses Ultimate RAG Pipeline)
+    search_parser = subparsers.add_parser("search", help="Search Quran (Ultimate RAG)")
     search_parser.add_argument("query", help="Search query")
-    search_parser.add_argument(
-        "--mode",
-        choices=["hybrid", "semantic", "keyword", "multi-query", "parallel-keyword"],
-        default="hybrid",
-        help="Search mode"
-    )
     search_parser.add_argument(
         "--limit",
         type=int,
@@ -495,26 +361,6 @@ def main():
         "-v", "--verbose",
         action="store_true",
         help="Show detailed first result"
-    )
-    search_parser.add_argument(
-        "--rerank",
-        action="store_true",
-        help="Rerank results with Qwen3-Reranker"
-    )
-    search_parser.add_argument(
-        "--enhance",
-        action="store_true",
-        help="Enhance query with LLM expansion"
-    )
-    search_parser.add_argument(
-        "--multi-query",
-        action="store_true",
-        help="Use Multi-Query RAG (RAG-Fusion) - generates 3 query variations"
-    )
-    search_parser.add_argument(
-        "--no-cache",
-        action="store_true",
-        help="Bypass semantic cache"
     )
     
     # Index Bible command
@@ -537,19 +383,13 @@ def main():
         help="Batch size for indexing"
     )
     
-    # Search Bible command
-    search_bible_parser = subparsers.add_parser("search-bible", help="Search Bible")
+    # Search Bible command (uses Ultimate RAG Pipeline)
+    search_bible_parser = subparsers.add_parser("search-bible", help="Search Bible (Ultimate RAG)")
     search_bible_parser.add_argument("query", help="Search query")
     search_bible_parser.add_argument(
         "--translation",
         default="turhadi",
         help="Bible translation to search (default: turhadi)"
-    )
-    search_bible_parser.add_argument(
-        "--mode",
-        choices=["hybrid", "semantic", "keyword"],
-        default="hybrid",
-        help="Search mode"
     )
     search_bible_parser.add_argument(
         "--limit",
@@ -561,16 +401,6 @@ def main():
         "-v", "--verbose",
         action="store_true",
         help="Show detailed first result"
-    )
-    search_bible_parser.add_argument(
-        "--rerank",
-        action="store_true",
-        help="Rerank results with Qwen3-Reranker"
-    )
-    search_bible_parser.add_argument(
-        "--enhance",
-        action="store_true",
-        help="Enhance query with LLM expansion"
     )
     
     # Info command

@@ -1,178 +1,128 @@
-# 📖 Kutsal Metinler Hibrit Arama - Kullanıcı Kılavuzu
+# Sacred Texts Ultimate RAG - Kullanıcı Rehberi
 
-Bu uygulama, Kuran-ı Kerim ve İncil metinleri içinde hem anlam olarak (semantik) hem de kelime bazlı (anahtar kelime) arama yapmanızı sağlar. Teknik bilgisi olmayan kullanıcılar için adım adım kurulum rehberi aşağıdadır.
+Bu rehber, Sacred Texts Ultimate RAG sisteminin nasıl kullanılacağını açıklar.
 
----
+## 🚀 Hızlı Başlangıç
 
-## 🛠 1. Hazırlık (Gereksinimler)
+### 1. Qdrant'ı Başlatın
 
-Uygulamayı çalıştırmadan önce bilgisayarınızda şu yazılımların kurulu olması gerekir:
-
-1. **Python**: [python.org](https://www.python.org/downloads/) adresinden indirin. **Kurulum sırasında "Add Python to PATH" kutucuğunu işaretleyin.**
-
-2. **Docker Desktop**: [docker.com](https://www.docker.com/products/docker-desktop/) adresinden indirin ve kurun.
-
-3. **OpenRouter API Anahtarı**: [openrouter.ai](https://openrouter.ai/) adresine kayıt olun ve bir API Key oluşturun.
-
----
-
-## 🚀 2. Kurulum Adımları
-
-### A. Veritabanını Başlatın
-Docker Desktop'ı açın, ardından PowerShell'de:
-```powershell
+```bash
 docker run -p 6333:6333 qdrant/qdrant
 ```
 
-### B. (Opsiyonel) Graf Veritabanını Başlatın
-Gelişmiş kavramsal arama için Neo4j:
-```powershell
-docker run -d --name neo4j -p 7474:7474 -p 7687:7687 -e NEO4J_AUTH=neo4j/password123 neo4j:5
-```
+### 2. Veriyi İndeksleyin (İlk Kurulum)
 
-### C. Kütüphaneleri Yükleyin
-```powershell
-cd qdrant
-pip install -r requirements.txt
-```
-
-### D. API Anahtarını Ayarlayın
-Proje klasöründeki `.env` dosyasını düzenleyin:
-```
-OPENROUTER_API_KEY=buraya_api_anahtarinizi_yazin
-NEO4J_PASSWORD=password123
-```
-
----
-
-## 📚 3. Verileri Hazırlama (İndeksleme)
-
-Arama yapabilmek için önce metinleri sisteme yüklemeniz gerekir (bir kez yapılır):
-
-```powershell
-# Kuran-ı Kerim (Türkçe)
+```bash
+# Kur'an
 python main.py index
 
 # İncil (Türkçe)
 python main.py index-bible --translation turhadi
+```
 
-# (Opsiyonel) Bilgi Grafiği Oluştur
-python main.py build-graph --collection quran_tr
+### 3. Aramaya Başlayın
+
+```bash
+python main.py search "sorgunuz"
 ```
 
 ---
 
-## 🔍 4. Arama Yapma
+## 📖 Arama Komutları
 
-### Temel Aramalar
+### Kur'an Araması
 
-**Kuran'da arama:**
-```powershell
+```bash
+# Temel arama
 python main.py search "sabır ve namaz"
+
+# Daha fazla sonuç
+python main.py search "Allah'ın rahmeti" --limit 20
+
+# Detaylı görünüm
+python main.py search "şefaat" -v
 ```
 
-**İncil'de arama:**
-```powershell
-python main.py search-bible "sevgi ve şefkat"
-```
+### İncil Araması
 
-### Gelişmiş Arama Seçenekleri
+```bash
+# Türkçe İncil
+python main.py search-bible "İsa Mesih"
 
-| Seçenek | Açıklama | Örnek |
-|---------|----------|-------|
-| `-v` | Detaylı görünüm | `python main.py search "yardımlaşma" -v` |
-| `--limit N` | N sonuç listele | `python main.py search "cennet" --limit 5` |
-| `--rerank` | Sonuçları yeniden sırala | `python main.py search "sabır" --rerank` |
-| `--enhance` | Sorguyu genişlet | `python main.py search "şükür" --enhance` |
-| `--graph` | Graf destekli arama | `python main.py search "Hz. Musa" --graph` |
-| `--no-cache` | Cache'i atla | `python main.py search "rahmet" --no-cache` |
-
-### Örnek Kullanımlar
-
-```powershell
-# Basit arama
-python main.py search "Allah'ın rahmeti"
-
-# Detaylı sonuç
-python main.py search "namaz" -v --limit 3
-
-# En iyi sonuçlar için reranking
-python main.py search "sabır nedir" --rerank
-
-# Kavramsal ilişkileri keşfet (Neo4j gerekir)
-python main.py search "Hz. İbrahim" --graph
+# İngilizce İncil
+python main.py search-bible "forgiveness" --translation kjva
 ```
 
 ---
 
-## 🗂 5. Cache ve Graf Yönetimi
+## 🔍 Ultimate RAG Pipeline Nasıl Çalışır?
 
-### Cache Komutları
-Benzer sorguların hızlı yanıtlanması için otomatik önbellekleme:
+Her arama otomatik olarak 4 aşamadan geçer:
 
-```powershell
-# Cache durumunu gör
-python main.py cache-info
+1. **Query Enhancement**: LLM sorgunuzu eşanlamlı kelimelerle genişletir
+2. **Multi-Query**: 5 farklı perspektiften sorgu varyasyonları oluşturulur
+3. **Semantic Search**: Tüm sorgularla arama yapılır ve sonuçlar birleştirilir
+4. **Reranking**: Cross-encoder ile en alakalı sonuçlar seçilir
 
-# Cache'i temizle
-python main.py cache-clear
+**Örnek:**
+- Sorgu: "sabır ve namaz"
+- Enhanced: "sabır, tahammül, tevekkül, namaz, salat, ibadet..."
+- Sonuç: En alakalı 10 ayet, %99+ güven skoru
+
+---
+
+## 📊 Sonuç Tablosu
+
+Sonuçlar şu formatta gösterilir:
+
+```
+┌───┬─────────────────┬──────────┬────────────────────────────────┐
+│ # │ Reference       │ Score    │ Translation                    │
+├───┼─────────────────┼──────────┼────────────────────────────────┤
+│ 1 │ 2:45 El-Bakara  │ 0.998    │ Sabır ve namazla Allah'tan...  │
+│ 2 │ 2:153 El-Bakara │ 0.996    │ Ey inananlar! Sabredin ve...   │
+└───┴─────────────────┴──────────┴────────────────────────────────┘
 ```
 
-### Graf Komutları
-```powershell
-# Graf istatistikleri
-python main.py graph-info
+- **Reference**: Sure:Ayet numarası ve sure adı
+- **Score**: Reranker güven skoru (0-1)
+- **Translation**: Ayetin Türkçe meali
 
-# Grafı yeniden oluştur
-python main.py build-graph --clear
-```
+---
 
-### Sistem Bilgisi
-```powershell
-python main.py info
+## ⚡ Python API Kullanımı
+
+```python
+from src.ultimate_rag import UltimateRAG
+
+# Pipeline oluştur
+rag = UltimateRAG()
+
+# Kur'an araması
+results = rag.search_quran("şefaat kavramı", top_k=5)
+
+for r in results:
+    print(f"{r.surah_id}:{r.verse_id} - {r.translation[:50]}...")
 ```
 
 ---
 
-## ❓ 6. Sorun Giderme
+## ❓ Sık Sorulan Sorular
 
-| Hata | Çözüm |
-|------|-------|
-| "Connection Error" | Docker Desktop açık mı? Qdrant çalışıyor mu? |
-| "API Key Missing" | `.env` dosyasında `OPENROUTER_API_KEY` ayarlandı mı? |
-| "Neo4j Error" | Neo4j container çalışıyor mu? `NEO4J_PASSWORD` doğru mu? |
-| Python bulunamadı | Python kurarken "Add to PATH" işaretleyin |
+**S: Arama neden 30-60 saniye sürüyor?**
+A: Ultimate RAG doğruluk odaklıdır. LLM çağrıları ve CPU'da reranking zaman alır. GPU ile 5-10x hızlanır.
 
-### Servisleri Kontrol Etme
-```powershell
-# Docker container'ları listele
-docker ps
+**S: Hangi API key gerekli?**
+A: Sadece `OPENROUTER_API_KEY`. Gemini Flash modeli kullanılır.
 
-# Qdrant'ı yeniden başlat
-docker restart qdrant
-
-# Neo4j'yi yeniden başlat
-docker restart neo4j
-```
+**S: İngilizce Kur'an var mı?**
+A: Şu an sadece Türkçe meal mevcut.
 
 ---
 
-## 💡 İpuçları
+## 📞 Destek
 
-1. **İlk arama yavaş olabilir** - Model yüklenir. Sonraki aramalar hızlıdır.
-2. **Cache sayesinde** aynı/benzer sorular anında yanıtlanır.
-3. **Graf araması** ilişkili kavramları keşfetmenizi sağlar (peygamberler, olaylar, yerler).
-4. **Reranking** en alakalı sonuçları en üste taşır.
-
----
-
-## 📊 Performans Bilgileri
-
-| İşlem | Süre |
-|-------|------|
-| İlk arama | ~2-3 saniye |
-| Önbellekten arama | <0.1 saniye |
-| Graf destekli arama | ~3-4 saniye |
-| Reranking | +1-2 saniye |
-
-İyi aramalar! 🔍
+Sorun yaşarsanız:
+1. Qdrant'ın çalıştığından emin olun: `docker ps`
+2. `.env` dosyasında API key olduğunu kontrol edin
+3. `python main.py info` ile koleksiyon durumunu görün
