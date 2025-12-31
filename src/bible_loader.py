@@ -37,8 +37,43 @@ class BibleChunk:
         }
 
 
-# Old Testament book IDs (1-39 for Protestant canon, includes deuterocanonical for Catholic)
+# Old Testament book IDs (1-39 Protestant canon)
 OLD_TESTAMENT_BOOKS = set(range(1, 40))
+
+# New Testament book IDs (40-66)
+NEW_TESTAMENT_BOOKS = set(range(40, 67))
+
+# Apocrypha/Deuterocanonical book IDs (67-81+)
+# Includes: 1 Esdras, 2 Esdras, Tobit, Judith, Additions to Esther, Wisdom,
+# Sirach, Baruch, Prayer of Azariah, Susanna, Bel and the Dragon,
+# Prayer of Manasses, 1 Maccabees, 2 Maccabees
+APOCRYPHA_BOOKS = {67, 68, 69, 70, 71, 73, 74, 75, 76, 77, 78, 79, 80, 81}
+
+
+def get_testament(book_id: int) -> str:
+    """
+    Determine testament category for a book ID.
+    
+    Args:
+        book_id: The numerical ID of the book
+        
+    Returns:
+        "OT" for Old Testament, "NT" for New Testament, "Apocrypha" for Apocryphal books
+    """
+    if book_id in OLD_TESTAMENT_BOOKS:
+        return "OT"
+    elif book_id in NEW_TESTAMENT_BOOKS:
+        return "NT"
+    elif book_id in APOCRYPHA_BOOKS:
+        return "Apocrypha"
+    else:
+        # Fallback for unknown IDs based on ID ranges
+        if book_id < 40:
+            return "OT"
+        elif book_id < 67:
+            return "NT"
+        else:
+            return "Apocrypha"
 
 
 class BibleDataLoader:
@@ -129,8 +164,8 @@ class BibleDataLoader:
             book_id = book.get("nr", book.get("book_nr", 0))
             book_name = book.get("name", book.get("book_name", "Unknown"))
             
-            # Determine testament based on book ID
-            testament = "OT" if book_id in OLD_TESTAMENT_BOOKS else "NT"
+            # Determine testament based on book ID using proper categorization
+            testament = get_testament(book_id)
             
             chapters = book.get("chapters", {})
             if isinstance(chapters, dict):
@@ -182,13 +217,17 @@ class BibleDataLoader:
         total_verses = 0
         ot_books = 0
         nt_books = 0
+        apocrypha_books = 0
         
         for book in book_list:
             book_id = book.get("nr", book.get("book_nr", 0))
-            if book_id in OLD_TESTAMENT_BOOKS:
+            testament = get_testament(book_id)
+            if testament == "OT":
                 ot_books += 1
-            else:
+            elif testament == "NT":
                 nt_books += 1
+            elif testament == "Apocrypha":
+                apocrypha_books += 1
                 
             chapters = book.get("chapters", {})
             if isinstance(chapters, dict):
@@ -214,9 +253,10 @@ class BibleDataLoader:
             "total_books": len(book_list),
             "old_testament_books": ot_books,
             "new_testament_books": nt_books,
+            "apocrypha_books": apocrypha_books,
             "total_chapters": total_chapters,
             "total_verses": total_verses,
-            "has_apocrypha": translation_info.get("has_apocrypha", False),
+            "has_apocrypha": translation_info.get("has_apocrypha", False) or apocrypha_books > 0,
         }
 
 

@@ -385,9 +385,15 @@ class BibleSearchResult:
     testament: str
     
     def __str__(self) -> str:
+        testament_display = {
+            "OT": "Eski Ahit",
+            "NT": "Yeni Ahit",
+            "Apocrypha": "Apokrif"
+        }.get(self.testament, self.testament)
+        
         return (
             f"[{self.book_name} {self.chapter}:{self.verse}] "
-            f"({self.testament}) - Score: {self.score:.3f}\n"
+            f"({testament_display}) - Score: {self.score:.3f}\n"
             f"  {self.text[:100]}{'...' if len(self.text) > 100 else ''}"
         )
 

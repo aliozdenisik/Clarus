@@ -68,6 +68,7 @@ Thumbs.db
 # Project specific
 qdrant_storage/
 data/
+memory-bank/
 *.bak
 cache/
 *.db
