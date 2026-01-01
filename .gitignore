@@ -119,8 +119,6 @@ qdrant_storage/
 # ----------------
 # Memory Bank (Agent Context)
 # ----------------
-memory-bank/
-
 # ----------------
 # Backup Files
 # ----------------
