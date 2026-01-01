@@ -106,6 +106,10 @@ cache/
 *.npy
 *_meta.json
 
+# Generated/Processed Data Files
+data/semantic_chunks.json
+data/quran_preprocessed.json
+
 # ----------------
 # Qdrant Database Storage
 # ----------------
