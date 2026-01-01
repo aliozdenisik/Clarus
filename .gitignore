@@ -1,9 +1,27 @@
-# Python
+# ============================================
+# Holly Search V1 - Git Ignore Configuration
+# ============================================
+
+# ----------------
+# Python Runtime
+# ----------------
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+
+# ----------------
+# Virtual Environments
+# ----------------
+.venv/
+venv/
+ENV/
+env/
+
+# ----------------
+# Build & Distribution
+# ----------------
 build/
 develop-eggs/
 dist/
@@ -20,14 +38,9 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual environments
-.env
-.venv/
-venv/
-ENV/
-env/
-
-# IDE
+# ----------------
+# IDE & Editor
+# ----------------
 .idea/
 .vscode/
 *.swp
@@ -37,26 +50,32 @@ env/
 .pydevproject
 .settings/
 
+# ----------------
 # Jupyter Notebook
+# ----------------
 .ipynb_checkpoints/
 
-# Testing
+# ----------------
+# Testing & Quality
+# ----------------
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
 .nox/
-
-# mypy
 .mypy_cache/
 .dmypy.json
 dmypy.json
 
+# ----------------
 # Logs
+# ----------------
 *.log
 logs/
 
-# OS generated files
+# ----------------
+# OS Generated
+# ----------------
 .DS_Store
 .DS_Store?
 ._*
@@ -65,16 +84,48 @@ logs/
 ehthumbs.db
 Thumbs.db
 
-# Project specific
-qdrant_storage/
-data/
-memory-bank/
-*.bak
-cache/
-*.db
-memory-bank/
+# =====================================
+# PROJECT SPECIFIC - HOLLY SEARCH V1
+# =====================================
 
-# Environment variables (API keys, secrets)
+# ----------------
+# Environment & Secrets (CRITICAL!)
+# ----------------
 .env
 .env.local
 .env.*.local
+*.env
+
+# ----------------
+# Cache & Generated Data
+# ----------------
+cache/
+*.db
+*.db-shm
+*.db-wal
+*.npy
+*_meta.json
+
+# ----------------
+# Qdrant Database Storage
+# ----------------
+qdrant_storage/
+
+# ----------------
+# Memory Bank (Agent Context)
+# ----------------
+memory-bank/
+
+# ----------------
+# Backup Files
+# ----------------
+*.bak
+*.backup
+*.orig
+
+# ----------------
+# Temporary Files
+# ----------------
+tmp/
+temp/
+*.tmp
