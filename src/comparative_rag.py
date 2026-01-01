@@ -65,6 +65,7 @@ class ComparativeRAG:
         qdrant_url: Qdrant server URL
         bible_translation: Bible translation to use (default: "kjva")
         verses_per_search: Number of verses per search type (default: 20)
+        enable_multi_query: Use 5 queries + RRF fusion for better accuracy (default: False)
         verbose: Print progress messages
     """
     
@@ -73,11 +74,13 @@ class ComparativeRAG:
         qdrant_url: str = "http://localhost:6333",
         bible_translation: str = "kjva",
         verses_per_search: int = 20,
+        enable_multi_query: bool = False,  # New: Enable Multi-Query + RRF
         verbose: bool = True
     ):
         self.qdrant_url = qdrant_url
         self.bible_translation = bible_translation
         self.verses_per_search = verses_per_search
+        self.enable_multi_query = enable_multi_query
         self.verbose = verbose
         
         # Lazy load components
@@ -157,6 +160,182 @@ class ComparativeRAG:
         """Log message if verbose"""
         if self.verbose:
             console.print(f"[{style}]{message}[/{style}]")
+    
+    # ==================== MULTI-QUERY SUPPORT ====================
+    
+    def _rrf_fusion(self, results_list: List[List], k: int = 60) -> List:
+        """
+        Reciprocal Rank Fusion - combine multiple ranked result lists.
+        
+        Results appearing in multiple lists get boosted scores.
+        Formula: RRF_score = sum(1 / (k + rank)) across all lists
+        
+        Args:
+            results_list: List of result lists from different queries
+            k: Smoothing constant (default 60)
+            
+        Returns:
+            Merged and sorted list of results by RRF score
+        """
+        rrf_scores = {}  # id -> (result, score)
+        
+        for results in results_list:
+            for rank, result in enumerate(results, 1):
+                # Get unique ID
+                rid = getattr(result, 'id', None) or getattr(result, 'chunk_id', None) or id(result)
+                rrf_contribution = 1 / (k + rank)
+                
+                if rid in rrf_scores:
+                    existing_result, existing_score = rrf_scores[rid]
+                    rrf_scores[rid] = (existing_result, existing_score + rrf_contribution)
+                else:
+                    rrf_scores[rid] = (result, rrf_contribution)
+        
+        # Sort by RRF score descending
+        sorted_results = sorted(rrf_scores.values(), key=lambda x: x[1], reverse=True)
+        return [item[0] for item in sorted_results]
+    
+    def _generate_multi_queries(self, query: str, corpus: str, n: int = 3) -> List[str]:
+        """
+        Generate multiple query variations for a corpus.
+        
+        Returns: [original, enhanced, multi_1, multi_2, multi_3] (deduplicated)
+        """
+        queries = [query]
+        
+        try:
+            # Enhanced query
+            enhanced = self.enhancer.expand_query(query, corpus=corpus)
+            queries.append(enhanced)
+            
+            # Multi-query perspectives
+            multi = self.enhancer.generate_multi_query(enhanced, n=n, corpus=corpus)
+            queries.extend(multi)
+        except Exception as e:
+            self._log(f"   Warning: Multi-query generation failed: {e}", "yellow")
+        
+        # Deduplicate while preserving order
+        seen = set()
+        unique = []
+        for q in queries:
+            q_lower = q.lower().strip()
+            if q_lower not in seen:
+                seen.add(q_lower)
+                unique.append(q)
+        
+        return unique[:5]  # Max 5 queries
+    
+    def _search_quadrant_multi_query(
+        self,
+        queries: List[str],
+        searcher,
+        limit_per_query: int = 30
+    ) -> List:
+        """
+        Execute multiple queries on a single searcher and merge with RRF.
+        
+        This is the core Multi-Query search logic for one quadrant.
+        All queries run in parallel, then results are fused.
+        """
+        all_results = []
+        
+        def search_single_query(q):
+            try:
+                return searcher.search(q, mode="semantic", limit=limit_per_query)
+            except Exception:
+                return []
+        
+        # Parallel execution of all queries
+        with ThreadPoolExecutor(max_workers=len(queries)) as executor:
+            futures = [executor.submit(search_single_query, q) for q in queries]
+            for future in as_completed(futures):
+                result = future.result()
+                if result:
+                    all_results.append(result)
+        
+        # Merge with RRF
+        if all_results:
+            return self._rrf_fusion(all_results)
+        return []
+    
+    def _search_all_multi_query(
+        self,
+        quran_queries: List[str],
+        bible_queries: List[str],
+        pool_size: int = 50
+    ) -> Tuple[List, List, List, List]:
+        """
+        Step 2 (Multi-Query Version): Execute 4 quadrants with multi-query + RRF.
+        
+        Each quadrant runs N queries in parallel, results merged with RRF.
+        All 4 quadrants also run in parallel.
+        """
+        self._log(f"🔍 Step 2: Multi-Query Search ({len(quran_queries)}q×4 quadrants)...")
+        start = time.time()
+        
+        results = {
+            "quran_semantic": [],
+            "quran_chunks": [],
+            "bible_semantic": [],
+            "bible_chunks": []
+        }
+        
+        def search_quran_semantic():
+            searcher = self._get_quran_searcher()
+            return ("quran_semantic", self._search_quadrant_multi_query(
+                quran_queries, searcher, limit_per_query=30
+            )[:pool_size])
+        
+        def search_quran_chunks():
+            searcher = self._get_quran_chunk_searcher()
+            if searcher.collection_exists():
+                return ("quran_chunks", self._search_quadrant_multi_query(
+                    quran_queries, searcher, limit_per_query=30
+                )[:pool_size])
+            return ("quran_chunks", [])
+        
+        def search_bible_semantic():
+            searcher = self._get_bible_searcher()
+            return ("bible_semantic", self._search_quadrant_multi_query(
+                bible_queries, searcher, limit_per_query=30
+            )[:pool_size])
+        
+        def search_bible_chunks():
+            searcher = self._get_bible_chunk_searcher()
+            if searcher.collection_exists():
+                return ("bible_chunks", self._search_quadrant_multi_query(
+                    bible_queries, searcher, limit_per_query=30
+                )[:pool_size])
+            return ("bible_chunks", [])
+        
+        # All 4 quadrants in parallel
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = [
+                executor.submit(search_quran_semantic),
+                executor.submit(search_quran_chunks),
+                executor.submit(search_bible_semantic),
+                executor.submit(search_bible_chunks)
+            ]
+            
+            for future in as_completed(futures):
+                key, result = future.result()
+                results[key] = result
+        
+        duration = (time.time() - start) * 1000
+        
+        counts = {k: len(v) for k, v in results.items()}
+        self._log(f"   Quran Semantic: {counts['quran_semantic']}, Quran Chunks: {counts['quran_chunks']}")
+        self._log(f"   Bible Semantic: {counts['bible_semantic']}, Bible Chunks: {counts['bible_chunks']}")
+        self._log(f"   Multi-Query searches completed in {duration:.0f}ms")
+        
+        return (
+            results["quran_semantic"],
+            results["quran_chunks"],
+            results["bible_semantic"],
+            results["bible_chunks"]
+        )
+    
+    # ==================== END MULTI-QUERY SUPPORT ====================
     
     def _enhance_query_parallel(self, query: str) -> Tuple[str, str]:
         """
@@ -335,22 +514,59 @@ class ComparativeRAG:
         Execute full search pipeline without answer generation.
         
         Returns 80 verses (20 per search type × 4 searches), all reranked.
+        
+        If enable_multi_query=True: Uses 5 queries + RRF fusion for better accuracy.
+        If enable_multi_query=False: Uses single enhanced query (faster).
         """
         total_start = time.time()
         
+        mode_label = "Multi-Query" if self.enable_multi_query else "Single-Query"
+        
         if self.verbose:
-            console.print(f"\n[bold blue]🔄 Comparative Search Pipeline[/bold blue]")
+            console.print(f"\n[bold blue]🔄 Comparative Search Pipeline ({mode_label})[/bold blue]")
             console.print(f"[dim]Query: \"{query}\"[/dim]\n")
         
-        # Step 1: Parallel query enhancement
-        quran_query, bible_query = self._enhance_query_parallel(query)
+        if self.enable_multi_query:
+            # ===== MULTI-QUERY PATH (5 queries + RRF) =====
+            self._log("⚡ Step 1: Generating Multi-Queries...")
+            start = time.time()
+            
+            # Generate query variations in parallel
+            def gen_quran():
+                return self._generate_multi_queries(query, corpus="quran", n=3)
+            def gen_bible():
+                return self._generate_multi_queries(query, corpus="bible", n=3)
+            
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                quran_future = executor.submit(gen_quran)
+                bible_future = executor.submit(gen_bible)
+                quran_queries = quran_future.result()
+                bible_queries = bible_future.result()
+            
+            duration = (time.time() - start) * 1000
+            self._log(f"   Quran: {len(quran_queries)} queries, Bible: {len(bible_queries)} queries")
+            self._log(f"   Generated in {duration:.0f}ms")
+            
+            # Step 2: Multi-query search with RRF fusion
+            quran_sem, quran_chunks, bible_sem, bible_chunks = self._search_all_multi_query(
+                quran_queries, bible_queries, pool_size=50
+            )
+            
+            # Use original query for reranking (best for relevance)
+            quran_query = query
+            bible_query = query
+            
+        else:
+            # ===== SINGLE-QUERY PATH (Original behavior) =====
+            # Step 1: Parallel query enhancement
+            quran_query, bible_query = self._enhance_query_parallel(query)
+            
+            # Step 2: 4 parallel searches
+            quran_sem, quran_chunks, bible_sem, bible_chunks = self._search_all_parallel(
+                quran_query, bible_query, pool_size=50
+            )
         
-        # Step 2: 4 parallel searches
-        quran_sem, quran_chunks, bible_sem, bible_chunks = self._search_all_parallel(
-            quran_query, bible_query, pool_size=50
-        )
-        
-        # Step 3: Rerank each set
+        # Step 3: Rerank each set (same for both paths)
         quran_sem, quran_chunks, bible_sem, bible_chunks = self._rerank_each(
             quran_query, bible_query,
             quran_sem, quran_chunks, bible_sem, bible_chunks
@@ -366,7 +582,8 @@ class ComparativeRAG:
             search_stats={
                 "duration_ms": total_duration,
                 "quran_query": quran_query,
-                "bible_query": bible_query
+                "bible_query": bible_query,
+                "mode": mode_label
             }
         )
         

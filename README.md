@@ -1,18 +1,24 @@
 # Sacred Texts Ultimate RAG Search 🚀
 
-Kuran-ı Kerim ve İncil için **maksimum doğruluk odaklı** Ultimate RAG arama sistemi.
+Kuran-ı Kerim ve İncil için **maksimum doğruluk odaklı** Ultimate RAG arama sistemi.  
+Karşılaştırmalı teolojik analiz ve LLM destekli cevap üretimi özellikleri ile.
 
 ## ✨ Ultimate RAG Pipeline
 
 Tüm en iyi RAG metodolojilerini tek bir pipeline'da birleştirir:
 
 ```
-Query → ENHANCE → MULTI-QUERY → PARALLEL SEARCH → RRF FUSION → RERANK → Results
+Query → ENHANCE → MULTI-QUERY → PARALLEL SEARCH → RRF FUSION → RERANK → ANSWER
                                     ↓
-                          ┌─────────┴─────────┐
-                          │                   │
-                    Single-Verse      Semantic Chunks
-                    (quran_tr)    (quran_semantic_chunks)
+          ┌─────────────────────────┴─────────────────────────┐
+          │                                                   │
+    ┌─────┴─────┐                                     ┌───────┴───────┐
+    │   QURAN   │                                     │     BIBLE     │
+    ├───────────┤                                     ├───────────────┤
+    │Single-Verse│                                    │ Single-Verse  │
+    │ + Semantic │                                    │  + Semantic   │
+    │   Chunks   │                                    │    Chunks     │
+    └───────────┘                                     └───────────────┘
 ```
 
 | Aşama | Açıklama | Teknoloji |
@@ -21,21 +27,52 @@ Query → ENHANCE → MULTI-QUERY → PARALLEL SEARCH → RRF FUSION → RERANK 
 | **2. Multi-Query** | 3-5 farklı perspektif | Gemini Flash |
 | **3. Parallel Search** | Tek ayet + Semantic chunk araması | OpenAI text-embedding-3-large |
 | **4. RRF Fusion** | Sonuçları birleştirme | Reciprocal Rank Fusion |
-| **5. Reranking** | Cross-encoder final sıralaması | Qwen3-Reranker |
+| **5. Reranking** | Cross-encoder final sıralaması | Qwen3-Reranker (SiliconFlow) |
+| **6. Answer Generation** | LLM ile cevap üretme | Gemini 2.5 Flash |
 
-### 📦 Semantic Chunking (YENİ!)
+---
 
-Semantik olarak ilişkili ayetleri gruplar:
+## 🆕 Son Güncellemeler
 
-- **1779 semantic chunk** (ortalama ~3.5 ayet/chunk)
-- Tematik bütünlük korunur (kıssa, hüküm grupları)
-- Paralel arama ile daha zengin context
+### 🎯 Comparative RAG (Karşılaştırmalı Analiz)
 
-### 📊 Performans
+Kuran ve İncil'i tek sorguda arayıp teolojik karşılaştırma makalesi üretir:
 
-- **%84+ isabet oranı** (Kur'an aramaları)
-- **%90+ keyword eşleşme** (enhance modunda)
-- **Score: 0.99+** (rerank sonrası)
+- 4 paralel arama (Kuran/İncil × Normal/Semantic)
+- 80 ayet analizi (her aramadan 20)
+- Akademik formatta karşılaştırmalı essay
+
+### 💬 Answer Generation (Soru-Cevap)
+
+Bulunan ayetlerden kapsamlı cevap üretir:
+
+- Kaynak alıntıları ile
+- Türkçe veya İngilizce
+
+### 📦 Bible Semantic Chunks
+
+İncil için semantik gruplama:
+
+- Tematik bütünlük
+- Kitap ve bölüm bazlı analiz
+
+### ⚡ Multi-Query RAG
+
+Sorguyu farklı perspektiflerden genişletir:
+
+- Query caching ile optimizasyon
+- Paralel arama
+
+---
+
+## 📊 Performans
+
+| Metrik | Değer |
+|--------|-------|
+| Kuran isabet oranı | **%84+** |
+| İncil isabet oranı | **%75+** |
+| Keyword eşleşme | **%90+** |
+| Rerank score | **0.99+** |
 
 ---
 
@@ -56,81 +93,109 @@ pip install -r requirements.txt
 ### 3. Ortam Değişkenleri (.env dosyası)
 
 ```env
-OPENROUTER_API_KEY=your-api-key-here
+OPENROUTER_API_KEY=your-openrouter-key
+SILICONFLOW_API_KEY=your-siliconflow-key  # Reranker için
 ```
 
-### 4. Veriyi İndeksleyin
+### 4. Tek Komutla Kurulum (Önerilen)
 
 ```bash
-# Kuran (Türkçe) - Tek ayet koleksiyonu
+# Tüm koleksiyonları oluştur (Kuran, İncil, Semantic Chunks)
+python main.py setup
+```
+
+### 4b. Manuel Kurulum (Alternatif)
+
+```bash
+# Kuran (Türkçe)
 python main.py index
 
-# Semantic chunks (paralel arama için)
+# Kuran Semantic Chunks
 python main.py build-semantic-chunks --threshold 25 --threshold-type percentile
 
-# İncil - İngilizce (KJVA)
+# İncil (KJVA)
 python main.py index-bible --translation kjva
+
+# İncil Semantic Chunks
+python main.py build-bible-semantic-chunks
 ```
 
 ---
 
 ## 📖 Kullanım
 
-### Kuran Araması
+### 🔍 Arama Komutları
 
 ```bash
-# Temel arama (Ultimate RAG + Semantic Chunks otomatik)
+# Kuran araması
 python main.py search "sabır ve namaz"
 
-# Daha fazla sonuç
-python main.py search "Allah'ın rahmeti" --limit 10
+# İncil araması
+python main.py search-bible "love your neighbor" --translation kjva
 
-# Detaylı sonuç görüntüleme
-python main.py search "şefaat" -v
+# Semantic chunk araması
+python main.py search-semantic "Adem'in yaratılışı"
+python main.py search-bible-semantic "creation of Adam"
 ```
 
-### Semantic Chunk Araması
+### 💬 Soru-Cevap (Ask)
 
 ```bash
-# Doğrudan semantic chunk koleksiyonunda ara
-python main.py search-semantic "Adem'in yaratılışı"
+# Kuran'dan soru sor
+python main.py ask "İslam'da sabır nedir?"
 
-# Belirli surenin chunk yapısını analiz et
+# İncil'den soru sor
+python main.py ask-bible "What is love according to the Bible?"
+```
+
+### ⚖️ Karşılaştırmalı Analiz
+
+```bash
+# Kuran ve İncil'de ortak temayı karşılaştır
+python main.py compare "Sabır ve dayanıklılık kavramı"
+python main.py compare "Yaratılış hikayesi"
+python main.py compare "Affetme ve merhamet"
+```
+
+### 📊 Sistem Komutları
+
+```bash
+# Koleksiyon bilgisi
+python main.py info
+
+# Cache istatistikleri
+python main.py cache-info
+
+# Cache temizle
+python main.py cache-clear
+
+# Chunk analizi
 python main.py analyze-chunks --surah 2
 ```
 
-### İncil Araması
+---
 
-```bash
-# Türkçe İncil
-python main.py search-bible "İsa Mesih'in doğumu"
-
-# İngilizce İncil
-python main.py search-bible "love your neighbor" --translation kjva
-```
-
-### Python API
+## 🐍 Python API
 
 ```python
 from src.ultimate_rag import UltimateRAG
+from src.comparative_rag import ComparativeRAG
 
-# Pipeline oluştur (semantic chunks varsayılan olarak aktif)
+# === Ultimate RAG ===
 rag = UltimateRAG(enable_semantic_chunks=True)
 
-# Kur'an araması
+# Arama
 results = rag.search_quran("şefaat kavramı", top_k=5)
+results = rag.search_bible("forgiveness", translation="kjva")
 
-# İncil araması (Türkçe sorgu otomatik İngilizce'ye çevrilir)
-results = rag.search_bible("Tanrı'nın sevgisi", translation="kjva")
+# Soru-Cevap
+answer = rag.ask_quran("Namaz nasıl kılınır?")
+answer = rag.ask_bible("How to love your neighbor?")
 
-# Semantic chunks'ı devre dışı bırak
-rag = UltimateRAG(enable_semantic_chunks=False)
-```
-
-### Koleksiyon Bilgisi
-
-```bash
-python main.py info
+# === Comparative RAG ===
+comp = ComparativeRAG()
+essay = comp.compare("Yaratılış ve insanın kökeni")
+print(essay['essay'])
 ```
 
 ---
@@ -139,25 +204,28 @@ python main.py info
 
 ```
 qdrant/
-├── main.py                    # CLI entrypoint
-├── requirements.txt           # Dependencies
-├── README.md                  # Bu dosya
-├── user_guide.md              # Kullanıcı rehberi
-├── .env                       # API keys
+├── main.py                         # CLI entrypoint
+├── requirements.txt                # Dependencies
+├── README.md                       # Bu dosya
 ├── data/
-│   ├── quran_tr.json          # Kuran (Türkçe)
-│   ├── semantic_chunks.json   # Semantic chunk verileri
-│   └── bible_kjva.json        # İncil (İngilizce KJVA)
+│   ├── quran_tr.json               # Kuran (Türkçe)
+│   ├── semantic_chunks.json        # Kuran semantic chunks
+│   ├── bible_kjva.json             # İncil (KJVA)
+│   └── bible_kjva_semantic_chunks.json  # İncil semantic chunks
 └── src/
-    ├── ultimate_rag.py        # 🚀 Ana pipeline
-    ├── semantic_chunker.py    # 📦 Semantic chunking modülü
-    ├── query_enhancer.py      # LLM sorgu genişletme
-    ├── reranker.py            # Cross-encoder reranking
-    ├── search.py              # Semantic/Keyword/Hybrid search
-    ├── embeddings.py          # Dense + Sparse encoders
-    ├── indexer.py             # Qdrant indeksleme
-    ├── data_loader.py         # Kur'an veri yükleyici
-    └── bible_loader.py        # İncil veri yükleyici
+    ├── ultimate_rag.py             # 🚀 Ana RAG pipeline
+    ├── comparative_rag.py          # ⚖️ Karşılaştırmalı RAG
+    ├── comparative_answer_generator.py  # Karşılaştırmalı essay üretici
+    ├── answer_generator.py         # 💬 LLM cevap üretici
+    ├── semantic_chunker.py         # 📦 Kuran semantic chunking
+    ├── bible_semantic_chunker.py   # 📦 İncil semantic chunking
+    ├── query_enhancer.py           # LLM sorgu genişletme
+    ├── reranker.py                 # Cross-encoder reranking
+    ├── search.py                   # Arama modülleri
+    ├── embeddings.py               # Dense + Sparse encoders
+    ├── indexer.py                  # Qdrant indeksleme
+    ├── data_loader.py              # Kuran veri yükleyici
+    └── bible_loader.py             # İncil veri yükleyici
 ```
 
 ---
@@ -169,30 +237,22 @@ qdrant/
 | Dense Encoder | `openai/text-embedding-3-large` (3072 dim) |
 | Sparse Encoder | `Qdrant/bm25` via FastEmbed |
 | Vector DB | Qdrant (HNSW + Scalar Quantization) |
-| Reranker | `Qwen3-Reranker-0.6B-seq-cls` |
-| LLM | Gemini 2.5 Flash Lite via OpenRouter |
+| Reranker | `Qwen3-Reranker-0.6B` via SiliconFlow |
+| LLM (Enhancement) | Gemini 2.5 Flash Lite via OpenRouter |
+| LLM (Answers) | Gemini 2.5 Flash via OpenRouter |
 | Fusion | Reciprocal Rank Fusion (RRF, k=60) |
-| Semantic Chunking | Percentile-based boundary detection |
-
-### Semantic Chunking Parametreleri
-
-| Parametre | Varsayılan | Açıklama |
-|-----------|------------|----------|
-| `--threshold` | 25 | Percentile değeri (düşük = daha fazla chunk) |
-| `--threshold-type` | percentile | percentile, gradient, interquartile, std, fixed |
-| `--max-size` | 10 | Maksimum ayet/chunk |
 
 ---
 
-## 📚 Örnek Aramalar
+## 📚 Örnek Sorgular
 
-| Kaynak | Sorgu | Sonuç |
-|--------|-------|-------|
-| Kuran | "sabır ve namaz" | Bakara 45, 153, 155 |
-| Kuran | "şefaat kavramı" | Zuhruf 86, Meryem 87 |
-| Kuran | "miras hukuku" | Nisa 11-12, 176 |
-| Kuran | "Adem'in yaratılışı" | Bakara 30-39 (semantic chunk) |
-| İncil | "İsa'nın doğumu" | Matta 1-2, Luka 2 |
+| Komut | Sorgu | Açıklama |
+|-------|-------|----------|
+| `search` | "sabır ve namaz" | Kuran'da sabır konusu |
+| `ask` | "Oruç nasıl tutulur?" | Detaylı cevap + kaynaklar |
+| `search-bible` | "love your enemies" | İncil araması |
+| `ask-bible` | "What is salvation?" | İncil soru-cevap |
+| `compare` | "Yaratılış hikayesi" | Kuran-İncil karşılaştırma |
 
 ---
 
