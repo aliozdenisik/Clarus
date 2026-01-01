@@ -237,7 +237,7 @@ qdrant/
 | Dense Encoder | `openai/text-embedding-3-large` (3072 dim) |
 | Sparse Encoder | `Qdrant/bm25` via FastEmbed |
 | Vector DB | Qdrant (HNSW + Scalar Quantization) |
-| Reranker | `Qwen3-Reranker-0.6B` via SiliconFlow |
+| Reranker | `Qwen3-Reranker-8B` via SiliconFlow |
 | LLM (Enhancement) | Gemini 2.5 Flash Lite via OpenRouter |
 | LLM (Answers) | Gemini 2.5 Flash via OpenRouter |
 | Fusion | Reciprocal Rank Fusion (RRF, k=60) |
