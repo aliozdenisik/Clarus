@@ -1,5 +1,6 @@
 # Core dependencies
 qdrant-client>=1.7.0
+grpcio>=1.59.0
 fastembed>=0.2.0
 sentence-transformers>=2.7.0
 transformers>=4.51.0

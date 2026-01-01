@@ -286,7 +286,8 @@ class UltimateRAG:
         self, 
         query: str, 
         source: str = "quran_tr",
-        top_k: int = None
+        top_k: int = None,
+        rerank_query: str = None  # Optional: use different query for reranking
     ) -> List:
         """
         Execute Ultimate RAG Pipeline
@@ -295,6 +296,7 @@ class UltimateRAG:
             query: User's search query
             source: Data source - "quran_tr", "bible_kjva"
             top_k: Number of final results (default: self.final_top_k)
+            rerank_query: Optional query to use for reranking (useful for translated queries)
             
         Returns:
             List of reranked search results
@@ -315,8 +317,10 @@ class UltimateRAG:
         # Step 3: Search with all queries (RRF merge)
         search_results = self._search_all_queries(all_queries, source)
         
-        # Step 4: Rerank for final precision - use ORIGINAL query for reranking
-        final_results = self._rerank_results(query, search_results, top_k=top_k)
+        # Step 4: Rerank for final precision
+        # Use rerank_query if provided (e.g., translated query), otherwise use original
+        final_query = rerank_query or query
+        final_results = self._rerank_results(final_query, search_results, top_k=top_k)
         
         total_duration = (time.time() - total_start) * 1000
         
@@ -331,8 +335,28 @@ class UltimateRAG:
         return self.search(query, source="quran_tr", top_k=top_k)
     
     def search_bible(self, query: str, translation: str = "kjva", top_k: int = None) -> List:
-        """Shortcut for Bible search"""
-        return self.search(query, source=f"bible_{translation}", top_k=top_k)
+        """
+        Shortcut for Bible search.
+        
+        For English translations (kjva, kjv), automatically translates Turkish queries to English
+        and uses the translated query for reranking to ensure proper cross-lingual matching.
+        """
+        original_query = query
+        translated_query = None
+        
+        # For English Bible translations, translate Turkish query to English
+        if translation in ("kjva", "kjv"):
+            try:
+                translated_query = self.enhancer.translate_for_bible(query)
+                if self.verbose:
+                    console.print(f"[dim]📝 Translated: {query} → {translated_query}[/dim]")
+                query = translated_query
+            except Exception as e:
+                if self.verbose:
+                    console.print(f"[yellow]Translation warning: {e}[/yellow]")
+        
+        # Pass translated query for reranking to fix language mismatch
+        return self.search(query, source=f"bible_{translation}", top_k=top_k, rerank_query=translated_query)
 
 
 # Convenience function

@@ -270,10 +270,10 @@ def cmd_index_bible(args):
     stats = loader.get_stats()
     console.print(f"[green][OK][/green] Loaded {stats['total_books']} books, {stats['total_verses']} verses")
     console.print(f"  Translation: {stats['translation_name']}")
-    console.print(f"  Old Testament: {stats['old_testament_books']} books")
-    console.print(f"  New Testament: {stats['new_testament_books']} books")
+    console.print(f"  Old Testament (Eski Ahit): {stats['old_testament_books']} books")
+    console.print(f"  New Testament (Yeni Ahit): {stats['new_testament_books']} books")
     if stats.get('has_apocrypha'):
-        console.print(f"  [dim]Includes Apocrypha[/dim]")
+        console.print(f"  Apocrypha (Apokrif): {stats.get('apocrypha_books', 0)} books")
     
     # Create chunks
     console.print("\n[yellow]Creating chunks...[/yellow]")
@@ -291,13 +291,20 @@ def cmd_index_bible(args):
         console.print("  docker run -p 6333:6333 qdrant/qdrant")
         return 1
     
-    # Index chunks (use async for faster embedding)
+    # Index chunks using async
     console.print("\n[yellow]Indexing chunks...[/yellow]")
-    if use_async:
-        console.print("[dim]Using async parallel embedding (2-3x faster)[/dim]")
-        count = asyncio.run(indexer.index_chunks_async(chunks, batch_size=args.batch_size))
-    else:
-        count = indexer.index_chunks(chunks, batch_size=args.batch_size)
+    max_concurrent = getattr(args, 'parallel', 8)
+    
+    async def run_index():
+        return await indexer.index_chunks(
+            chunks, 
+            batch_size=100,
+            max_concurrent=max_concurrent,
+            upload_batch_size=500,
+            show_progress=True
+        )
+    
+    count = asyncio.run(run_index())
     
     # Show info
     info = indexer.get_collection_info()
@@ -340,8 +347,16 @@ def cmd_search_bible(args):
         table.add_column("Score", style="green", width=8)
         table.add_column("Text", style="white")
         
+        # Testament display mapping for Turkish
+        testament_names = {
+            "OT": "Eski Ahit",
+            "NT": "Yeni Ahit",
+            "Apocrypha": "Apokrif"
+        }
+        
         for i, result in enumerate(results, 1):
-            ref = f"{result.book_name} {result.chapter}:{result.verse}\n({result.testament})"
+            testament_display = testament_names.get(result.testament, result.testament)
+            ref = f"{result.book_name} {result.chapter}:{result.verse}\n({testament_display})"
             score = f"{result.score:.3f}"
             text = result.text[:150] + ("..." if len(result.text) > 150 else "")
             table.add_row(str(i), ref, score, text)
@@ -351,9 +366,10 @@ def cmd_search_bible(args):
         # Show detailed first result
         if results and args.verbose:
             first = results[0]
+            testament_display = testament_names.get(first.testament, first.testament)
             console.print(Panel(
                 f"[bold]{first.book_name} {first.chapter}:{first.verse}[/bold]\n"
-                f"{first.testament} | {first.translation}\n\n"
+                f"{testament_display} | {first.translation}\n\n"
                 f"[dim]Text:[/dim]\n{first.text}",
                 title=f"[green]Top Result[/green]",
                 expand=False
@@ -422,10 +438,10 @@ def main():
         help="Recreate collection (delete existing)"
     )
     index_bible_parser.add_argument(
-        "--batch-size",
+        "--parallel",
         type=int,
-        default=100,
-        help="Batch size for indexing"
+        default=20,
+        help="Max concurrent API calls (default: 20)"
     )
     
     # Search Bible command (uses Ultimate RAG Pipeline)

@@ -174,6 +174,24 @@ Text: {query}
 English:"""
         
         return self._call_llm(prompt)
+    
+    def translate_for_bible(self, query: str) -> str:
+        """
+        Türkçe sorguyu King James İncil (KJVA) araması için İngilizceye çevir.
+        
+        Args:
+            query: Türkçe arama sorgusu
+            
+        Returns:
+            İngilizce'ye çevrilmiş ve İncil terminolojisine uygun sorgu
+        """
+        prompt = f"""Translate the following Turkish query to English for searching in the King James Bible.
+Use proper Biblical terminology and phrasing. Return ONLY the English translation, no explanations.
+
+Turkish query: {query}
+English translation:"""
+        
+        return self._call_llm(prompt)
 
 
 if __name__ == "__main__":
