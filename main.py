@@ -356,7 +356,16 @@ def cmd_search_bible(args):
         
         for i, result in enumerate(results, 1):
             testament_display = testament_names.get(result.testament, result.testament)
-            ref = f"{result.book_name} {result.chapter}:{result.verse}\n({testament_display})"
+            
+            # Handle both single verses and semantic chunks
+            if hasattr(result, 'verse'):
+                # Single verse result
+                ref = f"{result.book_name} {result.chapter}:{result.verse}\n({testament_display})"
+            else:
+                # Semantic chunk result
+                verse_range = f"{result.start_verse}-{result.end_verse}" if result.start_verse != result.end_verse else str(result.start_verse)
+                ref = f"{result.book_name} {result.chapter}:{verse_range}\n({testament_display})"
+            
             score = f"{result.score:.3f}"
             text = result.text[:150] + ("..." if len(result.text) > 150 else "")
             table.add_row(str(i), ref, score, text)
@@ -367,9 +376,16 @@ def cmd_search_bible(args):
         if results and args.verbose:
             first = results[0]
             testament_display = testament_names.get(first.testament, first.testament)
+            
+            if hasattr(first, 'verse'):
+                ref_text = f"{first.book_name} {first.chapter}:{first.verse}"
+            else:
+                verse_range = f"{first.start_verse}-{first.end_verse}" if first.start_verse != first.end_verse else str(first.start_verse)
+                ref_text = f"{first.book_name} {first.chapter}:{verse_range}"
+            
             console.print(Panel(
-                f"[bold]{first.book_name} {first.chapter}:{first.verse}[/bold]\n"
-                f"{testament_display} | {first.translation}\n\n"
+                f"[bold]{ref_text}[/bold]\n"
+                f"{testament_display} | {getattr(first, 'translation', getattr(first, 'verse_count', 'N/A') + ' verses')}\n\n"
                 f"[dim]Text:[/dim]\n{first.text}",
                 title=f"[green]Top Result[/green]",
                 expand=False
@@ -381,6 +397,186 @@ def cmd_search_bible(args):
         import traceback
         traceback.print_exc()
         return 1
+
+
+def cmd_ask(args):
+    """Ask a question about Quran - Full RAG Q&A with citations"""
+    query = args.query
+    limit = args.limit
+    
+    console.print("\n[bold magenta]🧠 Ultimate RAG Q&A Pipeline (Kuran)[/bold magenta]")
+    console.print("[dim]Search + Answer Generation with Citations[/dim]\n")
+    
+    try:
+        from src.ultimate_rag import UltimateRAG
+        rag = UltimateRAG(
+            qdrant_url=args.qdrant_url,
+            enable_multi_query=True,
+            search_mode="semantic",
+            final_top_k=limit,
+            verbose=True
+        )
+        
+        answer = rag.ask_quran(query, top_k=limit)
+        
+        # Display answer
+        console.print(Panel(
+            f"[bold white]{answer.text}[/bold white]",
+            title=f"[green]Cevap (Güven: {answer.confidence:.0%})[/green]",
+            subtitle=f"[dim]{len(answer.citations)} kaynak kullanıldı[/dim]",
+            expand=False
+        ))
+        
+        # Show citations
+        if answer.citations:
+            console.print("\n[cyan]📖 Kaynaklar:[/cyan]")
+            for i, ref in enumerate(answer.citations, 1):
+                console.print(f"  {i}. {ref}")
+        
+        return 0
+    except Exception as e:
+        console.print(f"[red][ERROR] Q&A failed: {e}[/red]")
+        import traceback
+        traceback.print_exc()
+        return 1
+
+
+def cmd_ask_bible(args):
+    """Ask a question about Bible - Full RAG Q&A with citations"""
+    query = args.query
+    translation = args.translation
+    limit = args.limit
+    
+    console.print(f"\n[bold magenta]🧠 Ultimate RAG Q&A Pipeline (Bible - {translation})[/bold magenta]")
+    console.print("[dim]Search + Answer Generation with Citations[/dim]\n")
+    
+    try:
+        from src.ultimate_rag import UltimateRAG
+        rag = UltimateRAG(
+            qdrant_url=args.qdrant_url,
+            enable_multi_query=True,
+            search_mode="semantic",
+            final_top_k=limit,
+            verbose=True
+        )
+        
+        answer = rag.ask_bible(query, translation=translation, top_k=limit)
+        
+        # Display answer
+        console.print(Panel(
+            f"[bold white]{answer.text}[/bold white]",
+            title=f"[green]Cevap (Güven: {answer.confidence:.0%})[/green]",
+            subtitle=f"[dim]{len(answer.citations)} kaynak kullanıldı[/dim]",
+            expand=False
+        ))
+        
+        # Show citations
+        if answer.citations:
+            console.print("\n[cyan]📖 Kaynaklar:[/cyan]")
+            for i, ref in enumerate(answer.citations, 1):
+                console.print(f"  {i}. {ref}")
+        
+        return 0
+    except Exception as e:
+        console.print(f"[red][ERROR] Q&A failed: {e}[/red]")
+        import traceback
+        traceback.print_exc()
+        return 1
+
+def cmd_build_bible_semantic_chunks(args):
+    """Build semantic chunks for Bible"""
+    translation = args.translation
+    console.print(f"\n[bold blue]Building Semantic Chunks for Bible ({translation})[/bold blue]\n")
+    
+    from src.bible_semantic_chunker import BibleSemanticVerseChunker
+    
+    # Initialize chunker
+    chunker = BibleSemanticVerseChunker(
+        translation=translation,
+        similarity_threshold=args.threshold,
+        max_chunk_size=args.max_size
+    )
+    
+    # Create chunks
+    console.print("[yellow]Creating semantic chunks...[/yellow]")
+    console.print(f"  Threshold: {args.threshold} ({args.threshold_type})")
+    console.print(f"  Max Size: {args.max_size}")
+    
+    chunks = chunker.create_semantic_chunks(show_progress=True, threshold_type=args.threshold_type)
+    
+    if args.analyze_only:
+        console.print("[yellow]Analysis mode: Skipping indexing[/yellow]")
+        return 0
+    
+    # Save to file
+    chunker.save_chunks(chunks)
+    
+    # Index
+    console.print("\n[yellow]Indexing semantic chunks...[/yellow]")
+    from src.indexer import BibleSemanticChunkIndexer
+    
+    indexer = BibleSemanticChunkIndexer(translation=translation, qdrant_url=args.qdrant_url)
+    indexer.create_collection(recreate=args.recreate)
+    indexer.index_chunks(chunks)
+    
+    info = indexer.get_collection_info()
+    console.print(f"\n[green][OK][/green] Successfully indexed {info['points_count']} semantic chunks!")
+    
+    return 0
+
+
+def cmd_search_bible_semantic(args):
+    """Search Bible semantic chunks"""
+    query = args.query
+    limit = args.limit
+    translation = args.translation
+    
+    console.print(f"\n[bold blue]Bible Semantic Search ({translation})[/bold blue]\n")
+    console.print(f"[dim]Query: {query}[/dim]")
+    
+    from src.search import BibleSemanticChunkSearcher
+    
+    searcher = BibleSemanticChunkSearcher(translation=translation, qdrant_url=args.qdrant_url)
+    
+    if not searcher.collection_exists():
+        console.print(f"[red]Collection not found: {searcher.collection_name}[/red]")
+        console.print(f"[yellow]Run 'python main.py build-bible-semantic-chunks --translation {translation}' first.[/yellow]")
+        return 1
+    
+    results = searcher.search(query, limit=limit)
+    
+    if not results:
+        console.print("[yellow]No results found.[/yellow]")
+        return 0
+    
+    # Create results table
+    table = Table(title=f"Semantic Chunk Results ({len(results)} found)", show_lines=True)
+    table.add_column("#", style="dim", width=3)
+    table.add_column("Reference", style="cyan", width=20)
+    table.add_column("Score", style="green", width=8)
+    table.add_column("Text", style="white")
+    
+    for i, result in enumerate(results, 1):
+        verse_range = f"{result.start_verse}-{result.end_verse}" if result.start_verse != result.end_verse else str(result.start_verse)
+        ref = f"{result.book_name} {result.chapter}:{verse_range}\n({result.testament})"
+        score = f"{result.score:.3f}"
+        text = result.text[:150] + ("..." if len(result.text) > 150 else "")
+        table.add_row(str(i), ref, score, text)
+    
+    console.print(table)
+    
+    if results and args.verbose:
+        first = results[0]
+        verse_range = f"{first.start_verse}-{first.end_verse}"
+        console.print(Panel(
+            f"[bold]{first.book_name} {first.chapter}:{verse_range}[/bold]\n"
+            f"{first.testament} | {first.verse_count} verses\n\n"
+            f"[dim]Text:[/dim]\n{first.text}",
+            title=f"[green]Top Semantic Result[/green]",
+            expand=False
+        ))
+    
+    return 0
 
 
 def main():
@@ -509,6 +705,31 @@ def main():
         "-v", "--verbose",
         action="store_true",
         help="Show detailed first result"
+    )
+    
+    # Ask Quran command (Full RAG Q&A with citations)
+    ask_parser = subparsers.add_parser("ask", help="Ask a question about Quran (RAG Q&A)")
+    ask_parser.add_argument("query", help="Question to ask")
+    ask_parser.add_argument(
+        "--limit",
+        type=int,
+        default=10,
+        help="Number of search results to use as context"
+    )
+    
+    # Ask Bible command (Full RAG Q&A with citations)
+    ask_bible_parser = subparsers.add_parser("ask-bible", help="Ask a question about Bible (RAG Q&A)")
+    ask_bible_parser.add_argument("query", help="Question to ask")
+    ask_bible_parser.add_argument(
+        "--translation",
+        default="kjva",
+        help="Bible translation to use (default: kjva)"
+    )
+    ask_bible_parser.add_argument(
+        "--limit",
+        type=int,
+        default=10,
+        help="Number of search results to use as context"
     )
     
     # Info command
@@ -650,6 +871,69 @@ def main():
         help="Surah number to analyze (default: 1)"
     )
     
+    # Bible Semantic Chunking commands
+    build_bible_chunks_parser = subparsers.add_parser(
+        "build-bible-semantic-chunks",
+        help="Build semantic chunks from Bible verses"
+    )
+    build_bible_chunks_parser.add_argument(
+        "--translation",
+        default="kjva",
+        choices=["kjva", "kjv"],
+        help="Bible translation (default: kjva)"
+    )
+    build_bible_chunks_parser.add_argument(
+        "--threshold",
+        type=float,
+        default=0.75,
+        help="Similarity threshold (default: 0.75)"
+    )
+    build_bible_chunks_parser.add_argument(
+        "--threshold-type",
+        type=str,
+        default="percentile",
+        choices=["percentile", "gradient", "interquartile", "std", "fixed"],
+        help="Threshold strategy (default: percentile)"
+    )
+    build_bible_chunks_parser.add_argument(
+        "--max-size",
+        type=int,
+        default=10,
+        help="Maximum verses per chunk (default: 10)"
+    )
+    build_bible_chunks_parser.add_argument(
+        "--recreate",
+        action="store_true",
+        help="Recreate collection (delete existing)"
+    )
+    build_bible_chunks_parser.add_argument(
+        "--analyze-only",
+        action="store_true",
+        help="Only analyze chunks, don't index"
+    )
+    
+    search_bible_semantic_parser = subparsers.add_parser(
+        "search-bible-semantic",
+        help="Search Bible semantic chunks"
+    )
+    search_bible_semantic_parser.add_argument("query", help="Search query")
+    search_bible_semantic_parser.add_argument(
+        "--translation",
+        default="kjva",
+        help="Bible translation to search (default: kjva)"
+    )
+    search_bible_semantic_parser.add_argument(
+        "--limit",
+        type=int,
+        default=5,
+        help="Number of results (default: 5)"
+    )
+    search_bible_semantic_parser.add_argument(
+        "-v", "--verbose",
+        action="store_true",
+        help="Show detailed results"
+    )
+    
     # Cache management commands
     cache_info_parser = subparsers.add_parser(
         "cache-info",
@@ -693,8 +977,16 @@ def main():
         return cmd_search_semantic(args)
     elif args.command == "analyze-chunks":
         return cmd_analyze_chunks(args)
+    elif args.command == "build-bible-semantic-chunks":
+        return cmd_build_bible_semantic_chunks(args)
+    elif args.command == "search-bible-semantic":
+        return cmd_search_bible_semantic(args)
     elif args.command == "setup":
         return cmd_setup(args)
+    elif args.command == "ask":
+        return cmd_ask(args)
+    elif args.command == "ask-bible":
+        return cmd_ask_bible(args)
     else:
         parser.print_help()
         return 0

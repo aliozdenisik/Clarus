@@ -1,0 +1,141 @@
+
+Running 30 Semantic Search 
+Queries on Bible Chunks
+
+Initialized OpenRouter dense encoder: openai/text-embedding-3-large
+  Cache: enabled (./cache/embeddings)
+Loading sparse encoder: Qdrant/bm25
+ Semantic Search Test Results
++----------------------------
+||            | Top Result ||
+|| Query      | Reference  ||
+|+------------+------------++
+|| In the     | Genesis    ||
+|| beginning  | 1:1-5      ||
+|| God        |            ||
+|| created    |            ||
+|| heaven and |            ||
+|| earth      |            ||
+|+------------+------------++
+|| faith      | James      ||
+|| without    | 2:17-26    ||
+|| works is   |            ||
+|| dead       |            ||
+|+------------+------------++
+|| The Lord   | Ezekiel    ||
+|| is my      | 34:22-31   ||
+|| shepherd   |            ||
+|+------------+------------++
+|| For God so | 1 John     ||
+|| loved the  | 4:5-13     ||
+|| world      |            ||
+|+------------+------------++
+|| I am the   | John       ||
+|| way the    | 14:1-6     ||
+|| truth and  |            ||
+|| the life   |            ||
+|+------------+------------++
+|| The fruit  | Galatians  ||
+|| of the     | 5:19-26    ||
+|| Spirit is  |            ||
+|| love joy   |            ||
+|| peace      |            ||
+|+------------+------------++
+|| Love is    | 2          ||
+|| patient    | Corinthiaà ||
+|| love is    | 6:6-13     ||
+|| kind       |            ||
+|+------------+------------++
+|| The armor  | 1 John     ||
+|| of God     | 4:5-13     ||
+|+------------+------------++
+|| Blessed    | Matthew    ||
+|| are the    | 5:3-5      ||
+|| poor in    |            ||
+|| spirit     |            ||
+|+------------+------------++
+|| The valley | Psalms     ||
+|| of the     | 23:1-6     ||
+|| shadow of  |            ||
+|| death      |            ||
+|+------------+------------++
+|| Moses      | Exodus     ||
+|| parting    | 15:19-26   ||
+|| the Red    |            ||
+|| Sea        |            ||
+|+------------+------------++
+|| David and  | 1 Samuel   ||
+|| Goliath    | 17:19-27   ||
+|+------------+------------++
+|| Noah's ark | Genesis    ||
+|| and the    | 7:1-7      ||
+|| flood      |            ||
+|+------------+------------++
+|| The ten    | Exodus     ||
+|| commandmeà | 34:27-35   ||
+|+------------+------------++
+|| The sermon | Luke       ||
+|| on the     | 21:29-38   ||
+|| mount      |            ||
+|+------------+------------++
+|| The        | 1 Esdras   ||
+|| prodigal   | 5:26-34    ||
+|| son        |            ||
+|+------------+------------++
+|| The good   | Mark       ||
+|| samaritan  | 10:17-18   ||
+|+------------+------------++
+|| The        | John       ||
+|| resurrectà | 11:23-29   ||
+|| of Jesus   |            ||
+|+------------+------------++
+|| The        | Mark       ||
+|| betrayal   | 14:10-11   ||
+|| by Judas   |            ||
+|+------------+------------++
+|| Pentecost  | Acts 2:1-4 ||
+|| and the    |            ||
+|| Holy       |            ||
+|| Spirit     |            ||
+|+------------+------------++
+|| The        | Acts       ||
+|| conversion | 21:37-40   ||
+|| of Paul    |            ||
+|+------------+------------++
+|| The        | Revelation ||
+|| revelation | of John    ||
+|| of John    | 1:1-7      ||
+|+------------+------------++
+|| The fall   | Joshua     ||
+|| of Jericho | 6:1-9      ||
+|+------------+------------++
+|| Daniel in  | Daniel     ||
+|| the lion's | 6:18-24    ||
+|| den        |            ||
+|+------------+------------++
+|| Jonah and  | Jonah      ||
+|| the whale  | 1:11-17    ||
+|+------------+------------++
+|| The wisdom | 1 Kings    ||
+|| of Solomon | 4:29-34    ||
+|+------------+------------++
+|| The        | James      ||
+|| patience   | 5:7-11     ||
+|| of Job     |            ||
+|+------------+------------++
+|| The        | Isaiah     ||
+|| prophecy   | 1:1-1      ||
+|| of Isaiah  |            ||
+|| about the  |            ||
+|| messiah    |            ||
+|+------------+------------++
+|| The        | Matthew    ||
+|| baptism of | 21:23-27   ||
+|| Jesus      |            ||
+|+------------+------------++
+|| The        | Matthew    ||
+|| transfiguà | 17:1-9     ||
++----------------------------
+
+Completed 30 queries in 0.68 
+seconds (0.02s/query)

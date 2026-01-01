@@ -760,6 +760,164 @@ class SemanticChunkSearcher:
             return False
 
 
+@dataclass
+class BibleSemanticChunkSearchResult:
+    """Represents a Bible semantic chunk search result (grouped verses)."""
+    chunk_id: str
+    score: float
+    verse_ids: List[str]
+    translation: str
+    book_id: int
+    book_name: str
+    chapter: int
+    start_verse: int
+    end_verse: int
+    text: str
+    verse_count: int
+    testament: str
+    
+    def __str__(self):
+        verse_range = f"{self.start_verse}-{self.end_verse}" if self.start_verse != self.end_verse else str(self.start_verse)
+        preview = self.text[:200] + "..." if len(self.text) > 200 else self.text
+        return f"[{self.book_name} {self.chapter}:{verse_range}] (Score: {self.score:.4f}, {self.verse_count} verses)\n   {preview}"
+
+
+class BibleSemanticChunkSearcher:
+    """
+    Search engine for Bible semantic chunks (grouped verses).
+    """
+    
+    def __init__(
+        self,
+        translation: str = "kjva",
+        qdrant_url: str = "http://localhost:6333",
+        in_memory: bool = False,
+        client: Optional[QdrantClient] = None,
+        dense_encoder: Optional[DenseEncoder] = None,
+        sparse_encoder: Optional[SparseEncoder] = None
+    ):
+        self.translation = translation
+        self.collection_name = f"bible_{translation}_semantic_chunks"
+        
+        if client:
+            self.client = client
+        elif in_memory:
+            self.client = QdrantClient(location=":memory:")
+        else:
+            self.client = QdrantClient(url=qdrant_url)
+        
+        self.dense_encoder = dense_encoder or DenseEncoder()
+        self.sparse_encoder = sparse_encoder or SparseEncoder()
+    
+    def _parse_results(self, results) -> List[BibleSemanticChunkSearchResult]:
+        """Convert Qdrant results to BibleSemanticChunkSearchResult objects."""
+        parsed = []
+        for result in results:
+            payload = result.payload
+            parsed.append(BibleSemanticChunkSearchResult(
+                chunk_id=payload.get("chunk_id", ""),
+                score=result.score,
+                verse_ids=payload.get("verse_ids", []),
+                translation=payload.get("translation", ""),
+                book_id=payload.get("book_id", 0),
+                book_name=payload.get("book_name", ""),
+                chapter=payload.get("chapter", 0),
+                start_verse=payload.get("start_verse", 0),
+                end_verse=payload.get("end_verse", 0),
+                text=payload.get("text", ""),
+                verse_count=payload.get("verse_count", 1),
+                testament=payload.get("testament", ""),
+            ))
+        return parsed
+    
+    def semantic_search(
+        self, 
+        query: str, 
+        limit: int = 10
+    ) -> List[BibleSemanticChunkSearchResult]:
+        """Perform semantic search on chunk collection."""
+        query_vector = self.dense_encoder.encode(query)
+        
+        results = self.client.query_points(
+            collection_name=self.collection_name,
+            query=query_vector,
+            using="dense",
+            limit=limit
+        )
+        
+        return self._parse_results(results.points)
+    
+    def keyword_search(
+        self, 
+        query: str, 
+        limit: int = 10
+    ) -> List[BibleSemanticChunkSearchResult]:
+        """Perform keyword (BM25) search on chunk collection."""
+        sparse_indices, sparse_values = self.sparse_encoder.query_embed(query)
+        
+        results = self.client.query_points(
+            collection_name=self.collection_name,
+            query=SparseVector(indices=sparse_indices, values=sparse_values),
+            using="sparse",
+            limit=limit
+        )
+        
+        return self._parse_results(results.points)
+    
+    def hybrid_search(
+        self,
+        query: str,
+        limit: int = 10,
+        prefetch_limit: int = 50,
+        rrf_k: int = 40
+    ) -> List[BibleSemanticChunkSearchResult]:
+        """Perform hybrid search combining semantic and keyword search."""
+        dense_vector = self.dense_encoder.encode(query)
+        sparse_indices, sparse_values = self.sparse_encoder.query_embed(query)
+        
+        results = self.client.query_points(
+            collection_name=self.collection_name,
+            prefetch=[
+                Prefetch(
+                    query=dense_vector,
+                    using="dense",
+                    limit=prefetch_limit
+                ),
+                Prefetch(
+                    query=SparseVector(indices=sparse_indices, values=sparse_values),
+                    using="sparse",
+                    limit=prefetch_limit
+                )
+            ],
+            query=RrfQuery(rrf=Rrf(k=rrf_k)),
+            limit=limit
+        )
+        
+        return self._parse_results(results.points)
+    
+    def search(
+        self,
+        query: str,
+        mode: str = "hybrid",
+        limit: int = 10
+    ) -> List[BibleSemanticChunkSearchResult]:
+        """Unified search interface."""
+        if mode == "semantic":
+            return self.semantic_search(query, limit)
+        elif mode == "keyword":
+            return self.keyword_search(query, limit)
+        else:
+            return self.hybrid_search(query, limit)
+    
+    def collection_exists(self) -> bool:
+        """Check if the semantic chunks collection exists."""
+        try:
+            collections = self.client.get_collections().collections
+            return any(c.name == self.collection_name for c in collections)
+        except Exception:
+            return False
+
+
 def print_results(results: List[SearchResult], title: str = "Search Results"):
     """Pretty print search results"""
     print(f"\n{'='*60}")

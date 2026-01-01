@@ -80,6 +80,7 @@ class UltimateRAG:
         # Lazy load components
         self._enhancer = None
         self._reranker = None
+        self._answer_generator = None
         self._quran_searcher = None
         self._bible_searcher = None
         self._semantic_chunk_searcher = None
@@ -103,6 +104,16 @@ class UltimateRAG:
             if self.verbose:
                 console.print("[dim]Loaded Qwen3-Reranker[/dim]")
         return self._reranker
+    
+    @property
+    def answer_generator(self):
+        """Lazy load Answer Generator"""
+        if self._answer_generator is None:
+            from src.answer_generator import AnswerGenerator
+            self._answer_generator = AnswerGenerator()
+            if self.verbose:
+                console.print("[dim]Loaded AnswerGenerator (Gemini 2.5 Flash Lite)[/dim]")
+        return self._answer_generator
     
     def _get_searcher(self, source: str):
         """Get appropriate searcher for source"""
@@ -215,42 +226,73 @@ class UltimateRAG:
             except Exception as e:
                 self._log(f"   Warning: Search failed for query: {e}", "yellow")
         
-        # Parallel search: Semantic chunks (only for Quran)
-        if self.enable_semantic_chunks and source == "quran_tr":
-            try:
-                chunk_searcher = self._get_semantic_chunk_searcher()
-                if chunk_searcher.collection_exists():
-                    self._log("   📦 Including semantic chunks in search...")
-                    
-                    for i, query in enumerate(queries):
-                        try:
-                            chunk_results = chunk_searcher.search(query, mode=self.search_mode, limit=limit // 2)
-                            
-                            for rank, chunk_result in enumerate(chunk_results, 1):
-                                # For each verse in the semantic chunk, add to results
-                                # This expands the context while keeping individual verse scores
-                                chunk_id = chunk_result.chunk_id
-                                rrf_contribution = 1 / (k + rank)
+        
+        # Parallel search: Semantic chunks (if enabled)
+        if self.enable_semantic_chunks:
+            # Handle Quran Semantic Chunks
+            if source == "quran_tr":
+                try:
+                    chunk_searcher = self._get_semantic_chunk_searcher()
+                    if chunk_searcher.collection_exists():
+                        self._log("   📦 Including semantic chunks in search (Quran)...")
+                        
+                        for i, query in enumerate(queries):
+                            try:
+                                chunk_results = chunk_searcher.search(query, mode=self.search_mode, limit=limit // 2)
                                 
-                                # Store chunk result with a unique ID
-                                if chunk_id in all_results:
-                                    existing_result, existing_score, matched = all_results[chunk_id]
-                                    all_results[chunk_id] = (
-                                        existing_result, 
-                                        existing_score + rrf_contribution,
-                                        matched + [query]
-                                    )
-                                else:
-                                    # Create a pseudo-result that works with reranker
-                                    # Use combined translation as the text to rerank
-                                    all_results[chunk_id] = (chunk_result, rrf_contribution, [query])
+                                for rank, chunk_result in enumerate(chunk_results, 1):
+                                    chunk_id = chunk_result.chunk_id
+                                    rrf_contribution = 1 / (k + rank)
                                     
-                        except Exception as e:
-                            self._log(f"   Warning: Chunk search failed: {e}", "yellow")
-                else:
-                    self._log("   [dim]Semantic chunks collection not found, skipping...[/dim]")
-            except Exception as e:
-                self._log(f"   Warning: Could not load semantic chunks: {e}", "yellow")
+                                    if chunk_id in all_results:
+                                        existing_result, existing_score, matched = all_results[chunk_id]
+                                        all_results[chunk_id] = (
+                                            existing_result, 
+                                            existing_score + rrf_contribution,
+                                            matched + [query]
+                                        )
+                                    else:
+                                        all_results[chunk_id] = (chunk_result, rrf_contribution, [query])
+                            except Exception as e:
+                                pass
+                except Exception as e:
+                    self._log(f"   Warning: Quran semantic chunks error: {e}", "yellow")
+            
+            # Handle Bible Semantic Chunks
+            elif source.startswith("bible_"):
+                try:
+                    translation = source.replace("bible_", "")
+                    # Initialize on demand
+                    from src.search import BibleSemanticChunkSearcher
+                    bible_chunk_searcher = BibleSemanticChunkSearcher(
+                        translation=translation,
+                        qdrant_url=self.qdrant_url
+                    )
+                    
+                    if bible_chunk_searcher.collection_exists():
+                        self._log(f"   📦 Including semantic chunks in search (Bible {translation})...")
+                        
+                        for i, query in enumerate(queries):
+                            try:
+                                chunk_results = bible_chunk_searcher.search(query, mode=self.search_mode, limit=limit // 2)
+                                
+                                for rank, chunk_result in enumerate(chunk_results, 1):
+                                    chunk_id = chunk_result.chunk_id
+                                    rrf_contribution = 1 / (k + rank)
+                                    
+                                    if chunk_id in all_results:
+                                        existing_result, existing_score, matched = all_results[chunk_id]
+                                        all_results[chunk_id] = (
+                                            existing_result, 
+                                            existing_score + rrf_contribution,
+                                            matched + [query]
+                                        )
+                                    else:
+                                        all_results[chunk_id] = (chunk_result, rrf_contribution, [query])
+                            except Exception as e:
+                                pass
+                except Exception as e:
+                    self._log(f"   Warning: Bible semantic chunks error: {e}", "yellow")
         
         # Sort by RRF score and return top results
         sorted_results = sorted(
@@ -363,6 +405,63 @@ class UltimateRAG:
         
         # Pass translated query for reranking to fix language mismatch
         return self.search(query, source=f"bible_{translation}", top_k=top_k, rerank_query=translated_query)
+    
+    # ============= ANSWER GENERATION (RAG) =============
+    
+    def ask(self, query: str, source: str = "quran_tr", top_k: int = None):
+        """
+        Full RAG Pipeline: Search + Generate Answer with Citations
+        
+        Searches for relevant verses, then generates a comprehensive answer
+        that cites specific verses using [Reference] format.
+        
+        Args:
+            query: User's question
+            source: Data source - "quran_tr", "bible_kjva", etc.
+            top_k: Number of search results to use as context
+            
+        Returns:
+            AnswerResult with text, citations, and confidence
+        """
+        from src.answer_generator import AnswerResult
+        
+        top_k = top_k or self.final_top_k
+        total_start = time.time()
+        
+        if self.verbose:
+            console.print(f"\n[bold blue]🧠 Ultimate RAG Q&A Pipeline[/bold blue]")
+            console.print(f"[dim]Question: \"{query}\"[/dim]\n")
+        
+        # Step 1-4: Search pipeline (enhance, multi-query, search, rerank)
+        search_results = self.search(query, source=source, top_k=top_k)
+        
+        # Step 5: Generate answer with citations
+        self._log("💬 Step 5: Generating answer with citations...")
+        answer_start = time.time()
+        
+        answer = self.answer_generator.generate_answer(query, search_results, source=source)
+        
+        answer_duration = (time.time() - answer_start) * 1000
+        total_duration = (time.time() - total_start) * 1000
+        
+        if self.verbose:
+            self._log(f"   Answer generated in {answer_duration:.0f}ms")
+            console.print(f"\n[green]✓ Q&A Pipeline complete in {total_duration:.0f}ms[/green]")
+            console.print(f"[dim]  {len(search_results)} verses → {len(answer.citations)} citations → confidence: {answer.confidence:.0%}[/dim]\n")
+        
+        return answer
+    
+    def ask_quran(self, query: str, top_k: int = None):
+        """Shortcut for Quran Q&A - Turkish in, Turkish out"""
+        return self.ask(query, source="quran_tr", top_k=top_k)
+    
+    def ask_bible(self, query: str, translation: str = "kjva", top_k: int = None):
+        """
+        Shortcut for Bible Q&A.
+        
+        Turkish query → English search → Turkish answer with English citations.
+        """
+        return self.ask(query, source=f"bible_{translation}", top_k=top_k)
 
 
 # Convenience function

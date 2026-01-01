@@ -724,11 +724,168 @@ class SemanticChunkIndexer:
         print(f"Indexed {total_indexed} semantic chunks successfully!")
         return total_indexed
     
+    
     def get_collection_info(self) -> dict:
         """Get information about the collection"""
         info = self.client.get_collection(self.COLLECTION_NAME)
         return {
             "name": self.COLLECTION_NAME,
+            "vectors_count": getattr(info, 'vectors_count', info.points_count),
+            "points_count": info.points_count,
+            "status": info.status,
+        }
+
+
+class BibleSemanticChunkIndexer:
+    """
+    Indexes semantic chunks (grouped verses) of Bible into Qdrant.
+    
+    Creates a parallel collection that stores semantically grouped verses
+    for context-aware search alongside the single-verse collection.
+    """
+    
+    def __init__(
+        self,
+        translation: str = "kjva",
+        qdrant_url: str = "http://localhost:6333",
+        in_memory: bool = False,
+        encoder: Optional[HybridEncoder] = None
+    ):
+        self.translation = translation
+        self.collection_name = f"bible_{translation}_semantic_chunks"
+        
+        if in_memory:
+            self.client = QdrantClient(location=":memory:")
+        else:
+            self.client = QdrantClient(url=qdrant_url)
+        self.encoder = encoder or HybridEncoder()
+        self._collection_exists = False
+    
+    def create_collection(self, recreate: bool = False) -> bool:
+        """Create collection for semantic chunks."""
+        # Check if collection exists
+        collections = self.client.get_collections().collections
+        exists = any(c.name == self.collection_name for c in collections)
+        
+        if exists:
+            if recreate:
+                print(f"Deleting existing collection: {self.collection_name}")
+                self.client.delete_collection(self.collection_name)
+            else:
+                print(f"Collection already exists: {self.collection_name}")
+                self._collection_exists = True
+                return False
+        
+        # Get dense vector dimension
+        dense_dim = self.encoder.dense_dimension
+        print(f"Creating semantic chunks collection ({self.translation}): {dense_dim}")
+        
+        self.client.create_collection(
+            collection_name=self.collection_name,
+            vectors_config={
+                "dense": VectorParams(
+                    size=dense_dim,
+                    distance=Distance.COSINE,
+                    hnsw_config=HnswConfigDiff(m=16, ef_construct=200),
+                    quantization_config=ScalarQuantization(
+                        scalar=ScalarQuantizationConfig(
+                            type="int8",
+                            quantile=0.99,
+                            always_ram=True
+                        )
+                    )
+                )
+            },
+            sparse_vectors_config={
+                "sparse": SparseVectorParams(
+                    index=SparseIndexParams(on_disk=False)
+                )
+            }
+        )
+        
+        # Create payload indexes
+        print("Creating payload indexes...")
+        self.client.create_payload_index(
+            collection_name=self.collection_name,
+            field_name="book_name",
+            field_schema=PayloadSchemaType.KEYWORD
+        )
+        self.client.create_payload_index(
+            collection_name=self.collection_name,
+            field_name="testament",
+            field_schema=PayloadSchemaType.KEYWORD
+        )
+        self.client.create_payload_index(
+            collection_name=self.collection_name,
+            field_name="verse_count",
+            field_schema=PayloadSchemaType.INTEGER
+        )
+        
+        print(f"Created collection: {self.collection_name}")
+        self._collection_exists = True
+        return True
+    
+    def index_chunks(
+        self,
+        chunks,  # List[BibleSemanticChunk]
+        batch_size: int = 50,
+        show_progress: bool = True
+    ) -> int:
+        """Index semantic chunks with both dense and sparse vectors."""
+        if not self._collection_exists:
+            self.create_collection()
+        
+        # Extract texts for encoding
+        texts = [chunk.text for chunk in chunks]
+        
+        # Encode all texts
+        print(f"Encoding {len(texts)} semantic chunks...")
+        dense_vectors, sparse_vectors = self.encoder.encode_batch(
+            texts, 
+            batch_size=batch_size,
+            show_progress=show_progress
+        )
+        
+        # Create points in batches
+        print("Indexing to Qdrant...")
+        total_indexed = 0
+        
+        for i in tqdm(range(0, len(chunks), batch_size), desc="Indexing semantic chunks"):
+            batch_chunks = chunks[i:i + batch_size]
+            batch_dense = dense_vectors[i:i + batch_size]
+            batch_sparse = sparse_vectors[i:i + batch_size]
+            
+            points = []
+            for j, chunk in enumerate(batch_chunks):
+                sparse_indices, sparse_values = batch_sparse[j]
+                
+                point = PointStruct(
+                    id=hash(chunk.chunk_id) % (2**63),
+                    vector={
+                        "dense": batch_dense[j],
+                        "sparse": SparseVector(
+                            indices=sparse_indices,
+                            values=sparse_values
+                        )
+                    },
+                    payload=chunk.to_dict()
+                )
+                points.append(point)
+            
+            self.client.upsert(
+                collection_name=self.collection_name,
+                points=points
+            )
+            total_indexed += len(points)
+        
+        print(f"Indexed {total_indexed} Bible semantic chunks successfully!")
+        return total_indexed
+    
+    def get_collection_info(self) -> dict:
+        """Get information about the collection"""
+        info = self.client.get_collection(self.collection_name)
+        return {
+            "name": self.collection_name,
             "vectors_count": getattr(info, 'vectors_count', info.points_count),
             "points_count": info.points_count,
             "status": info.status,
