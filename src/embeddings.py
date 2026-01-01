@@ -337,17 +337,22 @@ class AsyncDenseEncoder:
     async def encode_batch_async(
         self,
         texts: List[str],
-        batch_size: int = 32,
-        max_concurrent: int = 5,
+        batch_size: int = 256,  # Increased from 32 - OpenRouter supports up to 2048
+        max_concurrent: int = 10,  # Increased from 5 - OpenRouter has no rate limits with credits
         show_progress: bool = True
     ) -> List[List[float]]:
         """
         Encode multiple texts concurrently with controlled parallelism.
         
+        Optimized for maximum throughput:
+        - batch_size=256: Larger batches reduce API overhead
+        - max_concurrent=10: Parallel API calls (OpenRouter has no rate limits with $10+ credits)
+        - Connection pooling via aiohttp.TCPConnector
+        
         Args:
             texts: List of texts to encode
-            batch_size: Number of texts per API call
-            max_concurrent: Maximum concurrent API calls (controls rate limiting)
+            batch_size: Number of texts per API call (default: 256, max ~2048)
+            max_concurrent: Maximum concurrent API calls (default: 10)
             show_progress: Show progress bar
             
         Returns:
@@ -371,6 +376,8 @@ class AsyncDenseEncoder:
         if cache_hits > 0:
             print(f"Cache hits: {cache_hits}/{len(texts)}")
         
+        print(f"Processing {len(uncached_texts)} texts in {(len(uncached_texts) + batch_size - 1) // batch_size} batches (size={batch_size}, concurrent={max_concurrent})")
+        
         # Create batches from uncached texts
         batches = []
         for i in range(0, len(uncached_texts), batch_size):
@@ -379,7 +386,17 @@ class AsyncDenseEncoder:
         # Semaphore for rate limiting
         semaphore = asyncio.Semaphore(max_concurrent)
         
-        async with aiohttp.ClientSession() as session:
+        # High-performance connection pooling
+        connector = aiohttp.TCPConnector(
+            limit=max_concurrent * 2,  # Total connection pool size
+            limit_per_host=max_concurrent,  # Per-host limit
+            ttl_dns_cache=300,  # DNS cache for 5 minutes
+            enable_cleanup_closed=True
+        )
+        
+        timeout = aiohttp.ClientTimeout(total=300, connect=30)  # 5 min total, 30s connect
+        
+        async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
             if show_progress:
                 from tqdm.asyncio import tqdm_asyncio
                 tasks = [
@@ -539,6 +556,59 @@ class HybridEncoder:
     @property
     def dense_dimension(self) -> int:
         return self.dense_encoder.dimension
+
+
+class AsyncHybridEncoder:
+    """
+    Async version of HybridEncoder for faster batch processing.
+    Uses AsyncDenseEncoder for parallel API calls.
+    """
+    
+    def __init__(
+        self, 
+        dense_model: str = None,
+        sparse_model: str = "Qdrant/bm25",
+        api_key: str = None
+    ):
+        self.async_dense_encoder = AsyncDenseEncoder(model_name=dense_model, api_key=api_key)
+        self.sparse_encoder = SparseEncoder(sparse_model)
+    
+    async def encode_batch_async(
+        self, 
+        texts: List[str], 
+        batch_size: int = 256,  # Optimized: larger batches reduce API overhead
+        max_concurrent: int = 10,  # Optimized: OpenRouter has no rate limits with credits
+        show_progress: bool = True
+    ) -> Tuple[List[List[float]], List[Tuple[List[int], List[float]]]]:
+        """
+        Encode multiple texts to both dense and sparse vectors asynchronously.
+        
+        Optimized for maximum throughput:
+        - batch_size=256: Larger batches reduce API overhead
+        - max_concurrent=10: Parallel API calls
+        
+        Args:
+            texts: List of texts to encode
+            batch_size: Number of texts per API call (default: 256)
+            max_concurrent: Maximum concurrent API calls (default: 10)
+            show_progress: Show progress bar
+            
+        Returns:
+            Tuple of (dense_vectors, sparse_vectors)
+        """
+        print("Encoding dense vectors (async)...")
+        dense_vectors = await self.async_dense_encoder.encode_batch_async(
+            texts, batch_size, max_concurrent, show_progress
+        )
+        
+        print("Encoding sparse vectors...")
+        sparse_vectors = self.sparse_encoder.encode_batch(texts, batch_size)
+        
+        return dense_vectors, sparse_vectors
+    
+    @property
+    def dense_dimension(self) -> int:
+        return self.async_dense_encoder.dimension
 
 
 if __name__ == "__main__":

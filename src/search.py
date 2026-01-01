@@ -400,7 +400,7 @@ class BibleSearcher:
     
     def __init__(
         self,
-        translation: str = "turhadi",
+        translation: str = "kjva",
         qdrant_url: str = "http://localhost:6333",
         in_memory: bool = False,
         client: Optional[QdrantClient] = None,

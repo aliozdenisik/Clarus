@@ -26,6 +26,7 @@ Query → ENHANCE → MULTI-QUERY → PARALLEL SEARCH → RRF FUSION → RERANK 
 ### 📦 Semantic Chunking (YENİ!)
 
 Semantik olarak ilişkili ayetleri gruplar:
+
 - **1779 semantic chunk** (ortalama ~3.5 ayet/chunk)
 - Tematik bütünlük korunur (kıssa, hüküm grupları)
 - Paralel arama ile daha zengin context
@@ -66,9 +67,6 @@ python main.py index
 
 # Semantic chunks (paralel arama için)
 python main.py build-semantic-chunks --threshold 25 --threshold-type percentile
-
-# İncil - Türkçe
-python main.py index-bible --translation turhadi
 
 # İncil - İngilizce (KJVA)
 python main.py index-bible --translation kjva
@@ -122,8 +120,8 @@ rag = UltimateRAG(enable_semantic_chunks=True)
 # Kur'an araması
 results = rag.search_quran("şefaat kavramı", top_k=5)
 
-# İncil araması
-results = rag.search_bible("İsa'nın öğretileri", translation="turhadi")
+# İncil araması (Türkçe sorgu otomatik İngilizce'ye çevrilir)
+results = rag.search_bible("Tanrı'nın sevgisi", translation="kjva")
 
 # Semantic chunks'ı devre dışı bırak
 rag = UltimateRAG(enable_semantic_chunks=False)
@@ -149,8 +147,7 @@ qdrant/
 ├── data/
 │   ├── quran_tr.json          # Kuran (Türkçe)
 │   ├── semantic_chunks.json   # Semantic chunk verileri
-│   ├── bible_turhadi.json     # İncil (Türkçe)
-│   └── bible_kjva.json        # İncil (İngilizce)
+│   └── bible_kjva.json        # İncil (İngilizce KJVA)
 └── src/
     ├── ultimate_rag.py        # 🚀 Ana pipeline
     ├── semantic_chunker.py    # 📦 Semantic chunking modülü

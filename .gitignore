@@ -71,6 +71,7 @@ data/
 *.bak
 cache/
 *.db
+memory-bank/
 
 # Environment variables (API keys, secrets)
 .env

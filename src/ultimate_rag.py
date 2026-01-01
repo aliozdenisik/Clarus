@@ -33,7 +33,7 @@ class UltimateSearchResult:
     score: float
     text: str
     reference: str  # Surah:Verse or Book Chapter:Verse
-    source: str     # quran_tr, bible_turhadi, etc.
+    source: str     # quran_tr, bible_kjva, etc.
     original_score: float = 0.0
     rerank_score: float = 0.0
     matched_queries: List[str] = field(default_factory=list)
@@ -293,7 +293,7 @@ class UltimateRAG:
         
         Args:
             query: User's search query
-            source: Data source - "quran_tr", "bible_turhadi", "bible_kjva"
+            source: Data source - "quran_tr", "bible_kjva"
             top_k: Number of final results (default: self.final_top_k)
             
         Returns:
@@ -330,7 +330,7 @@ class UltimateRAG:
         """Shortcut for Quran search"""
         return self.search(query, source="quran_tr", top_k=top_k)
     
-    def search_bible(self, query: str, translation: str = "turhadi", top_k: int = None) -> List:
+    def search_bible(self, query: str, translation: str = "kjva", top_k: int = None) -> List:
         """Shortcut for Bible search"""
         return self.search(query, source=f"bible_{translation}", top_k=top_k)
 

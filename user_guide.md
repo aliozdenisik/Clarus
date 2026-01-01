@@ -19,8 +19,8 @@ python main.py index
 # Semantic chunks (önerilen - daha zengin context için)
 python main.py build-semantic-chunks --threshold 25 --threshold-type percentile
 
-# İncil (Türkçe)
-python main.py index-bible --translation turhadi
+# İncil (İngilizce KJVA)
+python main.py index-bible --translation kjva
 ```
 
 ### 3. Aramaya Başlayın
@@ -74,13 +74,14 @@ Her arama otomatik olarak 5 aşamadan geçer:
 
 1. **Query Enhancement**: LLM sorgunuzu eşanlamlı kelimelerle genişletir
 2. **Multi-Query**: 5 farklı perspektiften sorgu varyasyonları oluşturulur
-3. **Parallel Search**: 
+3. **Parallel Search**:
    - `quran_tr` (tek ayet koleksiyonu)
    - `quran_semantic_chunks` (gruplu ayetler)
 4. **RRF Fusion**: Her iki koleksiyonun sonuçları birleştirilir
 5. **Reranking**: Cross-encoder ile en alakalı sonuçlar seçilir
 
 **Örnek:**
+
 - Sorgu: "sabır ve namaz"
 - Enhanced: "sabır, tahammül, tevekkül, namaz, salat, ibadet..."
 - Sonuç: En alakalı 10 ayet/chunk, %99+ güven skoru
@@ -195,6 +196,7 @@ A: `python main.py build-semantic-chunks --recreate`
 ## 📞 Destek
 
 Sorun yaşarsanız:
+
 1. Qdrant'ın çalıştığından emin olun: `docker ps`
 2. `.env` dosyasında API key olduğunu kontrol edin
 3. `python main.py info` ile koleksiyon durumunu görün

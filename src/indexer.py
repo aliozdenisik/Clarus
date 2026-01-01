@@ -202,17 +202,99 @@ class QuranIndexer:
             "points_count": info.points_count,
             "status": info.status,
         }
+    
+    async def index_chunks_async(
+        self,
+        chunks: List[QuranChunk],
+        batch_size: int = 256,  # Optimized for OpenRouter API
+        max_concurrent_embeddings: int = 10,  # OpenRouter has no rate limits with credits
+        upsert_batch_size: int = 500,  # Qdrant upsert batch size (larger = faster)
+        show_progress: bool = True
+    ) -> int:
+        """
+        Async index chunks with parallel embedding generation.
+        
+        Optimized for maximum speed:
+        - batch_size=256: Larger batches reduce API overhead (8x increase)
+        - max_concurrent=10: Parallel API calls (2x increase)
+        - upsert_batch_size=500: Bulk Qdrant inserts
+        
+        Args:
+            chunks: List of QuranChunk objects
+            batch_size: Embedding batch size (default: 256)
+            max_concurrent_embeddings: Max concurrent API calls (default: 10)
+            upsert_batch_size: Points per Qdrant upsert (default: 500)
+            show_progress: Show progress bar
+            
+        Returns:
+            Number of indexed chunks
+        """
+        import asyncio
+        from .embeddings import AsyncHybridEncoder
+        
+        if not self._collection_exists:
+            self.create_collection()
+        
+        # Use async encoder
+        async_encoder = AsyncHybridEncoder()
+        
+        # Extract texts for encoding
+        texts = [chunk.translation for chunk in chunks]
+        
+        # Encode all texts asynchronously
+        print(f"Async encoding {len(texts)} chunks...")
+        dense_vectors, sparse_vectors = await async_encoder.encode_batch_async(
+            texts, 
+            batch_size=batch_size,
+            max_concurrent=max_concurrent_embeddings,
+            show_progress=show_progress
+        )
+        
+        # Create points in batches (use larger upsert batches for speed)
+        print(f"Indexing to Qdrant (batch_size={upsert_batch_size})...")
+        total_indexed = 0
+        
+        for i in tqdm(range(0, len(chunks), upsert_batch_size), desc="Indexing"):
+            batch_chunks = chunks[i:i + upsert_batch_size]
+            batch_dense = dense_vectors[i:i + upsert_batch_size]
+            batch_sparse = sparse_vectors[i:i + upsert_batch_size]
+            
+            points = []
+            for j, chunk in enumerate(batch_chunks):
+                sparse_indices, sparse_values = batch_sparse[j]
+                
+                point = PointStruct(
+                    id=hash(chunk.id) % (2**63),
+                    vector={
+                        "dense": batch_dense[j],
+                        "sparse": SparseVector(
+                            indices=sparse_indices,
+                            values=sparse_values
+                        )
+                    },
+                    payload=chunk.to_dict()
+                )
+                points.append(point)
+            
+            self.client.upsert(
+                collection_name=self.COLLECTION_NAME,
+                points=points
+            )
+            total_indexed += len(points)
+        
+        print(f"Async indexed {total_indexed} chunks successfully!")
+        return total_indexed
 
 
 class BibleIndexer:
     """
     Indexes Bible chunks into Qdrant with hybrid vectors.
-    Supports multiple translations (e.g., turhadi, kjva).
+    Supports English translations (kjva, kjv).
     """
     
     def __init__(
         self,
-        translation: str = "turhadi",
+        translation: str = "kjva",
         qdrant_url: str = "http://localhost:6333",
         in_memory: bool = False,
         encoder: Optional[HybridEncoder] = None
@@ -379,6 +461,88 @@ class BibleIndexer:
             "points_count": info.points_count,
             "status": info.status,
         }
+    
+    async def index_chunks_async(
+        self,
+        chunks,  # List[BibleChunk]
+        batch_size: int = 256,  # Optimized for OpenRouter API
+        max_concurrent_embeddings: int = 10,  # OpenRouter has no rate limits with credits
+        upsert_batch_size: int = 500,  # Qdrant upsert batch size (larger = faster)
+        show_progress: bool = True
+    ) -> int:
+        """
+        Async index chunks with parallel embedding generation.
+        
+        Optimized for maximum speed:
+        - batch_size=256: Larger batches reduce API overhead (8x increase)
+        - max_concurrent=10: Parallel API calls (2x increase)
+        - upsert_batch_size=500: Bulk Qdrant inserts
+        
+        Args:
+            chunks: List of BibleChunk objects
+            batch_size: Embedding batch size (default: 256)
+            max_concurrent_embeddings: Max concurrent API calls (default: 10)
+            upsert_batch_size: Points per Qdrant upsert (default: 500)
+            show_progress: Show progress bar
+            
+        Returns:
+            Number of indexed chunks
+        """
+        import asyncio
+        from .embeddings import AsyncHybridEncoder
+        
+        if not self._collection_exists:
+            self.create_collection()
+        
+        # Use async encoder
+        async_encoder = AsyncHybridEncoder()
+        
+        # Extract texts for encoding
+        texts = [chunk.text for chunk in chunks]
+        
+        # Encode all texts asynchronously
+        print(f"Async encoding {len(texts)} Bible chunks...")
+        dense_vectors, sparse_vectors = await async_encoder.encode_batch_async(
+            texts, 
+            batch_size=batch_size,
+            max_concurrent=max_concurrent_embeddings,
+            show_progress=show_progress
+        )
+        
+        # Create points in batches (use larger upsert batches for speed)
+        print(f"Indexing to Qdrant (batch_size={upsert_batch_size})...")
+        total_indexed = 0
+        
+        for i in tqdm(range(0, len(chunks), upsert_batch_size), desc="Indexing"):
+            batch_chunks = chunks[i:i + upsert_batch_size]
+            batch_dense = dense_vectors[i:i + upsert_batch_size]
+            batch_sparse = sparse_vectors[i:i + upsert_batch_size]
+            
+            points = []
+            for j, chunk in enumerate(batch_chunks):
+                sparse_indices, sparse_values = batch_sparse[j]
+                
+                point = PointStruct(
+                    id=hash(chunk.id) % (2**63),
+                    vector={
+                        "dense": batch_dense[j],
+                        "sparse": SparseVector(
+                            indices=sparse_indices,
+                            values=sparse_values
+                        )
+                    },
+                    payload=chunk.to_dict()
+                )
+                points.append(point)
+            
+            self.client.upsert(
+                collection_name=self.collection_name,
+                points=points
+            )
+            total_indexed += len(points)
+        
+        print(f"Async indexed {total_indexed} Bible chunks successfully!")
+        return total_indexed
 
 
 class SemanticChunkIndexer:

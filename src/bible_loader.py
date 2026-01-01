@@ -2,7 +2,7 @@
 Bible JSON Data Loader
 
 Loads Bible data from getBible API and prepares chunks for indexing.
-Supports multiple translations including Turkish (turhadi) and English with Apocrypha (kjva).
+Supports English translations: KJV and KJVA (King James Version with Apocrypha).
 """
 import json
 import requests
@@ -16,7 +16,7 @@ from tqdm import tqdm
 class BibleChunk:
     """Represents a single searchable chunk (verse)"""
     id: str  # Format: translation:book_id:chapter:verse
-    translation: str  # e.g., "turhadi", "kjva"
+    translation: str  # e.g., "kjva", "kjv"
     book_id: int
     book_name: str
     chapter: int
@@ -48,11 +48,6 @@ class BibleDataLoader:
     
     # Available translations
     TRANSLATIONS = {
-        "turhadi": {
-            "name": "Turkish Easy-to-Read Translation",
-            "language": "Turkish",
-            "has_apocrypha": False,
-        },
         "kjva": {
             "name": "King James Version with Apocrypha",
             "language": "English",
@@ -65,7 +60,7 @@ class BibleDataLoader:
         },
     }
     
-    def __init__(self, translation: str = "turhadi", data_dir: Optional[Path] = None):
+    def __init__(self, translation: str = "kjva", data_dir: Optional[Path] = None):
         if translation not in self.TRANSLATIONS:
             available = ", ".join(self.TRANSLATIONS.keys())
             raise ValueError(f"Unknown translation: {translation}. Available: {available}")
@@ -224,7 +219,7 @@ if __name__ == "__main__":
     # Test the loader
     print("Testing BibleDataLoader...")
     
-    loader = BibleDataLoader("turhadi")
+    loader = BibleDataLoader("kjva")
     loader.download_data()
     
     stats = loader.get_stats()

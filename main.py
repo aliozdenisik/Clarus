@@ -8,7 +8,7 @@ using Qdrant vector database with hybrid (semantic + BM25) search.
 Usage:
     python main.py index [--recreate]                    # Index Quran
     python main.py search "query"                        # Search Quran
-    python main.py index-bible --translation turhadi     # Index Bible
+    python main.py index-bible --translation kjva     # Index Bible
     python main.py search-bible "query"                  # Search Bible
     python main.py info
 """
@@ -39,7 +39,14 @@ console = Console()
 
 def cmd_index(args):
     """Index Quran data into Qdrant"""
+    import asyncio
+    
     console.print("\n[bold blue]Quran Hybrid Search Indexer[/bold blue]\n")
+    
+    # Check for async mode
+    use_async = getattr(args, 'use_async', True)  # Default to async
+    if use_async:
+        console.print("[dim]Mode: Async (parallel embeddings)[/dim]")
     
     # Load data
     console.print("[yellow]Loading Quran data...[/yellow]")
@@ -66,9 +73,13 @@ def cmd_index(args):
         console.print("  docker run -p 6333:6333 qdrant/qdrant")
         return 1
     
-    # Index chunks
-    console.print("\n[yellow]Indexing chunks (this may take a while)...[/yellow]")
-    count = indexer.index_chunks(chunks, batch_size=args.batch_size)
+    # Index chunks (use async for faster embedding)
+    console.print("\n[yellow]Indexing chunks...[/yellow]")
+    if use_async:
+        console.print("[dim]Using async parallel embedding (2-3x faster)[/dim]")
+        count = asyncio.run(indexer.index_chunks_async(chunks, batch_size=args.batch_size))
+    else:
+        count = indexer.index_chunks(chunks, batch_size=args.batch_size)
     
     # Show info
     info = indexer.get_collection_info()
@@ -236,8 +247,15 @@ def cmd_info(args):
 
 def cmd_index_bible(args):
     """Index Bible data into Qdrant"""
+    import asyncio
+    
     translation = args.translation
     console.print(f"\n[bold blue]Bible Hybrid Search Indexer ({translation})[/bold blue]\n")
+    
+    # Check for async mode
+    use_async = getattr(args, 'use_async', True)  # Default to async
+    if use_async:
+        console.print("[dim]Mode: Async (parallel embeddings)[/dim]")
     
     # Load data
     console.print(f"[yellow]Loading Bible data ({translation})...[/yellow]")
@@ -273,9 +291,13 @@ def cmd_index_bible(args):
         console.print("  docker run -p 6333:6333 qdrant/qdrant")
         return 1
     
-    # Index chunks
-    console.print("\n[yellow]Indexing chunks (this may take a while)...[/yellow]")
-    count = indexer.index_chunks(chunks, batch_size=args.batch_size)
+    # Index chunks (use async for faster embedding)
+    console.print("\n[yellow]Indexing chunks...[/yellow]")
+    if use_async:
+        console.print("[dim]Using async parallel embedding (2-3x faster)[/dim]")
+        count = asyncio.run(indexer.index_chunks_async(chunks, batch_size=args.batch_size))
+    else:
+        count = indexer.index_chunks(chunks, batch_size=args.batch_size)
     
     # Show info
     info = indexer.get_collection_info()
@@ -390,9 +412,9 @@ def main():
     index_bible_parser = subparsers.add_parser("index-bible", help="Index Bible data")
     index_bible_parser.add_argument(
         "--translation",
-        default="turhadi",
-        choices=["turhadi", "kjva", "kjv"],
-        help="Bible translation to index (default: turhadi)"
+        default="kjva",
+        choices=["kjva", "kjv"],
+        help="Bible translation to index (default: kjva)"
     )
     index_bible_parser.add_argument(
         "--recreate", 
@@ -411,8 +433,8 @@ def main():
     search_bible_parser.add_argument("query", help="Search query")
     search_bible_parser.add_argument(
         "--translation",
-        default="turhadi",
-        help="Bible translation to search (default: turhadi)"
+        default="kjva",
+        help="Bible translation to search (default: kjva)"
     )
     search_bible_parser.add_argument(
         "--limit",
