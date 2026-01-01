@@ -395,6 +395,53 @@ def main():
     
     subparsers = parser.add_subparsers(dest="command", help="Commands")
     
+    # Setup command (Runs everything)
+    setup_parser = subparsers.add_parser("setup", help="Full setup: Index Quran, Semantic Chunks, and Bible")
+    setup_parser.add_argument(
+        "--recreate", 
+        action="store_true",
+        help="Recreate all collections (delete existing)"
+    )
+    setup_parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=100,
+        help="Batch size for indexing (default: 100)"
+    )
+    # Bible args
+    setup_parser.add_argument(
+        "--translation",
+        default="kjva",
+        choices=["kjva", "kjv"],
+        help="Bible translation to index (default: kjva)"
+    )
+    setup_parser.add_argument(
+        "--parallel",
+        type=int,
+        default=20,
+        help="Max concurrent API calls for Bible (default: 20)"
+    )
+    # Semantic args
+    setup_parser.add_argument(
+        "--semantic-threshold",
+        type=float,
+        default=10,
+        help="Semantic chunking threshold (default: 10)"
+    )
+    setup_parser.add_argument(
+        "--threshold-type",
+        type=str,
+        default="percentile",
+        choices=["percentile", "gradient", "interquartile", "std", "fixed"],
+        help="Threshold strategy (default: percentile)"
+    )
+    setup_parser.add_argument(
+        "--semantic-max-size",
+        type=int,
+        default=10,
+        help="Maximum verses per chunk (default: 10)"
+    )
+    
     # Index Quran command
     index_parser = subparsers.add_parser("index", help="Index Quran data")
     index_parser.add_argument(
@@ -646,6 +693,8 @@ def main():
         return cmd_search_semantic(args)
     elif args.command == "analyze-chunks":
         return cmd_analyze_chunks(args)
+    elif args.command == "setup":
+        return cmd_setup(args)
     else:
         parser.print_help()
         return 0
@@ -945,6 +994,40 @@ def cmd_analyze_chunks(args):
     except Exception as e:
         console.print(f"[red][ERROR] {e}[/red]")
         return 1
+
+
+
+def cmd_setup(args):
+    """Run full setup: Index Quran, Semantic Chunks, and Bible"""
+    console.print("\n[bold green]🚀 Starting Full Setup[/bold green]\n")
+    
+    # 1. Index Quran
+    console.print(Panel("[bold]Step 1/3: Indexing Quran (Standard)[/bold]", style="blue"))
+    if cmd_index(args) != 0:
+        return 1
+        
+    # 2. Build Semantic Chunks
+    console.print("\n" + Panel("[bold]Step 2/3: Building & Indexing Semantic Chunks[/bold]", style="magenta"))
+    # Map setup args to chunker args
+    args.threshold = args.semantic_threshold
+    args.max_size = args.semantic_max_size
+    args.analyze_only = False
+    if cmd_build_semantic_chunks(args) != 0:
+        return 1
+        
+    # 3. Index Bible
+    console.print("\n" + Panel(f"[bold]Step 3/3: Indexing Bible ({args.translation})[/bold]", style="yellow"))
+    # Map setup args to bible args (translation is already set by parser)
+    if cmd_index_bible(args) != 0:
+        return 1
+        
+    console.print("\n[bold green]✨ Setup Completed Successfully! ✨[/bold green]")
+    console.print("You can now search using:")
+    console.print("  python main.py search 'query'          # Quran")
+    console.print("  python main.py search-semantic 'query' # Quran (Semantic)")
+    console.print(f"  python main.py search-bible 'query'    # Bible ({args.translation})")
+    
+    return 0
 
 
 if __name__ == "__main__":
