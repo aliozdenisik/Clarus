@@ -109,6 +109,7 @@ cache/
 # Generated/Processed Data Files
 data/semantic_chunks.json
 data/quran_preprocessed.json
+data/bible_kjva_semantic_chunks.json
 
 # ----------------
 # Qdrant Database Storage

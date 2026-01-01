@@ -485,6 +485,7 @@ def cmd_ask_bible(args):
 
 def cmd_build_bible_semantic_chunks(args):
     """Build semantic chunks for Bible"""
+    import asyncio
     translation = args.translation
     console.print(f"\n[bold blue]Building Semantic Chunks for Bible ({translation})[/bold blue]\n")
     
@@ -511,13 +512,15 @@ def cmd_build_bible_semantic_chunks(args):
     # Save to file
     chunker.save_chunks(chunks)
     
-    # Index
-    console.print("\n[yellow]Indexing semantic chunks...[/yellow]")
+    # Index using async for speed
+    console.print("\n[yellow]Indexing semantic chunks (async mode)...[/yellow]")
     from src.indexer import BibleSemanticChunkIndexer
     
     indexer = BibleSemanticChunkIndexer(translation=translation, qdrant_url=args.qdrant_url)
     indexer.create_collection(recreate=args.recreate)
-    indexer.index_chunks(chunks)
+    
+    # Use async indexer for 2-3x speed improvement
+    asyncio.run(indexer.index_chunks_async(chunks))
     
     info = indexer.get_collection_info()
     console.print(f"\n[green][OK][/green] Successfully indexed {info['points_count']} semantic chunks!")
@@ -1290,16 +1293,16 @@ def cmd_analyze_chunks(args):
 
 
 def cmd_setup(args):
-    """Run full setup: Index Quran, Semantic Chunks, and Bible"""
+    """Run full setup: Index Quran, Semantic Chunks, Bible, and Bible Semantic Chunks"""
     console.print("\n[bold green]🚀 Starting Full Setup[/bold green]\n")
     
     # 1. Index Quran
-    console.print(Panel("[bold]Step 1/3: Indexing Quran (Standard)[/bold]", style="blue"))
+    console.print(Panel("[bold]Step 1/4: Indexing Quran (Standard)[/bold]", style="blue"))
     if cmd_index(args) != 0:
         return 1
         
-    # 2. Build Semantic Chunks
-    console.print("\n" + Panel("[bold]Step 2/3: Building & Indexing Semantic Chunks[/bold]", style="magenta"))
+    # 2. Build Quran Semantic Chunks
+    console.print("\n" + Panel("[bold]Step 2/4: Building & Indexing Quran Semantic Chunks[/bold]", style="magenta"))
     # Map setup args to chunker args
     args.threshold = args.semantic_threshold
     args.max_size = args.semantic_max_size
@@ -1308,16 +1311,22 @@ def cmd_setup(args):
         return 1
         
     # 3. Index Bible
-    console.print("\n" + Panel(f"[bold]Step 3/3: Indexing Bible ({args.translation})[/bold]", style="yellow"))
+    console.print("\n" + Panel(f"[bold]Step 3/4: Indexing Bible ({args.translation})[/bold]", style="yellow"))
     # Map setup args to bible args (translation is already set by parser)
     if cmd_index_bible(args) != 0:
+        return 1
+    
+    # 4. Build Bible Semantic Chunks
+    console.print("\n" + Panel(f"[bold]Step 4/4: Building & Indexing Bible Semantic Chunks ({args.translation})[/bold]", style="cyan"))
+    if cmd_build_bible_semantic_chunks(args) != 0:
         return 1
         
     console.print("\n[bold green]✨ Setup Completed Successfully! ✨[/bold green]")
     console.print("You can now search using:")
-    console.print("  python main.py search 'query'          # Quran")
-    console.print("  python main.py search-semantic 'query' # Quran (Semantic)")
-    console.print(f"  python main.py search-bible 'query'    # Bible ({args.translation})")
+    console.print("  python main.py search 'query'               # Quran")
+    console.print("  python main.py search-semantic 'query'      # Quran (Semantic)")
+    console.print(f"  python main.py search-bible 'query'         # Bible ({args.translation})")
+    console.print(f"  python main.py search-bible-semantic 'query' # Bible Semantic ({args.translation})")
     
     return 0
 
