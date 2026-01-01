@@ -2,13 +2,13 @@
 Query Enhancement Module
 
 Enhances search queries using LLM for better semantic search results.
-Uses OpenRouter API for query expansion, translation, and rewriting.
-
-Key feature: Automatically translates Turkish queries to English for KJVA Bible search.
+Uses OpenRouter API for query expansion and multi-query generation.
+Supports strictly separated modes for Bible (English/KJV) and Quran (Turkish).
 """
 import os
+import json
 import requests
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 
 class QueryEnhancer:
@@ -16,198 +16,183 @@ class QueryEnhancer:
     LLM-powered query enhancement for sacred text search.
     
     Features:
-    - Query Expansion: Add synonyms and related biblical terms
-    - Query Translation: Translate Turkish queries to English for KJVA
-    - Query Rewriting: Optimize queries for search
+    - distinct "corpus" modes: 'bible' (English KJV) and 'quran' (Turkish)
+    - Query Expansion: Add synonyms and related terms appropriate for the corpus
     - Multi-Query: Generate multiple query perspectives
+    - JSON Structured Output: Robust parsing for reliability
     
     Usage:
         enhancer = QueryEnhancer()
         
-        # Expand query with synonyms (auto-translates Turkish to English)
-        expanded = enhancer.expand_query("Tanrı'nın sevgisi")
+        # Bible Mode (Default) - Auto-translates to English
+        expanded = enhancer.expand_query("Tanrı'nın sevgisi", corpus="bible")
         
-        # Generate multiple query perspectives
-        queries = enhancer.generate_multi_query("God's mercy", n=3)
+        # Quran Mode - Keeps Turkish, finds Islamic synonyms
+        expanded = enhancer.expand_query("sabır", corpus="quran")
     """
     
     OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-    DEFAULT_MODEL = "google/gemini-2.5-flash-lite"  # Fast and affordable
+    DEFAULT_MODEL = "google/gemini-2.5-flash-lite"
     
-    # System prompt for Turkish-to-English translation and query enhancement
-    SYSTEM_PROMPT = """You are a biblical search query optimizer. Your task is to help users find relevant passages in the King James Version Bible (KJVA).
+    # --- BIBLE PROMPTS (English / KJV) ---
+    SYSTEM_PROMPT_BIBLE = """You are an expert Biblical Scholar and Linguist specializing in the King James Version (KJV).
+Your goal is to convert user queries (which may be in Turkish or English) into precise search terms for a KJV database.
 
-IMPORTANT RULES:
-1. If the input query is in Turkish, FIRST translate it to English
-2. Then expand the English query with synonyms and related biblical terms
-3. Use KJV-style language where appropriate (thee, thou, hath, etc.)
-4. Keep the output concise - just the optimized query
-5. Do not include explanations or numbering"""
+Step 1: Identify the language. If Turkish, translate accurately to English.
+Step 2: Identify key biblical themes and archaic KJV synonyms (e.g., "you" -> "thee/thou", "love" -> "charity").
+Step 3: Output the result strictly in the following JSON format:
+
+{
+    "original_language": "tr|en",
+    "translated_query": "string (the English translation)",
+    "expanded_terms": ["term1", "term2", "term3"],
+    "final_search_query": "string (the optimized query string)"
+}
+"""
+    FEW_SHOT_BIBLE = [
+        {"role": "user", "content": "Make this query search-ready. Query: 'sabır'"},
+        {"role": "assistant", "content": json.dumps({
+            "original_language": "tr",
+            "translated_query": "patience",
+            "expanded_terms": ["longsuffering", "endurance", "waiting"],
+            "final_search_query": "patience longsuffering endurance"
+        })},
+        {"role": "user", "content": "Make this query search-ready. Query: 'Jesus miracles'"},
+        {"role": "assistant", "content": json.dumps({
+            "original_language": "en",
+            "translated_query": "Jesus miracles",
+            "expanded_terms": ["wonders", "signs", "healing", "mighty works"],
+            "final_search_query": "Jesus miracles wonders signs mighty works"
+        })}
+    ]
+
+    # --- QURAN PROMPTS (Turkish) ---
+    SYSTEM_PROMPT_QURAN = """Sen uzman bir İslam Alimi ve Kuran araştırmacısısın.
+Amacın, kullanıcı sorgularını Türkçe Kuran meallerinde arama yapmak için optimize etmektir.
+
+Adım 1: Sorgunun dilini algıla. Her zaman TÜRKÇE çıktı üretmelisin.
+Adım 2: Kuran terminolojisine uygun eşanlamlıları ve ilgili kavramları bul (örn: "Allah" -> "Rab", "Mevla"; "korku" -> "haşyet", "takva").
+Adım 3: Sonucu kesinlikle aşağıdaki JSON formatında ver:
+
+{
+    "original_language": "tr|en",
+    "translated_query": "string (Aynı kalmalı veya Türkçeye çevrilmeli)",
+    "expanded_terms": ["terim1", "terim2", "terim3"],
+    "final_search_query": "string (optimize edilmiş Türkçe sorgu)"
+}
+"""
+    FEW_SHOT_QURAN = [
+        {"role": "user", "content": "Bu sorguyu Kuran araması için hazırla. Sorgu: 'sabır'"},
+        {"role": "assistant", "content": json.dumps({
+            "original_language": "tr",
+            "translated_query": "sabır",
+            "expanded_terms": ["sebat", "direnç", "tahammül", "göğüs germek"],
+            "final_search_query": "sabır sebat direnç tahammül"
+        })},
+        {"role": "user", "content": "Bu sorguyu Kuran araması için hazırla. Sorgu: 'God's mercy'"},
+        {"role": "assistant", "content": json.dumps({
+            "original_language": "en",
+            "translated_query": "Allah'ın merhameti",
+            "expanded_terms": ["rahmet", "rahman", "rahim", "bağışlama", "mağfiret"],
+            "final_search_query": "Allah'ın merhameti rahmet rahman rahim mağfiret"
+        })}
+    ]
 
     def __init__(self, model: str = None, api_key: str = None):
-        """
-        Initialize QueryEnhancer.
-        
-        Args:
-            model: OpenRouter model identifier (default: google/gemini-2.5-flash-lite)
-            api_key: OpenRouter API key (default: from OPENROUTER_API_KEY env var)
-        """
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
-            raise ValueError(
-                "OpenRouter API key required. Set OPENROUTER_API_KEY environment variable "
-                "or pass api_key parameter."
-            )
+            raise ValueError("OpenRouter API key required.")
         self.model = model or self.DEFAULT_MODEL
         self._headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
+            "HTTP-Referer": "https://github.com/qdrant/qdrant",
         }
     
-    def _call_llm(self, prompt: str, system_prompt: str = None) -> str:
-        """Make LLM API call and return response text"""
-        messages = []
-        if system_prompt:
-            messages.append({"role": "system", "content": system_prompt})
+    def _call_llm_json(self, prompt: str, system_prompt: str, examples: List[Dict]) -> Dict[str, Any]:
+        """Generic JSON LLM caller with dynamic context"""
+        messages = [{"role": "system", "content": system_prompt}]
+        messages.extend(examples)
         messages.append({"role": "user", "content": prompt})
         
-        response = requests.post(
-            self.OPENROUTER_URL,
-            headers=self._headers,
-            json={
-                "model": self.model,
-                "messages": messages,
-                "max_tokens": 200
-            },
-            timeout=30
-        )
-        response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"].strip()
-    
-    def expand_query(self, query: str) -> str:
+        try:
+            response = requests.post(
+                self.OPENROUTER_URL,
+                headers=self._headers,
+                json={
+                    "model": self.model,
+                    "messages": messages,
+                    "response_format": {"type": "json_object"},
+                    "max_tokens": 500
+                },
+                timeout=30
+            )
+            response.raise_for_status()
+            content = response.json()["choices"][0]["message"]["content"].strip()
+            return json.loads(content)
+        except Exception as e:
+            print(f"API Call failed: {e}")
+            return {}
+
+    def expand_query(self, query: str, corpus: str = "bible") -> str:
         """
-        Expand query with synonyms and related terms.
-        Automatically translates Turkish queries to English.
-        
-        Args:
-            query: Original search query (Turkish or English)
+        Expand query based on corpus context.
+        corpus='bible': Translates to English, adds KJV terms.
+        corpus='quran': Keeps/Translates to Turkish, adds Islamic terms.
+        """
+        if corpus == "quran":
+            prompt = f"Bu sorguyu Kuran araması için hazırla. Sorgu: '{query}'"
+            system_prompt = self.SYSTEM_PROMPT_QURAN
+            examples = self.FEW_SHOT_QURAN
+        else:
+            prompt = f"Make this query search-ready. Query: '{query}'"
+            system_prompt = self.SYSTEM_PROMPT_BIBLE
+            examples = self.FEW_SHOT_BIBLE
             
-        Returns:
-            Expanded English query optimized for KJVA Bible search
-        """
-        prompt = f"""Expand this query for searching the King James Bible.
-If it's in Turkish, translate to English first. Add synonyms and biblical terms.
-Only return the expanded query, no explanation.
-
-Query: {query}
-Expanded query:"""
-        
-        return self._call_llm(prompt, self.SYSTEM_PROMPT)
+        result = self._call_llm_json(prompt, system_prompt, examples)
+        return result.get("final_search_query", query)
     
-    def generate_multi_query(self, query: str, n: int = 3) -> List[str]:
-        """
-        Generate multiple query perspectives from a single query.
-        Translates Turkish to English if needed.
-        
-        Args:
-            query: Original search query
-            n: Number of queries to generate
+    def generate_multi_query(self, query: str, n: int = 3, corpus: str = "bible") -> List[str]:
+        """Generate multiple query perspectives based on corpus."""
+        if corpus == "quran":
+            system_prompt = """Sen uzman bir İslam Alimisin.
+            Görev: Kullanıcı sorgusunu temel alarak Türkçe Kuran araması için 3-5 farklı arama varyasyonu üret.
             
-        Returns:
-            List of query variations in English
-        """
-        prompt = f"""Generate {n} different search queries for the King James Bible based on this query.
-If the original is in Turkish, translate ALL outputs to English.
-Put each query on a new line. No numbering or explanations.
-
-Original: {query}"""
-        
-        content = self._call_llm(prompt, self.SYSTEM_PROMPT)
-        queries = [line.strip() for line in content.strip().split("\n") if line.strip()]
-        # Remove numbering if present
-        cleaned = []
-        for q in queries:
-            # Remove patterns like "1.", "1)", "1-", etc.
-            if q and q[0].isdigit():
-                parts = q.split(".", 1) if "." in q[:3] else q.split(")", 1) if ")" in q[:3] else [q]
-                q = parts[-1].strip() if len(parts) > 1 else q
-            if q:
-                cleaned.append(q)
-        return cleaned[:n]
-    
-    def rewrite_for_search(self, query: str) -> str:
-        """
-        Rewrite query for better search results.
-        Translates Turkish to English if needed.
-        
-        Args:
-            query: Original search query
+            KRİTİK KURAL: Çıktıların tümü TÜRKÇE olmalıdır. İngilizce sorgu gelirse Türkçeye çevir.
             
-        Returns:
-            Search-optimized English query
-        """
-        prompt = f"""Rewrite this query for searching the King James Bible (KJVA).
-If it's in Turkish, translate to English first.
-Make it specific and search-friendly. Only return the optimized query.
-
-Query: {query}
-Optimized:"""
-        
-        return self._call_llm(prompt, self.SYSTEM_PROMPT)
-    
-    def translate_to_english(self, query: str) -> str:
-        """
-        Translate a Turkish query to English.
-        If already in English, returns as-is.
-        
-        Args:
-            query: Query in any language
+            Sadece geçerli JSON çıktısı ver:
+            {"queries": ["sorgu 1", "sorgu 2 (eşanlamlılar)", "sorgu 3 (kavramsal)"]}"""
+            prompt = f"Sorgu için {n} farklı Kuran arama perspektifi üret: '{query}'"
+            examples = [] # Multi-query has specific prompt, examples less critical here
+        else:
+            system_prompt = """You are an expert Biblical Scholar.
+            Task: Generate 3-5 different search queries for the King James Version (KJV) Bible.
+            CRITICAL RULE: ALL OUTPUT MUST BE IN ENGLISH. If Turkish, translate first.
             
-        Returns:
-            English translation
-        """
-        prompt = f"""If this text is in Turkish, translate it to English.
-If it's already in English, return it unchanged.
-Only return the translation, no explanation.
+            Output valid JSON only:
+            {"queries": ["query 1", "query 2", "query 3"]}"""
+            prompt = f"Generate {n} KJV search perspectives for: '{query}'"
+            examples = []
 
-Text: {query}
-English:"""
-        
-        return self._call_llm(prompt)
-    
-    def translate_for_bible(self, query: str) -> str:
-        """
-        Türkçe sorguyu King James İncil (KJVA) araması için İngilizceye çevir.
-        
-        Args:
-            query: Türkçe arama sorgusu
-            
-        Returns:
-            İngilizce'ye çevrilmiş ve İncil terminolojisine uygun sorgu
-        """
-        prompt = f"""Translate the following Turkish query to English for searching in the King James Bible.
-Use proper Biblical terminology and phrasing. Return ONLY the English translation, no explanations.
-
-Turkish query: {query}
-English translation:"""
-        
-        return self._call_llm(prompt)
-
+        result = self._call_llm_json(prompt, system_prompt, examples)
+        return result.get("queries", [query])[:n]
 
 if __name__ == "__main__":
-    # Test QueryEnhancer
-    enhancer = QueryEnhancer()
-    
-    # Test with Turkish query
-    test_query_tr = "Tanrı'nın sevgisi ve merhameti"
-    print(f"Turkish Query: {test_query_tr}")
-    print(f"Expanded (English): {enhancer.expand_query(test_query_tr)}")
-    
-    # Test with English query
-    test_query_en = "God's love and mercy"
-    print(f"\nEnglish Query: {test_query_en}")
-    print(f"Expanded: {enhancer.expand_query(test_query_en)}")
-    
-    print(f"\nMulti-query (from Turkish):")
-    for i, q in enumerate(enhancer.generate_multi_query(test_query_tr), 1):
-        print(f"  {i}. {q}")
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+        
+        enhancer = QueryEnhancer()
+        
+        print("--- BIBLE MODE TEST ---")
+        q_bible = "Tanrı'nın sevgisi"
+        print(f"TR Input: {q_bible}")
+        print(f"Expanded: {enhancer.expand_query(q_bible, corpus='bible')}")
+        
+        print("\n--- QURAN MODE TEST ---")
+        q_quran = "God's mercy" # Intentionally English to test translation back to TR
+        print(f"EN Input: {q_quran}")
+        print(f"Expanded: {enhancer.expand_query(q_quran, corpus='quran')}")
+        
+    except Exception as e:
+        print(f"Test failed: {e}")

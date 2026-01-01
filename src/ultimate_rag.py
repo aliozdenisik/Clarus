@@ -133,18 +133,21 @@ class UltimateRAG:
         if self.verbose:
             console.print(f"[{style}]{message}[/{style}]")
     
-    def _enhance_query(self, query: str) -> str:
+    def _enhance_query(self, query: str, source: str = "bible_kjva") -> str:
         """Step 1: Enhance query with LLM"""
         self._log("⚡ Step 1: Query Enhancement...")
         start = time.time()
         
-        enhanced = self.enhancer.expand_query(query)
+        # Determine corpus from source
+        corpus = "quran" if "quran" in source else "bible"
+        
+        enhanced = self.enhancer.expand_query(query, corpus=corpus)
         
         duration = (time.time() - start) * 1000
-        self._log(f"   Enhanced in {duration:.0f}ms: {enhanced[:80]}...")
+        self._log(f"   Enhanced ({corpus}) in {duration:.0f}ms: {enhanced[:80]}...")
         return enhanced
     
-    def _generate_multi_queries(self, query: str, enhanced_query: str, n: int = 3) -> List[str]:
+    def _generate_multi_queries(self, query: str, enhanced_query: str, source: str = "bible_kjva", n: int = 3) -> List[str]:
         """Step 2: Generate multiple query perspectives"""
         if not self.enable_multi_query:
             return [enhanced_query]
@@ -152,12 +155,15 @@ class UltimateRAG:
         self._log("🔄 Step 2: Multi-Query Generation...")
         start = time.time()
         
+        # Determine corpus from source
+        corpus = "quran" if "quran" in source else "bible"
+        
         # Always include original and enhanced
         queries = [query, enhanced_query]
         
         # Generate additional perspectives
         try:
-            multi = self.enhancer.generate_multi_query(enhanced_query, n=n)
+            multi = self.enhancer.generate_multi_query(enhanced_query, n=n, corpus=corpus)
             queries.extend(multi)
         except Exception as e:
             self._log(f"   Warning: Multi-query failed: {e}", "yellow")
@@ -309,10 +315,10 @@ class UltimateRAG:
             console.print(f"[dim]Query: \"{query}\"[/dim]\n")
         
         # Step 1: Enhance query
-        enhanced_query = self._enhance_query(query)
+        enhanced_query = self._enhance_query(query, source=source)
         
         # Step 2: Generate multi-queries
-        all_queries = self._generate_multi_queries(query, enhanced_query)
+        all_queries = self._generate_multi_queries(query, enhanced_query, source=source)
         
         # Step 3: Search with all queries (RRF merge)
         search_results = self._search_all_queries(all_queries, source)
