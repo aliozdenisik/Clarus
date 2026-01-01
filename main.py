@@ -483,6 +483,53 @@ def cmd_ask_bible(args):
         traceback.print_exc()
         return 1
 
+
+def cmd_compare(args):
+    """Comparative scripture analysis - Search Quran and Bible, generate theological essay"""
+    query = args.query
+    verses = args.verses
+    translation = args.translation
+    
+    console.print("\n[bold magenta]📚 Comparative Scripture Analysis[/bold magenta]")
+    console.print("[dim]Searching Quran + Bible → Comparative Theological Essay[/dim]\n")
+    
+    try:
+        from src.comparative_rag import ComparativeRAG
+        rag = ComparativeRAG(
+            qdrant_url=args.qdrant_url,
+            bible_translation=translation,
+            verses_per_search=verses,
+            verbose=True
+        )
+        
+        result = rag.compare(query)
+        
+        # Display essay
+        console.print(Panel(
+            f"[white]{result.essay}[/white]",
+            title=f"[green]Karşılaştırmalı Analiz (Güven: {result.confidence:.0%})[/green]",
+            subtitle=f"[dim]{result.verses_provided} ayet kullanıldı[/dim]",
+            expand=False,
+            padding=(1, 2)
+        ))
+        
+        # Show references
+        if result.all_references:
+            console.print("\n[bold cyan]📖 Kullanılan Kaynaklar:[/bold cyan]")
+            for i, ref in enumerate(result.all_references, 1):
+                console.print(f"  {i}. {ref}")
+        
+        # Show source breakdown
+        console.print(f"\n[dim]Kuran: {len(result.quran_references)} | İncil: {len(result.bible_references)}[/dim]")
+        
+        return 0
+    except Exception as e:
+        console.print(f"[red][ERROR] Comparative analysis failed: {e}[/red]")
+        import traceback
+        traceback.print_exc()
+        return 1
+
+
 def cmd_build_bible_semantic_chunks(args):
     """Build semantic chunks for Bible"""
     import asyncio
@@ -733,6 +780,21 @@ def main():
         type=int,
         default=10,
         help="Number of search results to use as context"
+    )
+    
+    # Comparative Scripture Analysis command
+    compare_parser = subparsers.add_parser("compare", help="Comparative scripture analysis (Quran + Bible)")
+    compare_parser.add_argument("query", help="Religious/philosophical question")
+    compare_parser.add_argument(
+        "--verses",
+        type=int,
+        default=20,
+        help="Verses per search type (default: 20, total: 80)"
+    )
+    compare_parser.add_argument(
+        "--translation",
+        default="kjva",
+        help="Bible translation to use (default: kjva)"
     )
     
     # Info command
@@ -990,6 +1052,8 @@ def main():
         return cmd_ask(args)
     elif args.command == "ask-bible":
         return cmd_ask_bible(args)
+    elif args.command == "compare":
+        return cmd_compare(args)
     else:
         parser.print_help()
         return 0
