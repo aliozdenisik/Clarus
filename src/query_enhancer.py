@@ -32,7 +32,7 @@ class QueryEnhancer:
     """
     
     OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-    DEFAULT_MODEL = "google/gemini-2.5-flash-lite"
+    DEFAULT_MODEL = "google/gemini-2.0-flash-001"
     
     # --- BIBLE PROMPTS (English / KJV) ---
     SYSTEM_PROMPT_BIBLE = """You are an expert Biblical Scholar and Linguist specializing in the King James Version (KJV).
@@ -67,18 +67,24 @@ Step 3: Output the result strictly in the following JSON format:
     ]
 
     # --- QURAN PROMPTS (Turkish) ---
-    SYSTEM_PROMPT_QURAN = """Sen uzman bir İslam Alimi ve Kuran araştırmacısısın.
-Amacın, kullanıcı sorgularını Türkçe Kuran meallerinde arama yapmak için optimize etmektir.
+    SYSTEM_PROMPT_QURAN = """Sen uzman bir İslam Alimi ve Dilbilimcususun.
+Görevin Kuran aramaları için sorgu optimize etmektir.
 
-Adım 1: Sorgunun dilini algıla. Her zaman TÜRKÇE çıktı üretmelisin.
-Adım 2: Kuran terminolojisine uygun eşanlamlıları ve ilgili kavramları bul (örn: "Allah" -> "Rab", "Mevla"; "korku" -> "haşyet", "takva").
-Adım 3: Sonucu kesinlikle aşağıdaki JSON formatında ver:
+KURALLAR:
+1. Çıktıların TAMAMI %100 TÜRKÇE olmalıdır.
+2. ASLA İngilizce kelime kullanma (örn: 'God', 'Judgment', 'Wrath' YASAK).
+3. Eğer girdi İngilizce ise, önce Türkçeye çevir.
+4. Sadece Türkçe ve İslami terminoloji kullan (örn: 'Judgment' -> 'Kıyamet', 'Hesap Günü').
+
+Adım 1: Dili algıla. İngilizce ise Türkçeye çevir.
+Adım 2: Sadece TÜRKÇE eşanlamlılar üret.
+Adım 3: JSON formatında ver.
 
 {
     "original_language": "tr|en",
-    "translated_query": "string (Aynı kalmalı veya Türkçeye çevrilmeli)",
-    "expanded_terms": ["terim1", "terim2", "terim3"],
-    "final_search_query": "string (optimize edilmiş Türkçe sorgu)"
+    "translated_query": "string (Türkçe çevirisi)",
+    "expanded_terms": ["terim1 (tr)", "terim2 (tr)"],
+    "final_search_query": "string (Sadece Türkçe kelimeler)"
 }
 """
     FEW_SHOT_QURAN = [
@@ -123,7 +129,8 @@ Adım 3: Sonucu kesinlikle aşağıdaki JSON formatında ver:
                     "model": self.model,
                     "messages": messages,
                     "response_format": {"type": "json_object"},
-                    "max_tokens": 500
+                    "max_tokens": 500,
+                    "temperature": 0.3
                 },
                 timeout=30
             )
@@ -150,7 +157,21 @@ Adım 3: Sonucu kesinlikle aşağıdaki JSON formatında ver:
             examples = self.FEW_SHOT_BIBLE
             
         result = self._call_llm_json(prompt, system_prompt, examples)
-        return result.get("final_search_query", query)
+        final_query = result.get("final_search_query", query)
+        
+        # Post-Processing: Safety Filter for Quran Mode
+        if corpus == "quran":
+            blacklist = {
+                "god", "lord", "wrath", "tribulation", "judgment", "day", "bible", 
+                "christ", "jesus", "spirit", "holy", "father", "son", "gospel",
+                "eschaton", "last", "times", "of", "the", "and"
+            }
+            # Filter out blacklisted English terms (case-insensitive)
+            terms = final_query.split()
+            filtered_terms = [t for t in terms if t.lower() not in blacklist]
+            final_query = " ".join(filtered_terms)
+            
+        return final_query
     
     def generate_multi_query(self, query: str, n: int = 3, corpus: str = "bible") -> List[str]:
         """Generate multiple query perspectives based on corpus."""

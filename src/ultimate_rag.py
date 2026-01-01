@@ -379,23 +379,52 @@ def ultimate_search(query: str, source: str = "quran_tr", top_k: int = 10) -> Li
 
 
 if __name__ == "__main__":
+    from dotenv import load_dotenv
+    load_dotenv()
+    
     # Test the Ultimate RAG Pipeline
     console.print("[bold]Testing Ultimate RAG Pipeline[/bold]\n")
     
     rag = UltimateRAG()
     
-    test_queries = [
+    test_queries_quran = [
         "Kur'an'da şefaat kavramı nasıl açıklanır?",
-        "sabır ve namaz",
     ]
     
-    for query in test_queries:
-        console.print(f"\n{'='*60}")
-        results = rag.search_quran(query, top_k=5)
-        
-        console.print(f"\n[bold cyan]Results for: {query}[/bold cyan]")
+    console.print("\n[bold green]--- QURAN TESTS ---[/bold green]")
+    for query in test_queries_quran:
+        results = rag.search_quran(query, top_k=3)
+        console.print(f"\n[bold cyan]Query: {query}[/bold cyan]")
         for i, r in enumerate(results, 1):
-            ref = f"{r.surah_id}:{r.verse_id}" if hasattr(r, 'surah_id') else str(r.id)
-            text = r.translation[:100] if hasattr(r, 'translation') else str(r)[:100]
+            # Handle standard PointStruct or SemanticChunkSearchResult
+            payload = getattr(r, 'payload', {}) or {}
+            
+            # Try to get reference from object attributes or payload
+            surah = getattr(r, 'surah_id', payload.get('surah_id'))
+            verse = getattr(r, 'verse_id', getattr(r, 'verse_ids', payload.get('verse_id', payload.get('verse_ids'))))
+            
+            ref = f"{surah}:{verse}" 
+            text = getattr(r, 'translation', payload.get('translation', ''))[:100]
+            
             console.print(f"  {i}. [{ref}] (score: {r.score:.4f})")
             console.print(f"     {text}...")
+            
+    console.print("\n[bold green]--- BIBLE TESTS ---[/bold green]")
+    test_queries_bible = [
+        "God's love and mercy",
+    ]
+    for query in test_queries_bible:
+        results = rag.search_bible(query, top_k=3)
+        console.print(f"\n[bold cyan]Query: {query}[/bold cyan]")
+        for i, r in enumerate(results, 1):
+            payload = getattr(r, 'payload', {}) or {}
+            book = getattr(r, 'book_name', payload.get('book_name', 'Unknown'))
+            chapter = getattr(r, 'chapter_number', payload.get('chapter_number'))
+            verse = getattr(r, 'verse_number', payload.get('verse_number'))
+            
+            ref = f"{book} {chapter}:{verse}"
+            text = getattr(r, 'text', getattr(r, 'content', payload.get('text', '')))[:100]
+            
+            console.print(f"  {i}. [{ref}] (score: {r.score:.4f})")
+            console.print(f"     {text}...")
+
