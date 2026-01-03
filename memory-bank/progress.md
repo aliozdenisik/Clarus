@@ -35,6 +35,7 @@
 - [ ] Investigate low GT Recall (1%)
 - [ ] Add retry logic for API timeouts
 - [ ] Tune essay prompt for citation balance
+- [ ] Test faster models for Query Enhancer (currently Gemini 2.5 Flash Lite)
 
 ### Potential Enhancements
 
@@ -89,4 +90,6 @@
 
 - **v1**: Local models considered
 - **v2**: OpenRouter integration
-- **Current**: Gemini 2.5 Flash (Lite for enhancement, Full for generation)
+- **Current**:
+  - Query Enhancer: Gemini 2.5 Flash Lite (faster models can be tested)
+  - Essay Synthesis: Gemini 3.0 Flash (combines queries and generates final text)

@@ -34,6 +34,8 @@ The project has completed core implementation and is now in evaluation/optimizat
 
 ### Query Enhancement
 
+- **Query Enhancer Model**: Gemini 2.5 Flash Lite (faster models can be tested)
+- **Essay Synthesis Model**: Gemini 3.0 Flash (combines queries and generates final text)
 - Turkish queries use Turkish-only output for Quran
 - Bible queries get translated to English for search
 - Aggressive prompt constraints prevent English leakage in Quran queries
