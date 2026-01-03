@@ -45,6 +45,13 @@
 - [ ] Multi-language Bible support
 - [ ] GraphRAG integration (partially implemented)
 
+### Security
+
+- [ ] Implement prompt injection attack prevention
+  - User input sanitization and validation
+  - Hardened LLM system prompts with role boundaries
+  - Input/output validation layers
+
 ## Current Status
 
 | Area | Status | Notes |
