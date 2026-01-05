@@ -35,6 +35,15 @@
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+## Design Principles
+
+A good system design should incorporate the following core quality attributes:
+
+- **Scalability**: The system should handle increasing workloads gracefully, whether scaling vertically (more resources) or horizontally (more instances).
+- **Reliability**: The system should function correctly and consistently, handling failures gracefully with proper error handling and recovery mechanisms.
+- **Maintainability**: The codebase should be easy to understand, modify, and extend. This includes clear code organization, documentation, and modular architecture.
+- **Efficiency**: The system should optimize resource usage (CPU, memory, network, API calls) to minimize latency and operational costs.
+
 ## Key Technical Decisions
 
 ### 1. Hybrid Search (Dense + Sparse)
