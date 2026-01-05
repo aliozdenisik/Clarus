@@ -115,6 +115,7 @@ data/bible_kjva_semantic_chunks.json
 # Qdrant Database Storage
 # ----------------
 qdrant_storage/
+qdrant_data/
 
 # ----------------
 # Memory Bank (Agent Context)

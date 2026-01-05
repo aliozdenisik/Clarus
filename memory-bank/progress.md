@@ -62,6 +62,7 @@
 | Multi-Query | ✅ Complete | +2% confidence, +46% latency |
 | Documentation | ✅ Complete | Memory Bank created |
 | Testing | ⚠️ Partial | Evaluation scripts exist |
+| **Ubuntu Migration** | ✅ Complete | Python 3.12, Docker native (2026-01-05) |
 
 ## Known Issues
 

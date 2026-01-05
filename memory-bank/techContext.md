@@ -10,16 +10,24 @@
 | **LLM (Enhancement)** | Gemini 2.5 Flash Lite | Query expansion |
 | **LLM (Answers)** | Gemini 2.5 Flash | Answer generation |
 | **Reranker** | Qwen3-Reranker-8B | Via SiliconFlow API |
-| **Language** | Python 3.13 | Main development language |
+| **Language** | Python 3.12 | Ubuntu native (3.13 also compatible) |
 | **CLI** | argparse + Rich | Beautiful terminal output |
+| **OS** | Ubuntu Linux | Migrated from Windows (2026-01-05) |
 
 ## Development Setup
 
 ### Prerequisites
 
 ```bash
-# Start Qdrant
-docker run -p 6333:6333 qdrant/qdrant
+# Start Qdrant (with persistent storage)
+docker run -d --name qdrant \
+  -p 6333:6333 \
+  -v $(pwd)/qdrant_data:/qdrant/storage \
+  qdrant/qdrant
+
+# Create virtual environment
+python3.12 -m venv venv
+source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -121,6 +129,6 @@ qdrant/
 ├── src/                    # Python modules
 ├── tests/                  # Test scripts
 ├── cache/                  # Embedding cache
-├── qdrant_storage/         # Qdrant data
+├── qdrant_data/            # Qdrant Docker volume
 └── memory-bank/            # This documentation
 ```
