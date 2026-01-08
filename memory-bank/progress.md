@@ -35,7 +35,8 @@
 - [ ] Investigate low GT Recall (1%)
 - [ ] Add retry logic for API timeouts
 - [ ] Tune essay prompt for citation balance
-- [ ] Test faster models for Query Enhancer (currently Gemini 2.5 Flash Lite)
+- [ ] Test faster models for Query Enhancer (currently Gemini 3)
+- [ ] Migrate caching system to Redis (if feasible)
 
 ### Potential Enhancements
 
