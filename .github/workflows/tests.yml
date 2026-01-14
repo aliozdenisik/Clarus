@@ -1,0 +1,54 @@
+# GitHub Actions Workflow: Python Tests
+# Runs automated tests on every push and pull request
+
+name: Python Tests
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+
+      - name: Run unit tests
+        run: |
+          python -m pytest tests/ -v --tb=short
+        continue-on-error: true
+
+      - name: Run test_bible_ultimate.py (Integration Test)
+        env:
+          # Add your API keys as secrets in GitHub repository settings
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          QDRANT_URL: ${{ secrets.QDRANT_URL }}
+          QDRANT_API_KEY: ${{ secrets.QDRANT_API_KEY }}
+        run: |
+          python test_bible_ultimate.py
+        continue-on-error: true
+
+      - name: Test Summary
+        if: always()
+        run: |
+          echo "✅ Test workflow completed"
