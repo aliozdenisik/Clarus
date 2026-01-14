@@ -1,96 +1,96 @@
-# 🔐 Güvenlik Politikası
+# 🔐 Security Policy
 
-Sacred Texts Ultimate RAG Search projesinin güvenlik politikası ve en iyi uygulamaları.
-
----
-
-## 📋 İçindekiler
-
-- [API Anahtarı Güvenliği](#-api-anahtarı-güvenliği)
-- [Ortam Değişkenleri](#-ortam-değişkenleri)
-- [Qdrant Veritabanı Güvenliği](#-qdrant-veritabanı-güvenliği)
-- [Veri Güvenliği](#-veri-güvenliği)
-- [Güvenlik Açığı Bildirme](#-güvenlik-açığı-bildirme)
-- [Desteklenen Sürümler](#-desteklenen-sürümler)
+Security policy and best practices for the Sacred Texts Ultimate RAG Search project.
 
 ---
 
-## 🔑 API Anahtarı Güvenliği
+## 📋 Table of Contents
 
-### Gerekli API Anahtarları
+- [API Key Security](#-api-key-security)
+- [Environment Variables](#-environment-variables)
+- [Qdrant Database Security](#-qdrant-database-security)
+- [Data Security](#-data-security)
+- [Reporting a Vulnerability](#-reporting-a-vulnerability)
+- [Supported Versions](#-supported-versions)
 
-| Servis | Değişken Adı | Kullanım Alanı |
-|--------|--------------|----------------|
-| OpenRouter | `OPENROUTER_API_KEY` | LLM sorgulama (Gemini) |
+---
+
+## 🔑 API Key Security
+
+### Required API Keys
+
+| Service | Variable Name | Purpose |
+|---------|---------------|---------|
+| OpenRouter | `OPENROUTER_API_KEY` | LLM queries (Gemini) |
 | SiliconFlow | `SILICONFLOW_API_KEY` | Reranker (Qwen3) |
 
-### ⚠️ Önemli Kurallar
+### ⚠️ Important Rules
 
-1. **API anahtarlarını asla commit etmeyin**
+1. **Never commit API keys**
    ```bash
-   # .gitignore'da bu satırın olduğundan emin olun
+   # Ensure this line exists in .gitignore
    .env
    ```
 
-2. **Anahtarları kodda hardcode etmeyin**
+2. **Never hardcode keys in source code**
    ```python
-   # ❌ YANLIŞ
+   # ❌ WRONG
    api_key = "sk-abc123..."
    
-   # ✅ DOĞRU
+   # ✅ CORRECT
    api_key = os.getenv("OPENROUTER_API_KEY")
    ```
 
-3. **Düzenli anahtar rotasyonu yapın**
-   - Her 90 günde bir anahtarları yenileyin
-   - Şüpheli aktivite görürseniz hemen değiştirin
+3. **Rotate keys regularly**
+   - Renew keys every 90 days
+   - Change immediately if suspicious activity is detected
 
 ---
 
-## 🌍 Ortam Değişkenleri
+## 🌍 Environment Variables
 
-### `.env` Dosya Şablonu
+### `.env` File Template
 
 ```env
-# === API Anahtarları ===
+# === API Keys ===
 OPENROUTER_API_KEY=your-openrouter-key
 SILICONFLOW_API_KEY=your-siliconflow-key
 
-# === Opsiyonel Ayarlar ===
+# === Optional Settings ===
 QDRANT_HOST=localhost
 QDRANT_PORT=6333
-# QDRANT_API_KEY=your-qdrant-api-key  # Aktifse kullanın
+# QDRANT_API_KEY=your-qdrant-api-key  # Enable if using authentication
 ```
 
-### Dosya İzinleri
+### File Permissions
 
 ```bash
-# .env dosyasını sadece sahibi okuyabilsin
+# Restrict .env file to owner only
 chmod 600 .env
 ```
 
 ---
 
-## 🗄️ Qdrant Veritabanı Güvenliği
+## 🗄️ Qdrant Database Security
 
-### Yerel Geliştirme
+### Local Development
 
-Varsayılan Docker kurulumu güvenlik olmadan çalışır:
+Default Docker setup runs without authentication:
 
 ```bash
 docker run -p 6333:6333 qdrant/qdrant
 ```
 
-### Üretim Ortamı İçin Öneriler
+### Production Environment Recommendations
 
-1. **API Key Aktifleştirin**
+1. **Enable API Key Authentication**
    ```yaml
    # config.yaml
    service:
-     api_key: "güçlü-rastgele-anahtar-üretin"
+     api_key: "generate-a-strong-random-key"
    ```
 
-2. **TLS/HTTPS Kullanın**
+2. **Use TLS/HTTPS**
    ```bash
    docker run -p 6333:6333 \
      -v $(pwd)/tls:/qdrant/tls:ro \
@@ -98,97 +98,97 @@ docker run -p 6333:6333 qdrant/qdrant
      qdrant/qdrant
    ```
 
-3. **Ağ İzolasyonu**
-   - Qdrant portunu dışarıya açmayın
-   - Docker network veya VPN kullanın
+3. **Network Isolation**
+   - Do not expose Qdrant port externally
+   - Use Docker networks or VPN
 
-4. **Düzenli Yedekleme**
+4. **Regular Backups**
    ```bash
-   # Snapshot oluştur
+   # Create snapshot
    curl -X POST 'http://localhost:6333/collections/quran_tr/snapshots'
    ```
 
 ---
 
-## 📊 Veri Güvenliği
+## 📊 Data Security
 
-### Depolanan Veriler
+### Stored Data
 
-| Koleksiyon | İçerik | Hassasiyet |
-|------------|--------|------------|
-| `quran_tr` | Kuran ayetleri (Türkçe) | Düşük |
-| `quran_tr_semantic_chunks` | Semantik gruplar | Düşük |
-| `bible_kjva` | İncil (KJVA) | Düşük |
-| `bible_kjva_semantic_chunks` | Semantik gruplar | Düşük |
+| Collection | Content | Sensitivity |
+|------------|---------|-------------|
+| `quran_tr` | Quran verses (Turkish) | Low |
+| `quran_tr_semantic_chunks` | Semantic groups | Low |
+| `bible_kjva` | Bible (KJVA) | Low |
+| `bible_kjva_semantic_chunks` | Semantic groups | Low |
 
-### Cache Güvenliği
+### Cache Security
 
-- Cache dosyaları `cache/` dizininde saklanır
-- Hassas sorgu verileri içerebilir
-- Paylaşılan sistemlerde dikkatli olun
+- Cache files are stored in `cache/` directory
+- May contain sensitive query data
+- Be cautious on shared systems
 
 ```bash
-# Cache temizleme
+# Clear cache
 python main.py cache-clear
 ```
 
 ---
 
-## 🚨 Güvenlik Açığı Bildirme
+## 🚨 Reporting a Vulnerability
 
-### Bildirme Süreci
+### Reporting Process
 
-1. **Gizli Tutun**: Açığı kamuya açıklamayın
-2. **Detaylı Raporlayın**:
-   - Açığın tanımı
-   - Yeniden üretme adımları
-   - Potansiyel etki
-   - Varsa çözüm önerisi
+1. **Keep it confidential**: Do not disclose publicly
+2. **Provide detailed report**:
+   - Description of the vulnerability
+   - Steps to reproduce
+   - Potential impact
+   - Suggested fix (if any)
 
-3. **İletişim**:
-   - GitHub Issues üzerinden **gizli** issue açın
-   - Veya proje sahibine doğrudan ulaşın
+3. **Contact**:
+   - Open a **private** issue on GitHub
+   - Or contact the project maintainer directly
 
-### Yanıt Süreci
+### Response Timeline
 
-| Aşama | Süre |
-|-------|------|
-| İlk yanıt | 48 saat içinde |
-| Değerlendirme | 7 gün içinde |
-| Yama yayını | Kritik: 7 gün, Orta: 30 gün |
+| Phase | Timeframe |
+|-------|-----------|
+| Initial response | Within 48 hours |
+| Assessment | Within 7 days |
+| Patch release | Critical: 7 days, Medium: 30 days |
 
-### Kapsam Dışı
+### Out of Scope
 
-- DoS saldırıları (zaten yerel/özel kullanım için)
-- Sosyal mühendislik
-- Fiziksel erişim saldırıları
-
----
-
-## 📦 Desteklenen Sürümler
-
-| Sürüm | Durum | Notlar |
-|-------|-------|--------|
-| `main` branch | ✅ Aktif | En güncel, desteklenen |
-| Eski commit'ler | ❌ Desteklenmiyor | Güncel sürüme geçin |
+- DoS attacks (designed for local/private use)
+- Social engineering
+- Physical access attacks
 
 ---
 
-## 🛡️ Güvenlik Kontrol Listesi
+## 📦 Supported Versions
 
-Üretim ortamına geçmeden önce kontrol edin:
-
-- [ ] `.env` dosyası `.gitignore`'da
-- [ ] API anahtarları güçlü ve benzersiz
-- [ ] Qdrant API key aktif (üretim için)
-- [ ] TLS/HTTPS etkin (üretim için)
-- [ ] Dosya izinleri kısıtlı (`chmod 600 .env`)
-- [ ] Düzenli yedekleme planı var
-- [ ] Cache verileri gözden geçirildi
+| Version | Status | Notes |
+|---------|--------|-------|
+| `main` branch | ✅ Active | Latest, supported |
+| Older commits | ❌ Unsupported | Please upgrade |
 
 ---
 
-## 📚 Ek Kaynaklar
+## 🛡️ Security Checklist
+
+Verify before deploying to production:
+
+- [ ] `.env` file is in `.gitignore`
+- [ ] API keys are strong and unique
+- [ ] Qdrant API key enabled (for production)
+- [ ] TLS/HTTPS enabled (for production)
+- [ ] File permissions restricted (`chmod 600 .env`)
+- [ ] Regular backup plan in place
+- [ ] Cache data reviewed
+
+---
+
+## 📚 Additional Resources
 
 - [Qdrant Security Best Practices](https://qdrant.tech/documentation/guides/security/)
 - [OpenRouter API Docs](https://openrouter.ai/docs)
@@ -196,4 +196,4 @@ python main.py cache-clear
 
 ---
 
-*Son güncelleme: Ocak 2026*
+*Last updated: January 2026*
