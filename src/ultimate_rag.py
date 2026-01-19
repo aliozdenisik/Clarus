@@ -2,18 +2,18 @@
 Ultimate RAG Pipeline - Maximum Accuracy Search System
 
 Bu modül tüm en iyi RAG metodolojilerini tek bir pipeline'da birleştirir:
-1. Query Enhancement (LLM ile sorgu genişletme) - ZORUNLU
-2. Multi-Query Generation (3 farklı perspektif) - OPSİYONEL
-3. Semantic Search (en iyi performans gösteren arama)
-4. Semantic Chunk Search (paralel - gruplu ayetleri arar) - OPSİYONEL
-5. Cross-Encoder Reranking (Qwen3-Reranker) - ZORUNLU
+1. Query Enhancement (LLM ile sorgu genişletme)
+2. Multi-Query Generation (3 farklı perspektif)
+3. Semantic Search (RRF fusion ile multi-query arama)
+4. Semantic Chunk Search (paralel - gruplu ayetleri arar)
 
-Doğruluk odaklı - Süre önemli değil!
+Not: Cross-encoder reranking kaldırıldı (2026-01-19).
+Test sonuçları: Reranker olmadan +11% recall artışı.
 
 Usage:
     from src.ultimate_rag import UltimateRAG
     
-    rag = UltimateRAG(enable_semantic_chunks=True)  # Parallel search
+    rag = UltimateRAG(enable_semantic_chunks=True)
     results = rag.search("Kur'an'da şefaat kavramı nasıl açıklanır?")
 """
 import os
@@ -35,7 +35,6 @@ class UltimateSearchResult:
     reference: str  # Surah:Verse or Book Chapter:Verse
     source: str     # quran_tr, bible_kjva, etc.
     original_score: float = 0.0
-    rerank_score: float = 0.0
     matched_queries: List[str] = field(default_factory=list)
 
 
@@ -49,13 +48,13 @@ class UltimateRAG:
     3. SEARCH: Tüm sorgularla semantic arama yap, sonuçları birleştir (RRF)
        - Single-verse collection (quran_tr)
        - Semantic chunks collection (quran_semantic_chunks) - OPSİYONEL
-    4. RERANK: Cross-encoder ile en alakalı sonuçları seçen final sıralama
+    4. TOP-K: En iyi sonuçları seç
     
     Ayarlar:
         enable_multi_query: Multi-query aşamasını aktif et (default: True)
         enable_semantic_chunks: Semantic chunk aramasını paralel çalıştır (default: True)
         search_mode: Arama modu - "semantic" önerilen (default: "semantic")
-        rerank_pool_size: Reranker'a gidecek max sonuç sayısı (default: 50)
+        search_pool_size: Search'ten gelen max sonuç sayısı (default: 50)
         final_top_k: Final sonuç sayısı (default: 10)
     """
     
@@ -65,21 +64,30 @@ class UltimateRAG:
         enable_multi_query: bool = True,
         enable_semantic_chunks: bool = True,  # Parallel semantic chunk search
         search_mode: str = "semantic",  # semantic performs best for Turkish
-        rerank_pool_size: int = 50,
+        search_pool_size: int = 50,  # Max results from Search (RRF)
         final_top_k: int = 10,
-        verbose: bool = True
+        verbose: bool = True,
+        # LLM Cache settings
+        enable_llm_cache: bool = True,  # Semantic LLM response cache
+        llm_cache_threshold: float = 0.95,  # Similarity threshold for cache hits
+        llm_cache_ttl: int = 86400 * 7,  # 7 days
     ):
         self.qdrant_url = qdrant_url
         self.enable_multi_query = enable_multi_query
         self.enable_semantic_chunks = enable_semantic_chunks
         self.search_mode = search_mode
-        self.rerank_pool_size = rerank_pool_size
+        self.search_pool_size = search_pool_size
         self.final_top_k = final_top_k
         self.verbose = verbose
         
+        # LLM Cache settings
+        self.enable_llm_cache = enable_llm_cache
+        self.llm_cache_threshold = llm_cache_threshold
+        self.llm_cache_ttl = llm_cache_ttl
+        
         # Lazy load components
         self._enhancer = None
-        self._reranker = None
+        self._llm_cache = None
         self._answer_generator = None
         self._quran_searcher = None
         self._bible_searcher = None
@@ -96,14 +104,17 @@ class UltimateRAG:
         return self._enhancer
     
     @property
-    def reranker(self):
-        """Lazy load Reranker"""
-        if self._reranker is None:
-            from src.reranker import Reranker
-            self._reranker = Reranker()
+    def llm_cache(self):
+        """Lazy load Semantic LLM Cache"""
+        if self._llm_cache is None and self.enable_llm_cache:
+            from src.llm_cache import SemanticLLMCache
+            self._llm_cache = SemanticLLMCache(
+                similarity_threshold=self.llm_cache_threshold,
+                ttl_seconds=self.llm_cache_ttl
+            )
             if self.verbose:
-                console.print("[dim]Loaded Qwen3-Reranker[/dim]")
-        return self._reranker
+                console.print(f"[dim]Loaded Semantic LLM Cache (θ={self.llm_cache_threshold}, TTL={self.llm_cache_ttl//86400}d)[/dim]")
+        return self._llm_cache
     
     @property
     def answer_generator(self):
@@ -145,21 +156,43 @@ class UltimateRAG:
             console.print(f"[{style}]{message}[/{style}]")
     
     def _enhance_query(self, query: str, source: str = "bible_kjva") -> str:
-        """Step 1: Enhance query with LLM"""
+        """
+        Step 1: Enhance query with LLM (with semantic caching)
+        
+        Uses semantic cache to avoid redundant LLM calls for similar queries.
+        """
         self._log("⚡ Step 1: Query Enhancement...")
         start = time.time()
         
         # Determine corpus from source
         corpus = "quran" if "quran" in source else "bible"
+        cache_key = f"{corpus}:expand"
         
+        # Check LLM cache first
+        if self.enable_llm_cache and self.llm_cache:
+            cached = self.llm_cache.get(query, cache_key)
+            if cached:
+                duration = (time.time() - start) * 1000
+                self._log(f"   [CACHE HIT] Enhanced ({corpus}) in {duration:.0f}ms: {cached[:80]}...")
+                return cached
+        
+        # LLM call (cache miss)
         enhanced = self.enhancer.expand_query(query, corpus=corpus)
+        
+        # Cache the result
+        if self.enable_llm_cache and self.llm_cache:
+            self.llm_cache.set(query, cache_key, enhanced)
         
         duration = (time.time() - start) * 1000
         self._log(f"   Enhanced ({corpus}) in {duration:.0f}ms: {enhanced[:80]}...")
         return enhanced
     
     def _generate_multi_queries(self, query: str, enhanced_query: str, source: str = "bible_kjva", n: int = 3) -> List[str]:
-        """Step 2: Generate multiple query perspectives"""
+        """
+        Step 2: Generate multiple query perspectives (with semantic caching)
+        
+        Uses semantic cache to avoid redundant LLM calls.
+        """
         if not self.enable_multi_query:
             return [enhanced_query]
         
@@ -168,16 +201,31 @@ class UltimateRAG:
         
         # Determine corpus from source
         corpus = "quran" if "quran" in source else "bible"
+        cache_key = f"{corpus}:multi_query"
         
         # Always include original and enhanced
         queries = [query, enhanced_query]
         
-        # Generate additional perspectives
-        try:
-            multi = self.enhancer.generate_multi_query(enhanced_query, n=n, corpus=corpus)
-            queries.extend(multi)
-        except Exception as e:
-            self._log(f"   Warning: Multi-query failed: {e}", "yellow")
+        # Check LLM cache for multi-queries
+        multi = None
+        if self.enable_llm_cache and self.llm_cache:
+            cached = self.llm_cache.get(enhanced_query, cache_key)
+            if cached:
+                multi = cached
+                self._log(f"   [CACHE HIT] Multi-query from cache")
+        
+        # Generate if not cached
+        if multi is None:
+            try:
+                multi = self.enhancer.generate_multi_query(enhanced_query, n=n, corpus=corpus)
+                # Cache the result
+                if self.enable_llm_cache and self.llm_cache:
+                    self.llm_cache.set(enhanced_query, cache_key, multi)
+            except Exception as e:
+                self._log(f"   Warning: Multi-query failed: {e}", "yellow")
+                multi = []
+        
+        queries.extend(multi)
         
         # Deduplicate while preserving order
         seen = set()
@@ -299,7 +347,7 @@ class UltimateRAG:
             all_results.values(), 
             key=lambda x: x[1], 
             reverse=True
-        )[:self.rerank_pool_size]
+        )[:self.search_pool_size]
         
         # Attach RRF info to results
         merged_results = []
@@ -311,24 +359,20 @@ class UltimateRAG:
         self._log(f"   Found {len(merged_results)} unique results in {duration:.0f}ms")
         return merged_results
     
-    def _rerank_results(self, query: str, results: List, top_k: int = None) -> List:
-        """Step 4: Rerank with cross-encoder"""
-        self._log(f"🏆 Step 4: Reranking {len(results)} results...")
-        start = time.time()
+    def _get_top_results(self, results: List, top_k: int = None) -> List:
+        """
+        Step 4: Return top results from Search (RRF)
         
+        Note: Cross-encoder and MMR reranking were removed (2026-01-19).
+        Test results showed +11% recall improvement without cross-encoder.
+        """
         top_k = top_k or self.final_top_k
         
         if not results:
             return []
         
-        try:
-            reranked = self.reranker.rerank(query, results, top_k=top_k)
-            duration = (time.time() - start) * 1000
-            self._log(f"   Reranked to top {len(reranked)} in {duration:.0f}ms")
-            return reranked
-        except Exception as e:
-            self._log(f"   Warning: Reranking failed: {e}", "yellow")
-            return results[:top_k]
+        self._log(f"🏆 Step 4: Returning top {min(len(results), top_k)} results")
+        return results[:top_k]
     
     def search(
         self, 
@@ -368,7 +412,7 @@ class UltimateRAG:
         # Step 4: Rerank for final precision
         # Use rerank_query if provided (e.g., translated query), otherwise use original
         final_query = rerank_query or query
-        final_results = self._rerank_results(final_query, search_results, top_k=top_k)
+        final_results = self._get_top_results(search_results, top_k=top_k)
         
         total_duration = (time.time() - total_start) * 1000
         

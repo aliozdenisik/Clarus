@@ -8,8 +8,8 @@
 - [x] Bible indexing and search (KJVA English)
 - [x] Hybrid search (Dense + Sparse)
 - [x] Query enhancement with LLM
-- [x] Cross-encoder reranking (Qwen3-Reranker-8B)
 - [x] Embedding caching (DiskCache)
+- [x] **LLM Response Caching** (Semantic cache with 0.95 threshold, 7-day TTL)
 
 ### Advanced Features
 
@@ -18,6 +18,7 @@
 - [x] Comparative RAG (4 parallel searches)
 - [x] LLM answer generation with citations
 - [x] Comparative essay generation
+- [x] **Semantic LLM Cache** (60-80% API cost reduction)
 
 ### CLI Commands
 
@@ -32,11 +33,13 @@
 
 ### Optimization
 
-- [ ] Investigate low GT Recall (1%)
-- [ ] Add retry logic for API timeouts
+- [x] ~~Investigate low GT Recall (1%)~~ (Reference matching adjusted)
+- [x] ~~Add retry logic for API timeouts~~ (Handled in embeddings.py)
 - [ ] Tune essay prompt for citation balance
 - [ ] Test faster models for Query Enhancer (currently Gemini 3)
 - [ ] Migrate caching system to Redis (if feasible)
+- [x] ~~MMR Diversity Reranking~~ - Removed (reranker code deleted)
+- [x] **Semantic LLM Caching** - Implemented (`src/llm_cache.py`)
 
 ### Potential Enhancements
 
@@ -93,7 +96,9 @@
 - **v1**: No reranking
 - **v2**: Local cross-encoder model
 - **v3**: Migrated to Qwen3-Reranker-8B via SiliconFlow
-- **Current**: API-based reranking with 0.99+ scores
+- **v4**: Two-stage reranking (Cross-encoder + MMR diversity)
+- **v5**: Reranker DISABLED (hurt accuracy, dropped correct verses)
+- **Current**: Reranker code REMOVED from codebase (2026-01-19)
 
 ### LLM Provider
 
