@@ -15,6 +15,7 @@ Project migrated from Windows to Ubuntu. Ready for VPS deployment preparation.
 3. **LLM Answer Generation** - Gemini-powered cited responses
 4. **Bible Semantic Chunks** - Thematic grouping for Bible verses
 5. **Query Enhancement** - Turkish/English aware query expansion
+6. **Project Cleanup** - Moved unused test scripts to `tests/archive/`
 
 ### Latest Evaluation Results
 
