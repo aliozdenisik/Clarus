@@ -1,641 +1,255 @@
 {
-    "dataset_metadata": {
-        "name": "Ibrahimi_Metinler_Semantik_Arama_Test_Seti",
-        "version": "1.0",
-        "description": "Kur'an ve Kitab-ı Mukaddes (Tevrat, Zebur, İncil) metinleri üzerinde kitap isminden bağımsız (book-agnostic) arama performansı ölçümü için hazırlanan 50 adetlik 'Ground Truth' veri seti.",
-        "language": "tr",
-        "total_samples": 50,
-        "categories": []
+  "metadata": {
+    "version": "1.0",
+    "total_tests": 35,
+    "created_at": "2026-01-19",
+    "description": "Kuran ve İncil RAG Sistemi Retrieval Accuracy Testi"
+  },
+  "tests": [
+    {
+      "id": "Q001",
+      "source": "quran",
+      "difficulty": "easy",
+      "question": "Fatiha suresi kaç ayetten oluşur?",
+      "expected_verses": ["1:1-7"]
     },
-    "data": [
-        {
-            "id": 1,
-            "category": "Teoloji ve Kozmogoni",
-            "query": "…",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 2,
-            "category": "Teoloji ve Kozmogoni",
-            "query": "Göklerin ve yerin altı günde veya evrede yaratıldığını anlatan ayetler nerede geçer?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 3,
-            "category": "Teoloji ve Kozmogoni",
-            "query": "Göklerin ve yerin başlangıçta bitişik bir kütle olduğunu ve sonradan ayrıldığını ifade eden ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Enbiya 21:30"
-                ],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 4,
-            "category": "Teoloji ve Kozmogoni",
-            "query": "Tanrı'nın egemenliğinin, kürsüsünün veya tahtının gökleri ve yeri kuşattığını anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 5,
-            "category": "Teoloji ve Kozmogoni",
-            "query": "Tanrı'nın her şeyi bildiğini, düşen bir yapraktan veya insanın içinden geçen fısıltılardan bile haberdar olduğunu söyleyen ayetler nelerdir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Enam 6:59",
-                    "Kaf 50:16"
-                ],
-                "bible_refs": [
-                    "Matta 10:30",
-                    "Mezmurlar 139:1-4"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 6,
-            "category": "Antropogoni",
-            "query": "İlk insanın çamurdan veya topraktan şekillendirilip, daha sonra ona ruh üflendiğini belirten ayetler nerede bulunur?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 7,
-            "category": "Antropogoni",
-            "query": "Adem ve eşinin cennetteki yasak ağaca yaklaşmamaları konusundaki uyarıyı, şeytanın/yılanın kandırmasını ve sonrasında işledikleri hatayı anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 8,
-            "category": "Antropogoni",
-            "query": "Adem'in iki oğlunun hikayesini, birinin sunduğu kurbanın kabul edilip diğerinin edilmediğini ve bunun sonucunda kardeşini öldürdüğünü anlatan ayetler nelerdir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Maide 5:27-31"
-                ],
-                "bible_refs": [],
-                "keywords": [
-                    "Habil",
-                    "Kabil",
-                    "Kain",
-                    "İlk cinayet",
-                    "Kurban"
-                ]
-            }
-        },
-        {
-            "id": 9,
-            "category": "Antropogoni",
-            "query": "Adem ve eşinin işledikleri hatadan sonra Tanrı'ya yalvarıp tövbe ettiklerini ve bağışlandıklarını anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 10,
-            "category": "Antropogoni",
-            "query": "Bütün insanların tek bir nefisten (candam/özden) yaratıldığını ve eşinin de ondan var edildiğini belirten ayetler nerede geçer?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Nisa 4:1",
-                    "Araf 7:189"
-                ],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 11,
-            "category": "Nuh ve Tufan",
-            "query": "Nuh'a bir gemi yapmasının emredildiğini ve tufan kopup sular yükseldiğinde inananların (veya ailesinin) bu gemiyle kurtulduğunu anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Hud 11:36-40",
-                    "Müminun 23:27"
-                ],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 12,
-            "category": "Nuh ve Tufan",
-            "query": "Nuh'un, gemiye binmeyi reddeden ve 'dağa sığınırım' diyerek boğulan oğlunun hikayesini anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Hud 11:42-43"
-                ],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 13,
-            "category": "Nuh ve Tufan",
-            "query": "Tufan suları çekildikten sonra Nuh'un gemisinin oturduğu dağın isminin geçtiği ayetler neresidir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Hud 11:44"
-                ],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 14,
-            "category": "Nuh ve Tufan",
-            "query": "Tufandan sonra Nuh'a ve yanındakilere 'selametle in' denildiğini veya Tanrı'nın Nuh ile bir ahit/sözleşme yaptığını belirten ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Hud 11:48"
-                ],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 15,
-            "category": "Nuh ve Tufan",
-            "query": "Nuh'un kavmi arasında ne kadar süre (örneğin 950 yıl) kaldığını belirten ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Ankebut 29:14"
-                ],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 16,
-            "category": "İbrahim ve Ata Peygamberler",
-            "query": "İbrahim'e insan suretinde misafir olarak gelen meleklerin, ona ve yaşlı/kısır karısına bir oğul (İshak) müjdesi verdikleri olayı anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Hud 11:69-73",
-                    "Zariyat 51:24-30"
-                ],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 17,
-            "category": "İbrahim ve Ata Peygamberler",
-            "query": "Lut kavminin erkeklere yönelerek o güne kadar kimsenin yapmadığı bir sapkınlığı yaptığını ve bu yüzden şehirlerinin alt üst edilip taş yağmuruyla yok edildiğini anlatan ayetler nelerdir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Araf 7:80-84",
-                    "Hud 11:82-83"
-                ],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 18,
-            "category": "İbrahim ve Ata Peygamberler",
-            "query": "Lut peygamber şehirden çıkarılırken karısının arkada kalarak veya geriye bakarak helak olanlardan olduğunu belirten ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 19,
-            "category": "İbrahim ve Ata Peygamberler",
-            "query": "İbrahim'in, halkının putlarını kırdığı için ateşe atıldığını ancak ateşin onu yakmadığını anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Enbiya 21:51-70",
-                    "Ankebut 29:24"
-                ],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 20,
-            "category": "İbrahim ve Ata Peygamberler",
-            "query": "İbrahim'in rüyasında oğlunu kurban ettiğini gördüğünü, bunu gerçekleştirmek üzereyken Tanrı'nın ona bir kurbanlık (koç) gönderdiğini anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 21,
-            "category": "Yusuf Kıssası",
-            "query": "Yusuf'un babasına; on bir yıldızın, güneşin ve ayın kendisine secde ettiğini gördüğü rüyasını anlattığı ayetler nerede geçer?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 22,
-            "category": "Yusuf Kıssası",
-            "query": "Kardeşlerinin Yusuf'u kıskanarak onu bir kuyuya attıklarını ve babalarına 'onu kurt yedi' diye yalan söylediklerini anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 23,
-            "category": "Yusuf Kıssası",
-            "query": "Yusuf'un, efendisinin karısı tarafından baştan çıkarılmaya çalışıldığını, Yusuf'un kaçarken gömleğinin (arkadan) yırtıldığını anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": [
-                    "Potifar'ın karısı",
-                    "Gömlek yırtılması",
-                    "Züleyha",
-                    "İffet"
-                ]
-            }
-        },
-        {
-            "id": 24,
-            "category": "Yusuf Kıssası",
-            "query": "Yusuf'un zindanda iki arkadaşının (biri şarap sunucusu, diğeri ekmekçi) rüyalarını yorumladığını anlatan ayetler nelerdir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 25,
-            "category": "Yusuf Kıssası",
-            "query": "Mısır Kralı/Firavunu'nun rüyasında yedi zayıf ineğin yedi semiz ineği yediğini gördüğünü ve Yusuf'un bunu yedi yıl bolluk ve yedi yıl kıtlık olarak yorumladığını anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 26,
-            "category": "Musa ve Çıkış",
-            "query": "Musa'nın kutsal vadide (Tuvâ/Horeb) bir ateş gördüğünü, oraya gittiğinde Tanrı'nın kendisine seslendiğini ve 'Ayakkabılarını çıkar' dediğini anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [
-                    "Çıkış 3:1-6"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 27,
-            "category": "Musa ve Çıkış",
-            "query": "Musa'nın elindeki asayı yere attığında yılana dönüştüğünü ve elini koynuna sokup çıkardığında bembeyaz parladığını anlatan ayetler nelerdir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [
-                    "Çıkış 4:2-7"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 28,
-            "category": "Musa ve Çıkış",
-            "query": "Musa'nın sihirbazlarla karşılaştığını, asasının onların iplerini yuttuğunu ve sihirbazların hemen orada Tanrı'ya iman edip secdeye kapandıklarını anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [
-                    "Çıkış 7:11-12"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 29,
-            "category": "Musa ve Çıkış",
-            "query": "Musa'nın asasıyla denize vurduğunu, denizin yarıldığını, İsrailoğulları'nın geçtiğini ancak Firavun ve ordusunun boğulduğunu anlatan ayetler nerede geçer?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [
-                    "Çıkış 14:21-28"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 30,
-            "category": "Musa ve Çıkış",
-            "query": "Musa Tur dağındayken kavminin erittikleri altınlardan bir buzağı heykeli yapıp ona taptıklarını anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [
-                    "Çıkış 32:1-24"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 31,
-            "category": "Krallar ve Bilgeler",
-            "query": "Davut'un (henüz genç bir askerken) Calut'u (Golyat'ı) sapanla/taşla öldürdüğünü ve sonrasında Tanrı'nın ona mülk/hükümdarlık verdiğini anlatan ayetler nelerdir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 32,
-            "category": "Krallar ve Bilgeler",
-            "query": "Davut peygambere 'Zebur' (Mezmurlar) adında bir kutsal kitap verildiğini belirten ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "İsra 17:55",
-                    "Nisa 4:163"
-                ],
-                "bible_refs": [
-                    "Mezmurlar Kitabı"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 33,
-            "category": "Krallar ve Bilgeler",
-            "query": "Sebe Melikesi'nin (Belkıs) Süleyman'ın sarayına geldiğini, Süleyman'ın zenginliği ve bilgeliği karşısında etkilendiğini anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Neml 27:23-44"
-                ],
-                "bible_refs": [
-                    "1. Krallar 10:1-13"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 34,
-            "category": "Krallar ve Bilgeler",
-            "query": "Eyüp peygamberin ağır bir hastalığa yakalandığını, sabrettiğini ve sonunda Tanrı'nın ona şifa verip ailesini ve malını iade ettiğini anlatan ayetler nelerdir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [
-                    "Eyüp Kitabı 1-2, 42:10-17"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 35,
-            "category": "Krallar ve Bilgeler",
-            "query": "Yunus'un gemiden denize atıldığını, büyük bir balık tarafından yutulduğunu ve balığın karnında dua ettikten sonra kurtarıldığını anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 36,
-            "category": "İsa ve Meryem",
-            "query": "Meryem'e bir melek (Cebrail) görünüp, ona bir erkek eli değmeden, mucizevi bir şekilde bir oğul (İsa) doğuracağını müjdelediği ayetler nelerdir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Meryem 19:16-21",
-                    "Ali İmran 3:45-47"
-                ],
-                "bible_refs": [
-                    "Luka 1:26-38"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 37,
-            "category": "İsa ve Meryem",
-            "query": "İsa'nın çamurdan kuş yapıp ona üfleyerek canlandırdığını, körleri ve cüzamlıları iyileştirdiğini anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Ali İmran 3:49",
-                    "Maide 5:110"
-                ],
-                "bible_refs": [],
-                "keywords": [
-                    "İsa'nın mucizeleri",
-                    "Kuş",
-                    "Şifa",
-                    "Cüzamlı",
-                    "Kör"
-                ]
-            }
-        },
-        {
-            "id": 38,
-            "category": "İsa ve Meryem",
-            "query": "Havarilerin İsa'dan gökten bir sofra/yiyecek indirmesini istedikleri veya İsa'nın son akşam yemeğini anlatan ayetler nelerdir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Maide 5:112-115"
-                ],
-                "bible_refs": [
-                    "Matta 26:17-30"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 39,
-            "category": "Hukuk ve Etik",
-            "query": "Domuz etinin yenmesini yasaklayan, onu 'pis' veya 'mekruh' olarak tanımlayan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 40,
-            "category": "Hukuk ve Etik",
-            "query": "Faiz almayı/tefeciliği yasaklayan, parayı borç verip fazlasını istemeyi kınayan ayetler nerede geçer?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [
-                    "Çıkış 22:25",
-                    "Levililer 25:36-37"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 41,
-            "category": "Hukuk ve Etik",
-            "query": "Cana can, göze göz, dişe diş şeklinde misilleme (kısas) hükmünü içeren ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Maide 5:45"
-                ],
-                "bible_refs": [
-                    "Çıkış 21:23-25",
-                    "Levililer 24:19-20"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 42,
-            "category": "Hukuk ve Etik",
-            "query": "Zina etmeyi (evlilik dışı cinsel ilişkiyi) kesin bir dille yasaklayan emirler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "İsra 17:32"
-                ],
-                "bible_refs": [
-                    "Çıkış 20:14"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 43,
-            "category": "Hukuk ve Etik",
-            "query": "Anne ve babaya iyi davranmayı, onlara saygısızlık etmemeyi emreden ayetler nelerdir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "İsra 17:23"
-                ],
-                "bible_refs": [
-                    "Çıkış 20:12"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 44,
-            "category": "Hukuk ve Etik",
-            "query": "Yalan yere şahitlik yapmayı yasaklayan ve adaleti emreden ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Furkan 25:72",
-                    "Nisa 4:135"
-                ],
-                "bible_refs": [
-                    "Çıkış 20:16"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 45,
-            "category": "Hukuk ve Etik",
-            "query": "Ticarette ölçü ve tartıyı doğru yapmayı, insanları aldatmamayı emreden ayetler nelerdir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Mutaffifin 83:1-3",
-                    "İsra 17:35"
-                ],
-                "bible_refs": [],
-                "keywords": []
-            }
-        },
-        {
-            "id": 46,
-            "category": "Eskatoloji",
-            "query": "Ahir zamanda ortaya çıkacak olan, setleri aşıp yeryüzüne yayılacak Yecüc ve Mecüc kavimlerini anlatan ayetler nerede geçer?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Enbiya 21:96",
-                    "Kehf 18:94"
-                ],
-                "bible_refs": [
-                    "Hezekiel 38:2",
-                    "Vahiy 20:8"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 47,
-            "category": "Eskatoloji",
-            "query": "Kıyamet günü geldiğinde bir boruya/sura üfleneceğini ve ölülerin dirileceğini anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [
-                    "1. Korintliler 15:52",
-                    "Matta 24:31"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 48,
-            "category": "Eskatoloji",
-            "query": "İnananlara vadedilen, altından ırmaklar akan cennetleri/bahçeleri anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [
-                    "Vahiy 22:1-2"
-                ],
-                "keywords": []
-            }
-        },
-        {
-            "id": 49,
-            "category": "Eskatoloji",
-            "query": "Günahkarların atılacağı, sönmeyen bir ateşi (Cehennem/Gehenna) anlatan ayetler nelerdir?",
-            "ground_truth": {
-                "quran_refs": [
-                    "Nebe 78:21-30"
-                ],
-                "bible_refs": [
-                    "Markos 9:43",
-                    "Matta 25:41"
-                ],
-                "keywords": [
-                    "Cehennem",
-                    "Ateş",
-                    "Azap"
-                ]
-            }
-        },
-        {
-            "id": 50,
-            "category": "Hukuk ve Etik",
-            "query": "Sebt (Cumartesi) günü yasağını ihlal edenlerin cezalandırıldığını veya bu günün kutsallığını anlatan ayetler hangileridir?",
-            "ground_truth": {
-                "quran_refs": [],
-                "bible_refs": [
-                    "Çıkış 20:8-11"
-                ],
-                "keywords": []
-            }
-        }
-    ]
+    {
+      "id": "Q002",
+      "source": "quran",
+      "difficulty": "easy",
+      "question": "Kevser suresi kaç ayetten oluşur?",
+      "expected_verses": ["108:1-3"]
+    },
+    {
+      "id": "Q003",
+      "source": "quran",
+      "difficulty": "easy",
+      "question": "Ihlas suresi kaç ayetten oluşur?",
+      "expected_verses": ["112:1-4"]
+    },
+    {
+      "id": "Q004",
+      "source": "quran",
+      "difficulty": "easy",
+      "question": "Nas suresi kaç ayetten oluşur?",
+      "expected_verses": ["114:1-6"]
+    },
+    {
+      "id": "Q005",
+      "source": "quran",
+      "difficulty": "easy",
+      "question": "Ayet-el Kürsi nedir?",
+      "expected_verses": ["2:255"]
+    },
+    {
+      "id": "Q006",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran'da sabır ile ilgili ayetler nelerdir?",
+      "expected_verses": ["2:45", "2:153", "3:200", "16:127"]
+    },
+    {
+      "id": "Q007",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran'da Allah'ın rahmeti ile ilgili ayetler nelerdir?",
+      "expected_verses": ["18:58", "39:53", "40:7"]
+    },
+    {
+      "id": "Q008",
+      "source": "quran",
+      "difficulty": "hard",
+      "question": "Kuran'da Hz. Musa ile ilgili ayetler nelerdir?",
+      "expected_verses": ["2:51-61", "7:103-160"]
+    },
+    {
+      "id": "Q009",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Hz. Yusuf'un kıssası Kuran'da hangi surede anlatılmaktadır?",
+      "expected_verses": ["12:1-111"]
+    },
+    {
+      "id": "Q010",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Hz. Nuh'un kıssası Kuran'da hangi surede anlatılmaktadır?",
+      "expected_verses": ["71:1-28"]
+    },
+    {
+      "id": "Q011",
+      "source": "quran",
+      "difficulty": "hard",
+      "question": "Ashab-ı Kehf hikayesi Kuran'da hangi ayetler arasında anlatılmaktadır?",
+      "expected_verses": ["18:9-26"]
+    },
+    {
+      "id": "Q012",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran'ın en uzun suresi hangisidir?",
+      "expected_verses": ["2:1-286"]
+    },
+    {
+      "id": "Q013",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Hz. İsa'nın doğumu Kuran'da hangi surede anlatılmaktadır?",
+      "expected_verses": ["19:16-36"]
+    },
+    {
+      "id": "Q014",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Nisa suresi 34. ayeti ne demektedir?",
+      "expected_verses": ["4:34"]
+    },
+    {
+      "id": "Q015",
+      "source": "quran",
+      "difficulty": "hard",
+      "question": "Kuran'da Hz. Muhammed'in adı hangi ayetlerde geçmektedir?",
+      "expected_verses": ["3:144", "33:40", "47:2", "48:29"]
+    },
+    {
+      "id": "Q016",
+      "source": "bible",
+      "difficulty": "easy",
+      "question": "Tanrı dünyayı o kadar çok sevdi ki biricik Oğlunu verdi ayeti İncil'in hangi kitabında geçmektedir?",
+      "expected_verses": ["John 3:16"]
+    },
+    {
+      "id": "Q017",
+      "source": "bible",
+      "difficulty": "easy",
+      "question": "Başlangıçta Tanrı gökleri ve yeri yarattı ayeti İncil'in hangi kitabında geçmektedir?",
+      "expected_verses": ["Genesis 1:1"]
+    },
+    {
+      "id": "Q018",
+      "source": "bible",
+      "difficulty": "easy",
+      "question": "Rab benim çobanımdır ayeti İncil'in hangi kitabındadır?",
+      "expected_verses": ["Psalms 23:1"]
+    },
+    {
+      "id": "Q019",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "İyi Samiriyeli meseli İncil'in hangi bölümünde anlatılmaktadır?",
+      "expected_verses": ["Luke 10:25-37"]
+    },
+    {
+      "id": "Q020",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "Kaybolan oğul meseli İncil'in hangi bölümünde anlatılmaktadır?",
+      "expected_verses": ["Luke 15:11-32"]
+    },
+    {
+      "id": "Q021",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "Hz. İsa'nın Kana'daki düğünde suyu şaraba çevirdiği mucize İncil'in hangi bölümünde anlatılmaktadır?",
+      "expected_verses": ["John 2:1-11"]
+    },
+    {
+      "id": "Q022",
+      "source": "bible",
+      "difficulty": "hard",
+      "question": "Hz. İsa'nın çarmıha gerilmesi İncil'in hangi bölümünde anlatılmaktadır?",
+      "expected_verses": ["Matthew 27:32-56"]
+    },
+    {
+      "id": "Q023",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "İncil'de bağışlama ile ilgili ayetler hangileridir?",
+      "expected_verses": ["Matthew 6:14-15", "Luke 6:37"]
+    },
+    {
+      "id": "Q024",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "İncil'de merhamet ile ilgili ayetler hangileridir?",
+      "expected_verses": ["Luke 6:36", "Matthew 5:7"]
+    },
+    {
+      "id": "Q025",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "Rab'bin Duası (\"Our Father\") İncil'in hangi bölümünde geçmektedir?",
+      "expected_verses": ["Matthew 6:9-13"]
+    },
+    {
+      "id": "Q026",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "Tanrı her şeyi iyilik için çalıştırır ayeti İncil'in hangi bölümünde geçmektedir?",
+      "expected_verses": ["Romans 8:28"]
+    },
+    {
+      "id": "Q027",
+      "source": "bible",
+      "difficulty": "hard",
+      "question": "Yakup'un rüyasında gördüğü merdiven olayı İncil'in hangi bölümünde anlatılmaktadır?",
+      "expected_verses": ["Genesis 28:10-22"]
+    },
+    {
+      "id": "Q028",
+      "source": "bible",
+      "difficulty": "hard",
+      "question": "Hz. İsa'nın \"Tüm uluslara gidin\" buyruğu İncil'in hangi bölümünde geçmektedir?",
+      "expected_verses": ["Matthew 28:19"]
+    },
+    {
+      "id": "Q029",
+      "source": "bible",
+      "difficulty": "hard",
+      "question": "Hz. Musa'ya Sina Dağı'nda verilen On Emirler İncil'in hangi bölümünde yer almaktadır?",
+      "expected_verses": ["Exodus 20:1-17"]
+    },
+    {
+      "id": "Q030",
+      "source": "bible",
+      "difficulty": "hard",
+      "question": "Hz. İsa'nın dirilişi İncil'in hangi bölümünde anlatılmaktadır?",
+      "expected_verses": ["Matthew 28:1-10"]
+    },
+    {
+      "id": "Q031",
+      "source": "quran",
+      "difficulty": "hard",
+      "question": "Kuran'da yapay zeka hakkında ne yazıyor?",
+      "expected_verses": []
+    },
+    {
+      "id": "Q032",
+      "source": "bible",
+      "difficulty": "hard",
+      "question": "İncil'de Bitcoin ve kripto para hakkında ne yazıyor?",
+      "expected_verses": []
+    },
+    {
+      "id": "Q033",
+      "source": "quran",
+      "difficulty": "hard",
+      "question": "Kuran'da internet hakkında ne yazıyor?",
+      "expected_verses": []
+    },
+    {
+      "id": "Q034",
+      "source": "bible",
+      "difficulty": "hard",
+      "question": "İncil'de bilgisayar hakkında ne yazıyor?",
+      "expected_verses": []
+    },
+    {
+      "id": "Q035",
+      "source": "quran",
+      "difficulty": "hard",
+      "question": "Kuran'da uzay yolculuğu hakkında ne yazıyor?",
+      "expected_verses": []
+    }
+  ]
 }
