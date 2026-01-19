@@ -1,0 +1,2703 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "total_tests": 28,
+    "created_at": "2026-01-19",
+    "description": "Teolojik ve Kutsal Metinler (Kur'an ve Bible-KJV) için Yüksek Spesifikasyonlu RAG Erişim Doğruluk Test Kiti (RRATK) veri seti."
+  },
+  "summary": {
+    "total_tests": 28,
+    "total_time": 295.1708028316498,
+    "avg_time_per_query": 10.541814386844635,
+    "errors": 0
+  },
+  "stage_timing": {
+    "query_enhancement_avg_ms": 2188.1733110972814,
+    "multi_query_avg_ms": 2147.018551826477,
+    "search_avg_ms": 6171.243071556091,
+    "rerank_avg_ms": 35.32810722078596
+  },
+  "overall": {
+    "precision": 0.46785714285714286,
+    "recall": 0.9464285714285714,
+    "f1": 0.5363195742452709,
+    "count": 28
+  },
+  "by_source": {
+    "quran": {
+      "precision": 0.3375,
+      "recall": 0.90625,
+      "f1": 0.4286912294361985,
+      "count": 16
+    },
+    "bible": {
+      "precision": 0.6416666666666667,
+      "recall": 1.0,
+      "f1": 0.6798240339907006,
+      "count": 12
+    }
+  },
+  "by_difficulty": {
+    "easy": {
+      "precision": 0.4166666666666667,
+      "recall": 0.8333333333333334,
+      "f1": 0.4401154401154401,
+      "count": 6
+    },
+    "medium": {
+      "precision": 0.53125,
+      "recall": 0.96875,
+      "f1": 0.6064122352822043,
+      "count": 16
+    },
+    "hard": {
+      "precision": 0.35000000000000003,
+      "recall": 1.0,
+      "f1": 0.4456099456099456,
+      "count": 6
+    }
+  },
+  "hallucination": {
+    "total": 0,
+    "passed": 0,
+    "pass_rate": 0.0
+  },
+  "details": [
+    {
+      "id": "Q-01",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran sabr-ı cemil ayeti sure no",
+      "expected": [
+        "12:18",
+        "12:83"
+      ],
+      "retrieved": [
+        "76:12",
+        "12:81",
+        "68:48",
+        "2:153",
+        "38:44"
+      ],
+      "precision": 0.2,
+      "recall": 1.0,
+      "f1": 0.33333333333333337,
+      "time_ms": 11588.2408618927,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Kuran sabr-ı cemil ayeti sure no",
+          "output": "sabr-ı cemil güzel sabır Yusuf suresi ayet",
+          "duration_ms": 2413.5055541992188,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "sabr-ı cemil güzel sabır Yusuf suresi ayet",
+          "output": [
+            "Kuran sabr-ı cemil ayeti sure no",
+            "sabr-ı cemil güzel sabır Yusuf suresi ayet",
+            "Yusuf suresi sabr-ı cemil ayetleri",
+            "Kuran'da güzel sabır kavramı ve Hz. Yakub'un sabrı",
+            "Yusuf suresi 18. ve 83. ayet sabır tefsiri"
+          ],
+          "duration_ms": 1951.5891075134277,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Kuran sabr-ı cemil ayeti sure no', 'sabr-ı cemil güzel sabır Yusuf suresi ayet', 'Yusuf suresi sabr-ı cemil ayetleri', \"Kuran'da güzel sabır kavramı ve Hz. Yakub'un sabrı\", 'Yusuf suresi 18. ve 83. ",
+          "output": [
+            "76:12",
+            "12:81",
+            "68:48",
+            "2:153",
+            "38:44",
+            "11:11",
+            "16:127",
+            "3:200",
+            "42:43",
+            "2:45"
+          ],
+          "duration_ms": 7168.036699295044,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "76:12",
+            "12:81",
+            "68:48",
+            "2:153",
+            "38:44",
+            "11:11",
+            "16:127",
+            "3:200",
+            "42:43",
+            "2:250"
+          ],
+          "duration_ms": 55.04441261291504,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q-02",
+      "source": "quran",
+      "difficulty": "hard",
+      "question": "Kuran miras ayetleri Nisa suresi kaçıncı ayetler",
+      "expected": [
+        "4:11-12",
+        "4:176"
+      ],
+      "retrieved": [
+        "4:176",
+        "2:180",
+        "4:33",
+        "4:12",
+        "4:19"
+      ],
+      "precision": 0.3,
+      "recall": 1.0,
+      "f1": 0.4615384615384615,
+      "time_ms": 7319.411277770996,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Kuran miras ayetleri Nisa suresi kaçıncı ayetler",
+          "output": "Nisa suresi miras ayetleri feraiz paylaşım vasiyet",
+          "duration_ms": 2771.040439605713,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Nisa suresi miras ayetleri feraiz paylaşım vasiyet",
+          "output": [
+            "Kuran miras ayetleri Nisa suresi kaçıncı ayetler",
+            "Nisa suresi miras ayetleri feraiz paylaşım vasiyet",
+            "Nisa suresi miras paylaşımı ve feraiz hükümleri",
+            "Kuranda vasiyet ve miras taksimi ile ilgili ayetler",
+            "İslam hukukuna göre aile içi miras dağılımı ve payları"
+          ],
+          "duration_ms": 4398.694038391113,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Kuran miras ayetleri Nisa suresi kaçıncı ayetler', 'Nisa suresi miras ayetleri feraiz paylaşım vasiyet', 'Nisa suresi miras paylaşımı ve feraiz hükümleri', 'Kuranda vasiyet ve miras taksimi ile ilgi",
+          "output": [
+            "4:176",
+            "4:12",
+            "4:33",
+            "2:180",
+            "4:11",
+            "2:240",
+            "4:19",
+            "15:88",
+            "23:9",
+            "70:32"
+          ],
+          "duration_ms": 54.76975440979004,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "4:176",
+            "2:180",
+            "4:33",
+            "4:12",
+            "4:19",
+            "15:88",
+            "2:240",
+            "4:11",
+            "23:9",
+            "70:32"
+          ],
+          "duration_ms": 94.85316276550293,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q-03",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Hz. İsa beşikte konuşması hangi sure ayet",
+      "expected": [
+        "19:29-33",
+        "3:46",
+        "5:110"
+      ],
+      "retrieved": [
+        "19:29",
+        "5:110",
+        "19:34",
+        "3:46",
+        "5:114"
+      ],
+      "precision": 0.7,
+      "recall": 1.0,
+      "f1": 0.8235294117647058,
+      "time_ms": 13256.519794464111,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Hz. İsa beşikte konuşması hangi sure ayet",
+          "output": "İsa beşikte konuşma Meryem Suresi Al-i İmran Suresi mucize",
+          "duration_ms": 3039.698839187622,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "İsa beşikte konuşma Meryem Suresi Al-i İmran Suresi mucize",
+          "output": [
+            "Hz. İsa beşikte konuşması hangi sure ayet",
+            "İsa beşikte konuşma Meryem Suresi Al-i İmran Suresi mucize",
+            "Hz. İsa'nın beşikteyken konuşması Meryem ve Al-i İmran sureleri",
+            "İsa peygamberin bebeklik mucizesi ve Meryem'in iffeti ayetleri",
+            "Beşikte konuşan çocuk mucizesi Kuran meali"
+          ],
+          "duration_ms": 3032.879590988159,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Hz. İsa beşikte konuşması hangi sure ayet', 'İsa beşikte konuşma Meryem Suresi Al-i İmran Suresi mucize', \"Hz. İsa'nın beşikteyken konuşması Meryem ve Al-i İmran sureleri\", \"İsa peygamberin bebeklik",
+          "output": [
+            "19:29",
+            "5:110",
+            "19:34",
+            "3:46",
+            "5:114",
+            "3:45",
+            "4:171",
+            "5:75",
+            "3:39",
+            "53:4"
+          ],
+          "duration_ms": 7105.846881866455,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "19:29",
+            "5:110",
+            "19:34",
+            "3:46",
+            "5:114",
+            "3:45",
+            "53:4",
+            "5:75",
+            "4:171",
+            "3:39"
+          ],
+          "duration_ms": 78.04441452026367,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q-04",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran abdest ayeti Maide kaç",
+      "expected": [
+        "5:6"
+      ],
+      "retrieved": [
+        "5:6",
+        "23:9",
+        "22:29",
+        "107:4",
+        "23:2"
+      ],
+      "precision": 0.1,
+      "recall": 1.0,
+      "f1": 0.18181818181818182,
+      "time_ms": 7924.412250518799,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Kuran abdest ayeti Maide kaç",
+          "output": "Maide suresi abdest ayeti taharet gusül teyemmüm",
+          "duration_ms": 1970.5147743225098,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Maide suresi abdest ayeti taharet gusül teyemmüm",
+          "output": [
+            "Kuran abdest ayeti Maide kaç",
+            "Maide suresi abdest ayeti taharet gusül teyemmüm",
+            "Maide suresi 6. ayet abdest ve gusül hükümleri",
+            "Kuran'da abdest gusül ve teyemmümün farzları",
+            "İslam'da fiziksel temizlik ve taharet ile ilgili ayetler"
+          ],
+          "duration_ms": 1947.026252746582,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Kuran abdest ayeti Maide kaç', 'Maide suresi abdest ayeti taharet gusül teyemmüm', 'Maide suresi 6. ayet abdest ve gusül hükümleri', \"Kuran'da abdest gusül ve teyemmümün farzları\", \"İslam'da fizikse",
+          "output": [
+            "5:6",
+            "23:9",
+            "70:34",
+            "22:29",
+            "107:4",
+            "4:43",
+            "23:2",
+            "80:13",
+            "80:14",
+            "9:103"
+          ],
+          "duration_ms": 3947.911024093628,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "5:6",
+            "23:9",
+            "22:29",
+            "107:4",
+            "23:2",
+            "4:43",
+            "80:13",
+            "70:34",
+            "9:103",
+            "27:3"
+          ],
+          "duration_ms": 58.8994026184082,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q-05",
+      "source": "quran",
+      "difficulty": "hard",
+      "question": "Kuran demir indirilmesi Hadid kaç",
+      "expected": [
+        "57:25"
+      ],
+      "retrieved": [
+        "39:1",
+        "18:96",
+        "57:25",
+        "40:2",
+        "45:2"
+      ],
+      "precision": 0.1,
+      "recall": 1.0,
+      "f1": 0.18181818181818182,
+      "time_ms": 12592.764854431152,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Kuran demir indirilmesi Hadid kaç",
+          "output": "Hadid Suresi demir indirilmesi inzal ayet 25",
+          "duration_ms": 1886.1939907073975,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Hadid Suresi demir indirilmesi inzal ayet 25",
+          "output": [
+            "Kuran demir indirilmesi Hadid kaç",
+            "Hadid Suresi demir indirilmesi inzal ayet 25",
+            "Hadid Suresi 25. ayet demirin indirilmesi ve özellikleri",
+            "Kuran'da demirin gökten indirilmesi inzal mucizesi",
+            "Hadid 25 demirde büyük bir güç ve faydalar vardır ayeti"
+          ],
+          "duration_ms": 684.3371391296387,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Kuran demir indirilmesi Hadid kaç', 'Hadid Suresi demir indirilmesi inzal ayet 25', 'Hadid Suresi 25. ayet demirin indirilmesi ve özellikleri', \"Kuran'da demirin gökten indirilmesi inzal mucizesi\", ",
+          "output": [
+            "39:1",
+            "40:2",
+            "45:2",
+            "18:96",
+            "18:95",
+            "57:25",
+            "8:11",
+            "24:1",
+            "2:242",
+            "18:3"
+          ],
+          "duration_ms": 9966.217041015625,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "39:1",
+            "18:96",
+            "57:25",
+            "40:2",
+            "45:2",
+            "2:242",
+            "8:11",
+            "24:1",
+            "18:95",
+            "18:3"
+          ],
+          "duration_ms": 55.9694766998291,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q-06",
+      "source": "quran",
+      "difficulty": "hard",
+      "question": "Kuran örümcek evi Ankebut kaç",
+      "expected": [
+        "29:41"
+      ],
+      "retrieved": [
+        "29:41",
+        "52:7",
+        "39:20",
+        "27:52",
+        "15:88"
+      ],
+      "precision": 0.1,
+      "recall": 1.0,
+      "f1": 0.18181818181818182,
+      "time_ms": 5071.308135986328,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Kuran örümcek evi Ankebut kaç",
+          "output": "Ankebut Suresi örümcek evi zayıf ev beyt",
+          "duration_ms": 2083.651304244995,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Ankebut Suresi örümcek evi zayıf ev beyt",
+          "output": [
+            "Kuran örümcek evi Ankebut kaç",
+            "Ankebut Suresi örümcek evi zayıf ev beyt",
+            "Ankebut Suresi örümcek evi ayeti meali",
+            "Kuranda evlerin en zayıfı örümcek yuvası benzetmesi",
+            "Ankebut suresi beytül ankebut tefsiri ve zayıf ev kavramı"
+          ],
+          "duration_ms": 1868.025302886963,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Kuran örümcek evi Ankebut kaç', 'Ankebut Suresi örümcek evi zayıf ev beyt', 'Ankebut Suresi örümcek evi ayeti meali', 'Kuranda evlerin en zayıfı örümcek yuvası benzetmesi', 'Ankebut suresi beytül an",
+          "output": [
+            "29:41",
+            "52:7",
+            "52:6",
+            "52:4",
+            "52:3",
+            "52:5",
+            "52:1",
+            "52:2",
+            "52:8",
+            "39:20"
+          ],
+          "duration_ms": 1065.3131008148193,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "29:41",
+            "52:7",
+            "39:20",
+            "27:52",
+            "15:88",
+            "33:34",
+            "106:4",
+            "78:12",
+            "52:6",
+            "52:4"
+          ],
+          "duration_ms": 54.26597595214844,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q-07",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran Rum suresi Rumların galibiyeti ayetleri",
+      "expected": [
+        "30:1-6"
+      ],
+      "retrieved": [
+        "30:5",
+        "61:13",
+        "8:19",
+        "23:1",
+        "48:20"
+      ],
+      "precision": 0.6,
+      "recall": 1.0,
+      "f1": 0.7499999999999999,
+      "time_ms": 11018.89705657959,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Kuran Rum suresi Rumların galibiyeti ayetleri",
+          "output": "Rum suresi Rumların galibiyeti Bizans zaferi fetih galip gelmek",
+          "duration_ms": 2117.1698570251465,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Rum suresi Rumların galibiyeti Bizans zaferi fetih galip gelmek",
+          "output": [
+            "Kuran Rum suresi Rumların galibiyeti ayetleri",
+            "Rum suresi Rumların galibiyeti Bizans zaferi fetih galip gelmek",
+            "Rum suresi Rumların galibiyeti ve Bizans zaferi ayetleri",
+            "Kuranda Rumların galip geleceği haberi ve fetih müjdesi",
+            "Ehl-i Kitabın müşriklere karşı zaferi ve Rum suresi tefsiri"
+          ],
+          "duration_ms": 1856.2343120574951,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Kuran Rum suresi Rumların galibiyeti ayetleri', 'Rum suresi Rumların galibiyeti Bizans zaferi fetih galip gelmek', 'Rum suresi Rumların galibiyeti ve Bizans zaferi ayetleri', 'Kuranda Rumların galip",
+          "output": [
+            "30:5",
+            "30:4",
+            "30:2",
+            "30:3",
+            "61:13",
+            "8:19",
+            "23:1",
+            "48:20",
+            "4:141",
+            "110:1"
+          ],
+          "duration_ms": 6988.691329956055,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "30:5",
+            "61:13",
+            "8:19",
+            "23:1",
+            "48:20",
+            "30:4",
+            "30:2",
+            "30:3",
+            "4:141",
+            "15:1"
+          ],
+          "duration_ms": 56.74624443054199,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q-08",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran Muhammed hatemül enbiya Ahzab kaç",
+      "expected": [
+        "33:40"
+      ],
+      "retrieved": [
+        "48:29",
+        "37:181",
+        "33:40",
+        "3:144",
+        "5:19"
+      ],
+      "precision": 0.1,
+      "recall": 1.0,
+      "f1": 0.18181818181818182,
+      "time_ms": 10650.118350982666,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Kuran Muhammed hatemül enbiya Ahzab kaç",
+          "output": "Muhammed hatemül enbiya Ahzab suresi 40 peygamberlerin sonuncusu",
+          "duration_ms": 2662.353277206421,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Muhammed hatemül enbiya Ahzab suresi 40 peygamberlerin sonuncusu",
+          "output": [
+            "Kuran Muhammed hatemül enbiya Ahzab kaç",
+            "Muhammed hatemül enbiya Ahzab suresi 40 peygamberlerin sonuncusu",
+            "Ahzab suresi 40. ayet Muhammed peygamberlerin sonuncusu",
+            "Hatemü'n-Nebiyyin kavramı ve Hz. Muhammed'in son peygamberliği",
+            "Kuran'da peygamberliğin sona ermesi ve Ahzab 40 tefsiri"
+          ],
+          "duration_ms": 404.5090675354004,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Kuran Muhammed hatemül enbiya Ahzab kaç', 'Muhammed hatemül enbiya Ahzab suresi 40 peygamberlerin sonuncusu', 'Ahzab suresi 40. ayet Muhammed peygamberlerin sonuncusu', \"Hatemü'n-Nebiyyin kavramı ve",
+          "output": [
+            "48:29",
+            "37:181",
+            "33:40",
+            "3:144",
+            "5:19",
+            "36:4",
+            "36:3",
+            "36:2",
+            "47:2",
+            "49:8"
+          ],
+          "duration_ms": 7509.490013122559,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "48:29",
+            "37:181",
+            "33:40",
+            "3:144",
+            "5:19",
+            "36:4",
+            "47:2",
+            "49:8",
+            "53:42",
+            "4:64"
+          ],
+          "duration_ms": 73.71997833251953,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q-09",
+      "source": "quran",
+      "difficulty": "hard",
+      "question": "Kuran Ashab-ı Kehf kaç yıl kaldı ayet no",
+      "expected": [
+        "18:25"
+      ],
+      "retrieved": [
+        "18:25",
+        "5:26",
+        "23:112",
+        "50:1",
+        "70:4"
+      ],
+      "precision": 0.1,
+      "recall": 1.0,
+      "f1": 0.18181818181818182,
+      "time_ms": 16774.266958236694,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Kuran Ashab-ı Kehf kaç yıl kaldı ayet no",
+          "output": "Ashab-ı Kehf süresi Kehf Suresi 25. ayet üç yüz dokuz yıl",
+          "duration_ms": 3546.1132526397705,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Ashab-ı Kehf süresi Kehf Suresi 25. ayet üç yüz dokuz yıl",
+          "output": [
+            "Kuran Ashab-ı Kehf kaç yıl kaldı ayet no",
+            "Ashab-ı Kehf süresi Kehf Suresi 25. ayet üç yüz dokuz yıl",
+            "Kehf Suresi 25. ayet 309 yıl",
+            "Ashab-ı Kehf'in mağarada kalış süresi",
+            "Kuranda üç yüz dokuz yıl geçen ayet"
+          ],
+          "duration_ms": 3075.7365226745605,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Kuran Ashab-ı Kehf kaç yıl kaldı ayet no', 'Ashab-ı Kehf süresi Kehf Suresi 25. ayet üç yüz dokuz yıl', 'Kehf Suresi 25. ayet 309 yıl', \"Ashab-ı Kehf'in mağarada kalış süresi\", 'Kuranda üç yüz dokuz",
+          "output": [
+            "18:25",
+            "5:26",
+            "23:112",
+            "50:1",
+            "70:4",
+            "89:2",
+            "22:47",
+            "18:19",
+            "22:55",
+            "2:259"
+          ],
+          "duration_ms": 10113.87848854065,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "18:25",
+            "5:26",
+            "23:112",
+            "50:1",
+            "70:4",
+            "89:2",
+            "22:47",
+            "22:55",
+            "18:19",
+            "78:23"
+          ],
+          "duration_ms": 38.47503662109375,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q-10",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran Zülkarneyn demir kütleleri ayet no",
+      "expected": [
+        "18:94-97"
+      ],
+      "retrieved": [
+        "18:96",
+        "34:12",
+        "18:98",
+        "18:94",
+        "18:86"
+      ],
+      "precision": 0.4,
+      "recall": 1.0,
+      "f1": 0.5714285714285715,
+      "time_ms": 11110.932111740112,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Kuran Zülkarneyn demir kütleleri ayet no",
+          "output": "Zülkarneyn demir kütleleri Kehf Suresi 96",
+          "duration_ms": 2283.0920219421387,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Zülkarneyn demir kütleleri Kehf Suresi 96",
+          "output": [
+            "Kuran Zülkarneyn demir kütleleri ayet no",
+            "Zülkarneyn demir kütleleri Kehf Suresi 96",
+            "Zülkarneyn'in demir bloklarla ördüğü set ayetleri",
+            "Kehf Suresi demir ve erimiş bakır ile yapılan engel"
+          ],
+          "duration_ms": 1798.0866432189941,
+          "metadata": {
+            "query_count": 4
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Kuran Zülkarneyn demir kütleleri ayet no', 'Zülkarneyn demir kütleleri Kehf Suresi 96', \"Zülkarneyn'in demir bloklarla ördüğü set ayetleri\", 'Kehf Suresi demir ve erimiş bakır ile yapılan engel']",
+          "output": [
+            "18:96",
+            "18:95",
+            "34:12",
+            "18:98",
+            "18:94",
+            "18:86",
+            "57:25",
+            "81:19",
+            "81:21",
+            "81:20"
+          ],
+          "duration_ms": 6951.785326004028,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 4
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "18:96",
+            "34:12",
+            "18:98",
+            "18:94",
+            "18:86",
+            "18:95",
+            "81:19",
+            "57:25",
+            "27:1",
+            "52:7"
+          ],
+          "duration_ms": 77.9106616973877,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q-11",
+      "source": "quran",
+      "difficulty": "easy",
+      "question": "Kuran Yunus balık karnı ayet no",
+      "expected": [
+        "21:87",
+        "37:139-148"
+      ],
+      "retrieved": [
+        "21:87",
+        "37:144",
+        "68:48",
+        "37:142",
+        "10:98"
+      ],
+      "precision": 1.1,
+      "recall": 1.0,
+      "f1": 1.0476190476190477,
+      "time_ms": 8496.918678283691,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Kuran Yunus balık karnı ayet no",
+          "output": "Yunus Peygamber balık karnı Zünnûn karanlıklar tesbih",
+          "duration_ms": 1830.4462432861328,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Yunus Peygamber balık karnı Zünnûn karanlıklar tesbih",
+          "output": [
+            "Kuran Yunus balık karnı ayet no",
+            "Yunus Peygamber balık karnı Zünnûn karanlıklar tesbih",
+            "Hz. Yunus'un balığın karnındaki duası ve zikri",
+            "Enbiya Suresi Zünnûn karanlıklar içinde yakarış"
+          ],
+          "duration_ms": 2525.7983207702637,
+          "metadata": {
+            "query_count": 4
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Kuran Yunus balık karnı ayet no', 'Yunus Peygamber balık karnı Zünnûn karanlıklar tesbih', \"Hz. Yunus'un balığın karnındaki duası ve zikri\", 'Enbiya Suresi Zünnûn karanlıklar içinde yakarış']",
+          "output": [
+            "21:87",
+            "68:48",
+            "37:144",
+            "37:143",
+            "37:142",
+            "10:98",
+            "37:139",
+            "26:215",
+            "24:40",
+            "19:3"
+          ],
+          "duration_ms": 4090.7745361328125,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 4
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "21:87",
+            "37:144",
+            "68:48",
+            "37:142",
+            "10:98",
+            "37:139",
+            "26:215",
+            "24:40",
+            "19:3",
+            "45:12"
+          ],
+          "duration_ms": 49.832820892333984,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q-12",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran Musa asasıyla denizi yarması ayet no",
+      "expected": [
+        "26:63",
+        "44:24"
+      ],
+      "retrieved": [
+        "26:63",
+        "20:77",
+        "2:60",
+        "51:38",
+        "17:101"
+      ],
+      "precision": 0.1,
+      "recall": 0.5,
+      "f1": 0.16666666666666669,
+      "time_ms": 12709.42997932434,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Kuran Musa asasıyla denizi yarması ayet no",
+          "output": "Musa asa deniz yarmak mucize Kızıldeniz",
+          "duration_ms": 1754.7132968902588,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Musa asa deniz yarmak mucize Kızıldeniz",
+          "output": [
+            "Kuran Musa asasıyla denizi yarması ayet no",
+            "Musa asa deniz yarmak mucize Kızıldeniz",
+            "Hz. Musa'nın asası ile denizi ikiye bölmesi mucizesi",
+            "Kur'an'da İsrailoğulları'nın Kızıldeniz'den geçişi ve Firavun'un boğulması",
+            "Musa Peygamber'in asasının suya vurulması ve denizin yarılması ayetleri"
+          ],
+          "duration_ms": 2132.133722305298,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Kuran Musa asasıyla denizi yarması ayet no', 'Musa asa deniz yarmak mucize Kızıldeniz', \"Hz. Musa'nın asası ile denizi ikiye bölmesi mucizesi\", \"Kur'an'da İsrailoğulları'nın Kızıldeniz'den geçişi ve",
+          "output": [
+            "26:63",
+            "20:77",
+            "2:60",
+            "17:101",
+            "51:38",
+            "14:6",
+            "20:97",
+            "79:15",
+            "20:9",
+            "7:154"
+          ],
+          "duration_ms": 8762.40348815918,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "26:63",
+            "20:77",
+            "2:60",
+            "51:38",
+            "17:101",
+            "14:6",
+            "20:97",
+            "7:154",
+            "7:107",
+            "79:15"
+          ],
+          "duration_ms": 60.125112533569336,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q-13",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran Süleyman Hüdhüd kuşu ayet no",
+      "expected": [
+        "27:20-28"
+      ],
+      "retrieved": [
+        "27:16",
+        "27:21",
+        "21:79",
+        "27:25",
+        "21:78"
+      ],
+      "precision": 0.9,
+      "recall": 1.0,
+      "f1": 0.9473684210526316,
+      "time_ms": 10652.636766433716,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Kuran Süleyman Hüdhüd kuşu ayet no",
+          "output": "Süleyman Hüdhüd Neml Suresi kuş dili",
+          "duration_ms": 1985.7838153839111,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Süleyman Hüdhüd Neml Suresi kuş dili",
+          "output": [
+            "Kuran Süleyman Hüdhüd kuşu ayet no",
+            "Süleyman Hüdhüd Neml Suresi kuş dili",
+            "Süleyman Peygamber Hüdhüd kuşu Neml Suresi kıssası",
+            "Kuran'da kuş dili (mantıku't-tayr) ve Hz. Süleyman",
+            "Neml Suresi Süleyman ve Hüdhüd diyaloğu ayetleri"
+          ],
+          "duration_ms": 1662.7192497253418,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Kuran Süleyman Hüdhüd kuşu ayet no', 'Süleyman Hüdhüd Neml Suresi kuş dili', 'Süleyman Peygamber Hüdhüd kuşu Neml Suresi kıssası', \"Kuran'da kuş dili (mantıku't-tayr) ve Hz. Süleyman\", 'Neml Suresi ",
+          "output": [
+            "27:16",
+            "27:21",
+            "27:20",
+            "21:79",
+            "27:25",
+            "27:24",
+            "27:22",
+            "27:23",
+            "27:26",
+            "21:78"
+          ],
+          "duration_ms": 6919.980525970459,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "27:16",
+            "27:21",
+            "21:79",
+            "27:25",
+            "21:78",
+            "27:17",
+            "27:36",
+            "34:13",
+            "38:32",
+            "27:20"
+          ],
+          "duration_ms": 84.10334587097168,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q-14",
+      "source": "quran",
+      "difficulty": "easy",
+      "question": "Kuran Kevser suresi ayet sayısı",
+      "expected": [
+        "108:1-3"
+      ],
+      "retrieved": [
+        "3:58",
+        "50:1",
+        "86:13",
+        "15:87",
+        "17:82"
+      ],
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "time_ms": 5872.24555015564,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Kuran Kevser suresi ayet sayısı",
+          "output": "Kevser suresi ayet sayısı adedi",
+          "duration_ms": 3607.651948928833,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Kevser suresi ayet sayısı adedi",
+          "output": [
+            "Kuran Kevser suresi ayet sayısı",
+            "Kevser suresi ayet sayısı adedi",
+            "Kevser suresi kaç ayetten oluşur",
+            "Kevser suresi ayet sayısı ve uzunluğu",
+            "Kuran'ın en kısa suresi Kevser kaç ayettir"
+          ],
+          "duration_ms": 2183.969497680664,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Kuran Kevser suresi ayet sayısı', 'Kevser suresi ayet sayısı adedi', 'Kevser suresi kaç ayetten oluşur', 'Kevser suresi ayet sayısı ve uzunluğu', \"Kuran'ın en kısa suresi Kevser kaç ayettir\"]",
+          "output": [
+            "3:58",
+            "50:1",
+            "15:87",
+            "17:82",
+            "86:13",
+            "80:11",
+            "27:77",
+            "31:2",
+            "31:3",
+            "10:1"
+          ],
+          "duration_ms": 48.90012741088867,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "3:58",
+            "50:1",
+            "86:13",
+            "15:87",
+            "17:82",
+            "27:77",
+            "80:11",
+            "31:2",
+            "2:242",
+            "10:1"
+          ],
+          "duration_ms": 31.675338745117188,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q-15",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran Ebabil kuşları ayet no",
+      "expected": [
+        "105:1-5"
+      ],
+      "retrieved": [
+        "105:3",
+        "16:79",
+        "2:57",
+        "67:19",
+        "24:41"
+      ],
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1": 0.6666666666666666,
+      "time_ms": 12298.43258857727,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Kuran Ebabil kuşları ayet no",
+          "output": "Fil Suresi Ebabil kuşları pişmiş çamur siccil",
+          "duration_ms": 2688.9684200286865,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Fil Suresi Ebabil kuşları pişmiş çamur siccil",
+          "output": [
+            "Kuran Ebabil kuşları ayet no",
+            "Fil Suresi Ebabil kuşları pişmiş çamur siccil",
+            "Fil Suresi Ebabil kuşları ve siccil taşları",
+            "Fil vakası pişmiş çamurdan taşlar ve helak",
+            "Kuran'da Fil ordusunun imhası ve ebabil kuşları"
+          ],
+          "duration_ms": 2364.2959594726562,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Kuran Ebabil kuşları ayet no', 'Fil Suresi Ebabil kuşları pişmiş çamur siccil', 'Fil Suresi Ebabil kuşları ve siccil taşları', 'Fil vakası pişmiş çamurdan taşlar ve helak', \"Kuran'da Fil ordusunun i",
+          "output": [
+            "105:3",
+            "105:4",
+            "16:79",
+            "67:19",
+            "2:57",
+            "24:41",
+            "55:35",
+            "6:38",
+            "34:11",
+            "34:10"
+          ],
+          "duration_ms": 7193.162679672241,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "105:3",
+            "16:79",
+            "2:57",
+            "67:19",
+            "24:41",
+            "105:4",
+            "55:35",
+            "6:38",
+            "34:11",
+            "51:41"
+          ],
+          "duration_ms": 51.94735527038574,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "Q-16",
+      "source": "quran",
+      "difficulty": "easy",
+      "question": "Kuran Kadir gecesi bin aydan hayırlıdır ayet no",
+      "expected": [
+        "97:3"
+      ],
+      "retrieved": [
+        "97:3",
+        "97:2",
+        "50:1",
+        "25:64",
+        "10:6"
+      ],
+      "precision": 0.1,
+      "recall": 1.0,
+      "f1": 0.18181818181818182,
+      "time_ms": 8265.30146598816,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Kuran Kadir gecesi bin aydan hayırlıdır ayet no",
+          "output": "Kadir gecesi bin aydan hayırlıdır Kadir Suresi 3. ayet",
+          "duration_ms": 924.6828556060791,
+          "metadata": {
+            "corpus": "quran"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Kadir gecesi bin aydan hayırlıdır Kadir Suresi 3. ayet",
+          "output": [
+            "Kuran Kadir gecesi bin aydan hayırlıdır ayet no",
+            "Kadir gecesi bin aydan hayırlıdır Kadir Suresi 3. ayet",
+            "Kadir gecesi bin aydan hayırlıdır ayeti",
+            "Kadir Suresi 3. ayet meali ve fazileti",
+            "Kuranda bin aydan daha hayırlı olan gece"
+          ],
+          "duration_ms": 1516.005039215088,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Kuran Kadir gecesi bin aydan hayırlıdır ayet no', 'Kadir gecesi bin aydan hayırlıdır Kadir Suresi 3. ayet', 'Kadir gecesi bin aydan hayırlıdır ayeti', 'Kadir Suresi 3. ayet meali ve fazileti', 'Kura",
+          "output": [
+            "97:3",
+            "97:2",
+            "50:1",
+            "25:64",
+            "10:6",
+            "73:6",
+            "25:62",
+            "3:58",
+            "17:79",
+            "97:1"
+          ],
+          "duration_ms": 5787.10150718689,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "97:3",
+            "97:2",
+            "50:1",
+            "25:64",
+            "10:6",
+            "73:6",
+            "3:58",
+            "17:79",
+            "25:62",
+            "89:2"
+          ],
+          "duration_ms": 37.46342658996582,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "B-01",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "Bible KJV Love is patient love is kind verse",
+      "expected": [
+        "1 Corinthians 13:4-8"
+      ],
+      "retrieved": [
+        "1 corinthians 13:4",
+        "1 corinthians 13:5",
+        "1 peter 4:8",
+        "1 corinthians 13:13",
+        "colossians 3:14"
+      ],
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1": 0.6666666666666666,
+      "time_ms": 10340.36111831665,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Bible KJV Love is patient love is kind verse",
+          "output": "charity suffereth long kind envieth not",
+          "duration_ms": 1756.8368911743164,
+          "metadata": {
+            "corpus": "bible"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "charity suffereth long kind envieth not",
+          "output": [
+            "Bible KJV Love is patient love is kind verse",
+            "charity suffereth long kind envieth not",
+            "1 Corinthians 13:4 charity suffereth long",
+            "KJV charity envieth not",
+            "biblical definition of charity suffereth long and is kind"
+          ],
+          "duration_ms": 1490.9279346466064,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Bible KJV Love is patient love is kind verse', 'charity suffereth long kind envieth not', '1 Corinthians 13:4 charity suffereth long', 'KJV charity envieth not', 'biblical definition of charity suff",
+          "output": [
+            "1 corinthians 13:4",
+            "1 corinthians 13:5",
+            "1 peter 4:8",
+            "1 corinthians 13:13",
+            "colossians 3:14",
+            "1 corinthians 13:8",
+            "1 corinthians 13:1",
+            "2 peter 1:7",
+            "proverbs 10:12",
+            "1 corinthians 13:2"
+          ],
+          "duration_ms": 7089.998722076416,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "1 corinthians 13:4",
+            "1 corinthians 13:5",
+            "1 peter 4:8",
+            "1 corinthians 13:13",
+            "colossians 3:14",
+            "1 corinthians 13:8",
+            "1 corinthians 13:1",
+            "2 peter 1:7",
+            "proverbs 10:12",
+            "1 corinthians 13:2"
+          ],
+          "duration_ms": 2.5587081909179688,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "B-02",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "Bible KJV Fruit of the Spirit verse",
+      "expected": [
+        "Galatians 5:22-23"
+      ],
+      "retrieved": [
+        "galatians 5:22",
+        "ephesians 5:9",
+        "galatians 5:23",
+        "colossians 3:12",
+        "ephesians 4:2"
+      ],
+      "precision": 0.2,
+      "recall": 1.0,
+      "f1": 0.33333333333333337,
+      "time_ms": 9799.065589904785,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Bible KJV Fruit of the Spirit verse",
+          "output": "\"fruit of the Spirit\" longsuffering gentleness temperance",
+          "duration_ms": 1538.1948947906494,
+          "metadata": {
+            "corpus": "bible"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "\"fruit of the Spirit\" longsuffering gentleness temperance",
+          "output": [
+            "Bible KJV Fruit of the Spirit verse",
+            "\"fruit of the Spirit\" longsuffering gentleness temperance",
+            "Galatians 5:22-23 fruit of the Spirit longsuffering gentleness",
+            "\"fruit of the Spirit\" AND \"longsuffering\" AND \"gentleness\" AND \"temperance\"",
+            "KJV Bible fruit of the Spirit list Galatians"
+          ],
+          "duration_ms": 2508.4855556488037,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Bible KJV Fruit of the Spirit verse', '\"fruit of the Spirit\" longsuffering gentleness temperance', 'Galatians 5:22-23 fruit of the Spirit longsuffering gentleness', '\"fruit of the Spirit\" AND \"longs",
+          "output": [
+            "galatians 5:22",
+            "ephesians 5:9",
+            "galatians 5:23",
+            "colossians 3:12",
+            "ephesians 4:2",
+            "james 3:17",
+            "james 3:18",
+            "colossians 1:11",
+            "colossians 3:14",
+            "philippians 1:11"
+          ],
+          "duration_ms": 5749.939441680908,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "galatians 5:22",
+            "ephesians 5:9",
+            "galatians 5:23",
+            "colossians 3:12",
+            "ephesians 4:2",
+            "james 3:17",
+            "james 3:18",
+            "colossians 1:11",
+            "colossians 3:14",
+            "philippians 1:11"
+          ],
+          "duration_ms": 2.3992061614990234,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "B-03",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "Bible KJV David and Goliath chapter",
+      "expected": [
+        "1 Samuel 17"
+      ],
+      "retrieved": [
+        "1 samuel 17:50",
+        "1 samuel 17:45",
+        "sirach 47:4",
+        "1 samuel 17:49",
+        "1 samuel 17:23"
+      ],
+      "precision": 0.1,
+      "recall": 1.0,
+      "f1": 0.18181818181818182,
+      "time_ms": 10974.50304031372,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Bible KJV David and Goliath chapter",
+          "output": "David Goliath 1 Samuel 17 Philistine giant",
+          "duration_ms": 1668.5030460357666,
+          "metadata": {
+            "corpus": "bible"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "David Goliath 1 Samuel 17 Philistine giant",
+          "output": [
+            "Bible KJV David and Goliath chapter",
+            "David Goliath 1 Samuel 17 Philistine giant",
+            "David and Goliath battle 1 Samuel 17",
+            "Philistine giant of Gath vs David",
+            "David kills Goliath with sling and stone KJV"
+          ],
+          "duration_ms": 2241.037607192993,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Bible KJV David and Goliath chapter', 'David Goliath 1 Samuel 17 Philistine giant', 'David and Goliath battle 1 Samuel 17', 'Philistine giant of Gath vs David', 'David kills Goliath with sling and s",
+          "output": [
+            "1 samuel 17:50",
+            "1 samuel 17:45",
+            "sirach 47:4",
+            "1 samuel 17:49",
+            "1 samuel 17:23",
+            "1 samuel 17:26",
+            "1 samuel 17:51",
+            "1 samuel 17:37",
+            "1 samuel 17:41",
+            "1 samuel 17:32"
+          ],
+          "duration_ms": 7062.511682510376,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "1 samuel 17:50",
+            "1 samuel 17:45",
+            "sirach 47:4",
+            "1 samuel 17:49",
+            "1 samuel 17:23",
+            "1 samuel 17:26",
+            "1 samuel 17:51",
+            "1 samuel 17:37",
+            "1 samuel 17:41",
+            "1 samuel 17:32"
+          ],
+          "duration_ms": 2.4089813232421875,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "B-04",
+      "source": "bible",
+      "difficulty": "easy",
+      "question": "Bible KJV Wedding at Cana water to wine verses",
+      "expected": [
+        "John 2:1-11"
+      ],
+      "retrieved": [
+        "john 2:7",
+        "john 2:6",
+        "john 2:1",
+        "john 2:11",
+        "john 2:9"
+      ],
+      "precision": 1.1,
+      "recall": 1.0,
+      "f1": 1.0476190476190477,
+      "time_ms": 8217.506647109985,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Bible KJV Wedding at Cana water to wine verses",
+          "output": "marriage Cana Galilee water wine waterpots",
+          "duration_ms": 2334.7413539886475,
+          "metadata": {
+            "corpus": "bible"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "marriage Cana Galilee water wine waterpots",
+          "output": [
+            "Bible KJV Wedding at Cana water to wine verses",
+            "marriage Cana Galilee water wine waterpots",
+            "marriage in Cana of Galilee water made wine",
+            "six waterpots of stone after the manner of the purifying",
+            "Jesus and his disciples to the marriage Cana"
+          ],
+          "duration_ms": 1956.5250873565674,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Bible KJV Wedding at Cana water to wine verses', 'marriage Cana Galilee water wine waterpots', 'marriage in Cana of Galilee water made wine', 'six waterpots of stone after the manner of the purifyin",
+          "output": [
+            "john 2:7",
+            "john 2:6",
+            "john 2:1",
+            "john 2:11",
+            "john 2:9",
+            "john 4:46",
+            "john 2:2",
+            "john 2:3",
+            "john 4:54",
+            "john 2:5"
+          ],
+          "duration_ms": 3923.516035079956,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "john 2:7",
+            "john 2:6",
+            "john 2:1",
+            "john 2:11",
+            "john 2:9",
+            "john 4:46",
+            "john 2:2",
+            "john 2:3",
+            "john 4:54",
+            "john 2:5"
+          ],
+          "duration_ms": 2.6788711547851562,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "B-05",
+      "source": "bible",
+      "difficulty": "hard",
+      "question": "Bible KJV Faith without works is dead verse James",
+      "expected": [
+        "James 2:17-26"
+      ],
+      "retrieved": [
+        "james 2:26",
+        "james 2:17",
+        "james 2:20",
+        "james 2:14",
+        "james 2:18"
+      ],
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "time_ms": 13462.459564208984,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Bible KJV Faith without works is dead verse James",
+          "output": "James \"faith without works is dead\"",
+          "duration_ms": 3121.356964111328,
+          "metadata": {
+            "corpus": "bible"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "James \"faith without works is dead\"",
+          "output": [
+            "Bible KJV Faith without works is dead verse James",
+            "James \"faith without works is dead\"",
+            "James 2:14-26 faith without works",
+            "KJV 'faith if it hath not works is dead'",
+            "James 2:20 'faith without works is dead' KJV"
+          ],
+          "duration_ms": 1862.3785972595215,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Bible KJV Faith without works is dead verse James', 'James \"faith without works is dead\"', 'James 2:14-26 faith without works', \"KJV 'faith if it hath not works is dead'\", \"James 2:20 'faith without",
+          "output": [
+            "james 2:26",
+            "james 2:17",
+            "james 2:20",
+            "james 2:14",
+            "james 2:18",
+            "james 2:22",
+            "james 2:24",
+            "romans 4:5",
+            "hebrews 11:6",
+            "2 esdras 9:7"
+          ],
+          "duration_ms": 8476.118326187134,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "james 2:26",
+            "james 2:17",
+            "james 2:20",
+            "james 2:14",
+            "james 2:18",
+            "james 2:22",
+            "james 2:24",
+            "romans 4:5",
+            "hebrews 11:6",
+            "2 esdras 9:7"
+          ],
+          "duration_ms": 2.5517940521240234,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "B-06",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "Bible KJV Armor of God verses range",
+      "expected": [
+        "Ephesians 6:11-18"
+      ],
+      "retrieved": [
+        "ephesians 6:13",
+        "ephesians 6:17",
+        "ephesians 6:14",
+        "ephesians 6:11",
+        "ephesians 6:16"
+      ],
+      "precision": 0.8,
+      "recall": 1.0,
+      "f1": 0.888888888888889,
+      "time_ms": 6268.488645553589,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Bible KJV Armor of God verses range",
+          "output": "\"whole armour of God\" Ephesians 6:11-18 breastplate shield helmet sword",
+          "duration_ms": 1876.9595623016357,
+          "metadata": {
+            "corpus": "bible"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "\"whole armour of God\" Ephesians 6:11-18 breastplate shield helmet sword",
+          "output": [
+            "Bible KJV Armor of God verses range",
+            "\"whole armour of God\" Ephesians 6:11-18 breastplate shield helmet sword",
+            "Ephesians 6:11-18 KJV full text armor of God",
+            "KJV Bible breastplate of righteousness shield of faith helmet of salvation sword of the Spirit",
+            "spiritual warfare armor of God Ephesians 6 KJV keywords"
+          ],
+          "duration_ms": 3076.068878173828,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Bible KJV Armor of God verses range', '\"whole armour of God\" Ephesians 6:11-18 breastplate shield helmet sword', 'Ephesians 6:11-18 KJV full text armor of God', 'KJV Bible breastplate of righteousne",
+          "output": [
+            "ephesians 6:13",
+            "ephesians 6:17",
+            "ephesians 6:14",
+            "ephesians 6:11",
+            "ephesians 6:16",
+            "isaiah 59:17",
+            "1 thessalonians 5:8",
+            "wisdom 5:18",
+            "2 corinthians 10:4",
+            "2 corinthians 6:7"
+          ],
+          "duration_ms": 1312.8306865692139,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "ephesians 6:13",
+            "ephesians 6:17",
+            "ephesians 6:14",
+            "ephesians 6:11",
+            "ephesians 6:16",
+            "isaiah 59:17",
+            "1 thessalonians 5:8",
+            "wisdom 5:18",
+            "2 corinthians 10:4",
+            "2 corinthians 6:7"
+          ],
+          "duration_ms": 2.5703907012939453,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "B-07",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "Bible KJV Ten Commandments Exodus 20 verses range",
+      "expected": [
+        "Exodus 20:1-17"
+      ],
+      "retrieved": [
+        "leviticus 27:34",
+        "deuteronomy 4:13",
+        "exodus 35:1",
+        "ezekiel 20:19",
+        "exodus 20:1"
+      ],
+      "precision": 1.7,
+      "recall": 1.0,
+      "f1": 1.259259259259259,
+      "time_ms": 11143.24164390564,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Bible KJV Ten Commandments Exodus 20 verses range",
+          "output": "Exodus 20:1-17 commandments law statutes",
+          "duration_ms": 1709.7063064575195,
+          "metadata": {
+            "corpus": "bible"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Exodus 20:1-17 commandments law statutes",
+          "output": [
+            "Bible KJV Ten Commandments Exodus 20 verses range",
+            "Exodus 20:1-17 commandments law statutes",
+            "Exodus 20:1-17 Ten Commandments KJV",
+            "God spake all these words Exodus 20 law",
+            "Exodus 20 statutes and judgments KJV"
+          ],
+          "duration_ms": 2226.1264324188232,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Bible KJV Ten Commandments Exodus 20 verses range', 'Exodus 20:1-17 commandments law statutes', 'Exodus 20:1-17 Ten Commandments KJV', 'God spake all these words Exodus 20 law', 'Exodus 20 statutes ",
+          "output": [
+            "leviticus 27:34",
+            "deuteronomy 4:13",
+            "exodus 35:1",
+            "ezekiel 20:19",
+            "exodus 20:1",
+            "mark 10:19",
+            "luke 18:20",
+            "leviticus 26:46",
+            "deuteronomy 5:7",
+            "numbers 36:13"
+          ],
+          "duration_ms": 7204.810857772827,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "leviticus 27:34",
+            "deuteronomy 4:13",
+            "exodus 35:1",
+            "ezekiel 20:19",
+            "exodus 20:1",
+            "mark 10:19",
+            "luke 18:20",
+            "leviticus 26:46",
+            "deuteronomy 5:7",
+            "numbers 36:13"
+          ],
+          "duration_ms": 2.5496482849121094,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "B-08",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "Bible KJV Beatitudes Matthew 5 verses range",
+      "expected": [
+        "Matthew 5:3-12"
+      ],
+      "retrieved": [
+        "matthew 5:10",
+        "matthew 5:3",
+        "matthew 5:12",
+        "matthew 5:4",
+        "matthew 5:11"
+      ],
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "time_ms": 12070.562839508057,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Bible KJV Beatitudes Matthew 5 verses range",
+          "output": "Matthew 5:3-12 blessed Beatitudes",
+          "duration_ms": 1829.8320770263672,
+          "metadata": {
+            "corpus": "bible"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Matthew 5:3-12 blessed Beatitudes",
+          "output": [
+            "Bible KJV Beatitudes Matthew 5 verses range",
+            "Matthew 5:3-12 blessed Beatitudes",
+            "Blessed are the poor in spirit for theirs is the kingdom of heaven",
+            "Matthew 5:3-12 KJV Beatitudes sermon on the mount",
+            "rejoice and be exceeding glad for great is your reward in heaven"
+          ],
+          "duration_ms": 2742.032766342163,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Bible KJV Beatitudes Matthew 5 verses range', 'Matthew 5:3-12 blessed Beatitudes', 'Blessed are the poor in spirit for theirs is the kingdom of heaven', 'Matthew 5:3-12 KJV Beatitudes sermon on the ",
+          "output": [
+            "matthew 5:10",
+            "matthew 5:3",
+            "matthew 5:12",
+            "matthew 5:4",
+            "matthew 5:11",
+            "luke 6:21",
+            "matthew 5:5",
+            "matthew 5:7",
+            "matthew 5:9",
+            "matthew 5:6"
+          ],
+          "duration_ms": 7496.273756027222,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "matthew 5:10",
+            "matthew 5:3",
+            "matthew 5:12",
+            "matthew 5:4",
+            "matthew 5:11",
+            "luke 6:21",
+            "matthew 5:5",
+            "matthew 5:7",
+            "matthew 5:9",
+            "matthew 5:6"
+          ],
+          "duration_ms": 2.3894309997558594,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "B-09",
+      "source": "bible",
+      "difficulty": "hard",
+      "question": "Bible KJV Lord's Prayer Matthew 6 verses range",
+      "expected": [
+        "Matthew 6:9-13"
+      ],
+      "retrieved": [
+        "matthew 6:9",
+        "luke 11:2",
+        "matthew 6:10",
+        "matthew 6:13",
+        "matthew 6:6"
+      ],
+      "precision": 0.5,
+      "recall": 1.0,
+      "f1": 0.6666666666666666,
+      "time_ms": 13755.320072174072,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Bible KJV Lord's Prayer Matthew 6 verses range",
+          "output": "Matthew 6:9-13 \"Our Father\" \"hallowed\"",
+          "duration_ms": 1991.3253784179688,
+          "metadata": {
+            "corpus": "bible"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Matthew 6:9-13 \"Our Father\" \"hallowed\"",
+          "output": [
+            "Bible KJV Lord's Prayer Matthew 6 verses range",
+            "Matthew 6:9-13 \"Our Father\" \"hallowed\"",
+            "Matthew 6:9-13 KJV Lord's Prayer",
+            "KJV Bible 'Our Father which art in heaven' hallowed",
+            "Matthew 6:9-13 KJV 'thy kingdom come' 'thy will be done'"
+          ],
+          "duration_ms": 1546.6744899749756,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "[\"Bible KJV Lord's Prayer Matthew 6 verses range\", 'Matthew 6:9-13 \"Our Father\" \"hallowed\"', \"Matthew 6:9-13 KJV Lord's Prayer\", \"KJV Bible 'Our Father which art in heaven' hallowed\", \"Matthew 6:9-13 ",
+          "output": [
+            "matthew 6:9",
+            "luke 11:2",
+            "matthew 6:10",
+            "matthew 6:13",
+            "matthew 6:6",
+            "luke 11:4",
+            "luke 11:1",
+            "matthew 6:11",
+            "matthew 6:12",
+            "matthew 6:8"
+          ],
+          "duration_ms": 10214.790105819702,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "matthew 6:9",
+            "luke 11:2",
+            "matthew 6:10",
+            "matthew 6:13",
+            "matthew 6:6",
+            "luke 11:4",
+            "luke 11:1",
+            "matthew 6:11",
+            "matthew 6:12",
+            "matthew 6:8"
+          ],
+          "duration_ms": 2.485990524291992,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "B-10",
+      "source": "bible",
+      "difficulty": "easy",
+      "question": "Bible KJV Daniel lions den verses",
+      "expected": [
+        "Daniel 6"
+      ],
+      "retrieved": [
+        "daniel 6:16",
+        "daniel 6:20",
+        "1 maccabees 2:60",
+        "daniel 6:24",
+        "daniel 6:23"
+      ],
+      "precision": 0.1,
+      "recall": 1.0,
+      "f1": 0.18181818181818182,
+      "time_ms": 14475.74758529663,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Bible KJV Daniel lions den verses",
+          "output": "Daniel lions den sealed mouths delivered",
+          "duration_ms": 1745.8271980285645,
+          "metadata": {
+            "corpus": "bible"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Daniel lions den sealed mouths delivered",
+          "output": [
+            "Bible KJV Daniel lions den verses",
+            "Daniel lions den sealed mouths delivered",
+            "Daniel 6:22 my God hath sent his angel and hath shut the lions' mouths",
+            "Daniel 6:16-23 king Darius Daniel lions den delivered",
+            "Daniel 6:17 stone brought and laid upon the mouth of the den"
+          ],
+          "duration_ms": 2521.815299987793,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Bible KJV Daniel lions den verses', 'Daniel lions den sealed mouths delivered', \"Daniel 6:22 my God hath sent his angel and hath shut the lions' mouths\", 'Daniel 6:16-23 king Darius Daniel lions den",
+          "output": [
+            "daniel 6:16",
+            "daniel 6:20",
+            "1 maccabees 2:60",
+            "daniel 6:24",
+            "daniel 6:23",
+            "daniel 6:17",
+            "bel and the dragon 1:32",
+            "bel and the dragon 1:31",
+            "bel and the dragon 1:40",
+            "daniel 6:19"
+          ],
+          "duration_ms": 10205.535173416138,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "daniel 6:16",
+            "daniel 6:20",
+            "1 maccabees 2:60",
+            "daniel 6:24",
+            "daniel 6:23",
+            "daniel 6:17",
+            "bel and the dragon 1:32",
+            "bel and the dragon 1:31",
+            "bel and the dragon 1:40",
+            "daniel 6:19"
+          ],
+          "duration_ms": 2.519845962524414,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "B-11",
+      "source": "bible",
+      "difficulty": "easy",
+      "question": "Bible KJV Noah ark dimensions verse",
+      "expected": [
+        "Genesis 6:15"
+      ],
+      "retrieved": [
+        "genesis 6:15",
+        "exodus 25:10",
+        "genesis 6:16",
+        "exodus 37:1",
+        "genesis 6:14"
+      ],
+      "precision": 0.1,
+      "recall": 1.0,
+      "f1": 0.18181818181818182,
+      "time_ms": 3979.4249534606934,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Bible KJV Noah ark dimensions verse",
+          "output": "Noah ark cubits length breadth height",
+          "duration_ms": 1985.7633113861084,
+          "metadata": {
+            "corpus": "bible"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Noah ark cubits length breadth height",
+          "output": [
+            "Bible KJV Noah ark dimensions verse",
+            "Noah ark cubits length breadth height",
+            "Genesis 6:15 length of the ark three hundred cubits",
+            "Noah ark dimensions breadth fifty cubits height thirty cubits",
+            "KJV Bible Noah ark cubits measurements"
+          ],
+          "duration_ms": 1902.8606414794922,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Bible KJV Noah ark dimensions verse', 'Noah ark cubits length breadth height', 'Genesis 6:15 length of the ark three hundred cubits', 'Noah ark dimensions breadth fifty cubits height thirty cubits',",
+          "output": [
+            "genesis 6:15",
+            "exodus 25:10",
+            "genesis 6:16",
+            "exodus 37:1",
+            "genesis 6:14",
+            "genesis 7:20",
+            "genesis 7:6",
+            "exodus 26:16",
+            "exodus 36:21",
+            "ezekiel 41:2"
+          ],
+          "duration_ms": 88.30618858337402,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "genesis 6:15",
+            "exodus 25:10",
+            "genesis 6:16",
+            "exodus 37:1",
+            "genesis 6:14",
+            "genesis 7:20",
+            "genesis 7:6",
+            "exodus 26:16",
+            "exodus 36:21",
+            "ezekiel 41:2"
+          ],
+          "duration_ms": 2.4476051330566406,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    },
+    {
+      "id": "B-12",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "Bible KJV Burning Bush Exodus 3 verse",
+      "expected": [
+        "Exodus 3:1-6"
+      ],
+      "retrieved": [
+        "exodus 3:2",
+        "acts 7:30",
+        "exodus 3:4",
+        "exodus 3:3",
+        "acts 7:31"
+      ],
+      "precision": 0.6,
+      "recall": 1.0,
+      "f1": 0.7499999999999999,
+      "time_ms": 15082.284450531006,
+      "hallucination_test": false,
+      "hallucination_passed": true,
+      "error": null,
+      "stages": [
+        {
+          "stage_number": 1,
+          "stage_name": "Query Enhancement",
+          "input": "Bible KJV Burning Bush Exodus 3 verse",
+          "output": "Exodus 3 \"burning bush\" \"flame of fire\"",
+          "duration_ms": 2144.225835800171,
+          "metadata": {
+            "corpus": "bible"
+          }
+        },
+        {
+          "stage_number": 2,
+          "stage_name": "Multi-Query Generation",
+          "input": "Exodus 3 \"burning bush\" \"flame of fire\"",
+          "output": [
+            "Bible KJV Burning Bush Exodus 3 verse",
+            "Exodus 3 \"burning bush\" \"flame of fire\"",
+            "Exodus 3:2 angel of the LORD appeared unto him in a flame of fire out of the midst of a bush",
+            "Exodus 3:3 why the bush is not burnt",
+            "Exodus 3:4 God called unto him out of the midst of the bush"
+          ],
+          "duration_ms": 2639.5463943481445,
+          "metadata": {
+            "query_count": 5
+          }
+        },
+        {
+          "stage_number": 3,
+          "stage_name": "Search (RRF Fusion)",
+          "input": "['Bible KJV Burning Bush Exodus 3 verse', 'Exodus 3 \"burning bush\" \"flame of fire\"', 'Exodus 3:2 angel of the LORD appeared unto him in a flame of fire out of the midst of a bush', 'Exodus 3:3 why the",
+          "output": [
+            "exodus 3:2",
+            "acts 7:30",
+            "exodus 3:4",
+            "exodus 3:3",
+            "acts 7:31",
+            "2 esdras 14:3",
+            "deuteronomy 5:4",
+            "2 esdras 14:1",
+            "deuteronomy 4:36",
+            "acts 7:33"
+          ],
+          "duration_ms": 10295.912504196167,
+          "metadata": {
+            "total_results": 50,
+            "queries_used": 5
+          }
+        },
+        {
+          "stage_number": 4,
+          "stage_name": "Reranking (Cross-Encoder)",
+          "input": "50 candidates",
+          "output": [
+            "exodus 3:2",
+            "acts 7:30",
+            "exodus 3:4",
+            "exodus 3:3",
+            "acts 7:31",
+            "2 esdras 14:3",
+            "deuteronomy 5:4",
+            "2 esdras 14:1",
+            "deuteronomy 4:36",
+            "acts 7:33"
+          ],
+          "duration_ms": 2.550363540649414,
+          "metadata": {
+            "final_count": 10
+          }
+        }
+      ]
+    }
+  ]
+}

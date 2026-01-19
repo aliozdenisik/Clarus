@@ -1,255 +1,268 @@
 {
   "metadata": {
     "version": "1.0",
-    "total_tests": 35,
+    "total_tests": 28,
     "created_at": "2026-01-19",
-    "description": "Kuran ve İncil RAG Sistemi Retrieval Accuracy Testi"
+    "description": "Teolojik ve Kutsal Metinler (Kur'an ve Bible-KJV) için Yüksek Spesifikasyonlu RAG Erişim Doğruluk Test Kiti (RRATK) veri seti."
   },
   "tests": [
     {
-      "id": "Q001",
+      "id": "Q-01",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran sabr-ı cemil ayeti sure no",
+      "expected_verses": [
+        "12:18",
+        "12:83"
+      ]
+    },
+    {
+      "id": "Q-02",
+      "source": "quran",
+      "difficulty": "hard",
+      "question": "Kuran miras ayetleri Nisa suresi kaçıncı ayetler",
+      "expected_verses": [
+        "4:11-12",
+        "4:176"
+      ]
+    },
+    {
+      "id": "Q-03",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Hz. İsa beşikte konuşması hangi sure ayet",
+      "expected_verses": [
+        "19:29-33",
+        "3:46",
+        "5:110"
+      ]
+    },
+    {
+      "id": "Q-04",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran abdest ayeti Maide kaç",
+      "expected_verses": [
+        "5:6"
+      ]
+    },
+    {
+      "id": "Q-05",
+      "source": "quran",
+      "difficulty": "hard",
+      "question": "Kuran demir indirilmesi Hadid kaç",
+      "expected_verses": [
+        "57:25"
+      ]
+    },
+    {
+      "id": "Q-06",
+      "source": "quran",
+      "difficulty": "hard",
+      "question": "Kuran örümcek evi Ankebut kaç",
+      "expected_verses": [
+        "29:41"
+      ]
+    },
+    {
+      "id": "Q-07",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran Rum suresi Rumların galibiyeti ayetleri",
+      "expected_verses": [
+        "30:1-6"
+      ]
+    },
+    {
+      "id": "Q-08",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran Muhammed hatemül enbiya Ahzab kaç",
+      "expected_verses": [
+        "33:40"
+      ]
+    },
+    {
+      "id": "Q-09",
+      "source": "quran",
+      "difficulty": "hard",
+      "question": "Kuran Ashab-ı Kehf kaç yıl kaldı ayet no",
+      "expected_verses": [
+        "18:25"
+      ]
+    },
+    {
+      "id": "Q-10",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran Zülkarneyn demir kütleleri ayet no",
+      "expected_verses": [
+        "18:94-97"
+      ]
+    },
+    {
+      "id": "Q-11",
       "source": "quran",
       "difficulty": "easy",
-      "question": "Fatiha suresi kaç ayetten oluşur?",
-      "expected_verses": ["1:1-7"]
+      "question": "Kuran Yunus balık karnı ayet no",
+      "expected_verses": [
+        "21:87",
+        "37:139-148"
+      ]
     },
     {
-      "id": "Q002",
+      "id": "Q-12",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran Musa asasıyla denizi yarması ayet no",
+      "expected_verses": [
+        "26:63",
+        "44:24"
+      ]
+    },
+    {
+      "id": "Q-13",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran Süleyman Hüdhüd kuşu ayet no",
+      "expected_verses": [
+        "27:20-28"
+      ]
+    },
+    {
+      "id": "Q-14",
       "source": "quran",
       "difficulty": "easy",
-      "question": "Kevser suresi kaç ayetten oluşur?",
-      "expected_verses": ["108:1-3"]
+      "question": "Kuran Kevser suresi ayet sayısı",
+      "expected_verses": [
+        "108:1-3"
+      ]
     },
     {
-      "id": "Q003",
+      "id": "Q-15",
+      "source": "quran",
+      "difficulty": "medium",
+      "question": "Kuran Ebabil kuşları ayet no",
+      "expected_verses": [
+        "105:1-5"
+      ]
+    },
+    {
+      "id": "Q-16",
       "source": "quran",
       "difficulty": "easy",
-      "question": "Ihlas suresi kaç ayetten oluşur?",
-      "expected_verses": ["112:1-4"]
+      "question": "Kuran Kadir gecesi bin aydan hayırlıdır ayet no",
+      "expected_verses": [
+        "97:3"
+      ]
     },
     {
-      "id": "Q004",
-      "source": "quran",
-      "difficulty": "easy",
-      "question": "Nas suresi kaç ayetten oluşur?",
-      "expected_verses": ["114:1-6"]
-    },
-    {
-      "id": "Q005",
-      "source": "quran",
-      "difficulty": "easy",
-      "question": "Ayet-el Kürsi nedir?",
-      "expected_verses": ["2:255"]
-    },
-    {
-      "id": "Q006",
-      "source": "quran",
+      "id": "B-01",
+      "source": "bible",
       "difficulty": "medium",
-      "question": "Kuran'da sabır ile ilgili ayetler nelerdir?",
-      "expected_verses": ["2:45", "2:153", "3:200", "16:127"]
+      "question": "Bible KJV Love is patient love is kind verse",
+      "expected_verses": [
+        "1 Corinthians 13:4-8"
+      ]
     },
     {
-      "id": "Q007",
-      "source": "quran",
+      "id": "B-02",
+      "source": "bible",
       "difficulty": "medium",
-      "question": "Kuran'da Allah'ın rahmeti ile ilgili ayetler nelerdir?",
-      "expected_verses": ["18:58", "39:53", "40:7"]
+      "question": "Bible KJV Fruit of the Spirit verse",
+      "expected_verses": [
+        "Galatians 5:22-23"
+      ]
     },
     {
-      "id": "Q008",
-      "source": "quran",
-      "difficulty": "hard",
-      "question": "Kuran'da Hz. Musa ile ilgili ayetler nelerdir?",
-      "expected_verses": ["2:51-61", "7:103-160"]
-    },
-    {
-      "id": "Q009",
-      "source": "quran",
+      "id": "B-03",
+      "source": "bible",
       "difficulty": "medium",
-      "question": "Hz. Yusuf'un kıssası Kuran'da hangi surede anlatılmaktadır?",
-      "expected_verses": ["12:1-111"]
+      "question": "Bible KJV David and Goliath chapter",
+      "expected_verses": [
+        "1 Samuel 17"
+      ]
     },
     {
-      "id": "Q010",
-      "source": "quran",
-      "difficulty": "medium",
-      "question": "Hz. Nuh'un kıssası Kuran'da hangi surede anlatılmaktadır?",
-      "expected_verses": ["71:1-28"]
-    },
-    {
-      "id": "Q011",
-      "source": "quran",
-      "difficulty": "hard",
-      "question": "Ashab-ı Kehf hikayesi Kuran'da hangi ayetler arasında anlatılmaktadır?",
-      "expected_verses": ["18:9-26"]
-    },
-    {
-      "id": "Q012",
-      "source": "quran",
-      "difficulty": "medium",
-      "question": "Kuran'ın en uzun suresi hangisidir?",
-      "expected_verses": ["2:1-286"]
-    },
-    {
-      "id": "Q013",
-      "source": "quran",
-      "difficulty": "medium",
-      "question": "Hz. İsa'nın doğumu Kuran'da hangi surede anlatılmaktadır?",
-      "expected_verses": ["19:16-36"]
-    },
-    {
-      "id": "Q014",
-      "source": "quran",
-      "difficulty": "medium",
-      "question": "Nisa suresi 34. ayeti ne demektedir?",
-      "expected_verses": ["4:34"]
-    },
-    {
-      "id": "Q015",
-      "source": "quran",
-      "difficulty": "hard",
-      "question": "Kuran'da Hz. Muhammed'in adı hangi ayetlerde geçmektedir?",
-      "expected_verses": ["3:144", "33:40", "47:2", "48:29"]
-    },
-    {
-      "id": "Q016",
+      "id": "B-04",
       "source": "bible",
       "difficulty": "easy",
-      "question": "Tanrı dünyayı o kadar çok sevdi ki biricik Oğlunu verdi ayeti İncil'in hangi kitabında geçmektedir?",
-      "expected_verses": ["John 3:16"]
+      "question": "Bible KJV Wedding at Cana water to wine verses",
+      "expected_verses": [
+        "John 2:1-11"
+      ]
     },
     {
-      "id": "Q017",
+      "id": "B-05",
+      "source": "bible",
+      "difficulty": "hard",
+      "question": "Bible KJV Faith without works is dead verse James",
+      "expected_verses": [
+        "James 2:17-26"
+      ]
+    },
+    {
+      "id": "B-06",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "Bible KJV Armor of God verses range",
+      "expected_verses": [
+        "Ephesians 6:11-18"
+      ]
+    },
+    {
+      "id": "B-07",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "Bible KJV Ten Commandments Exodus 20 verses range",
+      "expected_verses": [
+        "Exodus 20:1-17"
+      ]
+    },
+    {
+      "id": "B-08",
+      "source": "bible",
+      "difficulty": "medium",
+      "question": "Bible KJV Beatitudes Matthew 5 verses range",
+      "expected_verses": [
+        "Matthew 5:3-12"
+      ]
+    },
+    {
+      "id": "B-09",
+      "source": "bible",
+      "difficulty": "hard",
+      "question": "Bible KJV Lord's Prayer Matthew 6 verses range",
+      "expected_verses": [
+        "Matthew 6:9-13"
+      ]
+    },
+    {
+      "id": "B-10",
       "source": "bible",
       "difficulty": "easy",
-      "question": "Başlangıçta Tanrı gökleri ve yeri yarattı ayeti İncil'in hangi kitabında geçmektedir?",
-      "expected_verses": ["Genesis 1:1"]
+      "question": "Bible KJV Daniel lions den verses",
+      "expected_verses": [
+        "Daniel 6"
+      ]
     },
     {
-      "id": "Q018",
+      "id": "B-11",
       "source": "bible",
       "difficulty": "easy",
-      "question": "Rab benim çobanımdır ayeti İncil'in hangi kitabındadır?",
-      "expected_verses": ["Psalms 23:1"]
+      "question": "Bible KJV Noah ark dimensions verse",
+      "expected_verses": [
+        "Genesis 6:15"
+      ]
     },
     {
-      "id": "Q019",
+      "id": "B-12",
       "source": "bible",
       "difficulty": "medium",
-      "question": "İyi Samiriyeli meseli İncil'in hangi bölümünde anlatılmaktadır?",
-      "expected_verses": ["Luke 10:25-37"]
-    },
-    {
-      "id": "Q020",
-      "source": "bible",
-      "difficulty": "medium",
-      "question": "Kaybolan oğul meseli İncil'in hangi bölümünde anlatılmaktadır?",
-      "expected_verses": ["Luke 15:11-32"]
-    },
-    {
-      "id": "Q021",
-      "source": "bible",
-      "difficulty": "medium",
-      "question": "Hz. İsa'nın Kana'daki düğünde suyu şaraba çevirdiği mucize İncil'in hangi bölümünde anlatılmaktadır?",
-      "expected_verses": ["John 2:1-11"]
-    },
-    {
-      "id": "Q022",
-      "source": "bible",
-      "difficulty": "hard",
-      "question": "Hz. İsa'nın çarmıha gerilmesi İncil'in hangi bölümünde anlatılmaktadır?",
-      "expected_verses": ["Matthew 27:32-56"]
-    },
-    {
-      "id": "Q023",
-      "source": "bible",
-      "difficulty": "medium",
-      "question": "İncil'de bağışlama ile ilgili ayetler hangileridir?",
-      "expected_verses": ["Matthew 6:14-15", "Luke 6:37"]
-    },
-    {
-      "id": "Q024",
-      "source": "bible",
-      "difficulty": "medium",
-      "question": "İncil'de merhamet ile ilgili ayetler hangileridir?",
-      "expected_verses": ["Luke 6:36", "Matthew 5:7"]
-    },
-    {
-      "id": "Q025",
-      "source": "bible",
-      "difficulty": "medium",
-      "question": "Rab'bin Duası (\"Our Father\") İncil'in hangi bölümünde geçmektedir?",
-      "expected_verses": ["Matthew 6:9-13"]
-    },
-    {
-      "id": "Q026",
-      "source": "bible",
-      "difficulty": "medium",
-      "question": "Tanrı her şeyi iyilik için çalıştırır ayeti İncil'in hangi bölümünde geçmektedir?",
-      "expected_verses": ["Romans 8:28"]
-    },
-    {
-      "id": "Q027",
-      "source": "bible",
-      "difficulty": "hard",
-      "question": "Yakup'un rüyasında gördüğü merdiven olayı İncil'in hangi bölümünde anlatılmaktadır?",
-      "expected_verses": ["Genesis 28:10-22"]
-    },
-    {
-      "id": "Q028",
-      "source": "bible",
-      "difficulty": "hard",
-      "question": "Hz. İsa'nın \"Tüm uluslara gidin\" buyruğu İncil'in hangi bölümünde geçmektedir?",
-      "expected_verses": ["Matthew 28:19"]
-    },
-    {
-      "id": "Q029",
-      "source": "bible",
-      "difficulty": "hard",
-      "question": "Hz. Musa'ya Sina Dağı'nda verilen On Emirler İncil'in hangi bölümünde yer almaktadır?",
-      "expected_verses": ["Exodus 20:1-17"]
-    },
-    {
-      "id": "Q030",
-      "source": "bible",
-      "difficulty": "hard",
-      "question": "Hz. İsa'nın dirilişi İncil'in hangi bölümünde anlatılmaktadır?",
-      "expected_verses": ["Matthew 28:1-10"]
-    },
-    {
-      "id": "Q031",
-      "source": "quran",
-      "difficulty": "hard",
-      "question": "Kuran'da yapay zeka hakkında ne yazıyor?",
-      "expected_verses": []
-    },
-    {
-      "id": "Q032",
-      "source": "bible",
-      "difficulty": "hard",
-      "question": "İncil'de Bitcoin ve kripto para hakkında ne yazıyor?",
-      "expected_verses": []
-    },
-    {
-      "id": "Q033",
-      "source": "quran",
-      "difficulty": "hard",
-      "question": "Kuran'da internet hakkında ne yazıyor?",
-      "expected_verses": []
-    },
-    {
-      "id": "Q034",
-      "source": "bible",
-      "difficulty": "hard",
-      "question": "İncil'de bilgisayar hakkında ne yazıyor?",
-      "expected_verses": []
-    },
-    {
-      "id": "Q035",
-      "source": "quran",
-      "difficulty": "hard",
-      "question": "Kuran'da uzay yolculuğu hakkında ne yazıyor?",
-      "expected_verses": []
+      "question": "Bible KJV Burning Bush Exodus 3 verse",
+      "expected_verses": [
+        "Exodus 3:1-6"
+      ]
     }
   ]
 }

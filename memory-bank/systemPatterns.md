@@ -16,6 +16,7 @@
 │                      Shared Components                          │
 │  ┌──────────────┐ ┌───────────┐ ┌──────────┐ ┌───────────────┐  │
 │  │QueryEnhancer │ │ Reranker  │ │Embeddings│ │AnswerGenerator│  │
+│  │  +LLMCache   │ │+MMRRerank │ │          │ │               │  │
 │  └──────────────┘ └───────────┘ └──────────┘ └───────────────┘  │
 ├─────────────────────────────────────────────────────────────────┤
 │                       Search Layer                              │
@@ -82,29 +83,47 @@ def enhancer(self):
 - Avoids repeated API calls for same texts
 - Configurable cache directory
 
+### 6. Semantic LLM Caching (NEW 2026-01-19)
+
+- Caches LLM responses (query enhancement, multi-query)
+- Semantic similarity matching (threshold: 0.95)
+- 7-day TTL, disk-persistent
+- 60-80% reduction in LLM API calls
+
+### 7. MMR Diversity Reranking (NEW 2026-01-19)
+
+- Two-stage reranking: Cross-encoder → MMR
+- Balances relevance (70%) with diversity (30%)
+- Prevents redundant/similar results in top positions
+
 ## Component Relationships
 
 | Component | Dependencies | Purpose |
 |-----------|--------------|---------|
 | `UltimateRAG` | All components | Main single-scripture pipeline |
 | `ComparativeRAG` | All components | Multi-scripture pipeline |
-| `QueryEnhancer` | OpenRouter API | Expand queries with LLM |
+| `QueryEnhancer` | OpenRouter API, LLMCache | Expand queries with LLM |
 | `AnswerGenerator` | OpenRouter API | Generate cited answers |
 | `Reranker` | SiliconFlow API | Cross-encoder scoring |
+| `MMRReranker` | - | Diversity reranking (λ=0.7) |
+| `SemanticLLMCache` | Embeddings | LLM response cache (θ=0.95) |
 | `Embeddings` | OpenRouter API | Dense + Sparse encoding |
 | `*Searcher` | Qdrant, Embeddings | Vector similarity search |
 | `Indexer` | Qdrant, Embeddings | Data ingestion |
 
 ## Critical Implementation Paths
 
-### Search Flow
+### Search Flow (Updated 2026-01-19)
 
-1. `QueryEnhancer.enhance()` → expanded query
-2. `Embeddings.encode()` → dense + sparse vectors
-3. `Searcher.hybrid_search()` → raw results
-4. `RRF Fusion` → merged results
-5. `Reranker.rerank()` → scored results
-6. `AnswerGenerator.generate()` → cited answer
+1. `SemanticLLMCache.get()` → check cache for enhanced query
+2. `QueryEnhancer.enhance()` → expanded query (if cache miss)
+3. `SemanticLLMCache.set()` → cache the result
+4. `Embeddings.encode()` → dense + sparse vectors
+5. `Searcher.hybrid_search()` → raw results
+6. `RRF Fusion` → merged results
+7. `Reranker.rerank()` → cross-encoder scored results (2× top_k)
+8. `MMRReranker.rerank()` → diversity-aware final results (top_k)
+9. `AnswerGenerator.generate()` → cited answer
 
 ### Indexing Flow
 

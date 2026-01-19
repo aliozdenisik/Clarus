@@ -59,7 +59,7 @@ class ComparativeRAG:
     Multi-Scripture RAG Pipeline
     
     Executes 4 parallel searches (2 scriptures × 2 search types),
-    reranks each set of 20, and generates comparative theological essay.
+    executes 4 parallel searches, and generates comparative theological essay.
     
     Args:
         qdrant_url: Qdrant server URL
@@ -85,7 +85,6 @@ class ComparativeRAG:
         
         # Lazy load components
         self._enhancer = None
-        self._reranker = None
         self._answer_generator = None
         self._quran_searcher = None
         self._bible_searcher = None
@@ -101,16 +100,6 @@ class ComparativeRAG:
             if self.verbose:
                 console.print("[dim]Loaded QueryEnhancer[/dim]")
         return self._enhancer
-    
-    @property
-    def reranker(self):
-        """Lazy load Reranker"""
-        if self._reranker is None:
-            from src.reranker import Reranker
-            self._reranker = Reranker()
-            if self.verbose:
-                console.print("[dim]Loaded Qwen3-Reranker[/dim]")
-        return self._reranker
     
     @property
     def answer_generator(self):
@@ -394,7 +383,7 @@ class ComparativeRAG:
         Args:
             quran_query: Enhanced query for Quran
             bible_query: Enhanced query for Bible
-            pool_size: Results per search before reranking
+            pool_size: Results per search before selection
             
         Returns:
             (quran_semantic, quran_chunks, bible_semantic, bible_chunks)
@@ -463,57 +452,45 @@ class ComparativeRAG:
             results["bible_chunks"]
         )
     
-    def _rerank_each(
+    def _select_top_results(
         self,
-        quran_query: str,
-        bible_query: str,
         quran_semantic: List,
         quran_chunks: List,
         bible_semantic: List,
         bible_chunks: List
     ) -> Tuple[List, List, List, List]:
         """
-        Step 3: Rerank each set of results separately (20 each)
+        Step 3: Select top results from each search (20 each)
         
-        Each scripture's results are reranked with their respective query.
+        Results are already ranked by search relevance score.
         """
-        self._log(f"🏆 Step 3: Reranking each result set to top {self.verses_per_search}...")
+        self._log(f"📋 Step 3: Selecting top {self.verses_per_search} from each result set...")
         start = time.time()
         
-        def rerank_set(query: str, results: List, name: str) -> List:
-            if not results:
-                return []
-            try:
-                return self.reranker.rerank(query, results, top_k=self.verses_per_search)
-            except Exception as e:
-                self._log(f"   Warning: Rerank {name} failed: {e}", "yellow")
-                return results[:self.verses_per_search]
-        
-        # Rerank each set
-        quran_semantic_reranked = rerank_set(quran_query, quran_semantic, "Quran Semantic")
-        quran_chunks_reranked = rerank_set(quran_query, quran_chunks, "Quran Chunks")
-        bible_semantic_reranked = rerank_set(bible_query, bible_semantic, "Bible Semantic")
-        bible_chunks_reranked = rerank_set(bible_query, bible_chunks, "Bible Chunks")
+        quran_semantic_top = quran_semantic[:self.verses_per_search]
+        quran_chunks_top = quran_chunks[:self.verses_per_search]
+        bible_semantic_top = bible_semantic[:self.verses_per_search]
+        bible_chunks_top = bible_chunks[:self.verses_per_search]
         
         duration = (time.time() - start) * 1000
         total = (
-            len(quran_semantic_reranked) + len(quran_chunks_reranked) +
-            len(bible_semantic_reranked) + len(bible_chunks_reranked)
+            len(quran_semantic_top) + len(quran_chunks_top) +
+            len(bible_semantic_top) + len(bible_chunks_top)
         )
-        self._log(f"   Reranked to {total} total verses in {duration:.0f}ms")
+        self._log(f"   Selected {total} total verses in {duration:.0f}ms")
         
         return (
-            quran_semantic_reranked,
-            quran_chunks_reranked,
-            bible_semantic_reranked,
-            bible_chunks_reranked
+            quran_semantic_top,
+            quran_chunks_top,
+            bible_semantic_top,
+            bible_chunks_top
         )
     
     def search_all(self, query: str) -> ComparativeScriptureResult:
         """
         Execute full search pipeline without answer generation.
         
-        Returns 80 verses (20 per search type × 4 searches), all reranked.
+        Returns 80 verses (20 per search type × 4 searches).
         
         If enable_multi_query=True: Uses 5 queries + RRF fusion for better accuracy.
         If enable_multi_query=False: Uses single enhanced query (faster).
@@ -552,7 +529,7 @@ class ComparativeRAG:
                 quran_queries, bible_queries, pool_size=50
             )
             
-            # Use original query for reranking (best for relevance)
+            # Use original query for search
             quran_query = query
             bible_query = query
             
@@ -566,9 +543,8 @@ class ComparativeRAG:
                 quran_query, bible_query, pool_size=50
             )
         
-        # Step 3: Rerank each set (same for both paths)
-        quran_sem, quran_chunks, bible_sem, bible_chunks = self._rerank_each(
-            quran_query, bible_query,
+        # Step 3: Select top results from each set (same for both paths)
+        quran_sem, quran_chunks, bible_sem, bible_chunks = self._select_top_results(
             quran_sem, quran_chunks, bible_sem, bible_chunks
         )
         
@@ -608,7 +584,7 @@ class ComparativeRAG:
             console.print(f"\n[bold blue]📚 Comparative Scripture Analysis[/bold blue]")
             console.print(f"[dim]Question: \"{query}\"[/dim]\n")
         
-        # Steps 1-3: Search and rerank
+        # Steps 1-3: Search and select top results
         search_result = self.search_all(query)
         
         # Step 4: Generate comparative essay

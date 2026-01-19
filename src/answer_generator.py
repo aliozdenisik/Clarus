@@ -45,7 +45,7 @@ class AnswerGenerator:
     """
     
     OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-    MODEL = "google/gemini-2.0-flash-001"  # Same as query_enhancer
+    MODEL = "google/gemini-3-flash-preview" 
     
     # --- QURAN PROMPT (Turkish in, Turkish out) ---
     SYSTEM_PROMPT_QURAN = """Sen uzman bir İslam Alimi ve Kuran tefsircisisin.
