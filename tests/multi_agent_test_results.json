@@ -1,0 +1,74 @@
+{
+  "query": "Sabır ve tahammül hakkında kutsal kitaplar ne diyor?",
+  "search_stats": {
+    "quran_semantic": 20,
+    "quran_chunks": 0,
+    "bible_semantic": 20,
+    "bible_chunks": 20,
+    "total": 60
+  },
+  "agent_input": {
+    "old_testament": 5,
+    "new_testament": 21,
+    "apocrypha": 14,
+    "quran": 20
+  },
+  "agent_output": {
+    "old_testament": {
+      "has_commentary": true,
+      "commentary_length": 532,
+      "citations": [
+        "Proverbs 14:29",
+        "Ecclesiastes 7:8"
+      ]
+    },
+    "new_testament": {
+      "has_commentary": true,
+      "commentary_length": 697,
+      "citations": [
+        "James 1:3",
+        "James 1:4",
+        "Hebrews 10:36",
+        "Luke 21:19",
+        "Revelation 14:12",
+        "Ephesians 4:2",
+        "Romans 5:4",
+        "Hebrews 6:15",
+        "Colossians 1:11"
+      ]
+    },
+    "apocrypha": {
+      "has_commentary": true,
+      "commentary_length": 580,
+      "citations": [
+        "Sirach 1:23",
+        "Sirach 18:11",
+        "Sirach 29:8",
+        "Sirach 2:14",
+        "Sirach 20:32"
+      ]
+    },
+    "quran": {
+      "has_commentary": true,
+      "commentary_length": 681,
+      "citations": [
+        "Bakara:153",
+        "Kasas:54",
+        "Yûnus:109",
+        "Beled:17",
+        "Meâric:5",
+        "Hûd:11",
+        "İnsân:12",
+        "Şûrâ:43",
+        "Âl-i İmrân:186"
+      ]
+    }
+  },
+  "synthesis_length": 660,
+  "confidence": 0.95,
+  "timing": {
+    "search_time_s": 28.935959815979004,
+    "generation_time_s": 7.609613418579102,
+    "total_time_s": 36.54969263076782
+  }
+}

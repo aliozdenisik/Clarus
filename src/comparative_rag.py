@@ -74,7 +74,7 @@ class ComparativeRAG:
         qdrant_url: str = "http://localhost:6333",
         bible_translation: str = "kjva",
         verses_per_search: int = 20,
-        enable_multi_query: bool = False,  # New: Enable Multi-Query + RRF
+        enable_multi_query: bool = True,  # Multi-Query + RRF for maximum accuracy
         verbose: bool = True
     ):
         self.qdrant_url = qdrant_url
@@ -608,6 +608,110 @@ class ComparativeRAG:
             console.print(f"[dim]  {search_result.total_verses} verses → {len(answer.all_references)} citations → confidence: {answer.confidence:.0%}[/dim]\n")
         
         return answer
+    
+    # ==================== MULTI-AGENT SUPPORT ====================
+    
+    def _split_bible_by_testament(self, results: List) -> Tuple[List, List, List]:
+        """
+        Split Bible results into Old Testament, New Testament, and Apocrypha.
+        
+        Args:
+            results: List of Bible search results
+            
+        Returns:
+            (ot_results, nt_results, apocrypha_results) tuple
+        """
+        ot_results = []
+        nt_results = []
+        apocrypha_results = []
+        
+        for r in results:
+            testament = getattr(r, 'testament', None)
+            if testament is None and hasattr(r, 'payload'):
+                testament = r.payload.get('testament', '')
+            
+            if testament == 'OT':
+                ot_results.append(r)
+            elif testament == 'NT':
+                nt_results.append(r)
+            elif testament == 'Apocrypha':
+                apocrypha_results.append(r)
+            else:
+                # Default to OT for unknown
+                ot_results.append(r)
+        
+        return ot_results, nt_results, apocrypha_results
+    
+    @property
+    def multi_agent_generator(self):
+        """Lazy load Multi-Agent Answer Generator"""
+        if not hasattr(self, '_multi_agent_generator') or self._multi_agent_generator is None:
+            from src.multi_agent_answer_generator import MultiAgentOrchestrator
+            self._multi_agent_generator = MultiAgentOrchestrator(verbose=self.verbose)
+            if self.verbose:
+                console.print("[dim]Loaded MultiAgentOrchestrator (4 specialists + summary)[/dim]")
+        return self._multi_agent_generator
+    
+    def compare_multi_agent(self, query: str):
+        """
+        Full comparative pipeline with Multi-Agent answer generation.
+        
+        Uses 4 specialist agents (OT, NT, Apocrypha, Quran) running in parallel,
+        followed by a summary agent. Returns 5 paragraphs.
+        
+        Args:
+            query: User's religious/philosophical question
+            
+        Returns:
+            MultiAgentAnswer with 5 paragraphs (OT, NT, Apocrypha, Quran, Synthesis)
+        """
+        total_start = time.time()
+        
+        if self.verbose:
+            console.print(f"\n[bold blue]📚 Multi-Agent Comparative Scripture Analysis[/bold blue]")
+            console.print(f"[dim]Question: \"{query}\"[/dim]\n")
+        
+        # Steps 1-3: Search and select top results
+        search_result = self.search_all(query)
+        
+        # Step 4: Split Bible results by testament
+        self._log("📋 Step 4: Splitting Bible results by testament...")
+        split_start = time.time()
+        
+        # Combine semantic + chunks for each source
+        all_bible_results = search_result.bible_semantic + search_result.bible_chunks
+        ot_verses, nt_verses, apocrypha_verses = self._split_bible_by_testament(all_bible_results)
+        
+        quran_verses = search_result.quran_semantic + search_result.quran_chunks
+        
+        split_duration = (time.time() - split_start) * 1000
+        self._log(f"   OT: {len(ot_verses)}, NT: {len(nt_verses)}, "
+                  f"Apocrypha: {len(apocrypha_verses)}, Quran: {len(quran_verses)}")
+        self._log(f"   Split completed in {split_duration:.0f}ms")
+        
+        # Step 5: Multi-agent generation
+        self._log("📝 Step 5: Running 4 specialist agents + summary agent...")
+        gen_start = time.time()
+        
+        answer = self.multi_agent_generator.generate(
+            query=query,
+            quran_verses=quran_verses,
+            ot_verses=ot_verses,
+            nt_verses=nt_verses,
+            apocrypha_verses=apocrypha_verses
+        )
+        
+        gen_duration = (time.time() - gen_start) * 1000
+        total_duration = (time.time() - total_start) * 1000
+        
+        if self.verbose:
+            self._log(f"   Multi-agent generation completed in {gen_duration:.0f}ms")
+            console.print(f"\n[green]✨ Multi-Agent Analysis complete in {total_duration:.0f}ms[/green]")
+            total_citations = sum(len(c) for c in answer.citations.values())
+            console.print(f"[dim]  {search_result.total_verses} verses → 5 paragraphs → "
+                          f"{total_citations} citations → confidence: {answer.confidence:.0%}[/dim]\n")
+        
+        return answer
 
 
 # Convenience function
@@ -618,9 +722,19 @@ def comparative_search(query: str) -> ComparativeScriptureResult:
 
 
 def comparative_analysis(query: str):
-    """One-liner for full comparative analysis"""
+    """One-liner for full comparative analysis (single essay)"""
     rag = ComparativeRAG(verbose=True)
     return rag.compare(query)
+
+
+def multi_agent_analysis(query: str):
+    """
+    One-liner for multi-agent comparative analysis.
+    
+    Returns 5 paragraphs: OT, NT, Apocrypha, Quran, Synthesis
+    """
+    rag = ComparativeRAG(verbose=True)
+    return rag.compare_multi_agent(query)
 
 
 if __name__ == "__main__":

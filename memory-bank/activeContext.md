@@ -2,67 +2,76 @@
 
 ## Current Work Focus
 
-**Date**: 2026-01-19
+**Date**: 2026-01-19 (evening)
 
-Cross-encoder reranker has been **COMPLETELY REMOVED** from the codebase based on retrieval accuracy test results.
+**Multi-Agent Answer Generation** system implemented for comparative scripture analysis.
 
 ## Recent Changes
 
-### Code Cleanup (2026-01-19)
+### Multi-Agent Architecture (2026-01-19)
 
-**Reranker Code Removed** - All reranker-related code has been deleted from the project:
+**New Feature**: 5-agent theological answer generation system:
 
-**Reason**: Test analysis showed reranker was actively removing correct verses found by Search:
-- Q-15 (Ebabil): Search found 105:3, 105:4 at top → Reranker dropped them
-- B-02 (Fruit of Spirit): Search found Gal 5:22, 5:23 at top → Reranker dropped them
-- Q-08 (Hatemül Enbiya): Search found 33:40 at rank 3 → Reranker dropped it
+| Agent | Scope | Perspective |
+|-------|-------|-------------|
+| OldTestamentAgent | Tevrat, Zebur, Peygamberler | Yahudi-Hristiyan tefsir |
+| NewTestamentAgent | İnciller, Mektuplar, Vahiy | Kristolojik perspektif |
+| ApocryphaAgent | Tobit, Sirach, Makkabiler, vb. | Katolik/Ortodoks tefsir |
+| QuranAgent | Kuran | İslami tefsir geleneği |
+| SummaryAgent | 4 yorumu sentezler | Karşılaştırmalı |
 
-**Test Results Comparison**:
-| Metric | With Reranker | Without Reranker |
-|--------|---------------|------------------|
-| Recall | 83.9% | **94.6%** (+11%) |
-| F1 | 49.4% | **53.6%** (+4%) |
-| Latency | 17.6s | **11.0s** (-37%) |
-| Kuran Recall | 71.9% | **90.6%** (+19%) |
+**New Files**:
+- `src/multi_agent_answer_generator.py` - 5 agent + orchestrator
 
-**TODO**: Re-enable with multilingual cross-encoder model (current Qwen3-Reranker-8B struggles with Turkish)
+**Modified Files**:
+- `src/comparative_rag.py` - Added `compare_multi_agent()` method
 
-### Deleted Files
-- `src/reranker.py` - Cross-encoder reranker module
-- `src/mmr_reranker.py` - MMR diversity reranker module
-- `tests/archive/test_reranker_module.py` - Obsolete test
-- `tests/run_no_reranker_test.py` - Legacy comparison test
-- `tests/test_results_no_reranker.json` - Old test results
-- `tests/test_output.log`, `tests/test_results_mmr_only.log` - Log files
-- Stale `__pycache__/*.pyc` files for removed modules
+**Test Results** (query: "Sabır hakkında..."):
 
-### Code Refactored
-- `src/comparative_rag.py` - Removed `reranker` property and `_rerank_each()` method, replaced with `_select_top_results()`
-- `src/ultimate_rag.py` - Already simplified in previous session
+| Metric | Single Query | Multi-Query + RRF |
+|--------|--------------|-------------------|
+| OT Verses | 0 | 1 |
+| Apocrypha | 5 | 6 |
+| Confidence | 96% | 98% |
+
+| Latency | ~21s | ~37s |
+
+### Retrieval Accuracy Test (2026-01-20)
+
+**10-Question Sample (5 Quran + 5 Bible)**:
+- **Overall F1**: 57.3%
+- **Quran Recall**: 80%
+- **Bible Recall**: 100%
+- **Fix**: Re-indexed `quran_tr` and `bible_kjva` collections.
 
 ### Previous Features
 
 1. **Semantic LLM Cache** - `src/llm_cache.py` (active)
 2. **Comparative RAG Pipeline** - 4 parallel searches
-3. **Multi-Query RAG** - Query expansion with RRF fusion
+3. **Multi-Query RAG** - Query expansion with RRF fusion (Active by default)
 4. **Query Enhancement** - Turkish/English aware expansion
+5. **Multi-Agent Answers** - 5-paragraph structured output (NEW)
 
 ## Next Steps
 
-1. ✅ ~~Retrieval accuracy test with reranker disabled~~
+1. ✅ ~~Multi-agent answer generation~~
 2. **Find multilingual reranker** - BAAI/bge-reranker-v2-m3 or similar
 3. **Web UI** - Consider frontend for the RAG system
+4. **Old Testament coverage** - Current search returns mostly NT
 
 ## Active Decisions
 
-- **Reranker**: REMOVED from codebase (Qwen3 dropped correct results)
-- **Search Strategy**: RRF fusion with multi-query expansion
+- **Answer Mode**: Two options available:
+  - `compare()` → Single essay (faster)
+  - `compare_multi_agent()` → 5 paragraphs (better quality)
+- **Search Strategy**: Multi-Query + RRF Fusion (Enabled by default for max accuracy)
+- **Reranker**: REMOVED from codebase
 - **Priority**: Accuracy > Cost > Speed
-- **LLM Cache**: Active (0.95 threshold, 7-day TTL)
 
 ## Learnings
 
-1. **Reranker can hurt accuracy** - Cross-encoder models need language-matching training
-2. **RRF k=60 works well** for fusing diverse result sets
-3. **Semantic chunks improve recall** for thematic queries
-4. **Gemini Flash** balances cost/quality well for generation
+1. **Tradition-specific prompts** improve theological accuracy
+2. **Parallel agent execution** keeps latency manageable (8s for 4 agents)
+3. **Testament split works** - Bible data has testament field (OT/NT/Apocrypha)
+4. **Gemini Flash** handles all 5 agents well at 0.3 temperature
+
