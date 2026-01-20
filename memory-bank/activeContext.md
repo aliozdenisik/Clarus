@@ -4,13 +4,43 @@
 
 **Date**: 2026-01-20
 
-**4-Testament Collection Architecture** implemented for balanced multi-agent search.
+**Web Application Implementation** - CLI converted to full-stack web app with Vue 3 + FastAPI.
 
 ## Recent Changes
 
-### Testament-Based Collections (2026-01-20)
+### Web Application Scaffold (2026-01-20)
 
-**Architecture Update**: Bible split into 3 separate Qdrant collections:
+**Backend (FastAPI)**:
+- `app/main.py` - ASGI entrypoint with CORS
+- `app/config.py` - Pydantic settings (JWT, OAuth, DB)
+- `app/db.py` - SQLAlchemy async with PostgreSQL
+- `app/models.py` - User, SearchHistory models
+- `app/auth/` - JWT + Google OAuth authentication
+- `app/api/` - auth, search, compare, stream routes
+
+**Frontend (Vue 3)**:
+- Vue 3 + Vite + Tailwind CSS + Pinia
+- 6 views: Home, Login, Register, Search, Results, Compare
+- SSE streaming composable for real-time LLM responses
+- Design system from konsept-frontend (Inter font, Material icons)
+
+**Infrastructure**:
+- `docker-compose.yml` - PostgreSQL + Qdrant
+- `scripts/dev.sh` - Development startup script
+- `WEB_APP_README.md` - Quick start guide
+
+### Tech Stack Decisions
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | Vue 3 + Vite + Tailwind |
+| State | Pinia |
+| Backend | FastAPI + SQLAlchemy |
+| Auth | JWT + Google OAuth |
+| Database | PostgreSQL (Supabase Local) |
+| Vector DB | Qdrant |
+
+### Previous Work (Testament Collections)
 
 | Collection | Points | Agent |
 |------------|--------|-------|
@@ -18,65 +48,26 @@
 | `bible_ot` | 23,145 | OldTestamentAgent |
 | `bible_nt` | 7,957 | NewTestamentAgent |
 | `bible_apocrypha` | 5,717 | ApocryphaAgent |
-| SummaryAgent | 4 yorumu sentezler | Karşılaştırmalı |
-
-**New Files**:
-- `src/multi_agent_answer_generator.py` - 5 agent + orchestrator
-
-**Modified Files**:
-- `src/comparative_rag.py` - Added `compare_multi_agent()` method
-
-**Test Results** (query: "Sabır hakkında..."):
-
-| Agent | Verses (Before) | Verses (Now) |
-|-------|-----------------|-------------|
-| OT | 3 | **20** ✅ |
-| NT | 11 | **20** ✅ |
-| Apocrypha | 6 | **20** ✅ |
-| Quran | 40 | **20** ✅ |
-
-| Metric | Value |
-|--------|-------|
-| Total | 80 verses |
-| Confidence | 96% |
-| Latency | ~40s |
-
-### Retrieval Accuracy Test (2026-01-20)
-
-**10-Question Sample (5 Quran + 5 Bible)**:
-- **Overall F1**: 57.3%
-- **Quran Recall**: 80%
-- **Bible Recall**: 100%
-- **Fix**: Re-indexed `quran_tr` and `bible_kjva` collections.
-
-### Previous Features
-
-1. **Semantic LLM Cache** - `src/llm_cache.py` (active)
-2. **Comparative RAG Pipeline** - 4 parallel searches
-3. **Multi-Query RAG** - Query expansion with RRF fusion (Active by default)
-4. **Query Enhancement** - Turkish/English aware expansion
-5. **Multi-Agent Answers** - 5-paragraph structured output (NEW)
 
 ## Next Steps
 
-1. ✅ ~~Multi-agent answer generation~~
-2. **Find multilingual reranker** - BAAI/bge-reranker-v2-m3 or similar
-3. **Web UI** - Consider frontend for the RAG system
-4. **Old Testament coverage** - Current search returns mostly NT
+1. ✅ ~~Web Application Scaffold~~
+2. **Test full auth flow** - Register, Login, JWT
+3. **SSE Streaming** - Verify token-by-token display
+4. **Google OAuth** - Add credentials to .env
+5. **Production build** - Frontend optimization
 
 ## Active Decisions
 
-- **Answer Mode**: Two options available:
-  - `compare()` → Single essay (faster)
-  - `compare_multi_agent()` → 5 paragraphs (better quality)
-- **Search Strategy**: Multi-Query + RRF Fusion (Enabled by default for max accuracy)
-- **Reranker**: REMOVED from codebase
-- **Priority**: Accuracy > Cost > Speed
+- **Rate Limit**: 50 queries/day/user
+- **Language**: Turkish UI only
+- **Theme**: Light default, dark mode toggle
+- **Responsive**: Desktop-first
+- **MVP Exclusions**: Save/Share, Arabic font optimization
 
 ## Learnings
 
-1. **Tradition-specific prompts** improve theological accuracy
-2. **Parallel agent execution** keeps latency manageable (8s for 4 agents)
-3. **Testament split works** - Bible data has testament field (OT/NT/Apocrypha)
-4. **Gemini Flash** handles all 5 agents well at 0.3 temperature
-
+1. **Vue 3 Composition API** works well with SSE streaming
+2. **@vueuse/motion** provides lightweight animations
+3. **FastAPI + SQLAlchemy async** handles concurrent requests efficiently
+4. **Pinia** simplifies auth state management with localStorage persistence

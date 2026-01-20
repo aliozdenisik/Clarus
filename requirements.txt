@@ -16,3 +16,19 @@ tenacity>=8.2.0
 
 # Turkish lemmatization (for BM25)
 zeyrek>=0.1.0
+
+# Web Application (FastAPI)
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+sse-starlette>=2.0.0
+pydantic-settings>=2.1.0
+
+# Database
+sqlalchemy[asyncio]>=2.0.0
+asyncpg>=0.29.0
+
+# Authentication
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.9
+httpx>=0.26.0
