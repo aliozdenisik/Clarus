@@ -4,121 +4,97 @@
 
 | Category | Technology | Details |
 |----------|------------|---------|
-| **Vector DB** | Qdrant | Local Docker instance, port 6333 |
-| **Dense Embeddings** | OpenAI text-embedding-3-large | 3072 dimensions, via OpenRouter |
-| **Sparse Embeddings** | Qdrant BM25 | FastEmbed integration |
-| **LLM (Enhancement)** | Gemini 2.5 Flash Lite | Query expansion |
-| **LLM (Answers)** | Gemini 2.5 Flash | Answer generation |
-| **Reranker** | Qwen3-Reranker-8B | Via SiliconFlow API |
-| **Language** | Python 3.12 | Ubuntu native (3.13 also compatible) |
-| **CLI** | argparse + Rich | Beautiful terminal output |
-| **OS** | Ubuntu Linux | Migrated from Windows (2026-01-05) |
+| **Vector DB** | Qdrant | Docker, port 6333 |
+| **Database** | PostgreSQL | Supabase Local, port 54322 |
+| **Dense Embeddings** | OpenAI text-embedding-3-large | 3072 dim, via OpenRouter |
+| **Sparse Embeddings** | Qdrant BM25 | FastEmbed |
+| **LLM** | Gemini 2.5 Flash | Query enhancement + answers |
+| **Backend** | FastAPI | Python 3.12, async |
+| **Frontend** | Vue 3 + Vite | Tailwind CSS, Pinia |
+| **Auth** | JWT + Google OAuth | python-jose, passlib |
+| **CLI** | argparse + Rich | Still available |
+| **OS** | Ubuntu Linux | Docker native |
 
 ## Development Setup
 
 ### Prerequisites
 
 ```bash
-# Start Qdrant (with persistent storage)
-docker run -d --name qdrant \
-  -p 6333:6333 \
-  -v $(pwd)/qdrant_data:/qdrant/storage \
-  qdrant/qdrant
+# Start all services
+docker compose up -d
 
-# Create virtual environment
-python3.12 -m venv venv
+# Backend
 source venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
+uvicorn app.main:app --reload
+
+# Frontend
+cd frontend
+npm install
+npm run dev
 ```
 
 ### Environment Variables (.env)
 
 ```env
+# Existing
 OPENROUTER_API_KEY=your-openrouter-key
-SILICONFLOW_API_KEY=your-siliconflow-key
+
+# Web Application
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:54322/postgres
+JWT_SECRET_KEY=your-secret-key
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+RATE_LIMIT_PER_DAY=50
 ```
 
-### First-Time Setup
+### URLs
 
-```bash
-python main.py setup  # Indexes Quran, Bible, and semantic chunks
-```
-
-## Technical Constraints
-
-1. **Qdrant Local Only**: No cloud deployment yet
-2. **API Rate Limits**: SiliconFlow reranker has usage limits
-3. **Embedding Costs**: OpenAI embeddings incur per-token costs
-4. **Memory**: Large models (torch, transformers) require significant RAM
-5. **Cache Size**: Embedding cache can grow large (cache/embeddings/cache.db)
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:5173 |
+| Backend | http://localhost:8000 |
+| API Docs | http://localhost:8000/docs |
+| Qdrant | http://localhost:6333/dashboard |
 
 ## Dependencies
 
-### Core
+### Backend (requirements.txt)
 
-- `qdrant-client>=1.7.0` - Vector database client
-- `fastembed>=0.2.0` - BM25 sparse embeddings
-- `sentence-transformers>=2.7.0` - Transformer models
-- `torch>=2.0.0` - PyTorch backend
-- `rich>=13.0.0` - Terminal formatting
+```
+# Core
+qdrant-client>=1.7.0
+fastembed>=0.2.0
+rich>=13.0.0
 
-### Data Processing
-
-- `pandas>=2.0.0` - Data manipulation
-- `diskcache>=5.6.0` - Embedding persistence
-- `tenacity>=8.2.0` - Retry logic
-
-### Turkish NLP
-
-- `zeyrek>=0.1.0` - Turkish lemmatization for BM25
-
-## Tool Usage Patterns
-
-### CLI Commands (main.py)
-
-```bash
-# Indexing
-python main.py index                    # Quran
-python main.py index-bible              # Bible
-python main.py build-semantic-chunks    # Quran chunks
-python main.py build-bible-semantic-chunks  # Bible chunks
-python main.py setup                    # All of the above
-
-# Unified Setup (recommended)
-python scripts/setup_all_collections.py  # All collections from scratch
-
-# Searching
-python main.py search "query"           # Quran
-python main.py search-bible "query"     # Bible
-python main.py search-semantic "query"  # Quran semantci chunks
-
-# Q&A
-python main.py ask "question"           # Quran Q&A
-python main.py ask-bible "question"     # Bible Q&A
-python main.py compare "topic"          # Comparative analysis
-
-# Utilities
-python main.py info                     # Collection info
-python main.py cache-info               # Cache stats
-python main.py cache-clear              # Clear cache
+# Web Application
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+sse-starlette>=2.0.0
+pydantic-settings>=2.1.0
+sqlalchemy[asyncio]>=2.0.0
+asyncpg>=0.29.0
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+httpx>=0.26.0
 ```
 
-### Python API
+### Frontend (package.json)
 
-```python
-from src.ultimate_rag import UltimateRAG
-from src.comparative_rag import ComparativeRAG
-
-# Single scripture
-rag = UltimateRAG()
-results = rag.search_quran("sabır")
-answer = rag.ask_quran("Namaz nedir?")
-
-# Comparative
-comp = ComparativeRAG()
-essay = comp.compare("Yaratılış")
+```json
+{
+  "dependencies": {
+    "vue": "^3.5.24",
+    "vue-router": "^4.5.1",
+    "pinia": "^3.0.3",
+    "@vueuse/core": "^13.2.0",
+    "@vueuse/motion": "^3.0.3"
+  },
+  "devDependencies": {
+    "vite": "^7.2.4",
+    "tailwindcss": "^3.4.0"
+  }
+}
 ```
 
 ## Directory Structure
@@ -126,12 +102,34 @@ essay = comp.compare("Yaratılış")
 ```
 qdrant/
 ├── main.py                 # CLI entrypoint
-├── requirements.txt        # Python dependencies
-├── .env                    # API keys (not in git)
-├── data/                   # Source data (JSON)
-├── src/                    # Python modules
-├── tests/                  # Test scripts
-├── cache/                  # Embedding cache
-├── qdrant_data/            # Qdrant Docker volume
-└── memory-bank/            # This documentation
+├── app/                    # [NEW] FastAPI backend
+│   ├── main.py
+│   ├── config.py
+│   ├── db.py
+│   ├── models.py
+│   ├── auth/
+│   └── api/
+├── frontend/               # [NEW] Vue 3 SPA
+│   ├── src/
+│   │   ├── views/
+│   │   ├── components/
+│   │   ├── stores/
+│   │   └── composables/
+│   └── package.json
+├── src/                    # Python RAG modules
+├── docker-compose.yml      # PostgreSQL + Qdrant
+├── scripts/dev.sh          # Development startup
+└── memory-bank/            # Documentation
 ```
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/auth/register` | POST | User registration |
+| `/api/auth/login` | POST | JWT login |
+| `/api/auth/google` | POST | Google OAuth |
+| `/api/search/quran` | POST | Quran search |
+| `/api/search/bible` | POST | Bible search |
+| `/api/stream/search` | GET | SSE streaming search |
+| `/api/compare/` | POST | Multi-agent comparison |
