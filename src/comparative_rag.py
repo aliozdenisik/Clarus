@@ -39,19 +39,16 @@ console = Console()
 
 @dataclass
 class ComparativeScriptureResult:
-    """Combined results from all scripture searches - 80 verses total"""
-    quran_semantic: List = field(default_factory=list)    # 20 from Quran Semantic Search
-    quran_chunks: List = field(default_factory=list)      # 20 from Quran Chunk Search
-    bible_semantic: List = field(default_factory=list)    # 20 from Bible Semantic Search
-    bible_chunks: List = field(default_factory=list)      # 20 from Bible Chunk Search
-    search_stats: Dict = field(default_factory=dict)      # Timing, counts per source
+    """Combined results from all scripture searches - 80 verses total (20 per testament)"""
+    quran: List = field(default_factory=list)       # 20 from Quran
+    ot: List = field(default_factory=list)          # 20 from Old Testament
+    nt: List = field(default_factory=list)          # 20 from New Testament
+    apocrypha: List = field(default_factory=list)   # 20 from Apocrypha
+    search_stats: Dict = field(default_factory=dict)  # Timing, counts per source
     
     @property
     def total_verses(self) -> int:
-        return (
-            len(self.quran_semantic) + len(self.quran_chunks) +
-            len(self.bible_semantic) + len(self.bible_chunks)
-        )
+        return len(self.quran) + len(self.ot) + len(self.nt) + len(self.apocrypha)
 
 
 class ComparativeRAG:
@@ -87,9 +84,10 @@ class ComparativeRAG:
         self._enhancer = None
         self._answer_generator = None
         self._quran_searcher = None
-        self._bible_searcher = None
-        self._quran_chunk_searcher = None
-        self._bible_chunk_searcher = None
+        # Testament-specific Bible searchers (replaces single _bible_searcher)
+        self._ot_searcher = None
+        self._nt_searcher = None
+        self._apocrypha_searcher = None
     
     @property
     def enhancer(self):
@@ -118,32 +116,35 @@ class ComparativeRAG:
             self._quran_searcher = QuranSearcher(qdrant_url=self.qdrant_url)
         return self._quran_searcher
     
-    def _get_bible_searcher(self):
-        """Get Bible searcher (lazy load)"""
-        if self._bible_searcher is None:
+    def _get_ot_searcher(self):
+        """Get Old Testament searcher (lazy load)"""
+        if self._ot_searcher is None:
             from src.search import BibleSearcher
-            self._bible_searcher = BibleSearcher(
-                translation=self.bible_translation,
+            self._ot_searcher = BibleSearcher(
+                testament="ot",
                 qdrant_url=self.qdrant_url
             )
-        return self._bible_searcher
+        return self._ot_searcher
     
-    def _get_quran_chunk_searcher(self):
-        """Get Quran semantic chunk searcher (lazy load)"""
-        if self._quran_chunk_searcher is None:
-            from src.search import SemanticChunkSearcher
-            self._quran_chunk_searcher = SemanticChunkSearcher(qdrant_url=self.qdrant_url)
-        return self._quran_chunk_searcher
-    
-    def _get_bible_chunk_searcher(self):
-        """Get Bible semantic chunk searcher (lazy load)"""
-        if self._bible_chunk_searcher is None:
-            from src.search import BibleSemanticChunkSearcher
-            self._bible_chunk_searcher = BibleSemanticChunkSearcher(
-                translation=self.bible_translation,
+    def _get_nt_searcher(self):
+        """Get New Testament searcher (lazy load)"""
+        if self._nt_searcher is None:
+            from src.search import BibleSearcher
+            self._nt_searcher = BibleSearcher(
+                testament="nt",
                 qdrant_url=self.qdrant_url
             )
-        return self._bible_chunk_searcher
+        return self._nt_searcher
+    
+    def _get_apocrypha_searcher(self):
+        """Get Apocrypha searcher (lazy load)"""
+        if self._apocrypha_searcher is None:
+            from src.search import BibleSearcher
+            self._apocrypha_searcher = BibleSearcher(
+                testament="apocrypha",
+                qdrant_url=self.qdrant_url
+            )
+        return self._apocrypha_searcher
     
     def _log(self, message: str, style: str = "dim"):
         """Log message if verbose"""
@@ -251,59 +252,55 @@ class ComparativeRAG:
         self,
         quran_queries: List[str],
         bible_queries: List[str],
-        pool_size: int = 50
+        pool_size: int = 20
     ) -> Tuple[List, List, List, List]:
         """
-        Step 2 (Multi-Query Version): Execute 4 quadrants with multi-query + RRF.
+        Step 2 (Multi-Query Version): Execute 4 testament searches with multi-query + RRF.
         
-        Each quadrant runs N queries in parallel, results merged with RRF.
-        All 4 quadrants also run in parallel.
+        Searches: Quran, Old Testament, New Testament, Apocrypha
+        Each returns up to pool_size results.
         """
-        self._log(f"🔍 Step 2: Multi-Query Search ({len(quran_queries)}q×4 quadrants)...")
+        self._log(f"🔍 Step 2: Multi-Query Search ({len(quran_queries)}q×4 collections)...")
         start = time.time()
         
         results = {
-            "quran_semantic": [],
-            "quran_chunks": [],
-            "bible_semantic": [],
-            "bible_chunks": []
+            "quran": [],
+            "ot": [],
+            "nt": [],
+            "apocrypha": []
         }
         
-        def search_quran_semantic():
+        def search_quran():
             searcher = self._get_quran_searcher()
-            return ("quran_semantic", self._search_quadrant_multi_query(
+            return ("quran", self._search_quadrant_multi_query(
                 quran_queries, searcher, limit_per_query=30
             )[:pool_size])
         
-        def search_quran_chunks():
-            searcher = self._get_quran_chunk_searcher()
-            if searcher.collection_exists():
-                return ("quran_chunks", self._search_quadrant_multi_query(
-                    quran_queries, searcher, limit_per_query=30
-                )[:pool_size])
-            return ("quran_chunks", [])
-        
-        def search_bible_semantic():
-            searcher = self._get_bible_searcher()
-            return ("bible_semantic", self._search_quadrant_multi_query(
+        def search_ot():
+            searcher = self._get_ot_searcher()
+            return ("ot", self._search_quadrant_multi_query(
                 bible_queries, searcher, limit_per_query=30
             )[:pool_size])
         
-        def search_bible_chunks():
-            searcher = self._get_bible_chunk_searcher()
-            if searcher.collection_exists():
-                return ("bible_chunks", self._search_quadrant_multi_query(
-                    bible_queries, searcher, limit_per_query=30
-                )[:pool_size])
-            return ("bible_chunks", [])
+        def search_nt():
+            searcher = self._get_nt_searcher()
+            return ("nt", self._search_quadrant_multi_query(
+                bible_queries, searcher, limit_per_query=30
+            )[:pool_size])
         
-        # All 4 quadrants in parallel
+        def search_apocrypha():
+            searcher = self._get_apocrypha_searcher()
+            return ("apocrypha", self._search_quadrant_multi_query(
+                bible_queries, searcher, limit_per_query=30
+            )[:pool_size])
+        
+        # All 4 collections in parallel
         with ThreadPoolExecutor(max_workers=4) as executor:
             futures = [
-                executor.submit(search_quran_semantic),
-                executor.submit(search_quran_chunks),
-                executor.submit(search_bible_semantic),
-                executor.submit(search_bible_chunks)
+                executor.submit(search_quran),
+                executor.submit(search_ot),
+                executor.submit(search_nt),
+                executor.submit(search_apocrypha)
             ]
             
             for future in as_completed(futures):
@@ -313,15 +310,14 @@ class ComparativeRAG:
         duration = (time.time() - start) * 1000
         
         counts = {k: len(v) for k, v in results.items()}
-        self._log(f"   Quran Semantic: {counts['quran_semantic']}, Quran Chunks: {counts['quran_chunks']}")
-        self._log(f"   Bible Semantic: {counts['bible_semantic']}, Bible Chunks: {counts['bible_chunks']}")
+        self._log(f"   Quran: {counts['quran']}, OT: {counts['ot']}, NT: {counts['nt']}, Apoc: {counts['apocrypha']}")
         self._log(f"   Multi-Query searches completed in {duration:.0f}ms")
         
         return (
-            results["quran_semantic"],
-            results["quran_chunks"],
-            results["bible_semantic"],
-            results["bible_chunks"]
+            results["quran"],
+            results["ot"],
+            results["nt"],
+            results["apocrypha"]
         )
     
     # ==================== END MULTI-QUERY SUPPORT ====================
@@ -490,7 +486,7 @@ class ComparativeRAG:
         """
         Execute full search pipeline without answer generation.
         
-        Returns 80 verses (20 per search type × 4 searches).
+        Returns 80 verses (20 per testament × 4 collections: Quran, OT, NT, Apocrypha).
         
         If enable_multi_query=True: Uses 5 queries + RRF fusion for better accuracy.
         If enable_multi_query=False: Uses single enhanced query (faster).
@@ -524,37 +520,60 @@ class ComparativeRAG:
             self._log(f"   Quran: {len(quran_queries)} queries, Bible: {len(bible_queries)} queries")
             self._log(f"   Generated in {duration:.0f}ms")
             
-            # Step 2: Multi-query search with RRF fusion
-            quran_sem, quran_chunks, bible_sem, bible_chunks = self._search_all_multi_query(
-                quran_queries, bible_queries, pool_size=50
+            # Step 2: Multi-query search with RRF fusion - now returns (quran, ot, nt, apocrypha)
+            quran_results, ot_results, nt_results, apocrypha_results = self._search_all_multi_query(
+                quran_queries, bible_queries, pool_size=20
             )
             
-            # Use original query for search
             quran_query = query
             bible_query = query
             
         else:
-            # ===== SINGLE-QUERY PATH (Original behavior) =====
+            # ===== SINGLE-QUERY PATH =====
             # Step 1: Parallel query enhancement
             quran_query, bible_query = self._enhance_query_parallel(query)
             
-            # Step 2: 4 parallel searches
-            quran_sem, quran_chunks, bible_sem, bible_chunks = self._search_all_parallel(
-                quran_query, bible_query, pool_size=50
-            )
-        
-        # Step 3: Select top results from each set (same for both paths)
-        quran_sem, quran_chunks, bible_sem, bible_chunks = self._select_top_results(
-            quran_sem, quran_chunks, bible_sem, bible_chunks
-        )
+            # Step 2: 4 parallel testament searches (fallback for single query mode)
+            self._log("🔍 Step 2: Parallel Testament Searches...")
+            start = time.time()
+            
+            def search_quran():
+                return self._get_quran_searcher().search(quran_query, mode="semantic", limit=20)
+            def search_ot():
+                return self._get_ot_searcher().search(bible_query, mode="semantic", limit=20)
+            def search_nt():
+                return self._get_nt_searcher().search(bible_query, mode="semantic", limit=20)
+            def search_apocrypha():
+                return self._get_apocrypha_searcher().search(bible_query, mode="semantic", limit=20)
+            
+            with ThreadPoolExecutor(max_workers=4) as executor:
+                futures = {
+                    executor.submit(search_quran): "quran",
+                    executor.submit(search_ot): "ot",
+                    executor.submit(search_nt): "nt",
+                    executor.submit(search_apocrypha): "apocrypha"
+                }
+                results = {}
+                for future in as_completed(futures):
+                    key = futures[future]
+                    results[key] = future.result()
+            
+            quran_results = results["quran"]
+            ot_results = results["ot"]
+            nt_results = results["nt"]
+            apocrypha_results = results["apocrypha"]
+            
+            duration = (time.time() - start) * 1000
+            self._log(f"   Quran: {len(quran_results)}, OT: {len(ot_results)}, NT: {len(nt_results)}, Apoc: {len(apocrypha_results)}")
+            self._log(f"   Searches completed in {duration:.0f}ms")
         
         total_duration = (time.time() - total_start) * 1000
         
         result = ComparativeScriptureResult(
-            quran_semantic=quran_sem,
-            quran_chunks=quran_chunks,
-            bible_semantic=bible_sem,
-            bible_chunks=bible_chunks,
+            quran=quran_results,
+            ot=ot_results,
+            nt=nt_results,
+            apocrypha=apocrypha_results,
             search_stats={
                 "duration_ms": total_duration,
                 "quran_query": quran_query,
@@ -656,8 +675,8 @@ class ComparativeRAG:
         """
         Full comparative pipeline with Multi-Agent answer generation.
         
-        Uses 4 specialist agents (OT, NT, Apocrypha, Quran) running in parallel,
-        followed by a summary agent. Returns 5 paragraphs.
+        Uses 4 testament-specific searches (Quran, OT, NT, Apocrypha) in parallel,
+        each returning 20 verses. Then runs 4 specialist agents + 1 summary agent.
         
         Args:
             query: User's religious/philosophical question
@@ -671,26 +690,20 @@ class ComparativeRAG:
             console.print(f"\n[bold blue]📚 Multi-Agent Comparative Scripture Analysis[/bold blue]")
             console.print(f"[dim]Question: \"{query}\"[/dim]\n")
         
-        # Steps 1-3: Search and select top results
+        # Steps 1-2: Search all 4 collections (now pre-separated by testament)
         search_result = self.search_all(query)
         
-        # Step 4: Split Bible results by testament
-        self._log("📋 Step 4: Splitting Bible results by testament...")
-        split_start = time.time()
+        # Results are now directly available per testament - no splitting needed!
+        quran_verses = search_result.quran
+        ot_verses = search_result.ot
+        nt_verses = search_result.nt
+        apocrypha_verses = search_result.apocrypha
         
-        # Combine semantic + chunks for each source
-        all_bible_results = search_result.bible_semantic + search_result.bible_chunks
-        ot_verses, nt_verses, apocrypha_verses = self._split_bible_by_testament(all_bible_results)
+        self._log(f"📋 Verses: Quran={len(quran_verses)}, OT={len(ot_verses)}, "
+                  f"NT={len(nt_verses)}, Apoc={len(apocrypha_verses)}")
         
-        quran_verses = search_result.quran_semantic + search_result.quran_chunks
-        
-        split_duration = (time.time() - split_start) * 1000
-        self._log(f"   OT: {len(ot_verses)}, NT: {len(nt_verses)}, "
-                  f"Apocrypha: {len(apocrypha_verses)}, Quran: {len(quran_verses)}")
-        self._log(f"   Split completed in {split_duration:.0f}ms")
-        
-        # Step 5: Multi-agent generation
-        self._log("📝 Step 5: Running 4 specialist agents + summary agent...")
+        # Step 3: Multi-agent generation
+        self._log("📝 Step 3: Running 4 specialist agents + summary agent...")
         gen_start = time.time()
         
         answer = self.multi_agent_generator.generate(

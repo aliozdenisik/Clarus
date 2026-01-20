@@ -50,44 +50,40 @@ def test_multi_agent_flow():
     total_start = time.time()
     
     # Step 1: Run search_all to get raw search results
-    console.print("[yellow]Step 1: Running search_all()[/yellow]")
+    console.print("[yellow]Step 1: Running search_all() with 4 testament collections[/yellow]")
     search_start = time.time()
     search_result = rag.search_all(test_query)
     search_time = time.time() - search_start
     
     # Step 2: Show search results distribution
-    console.print(f"\n[yellow]Step 2: Search Results Distribution[/yellow]")
+    console.print(f"\n[yellow]Step 2: Search Results Distribution (Per Testament)[/yellow]")
     
-    search_table = Table(title="Search Results by Source")
-    search_table.add_column("Source", style="cyan")
+    search_table = Table(title="Search Results by Testament")
+    search_table.add_column("Collection", style="cyan")
     search_table.add_column("Count", justify="right")
-    search_table.add_column("Mode")
+    search_table.add_column("Agent")
     
-    search_table.add_row("Quran Semantic", str(len(search_result.quran_semantic)), "Dense")
-    search_table.add_row("Quran Chunks", str(len(search_result.quran_chunks)), "Semantic Chunks")
-    search_table.add_row("Bible Semantic", str(len(search_result.bible_semantic)), "Dense")
-    search_table.add_row("Bible Chunks", str(len(search_result.bible_chunks)), "Semantic Chunks")
-    search_table.add_row("TOTAL", str(search_result.total_verses), "Combined")
+    search_table.add_row("quran_tr", str(len(search_result.quran)), "QuranAgent")
+    search_table.add_row("bible_ot", str(len(search_result.ot)), "OldTestamentAgent")
+    search_table.add_row("bible_nt", str(len(search_result.nt)), "NewTestamentAgent")
+    search_table.add_row("bible_apocrypha", str(len(search_result.apocrypha)), "ApocryphaAgent")
+    search_table.add_row("TOTAL", str(search_result.total_verses), "-")
     
     console.print(search_table)
     console.print(f"Search completed in {search_time:.2f}s")
     
-    # Step 3: Split Bible by testament
-    console.print(f"\n[yellow]Step 3: Testament Split[/yellow]")
+    # Step 3: Direct to agents (no more splitting needed!)
+    console.print(f"\n[yellow]Step 3: Results Ready for Agents (No Split Needed)[/yellow]")
     
-    all_bible = search_result.bible_semantic + search_result.bible_chunks
-    ot_verses, nt_verses, apocrypha_verses = rag._split_bible_by_testament(all_bible)
-    quran_verses = search_result.quran_semantic + search_result.quran_chunks
-    
-    split_table = Table(title="Verses by Tradition (Agent Input)")
+    split_table = Table(title="Verses Directly Available Per Agent")
     split_table.add_column("Agent", style="cyan")
-    split_table.add_column("Tradition", style="dim")
+    split_table.add_column("Collection", style="dim")
     split_table.add_column("Verse Count", justify="right")
     
-    split_table.add_row("OldTestamentAgent", "Tevrat, Zebur, Peygamberler", str(len(ot_verses)))
-    split_table.add_row("NewTestamentAgent", "İnciller, Mektuplar, Vahiy", str(len(nt_verses)))
-    split_table.add_row("ApocryphaAgent", "Tobit, Sirach, Makkabiler", str(len(apocrypha_verses)))
-    split_table.add_row("QuranAgent", "Kuran-ı Kerim", str(len(quran_verses)))
+    split_table.add_row("OldTestamentAgent", "bible_ot", str(len(search_result.ot)))
+    split_table.add_row("NewTestamentAgent", "bible_nt", str(len(search_result.nt)))
+    split_table.add_row("ApocryphaAgent", "bible_apocrypha", str(len(search_result.apocrypha)))
+    split_table.add_row("QuranAgent", "quran_tr", str(len(search_result.quran)))
     
     console.print(split_table)
     
@@ -97,10 +93,10 @@ def test_multi_agent_flow():
     
     answer = rag.multi_agent_generator.generate(
         query=test_query,
-        quran_verses=quran_verses,
-        ot_verses=ot_verses,
-        nt_verses=nt_verses,
-        apocrypha_verses=apocrypha_verses
+        quran_verses=search_result.quran,
+        ot_verses=search_result.ot,
+        nt_verses=search_result.nt,
+        apocrypha_verses=search_result.apocrypha
     )
     gen_time = time.time() - gen_start
     
@@ -182,17 +178,17 @@ def test_multi_agent_flow():
     results = {
         "query": test_query,
         "search_stats": {
-            "quran_semantic": len(search_result.quran_semantic),
-            "quran_chunks": len(search_result.quran_chunks),
-            "bible_semantic": len(search_result.bible_semantic),
-            "bible_chunks": len(search_result.bible_chunks),
+            "quran": len(search_result.quran),
+            "old_testament": len(search_result.ot),
+            "new_testament": len(search_result.nt),
+            "apocrypha": len(search_result.apocrypha),
             "total": search_result.total_verses
         },
         "agent_input": {
-            "old_testament": len(ot_verses),
-            "new_testament": len(nt_verses),
-            "apocrypha": len(apocrypha_verses),
-            "quran": len(quran_verses)
+            "old_testament": len(search_result.ot),
+            "new_testament": len(search_result.nt),
+            "apocrypha": len(search_result.apocrypha),
+            "quran": len(search_result.quran)
         },
         "agent_output": {
             "old_testament": {

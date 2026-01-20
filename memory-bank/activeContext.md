@@ -2,22 +2,22 @@
 
 ## Current Work Focus
 
-**Date**: 2026-01-19 (evening)
+**Date**: 2026-01-20
 
-**Multi-Agent Answer Generation** system implemented for comparative scripture analysis.
+**4-Testament Collection Architecture** implemented for balanced multi-agent search.
 
 ## Recent Changes
 
-### Multi-Agent Architecture (2026-01-19)
+### Testament-Based Collections (2026-01-20)
 
-**New Feature**: 5-agent theological answer generation system:
+**Architecture Update**: Bible split into 3 separate Qdrant collections:
 
-| Agent | Scope | Perspective |
-|-------|-------|-------------|
-| OldTestamentAgent | Tevrat, Zebur, Peygamberler | Yahudi-Hristiyan tefsir |
-| NewTestamentAgent | İnciller, Mektuplar, Vahiy | Kristolojik perspektif |
-| ApocryphaAgent | Tobit, Sirach, Makkabiler, vb. | Katolik/Ortodoks tefsir |
-| QuranAgent | Kuran | İslami tefsir geleneği |
+| Collection | Points | Agent |
+|------------|--------|-------|
+| `quran_tr` | 6,236 | QuranAgent |
+| `bible_ot` | 23,145 | OldTestamentAgent |
+| `bible_nt` | 7,957 | NewTestamentAgent |
+| `bible_apocrypha` | 5,717 | ApocryphaAgent |
 | SummaryAgent | 4 yorumu sentezler | Karşılaştırmalı |
 
 **New Files**:
@@ -28,13 +28,18 @@
 
 **Test Results** (query: "Sabır hakkında..."):
 
-| Metric | Single Query | Multi-Query + RRF |
-|--------|--------------|-------------------|
-| OT Verses | 0 | 1 |
-| Apocrypha | 5 | 6 |
-| Confidence | 96% | 98% |
+| Agent | Verses (Before) | Verses (Now) |
+|-------|-----------------|-------------|
+| OT | 3 | **20** ✅ |
+| NT | 11 | **20** ✅ |
+| Apocrypha | 6 | **20** ✅ |
+| Quran | 40 | **20** ✅ |
 
-| Latency | ~21s | ~37s |
+| Metric | Value |
+|--------|-------|
+| Total | 80 verses |
+| Confidence | 96% |
+| Latency | ~40s |
 
 ### Retrieval Accuracy Test (2026-01-20)
 

@@ -402,11 +402,25 @@ class BibleSearcher:
     """
     Hybrid search engine for Bible translations.
     Supports semantic, keyword (BM25), and hybrid search modes.
+    
+    Can search specific testaments via the testament parameter:
+    - "ot" -> bible_ot collection (Old Testament)
+    - "nt" -> bible_nt collection (New Testament)
+    - "apocrypha" -> bible_apocrypha collection
+    - None -> searches the combined collection if exists, otherwise raises error
     """
+    
+    # Testament to collection name mapping
+    TESTAMENT_COLLECTIONS = {
+        "ot": "bible_ot",
+        "nt": "bible_nt",
+        "apocrypha": "bible_apocrypha",
+    }
     
     def __init__(
         self,
         translation: str = "kjva",
+        testament: Optional[str] = None,
         qdrant_url: str = "http://localhost:6333",
         in_memory: bool = False,
         client: Optional[QdrantClient] = None,
@@ -414,7 +428,16 @@ class BibleSearcher:
         sparse_encoder: Optional[SparseEncoder] = None
     ):
         self.translation = translation
-        self.collection_name = f"bible_{translation}"
+        self.testament = testament.lower() if testament else None
+        
+        # Determine collection name based on testament
+        if self.testament:
+            if self.testament not in self.TESTAMENT_COLLECTIONS:
+                raise ValueError(f"Invalid testament: {testament}. Must be one of: ot, nt, apocrypha")
+            self.collection_name = self.TESTAMENT_COLLECTIONS[self.testament]
+        else:
+            # Legacy: use combined collection (may not exist after migration)
+            self.collection_name = f"bible_{translation}"
         
         if client:
             self.client = client
