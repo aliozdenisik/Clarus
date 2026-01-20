@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Holly Search: Kaydet/Paylaş</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#007bff",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0f1923",
+                        "border-light": "#e5e7eb",
+                        "border-dark": "#2a2f35",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem", // Sharp-ish (2px)
+                        "sm": "0.125rem",
+                        "md": "0.25rem", 
+                        "lg": "0.375rem",
+                        "full": "9999px"
+                    },
+                    boxShadow: {
+                        'modal': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#101418] dark:text-gray-100 font-display min-h-screen flex flex-col overflow-hidden">
+<!-- Background Content (Blurred Context) -->
+<div aria-hidden="true" class="relative flex flex-col flex-1 h-full w-full opacity-40 pointer-events-none select-none">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-border-light dark:border-border-dark bg-white dark:bg-background-dark px-10 py-3">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 text-[#101418] dark:text-white">
+<div class="size-8 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-3xl">auto_stories</span>
+</div>
+<h2 class="text-[#101418] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Holly Search</h2>
+</div>
+<label class="flex flex-col min-w-40 !h-10 max-w-64 hidden md:flex">
+<div class="flex w-full flex-1 items-stretch rounded border border-border-light dark:border-border-dark h-full bg-background-light dark:bg-[#1a2027]">
+<div class="text-[#5e758d] flex border-none items-center justify-center pl-3 rounded-l">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded bg-transparent text-[#101418] dark:text-white focus:outline-0 focus:ring-0 border-none h-full placeholder:text-[#5e758d] px-3 text-sm font-normal leading-normal" placeholder="Sure, ayet veya konu ara..." value=""/>
+</div>
+</label>
+</div>
+<div class="flex flex-1 justify-end gap-8">
+<div class="flex items-center gap-9 hidden sm:flex">
+<a class="text-[#101418] dark:text-gray-200 text-sm font-medium leading-normal" href="#">Kütüphane</a>
+<a class="text-[#101418] dark:text-gray-200 text-sm font-medium leading-normal" href="#">Ayarlar</a>
+</div>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-gray-200 dark:border-gray-700" data-alt="User profile avatar placeholder" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDdjbTv2pA377mcUl9hPCUiQ-8SzSezmAMK0CedTzObRDWTZ13kCy-mqj8ud7UtqUYI8f9i1LH4W8SaY4nZTQMluiqUdGCOhsDnr9eAnJfsrr65klcRzqY4blfoZX2YV55HA9o_ul3hlmPSIzsvmH3_0_DrElFQyE5iK0GHTM2R1I8znv4S0BuET6ur97nQ2Wgnx54vbgy6i23Mg0aC0kneehFwP4axiw1E4-iPoQohPdCYZ8xDeJ4prU1Dtft87tLpU1elKJGFCBo");'></div>
+</div>
+</header>
+<!-- Main Content Dummy -->
+<main class="flex-1 flex flex-col items-center py-10 px-6">
+<div class="max-w-4xl w-full">
+<!-- Verse Card -->
+<div class="bg-white dark:bg-[#151b23] p-8 rounded shadow-sm border border-border-light dark:border-border-dark mb-6">
+<div class="flex justify-between items-start mb-4">
+<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Bakara Suresi, 255. Ayet</h1>
+<span class="bg-primary/10 text-primary px-3 py-1 rounded text-xs font-semibold">Tefsir</span>
+</div>
+<p class="text-lg leading-relaxed text-gray-700 dark:text-gray-300 mb-6 font-light">
+                        Allah, kendisinden başka ilâh olmayandır; diridir, her şeyin varlığı O’na bağlı ve dayalıdır. Ne uykusu gelir ne de uyur. Göklerde ve yerde ne varsa hepsi O’nundur. O’nun izni olmadıkça katında şefaat edecek kimdir? O, kullarının yaptıklarını ve yapacaklarını bilir.
+                    </p>
+<div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-3/4 mb-2"></div>
+<div class="h-4 bg-gray-100 dark:bg-gray-800 rounded w-1/2"></div>
+</div>
+</div>
+</main>
+</div>
+<!-- Modal Overlay -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+<!-- Backdrop Blur -->
+<div class="absolute inset-0 bg-[#f5f7f8]/60 dark:bg-[#0f1923]/80 backdrop-blur-sm"></div>
+<!-- Modal Container -->
+<div class="relative w-full max-w-[520px] bg-white dark:bg-[#151b23] rounded shadow-modal border border-gray-100 dark:border-gray-800 flex flex-col animate-in fade-in zoom-in-95 duration-200">
+<!-- Modal Header -->
+<div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800">
+<h3 class="text-lg font-bold text-gray-900 dark:text-white tracking-tight">Paylaşım Seçenekleri</h3>
+<button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1 rounded hover:bg-gray-50 dark:hover:bg-gray-800">
+<span class="material-symbols-outlined text-[24px]">close</span>
+</button>
+</div>
+<!-- Modal Content -->
+<div class="p-6 space-y-8">
+<!-- Save Section -->
+<div class="space-y-4">
+<div class="flex items-start gap-4">
+<div class="bg-primary/5 dark:bg-primary/10 p-3 rounded text-primary">
+<span class="material-symbols-outlined text-[28px]">bookmark</span>
+</div>
+<div class="flex-1">
+<h4 class="text-base font-semibold text-gray-900 dark:text-white mb-1">Koleksiyonuna Ekle</h4>
+<p class="text-sm text-gray-500 dark:text-gray-400 leading-normal">
+                                Bu ayet tefsirini kaydederek daha sonra kütüphanenden kolayca erişebilirsin.
+                            </p>
+</div>
+</div>
+<button class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white font-medium py-3 px-4 rounded transition-colors duration-200 shadow-sm shadow-blue-500/20">
+<span class="material-symbols-outlined text-[20px]">add</span>
+<span>Kaydedilenlerime Ekle</span>
+</button>
+</div>
+<div class="h-px bg-gray-100 dark:bg-gray-800 w-full"></div>
+<!-- Share Section -->
+<div class="space-y-5">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-gray-400 text-[20px]">share</span>
+<h4 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Başkalarıyla Paylaş</h4>
+</div>
+<!-- Link Copy Input -->
+<div class="group relative">
+<label class="sr-only">Paylaşım Bağlantısı</label>
+<div class="flex items-center bg-background-light dark:bg-[#0f1419] border border-gray-200 dark:border-gray-700 rounded overflow-hidden focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+<div class="pl-3 text-gray-400 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-[20px]">link</span>
+</div>
+<input class="flex-1 bg-transparent border-none text-sm text-gray-700 dark:text-gray-200 py-3 px-3 focus:ring-0 truncate selection:bg-primary/20" readonly="" type="text" value="https://hollysearch.com/s/bakara-255-tefsir"/>
+<button class="px-4 py-3 bg-white dark:bg-[#1e252e] border-l border-gray-200 dark:border-gray-700 text-sm font-medium text-primary hover:text-blue-700 hover:bg-gray-50 dark:hover:bg-[#252d38] transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+                                Kopyala
+                            </button>
+</div>
+</div>
+<!-- Action Grid -->
+<div class="grid grid-cols-2 gap-3">
+<button class="flex items-center justify-center gap-2 py-2.5 px-4 rounded border border-gray-200 dark:border-gray-700 hover:border-primary/50 hover:bg-primary/5 text-gray-700 dark:text-gray-300 text-sm font-medium transition-all group">
+<span class="material-symbols-outlined text-[20px] text-gray-400 group-hover:text-primary transition-colors">description</span>
+                            Metni Kopyala
+                        </button>
+<button class="flex items-center justify-center gap-2 py-2.5 px-4 rounded border border-gray-200 dark:border-gray-700 hover:border-green-500/50 hover:bg-green-50 dark:hover:bg-green-900/10 text-gray-700 dark:text-gray-300 text-sm font-medium transition-all group">
+<!-- Whatsapp style icon via Material Symbols approximation -->
+<span class="material-symbols-outlined text-[20px] text-gray-400 group-hover:text-green-600 transition-colors">chat</span>
+                            WhatsApp
+                        </button>
+</div>
+<!-- More Socials (Clean Row) -->
+<div class="flex items-center justify-center gap-4 pt-2">
+<span class="text-xs text-gray-400">Diğer platformlar:</span>
+<div class="flex gap-2">
+<button aria-label="Share via Email" class="size-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 transition-colors">
+<span class="material-symbols-outlined text-[18px]">mail</span>
+</button>
+<button aria-label="Share via Twitter" class="size-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 transition-colors">
+<!-- X logo approximation using generic share or close enough icon since material doesn't have brands -->
+<svg aria-hidden="true" class="w-4 h-4 fill-current" viewbox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+</button>
+<button aria-label="More Options" class="size-8 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 transition-colors">
+<span class="material-symbols-outlined text-[18px]">more_horiz</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Modal Footer (Optional status bar style) -->
+<div class="bg-gray-50 dark:bg-[#1a2027] px-6 py-3 border-t border-gray-100 dark:border-gray-800 flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+<span>Tefsir v1.2</span>
+<a class="hover:text-primary underline decoration-dotted" href="#">Gizlilik Politikası</a>
+</div>
+</div>
+</div>
+</body></html>

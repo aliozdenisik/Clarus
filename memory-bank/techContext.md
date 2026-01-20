@@ -86,6 +86,9 @@ python main.py build-semantic-chunks    # Quran chunks
 python main.py build-bible-semantic-chunks  # Bible chunks
 python main.py setup                    # All of the above
 
+# Unified Setup (recommended)
+python scripts/setup_all_collections.py  # All collections from scratch
+
 # Searching
 python main.py search "query"           # Quran
 python main.py search-bible "query"     # Bible

@@ -6,11 +6,12 @@ Command-line interface for indexing and searching Quran and Bible translations
 using Qdrant vector database with hybrid (semantic + BM25) search.
 
 Usage:
-    python main.py index [--recreate]                    # Index Quran
     python main.py search "query"                        # Search Quran
-    python main.py index-bible --translation kjva     # Index Bible
     python main.py search-bible "query"                  # Search Bible
     python main.py info
+    
+    # For indexing, use the unified script:
+    python scripts/setup_all_collections.py
 """
 import argparse
 import sys
@@ -29,7 +30,7 @@ from rich.panel import Panel
 from rich import print as rprint
 
 from src.data_loader import QuranDataLoader
-from src.indexer import QuranIndexer, BibleIndexer, SemanticChunkIndexer
+from src.indexer import QuranIndexer, SemanticChunkIndexer
 from src.search import QuranSearcher, BibleSearcher, SemanticChunkSearcher, print_results
 from src.bible_loader import BibleDataLoader
 from src.semantic_chunker import SemanticVerseChunker, analyze_surah_chunks
@@ -245,75 +246,6 @@ def cmd_info(args):
     return 0
 
 
-def cmd_index_bible(args):
-    """Index Bible data into Qdrant"""
-    import asyncio
-    
-    translation = args.translation
-    console.print(f"\n[bold blue]Bible Hybrid Search Indexer ({translation})[/bold blue]\n")
-    
-    # Check for async mode
-    use_async = getattr(args, 'use_async', True)  # Default to async
-    if use_async:
-        console.print("[dim]Mode: Async (parallel embeddings)[/dim]")
-    
-    # Load data
-    console.print(f"[yellow]Loading Bible data ({translation})...[/yellow]")
-    try:
-        loader = BibleDataLoader(translation=translation, data_dir=Path("data"))
-        loader.download_data()
-    except Exception as e:
-        console.print(f"[red][ERROR] Error loading Bible data: {e}[/red]")
-        return 1
-    
-    # Show stats
-    stats = loader.get_stats()
-    console.print(f"[green][OK][/green] Loaded {stats['total_books']} books, {stats['total_verses']} verses")
-    console.print(f"  Translation: {stats['translation_name']}")
-    console.print(f"  Old Testament (Eski Ahit): {stats['old_testament_books']} books")
-    console.print(f"  New Testament (Yeni Ahit): {stats['new_testament_books']} books")
-    if stats.get('has_apocrypha'):
-        console.print(f"  Apocrypha (Apokrif): {stats.get('apocrypha_books', 0)} books")
-    
-    # Create chunks
-    console.print("\n[yellow]Creating chunks...[/yellow]")
-    chunks = loader.create_chunks(show_progress=True)
-    console.print(f"[green][OK][/green] Created {len(chunks)} chunks")
-    
-    # Initialize indexer
-    console.print("\n[yellow]Initializing Qdrant...[/yellow]")
-    try:
-        indexer = BibleIndexer(translation=translation, qdrant_url=args.qdrant_url)
-        indexer.create_collection(recreate=args.recreate)
-    except Exception as e:
-        console.print(f"[red][ERROR] Error connecting to Qdrant: {e}[/red]")
-        console.print("\n[yellow]Make sure Qdrant is running:[/yellow]")
-        console.print("  docker run -p 6333:6333 qdrant/qdrant")
-        return 1
-    
-    # Index chunks using async
-    console.print("\n[yellow]Indexing chunks...[/yellow]")
-    max_concurrent = getattr(args, 'parallel', 8)
-    
-    async def run_index():
-        return await indexer.index_chunks(
-            chunks, 
-            batch_size=100,
-            max_concurrent=max_concurrent,
-            upload_batch_size=500,
-            show_progress=True
-        )
-    
-    count = asyncio.run(run_index())
-    
-    # Show info
-    info = indexer.get_collection_info()
-    console.print(f"\n[green][OK][/green] Successfully indexed {count} verses!")
-    console.print(f"  Collection: {info['name']}")
-    console.print(f"  Points: {info['points_count']}")
-    console.print(f"  Status: {info['status']}")
-    
-    return 0
 
 
 def cmd_search_bible(args):
@@ -489,9 +421,14 @@ def cmd_compare(args):
     query = args.query
     verses = args.verses
     translation = args.translation
+    multi_agent = args.multi_agent
     
-    console.print("\n[bold magenta]📚 Comparative Scripture Analysis[/bold magenta]")
-    console.print("[dim]Searching Quran + Bible → Comparative Theological Essay[/dim]\n")
+    if multi_agent:
+        console.print(f"\n[bold magenta]📚 Multi-Agent Comparative Scripture Analysis[/bold magenta]")
+        console.print("[dim]4 Specialist Agents (OT, NT, Apocrypha, Quran) + Synthesis Agent[/dim]\n")
+    else:
+        console.print("\n[bold magenta]📚 Comparative Scripture Analysis[/bold magenta]")
+        console.print("[dim]Searching Quran + Bible → Comparative Theological Essay[/dim]\n")
     
     try:
         from src.comparative_rag import ComparativeRAG
@@ -502,25 +439,34 @@ def cmd_compare(args):
             verbose=True
         )
         
-        result = rag.compare(query)
+        if multi_agent:
+            result = rag.compare_multi_agent(query)
+            essay_text = result.to_essay()
+            confidence = result.confidence
+            citations = result.citations
+            # Flatten citations for display
+            all_refs = []
+            for source, refs in citations.items():
+                all_refs.extend([f"({source}) {ref}" for ref in refs])
+        else:
+            result = rag.compare(query)
+            essay_text = result.essay
+            confidence = result.confidence
+            all_refs = result.all_references
         
         # Display essay
         console.print(Panel(
-            f"[white]{result.essay}[/white]",
-            title=f"[green]Karşılaştırmalı Analiz (Güven: {result.confidence:.0%})[/green]",
-            subtitle=f"[dim]{result.verses_provided} ayet kullanıldı[/dim]",
+            f"[white]{essay_text}[/white]",
+            title=f"[green]Karşılaştırmalı Analiz (Güven: {confidence:.0%})[/green]",
             expand=False,
             padding=(1, 2)
         ))
         
         # Show references
-        if result.all_references:
+        if all_refs:
             console.print("\n[bold cyan]📖 Kullanılan Kaynaklar:[/bold cyan]")
-            for i, ref in enumerate(result.all_references, 1):
+            for i, ref in enumerate(all_refs, 1):
                 console.print(f"  {i}. {ref}")
-        
-        # Show source breakdown
-        console.print(f"\n[dim]Kuran: {len(result.quran_references)} | İncil: {len(result.bible_references)}[/dim]")
         
         return 0
     except Exception as e:
@@ -716,26 +662,7 @@ def main():
         action="store_true",
         help="Show detailed first result"
     )
-    
-    # Index Bible command
-    index_bible_parser = subparsers.add_parser("index-bible", help="Index Bible data")
-    index_bible_parser.add_argument(
-        "--translation",
-        default="kjva",
-        choices=["kjva", "kjv"],
-        help="Bible translation to index (default: kjva)"
-    )
-    index_bible_parser.add_argument(
-        "--recreate", 
-        action="store_true",
-        help="Recreate collection (delete existing)"
-    )
-    index_bible_parser.add_argument(
-        "--parallel",
-        type=int,
-        default=20,
-        help="Max concurrent API calls (default: 20)"
-    )
+
     
     # Search Bible command (uses Ultimate RAG Pipeline)
     search_bible_parser = subparsers.add_parser("search-bible", help="Search Bible (Ultimate RAG)")
@@ -795,6 +722,11 @@ def main():
         "--translation",
         default="kjva",
         help="Bible translation to use (default: kjva)"
+    )
+    compare_parser.add_argument(
+        "--multi-agent",
+        action="store_true",
+        help="Use multi-agent system (5 paragraphs: OT, NT, Apocrypha, Quran, Synthesis)"
     )
     
     # Info command
@@ -1022,8 +954,7 @@ def main():
         return cmd_index(args)
     elif args.command == "search":
         return cmd_search(args)
-    elif args.command == "index-bible":
-        return cmd_index_bible(args)
+
     elif args.command == "search-bible":
         return cmd_search_bible(args)
     elif args.command == "info":
@@ -1357,41 +1288,12 @@ def cmd_analyze_chunks(args):
 
 
 def cmd_setup(args):
-    """Run full setup: Index Quran, Semantic Chunks, Bible, and Bible Semantic Chunks"""
-    console.print("\n[bold green]🚀 Starting Full Setup[/bold green]\n")
-    
-    # 1. Index Quran
-    console.print(Panel("[bold]Step 1/4: Indexing Quran (Standard)[/bold]", style="blue"))
-    if cmd_index(args) != 0:
-        return 1
-        
-    # 2. Build Quran Semantic Chunks
-    console.print("\n" + Panel("[bold]Step 2/4: Building & Indexing Quran Semantic Chunks[/bold]", style="magenta"))
-    # Map setup args to chunker args
-    args.threshold = args.semantic_threshold
-    args.max_size = args.semantic_max_size
-    args.analyze_only = False
-    if cmd_build_semantic_chunks(args) != 0:
-        return 1
-        
-    # 3. Index Bible
-    console.print("\n" + Panel(f"[bold]Step 3/4: Indexing Bible ({args.translation})[/bold]", style="yellow"))
-    # Map setup args to bible args (translation is already set by parser)
-    if cmd_index_bible(args) != 0:
-        return 1
-    
-    # 4. Build Bible Semantic Chunks
-    console.print("\n" + Panel(f"[bold]Step 4/4: Building & Indexing Bible Semantic Chunks ({args.translation})[/bold]", style="cyan"))
-    if cmd_build_bible_semantic_chunks(args) != 0:
-        return 1
-        
-    console.print("\n[bold green]✨ Setup Completed Successfully! ✨[/bold green]")
-    console.print("You can now search using:")
-    console.print("  python main.py search 'query'               # Quran")
-    console.print("  python main.py search-semantic 'query'      # Quran (Semantic)")
-    console.print(f"  python main.py search-bible 'query'         # Bible ({args.translation})")
-    console.print(f"  python main.py search-bible-semantic 'query' # Bible Semantic ({args.translation})")
-    
+    """Redirect to unified setup script"""
+    console.print("\n[bold yellow]⚠️  Deprecated: Use unified script instead[/bold yellow]\n")
+    console.print("Run the following command for complete setup:")
+    console.print("  [cyan]python scripts/setup_all_collections.py[/cyan]\n")
+    console.print("This creates all collections (quran_tr, bible_ot, bible_nt, bible_apocrypha)")
+    console.print("with testament-split Bible indexing for better search accuracy.\n")
     return 0
 
 

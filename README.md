@@ -103,28 +103,21 @@ pip install -r requirements.txt
 OPENROUTER_API_KEY=your-openrouter-key
 ```
 
-### 4. Tek Komutla Kurulum (Önerilen)
+### 4. Koleksiyonları Oluşturun
 
 ```bash
-# Tüm koleksiyonları oluştur (Kuran + 3 Bible Testament + Semantic Chunks)
-python main.py setup
+# Tek komutla tüm koleksiyonları oluştur (Önerilen)
+python scripts/setup_all_collections.py
 ```
 
-### 4b. Manuel Kurulum (Alternatif)
+Bu script:
+- Mevcut koleksiyonları siler (temiz başlangıç)
+- `quran_tr` (6,236 ayet)
+- `bible_ot` (23,145 ayet)
+- `bible_nt` (7,957 ayet)
+- `bible_apocrypha` (5,717 ayet)
 
-```bash
-# Kuran (Türkçe)
-python main.py index
-
-# Kuran Semantic Chunks
-python main.py build-semantic-chunks --threshold 25 --threshold-type percentile
-
-# İncil Testament Koleksiyonları
-python main.py index-bible --translation kjva
-
-# İncil Semantic Chunks
-python main.py build-bible-semantic-chunks
-```
+koleksiyonlarını async indexing ile oluşturur (~2 dakika).
 
 ---
 
@@ -223,6 +216,8 @@ qdrant/
 ├── data/
 │   ├── quran_tr.json               # Kuran (Türkçe)
 │   └── bible_kjva.json             # İncil (KJVA)
+├── scripts/
+│   └── setup_all_collections.py    # 🔧 Unified indeksleme script
 ├── src/
 │   ├── ultimate_rag.py             # 🚀 Ana RAG pipeline
 │   ├── comparative_rag.py          # ⚖️ Karşılaştırmalı RAG

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Holly Search - Referans Detayı</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&amp;family=Inter:wght@400;500;600;700;800;900&amp;family=Noto+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137cec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "text-main": "#111418",
+                        "text-secondary": "#617589",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "arabic": ["Amiri", "serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem", // Sharp-ish 2px
+                        "sm": "0.125rem",
+                        "md": "0.25rem",
+                        "lg": "0.375rem",
+                        "xl": "0.5rem",
+                        "full": "9999px",
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-arabic {
+            font-family: 'Amiri', serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-text-main dark:text-white transition-colors duration-200">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<!-- Header -->
+<header class="flex items-center justify-between border-b border-solid border-gray-200 dark:border-gray-800 bg-white dark:bg-background-dark px-6 py-4 sticky top-0 z-50">
+<div class="flex items-center gap-4">
+<a class="text-text-main dark:text-white hover:text-primary transition-colors flex items-center gap-2 group" href="#">
+<span class="material-symbols-outlined text-xl group-hover:-translate-x-1 transition-transform">arrow_back</span>
+<span class="text-sm font-medium leading-normal">Geri</span>
+</a>
+</div>
+<div class="flex items-center gap-2 absolute left-1/2 top-1/2 -translate-x-1/2 transform">
+<div class="size-5 text-primary">
+<svg class="w-full h-full" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 42.4379C4 42.4379 14.0962 36.0744 24 41.1692C35.0664 46.8624 44 42.2078 44 42.2078L44 7.01134C44 7.01134 35.068 11.6577 24.0031 5.96913C14.0971 0.876274 4 7.27094 4 7.27094L4 42.4379Z" fill="none" stroke="currentColor" stroke-width="4"></path>
+</svg>
+</div>
+<h1 class="text-text-main dark:text-white text-base font-bold tracking-tight hidden sm:block">Holly Search</h1>
+</div>
+<div class="flex items-center justify-end gap-4 w-[60px]">
+<!-- Placeholder for balance or right menu -->
+<button class="text-text-main dark:text-gray-300 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex flex-1 justify-center py-8 sm:py-12 px-4 sm:px-6">
+<div class="flex flex-col max-w-[720px] w-full flex-1 gap-8">
+<!-- Page Heading / Source Info -->
+<div class="flex flex-col gap-2 border-b border-gray-100 dark:border-gray-800 pb-6">
+<p class="text-primary text-sm font-medium tracking-wide uppercase">Kur'an-ı Kerim</p>
+<h2 class="text-text-main dark:text-white text-3xl sm:text-4xl font-black leading-tight tracking-[-0.033em]">
+                        Bakara Suresi, 2:255
+                    </h2>
+<p class="text-text-secondary dark:text-gray-400 text-sm font-normal">(Ayet-el Kürsi)</p>
+</div>
+<!-- Original Script -->
+<div class="py-4">
+<p class="font-arabic text-text-main dark:text-gray-100 text-[32px] sm:text-[40px] leading-[1.6] text-center" dir="rtl">
+                        اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ
+                    </p>
+</div>
+<!-- Translation -->
+<div>
+<p class="text-text-main dark:text-gray-200 text-lg sm:text-xl font-normal leading-relaxed">
+                        Allah, O'ndan başka ilah yoktur; O, hayydır, kayyûmdur. Kendisine ne uyku gelir ne de uyuklama. Göklerde ve yerdekilerin hepsi O'nundur. İzni olmadan O'nun katında kim şefaat edebilir? O, kullarının yaptıklarını ve yapacaklarını bilir. (İnsanlar) ise O'nun bildirdiklerinin dışında ilrinden hiçbir şeyi tam olarak kavrayamazlar.
+                    </p>
+</div>
+<!-- Context Card (ActionPanel) -->
+<div class="@container mt-4">
+<div class="flex flex-col gap-4 rounded bg-white dark:bg-gray-800 border-l-4 border-primary shadow-sm p-6 relative overflow-hidden">
+<!-- Decorative background element -->
+<div class="absolute -right-10 -top-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-primary text-[20px]">auto_awesome</span>
+<p class="text-text-main dark:text-white text-sm font-bold tracking-wide uppercase">Yapay Zeka Bağlamı</p>
+</div>
+<div class="flex flex-col gap-3">
+<p class="text-text-secondary dark:text-gray-300 text-base leading-relaxed">
+                                Bu ayet (Ayet-el Kürsi), Allah'ın mutlak hakimiyetini, ilmini ve kudretini vurgular. Medine döneminde inmiştir ve koruyucu özellikleriyle bilinir. İslam inancında tevhidi (Allah'ın birliğini) en güçlü şekilde ifade eden ayetlerden biri olarak kabul edilir.
+                            </p>
+<a class="text-sm font-bold leading-normal tracking-[0.015em] flex items-center gap-1 text-primary hover:text-primary/80 transition-colors w-fit mt-2" href="#">
+                                Detaylı tefsir oku
+                                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Fixed/Sticky Bottom Action Bar -->
+<div class="sticky bottom-6 flex justify-center w-full px-4 pointer-events-none z-40">
+<div class="bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700 rounded-full px-6 py-3 flex items-center gap-6 pointer-events-auto backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
+<button aria-label="Kaydet" class="flex flex-col items-center gap-1 group min-w-[50px]">
+<div class="p-2 rounded-full group-hover:bg-background-light dark:group-hover:bg-gray-700 transition-colors text-text-secondary dark:text-gray-400 group-hover:text-primary">
+<span class="material-symbols-outlined">bookmark</span>
+</div>
+<span class="text-[10px] font-medium text-text-secondary dark:text-gray-400 uppercase tracking-wide">Kaydet</span>
+</button>
+<div class="w-px h-8 bg-gray-200 dark:bg-gray-700"></div>
+<button aria-label="Kopyala" class="flex flex-col items-center gap-1 group min-w-[50px]">
+<div class="p-2 rounded-full group-hover:bg-background-light dark:group-hover:bg-gray-700 transition-colors text-text-secondary dark:text-gray-400 group-hover:text-primary">
+<span class="material-symbols-outlined">content_copy</span>
+</div>
+<span class="text-[10px] font-medium text-text-secondary dark:text-gray-400 uppercase tracking-wide">Kopyala</span>
+</button>
+<div class="w-px h-8 bg-gray-200 dark:bg-gray-700"></div>
+<button aria-label="Paylaş" class="flex flex-col items-center gap-1 group min-w-[50px]">
+<div class="p-2 rounded-full group-hover:bg-background-light dark:group-hover:bg-gray-700 transition-colors text-text-secondary dark:text-gray-400 group-hover:text-primary">
+<span class="material-symbols-outlined">ios_share</span>
+</div>
+<span class="text-[10px] font-medium text-text-secondary dark:text-gray-400 uppercase tracking-wide">Paylaş</span>
+</button>
+</div>
+</div>
+<!-- Bottom spacing for sticky bar -->
+<div class="h-20"></div>
+</div>
+</body></html>
