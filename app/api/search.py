@@ -6,6 +6,10 @@ from pydantic import BaseModel
 from typing import Optional
 import sys
 import os
+from dotenv import load_dotenv
+
+# Load .env before importing RAG modules
+load_dotenv()
 
 # Add parent directory to path for src imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -76,9 +80,9 @@ async def search_quran(
     verses = [
         VerseResult(
             source="Kuran",
-            reference=f"{r.get('surah_name', '')} {r.get('surah_no', '')}:{r.get('verse_no', '')}",
-            text=r.get('verse_text', ''),
-            score=r.get('score', 0.0)
+            reference=f"{r.surah_name} {r.surah_id}:{r.verse_id}",
+            text=r.translation,
+            score=r.score
         )
         for r in results
     ]
@@ -114,9 +118,9 @@ async def search_bible(
     verses = [
         VerseResult(
             source="İncil",
-            reference=f"{r.get('book_name', '')} {r.get('chapter', '')}:{r.get('verse', '')}",
-            text=r.get('text', ''),
-            score=r.get('score', 0.0)
+            reference=f"{getattr(r, 'book_name', '')} {getattr(r, 'chapter', '')}:{getattr(r, 'verse', '')}",
+            text=getattr(r, 'text', getattr(r, 'translation', '')),
+            score=r.score
         )
         for r in results
     ]

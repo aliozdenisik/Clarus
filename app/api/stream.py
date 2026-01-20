@@ -8,6 +8,10 @@ import asyncio
 import json
 import sys
 import os
+from dotenv import load_dotenv
+
+# Load .env before importing RAG modules
+load_dotenv()
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -83,7 +87,15 @@ async def stream_search(
                 answer = rag.ask_bible(q)
             
             # Stream the answer token by token
-            answer_text = answer.get("answer", "")
+            # Handle both dict and AnswerResult dataclass responses
+            if hasattr(answer, 'text'):
+                answer_text = answer.text
+            elif hasattr(answer, 'answer'):
+                answer_text = answer.answer
+            elif isinstance(answer, dict):
+                answer_text = answer.get('answer', '') or answer.get('text', '')
+            else:
+                answer_text = str(answer)
             words = answer_text.split()
             
             for i, word in enumerate(words):
@@ -91,7 +103,13 @@ async def stream_search(
                 await asyncio.sleep(0.03)  # 30ms per word
             
             # Send citations
-            yield f"data: {json.dumps({'citations': answer.get('citations', [])})}\n\n"
+            if hasattr(answer, 'citations'):
+                citations = answer.citations
+            elif isinstance(answer, dict):
+                citations = answer.get('citations', [])
+            else:
+                citations = []
+            yield f"data: {json.dumps({'citations': citations})}\n\n"
             
         except Exception as e:
             yield f"data: {json.dumps({'error': str(e)})}\n\n"

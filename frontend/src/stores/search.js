@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { useAuthStore } from './auth'
 
-const API_URL = 'http://localhost:8000/api'
+const API_URL = '/api'
 
 export const useSearchStore = defineStore('search', () => {
   const query = ref('')
