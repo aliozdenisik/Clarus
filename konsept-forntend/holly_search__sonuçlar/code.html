@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html class="light" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Holly Search: Detaylı Analiz Sonuçları</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137cec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "surface-dark": "#1a242d",
+                        "text-main": "#111418",
+                        "text-secondary": "#617589",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"],
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-white dark:bg-background-dark text-text-main dark:text-gray-100 font-display min-h-screen flex flex-col overflow-x-hidden antialiased selection:bg-primary/20 selection:text-primary">
+<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-[#f0f2f4] dark:border-gray-800 bg-white/90 dark:bg-background-dark/90 backdrop-blur-md px-6 md:px-10 py-3">
+<div class="flex items-center gap-4 text-text-main dark:text-white cursor-pointer">
+<div class="size-6 text-primary">
+<span class="material-symbols-outlined" style="font-size: 28px;">auto_stories</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">Holly Search</h2>
+</div>
+<div class="flex items-center gap-6">
+<button class="md:hidden text-text-main dark:text-white">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="hidden md:flex items-center gap-4">
+<button class="flex items-center justify-center gap-2 text-text-secondary dark:text-gray-400 hover:text-primary transition-colors text-sm font-medium">
+<span class="material-symbols-outlined" style="font-size: 20px;">history</span>
+<span>Geçmiş</span>
+</button>
+<div class="h-6 w-[1px] bg-gray-200 dark:bg-gray-700"></div>
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-9 ring-2 ring-gray-100 dark:ring-gray-800" data-alt="User profile avatar showing a generic silhouette" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAJQL-zPcOQ-S98j_Qn5CZNprZ6X44hwWKrr-UN24psN39AOsSwp7b3qhEDCCyis2M85wnd8wT_zUpolf4Rcr62sjT-doFknfePa8NICZ70jSUFblrvDNilJjwjBWPuh0XLIY6oMX0e7j2kSeCJKANFIQyZbtS8nLLxZTxBc4C5GGguredallWxQkG30bLWWM8IRWI1B6rurQNK51fMxKFhyKD59nOQzZjYSM9sCo6jH4nN-9NnPZHsSsIEpE8lC7shDa4qkxfiVLU");'></div>
+</div>
+</div>
+</header>
+<main class="flex-1 flex justify-center w-full px-4 md:px-0 py-8">
+<div class="flex flex-col w-full max-w-[800px] gap-8">
+<div class="w-full">
+<label class="flex flex-col w-full h-12">
+<div class="flex w-full items-stretch rounded-lg h-full shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 bg-background-light dark:bg-surface-dark overflow-hidden focus-within:ring-2 focus-within:ring-primary transition-all">
+<div class="text-text-secondary dark:text-gray-400 flex items-center justify-center pl-4 pr-2">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input aria-label="Search query" class="flex w-full flex-1 bg-transparent border-none text-text-main dark:text-white placeholder:text-text-secondary focus:ring-0 px-2 text-base font-normal leading-normal" value="Faiz hakkında kutsal kitaplar ne diyor?"/>
+<div class="flex items-center justify-center pr-2">
+<button aria-label="Clear search" class="flex items-center justify-center rounded-full p-1 hover:bg-gray-200 dark:hover:bg-gray-700 text-text-secondary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 20px;">close</span>
+</button>
+</div>
+</div>
+</label>
+</div>
+<div class="flex flex-col bg-background-light dark:bg-surface-dark rounded-xl p-6 md:p-8 border border-gray-100 dark:border-gray-800 animate-[fadeIn_0.5s_ease-out]">
+<div class="flex items-center gap-3 mb-6">
+<div class="flex items-center justify-center size-8 rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined" style="font-size: 18px;">auto_awesome</span>
+</div>
+<h2 class="text-text-main dark:text-white tracking-tight text-xl font-bold leading-tight">Bütünleşik Yorum</h2>
+</div>
+<div class="mb-5 flex flex-col gap-1.5 animate-[fadeIn_0.8s_ease-out]">
+<div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold tracking-tight">
+<span class="text-lg">✨</span>
+<span>Multi-Agent Analysis complete in 33919ms</span>
+</div>
+<div class="text-xs font-mono text-text-secondary dark:text-gray-500 tracking-wide">
+                        80 verses → 5 paragraphs → 32 citations → confidence: 95%
+                    </div>
+</div>
+<div class="bg-white dark:bg-[#12181f] border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
+<div class="flex flex-col gap-2">
+<h3 class="font-mono text-sm font-bold text-primary dark:text-blue-400 uppercase tracking-wide">## Eski Ahit (Old Testament)</h3>
+<p class="text-text-main dark:text-gray-300 text-[15px] leading-relaxed">
+                            Tevrat'ta faiz yasağı, genellikle topluluk içi dayanışma ve sosyal dengeyi koruma ilkesine dayanır. Yoksula borç verilirken faiz talep edilmemesi kesin bir dille emredilir <span class="text-text-secondary dark:text-gray-500 font-mono text-xs">[Çıkış:22:25]</span>. Yabancılardan faiz alınabileceği, ancak kardeşten (topluluk üyesinden) alınamayacağı belirtilir; bu durum ekonomik korumacılığın bir işareti olarak yorumlanabilir <span class="text-text-secondary dark:text-gray-500 font-mono text-xs">[Tesniye:23:20]</span>.
+                        </p>
+</div>
+<div class="h-px bg-gray-100 dark:bg-gray-800 my-5 border-t border-dashed border-gray-300 dark:border-gray-700"></div>
+<div class="flex flex-col gap-2">
+<h3 class="font-mono text-sm font-bold text-primary dark:text-blue-400 uppercase tracking-wide">## Yeni Ahit (New Testament)</h3>
+<p class="text-text-main dark:text-gray-300 text-[15px] leading-relaxed">
+                            İncil, maddi kazançtan ziyade karşılıksız vermeyi, merhameti ve cömertliği öne çıkarır. İsa, sadece geri almayı umarak borç vermenin gerçek bir erdem olmadığını, asıl olanın karşılık beklemeden iyilik yapmak olduğunu öğütler <span class="text-text-secondary dark:text-gray-500 font-mono text-xs">[Luka:6:34-35]</span>.
+                        </p>
+</div>
+<div class="h-px bg-gray-100 dark:bg-gray-800 my-5 border-t border-dashed border-gray-300 dark:border-gray-700"></div>
+<div class="flex flex-col gap-2">
+<h3 class="font-mono text-sm font-bold text-primary dark:text-blue-400 uppercase tracking-wide">## Apokrifa (Apocrypha)</h3>
+<p class="text-text-main dark:text-gray-300 text-[15px] leading-relaxed">
+                            Apokrif metinlerde de zenginlik hırsı ve tefecilik konusunda ciddi uyarılar bulunur. Sirak oğlu Hikmet kitabında, parayı aşırı sevmenin günahın başlangıcı olduğu ve haksız kazancın ruhu kirlettiği vurgulanır <span class="text-text-secondary dark:text-gray-500 font-mono text-xs">[Sirak:31:5]</span>.
+                        </p>
+</div>
+<div class="h-px bg-gray-100 dark:bg-gray-800 my-5 border-t border-dashed border-gray-300 dark:border-gray-700"></div>
+<div class="flex flex-col gap-2">
+<h3 class="font-mono text-sm font-bold text-primary dark:text-blue-400 uppercase tracking-wide">## Kuran-ı Kerim</h3>
+<p class="text-text-main dark:text-gray-300 text-[15px] leading-relaxed">
+                            Kuran'da faiz (riba) kesin ve net bir dille haram kılınmıştır. Ticaretin helal, faizin ise yasak olduğu belirtilirken, faiz yiyenlerin durumu şeytan çarpmış kimselere benzetilir <span class="text-text-secondary dark:text-gray-500 font-mono text-xs">[Bakara:275]</span>. Müminlerin kat kat faiz yememeleri ve Allah'tan sakınmaları emredilir <span class="text-text-secondary dark:text-gray-500 font-mono text-xs">[Ali İmran:130]</span>.
+                        </p>
+</div>
+<div class="h-px bg-gray-100 dark:bg-gray-800 my-5 border-t border-dashed border-gray-300 dark:border-gray-700"></div>
+<div class="flex flex-col gap-2">
+<h3 class="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">## Karşılaştırmalı Değerlendirme</h3>
+<p class="text-text-main dark:text-gray-300 text-[15px] leading-relaxed">
+                            Tüm metinlerde faiz ve tefecilik, toplumsal adaleti bozan ve sömürüye dayalı bir unsur olarak görülür. Eski Ahit bunu toplumsal kurallar ve sınırlar çerçevesinde, Yeni Ahit ahlaki erdemler ve merhamet üzerinden, Kuran ise mutlak bir yasak ve ilahi bir emirle ele alır. Ortak payda, zayıfın korunması ve haksız kazancın önlenmesidir.
+                        </p>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+<p class="text-text-secondary dark:text-gray-500 text-xs font-medium uppercase tracking-wide">Bu kısım yapay zeka tarafından oluşturulmuştur.</p>
+<div class="flex gap-2">
+<button aria-label="Copy text" class="text-text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span>
+</button>
+<button aria-label="Report issue" class="text-text-secondary hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined" style="font-size: 18px;">flag</span>
+</button>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-6 mt-2">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
+<h3 class="text-lg font-bold text-text-main dark:text-white">Kaynak Referansları</h3>
+<div class="flex p-1 bg-background-light dark:bg-surface-dark rounded-lg self-start sm:self-auto">
+<button class="px-4 py-1.5 text-sm font-semibold rounded shadow-sm bg-white dark:bg-gray-700 text-primary dark:text-white ring-1 ring-black/5 dark:ring-white/10 transition-all">Tümü</button>
+<button class="px-4 py-1.5 text-sm font-medium rounded text-text-secondary hover:text-text-main dark:text-gray-400 dark:hover:text-white transition-colors">Kuran</button>
+<button class="px-4 py-1.5 text-sm font-medium rounded text-text-secondary hover:text-text-main dark:text-gray-400 dark:hover:text-white transition-colors">Tevrat</button>
+<button class="px-4 py-1.5 text-sm font-medium rounded text-text-secondary hover:text-text-main dark:text-gray-400 dark:hover:text-white transition-colors">İncil</button>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<article class="group relative flex flex-col bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-lg p-5 hover:border-primary/40 hover:shadow-md dark:hover:shadow-none dark:hover:border-primary/40 transition-all duration-200 cursor-pointer">
+<div class="flex justify-between items-start mb-3">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900">Kuran</span>
+<h4 class="font-bold text-text-main dark:text-white text-base">Bakara Suresi, 2:275</h4>
+</div>
+<span class="text-xs text-text-secondary dark:text-gray-500">Çeviri: Diyanet İşleri</span>
+</div>
+<span class="material-symbols-outlined text-gray-300 dark:text-gray-600 group-hover:text-primary transition-colors">arrow_outward</span>
+</div>
+<p class="text-text-secondary dark:text-gray-300 text-sm leading-relaxed line-clamp-2 group-hover:text-text-main dark:group-hover:text-gray-100 transition-colors">
+                            Faiz yiyenler, ancak şeytanın çarptığı kimsenin kalktığı gibi kalkarlar. Bu, onların, "Alışveriş de faiz gibidir" demelerindendir. Oysa Allah alışverişi helal, faizi haram kılmıştır...
+                        </p>
+<div class="mt-3 flex items-center gap-1 text-primary text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0">
+<span>Alıntıyı Gör</span>
+<span class="material-symbols-outlined" style="font-size: 14px;">chevron_right</span>
+</div>
+</article>
+<article class="group relative flex flex-col bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-lg p-5 hover:border-primary/40 hover:shadow-md dark:hover:shadow-none dark:hover:border-primary/40 transition-all duration-200 cursor-pointer">
+<div class="flex justify-between items-start mb-3">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-sky-50 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400 border border-sky-100 dark:border-sky-900">Tevrat</span>
+<h4 class="font-bold text-text-main dark:text-white text-base">Çıkış (Mısır'dan Çıkış), 22:25</h4>
+</div>
+<span class="text-xs text-text-secondary dark:text-gray-500">Çeviri: Yeni Çeviri</span>
+</div>
+<span class="material-symbols-outlined text-gray-300 dark:text-gray-600 group-hover:text-primary transition-colors">arrow_outward</span>
+</div>
+<p class="text-text-secondary dark:text-gray-300 text-sm leading-relaxed line-clamp-2 group-hover:text-text-main dark:group-hover:text-gray-100 transition-colors">
+                            Halkıma, aranızda yaşayan bir yoksula ödünç para verirseniz, ona tefeci gibi davranmayacaksınız. Ondan faiz almayacaksınız.
+                        </p>
+<div class="mt-3 flex items-center gap-1 text-primary text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0">
+<span>Alıntıyı Gör</span>
+<span class="material-symbols-outlined" style="font-size: 14px;">chevron_right</span>
+</div>
+</article>
+<article class="group relative flex flex-col bg-white dark:bg-surface-dark border border-gray-100 dark:border-gray-800 rounded-lg p-5 hover:border-primary/40 hover:shadow-md dark:hover:shadow-none dark:hover:border-primary/40 transition-all duration-200 cursor-pointer">
+<div class="flex justify-between items-start mb-3">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-100 dark:border-purple-900">İncil</span>
+<h4 class="font-bold text-text-main dark:text-white text-base">Luka, 6:34-35</h4>
+</div>
+<span class="text-xs text-text-secondary dark:text-gray-500">Çeviri: Kutsal Kitap</span>
+</div>
+<span class="material-symbols-outlined text-gray-300 dark:text-gray-600 group-hover:text-primary transition-colors">arrow_outward</span>
+</div>
+<p class="text-text-secondary dark:text-gray-300 text-sm leading-relaxed line-clamp-2 group-hover:text-text-main dark:group-hover:text-gray-100 transition-colors">
+                            Eğer karşılık beklediğiniz kişilere ödünç verirseniz, bu size ne övgü kazandırır? Günahkarlar bile, verdiklerini geri almak koşuluyla günahkarlara ödünç verirler.
+                        </p>
+<div class="mt-3 flex items-center gap-1 text-primary text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0">
+<span>Alıntıyı Gör</span>
+<span class="material-symbols-outlined" style="font-size: 14px;">chevron_right</span>
+</div>
+</article>
+</div>
+<div class="flex justify-center mt-6">
+<p class="text-text-secondary dark:text-gray-500 text-sm">Toplam 8 sonuç bulundu.</p>
+</div>
+</div>
+</div>
+</main>
+
+</body></html>
