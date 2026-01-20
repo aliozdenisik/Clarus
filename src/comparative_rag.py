@@ -607,15 +607,22 @@ class ComparativeRAG:
         search_result = self.search_all(query)
         
         # Step 4: Generate comparative essay
+        # Combine testament results for the answer generator
         self._log("📝 Step 4: Generating comparative theological essay...")
         essay_start = time.time()
         
+        # Map new testament-based results to answer generator format
+        # quran_semantic = Quran verses
+        # bible_semantic = combined OT + NT + Apocrypha
+        quran_verses = search_result.quran
+        bible_verses = search_result.ot + search_result.nt + search_result.apocrypha
+        
         answer = self.answer_generator.generate_comparative_answer(
             query=query,
-            quran_semantic=search_result.quran_semantic,
-            quran_chunks=search_result.quran_chunks,
-            bible_semantic=search_result.bible_semantic,
-            bible_chunks=search_result.bible_chunks
+            quran_semantic=quran_verses,
+            quran_chunks=[],  # No chunk search in new architecture
+            bible_semantic=bible_verses,
+            bible_chunks=[]   # No chunk search in new architecture
         )
         
         essay_duration = (time.time() - essay_start) * 1000

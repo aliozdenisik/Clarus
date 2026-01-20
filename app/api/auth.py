@@ -33,10 +33,11 @@ async def get_current_user(
     if payload is None:
         raise credentials_exception
     
-    user_id: int = payload.get("sub")
-    if user_id is None:
+    user_id_str = payload.get("sub")
+    if user_id_str is None:
         raise credentials_exception
     
+    user_id = int(user_id_str)
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     
@@ -88,7 +89,7 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     await db.refresh(user)
     
     # Create token
-    access_token = create_access_token(data={"sub": user.id})
+    access_token = create_access_token(data={"sub": str(user.id)})
     
     return Token(
         access_token=access_token,
@@ -114,7 +115,7 @@ async def login(user_data: UserLogin, db: AsyncSession = Depends(get_db)):
             detail="Geçersiz e-posta veya şifre"
         )
     
-    access_token = create_access_token(data={"sub": user.id})
+    access_token = create_access_token(data={"sub": str(user.id)})
     
     return Token(
         access_token=access_token,
@@ -184,7 +185,7 @@ async def google_auth(auth_data: GoogleAuthRequest, db: AsyncSession = Depends(g
         await db.commit()
         await db.refresh(user)
     
-    access_token = create_access_token(data={"sub": user.id})
+    access_token = create_access_token(data={"sub": str(user.id)})
     
     return Token(
         access_token=access_token,

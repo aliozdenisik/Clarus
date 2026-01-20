@@ -7,9 +7,7 @@ const topic = ref("");
 
 function handleCompare() {
   if (topic.value.trim()) {
-    startStream(
-      `http://localhost:8000/api/stream/compare?topic=${encodeURIComponent(topic.value)}`,
-    );
+    startStream(`/api/stream/compare?topic=${encodeURIComponent(topic.value)}`);
   }
 }
 </script>

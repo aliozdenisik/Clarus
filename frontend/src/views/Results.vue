@@ -24,7 +24,7 @@ onMounted(() => {
   if (query.value) {
     const source = route.query.source || "quran";
     startStream(
-      `http://localhost:8000/api/stream/search?q=${encodeURIComponent(query.value)}&source=${source}`,
+      `/api/stream/search?q=${encodeURIComponent(query.value)}&source=${source}`,
     );
   }
 });
@@ -36,7 +36,7 @@ function handleNewSearch() {
 function handleRegenerate() {
   const source = route.query.source || "quran";
   startStream(
-    `http://localhost:8000/api/stream/search?q=${encodeURIComponent(query.value)}&source=${source}`,
+    `/api/stream/search?q=${encodeURIComponent(query.value)}&source=${source}`,
   );
 }
 </script>

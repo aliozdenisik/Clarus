@@ -6,6 +6,10 @@ from pydantic import BaseModel
 from typing import Optional
 import sys
 import os
+from dotenv import load_dotenv
+
+# Load .env before importing RAG modules
+load_dotenv()
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -50,6 +54,9 @@ async def compare_scriptures(
     db: AsyncSession = Depends(get_db)
 ):
     """Compare a topic across scriptures."""
+    import time
+    start_time = time.time()
+    
     await check_rate_limit(current_user, db)
     
     rag = get_comparative_rag()
@@ -58,6 +65,8 @@ async def compare_scriptures(
         result = rag.compare_multi_agent(request.topic)
     else:
         result = rag.compare(request.topic)
+    
+    latency_ms = int((time.time() - start_time) * 1000)
     
     # Save to history
     history = SearchHistory(
@@ -68,10 +77,25 @@ async def compare_scriptures(
     db.add(history)
     await db.commit()
     
-    return CompareResponse(
-        topic=request.topic,
-        analysis=result.get("analysis", ""),
-        sources=result.get("sources", {}),
-        confidence=result.get("confidence", 0.0),
-        latency_ms=int(result.get("latency", 0) * 1000)
-    )
+    # Handle both dataclass (ComparativeAnswer) and MultiAgentAnswer response types
+    if hasattr(result, 'essay'):
+        # ComparativeAnswer dataclass
+        return CompareResponse(
+            topic=request.topic,
+            analysis=result.essay,
+            sources={
+                "quran": result.quran_references,
+                "bible": result.bible_references
+            },
+            confidence=result.confidence,
+            latency_ms=latency_ms
+        )
+    else:
+        # MultiAgentAnswer dataclass
+        return CompareResponse(
+            topic=request.topic,
+            analysis=result.full_text if hasattr(result, 'full_text') else str(result),
+            sources={},
+            confidence=result.confidence if hasattr(result, 'confidence') else 0.9,
+            latency_ms=latency_ms
+        )
