@@ -7,7 +7,8 @@ Karşılaştırmalı teolojik analiz ve Multi-Agent LLM destekli cevap üretimi 
 
 Tüm en iyi RAG metodolojilerini tek bir pipeline'da birleştirir:
 
-```
+---
+
 Query → ENHANCE → MULTI-QUERY → PARALLEL SEARCH → RRF FUSION → ANSWER
                                      ↓
      ┌───────────────────────────────┼───────────────────────────────┐
@@ -16,7 +17,8 @@ Query → ENHANCE → MULTI-QUERY → PARALLEL SEARCH → RRF FUSION → ANSWER
 │  QURAN  │    │BIBLE OT │    │  BIBLE NT   │    │BIBLE APOCRYPHA  │
 │ 6,236   │    │ 23,145  │    │   7,957     │    │     5,717       │
 └─────────┘    └─────────┘    └─────────────┘    └─────────────────┘
-```
+
+---
 
 | Aşama | Açıklama | Teknoloji |
 |-------|----------|-----------|
@@ -111,6 +113,7 @@ python scripts/setup_all_collections.py
 ```
 
 Bu script:
+
 - Mevcut koleksiyonları siler (temiz başlangıç)
 - `quran_tr` (6,236 ayet)
 - `bible_ot` (23,145 ayet)
