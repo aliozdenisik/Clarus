@@ -89,8 +89,7 @@ class UltimateRAG:
         self._enhancer = None
         self._llm_cache = None
         self._answer_generator = None
-        self._quran_searcher = None
-        self._bible_searcher = None
+        self._searchers = {}
         self._semantic_chunk_searcher = None
         
     @property
@@ -128,20 +127,37 @@ class UltimateRAG:
     
     def _get_searcher(self, source: str):
         """Get appropriate searcher for source"""
+        if source in self._searchers:
+            return self._searchers[source]
+
         if source == "quran_tr":
-            if self._quran_searcher is None:
-                from src.search import QuranSearcher
-                self._quran_searcher = QuranSearcher(qdrant_url=self.qdrant_url)
-            return self._quran_searcher
-        else:
-            if self._bible_searcher is None:
-                from src.search import BibleSearcher
-                translation = source.replace("bible_", "")
-                self._bible_searcher = BibleSearcher(
+            from src.search import QuranSearcher
+            searcher = QuranSearcher(qdrant_url=self.qdrant_url)
+        elif source.startswith("bible_"):
+            from src.search import BibleSearcher
+            suffix = source.replace("bible_", "")
+            
+            if suffix in ["ot", "nt", "apocrypha"]:
+                # Testament specific search
+                translation = "kjva"
+                testament = suffix
+                searcher = BibleSearcher(
+                    translation=translation, 
+                    testament=testament,
+                    qdrant_url=self.qdrant_url
+                )
+            else:
+                # Translation specific search
+                translation = suffix
+                searcher = BibleSearcher(
                     translation=translation, 
                     qdrant_url=self.qdrant_url
                 )
-            return self._bible_searcher
+        else:
+            raise ValueError(f"Unknown source: {source}")
+            
+        self._searchers[source] = searcher
+        return searcher
     
     def _get_semantic_chunk_searcher(self):
         """Get semantic chunk searcher (lazy load)"""
@@ -426,7 +442,7 @@ class UltimateRAG:
         """Shortcut for Quran search"""
         return self.search(query, source="quran_tr", top_k=top_k)
     
-    def search_bible(self, query: str, translation: str = "kjva", top_k: int = None) -> List:
+    def search_bible(self, query: str, translation: str = "kjva", testament: str = None, top_k: int = None) -> List:
         """
         Shortcut for Bible search.
         
@@ -447,8 +463,11 @@ class UltimateRAG:
                 if self.verbose:
                     console.print(f"[yellow]Translation warning: {e}[/yellow]")
         
+        # Determine source string
+        source = f"bible_{testament}" if testament else f"bible_{translation}"
+        
         # Pass translated query for reranking to fix language mismatch
-        return self.search(query, source=f"bible_{translation}", top_k=top_k, rerank_query=translated_query)
+        return self.search(query, source=source, top_k=top_k, rerank_query=translated_query)
     
     # ============= ANSWER GENERATION (RAG) =============
     
@@ -499,13 +518,14 @@ class UltimateRAG:
         """Shortcut for Quran Q&A - Turkish in, Turkish out"""
         return self.ask(query, source="quran_tr", top_k=top_k)
     
-    def ask_bible(self, query: str, translation: str = "kjva", top_k: int = None):
+    def ask_bible(self, query: str, translation: str = "kjva", testament: str = None, top_k: int = None):
         """
         Shortcut for Bible Q&A.
         
         Turkish query → English search → Turkish answer with English citations.
         """
-        return self.ask(query, source=f"bible_{translation}", top_k=top_k)
+        source = f"bible_{testament}" if testament else f"bible_{translation}"
+        return self.ask(query, source=source, top_k=top_k)
 
 
 # Convenience function

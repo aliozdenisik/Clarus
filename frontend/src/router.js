@@ -35,6 +35,18 @@ const routes = [
     component: () => import('./views/Compare.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/history',
+    name: 'History',
+    component: () => import('./views/History.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('./views/Admin.vue'),
+    meta: { requiresAuth: true },
+  },
 ]
 
 const router = createRouter({

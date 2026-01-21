@@ -11,7 +11,8 @@ import os
 from dotenv import load_dotenv
 
 # Load .env before importing RAG modules
-load_dotenv()
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), '.env')
+load_dotenv(env_path)
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -68,6 +69,8 @@ async def stream_search(
         # Perform search
         if source == "quran":
             results = rag.search_quran(q, top_k=10)
+        elif source in ["ot", "nt", "apocrypha"]:
+            results = rag.search_bible(q, translation="kjva", testament=source, top_k=10)
         else:
             results = rag.search_bible(q, top_k=10)
         
@@ -83,6 +86,8 @@ async def stream_search(
         try:
             if source == "quran":
                 answer = rag.ask_quran(q)
+            elif source in ["ot", "nt", "apocrypha"]:
+                answer = rag.ask_bible(q, translation="kjva", testament=source)
             else:
                 answer = rag.ask_bible(q)
             
@@ -146,18 +151,57 @@ async def stream_compare(
     await db.commit()
     
     async def generate():
-        rag = ComparativeRAG()
+        import logging
+        import traceback
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"[COMPARE] Starting compare for topic: {topic}")
+        print(f"[COMPARE] Starting compare for topic: {topic}")
+        
+        try:
+            logger.info("[COMPARE] Creating ComparativeRAG instance...")
+            print("[COMPARE] Creating ComparativeRAG instance...")
+            rag = ComparativeRAG(verbose=True)
+            logger.info("[COMPARE] ComparativeRAG created successfully")
+            print("[COMPARE] ComparativeRAG created successfully")
+        except Exception as e:
+            logger.error(f"[COMPARE] Failed to create RAG: {e}")
+            print(f"[COMPARE] Failed to create RAG: {e}")
+            traceback.print_exc()
+            yield f"data: {json.dumps({'error': f'RAG creation failed: {str(e)}'})}\n\n"
+            yield f"data: {json.dumps({'done': True})}\n\n"
+            return
         
         # Status updates
         yield f"data: {json.dumps({'status': 'analyzing', 'message': 'Metinler analiz ediliyor...'})}\n\n"
         await asyncio.sleep(0.1)
         
         try:
+            logger.info("[COMPARE] Starting compare_multi_agent...")
+            print("[COMPARE] Starting compare_multi_agent...")
             result = rag.compare_multi_agent(topic)
-            analysis = result.get("analysis", "")
+            logger.info(f"[COMPARE] compare_multi_agent completed, result type: {type(result)}")
+            print(f"[COMPARE] compare_multi_agent completed, result type: {type(result)}")
+            
+            # Get analysis text - handle both MultiAgentAnswer and dict
+            if hasattr(result, 'to_essay'):
+                logger.info("[COMPARE] Using to_essay() method")
+                print("[COMPARE] Using to_essay() method")
+                analysis = result.to_essay()
+            elif hasattr(result, 'full_text'):
+                analysis = result.full_text
+            elif isinstance(result, dict):
+                analysis = result.get("analysis", "")
+            else:
+                analysis = str(result)
+            
+            logger.info(f"[COMPARE] Analysis length: {len(analysis)} chars")
+            print(f"[COMPARE] Analysis length: {len(analysis)} chars")
             
             # Stream section by section
             sections = analysis.split("##")
+            logger.info(f"[COMPARE] Streaming {len(sections)} sections...")
+            print(f"[COMPARE] Streaming {len(sections)} sections...")
             
             for section in sections:
                 if section.strip():
@@ -172,9 +216,15 @@ async def stream_compare(
                     yield f"data: {json.dumps({'token': '\\n\\n'})}\n\n"
             
             # Send metadata
-            yield f"data: {json.dumps({'confidence': result.get('confidence', 0), 'latency': result.get('latency', 0)})}\n\n"
+            confidence = getattr(result, 'confidence', 0) if hasattr(result, 'confidence') else result.get('confidence', 0) if isinstance(result, dict) else 0
+            yield f"data: {json.dumps({'confidence': confidence, 'latency': 0})}\n\n"
+            logger.info("[COMPARE] Streaming completed successfully")
+            print("[COMPARE] Streaming completed successfully")
             
         except Exception as e:
+            logger.error(f"[COMPARE] Error during compare: {e}")
+            print(f"[COMPARE] Error during compare: {e}")
+            traceback.print_exc()
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
         
         yield f"data: {json.dumps({'done': True})}\n\n"

@@ -48,7 +48,10 @@ async def get_current_user(
 
 
 async def check_rate_limit(user: User, db: AsyncSession) -> None:
-    """Check if user has exceeded daily query limit."""
+    """Check if user has exceeded daily query limit. DISABLED for dev."""
+    # TODO: Re-enable for production
+    return  # Rate limiting disabled for development
+    
     today = date.today()
     
     if user.last_query_date is None or user.last_query_date.date() != today:

@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.config import settings
-from app.api import auth, search, compare, stream
+from app.api import auth, search, compare, stream, admin
 from app.db import init_db
 
 
@@ -37,6 +37,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(compare.router, prefix="/api/compare", tags=["compare"])
 app.include_router(stream.router, prefix="/api/stream", tags=["stream"])
+app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 
 
 @app.get("/api/health")

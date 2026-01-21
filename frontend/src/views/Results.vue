@@ -39,6 +39,28 @@ function handleRegenerate() {
     `/api/stream/search?q=${encodeURIComponent(query.value)}&source=${source}`,
   );
 }
+
+// Export as Markdown
+function exportMarkdown() {
+  const markdown = `# Arama: ${query.value}\n\n${text.value}\n\n---\n*Holly Search ile oluşturuldu*`;
+  const blob = new Blob([markdown], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `arama-${query.value.toLowerCase().replace(/\s+/g, '-')}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Copy to clipboard
+async function copyToClipboard() {
+  try {
+    await navigator.clipboard.writeText(text.value);
+    alert('Panoya kopyalandı!');
+  } catch (err) {
+    alert('Kopyalama başarısız oldu');
+  }
+}
 </script>
 
 <template>
@@ -89,36 +111,36 @@ function handleRegenerate() {
           <h2 class="text-xl font-bold">Bütünleşik Yorum</h2>
         </div>
 
-        <!-- Status -->
+        <!-- Status - Modern Loading -->
         <div
           v-if="status === 'connecting' || status === 'searching'"
-          class="mb-5 flex items-center gap-2 text-text-secondary"
+          class="mb-5"
         >
-          <div class="flex gap-1">
-            <span
-              class="w-2 h-2 bg-primary rounded-full animate-bounce"
-              style="animation-delay: 0ms"
-            ></span>
-            <span
-              class="w-2 h-2 bg-primary rounded-full animate-bounce"
-              style="animation-delay: 150ms"
-            ></span>
-            <span
-              class="w-2 h-2 bg-primary rounded-full animate-bounce"
-              style="animation-delay: 300ms"
-            ></span>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="ai-thinking">
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
+            <span class="text-primary font-medium">Kutsal metinlerde aranıyor...</span>
           </div>
-          <span>Aranıyor...</span>
+          <!-- Skeleton Lines -->
+          <div class="space-y-3">
+            <div class="skeleton-line w-full"></div>
+            <div class="skeleton-line w-11/12"></div>
+            <div class="skeleton-line w-4/5"></div>
+            <div class="skeleton-line w-3/4"></div>
+          </div>
         </div>
 
         <div
           v-if="status === 'generating'"
-          class="mb-5 flex items-center gap-2 text-emerald-600"
+          class="mb-5"
         >
-          <span class="material-symbols-outlined animate-pulse"
-            >auto_awesome</span
-          >
-          <span>Yanıt oluşturuluyor...</span>
+          <div class="flex items-center gap-3 mb-4">
+            <span class="material-symbols-outlined text-emerald-500 animate-pulse text-2xl">auto_awesome</span>
+            <span class="text-emerald-600 font-medium">Yanıt oluşturuluyor...</span>
+          </div>
         </div>
 
         <!-- Content -->
@@ -127,7 +149,7 @@ function handleRegenerate() {
         >
           <div class="prose dark:prose-invert max-w-none">
             <p class="whitespace-pre-wrap">
-              {{ text }}<span v-if="isStreaming" class="animate-blink">█</span>
+              {{ text }}
             </p>
           </div>
 
@@ -163,6 +185,22 @@ function handleRegenerate() {
             >
               <span class="material-symbols-outlined text-lg">refresh</span>
               Yeniden Oluştur
+            </button>
+            <button
+              v-if="text && !isStreaming"
+              @click="exportMarkdown"
+              class="flex items-center gap-1 px-3 py-1.5 text-sm bg-primary/10 text-primary hover:bg-primary/20 rounded transition-colors"
+            >
+              <span class="material-symbols-outlined text-lg">download</span>
+              İndir
+            </button>
+            <button
+              v-if="text && !isStreaming"
+              @click="copyToClipboard"
+              class="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-text-secondary hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+            >
+              <span class="material-symbols-outlined text-lg">content_copy</span>
+              Kopyala
             </button>
           </div>
         </div>

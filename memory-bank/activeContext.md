@@ -29,6 +29,15 @@
 - `scripts/dev.sh` - Development startup script
 - `WEB_APP_README.md` - Quick start guide
 
+### Web App Search Filters (2026-01-21)
+
+**Frontend**:
+- Updated `Search.vue` to include specific filtering options: "Eski Ahit", "Yeni Ahit", "Apokrif", "Kuran", and "Tümü".
+
+**Backend**:
+- Updated `app/api/stream.py` to handle `ot`, `nt`, `apocrypha` source parameters.
+- Updated `src/ultimate_rag.py` to support testament-specific `BibleSearcher` instantiation and caching.
+
 ### Tech Stack Decisions
 
 | Layer | Technology |
