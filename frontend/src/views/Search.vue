@@ -9,8 +9,10 @@ const source = ref("all");
 
 const sources = [
   { value: "all", label: "Tümü", icon: "library_books" },
-  { value: "quran", label: "Kuran", icon: "auto_stories" },
-  { value: "bible", label: "İncil", icon: "menu_book" },
+  { value: "ot", label: "Eski Ahit", icon: "history_edu" },
+  { value: "nt", label: "Yeni Ahit", icon: "menu_book" },
+  { value: "apocrypha", label: "Apokrif", icon: "auto_stories" },
+  { value: "quran", label: "Kuran", icon: "book" },
 ];
 
 function handleSearch() {

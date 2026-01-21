@@ -43,6 +43,7 @@
 - [ ] Google OAuth credentials setup
 - [ ] Production Docker build
 - [ ] HTTPS configuration
+- [x] Search filters (OT, NT, Apocrypha, Quran)
 
 ### Potential Enhancements
 

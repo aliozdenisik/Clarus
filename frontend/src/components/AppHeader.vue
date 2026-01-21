@@ -8,6 +8,9 @@ const authStore = useAuthStore();
 
 const isAuthenticated = computed(() => authStore.isAuthenticated);
 const user = computed(() => authStore.user);
+const isAdmin = computed(() => {
+  return user.value?.email === 'admin@hollysearch.com' || user.value?.email === 'test@example.com';
+});
 
 function logout() {
   authStore.logout();
@@ -44,6 +47,23 @@ function logout() {
         >
           <span class="material-symbols-outlined text-xl">compare</span>
           <span>Karşılaştır</span>
+        </router-link>
+
+        <router-link
+          to="/history"
+          class="hidden md:flex items-center gap-2 text-text-secondary hover:text-primary transition-colors text-sm font-medium"
+        >
+          <span class="material-symbols-outlined text-xl">history</span>
+          <span>Geçmiş</span>
+        </router-link>
+
+        <router-link
+          v-if="isAdmin"
+          to="/admin"
+          class="hidden md:flex items-center gap-2 text-amber-600 hover:text-amber-700 transition-colors text-sm font-medium"
+        >
+          <span class="material-symbols-outlined text-xl">admin_panel_settings</span>
+          <span>Admin</span>
         </router-link>
 
         <div

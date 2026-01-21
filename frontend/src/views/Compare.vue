@@ -2,12 +2,51 @@
 import { ref } from "vue";
 import { useStreaming } from "../composables/useStreaming";
 
-const { text, isStreaming, status, startStream, stopStream } = useStreaming();
+const { text, isStreaming, status, error, startStream, stopStream } = useStreaming();
 const topic = ref("");
 
 function handleCompare() {
   if (topic.value.trim()) {
     startStream(`/api/stream/compare?topic=${encodeURIComponent(topic.value)}`);
+  }
+}
+
+// Export as Markdown
+function exportMarkdown() {
+  const markdown = `# Karşılaştırmalı Analiz: ${topic.value}\n\n${text.value.replace(/\\n/g, '\n')}\n\n---\n*Holly Search ile oluşturuldu*`;
+  const blob = new Blob([markdown], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `karsilastirma-${topic.value.toLowerCase().replace(/\s+/g, '-')}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Copy to clipboard
+async function copyToClipboard() {
+  try {
+    await navigator.clipboard.writeText(text.value.replace(/\\n/g, '\n'));
+    alert('Panoya kopyalandı!');
+  } catch (err) {
+    alert('Kopyalama başarısız oldu');
+  }
+}
+
+// Share (Web Share API)
+async function shareResult() {
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `Karşılaştırmalı Analiz: ${topic.value}`,
+        text: text.value.replace(/\\n/g, '\n').substring(0, 500) + '...',
+        url: window.location.href
+      });
+    } catch (err) {
+      // User cancelled share
+    }
+  } else {
+    copyToClipboard();
   }
 }
 </script>
@@ -39,28 +78,42 @@ function handleCompare() {
         </button>
       </div>
 
-      <!-- Loading -->
+      <!-- Loading - Modern Skeleton -->
       <div
-        v-if="status === 'analyzing'"
-        class="flex items-center justify-center py-12"
+        v-if="isStreaming && !text"
+        class="bg-white dark:bg-surface-dark rounded-xl border border-border-light dark:border-border-dark p-6 md:p-8"
       >
-        <div class="flex items-center gap-3 text-text-secondary">
-          <div class="flex gap-1">
-            <span
-              class="w-2 h-2 bg-primary rounded-full animate-bounce"
-              style="animation-delay: 0ms"
-            ></span>
-            <span
-              class="w-2 h-2 bg-primary rounded-full animate-bounce"
-              style="animation-delay: 150ms"
-            ></span>
-            <span
-              class="w-2 h-2 bg-primary rounded-full animate-bounce"
-              style="animation-delay: 300ms"
-            ></span>
+        <div class="flex items-center gap-3 mb-6">
+          <div class="ai-thinking">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
           </div>
-          <span>Metinler analiz ediliyor...</span>
+          <span class="text-primary font-medium">Metinler karşılaştırılıyor...</span>
         </div>
+        <!-- Multi-column skeleton for compare -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-3">
+            <div class="skeleton-line w-1/3 h-5"></div>
+            <div class="skeleton-line w-full"></div>
+            <div class="skeleton-line w-11/12"></div>
+            <div class="skeleton-line w-4/5"></div>
+          </div>
+          <div class="space-y-3">
+            <div class="skeleton-line w-1/3 h-5"></div>
+            <div class="skeleton-line w-full"></div>
+            <div class="skeleton-line w-10/12"></div>
+            <div class="skeleton-line w-3/4"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div
+        v-if="error"
+        class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-8"
+      >
+        <p class="text-red-600 dark:text-red-400">{{ error }}</p>
       </div>
 
       <!-- Results -->
@@ -92,6 +145,34 @@ function handleCompare() {
           >
             <span class="material-symbols-outlined text-lg">stop</span>
             Durdur
+          </button>
+        </div>
+
+        <!-- Export Actions -->
+        <div
+          v-if="text && !isStreaming"
+          class="mt-6 pt-4 border-t border-border-light dark:border-border-dark flex flex-wrap gap-2"
+        >
+          <button
+            @click="exportMarkdown"
+            class="flex items-center gap-1 px-3 py-1.5 text-sm bg-primary/10 text-primary hover:bg-primary/20 rounded transition-colors"
+          >
+            <span class="material-symbols-outlined text-lg">download</span>
+            İndir (.md)
+          </button>
+          <button
+            @click="copyToClipboard"
+            class="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-text-secondary hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          >
+            <span class="material-symbols-outlined text-lg">content_copy</span>
+            Kopyala
+          </button>
+          <button
+            @click="shareResult"
+            class="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-text-secondary hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          >
+            <span class="material-symbols-outlined text-lg">share</span>
+            Paylaş
           </button>
         </div>
       </div>
