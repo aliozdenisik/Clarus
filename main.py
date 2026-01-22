@@ -155,7 +155,7 @@ def cmd_search(args):
     limit = args.limit
     
     console.print("\n[bold magenta]🚀 Ultimate RAG Pipeline[/bold magenta]")
-    console.print("[dim]Combining: Enhance + Multi-Query + Semantic + Rerank[/dim]\n")
+    console.print("[dim]Combining: Enhance + Multi-Query + Semantic + RRF Fusion[/dim]\n")
     
     try:
         from src.ultimate_rag import UltimateRAG
@@ -255,7 +255,7 @@ def cmd_search_bible(args):
     limit = args.limit
     
     console.print("\n[bold magenta]🚀 Ultimate RAG Pipeline (Bible)[/bold magenta]")
-    console.print("[dim]Combining: Enhance + Multi-Query + Semantic + Rerank[/dim]\n")
+    console.print("[dim]Combining: Enhance + Multi-Query + Semantic + RRF Fusion[/dim]\n")
     
     try:
         from src.ultimate_rag import UltimateRAG
