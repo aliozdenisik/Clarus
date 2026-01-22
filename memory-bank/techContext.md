@@ -10,9 +10,8 @@
 | **Sparse Embeddings** | Qdrant BM25 | FastEmbed |
 | **LLM** | Gemini 2.5 Flash | Query enhancement + answers |
 | **Backend** | FastAPI | Python 3.12, async |
-| **Frontend** | Vue 3 + Vite | Tailwind CSS, Pinia |
 | **Auth** | JWT + Google OAuth | python-jose, passlib |
-| **CLI** | argparse + Rich | Still available |
+| **CLI** | argparse + Rich | Primary Interface |
 | **OS** | Ubuntu Linux | Docker native |
 
 ## Development Setup
@@ -27,11 +26,6 @@ docker compose up -d
 source venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
-
-# Frontend
-cd frontend
-npm install
-npm run dev
 ```
 
 ### Environment Variables (.env)
@@ -52,7 +46,7 @@ RATE_LIMIT_PER_DAY=50
 
 | Service | URL |
 |---------|-----|
-| Frontend | http://localhost:5173 |
+
 | Backend | http://localhost:8000 |
 | API Docs | http://localhost:8000/docs |
 | Qdrant | http://localhost:6333/dashboard |
@@ -79,23 +73,6 @@ passlib[bcrypt]>=1.7.4
 httpx>=0.26.0
 ```
 
-### Frontend (package.json)
-
-```json
-{
-  "dependencies": {
-    "vue": "^3.5.24",
-    "vue-router": "^4.5.1",
-    "pinia": "^3.0.3",
-    "@vueuse/core": "^13.2.0",
-    "@vueuse/motion": "^3.0.3"
-  },
-  "devDependencies": {
-    "vite": "^7.2.4",
-    "tailwindcss": "^3.4.0"
-  }
-}
-```
 
 ## Directory Structure
 
