@@ -45,16 +45,12 @@ cd "$(dirname "$0")"
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 
-# Start frontend
-echo -e "\n${BLUE}🎨 Starting Vue frontend on http://localhost:5173${NC}"
-cd frontend
-npm run dev &
-FRONTEND_PID=$!
+
 
 echo -e "\n${GREEN}========================================"
 echo -e "✅ All services started!"
 echo -e "========================================"
-echo -e "📍 Frontend: http://localhost:5173"
+
 echo -e "📍 Backend:  http://localhost:8000"
 echo -e "📍 API Docs: http://localhost:8000/docs"
 echo -e "📍 Qdrant:   http://localhost:6333/dashboard"
@@ -62,7 +58,7 @@ echo -e "========================================${NC}"
 echo -e "\nPress Ctrl+C to stop all services"
 
 # Trap Ctrl+C
-trap "echo -e '\n${BLUE}Stopping services...${NC}'; kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; docker compose stop; echo -e '${GREEN}✅ All services stopped${NC}'; exit 0" SIGINT
+trap "echo -e '\n${BLUE}Stopping services...${NC}'; kill $BACKEND_PID 2>/dev/null; docker compose stop; echo -e '${GREEN}✅ All services stopped${NC}'; exit 0" SIGINT
 
 # Wait
 wait
