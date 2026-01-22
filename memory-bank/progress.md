@@ -60,7 +60,7 @@
 | Answer Generation | ✅ Complete | Gemini 2.5 Flash |
 | Multi-Agent | ✅ Complete | 5-paragraph output |
 | Web Backend | ✅ Complete | FastAPI + JWT |
-| Web Frontend | ✅ Complete | Vue 3 + Tailwind |
+| Web Frontend | ❌ Removed | Reverted to CLI/API |
 | Docker Setup | ✅ Complete | PostgreSQL + Qdrant |
 | Testing | ⚠️ Partial | Manual testing needed |
 

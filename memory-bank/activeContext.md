@@ -2,9 +2,9 @@
 
 ## Current Work Focus
 
-**Date**: 2026-01-20
+**Date**: 2026-01-22
 
-**Web Application Implementation** - CLI converted to full-stack web app with Vue 3 + FastAPI.
+**Removed Frontend** - Reverting to CLI/API specific architecture.
 
 ## Recent Changes
 
@@ -18,11 +18,6 @@
 - `app/auth/` - JWT + Google OAuth authentication
 - `app/api/` - auth, search, compare, stream routes
 
-**Frontend (Vue 3)**:
-- Vue 3 + Vite + Tailwind CSS + Pinia
-- 6 views: Home, Login, Register, Search, Results, Compare
-- SSE streaming composable for real-time LLM responses
-- Design system from konsept-frontend (Inter font, Material icons)
 
 **Infrastructure**:
 - `docker-compose.yml` - PostgreSQL + Qdrant
@@ -31,8 +26,9 @@
 
 ### Web App Search Filters (2026-01-21)
 
-**Frontend**:
-- Updated `Search.vue` to include specific filtering options: "Eski Ahit", "Yeni Ahit", "Apokrif", "Kuran", and "Tümü".
+**Fronted**:
+[REMOVED]
+
 
 **Backend**:
 - Updated `app/api/stream.py` to handle `ot`, `nt`, `apocrypha` source parameters.
@@ -42,8 +38,6 @@
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | Vue 3 + Vite + Tailwind |
-| State | Pinia |
 | Backend | FastAPI + SQLAlchemy |
 | Auth | JWT + Google OAuth |
 | Database | PostgreSQL (Supabase Local) |
@@ -61,18 +55,15 @@
 ## Next Steps
 
 1. ✅ ~~Web Application Scaffold~~
-2. **Test full auth flow** - Register, Login, JWT
-3. **SSE Streaming** - Verify token-by-token display
-4. **Google OAuth** - Add credentials to .env
-5. **Production build** - Frontend optimization
+2. **Backend API Hardening**
+3. **CLI Feature Parity**
+4. **Documentation Update**
 
 ## Active Decisions
 
 - **Rate Limit**: 50 queries/day/user
-- **Language**: Turkish UI only
-- **Theme**: Light default, dark mode toggle
-- **Responsive**: Desktop-first
-- **MVP Exclusions**: Save/Share, Arabic font optimization
+- **Language**: Turkish
+- **API First**: Focus on backend capabilities
 
 ## Learnings
 
