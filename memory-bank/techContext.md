@@ -19,22 +19,40 @@
 ### Prerequisites
 
 ```bash
-# Start all services
+# Start services (Qdrant + PostgreSQL)
 docker compose up -d
 
-# Backend
+# Python environment
 source venv/bin/activate
 pip install -r requirements.txt
+```
+
+### CLI Usage (Primary)
+
+```bash
+# Search
+python main.py search "sabir ve namaz"
+python main.py search-bible "love your neighbor"
+
+# Q&A
+python main.py ask "Islam'da sabir nedir?"
+python main.py compare "Yaratilis hikayesi"
+```
+
+### API Usage (Optional)
+
+```bash
+# Start FastAPI server
 uvicorn app.main:app --reload
 ```
 
 ### Environment Variables (.env)
 
 ```env
-# Existing
+# Required
 OPENROUTER_API_KEY=your-openrouter-key
 
-# Web Application
+# API Usage (optional)
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:54322/postgres
 JWT_SECRET_KEY=your-secret-key
 GOOGLE_CLIENT_ID=your-google-client-id
@@ -46,22 +64,21 @@ RATE_LIMIT_PER_DAY=50
 
 | Service | URL |
 |---------|-----|
-
-| Backend | http://localhost:8000 |
+| Backend API | http://localhost:8000 |
 | API Docs | http://localhost:8000/docs |
-| Qdrant | http://localhost:6333/dashboard |
+| Qdrant Dashboard | http://localhost:6333/dashboard |
 
 ## Dependencies
 
-### Backend (requirements.txt)
+### Core (requirements.txt)
 
 ```
-# Core
+# Core RAG
 qdrant-client>=1.7.0
 fastembed>=0.2.0
 rich>=13.0.0
 
-# Web Application
+# REST API
 fastapi>=0.110.0
 uvicorn[standard]>=0.27.0
 sse-starlette>=2.0.0
@@ -73,30 +90,23 @@ passlib[bcrypt]>=1.7.4
 httpx>=0.26.0
 ```
 
-
 ## Directory Structure
 
 ```
 qdrant/
-├── main.py                 # CLI entrypoint
-├── app/                    # [NEW] FastAPI backend
-│   ├── main.py
-│   ├── config.py
-│   ├── db.py
-│   ├── models.py
-│   ├── auth/
-│   └── api/
-├── frontend/               # [NEW] Vue 3 SPA
-│   ├── src/
-│   │   ├── views/
-│   │   ├── components/
-│   │   ├── stores/
-│   │   └── composables/
-│   └── package.json
+├── main.py                 # CLI entrypoint (primary interface)
+├── app/                    # FastAPI backend (REST API)
+│   ├── main.py             # ASGI entrypoint
+│   ├── config.py           # Pydantic settings
+│   ├── db.py               # SQLAlchemy async
+│   ├── models.py           # User, SearchHistory
+│   ├── auth/               # JWT + OAuth
+│   └── api/                # Route handlers
 ├── src/                    # Python RAG modules
+├── data/                   # Quran + Bible JSON
+├── scripts/                # Setup scripts
 ├── docker-compose.yml      # PostgreSQL + Qdrant
-├── scripts/dev.sh          # Development startup
-└── memory-bank/            # Documentation
+└── memory-bank/            # Project documentation
 ```
 
 ## API Endpoints
@@ -110,3 +120,4 @@ qdrant/
 | `/api/search/bible` | POST | Bible search |
 | `/api/stream/search` | GET | SSE streaming search |
 | `/api/compare/` | POST | Multi-agent comparison |
+| `/docs` | GET | OpenAPI documentation |
