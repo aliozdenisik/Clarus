@@ -1,42 +1,48 @@
-# Sacred Texts Ultimate RAG Search 🚀
+# Sacred Texts Ultimate RAG Search
 
-Kuran-ı Kerim ve İncil için **maksimum doğruluk odaklı** Ultimate RAG arama sistemi.  
-Karşılaştırmalı teolojik analiz ve Multi-Agent LLM destekli cevap üretimi özellikleri ile.
+Kuran-ı Kerim ve Incil icin **maksimum dogruluk odakli** Ultimate RAG arama sistemi.  
+Karsilastirmali teolojik analiz ve Multi-Agent LLM destekli cevap uretimi ozellikleri ile.
 
-## ✨ Ultimate RAG Pipeline
+## Ultimate RAG Pipeline
 
-Tüm en iyi RAG metodolojilerini tek bir pipeline'da birleştirir:
+Tum en iyi RAG metodolojilerini tek bir pipeline'da birlestirir:
 
----
+```
+Query -> ENHANCE -> MULTI-QUERY -> PARALLEL SEARCH -> RRF FUSION -> ANSWER
+                                     |
+     +-------------------------------+-------------------------------+
+     |                               |                               |
++----+----+    +---------+    +------+------+    +-----------------+
+|  QURAN  |    |BIBLE OT |    |  BIBLE NT   |    |BIBLE APOCRYPHA  |
+| 6,236   |    | 23,145  |    |   7,957     |    |     5,717       |
++---------+    +---------+    +-------------+    +-----------------+
+```
 
-Query → ENHANCE → MULTI-QUERY → PARALLEL SEARCH → RRF FUSION → ANSWER
-                                     ↓
-     ┌───────────────────────────────┼───────────────────────────────┐
-     │                               │                               │
-┌────┴────┐    ┌─────────┐    ┌──────┴──────┐    ┌─────────────────┐
-│  QURAN  │    │BIBLE OT │    │  BIBLE NT   │    │BIBLE APOCRYPHA  │
-│ 6,236   │    │ 23,145  │    │   7,957     │    │     5,717       │
-└─────────┘    └─────────┘    └─────────────┘    └─────────────────┘
-
----
-
-| Aşama | Açıklama | Teknoloji |
+| Asama | Aciklama | Teknoloji |
 |-------|----------|-----------|
-| **1. Query Enhancement** | LLM ile sorgu genişletme | Grok 4.1 Fast |
-| **2. Multi-Query** | 3-5 farklı perspektif | Grok 4.1 Fast |
+| **1. Query Enhancement** | LLM ile sorgu genisletme | Grok 4.1 Fast |
+| **2. Multi-Query** | 3-5 farkli perspektif | Grok 4.1 Fast |
 | **3. Parallel Search** | 4 testament koleksiyonda arama | OpenAI text-embedding-3-large |
-| **4. RRF Fusion** | Sonuçları birleştirme | Reciprocal Rank Fusion |
-| **5. Multi-Agent** | 5 uzman ajan ile cevap üretme | Gemini 2.5 Flash |
+| **4. RRF Fusion** | Sonuclari birlestirme | Reciprocal Rank Fusion |
+| **5. Multi-Agent** | 5 uzman ajan ile cevap uretme | Gemini 2.5 Flash |
 
 ---
 
-## 🆕 Son Güncellemeler
+## Son Guncellemeler
 
-### 🤖 Multi-Agent Answer Generation (2026-01-20)
+### API-First Architecture (2026-01-22)
 
-5 uzman ajan ile paralel cevap üretimi:
+Frontend kaldirildi, CLI ve REST API odakli mimariye gecildi:
 
-| Ajan | Koleksiyon | Görev |
+- **CLI**: Birincil kullanici arayuzu (`python main.py`)
+- **REST API**: FastAPI backend (programatik erisim)
+- **SSE Streaming**: Token-by-token cevap akisi
+
+### Multi-Agent Answer Generation (2026-01-20)
+
+5 uzman ajan ile paralel cevap uretimi:
+
+| Ajan | Koleksiyon | Gorev |
 |------|------------|-------|
 | QuranAgent | `quran_tr` | Kuran perspektifi |
 | OldTestamentAgent | `bible_ot` | Eski Ahit perspektifi |
@@ -44,123 +50,111 @@ Query → ENHANCE → MULTI-QUERY → PARALLEL SEARCH → RRF FUSION → ANSWER
 | ApocryphaAgent | `bible_apocrypha` | Apokrifa perspektifi |
 | SummaryAgent | - | 4 yorumu sentezler |
 
-### � 4-Testament Koleksiyon Yapısı (2026-01-20)
+### 4-Testament Koleksiyon Yapisi (2026-01-20)
 
-Bible tek koleksiyondan 3 ayrı koleksiyona bölündü:
-
-| Koleksiyon | Ayet Sayısı | Açıklama |
+| Koleksiyon | Ayet Sayisi | Aciklama |
 |------------|-------------|----------|
-| `quran_tr` | 6,236 | Kuran (Türkçe) |
+| `quran_tr` | 6,236 | Kuran (Turkce) |
 | `bible_ot` | 23,145 | Eski Ahit (KJVA) |
 | `bible_nt` | 7,957 | Yeni Ahit (KJVA) |
 | `bible_apocrypha` | 5,717 | Apokrifa (KJVA) |
 
-### ⚡ Semantic LLM Cache (2026-01-19)
+### Semantic LLM Cache (2026-01-19)
 
-LLM yanıtları için semantic cache:
-
-- %95 benzerlik eşiği ile sorgu eşleştirme
-- 7 gün TTL
+- %95 benzerlik esigi ile sorgu eslestirme
+- 7 gun TTL
 - %60-80 API maliyeti azaltma
-
-### 🎯 Comparative RAG (Karşılaştırmalı Analiz)
-
-Kuran ve İncil'i tek sorguda arayıp teolojik karşılaştırma üretir:
-
-- 4 paralel arama (her testten 20 ayet)
-- 80 ayet analizi
-- İki mod: Tek essay veya 5-paragraf multi-agent
 
 ---
 
-## 📊 Performans
+## Performans
 
-| Metrik | Değer |
+| Metrik | Deger |
 |--------|-------|
 | Overall F1 Score | **%57+** |
 | Kuran Recall | **%80+** |
-| İncil Recall | **%100** |
+| Incil Recall | **%100** |
 | Confidence Score | **%96** |
 | Multi-Agent Latency | **~40s** |
 
 ---
 
-## 🛠️ Kurulum
+## Kurulum
 
-### 1. Qdrant'ı Başlatın
+### 1. Qdrant'i Baslatin
 
 ```bash
 docker run -p 6333:6333 qdrant/qdrant
 ```
 
-### 2. Bağımlılıkları Yükleyin
+### 2. Bagimliliklari Yukleyin
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Ortam Değişkenleri (.env dosyası)
+### 3. Ortam Degiskenleri (.env dosyasi)
 
 ```env
+# Zorunlu
 OPENROUTER_API_KEY=your-openrouter-key
+
+# API Kullanimi (opsiyonel)
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:54322/postgres
+JWT_SECRET_KEY=your-secret-key
 ```
 
-### 4. Koleksiyonları Oluşturun
+### 4. Koleksiyonlari Olusturun
 
 ```bash
-# Tek komutla tüm koleksiyonları oluştur (Önerilen)
 python scripts/setup_all_collections.py
 ```
 
 Bu script:
-
-- Mevcut koleksiyonları siler (temiz başlangıç)
-- `quran_tr` (6,236 ayet)
-- `bible_ot` (23,145 ayet)
-- `bible_nt` (7,957 ayet)
-- `bible_apocrypha` (5,717 ayet)
-
-koleksiyonlarını async indexing ile oluşturur (~2 dakika).
+- Mevcut koleksiyonlari siler (temiz baslangic)
+- 4 koleksiyonu async indexing ile olusturur (~2 dakika)
 
 ---
 
-## 📖 Kullanım
+## Kullanim
 
-### 🔍 Arama Komutları
+### CLI Komutlari
+
+#### Arama
 
 ```bash
-# Kuran araması
-python main.py search "sabır ve namaz"
+# Kuran aramasi
+python main.py search "sabir ve namaz"
 
-# İncil araması
+# Incil aramasi
 python main.py search-bible "love your neighbor" --translation kjva
 
-# Semantic chunk araması
-python main.py search-semantic "Adem'in yaratılışı"
+# Semantic chunk aramasi
+python main.py search-semantic "Adem'in yaratilisi"
 python main.py search-bible-semantic "creation of Adam"
 ```
 
-### 💬 Soru-Cevap (Ask)
+#### Soru-Cevap (Ask)
 
 ```bash
 # Kuran'dan soru sor
-python main.py ask "İslam'da sabır nedir?"
+python main.py ask "Islam'da sabir nedir?"
 
-# İncil'den soru sor
+# Incil'den soru sor
 python main.py ask-bible "What is love according to the Bible?"
 ```
 
-### ⚖️ Karşılaştırmalı Analiz
+#### Karsilastirmali Analiz
 
 ```bash
-# Tek essay modu (hızlı)
-python main.py compare "Sabır ve dayanıklılık kavramı"
+# Tek essay modu (hizli)
+python main.py compare "Sabir ve dayaniklilik kavrami"
 
-# Multi-agent modu (5 paragraf, daha detaylı)
-python main.py compare --multi-agent "Yaratılış hikayesi"
+# Multi-agent modu (5 paragraf, daha detayli)
+python main.py compare --multi-agent "Yaratilis hikayesi"
 ```
 
-### 📊 Sistem Komutları
+#### Sistem Komutlari
 
 ```bash
 # Koleksiyon bilgisi
@@ -171,14 +165,33 @@ python main.py cache-info
 
 # Cache temizle
 python main.py cache-clear
-
-# Chunk analizi
-python main.py analyze-chunks --surah 2
 ```
 
----
+### REST API
 
-## 🐍 Python API
+API'yi baslatmak icin:
+
+```bash
+# PostgreSQL + Qdrant
+docker compose up -d
+
+# FastAPI server
+uvicorn app.main:app --reload
+```
+
+API Endpoints:
+
+| Endpoint | Method | Aciklama |
+|----------|--------|----------|
+| `/api/auth/register` | POST | Kullanici kaydi |
+| `/api/auth/login` | POST | JWT ile giris |
+| `/api/search/quran` | POST | Kuran aramasi |
+| `/api/search/bible` | POST | Incil aramasi |
+| `/api/stream/search` | GET | SSE streaming arama |
+| `/api/compare/` | POST | Multi-agent karsilastirma |
+| `/docs` | GET | OpenAPI dokumantasyonu |
+
+### Python API
 
 ```python
 from src.ultimate_rag import UltimateRAG
@@ -188,64 +201,78 @@ from src.comparative_rag import ComparativeRAG
 rag = UltimateRAG(enable_semantic_chunks=True)
 
 # Arama
-results = rag.search_quran("şefaat kavramı", top_k=5)
+results = rag.search_quran("sefaat kavrami", top_k=5)
 results = rag.search_bible("forgiveness", translation="kjva")
 
 # Soru-Cevap
-answer = rag.ask_quran("Namaz nasıl kılınır?")
+answer = rag.ask_quran("Namaz nasil kilinir?")
 answer = rag.ask_bible("How to love your neighbor?")
 
 # === Comparative RAG ===
 comp = ComparativeRAG()
 
 # Tek essay modu
-essay = comp.compare("Yaratılış ve insanın kökeni")
+essay = comp.compare("Yaratilis ve insanin kokeni")
 print(essay['essay'])
 
 # Multi-agent modu (5 paragraf)
-result = comp.compare_multi_agent("Yaratılış ve insanın kökeni")
+result = comp.compare_multi_agent("Yaratilis ve insanin kokeni")
 print(result['paragraphs'])
 ```
 
 ---
 
-## 📁 Proje Yapısı
+## Proje Yapisi
 
 ```
 qdrant/
 ├── main.py                         # CLI entrypoint
 ├── requirements.txt                # Dependencies
-├── README.md                       # Bu dosya
-├── data/
-│   ├── quran_tr.json               # Kuran (Türkçe)
-│   └── bible_kjva.json             # İncil (KJVA)
-├── scripts/
-│   └── setup_all_collections.py    # 🔧 Unified indeksleme script
-├── src/
-│   ├── ultimate_rag.py             # 🚀 Ana RAG pipeline
-│   ├── comparative_rag.py          # ⚖️ Karşılaştırmalı RAG
-│   ├── multi_agent_answer_generator.py  # 🤖 5-Ajan sistemi
-│   ├── comparative_answer_generator.py  # Essay üretici
-│   ├── answer_generator.py         # 💬 LLM cevap üretici
-│   ├── semantic_chunker.py         # 📦 Kuran semantic chunking
-│   ├── bible_semantic_chunker.py   # 📦 İncil semantic chunking
-│   ├── query_enhancer.py           # LLM sorgu genişletme
+├── docker-compose.yml              # PostgreSQL + Qdrant
+│
+├── app/                            # FastAPI backend (REST API)
+│   ├── main.py                     # ASGI entrypoint
+│   ├── config.py                   # Pydantic settings
+│   ├── db.py                       # SQLAlchemy async
+│   ├── models.py                   # User, SearchHistory
+│   ├── auth/                       # JWT + OAuth
+│   └── api/                        # Route handlers
+│
+├── src/                            # RAG pipeline modulleri
+│   ├── ultimate_rag.py             # Ana RAG pipeline
+│   ├── comparative_rag.py          # Karsilastirmali RAG
+│   ├── multi_agent_answer_generator.py  # 5-Ajan sistemi
+│   ├── comparative_answer_generator.py  # Essay uretici
+│   ├── answer_generator.py         # LLM cevap uretici
+│   ├── semantic_chunker.py         # Kuran semantic chunking
+│   ├── bible_semantic_chunker.py   # Incil semantic chunking
+│   ├── query_enhancer.py           # LLM sorgu genisletme
 │   ├── llm_cache.py                # Semantic LLM cache
-│   ├── search.py                   # Arama modülleri
+│   ├── search.py                   # Arama modulleri
 │   ├── embeddings.py               # Dense + Sparse encoders
 │   ├── indexer.py                  # Qdrant indeksleme
-│   ├── data_loader.py              # Kuran veri yükleyici
-│   └── bible_loader.py             # İncil veri yükleyici
+│   ├── data_loader.py              # Kuran veri yukleyici
+│   └── bible_loader.py             # Incil veri yukleyici
+│
+├── data/
+│   ├── quran_tr.json               # Kuran (Turkce)
+│   └── bible_kjva.json             # Incil (KJVA)
+│
+├── scripts/
+│   ├── setup_all_collections.py    # Unified indeksleme
+│   └── dev.sh                      # Development startup
+│
 ├── tests/
-│   └── test_data.json              # Retrieval accuracy test data
-└── memory-bank/                    # Proje context dosyaları
+│   └── test_data.json              # Retrieval accuracy test
+│
+└── memory-bank/                    # Proje context dosyalari
 ```
 
 ---
 
-## ⚙️ Teknik Detaylar
+## Teknik Detaylar
 
-| Bileşen | Teknoloji |
+| Bilesen | Teknoloji |
 |---------|-----------|
 | Dense Encoder | `openai/text-embedding-3-large` (3072 dim) |
 | Sparse Encoder | `Qdrant/bm25` via FastEmbed |
@@ -253,23 +280,25 @@ qdrant/
 | LLM (Enhancement) | Grok 4.1 Fast via OpenRouter |
 | LLM (Answers) | Gemini 2.5 Flash via OpenRouter |
 | Fusion | Reciprocal Rank Fusion (RRF, k=60) |
-| Cache | Semantic LLM Cache (θ=0.95, 7-day TTL) |
+| Cache | Semantic LLM Cache (theta=0.95, 7-day TTL) |
+| Backend | FastAPI + SQLAlchemy async |
+| Auth | JWT + Google OAuth |
 
 ---
 
-## 📚 Örnek Sorgular
+## Ornek Sorgular
 
-| Komut | Sorgu | Açıklama |
+| Komut | Sorgu | Aciklama |
 |-------|-------|----------|
-| `search` | "sabır ve namaz" | Kuran'da sabır konusu |
-| `ask` | "Oruç nasıl tutulur?" | Detaylı cevap + kaynaklar |
-| `search-bible` | "love your enemies" | İncil araması |
-| `ask-bible` | "What is salvation?" | İncil soru-cevap |
-| `compare` | "Yaratılış hikayesi" | Kuran-İncil karşılaştırma |
-| `compare --multi-agent` | "Affetme kavramı" | 5 ajan ile detaylı analiz |
+| `search` | "sabir ve namaz" | Kuran'da sabir konusu |
+| `ask` | "Oruc nasil tutulur?" | Detayli cevap + kaynaklar |
+| `search-bible` | "love your enemies" | Incil aramasi |
+| `ask-bible` | "What is salvation?" | Incil soru-cevap |
+| `compare` | "Yaratilis hikayesi" | Kuran-Incil karsilastirma |
+| `compare --multi-agent` | "Affetme kavrami" | 5 ajan ile detayli analiz |
 
 ---
 
-## 📄 Lisans
+## Lisans
 
 MIT

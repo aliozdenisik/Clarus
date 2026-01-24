@@ -29,22 +29,36 @@ Traditional keyword search fails for religious texts because:
 - References must be verifiable (Surah:Verse, Book:Chapter:Verse)
 - High confidence in generated content
 
-## How It Should Work
+## How It Works
 
 ```
-User Question → Enhance → Search → Rerank → Generate Answer
-                  │
-                  ├─ Expand with synonyms/concepts
-                  ├─ Multiple query perspectives
-                  ├─ 4 parallel searches (2 scriptures × 2 types)
-                  ├─ Cross-encoder reranking
-                  └─ LLM generates cited answer
+User Question -> Enhance -> Search -> Rerank -> Generate Answer
+                   |
+                   +-- Expand with synonyms/concepts
+                   +-- Multiple query perspectives
+                   +-- 4 parallel searches (4 testament collections)
+                   +-- RRF fusion + reranking
+                   +-- LLM generates cited answer
 ```
 
 ## User Experience Goals
 
-1. **Simple CLI Interface**: `python main.py ask "question"` / `python main.py compare "topic"`
-2. **Python API**: Import and use programmatically
+### CLI (Primary Interface)
+
+1. **Simple Commands**: `python main.py ask "question"` / `python main.py compare "topic"`
+2. **Rich Output**: Formatted tables, colored output, confidence scores
 3. **Fast Setup**: Single `setup` command indexes everything
-4. **Rich Output**: Formatted tables, colored output, confidence scores
-5. **Transparent**: Show latency, costs, search statistics
+4. **Transparent**: Show latency, costs, search statistics
+
+### REST API (Programmatic Access)
+
+1. **Standard REST**: JSON request/response with OpenAPI docs
+2. **SSE Streaming**: Real-time token streaming for LLM responses
+3. **Authentication**: JWT for user tracking and rate limiting
+4. **Integrations**: Easy to integrate with other applications
+
+### Python API (Library Usage)
+
+1. **Direct Import**: `from src.ultimate_rag import UltimateRAG`
+2. **Full Control**: Access all pipeline components
+3. **Batch Processing**: Suitable for research workflows
