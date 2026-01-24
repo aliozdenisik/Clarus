@@ -5,16 +5,20 @@ import { springPresets } from "@/lib/design-system";
 import { useState, MouseEvent } from "react";
 import { cn } from "@/lib/utils";
 
-interface MagneticButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface MagneticButtonProps {
   children: React.ReactNode;
   className?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  type?: "button" | "submit" | "reset";
 }
 
 export function MagneticButton({
   children,
   className,
-  ...props
+  onClick,
+  disabled,
+  type = "button",
 }: MagneticButtonProps) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
@@ -41,9 +45,11 @@ export function MagneticButton({
       transition={springPresets.snappy}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+      disabled={disabled}
+      type={type}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
-      {...props}
     >
       {children}
     </motion.button>
