@@ -10,13 +10,14 @@ A maximum-accuracy RAG (Retrieval-Augmented Generation) search system for sacred
 2. **Semantic Understanding**: Use LLM-enhanced query expansion and semantic chunking
 3. **Comparative Analysis**: Generate academic-style comparative essays across scriptures
 4. **Answer Generation**: Produce cited answers from retrieved verses
+5. **Dual Interface**: Accessible via CLI for power users and Web App for general users
 
 ## Project Goals
 
 - **Accuracy**: 84%+ Quran hit rate, 75%+ Bible hit rate
-- **Speed**: Reasonable latency (~16s single-query, ~23s multi-query)
+- **Experience**: Fast, responsive Web App with streaming and animations
 - **Quality**: High-confidence, well-cited responses with balanced scripture representation
-- **Cost Efficiency**: ~$0.013 per query
+- **Cost Efficiency**: ~$0.013 per query via semantic caching
 
 ## Key Features
 

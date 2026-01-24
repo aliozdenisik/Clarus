@@ -43,7 +43,14 @@ User Question -> Enhance -> Search -> Rerank -> Generate Answer
 
 ## User Experience Goals
 
-### CLI (Primary Interface)
+### Web App (General Interface)
+
+1. **Modern UI**: Next.js 15 app with Linear-style dark theme
+2. **Interactive**: Real-time search results, spring animations
+3. **Structured Analysis**: Visual breakdown of comparative essays (5 paragraphs)
+4. **Accessible**: Login/Register flow, responsive design for mobile/desktop
+
+### CLI (Power User Interface)
 
 1. **Simple Commands**: `python main.py ask "question"` / `python main.py compare "topic"`
 2. **Rich Output**: Formatted tables, colored output, confidence scores
