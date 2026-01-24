@@ -111,13 +111,45 @@ qdrant/
 
 ## API Endpoints
 
+### Authentication
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/auth/register` | POST | User registration |
-| `/api/auth/login` | POST | JWT login |
+| `/api/auth/register` | POST | User registration (returns access + refresh token) |
+| `/api/auth/login` | POST | JWT login (returns access + refresh token) |
 | `/api/auth/google` | POST | Google OAuth |
-| `/api/search/quran` | POST | Quran search |
-| `/api/search/bible` | POST | Bible search |
+| `/api/auth/refresh` | POST | Refresh access token |
+| `/api/auth/logout` | POST | Invalidate refresh token |
+| `/api/auth/me` | GET | Get current user |
+| `/api/auth/rate-limit` | GET | Get rate limit status |
+
+### Search
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/search/quran` | POST | Quran search (validated, paginated) |
+| `/api/search/bible` | POST | Bible search (validated, paginated) |
+| `/api/search/history` | GET | Search history (paginated) |
+| `/api/search/history/{id}` | DELETE | Delete history item |
 | `/api/stream/search` | GET | SSE streaming search |
+| `/api/stream/compare` | GET | SSE streaming compare |
+
+### Compare & Metadata
+| Endpoint | Method | Description |
+|----------|--------|-------------|
 | `/api/compare/` | POST | Multi-agent comparison |
+| `/api/metadata/collections` | GET | Qdrant collections info |
+| `/api/metadata/quran/surahs` | GET | All surahs list |
+| `/api/metadata/quran/surahs/{id}` | GET | Surah detail with verses |
+| `/api/metadata/bible/books` | GET | All books list (filter by testament) |
+| `/api/metadata/bible/books/{nr}` | GET | Book detail with chapters |
+| `/api/metadata/testaments` | GET | Testament list |
+
+### Preferences & Admin
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/preferences/` | GET/PUT/DELETE | User preferences CRUD |
+| `/api/admin/stats` | GET | Dashboard statistics |
+| `/api/admin/users` | GET | User list (paginated) |
+| `/api/admin/system` | GET | System info |
+| `/api/config` | GET | Public config (rate limits, etc) |
+| `/api/health` | GET | Health check |
 | `/docs` | GET | OpenAPI documentation |

@@ -1,6 +1,6 @@
 # Progress
 
-## What Works ✅
+## What Works
 
 ### Core Pipeline
 
@@ -19,14 +19,25 @@
 - [x] Multi-Agent Answer Generation (5 paragraphs)
 - [x] Semantic LLM Cache (60-80% API cost reduction)
 
-### Web Application (NEW 2026-01-20)
+### Interfaces
 
+- [x] CLI with Rich formatting (primary interface)
+- [x] Python API for programmatic access
 - [x] FastAPI backend with async SQLAlchemy
 - [x] JWT + Google OAuth authentication
 - [x] SSE streaming endpoints
-- [x] Vue 3 + Vite + Tailwind frontend
-- [x] Pinia state management
 - [x] Docker Compose (PostgreSQL + Qdrant)
+
+### Backend API (Frontend-Ready)
+
+- [x] CORS production configuration
+- [x] Standardized error responses
+- [x] Rate limit headers (X-RateLimit-*)
+- [x] Token refresh mechanism
+- [x] User preferences API
+- [x] Metadata endpoints (collections, books, surahs)
+- [x] Pagination for list endpoints
+- [x] Input validation & XSS prevention
 
 ### CLI Commands
 
@@ -34,35 +45,44 @@
 - [x] `search` / `search-bible` - Basic search
 - [x] `ask` / `ask-bible` - Q&A with citations
 - [x] `compare` - Comparative analysis
+- [x] `info` - Collection info
+- [x] `cache-info` / `cache-clear` - Cache management
 
-## What's Left to Build 🚧
+## What's Left to Build
 
-### Web Application
+### Frontend Development
 
-- [ ] Test full auth flow end-to-end
+- [ ] Build React/Vue frontend
+- [ ] Authentication flow (login, register, OAuth)
+- [ ] Search UI with streaming
+- [ ] Preferences settings page
+
+### Production Deployment
+
 - [ ] Google OAuth credentials setup
 - [ ] Production Docker build
 - [ ] HTTPS configuration
-- [x] Search filters (OT, NT, Apocrypha, Quran)
+- [ ] Environment validation
 
 ### Potential Enhancements
 
 - [ ] Arabic font optimization
 - [ ] Save/Share functionality
-- [ ] Multi-language UI (i18n)
-- [ ] Mobile responsive optimization
+- [ ] Multi-language support
+- [ ] Batch query API
 
 ## Current Status
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Core Search | ✅ Complete | 84%+ accuracy |
-| Answer Generation | ✅ Complete | Gemini 2.5 Flash |
-| Multi-Agent | ✅ Complete | 5-paragraph output |
-| Web Backend | ✅ Complete | FastAPI + JWT |
-| Web Frontend | ❌ Removed | Reverted to CLI/API |
-| Docker Setup | ✅ Complete | PostgreSQL + Qdrant |
-| Testing | ⚠️ Partial | Manual testing needed |
+| Core Search | Complete | 84%+ accuracy |
+| Answer Generation | Complete | Gemini 2.5 Flash |
+| Multi-Agent | Complete | 5-paragraph output |
+| CLI | Complete | Primary interface |
+| REST API | Complete | FastAPI + JWT + Refresh tokens |
+| Backend for Frontend | Complete | CORS, pagination, validation, metadata |
+| Docker Setup | Complete | PostgreSQL + Qdrant |
+| Frontend | Not Started | Backend ready for integration |
 
 ## Known Issues
 
@@ -76,12 +96,13 @@
 
 - **v1**: CLI-only Python application
 - **v2**: Added multi-agent answer generation
-- **v3**: Web application with Vue 3 + FastAPI (Current)
+- **v3**: Added FastAPI REST API
+- **v3.1**: Removed Vue 3 frontend, CLI/API focus (current)
 
-### Frontend Selection (MCDM Analysis)
+### Key Decisions
 
-| Framework | Score | Chosen |
-|-----------|-------|--------|
-| Vue 3 | 4.55 | ✅ |
-| React | 3.70 | |
-| HTMX | 4.75 | Initially considered |
+| Decision | Rationale |
+|----------|-----------|
+| Remove frontend | Simplify maintenance, CLI sufficient for use case |
+| Keep REST API | Enables integrations and programmatic access |
+| CLI as primary | Power users prefer command-line, no auth friction |

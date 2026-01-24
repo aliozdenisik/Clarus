@@ -24,17 +24,17 @@ def get_password_hash(password: str) -> str:
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Create JWT access token."""
     to_encode = data.copy()
-    
+
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=settings.jwt_expire_minutes)
-    
+        expire = datetime.utcnow() + timedelta(
+            minutes=settings.jwt_access_expire_minutes
+        )
+
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
-        to_encode, 
-        settings.jwt_secret_key, 
-        algorithm=settings.jwt_algorithm
+        to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
     )
     return encoded_jwt
 
@@ -43,9 +43,7 @@ def decode_access_token(token: str) -> Optional[dict]:
     """Decode and verify JWT token."""
     try:
         payload = jwt.decode(
-            token, 
-            settings.jwt_secret_key, 
-            algorithms=[settings.jwt_algorithm]
+            token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
         )
         return payload
     except JWTError:
