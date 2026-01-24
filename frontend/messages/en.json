@@ -1,0 +1,46 @@
+{
+  "common": {
+    "search": "Search",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "loading": "Loading..."
+  },
+  "hero": {
+    "title": "Sacred Texts Search",
+    "subtitle": "Explore Quran and Bible with AI-powered insights",
+    "searchPlaceholder": "Search sacred texts...",
+    "signIn": "Sign In",
+    "getStarted": "Get Started"
+  },
+  "auth": {
+    "welcomeBack": "Welcome Back",
+    "signInSubtitle": "Sign in to continue your search",
+    "createAccount": "Create Account",
+    "registerSubtitle": "Start exploring sacred texts",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "emailPlaceholder": "you@example.com",
+    "passwordPlaceholder": "••••••••",
+    "namePlaceholder": "Your name",
+    "signingIn": "Signing in...",
+    "creatingAccount": "Creating account...",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "signUp": "Sign up",
+    "loginSuccess": "Login successful!",
+    "loginFailed": "Login failed. Please check your credentials.",
+    "registerSuccess": "Account created successfully!",
+    "registerFailed": "Registration failed. Please try again."
+  },
+  "search": {
+    "title": "Search Sacred Texts",
+    "placeholder": "Search Quran...",
+    "searching": "Searching...",
+    "searchButton": "Search",
+    "resultsFound": "Found {count} results",
+    "searchFailed": "Search failed. Please try again.",
+    "score": "Score"
+  }
+}
