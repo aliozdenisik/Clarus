@@ -4,6 +4,9 @@
 
 | Category | Technology | Details |
 |----------|------------|---------|
+| **Frontend** | Next.js 15 | App Router, React 19, TypeScript |
+| **Styling** | Tailwind CSS | Utility-first CSS, Radix UI primitives |
+| **Animation** | Framer Motion | Spring animations, layout transitions |
 | **Vector DB** | Qdrant | Docker, port 6333 |
 | **Database** | PostgreSQL | Supabase Local, port 54322 |
 | **Dense Embeddings** | OpenAI text-embedding-3-large | 3072 dim, via OpenRouter |
@@ -25,6 +28,11 @@ docker compose up -d
 # Python environment
 source venv/bin/activate
 pip install -r requirements.txt
+
+# Node.js environment (Frontend)
+cd frontend
+npm install
+npm run dev
 ```
 
 ### CLI Usage (Primary)
@@ -102,6 +110,10 @@ qdrant/
 │   ├── models.py           # User, SearchHistory
 │   ├── auth/               # JWT + OAuth
 │   └── api/                # Route handlers
+├── frontend/               # Next.js 15 Web App
+│   ├── app/                # App Router pages
+│   ├── components/         # UI Components
+│   └── lib/                # Utilities & API client
 ├── src/                    # Python RAG modules
 ├── data/                   # Quran + Bible JSON
 ├── scripts/                # Setup scripts

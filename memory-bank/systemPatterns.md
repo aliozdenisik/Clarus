@@ -5,61 +5,56 @@
 ```
 +-----------------------------------------------------------------------+
 |                         User Interfaces                               |
-|  +------------------+                    +---------------------------+|
-|  |    CLI (Rich)    |                    |   REST API (FastAPI)      ||
-|  |  python main.py  |                    |   uvicorn app.main:app    ||
-|  +--------+---------+                    +-------------+-------------+|
-|           |                                            |              |
-+-----------+--------------------------------------------+--------------+
-            |                                            |
-            v                                            v
+|  +------------------+    +---------------------------+                |
+|  |    Web App       |    |    CLI (Rich)             |                |
+|  |  Next.js 15      |    |  python main.py           |                |
+|  +--------+---------+    +---------+-----------------+                |
+|           |                        |                                  |
+|           v                        |                                  |
+|  +---------------------------------+--------------------------+       |
+|  |                    REST API (FastAPI)                      |       |
+|  |                   uvicorn app.main:app                     |       |
+|  +-----------------------------+------------------------------+       |
+|                                |                                      |
+|                                v                                      |
 +-----------------------------------------------------------------------+
 |                         RAG Pipeline                                  |
-|  +---------------+  +---------------+  +-----------------------------+|
-|  | UltimateRAG   |  | Comparative   |  |  Multi-Agent Generator      ||
-|  | (Single Text) |  |     RAG       |  |  (5 paragraphs)             ||
-|  +---------------+  +---------------+  +-----------------------------+|
-+-----------------------------------------------------------------------+
-            |
-            v
-+-----------------------------------------------------------------------+
-|                         Data Layer                                    |
-|  +---------------+  +---------------+  +-----------------------------+|
-|  | PostgreSQL    |  |    Qdrant     |  |        DiskCache            ||
-|  | (Users/Auth)  |  |  (Vectors)    |  |     (Embeddings)            ||
-|  +---------------+  +---------------+  +-----------------------------+|
-+-----------------------------------------------------------------------+
 ```
 
 ## Design Principles
 
-- **CLI-First**: Primary interface is command-line for power users
-- **API-Available**: REST API for programmatic access and integrations
+- **Hybrid Interface**: CLI for dev/ops, Web App for end users
+- **API-First**: All business logic exposed via REST API
 - **Scalability**: Async architecture supports concurrent requests
 - **Reliability**: Rate limiting prevents abuse (50/day/user)
-- **Efficiency**: SSE streaming reduces perceived latency
+- **Efficiency**: Semantic Caching & SSE streaming
 
 ## Key Technical Decisions
 
-### 1. CLI as Primary Interface
+### 1. Next.js for Frontend
 
-- Direct access to all RAG features
-- Rich formatting with tables and colors
-- No authentication overhead for local use
-- Fastest path from query to answer
+- **App Router**: Modern routing with server components
+- **Framer Motion**: High-quality spring animations
+- **Tailwind CSS**: Rapid styling with consistent design system
+- **TypeScript**: Type safety across full stack
 
-### 2. FastAPI for REST API
+### 2. FastAPI for Backend
 
-- Native async support (ASGI)
-- Built-in OpenAPI docs at `/docs`
-- Pydantic validation
-- Easy SSE with StreamingResponse
+- **Native async support**: Handles concurrent RAG requests
+- **Pydantic**: Shared schemas for API contracts
+- **SSE**: Streaming responses for long-running agents
 
-### 3. JWT over Session Auth
+### 3. CLI for Power Users
 
-- Stateless (no server-side session storage)
-- Works with any client (curl, Postman, custom apps)
-- Easy Google OAuth integration
+- Direct access to RAG pipeline bypassing API overhead
+- Rich formatting for debugging and analysis
+- Immediate feedback loop for development
+
+### 4. JWT Auth
+
+- Stateless authentication for API scaling
+- Refresh token rotation for security
+- Unified auth for Web App and CLI (optional)
 
 ### 4. SSE over WebSocket
 
