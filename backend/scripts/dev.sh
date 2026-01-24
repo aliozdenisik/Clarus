@@ -17,6 +17,11 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
+# Navigate to project root for docker-compose
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+cd "$PROJECT_ROOT"
+
 # Start containers
 echo -e "\n${BLUE}📦 Starting PostgreSQL and Qdrant...${NC}"
 docker compose up -d
@@ -35,14 +40,13 @@ until curl -s http://localhost:6333/health > /dev/null 2>&1; do
 done
 echo -e "${GREEN}✅ Qdrant is ready${NC}"
 
-# Activate Python venv
+# Activate Python venv (from project root)
 echo -e "\n${BLUE}🐍 Activating Python virtual environment...${NC}"
-source venv/bin/activate
+source "$PROJECT_ROOT/venv/bin/activate"
 
 # Start backend
 echo -e "\n${BLUE}🔧 Starting FastAPI backend on http://localhost:8000${NC}"
-cd "$(dirname "$0")"
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
+cd "$PROJECT_ROOT/backend" && PYTHONPATH=. uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 
 
