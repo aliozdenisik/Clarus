@@ -3,32 +3,32 @@
 ## Context
 
 ### Original Request
-Kullanici, Sacred Texts RAG projesine frontend eklemek istiyor. Bunun icin once backend kodlarini `backend/` klasorune, frontend kodlarini `frontend/` klasorune organize etmek gerekiyor.
+User wants to add a frontend to the Sacred Texts RAG project. This requires organizing backend code into `backend/` folder and frontend code into `frontend/` folder.
 
 ### Interview Summary
 
 **Key Discussions**:
-- **Kapsam**: MVP (Landing Page + Auth + Unified Search)
-- **Tema**: Dark Mode Only (Linear/Raycast estetigi)
-- **Arapca**: Goruntuleme + Tecvid (statik veri)
-- **Auth**: Zorunlu (Email/Sifre + Google OAuth)
-- **Hedef Kitle**: Genel kullanicilar
-- **Streaming**: LLM cevaplari icin SSE
-- **Arama**: Birlesik (Quran + Bible tek sorguda)
+- **Scope**: MVP (Landing Page + Auth + Unified Search)
+- **Theme**: Dark Mode Only (Linear/Raycast aesthetic)
+- **Arabic**: Display + Tecvid coloring (static data)
+- **Auth**: Mandatory (Email/Password + Google OAuth)
+- **Target Audience**: General users
+- **Streaming**: SSE for LLM responses
+- **Search**: Unified (Quran + Bible in single query)
 - **Landing**: Minimal Hero
 - **i18n**: TR/EN
 
 **Research Findings**:
-- Backend 92 import statement kullaniyor (`from src.`, `from app.`)
-- Dosyalar `backend/` klasorune tasinmis (TODO reorg-1 to reorg-4)
-- Import'lar PYTHONPATH ile calisacak (kod degisikligi gerekmez)
-- FastAPI OpenAPI schema `/docs` adresinde mevcut
+- Backend uses 92 import statements (`from src.`, `from app.`)
+- Files moved to `backend/` folder
+- Imports work with PYTHONPATH (no code changes needed)
+- FastAPI OpenAPI schema available at `/docs`
 
 ### Metis Review
 
 **Identified Gaps** (addressed):
-1. `.env` dosyasi konumu belirsizdi → Root'ta kalacak, symlink olusturulacak
-2. Working directory belirsizdi → `backend/` icinden calistirilacak
+1. `.env` file location unclear → Stays in root, symlink created
+2. Working directory unclear → Run from `backend/`
 3. Token expire edge case → Reconnect with refresh token
 4. Empty search handling → Button disabled + validation error
 
@@ -37,47 +37,98 @@ Kullanici, Sacred Texts RAG projesine frontend eklemek istiyor. Bunun icin once 
 ## Work Objectives
 
 ### Core Objective
-Projeyi monorepo yapisina donustur ve "Utilitarian Luxury" (Linear/Raycast) standartlarinda frontend MVP olustur.
+Transform project into monorepo structure and build frontend MVP following "Utilitarian Luxury" (Linear/Raycast) industry standards.
 
 ### Concrete Deliverables
-- `backend/` klasorunde calisan Python backend
-- `frontend/` klasorunde Next.js 15 MVP uygulamasi (endustri standardi)
-- Guncelenmis docker-compose.yml ve scripts
+- Working Python backend in `backend/` folder
+- Next.js 15 MVP application in `frontend/` folder (industry standard)
+- Updated docker-compose.yml and scripts
 
 ### Definition of Done
-- [ ] `cd backend && python main.py search "sabir"` → Sonuc doner
-- [ ] `cd backend && uvicorn app.main:app --reload` → Hatasiz baslar
-- [ ] `cd frontend && npm run dev` → localhost:3000'de acilir
-- [ ] Kullanici login/register yapabilir
-- [ ] Arama yapildiginda SSE streaming calisir
-- [ ] Animasyonlar fiziksel (spring) hissettiriyor
-- [ ] UI "Linear" kalitesinde gorunuyor
+- [ ] `cd backend && python main.py search "patience"` → Returns results
+- [ ] `cd backend && uvicorn app.main:app --reload` → Starts without errors
+- [ ] `cd frontend && npm run dev` → Opens at localhost:3000
+- [ ] User can login/register
+- [ ] Search with SSE streaming works
+- [ ] Animations feel physical (spring-based)
+- [ ] UI matches "Linear" quality standards
 
 ### Must Have
-- Backend import'lari calismali (PYTHONPATH ile)
-- Frontend API client OpenAPI'den uretilmeli
-- Dark mode tema (Linear Zinc palette)
+- Backend imports working (via PYTHONPATH)
+- Frontend API client generated from OpenAPI
+- Dark mode theme (Linear Zinc palette)
 - TR/EN i18n
 - Google OAuth
-- **Framer Motion spring animasyonlari**
-- **shadcn/ui + Radix UI componentleri**
+- **Framer Motion spring animations**
+- **shadcn/ui + Radix UI components**
 - **cmdk Command Palette**
 - **Optimistic UI pattern**
 - **Skeleton loading states**
+- **ALL CODE IN ENGLISH** (industry standard)
 
 ### Must NOT Have (Guardrails)
-- Light mode tema (sadece dark)
+- Light mode theme (dark only)
 - Admin panel
 - Favorites/Bookmarks
 - Search history page
 - Chat history
-- Custom API wrappers (sadece @hey-api/openapi-ts)
+- Custom API wrappers (only @hey-api/openapi-ts)
 - Manual fetch calls
 - Analytics/tracking
 - E2E tests (Phase 3)
 - User documentation
-- CSS transition/ease (sadece spring physics)
-- MUI, Ant Design veya diger UI kit'ler
+- CSS transition/ease (spring physics only)
+- MUI, Ant Design or other UI kits
+- Non-English variable/function names
+- Turkish comments in code
+
+---
+
+## Code Standards (MANDATORY)
+
+### Language Requirements
+
+**ALL code must be in English:**
+- Variable names: `searchResults`, not `aramaSecuclari`
+- Function names: `handleSearch`, not `aramaYap`
+- Component names: `SearchInput`, not `AramaGirisi`
+- Comments: `// Fetch search results`, not `// Arama sonuclarini getir`
+- File names: `search-results.tsx`, not `arama-sonuclari.tsx`
+- CSS classes: `search-container`, not `arama-kapsayici`
+- Type names: `SearchResult`, not `AramaSonucu`
+- Constants: `MAX_RESULTS`, not `MAKSIMUM_SONUC`
+
+**Only i18n message files contain Turkish:**
+- `messages/tr.json` - Turkish UI strings
+- `messages/en.json` - English UI strings
+
+**Example:**
+```typescript
+// CORRECT - Industry Standard
+interface SearchResult {
+  id: string;
+  verseText: string;
+  surahName: string;
+  verseNumber: number;
+}
+
+function handleSearch(query: string): Promise<SearchResult[]> {
+  // Fetch results from API
+  return api.search({ query });
+}
+
+// WRONG - Not acceptable
+interface AramaSonucu {
+  id: string;
+  ayetMetni: string;
+  sureAdi: string;
+}
+
+function aramaYap(sorgu: string) {
+  // API'den sonuclari getir
+  return api.ara({ sorgu });
+}
+```
 
 ---
 
@@ -88,22 +139,22 @@ Projeyi monorepo yapisina donustur ve "Utilitarian Luxury" (Linear/Raycast) stan
 ```css
 :root {
   /* Backgrounds - Layered depth */
-  --bg-app: #09090b;        /* Zinc-950 - Ana arka plan */
-  --bg-surface: #18181b;    /* Zinc-900 - Kartlar, paneller */
-  --bg-elevated: #27272a;   /* Zinc-800 - Hover, aktif */
+  --color-bg-app: #09090b;        /* Zinc-950 - Main background */
+  --color-bg-surface: #18181b;    /* Zinc-900 - Cards, panels */
+  --color-bg-elevated: #27272a;   /* Zinc-800 - Hover, active */
   
   /* Borders - Subtle glow */
-  --border-subtle: #27272a; /* Zinc-800 - Pasif sinirlar */
-  --border-glow: #3f3f46;   /* Zinc-700 - Aktif, focus */
+  --color-border-subtle: #27272a; /* Zinc-800 - Passive borders */
+  --color-border-glow: #3f3f46;   /* Zinc-700 - Active, focus */
   
   /* Text hierarchy */
-  --text-primary: #f4f4f5;  /* Zinc-100 - Basliklar */
-  --text-secondary: #a1a1aa; /* Zinc-400 - Metadata */
-  --text-muted: #71717a;    /* Zinc-500 - Placeholder */
+  --color-text-primary: #f4f4f5;  /* Zinc-100 - Headings */
+  --color-text-secondary: #a1a1aa; /* Zinc-400 - Metadata */
+  --color-text-muted: #71717a;    /* Zinc-500 - Placeholder */
   
   /* Accent */
-  --accent-primary: #6366f1; /* Indigo-500 - CTA, links */
-  --accent-glow: rgba(99, 102, 241, 0.15); /* Glow effect */
+  --color-accent-primary: #6366f1; /* Indigo-500 - CTA, links */
+  --color-accent-glow: rgba(99, 102, 241, 0.15); /* Glow effect */
 }
 ```
 
@@ -134,11 +185,14 @@ font-feature-settings: 'cv05', 'cv08', 'ss01'; /* OpenType features for readabil
 
 **Framer Motion Config:**
 ```typescript
+// lib/motion.ts
 export const springPresets = {
   snappy: { type: "spring", stiffness: 300, damping: 30 },
   fluid: { type: "spring", stiffness: 170, damping: 26 },
   gentle: { type: "spring", stiffness: 120, damping: 14 },
-};
+} as const;
+
+export const defaultTransition = springPresets.snappy;
 ```
 
 ### Component Standards
@@ -151,14 +205,14 @@ export const springPresets = {
 
 **Inputs:**
 - Height: 36px (default), 40px (large)
-- Border: 1px --border-subtle
-- Focus: --border-glow + box-shadow glow
-- Placeholder: --text-muted
+- Border: 1px border-subtle
+- Focus: border-glow + box-shadow glow
+- Placeholder: text-muted
 
 **Cards:**
-- Background: --bg-surface
-- Border: 1px --border-subtle
-- Hover: border --border-glow
+- Background: bg-surface
+- Border: 1px border-subtle
+- Hover: border-glow
 - Border radius: 8px
 
 ---
@@ -166,12 +220,12 @@ export const springPresets = {
 ## Verification Strategy (MANDATORY)
 
 ### Test Decision
-- **Infrastructure exists**: YES (backend tests mevcut)
+- **Infrastructure exists**: YES (backend tests exist)
 - **User wants tests**: Manual verification for MVP
 - **Framework**: pytest (backend), manual (frontend)
 
 ### Manual QA for Frontend
-Her task icin detayli verification procedure belirlendi.
+Detailed verification procedure defined for each task.
 
 ---
 
@@ -266,8 +320,8 @@ PHASE 4: Polish
   **What to do**:
   - Run from backend directory with PYTHONPATH
   - Test: `PYTHONPATH=. python main.py info`
-  - Test: `PYTHONPATH=. python main.py search "sabir"`
-  - Test: `PYTHONPATH=. python main.py ask "Islam'da sabir nedir?"`
+  - Test: `PYTHONPATH=. python main.py search "patience"`
+  - Test: `PYTHONPATH=. python main.py ask "What is patience in Islam?"`
   - Fix any path issues found
 
   **Must NOT do**:
@@ -282,7 +336,7 @@ PHASE 4: Polish
 
   **Acceptance Criteria**:
   - [ ] `cd backend && PYTHONPATH=. python main.py info` → Shows collection info
-  - [ ] `cd backend && PYTHONPATH=. python main.py search "sabir"` → Returns verses
+  - [ ] `cd backend && PYTHONPATH=. python main.py search "patience"` → Returns verses
   - [ ] `cd backend && PYTHONPATH=. python main.py ask "test"` → Returns answer
 
   **Commit**: NO (verification only)
@@ -358,7 +412,7 @@ PHASE 4: Polish
   - Initialize shadcn/ui:
     ```bash
     npx shadcn@latest init
-    # Style: New York (daha kompakt)
+    # Style: New York (more compact)
     # Base color: Zinc
     # CSS variables: Yes
     ```
@@ -372,8 +426,8 @@ PHASE 4: Polish
   **Must NOT do**:
   - Use Pages Router (App Router only)
   - Install MUI, Ant Design, Chakra
-  - Skip any dependency (hepsi gerekli)
-  - Use default shadcn colors (Zinc olmali)
+  - Skip any dependency (all are required)
+  - Use default shadcn colors (must be Zinc)
 
   **Parallelizable**: NO (after Phase 1)
 
@@ -398,27 +452,41 @@ PHASE 4: Polish
 - [ ] 2.2. Setup Design System (Linear Standard)
 
   **What to do**:
-  - Create `frontend/lib/design-system.ts` with:
-    - Spring animation presets (snappy, fluid, gentle)
-    - Color tokens as constants
-    - Typography scale
+  - Create `frontend/lib/design-system.ts`:
+    ```typescript
+    // Spring animation presets
+    export const springPresets = {
+      snappy: { type: "spring", stiffness: 300, damping: 30 },
+      fluid: { type: "spring", stiffness: 170, damping: 26 },
+      gentle: { type: "spring", stiffness: 120, damping: 14 },
+    } as const;
+
+    // Color tokens (matching CSS variables)
+    export const colors = {
+      bgApp: "var(--color-bg-app)",
+      bgSurface: "var(--color-bg-surface)",
+      bgElevated: "var(--color-bg-elevated)",
+      // ... etc
+    } as const;
+    ```
   - Update `frontend/app/globals.css`:
-    - Add CSS variables from Design System Specification above
+    - Add CSS variables from Design System Specification
     - Set dark mode as default (no light mode)
     - Add Inter font with OpenType features
   - Update `frontend/tailwind.config.ts`:
     - Extend colors with CSS variables
     - Add custom animations using spring presets
     - Configure font family
-  - Create `frontend/components/motion.tsx`:
+  - Create `frontend/components/motion/index.tsx`:
     - Export pre-configured motion components
     - `MotionDiv`, `MotionButton` with default spring
     - `AnimatePresence` wrapper
 
   **Must NOT do**:
   - Add light mode support
-  - Use CSS ease/transition (only spring)
+  - Use CSS ease/transition (spring only)
   - Deviate from Zinc palette
+  - Use Turkish in any code
 
   **Parallelizable**: NO (depends on 2.1)
 
@@ -429,14 +497,15 @@ PHASE 4: Polish
 
   **Acceptance Criteria**:
   - [ ] `globals.css` has all CSS variables defined
-  - [ ] Body background is `--bg-app` (#09090b)
+  - [ ] Body background is `--color-bg-app` (#09090b)
   - [ ] Inter font loads with OpenType features
   - [ ] `springPresets.snappy` exportable from design-system.ts
   - [ ] No `transition` or `ease` in CSS (only spring)
+  - [ ] All code in English
 
   **Commit**: YES
   - Message: `feat(frontend): setup Linear-style design system with spring animations`
-  - Files: `globals.css`, `tailwind.config.ts`, `lib/design-system.ts`, `components/motion.tsx`
+  - Files: `globals.css`, `tailwind.config.ts`, `lib/design-system.ts`, `components/motion/`
 
 ---
 
@@ -453,9 +522,20 @@ PHASE 4: Polish
       -c @tanstack/react-query
     ```
   - Create `frontend/lib/api-provider.tsx`:
-    - Setup QueryClient with optimistic update defaults
-    - Configure stale time, retry logic
-    - Export provider component
+    ```typescript
+    // Configure QueryClient with optimistic update defaults
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          staleTime: 1000 * 60, // 1 minute
+          retry: 1,
+        },
+        mutations: {
+          // Enable optimistic updates by default
+        },
+      },
+    });
+    ```
 
   **Must NOT do**:
   - Write manual fetch functions
@@ -473,6 +553,7 @@ PHASE 4: Polish
   - [ ] TypeScript types match backend Pydantic models
   - [ ] `useQuery` and `useMutation` hooks generated
   - [ ] No manual fetch/axios code
+  - [ ] All generated code in English
 
   **Commit**: YES
   - Message: `feat(frontend): generate type-safe API client from OpenAPI`
@@ -484,22 +565,64 @@ PHASE 4: Polish
 
   **What to do**:
   - Update `frontend/app/layout.tsx`:
-    - Wrap with QueryClientProvider
-    - Add Sonner Toaster (dark theme)
-    - Set metadata (title, description)
-    - Apply Inter font class
+    ```typescript
+    // Root layout with all providers
+    export default function RootLayout({ children }: { children: React.ReactNode }) {
+      return (
+        <html lang="en" className="dark">
+          <body className={inter.className}>
+            <Providers>
+              {children}
+              <Toaster />
+            </Providers>
+          </body>
+        </html>
+      );
+    }
+    ```
   - Create `frontend/components/providers.tsx`:
-    - Combine all providers (Query, Theme, etc.)
+    - Combine all providers (Query, etc.)
   - Create `frontend/components/ui/glow-card.tsx`:
-    - Card with Linear-style border glow on hover
-    - Use Framer Motion for hover animation
+    ```typescript
+    // Card with Linear-style border glow on hover
+    export function GlowCard({ children, className }: GlowCardProps) {
+      return (
+        <motion.div
+          className={cn("relative rounded-lg border border-subtle", className)}
+          whileHover={{ borderColor: "var(--color-border-glow)" }}
+          transition={springPresets.snappy}
+        >
+          {children}
+        </motion.div>
+      );
+    }
+    ```
   - Create `frontend/components/ui/magnetic-button.tsx`:
-    - Button that moves toward cursor on hover
-    - Spring animation for magnetic effect
+    ```typescript
+    // Button that moves toward cursor on hover
+    export function MagneticButton({ children, ...props }: MagneticButtonProps) {
+      const [position, setPosition] = useState({ x: 0, y: 0 });
+      
+      const handleMouseMove = (e: MouseEvent) => {
+        // Calculate magnetic pull toward cursor
+      };
+      
+      return (
+        <motion.button
+          style={{ x: position.x, y: position.y }}
+          transition={springPresets.snappy}
+          {...props}
+        >
+          {children}
+        </motion.button>
+      );
+    }
+    ```
 
   **Must NOT do**:
   - Add theme toggle (dark only)
   - Create complex navigation yet
+  - Use Turkish in component names/comments
 
   **Parallelizable**: NO (depends on 2.3)
 
@@ -513,6 +636,7 @@ PHASE 4: Polish
   - [ ] GlowCard border glows on hover (spring animation)
   - [ ] MagneticButton moves toward cursor
   - [ ] No flash of unstyled content
+  - [ ] All component names in English (GlowCard, MagneticButton)
 
   **Commit**: YES
   - Message: `feat(frontend): create base layout with spring-animated components`
@@ -526,25 +650,44 @@ PHASE 4: Polish
 
   **What to do**:
   - Create `/login/page.tsx`:
-    - Glassmorphism card (backdrop-blur)
-    - Email/password inputs with glow focus
+    ```typescript
+    // Login page with glassmorphism card
+    export default function LoginPage() {
+      const { mutate: login, isPending } = useLogin();
+      
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={springPresets.fluid}
+        >
+          <GlassCard>
+            <LoginForm onSubmit={login} isLoading={isPending} />
+            <GoogleOAuthButton />
+          </GlassCard>
+        </motion.div>
+      );
+    }
+    ```
+  - Create `/register/page.tsx` (same design as login)
+  - Create `frontend/lib/auth/`:
+    - `auth-context.tsx` - Auth state management
+    - `auth-provider.tsx` - Provider component
+    - `use-auth.ts` - Auth hooks
+    - `protected-route.tsx` - Route guard
+  - Implement features:
+    - Email/password form with Zod validation
     - Google OAuth button (magnetic effect)
     - Spring animated form appearance
     - Skeleton loading during auth check
-  - Create `/register/page.tsx`:
-    - Same design as login
-    - Zod validation with react-hook-form
-  - Create `frontend/lib/auth/`:
-    - Auth context with token management
-    - Protected route wrapper
-    - Optimistic login (UI updates before server confirms)
-  - Implement logout with spring exit animation
+    - Logout with spring exit animation
 
   **Must NOT do**:
-  - Store tokens in localStorage (httpOnly cookies)
+  - Store tokens in localStorage (use httpOnly cookies)
   - Add forgot password
   - Add email verification
   - Use CSS transitions (spring only)
+  - Use Turkish variable/function names
 
   **Parallelizable**: NO (depends on 2.4)
 
@@ -560,6 +703,7 @@ PHASE 4: Polish
   - [ ] Google button has magnetic hover effect
   - [ ] Loading state shows skeleton
   - [ ] Successful login shows optimistic redirect
+  - [ ] All code in English (LoginPage, handleSubmit, etc.)
   - [ ] Playwright test:
     - Navigate to /login
     - Fill credentials
@@ -574,20 +718,46 @@ PHASE 4: Polish
 - [ ] 3.2. Create landing page (Minimal Hero)
 
   **What to do**:
-  - Create `/page.tsx` with:
+  - Create `/page.tsx`:
+    ```typescript
+    export default function HomePage() {
+      return (
+        <main className="min-h-screen flex flex-col items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={springPresets.fluid}
+          >
+            <GradientText>
+              Sacred Texts Search
+            </GradientText>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ ...springPresets.gentle, delay: 0.2 }}
+          >
+            <SearchInput disabled onClick={redirectToLogin} />
+          </motion.div>
+          
+          <CTAButtons />
+        </main>
+      );
+    }
+    ```
+  - Implement:
     - Full-screen dark gradient background
     - Large centered search input (glow on focus)
-    - Animated tagline: "Kutsal Metinlerde Arama"
+    - Animated tagline with gradient text
     - CTA buttons with magnetic effect
-    - Subtle particle/grain background (optional)
-  - Implement Linear-style text gradient on title
-  - Add staggered entrance animations (spring)
-  - Search input redirects to /login if not authenticated
+    - Staggered entrance animations (spring)
 
   **Must NOT do**:
-  - Add Bento grid (MVP'de yok)
+  - Add Bento grid (not in MVP)
   - Create complex animations
   - Allow search without auth
+  - Use Turkish in code
 
   **Parallelizable**: YES (with 3.3 after 3.1)
 
@@ -603,6 +773,7 @@ PHASE 4: Polish
   - [ ] Buttons have magnetic hover
   - [ ] Clicking search → redirects to /login
   - [ ] Background has subtle depth
+  - [ ] All code in English (HomePage, GradientText, CTAButtons)
 
   **Commit**: YES
   - Message: `feat(frontend): create Linear-style hero landing page`
@@ -614,33 +785,57 @@ PHASE 4: Polish
 
   **What to do**:
   - Create `/search/page.tsx` (protected route):
-    - Command palette style input (cmdk)
-    - Real-time streaming results
-    - Spring animated result cards
+    ```typescript
+    export default function SearchPage() {
+      const [results, setResults] = useState<SearchResult[]>([]);
+      const [isStreaming, setIsStreaming] = useState(false);
+      
+      const handleSearch = async (query: string) => {
+        setIsStreaming(true);
+        const eventSource = new EventSource(`/api/stream/search?query=${query}`);
+        // Handle SSE events
+      };
+      
+      return (
+        <div className="container mx-auto">
+          <SearchInput onSearch={handleSearch} />
+          <AnimatePresence mode="popLayout">
+            {results.map((result, i) => (
+              <motion.div
+                key={result.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ ...springPresets.snappy, delay: i * 0.05 }}
+              >
+                <VerseCard result={result} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      );
+    }
+    ```
   - Create `frontend/components/search/`:
-    - `SearchInput.tsx` - cmdk style with glow
-    - `SearchResults.tsx` - Animated list with layout animations
-    - `VerseCard.tsx` - Result card with hover glow
-    - `StreamingText.tsx` - Typewriter effect for LLM response
-  - Implement SSE connection:
-    - Connect to `/api/stream/search`
-    - Handle token-by-token streaming
+    - `search-input.tsx` - cmdk style with glow
+    - `search-results.tsx` - Animated list with layout animations
+    - `verse-card.tsx` - Result card with hover glow
+    - `streaming-text.tsx` - Typewriter effect for LLM response
+    - `rate-limit-indicator.tsx` - Shows remaining searches
+  - Implement:
+    - SSE connection to `/api/stream/search`
+    - Token-by-token streaming display
     - Optimistic UI during search
-  - Arabic text support:
-    - RTL direction for Quran verses
-    - Amiri font for Arabic
-  - Rate limit display:
-    - "X/50 arama kaldi" indicator
-    - Warning when low (< 10)
-  - Error handling:
-    - Sonner toast for errors
-    - Retry button with spring animation
+    - Arabic text with RTL support (Amiri font)
+    - Rate limit display ("X searches remaining")
+    - Error handling with Sonner toast
 
   **Must NOT do**:
   - Add filters or facets
   - Implement search history UI
   - Add bookmarking
   - Use CSS transitions (spring for everything)
+  - Use Turkish in code
 
   **Parallelizable**: YES (with 3.2 after 3.1)
 
@@ -658,6 +853,7 @@ PHASE 4: Polish
   - [ ] Error shows toast notification
   - [ ] VerseCard has hover glow effect
   - [ ] Layout animation when results change
+  - [ ] All code in English (SearchPage, VerseCard, handleSearch)
   - [ ] Playwright test:
     - Login → Navigate to /search
     - Type query → Submit
@@ -676,26 +872,53 @@ PHASE 4: Polish
 
   **What to do**:
   - Configure next-intl:
-    - Create `frontend/i18n.ts` configuration
-    - Setup middleware for locale detection
+    ```typescript
+    // i18n.ts
+    export default getRequestConfig(async ({ locale }) => ({
+      messages: (await import(`./messages/${locale}.json`)).default,
+    }));
+    ```
   - Create message files:
-    - `frontend/messages/tr.json` - Turkce UI
-    - `frontend/messages/en.json` - English UI
+    - `frontend/messages/tr.json`:
+      ```json
+      {
+        "common": {
+          "search": "Ara",
+          "login": "Giris Yap",
+          "register": "Kayit Ol",
+          "logout": "Cikis"
+        },
+        "hero": {
+          "title": "Kutsal Metinlerde Arama",
+          "subtitle": "Kuran ve Incil'de anlam arayisi"
+        }
+      }
+      ```
+    - `frontend/messages/en.json`:
+      ```json
+      {
+        "common": {
+          "search": "Search",
+          "login": "Login",
+          "register": "Register",
+          "logout": "Logout"
+        },
+        "hero": {
+          "title": "Sacred Texts Search",
+          "subtitle": "Explore meaning in Quran and Bible"
+        }
+      }
+      ```
   - Add language switcher:
-    - Dropdown in header/footer
-    - Animated with spring on open
+    - Dropdown with spring animation
     - Persist selection in cookie
-  - Translate all UI strings:
-    - Auth pages
-    - Landing page
-    - Search page
-    - Error messages
-    - Placeholders
+  - Replace all hardcoded strings with `t()` calls
 
   **Must NOT do**:
   - Add more languages (only TR/EN)
   - Translate content (only UI)
   - Use CSS transition for dropdown
+  - Put Turkish in code files (only in tr.json)
 
   **Parallelizable**: NO (depends on 3.3)
 
@@ -709,6 +932,8 @@ PHASE 4: Polish
   - [ ] EN → TR changes all text
   - [ ] Selection persists on refresh
   - [ ] No hardcoded strings remain
+  - [ ] Turkish only in messages/tr.json
+  - [ ] All code remains in English
 
   **Commit**: YES
   - Message: `feat(frontend): add TR/EN internationalization`
@@ -721,16 +946,18 @@ PHASE 4: Polish
   **What to do**:
   - Run complete user flow:
     1. Open landing page (verify animations)
-    2. Click "Kayit Ol" (verify magnetic button)
-    3. Register (verify form animations)
+    2. Click "Register" (verify magnetic button)
+    3. Register account (verify form animations)
     4. Redirect to search (verify transition)
     5. Perform search (verify SSE streaming)
     6. View results (verify spring cards)
     7. Switch language (verify dropdown animation)
     8. Logout (verify exit animation)
     9. Login again (verify flow)
-  - Fix any animation/timing issues
-  - Verify no CSS transitions (only springs)
+  - Code quality check:
+    - All code in English
+    - No Turkish comments
+    - No CSS transitions (only springs)
   - Performance check:
     - No layout shift (CLS < 0.1)
     - Smooth 60fps animations
@@ -740,6 +967,7 @@ PHASE 4: Polish
   - Add new features
   - Change existing behavior
   - Skip animation verification
+  - Leave any Turkish in code
 
   **Parallelizable**: NO (final task)
 
@@ -754,6 +982,7 @@ PHASE 4: Polish
   - [ ] No TypeScript errors
   - [ ] CLS < 0.1 (no layout shift)
   - [ ] 60fps animations
+  - [ ] ALL CODE IN ENGLISH verified
   - [ ] memory-bank/progress.md updated
   - [ ] memory-bank/techContext.md updated
 
@@ -805,6 +1034,13 @@ cd frontend && npm run dev
 - [ ] Frontend builds without errors
 - [ ] Full user flow works
 
+**Code Quality (MANDATORY):**
+- [ ] ALL code in English
+- [ ] No Turkish variable names
+- [ ] No Turkish function names
+- [ ] No Turkish comments
+- [ ] Only messages/*.json contains Turkish
+
 **Design System (Linear Standard):**
 - [ ] Dark mode only (no light mode)
 - [ ] Zinc color palette applied
@@ -830,3 +1066,4 @@ cd frontend && npm run dev
 **i18n:**
 - [ ] TR/EN working
 - [ ] Persists on refresh
+- [ ] All UI strings translated
