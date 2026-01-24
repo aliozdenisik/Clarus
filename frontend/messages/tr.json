@@ -1,0 +1,46 @@
+{
+  "common": {
+    "search": "Ara",
+    "login": "Giriş Yap",
+    "register": "Kayıt Ol",
+    "logout": "Çıkış",
+    "loading": "Yükleniyor..."
+  },
+  "hero": {
+    "title": "Kutsal Metinlerde Arama",
+    "subtitle": "Kuran ve İncil'de yapay zeka destekli arama",
+    "searchPlaceholder": "Kutsal metinlerde ara...",
+    "signIn": "Giriş Yap",
+    "getStarted": "Başla"
+  },
+  "auth": {
+    "welcomeBack": "Tekrar Hoş Geldiniz",
+    "signInSubtitle": "Aramaya devam etmek için giriş yapın",
+    "createAccount": "Hesap Oluştur",
+    "registerSubtitle": "Kutsal metinleri keşfetmeye başlayın",
+    "email": "E-posta",
+    "password": "Şifre",
+    "name": "İsim",
+    "emailPlaceholder": "ornek@email.com",
+    "passwordPlaceholder": "••••••••",
+    "namePlaceholder": "Adınız",
+    "signingIn": "Giriş yapılıyor...",
+    "creatingAccount": "Hesap oluşturuluyor...",
+    "dontHaveAccount": "Hesabınız yok mu?",
+    "alreadyHaveAccount": "Zaten hesabınız var mı?",
+    "signUp": "Kayıt ol",
+    "loginSuccess": "Giriş başarılı!",
+    "loginFailed": "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.",
+    "registerSuccess": "Hesap başarıyla oluşturuldu!",
+    "registerFailed": "Kayıt başarısız. Lütfen tekrar deneyin."
+  },
+  "search": {
+    "title": "Kutsal Metinlerde Ara",
+    "placeholder": "Kuran'da ara...",
+    "searching": "Aranıyor...",
+    "searchButton": "Ara",
+    "resultsFound": "{count} sonuç bulundu",
+    "searchFailed": "Arama başarısız. Lütfen tekrar deneyin.",
+    "score": "Skor"
+  }
+}
