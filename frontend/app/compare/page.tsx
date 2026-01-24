@@ -1,0 +1,369 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { springPresets } from "@/lib/design-system";
+import { useAuth } from "@/lib/auth/auth-context";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { GlowCard } from "@/components/ui/glow-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import {
+  LogOut,
+  User,
+  BookOpen,
+  Clock,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  Quote,
+  Search,
+} from "lucide-react";
+
+interface ParagraphData {
+  title: string;
+  content: string;
+  citations: string[];
+}
+
+interface CompareResult {
+  topic: string;
+  essay: string;
+  paragraphs: ParagraphData[];
+  citations: Record<string, string[]>;
+  confidence: number;
+  total_verses: number;
+  total_citations: number;
+  latency_ms: number;
+}
+
+export default function ComparePage() {
+  const [topic, setTopic] = useState("");
+  const [result, setResult] = useState<CompareResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [expandedParagraphs, setExpandedParagraphs] = useState<Set<number>>(
+    new Set()
+  );
+  const { user, isLoading: authLoading, logout } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, authLoading, router]);
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
+    toast.success("Logged out successfully");
+  };
+
+  const toggleParagraph = (index: number) => {
+    setExpandedParagraphs((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  };
+
+  const handleCompare = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!topic.trim()) return;
+
+    setIsLoading(true);
+    setResult(null);
+    setExpandedParagraphs(new Set([0, 1, 2, 3, 4])); // Expand all by default
+
+    try {
+      const token = localStorage.getItem("access_token");
+      const response = await fetch("http://localhost:8000/api/compare/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ topic, use_multi_agent: true }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Compare failed");
+      }
+
+      const data = await response.json();
+      setResult(data);
+      toast.success(
+        `Analysis complete in ${(data.latency_ms / 1000).toFixed(1)}s`
+      );
+    } catch (error) {
+      toast.error("Analysis failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
+        <div className="text-[var(--color-text-secondary)]">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[var(--color-bg-app)] p-8">
+      <div className="mx-auto max-w-4xl">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={springPresets.snappy}
+          className="mb-6 flex items-center justify-between"
+        >
+          <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
+            <User className="h-4 w-4" />
+            <span className="text-sm">{user?.name || user?.email}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/search")}
+              className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+            >
+              <Search className="h-4 w-4" />
+              Search
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+          </div>
+        </motion.div>
+
+        {/* Title */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={springPresets.fluid}
+        >
+          <h1 className="mb-2 text-3xl font-bold text-[var(--color-text-primary)]">
+            Comparative Scripture Analysis
+          </h1>
+          <p className="mb-8 text-[var(--color-text-muted)]">
+            Multi-agent analysis across Quran, Old Testament, New Testament, and
+            Apocrypha
+          </p>
+
+          {/* Search Form */}
+          <form onSubmit={handleCompare} className="mb-8 flex gap-4">
+            <Input
+              type="text"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="Enter a topic (e.g., patience, forgiveness, creation)..."
+              className="flex-1"
+            />
+            <Button
+              type="submit"
+              disabled={isLoading || !topic.trim()}
+              className="bg-[var(--color-accent-primary)] min-w-[120px]"
+            >
+              {isLoading ? "Analyzing..." : "Analyze"}
+            </Button>
+          </form>
+        </motion.div>
+
+        {/* Loading State */}
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-4"
+          >
+            <div className="flex items-center gap-2 text-[var(--color-text-muted)] mb-4">
+              <Sparkles className="h-4 w-4 animate-pulse" />
+              <span>Running multi-agent analysis...</span>
+            </div>
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-32 w-full" />
+            ))}
+          </motion.div>
+        )}
+
+        {/* Results */}
+        <AnimatePresence mode="wait">
+          {result && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={springPresets.fluid}
+            >
+              {/* Stats Header */}
+              <GlowCard className="mb-6">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-[var(--color-accent-primary)]" />
+                    <span className="font-semibold text-[var(--color-text-primary)]">
+                      Analysis Complete
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-4 text-sm text-[var(--color-text-muted)]">
+                    <div className="flex items-center gap-1">
+                      <BookOpen className="h-4 w-4" />
+                      <span>{result.total_verses} verses</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Quote className="h-4 w-4" />
+                      <span>{result.total_citations} citations</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      <span>{(result.latency_ms / 1000).toFixed(1)}s</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span
+                        className={`font-medium ${
+                          result.confidence >= 0.8
+                            ? "text-green-400"
+                            : result.confidence >= 0.6
+                              ? "text-yellow-400"
+                              : "text-red-400"
+                        }`}
+                      >
+                        {(result.confidence * 100).toFixed(0)}% confidence
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </GlowCard>
+
+              {/* Paragraphs */}
+              <div className="space-y-4">
+                {result.paragraphs.map((paragraph, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      ...springPresets.snappy,
+                      delay: index * 0.1,
+                    }}
+                  >
+                    <GlowCard>
+                      {/* Paragraph Header */}
+                      <button
+                        onClick={() => toggleParagraph(index)}
+                        className="flex w-full items-center justify-between text-left"
+                      >
+                        <h3 className="text-lg font-semibold text-[var(--color-accent-primary)]">
+                          {paragraph.title}
+                        </h3>
+                        {expandedParagraphs.has(index) ? (
+                          <ChevronUp className="h-5 w-5 text-[var(--color-text-muted)]" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-[var(--color-text-muted)]" />
+                        )}
+                      </button>
+
+                      {/* Paragraph Content */}
+                      <AnimatePresence>
+                        {expandedParagraphs.has(index) && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={springPresets.snappy}
+                            className="overflow-hidden"
+                          >
+                            <div className="mt-4 border-t border-[var(--color-border-subtle)] pt-4">
+                              <p className="text-[var(--color-text-primary)] leading-relaxed whitespace-pre-wrap">
+                                {paragraph.content}
+                              </p>
+
+                              {/* Citations */}
+                              {paragraph.citations.length > 0 && (
+                                <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)]">
+                                  <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">
+                                    Citations:
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {paragraph.citations.map((citation, i) => (
+                                      <span
+                                        key={i}
+                                        className="inline-block px-2 py-1 text-xs rounded-md bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
+                                      >
+                                        {citation}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </GlowCard>
+                  </motion.div>
+                ))}
+              </div>
+
+              {/* All Citations Summary */}
+              {Object.keys(result.citations).length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    ...springPresets.snappy,
+                    delay: result.paragraphs.length * 0.1,
+                  }}
+                  className="mt-6"
+                >
+                  <GlowCard>
+                    <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
+                      All Citations by Source
+                    </h3>
+                    <div className="space-y-4">
+                      {Object.entries(result.citations).map(
+                        ([source, citations]) =>
+                          citations.length > 0 && (
+                            <div key={source}>
+                              <p className="text-sm font-medium text-[var(--color-accent-primary)] mb-2 capitalize">
+                                {source.replace("_", " ")}
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {citations.map((citation, i) => (
+                                  <span
+                                    key={i}
+                                    className="inline-block px-2 py-1 text-xs rounded-md bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
+                                  >
+                                    {citation}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                      )}
+                    </div>
+                  </GlowCard>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}

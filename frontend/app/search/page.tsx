@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -10,7 +10,7 @@ import { GlowCard } from "@/components/ui/glow-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { LogOut, User, GitCompare } from "lucide-react";
 
 interface SearchResult {
   source: string;
@@ -23,7 +23,7 @@ export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -31,6 +31,12 @@ export default function SearchPage() {
       router.push("/login");
     }
   }, [user, isLoading, router]);
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
+    toast.success("Logged out successfully");
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,6 +81,38 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen bg-[var(--color-bg-app)] p-8">
       <div className="mx-auto max-w-4xl">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={springPresets.snappy}
+          className="mb-6 flex items-center justify-between"
+        >
+          <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
+            <User className="h-4 w-4" />
+            <span className="text-sm">{user?.name || user?.email}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/compare")}
+              className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+            >
+              <GitCompare className="h-4 w-4" />
+              Compare
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+          </div>
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

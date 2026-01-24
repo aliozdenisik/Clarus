@@ -21,14 +21,15 @@
 
 ### Interfaces
 
-- [x] CLI with Rich formatting (primary interface)
+- [x] CLI with Rich formatting
 - [x] Python API for programmatic access
 - [x] FastAPI backend with async SQLAlchemy
 - [x] JWT + Google OAuth authentication
 - [x] SSE streaming endpoints
 - [x] Docker Compose (PostgreSQL + Qdrant)
+- [x] Next.js 15 Frontend (Web App)
 
-### Backend API (Frontend-Ready)
+### Backend API
 
 - [x] CORS production configuration
 - [x] Standardized error responses
@@ -38,6 +39,18 @@
 - [x] Metadata endpoints (collections, books, surahs)
 - [x] Pagination for list endpoints
 - [x] Input validation & XSS prevention
+- [x] Compare API with rich response schema
+
+### Frontend (Next.js 15)
+
+- [x] Landing page with animations
+- [x] Login / Register pages
+- [x] Search page (Kuran)
+- [x] Compare page (Multi-agent analysis)
+- [x] Linear-style dark theme
+- [x] Framer Motion animations
+- [x] GlowCard components
+- [x] Navigation between pages
 
 ### CLI Commands
 
@@ -50,12 +63,12 @@
 
 ## What's Left to Build
 
-### Frontend Development
+### Frontend Enhancements
 
-- [ ] Build React/Vue frontend
-- [ ] Authentication flow (login, register, OAuth)
-- [ ] Search UI with streaming
-- [ ] Preferences settings page
+- [ ] Bible search page
+- [ ] User preferences page
+- [ ] Search history page
+- [ ] SSE streaming integration
 
 ### Production Deployment
 
@@ -78,11 +91,11 @@
 | Core Search | Complete | 84%+ accuracy |
 | Answer Generation | Complete | Gemini 2.5 Flash |
 | Multi-Agent | Complete | 5-paragraph output |
-| CLI | Complete | Primary interface |
-| REST API | Complete | FastAPI + JWT + Refresh tokens |
-| Backend for Frontend | Complete | CORS, pagination, validation, metadata |
+| CLI | Complete | Rich formatting |
+| REST API | Complete | FastAPI + JWT |
+| Frontend | Complete | Next.js 15 + Framer Motion |
 | Docker Setup | Complete | PostgreSQL + Qdrant |
-| Frontend | Not Started | Backend ready for integration |
+| Browser Tests | Passed | Login, Search, Compare |
 
 ## Known Issues
 

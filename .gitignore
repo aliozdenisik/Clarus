@@ -134,3 +134,8 @@ qdrant_data/
 tmp/
 temp/
 *.tmp
+
+# ----------------
+# Test Credentials
+# ----------------
+test-credentials.json
