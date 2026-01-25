@@ -1,0 +1,137 @@
+'use client';
+
+import { useState, useCallback, useRef } from 'react';
+
+/**
+ * SSE Message format from backend
+ */
+interface SSEMessage {
+  type: 'token' | 'complete' | 'error';
+  content?: string;
+  result?: unknown;
+  error?: string;
+}
+
+/**
+ * Return type for useSSE hook
+ */
+export interface UseSSEReturn {
+  data: SSEMessage[];
+  isStreaming: boolean;
+  error: string | null;
+  startStream: (url: string) => void;
+  stopStream: () => void;
+}
+
+/**
+ * Hook for Server-Sent Events (SSE) streaming
+ * Supports both /api/stream/search and /api/stream/compare endpoints
+ *
+ * @returns {UseSSEReturn} Object with data, streaming state, error, and control functions
+ *
+ * @example
+ * const { data, isStreaming, error, startStream, stopStream } = useSSE();
+ *
+ * const handleSearch = () => {
+ *   startStream('/api/stream/search?q=test&source=quran');
+ * };
+ */
+export function useSSE(): UseSSEReturn {
+  const [data, setData] = useState<SSEMessage[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
+
+  const startStream = useCallback((url: string) => {
+    // Clean up any existing connection
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+
+    // Reset state
+    setData([]);
+    setError(null);
+    setIsStreaming(true);
+
+    try {
+      // Create EventSource with credentials for auth
+      const eventSource = new EventSource(url, {
+        withCredentials: true,
+      });
+
+      eventSourceRef.current = eventSource;
+
+      /**
+       * Handle incoming messages
+       * Expected format: data: {"type": "token", "content": "..."}
+       */
+      eventSource.onmessage = (event: MessageEvent) => {
+        try {
+          const message: SSEMessage = JSON.parse(event.data);
+
+          setData((prevData) => [...prevData, message]);
+
+          // Close stream on completion
+          if (message.type === 'complete') {
+            eventSource.close();
+            setIsStreaming(false);
+          }
+        } catch (parseError) {
+          const errorMsg =
+            parseError instanceof Error
+              ? parseError.message
+              : 'Failed to parse message';
+          setError(errorMsg);
+          eventSource.close();
+          setIsStreaming(false);
+        }
+      };
+
+      /**
+       * Handle connection open
+       */
+      eventSource.onopen = () => {
+        setError(null);
+      };
+
+      /**
+       * Handle errors
+       */
+      eventSource.onerror = (event: Event) => {
+        const eventSource = event.target as EventSource;
+
+        if (eventSource.readyState === EventSource.CLOSED) {
+          // Connection closed normally
+          setIsStreaming(false);
+        } else {
+          // Connection error
+          setError('Connection error. Stream interrupted.');
+          setIsStreaming(false);
+        }
+
+        eventSource.close();
+      };
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : 'Failed to start stream';
+      setError(errorMsg);
+      setIsStreaming(false);
+    }
+  }, []);
+
+  const stopStream = useCallback(() => {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+    setIsStreaming(false);
+  }, []);
+
+  return {
+    data,
+    isStreaming,
+    error,
+    startStream,
+    stopStream,
+  };
+}
