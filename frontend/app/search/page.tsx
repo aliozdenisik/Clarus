@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -9,8 +9,9 @@ import { Button } from "@/components/ui/button";
 import { GlowCard } from "@/components/ui/glow-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LogOut, User, GitCompare } from "lucide-react";
+import { SearchTabs, SearchSource } from "@/components/search/search-tabs";
 
 interface SearchResult {
   source: string;
@@ -19,12 +20,15 @@ interface SearchResult {
   score: number;
 }
 
-export default function SearchPage() {
+function SearchContent() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [activeTab, setActiveTab] = useState<SearchSource>("quran");
+  
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -32,10 +36,38 @@ export default function SearchPage() {
     }
   }, [user, isLoading, router]);
 
+  useEffect(() => {
+    const source = searchParams?.get("source") as SearchSource;
+    if (source && ["quran", "ot", "nt", "apocrypha"].includes(source)) {
+      setActiveTab(source);
+    }
+  }, [searchParams]);
+
   const handleLogout = async () => {
     await logout();
     router.push("/login");
     toast.success("Logged out successfully");
+  };
+
+  const handleTabChange = (tab: SearchSource) => {
+    setActiveTab(tab);
+    setResults([]);
+    router.push(`/search?source=${tab}`);
+  };
+
+  const getPlaceholder = () => {
+    switch (activeTab) {
+      case "quran":
+        return "Search Quran...";
+      case "ot":
+        return "Search Old Testament...";
+      case "nt":
+        return "Search New Testament...";
+      case "apocrypha":
+        return "Search Apocrypha...";
+      default:
+        return "Search...";
+    }
   };
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -47,13 +79,22 @@ export default function SearchPage() {
 
     try {
       const token = localStorage.getItem("access_token");
-      const response = await fetch("http://localhost:8000/api/search/quran", {
+      
+      let url = "http://localhost:8000/api/search/quran";
+      let body: any = { query, mode: "semantic", top_k: 10 };
+
+      if (activeTab !== "quran") {
+        url = "http://localhost:8000/api/search/bible";
+        body = { ...body, testament: activeTab };
+      }
+
+      const response = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ query, mode: "semantic", top_k: 10 }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -122,12 +163,14 @@ export default function SearchPage() {
             Search Sacred Texts
           </h1>
 
+          <SearchTabs activeTab={activeTab} onTabChange={handleTabChange} />
+
           <form onSubmit={handleSearch} className="mb-8 flex gap-4">
             <Input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search Quran..."
+              placeholder={getPlaceholder()}
               className="flex-1"
             />
             <Button
@@ -174,5 +217,19 @@ export default function SearchPage() {
         </AnimatePresence>
       </div>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
+          <div className="text-[var(--color-text-secondary)]">Loading...</div>
+        </div>
+      }
+    >
+      <SearchContent />
+    </Suspense>
   );
 }
