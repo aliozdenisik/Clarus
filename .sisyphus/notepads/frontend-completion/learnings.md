@@ -48,3 +48,14 @@
 ### Verification
 - `npm test -- --run apocrypha` passed (4 tests).
 - `npm run build` passed successfully.
+
+## Search Page SSE Integration (2026-01-25)
+
+- Integrated `useSSE` hook into `frontend/app/search/page.tsx`.
+- Implemented a "Hybrid" search mode:
+  - If `enable_streaming` is true: Uses `/api/stream/search` SSE endpoint.
+  - If `enable_streaming` is false: Uses standard `/api/search` batch endpoints.
+- **UI UX**: Added a dynamic "AI Answer" section that appears with typewriter effect during streaming.
+- **Error Handling**: Implemented automatic fallback to batch search if SSE connection fails.
+- **State Management**: Used `streamedAnswer` state to accumulate tokens and `results` state for final references.
+- **Note**: The SSE endpoint unifies Quran/Bible search via the `source` parameter, simplifying the logic compared to the separate batch endpoints.

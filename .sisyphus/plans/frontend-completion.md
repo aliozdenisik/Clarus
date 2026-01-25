@@ -712,7 +712,7 @@ Finalization:
 
 ### INTEGRATION PHASE
 
-- [ ] 11. Add SSE streaming to Search page
+- [x] 11. Add SSE streaming to Search page
 
   **What to do**:
   - Update `frontend/app/search/page.tsx`
