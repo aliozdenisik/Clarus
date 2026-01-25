@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LogOut, User, GitCompare } from "lucide-react";
 import { SearchTabs, SearchSource } from "@/components/search/search-tabs";
+import { useSSE } from "@/lib/hooks/use-sse";
+import { usePreferencesStore } from "@/lib/stores/preferences-store";
 
 interface SearchResult {
   source: string;
@@ -25,10 +27,14 @@ function SearchContent() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [activeTab, setActiveTab] = useState<SearchSource>("quran");
-  
+  const [streamedAnswer, setStreamedAnswer] = useState("");
+
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const { data: sseData, isStreaming, error: sseError, startStream } = useSSE();
+  const { enable_streaming } = usePreferencesStore();
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -43,6 +49,30 @@ function SearchContent() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    const tokens = sseData
+      .filter((m) => m.type === "token")
+      .map((m) => m.content)
+      .join("");
+    setStreamedAnswer(tokens);
+
+    const completeMsg = sseData.find((m) => m.type === "complete");
+    if (completeMsg?.result) {
+      const data = completeMsg.result as any;
+      if (data.results) {
+        setResults(data.results);
+        setIsSearching(false);
+      }
+    }
+  }, [sseData]);
+
+  useEffect(() => {
+    if (sseError) {
+      toast.error("Streaming failed. Switching to standard search.");
+      performBatchSearch();
+    }
+  }, [sseError]);
+
   const handleLogout = async () => {
     await logout();
     router.push("/login");
@@ -52,6 +82,7 @@ function SearchContent() {
   const handleTabChange = (tab: SearchSource) => {
     setActiveTab(tab);
     setResults([]);
+    setStreamedAnswer("");
     router.push(`/search?source=${tab}`);
   };
 
@@ -70,10 +101,7 @@ function SearchContent() {
     }
   };
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
-
+  const performBatchSearch = async () => {
     setIsSearching(true);
     setResults([]);
 
@@ -108,6 +136,23 @@ function SearchContent() {
       toast.error("Search failed. Please try again.");
     } finally {
       setIsSearching(false);
+    }
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+
+    setResults([]);
+    setStreamedAnswer("");
+
+    if (enable_streaming) {
+      setIsSearching(true);
+      const baseUrl = "http://localhost:8000";
+      const url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`;
+      startStream(url);
+    } else {
+      performBatchSearch();
     }
   };
 
@@ -175,19 +220,44 @@ function SearchContent() {
             />
             <Button
               type="submit"
-              disabled={isSearching || !query.trim()}
+              disabled={(isSearching && !isStreaming) || !query.trim()}
               className="bg-[var(--color-accent-primary)]"
             >
-              {isSearching ? "Searching..." : "Search"}
+              {isSearching || isStreaming ? "Searching..." : "Search"}
             </Button>
           </form>
         </motion.div>
 
-        {isSearching && (
+        <AnimatePresence>
+          {streamedAnswer && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-8"
+            >
+              <GlowCard className="bg-[var(--color-bg-secondary)]">
+                <h3 className="mb-2 text-sm font-medium text-[var(--color-accent-primary)]">AI Answer</h3>
+                <p className="whitespace-pre-wrap text-[var(--color-text-primary)]">{streamedAnswer}</p>
+              </GlowCard>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {isSearching && !results.length && !streamedAnswer && (
           <div className="space-y-4">
             {[...Array(3)].map((_, i) => (
               <Skeleton key={i} className="h-32 w-full" />
             ))}
+          </div>
+        )}
+
+        {isSearching && !results.length && streamedAnswer && (
+          <div className="space-y-4 mt-8">
+             <p className="text-sm text-[var(--color-text-muted)]">Fetching source verses...</p>
+             {[...Array(3)].map((_, i) => (
+               <Skeleton key={i} className="h-32 w-full" />
+             ))}
           </div>
         )}
 
