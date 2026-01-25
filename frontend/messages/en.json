@@ -7,7 +7,7 @@
     "loading": "Loading..."
   },
   "hero": {
-    "title": "Sacred Texts Search",
+    "title": "Clarus",
     "subtitle": "Explore Quran and Bible with AI-powered insights",
     "searchPlaceholder": "Search sacred texts...",
     "signIn": "Sign In",
@@ -35,7 +35,7 @@
     "registerFailed": "Registration failed. Please try again."
   },
   "search": {
-    "title": "Search Sacred Texts",
+    "title": "Search",
     "placeholder": "Search Quran...",
     "searching": "Searching...",
     "searchButton": "Search",
