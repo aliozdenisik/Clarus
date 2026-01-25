@@ -453,7 +453,7 @@ Finalization:
 
 ---
 
-- [ ] 8. Create User Preferences page with test
+- [x] 8. Create User Preferences page with test
 
   **What to do**:
   - Create test: `frontend/__tests__/settings.test.tsx`
@@ -517,7 +517,7 @@ Finalization:
 
 ---
 
-- [ ] 9. Create Quran Browse page with test
+- [x] 9. Create Quran Browse page with test
 
   **What to do**:
   - Create test: `frontend/__tests__/quran.test.tsx`
@@ -568,7 +568,7 @@ Finalization:
 
 ---
 
-- [ ] 10. Create Old Testament Browse page with test
+- [x] 10. Create Old Testament Browse page with test
 
   **What to do**:
   - Create test: `frontend/__tests__/old-testament.test.tsx`
