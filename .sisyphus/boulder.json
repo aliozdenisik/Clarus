@@ -1,20 +1,12 @@
 {
-  "active_plan": "/home/freyja/qdrant/.sisyphus/plans/frontend-completion.md",
-  "started_at": "2026-01-25T05:34:02.115Z",
-  "completed_at": "2026-01-25T17:35:00.000Z",
+  "active_plan": "/home/freyja/qdrant/.sisyphus/plans/qdrant-persistence-fix.md",
+  "started_at": "2026-01-25T18:34:22.781Z",
+  "completed_at": "2026-01-25T18:45:00.000Z",
   "session_ids": [
-    "ses_40c5ae68effes9yM9HLoRVRTA0",
-    "ses_40c28e147ffen4KbR6sMBeXZeR",
-    "ses_40b59e80effefecv6SKo0QIXoA",
-    "ses_40b08c2b1ffeXuG1QiJJWUPNF0",
-    "ses_40b029945ffeyaehutJv4incQi",
-    "ses_40b015c68ffeN9LbLp1C8252YW",
-    "ses_40aa15005ffe8bZP2GURZzZhuT",
-    "ses_40a994fe7ffeIPu5FLKqJYD9sH"
+    "ses_40990794bfferS4jAgQkmMELut"
   ],
-  "plan_name": "frontend-completion",
-  "status": "COMPLETE",
-  "tasks_completed": 15,
-  "tasks_total": 15,
-  "completion_percentage": 100
+  "plan_name": "qdrant-persistence-fix",
+  "status": "completed",
+  "tasks_completed": "10/10",
+  "all_acceptance_criteria_verified": true
 }
