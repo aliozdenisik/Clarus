@@ -66,8 +66,8 @@
 ### Frontend Enhancements
 
 - [ ] Bible search page
-- [ ] User preferences page
-- [ ] Search history page
+- [x] User preferences page
+- [x] Search history page
 - [ ] SSE streaming integration
 
 ### Production Deployment
