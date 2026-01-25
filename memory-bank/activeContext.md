@@ -6,9 +6,32 @@
 
 **Constraint**: Delegation System Failure (2026-01-24) - `delegate_task(run_in_background=false)` fails. Strategy: Execute synchronous tasks directly.
 
-**Frontend Enhancements** - Bible Search, User Preferences, Search History pages.
+**Rebranding Complete** - Project rebranded from "Sacred Texts Search" to "Clarus".
 
 ## Recent Changes
+
+### Rebranding to Clarus (2026-01-25)
+
+Project rebranded from "Sacred Texts Search" to "Clarus":
+
+**Documentation:**
+- README.md - Project title
+- memory-bank/projectbrief.md - Project title
+- memory-bank/productContext.md - UI references
+
+**Frontend:**
+- package.json - App name
+- app/layout.tsx - Metadata title
+- app/page.tsx - Landing page title
+- components/layout/navigation.tsx - Logo text
+- app/search/page.tsx - Page heading
+- messages/en.json - i18n strings
+- messages/tr.json - i18n strings
+
+**Backend:**
+- backend/src/__init__.py - Package comment
+- backend/app/main.py - FastAPI title & description
+- backend/main.py - CLI docstring & argparse description
 
 ### Frontend Development Complete (2026-01-24)
 
@@ -75,6 +98,13 @@ class CompareResponse:
     total_citations: int
     latency_ms: int
 ```
+
+### Qdrant Persistence Fix (2026-01-25)
+
+- **Root Cause**: Docker Desktop 4.55.0 bind mount sync issue
+- **Solution**: Switched from bind mount (`./qdrant_data`) to named volume (`qdrant_storage`)
+- **Verification**: All 43,055 vectors preserved across restart
+- **Collections**: quran_tr (6,236), bible_ot (23,145), bible_nt (7,957), bible_apocrypha (5,717)
 
 ### New/Modified Files
 - `frontend/app/compare/page.tsx` - Compare sayfasi (yeni)
