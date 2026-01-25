@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Sacred Texts Search",
+  title: "Clarus",
   description: "Search and explore Quran and Bible with AI-powered insights",
 };
 

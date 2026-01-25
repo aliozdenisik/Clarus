@@ -34,7 +34,7 @@ export default function HomePage() {
         className="text-center"
       >
         <h1 className="bg-gradient-to-r from-[var(--color-text-primary)] to-[var(--color-text-secondary)] bg-clip-text text-6xl font-bold text-transparent">
-          Sacred Texts Search
+          Clarus
         </h1>
         <p className="mt-4 text-lg text-[var(--color-text-secondary)]">
           Explore Quran and Bible with AI-powered insights

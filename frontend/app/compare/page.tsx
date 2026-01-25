@@ -22,6 +22,7 @@ import {
   Quote,
   Search,
 } from "lucide-react";
+import { usePreferencesStore } from "@/lib/stores/preferences-store";
 
 interface ParagraphData {
   title: string;
@@ -51,6 +52,7 @@ export default function ComparePage() {
   const router = useRouter();
 
   const { data: sseData, isStreaming, error: sseError, startStream } = useSSE();
+  const { enable_streaming } = usePreferencesStore();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -169,13 +171,26 @@ export default function ComparePage() {
     setResult(null);
     setExpandedParagraphs(new Set()); 
 
-    // Start SSE Stream
-    try {
-      const baseUrl = "http://localhost:8000";
-      const url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(topic)}`;
-      startStream(url);
-    } catch (err) {
-      // Fallback
+    // Check streaming preference
+    if (enable_streaming) {
+      // Start SSE Stream
+      try {
+        const baseUrl = "http://localhost:8000";
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+          toast.error("Authentication required");
+          performBatchCompare(topic);
+          return;
+        }
+        // SSE/EventSource doesn't support custom headers, so pass token as query param
+        const url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(topic)}&token=${encodeURIComponent(token)}`;
+        startStream(url);
+      } catch (err) {
+        // Fallback
+        performBatchCompare(topic);
+      }
+    } else {
+      // Use batch API directly
       performBatchCompare(topic);
     }
   };
