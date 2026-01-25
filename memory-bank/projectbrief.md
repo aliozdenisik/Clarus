@@ -1,4 +1,4 @@
-# Sacred Texts Ultimate RAG Search
+# Clarus
 
 ## Project Overview
 

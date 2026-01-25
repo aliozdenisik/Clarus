@@ -43,7 +43,7 @@ User Question -> Enhance -> Search -> Rerank -> Generate Answer
 
 ## User Experience Goals
 
-### Web App (General Interface)
+### Web App (Clarus)
 
 1. **Modern UI**: Next.js 15 app with Linear-style dark theme
 2. **Interactive**: Real-time search results, spring animations
