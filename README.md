@@ -1,4 +1,4 @@
-# Sacred Texts Ultimate RAG Search
+# Clarus
 
 Kuran-ı Kerim ve Incil icin **maksimum dogruluk odakli** Ultimate RAG arama sistemi.  
 Karsilastirmali teolojik analiz ve Multi-Agent LLM destekli cevap uretimi ozellikleri ile.

@@ -7,7 +7,7 @@
     "loading": "Yükleniyor..."
   },
   "hero": {
-    "title": "Kutsal Metinlerde Arama",
+    "title": "Clarus",
     "subtitle": "Kuran ve İncil'de yapay zeka destekli arama",
     "searchPlaceholder": "Kutsal metinlerde ara...",
     "signIn": "Giriş Yap",
@@ -35,7 +35,7 @@
     "registerFailed": "Kayıt başarısız. Lütfen tekrar deneyin."
   },
   "search": {
-    "title": "Kutsal Metinlerde Ara",
+    "title": "Ara",
     "placeholder": "Kuran'da ara...",
     "searching": "Aranıyor...",
     "searchButton": "Ara",
