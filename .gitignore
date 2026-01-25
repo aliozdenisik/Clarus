@@ -136,6 +136,11 @@ temp/
 *.tmp
 
 # ----------------
+# Sisyphus (AI Workflow State)
+# ----------------
+.sisyphus/
+
+# ----------------
 # Test Credentials
 # ----------------
 test-credentials.json
