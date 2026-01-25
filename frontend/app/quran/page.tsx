@@ -20,6 +20,19 @@ interface Surah {
   revelation_type: string;
 }
 
+// API response format (may vary)
+interface ApiSurah {
+  id: number;
+  name?: string;
+  name_arabic?: string;
+  transliteration?: string;
+  name_transliterated?: string;
+  total_verses?: number;
+  verse_count?: number;
+  type?: string;
+  revelation_type?: string;
+}
+
 export default function QuranPage() {
   const [surahs, setSurahs] = useState<Surah[]>([]);
   const [filter, setFilter] = useState("");
@@ -48,7 +61,17 @@ export default function QuranPage() {
         }
 
         const data = await response.json();
-        setSurahs(data);
+        // Handle wrapped response format: {success: true, data: {surahs: [...]}}
+        const surahList: ApiSurah[] = data.data?.surahs || data.surahs || data || [];
+        // Map API field names to component expected names
+        const mappedSurahs: Surah[] = surahList.map((s: ApiSurah) => ({
+          id: s.id,
+          name: s.name_arabic || s.name || '',
+          name_transliterated: s.transliteration || s.name_transliterated || s.name || '',
+          verse_count: s.total_verses || s.verse_count || 0,
+          revelation_type: s.type || s.revelation_type || '',
+        }));
+        setSurahs(mappedSurahs);
       } catch (error) {
         toast.error("Failed to load surahs");
       } finally {

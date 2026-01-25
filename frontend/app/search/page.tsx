@@ -149,7 +149,14 @@ function SearchContent() {
     if (enable_streaming) {
       setIsSearching(true);
       const baseUrl = "http://localhost:8000";
-      const url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`;
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("Authentication required");
+        performBatchSearch();
+        return;
+      }
+      // SSE/EventSource doesn't support custom headers, so pass token as query param
+      const url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}&token=${encodeURIComponent(token)}`;
       startStream(url);
     } else {
       performBatchSearch();
@@ -205,7 +212,7 @@ function SearchContent() {
           transition={springPresets.fluid}
         >
           <h1 className="mb-8 text-3xl font-bold text-[var(--color-text-primary)]">
-            Search Sacred Texts
+            Search
           </h1>
 
           <SearchTabs activeTab={activeTab} onTabChange={handleTabChange} />

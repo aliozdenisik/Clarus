@@ -42,7 +42,7 @@ export default function Navigation() {
           {/* Logo */}
           <div className="flex items-center">
             <Link href="/" className="text-xl font-bold text-white hover:text-purple-400 transition-colors">
-              Sacred Texts
+              Clarus
             </Link>
           </div>
 
