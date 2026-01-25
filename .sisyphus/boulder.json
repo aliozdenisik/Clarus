@@ -1,9 +1,15 @@
 {
-  "active_plan": "/home/freyja/qdrant/.sisyphus/plans/monorepo-reorganization.md",
-  "started_at": "2026-01-24T15:32:49.409Z",
+  "active_plan": "/home/freyja/qdrant/.sisyphus/plans/frontend-completion.md",
+  "started_at": "2026-01-25T05:34:02.115Z",
   "session_ids": [
-    "ses_40f5d0d9affeaJFN1mohRr9zNo",
-    "ses_40e8edb2bffeAUuj5e2qNlTcVL"
+    "ses_40c5ae68effes9yM9HLoRVRTA0",
+    "ses_40c28e147ffen4KbR6sMBeXZeR",
+    "ses_40b59e80effefecv6SKo0QIXoA",
+    "ses_40b08c2b1ffeXuG1QiJJWUPNF0",
+    "ses_40b029945ffeyaehutJv4incQi",
+    "ses_40b015c68ffeN9LbLp1C8252YW",
+    "ses_40aa15005ffe8bZP2GURZzZhuT",
+    "ses_40a994fe7ffeIPu5FLKqJYD9sH"
   ],
-  "plan_name": "monorepo-reorganization"
+  "plan_name": "frontend-completion"
 }
