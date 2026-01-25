@@ -620,7 +620,7 @@ Finalization:
 
 ---
 
-- [ ] 10a. Create New Testament Browse page with test
+- [x] 10a. Create New Testament Browse page with test
 
   **What to do**:
   - Create test: `frontend/__tests__/new-testament.test.tsx`
@@ -665,7 +665,7 @@ Finalization:
 
 ---
 
-- [ ] 10b. Create Apocrypha Browse page with test
+- [x] 10b. Create Apocrypha Browse page with test
 
   **What to do**:
   - Create test: `frontend/__tests__/apocrypha.test.tsx`

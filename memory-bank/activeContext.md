@@ -41,6 +41,12 @@ Next.js 15 + Framer Motion ile modern frontend tamamlandi:
 - Full form support for all 7 preference fields
 - Validated with TDD (5 tests passing)
 
+### Apocrypha Browse Page (2026-01-25)
+
+- Implemented `/apocrypha` with book listing and filtering
+- Copied pattern from Old Testament page
+- Validated with TDD (4 tests passing)
+
 ### Backend Compare API Fix (2026-01-24)
 
 `MultiAgentAnswer` serialization hatasi duzeltildi:

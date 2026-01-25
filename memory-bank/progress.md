@@ -46,6 +46,7 @@
 - [x] Landing page with animations
 - [x] Login / Register pages
 - [x] Search page (Kuran)
+- [x] Apocrypha browse page
 - [x] Compare page (Multi-agent analysis)
 - [x] Linear-style dark theme
 - [x] Framer Motion animations
