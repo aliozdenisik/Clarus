@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Sacred Texts Hybrid Search CLI
+Clarus CLI
 
 Command-line interface for indexing and searching Quran and Bible translations
 using Qdrant vector database with hybrid (semantic + BM25) search.
@@ -9,10 +9,11 @@ Usage:
     python main.py search "query"                        # Search Quran
     python main.py search-bible "query"                  # Search Bible
     python main.py info
-    
+
     # For indexing, use the unified script:
     python scripts/setup_all_collections.py
 """
+
 import argparse
 import sys
 from pathlib import Path
@@ -31,7 +32,12 @@ from rich import print as rprint
 
 from src.data_loader import QuranDataLoader
 from src.indexer import QuranIndexer, SemanticChunkIndexer
-from src.search import QuranSearcher, BibleSearcher, SemanticChunkSearcher, print_results
+from src.search import (
+    QuranSearcher,
+    BibleSearcher,
+    SemanticChunkSearcher,
+    print_results,
+)
 from src.bible_loader import BibleDataLoader
 from src.semantic_chunker import SemanticVerseChunker, analyze_surah_chunks
 
@@ -41,28 +47,30 @@ console = Console()
 def cmd_index(args):
     """Index Quran data into Qdrant"""
     import asyncio
-    
+
     console.print("\n[bold blue]Quran Hybrid Search Indexer[/bold blue]\n")
-    
+
     # Check for async mode
-    use_async = getattr(args, 'use_async', True)  # Default to async
+    use_async = getattr(args, "use_async", True)  # Default to async
     if use_async:
         console.print("[dim]Mode: Async (parallel embeddings)[/dim]")
-    
+
     # Load data
     console.print("[yellow]Loading Quran data...[/yellow]")
     loader = QuranDataLoader(data_dir=Path("data"))
     loader.download_data()
-    
+
     # Show stats
     stats = loader.get_stats()
-    console.print(f"[green][OK][/green] Loaded {stats['total_surahs']} surahs, {stats['total_verses']} verses")
-    
+    console.print(
+        f"[green][OK][/green] Loaded {stats['total_surahs']} surahs, {stats['total_verses']} verses"
+    )
+
     # Create chunks
     console.print("\n[yellow]Creating chunks...[/yellow]")
     chunks = loader.create_chunks(show_progress=True)
     console.print(f"[green][OK][/green] Created {len(chunks)} chunks")
-    
+
     # Initialize indexer
     console.print("\n[yellow]Initializing Qdrant...[/yellow]")
     try:
@@ -73,79 +81,92 @@ def cmd_index(args):
         console.print("\n[yellow]Make sure Qdrant is running:[/yellow]")
         console.print("  docker run -p 6333:6333 qdrant/qdrant")
         return 1
-    
+
     # Index chunks (use async for faster embedding)
     console.print("\n[yellow]Indexing chunks...[/yellow]")
     if use_async:
         console.print("[dim]Using async parallel embedding (2-3x faster)[/dim]")
-        count = asyncio.run(indexer.index_chunks_async(chunks, batch_size=args.batch_size))
+        count = asyncio.run(
+            indexer.index_chunks_async(chunks, batch_size=args.batch_size)
+        )
     else:
         count = indexer.index_chunks(chunks, batch_size=args.batch_size)
-    
+
     # Show info
     info = indexer.get_collection_info()
     console.print(f"\n[green][OK][/green] Successfully indexed {count} verses!")
     console.print(f"  Collection: {info['name']}")
     console.print(f"  Points: {info['points_count']}")
     console.print(f"  Status: {info['status']}")
-    
+
     return 0
+
 
 def display_quran_results(args, results, query):
     """Display Quran search results in a formatted table."""
     if not results:
         console.print("[yellow]No results found.[/yellow]")
         return 0
-    
+
     # Create results table
     table = Table(title=f"Search Results ({len(results)} found)", show_lines=True)
     table.add_column("#", style="dim", width=3)
     table.add_column("Reference", style="cyan", width=15)
     table.add_column("Score", style="green", width=8)
     table.add_column("Translation", style="white")
-    
+
     for i, result in enumerate(results, 1):
         # Handle both regular SearchResult and SemanticChunkSearchResult
-        if hasattr(result, 'verse_id'):
+        if hasattr(result, "verse_id"):
             # Regular single-verse result
             ref = f"{result.surah_id}:{result.verse_id}\n{result.surah_name}"
             translation = result.translation
         else:
             # SemanticChunkSearchResult (multi-verse)
-            verse_range = f"{result.start_verse}-{result.end_verse}" if result.start_verse != result.end_verse else str(result.start_verse)
+            verse_range = (
+                f"{result.start_verse}-{result.end_verse}"
+                if result.start_verse != result.end_verse
+                else str(result.start_verse)
+            )
             ref = f"{result.surah_id}:{verse_range}\n{result.surah_name} ({result.verse_count}v)"
             translation = result.combined_translation
-        
+
         score = f"{result.score:.3f}"
-        translation_display = translation[:150] + ("..." if len(translation) > 150 else "")
+        translation_display = translation[:150] + (
+            "..." if len(translation) > 150 else ""
+        )
         table.add_row(str(i), ref, score, translation_display)
-    
+
     console.print(table)
-    
+
     # Show detailed first result
-    if results and getattr(args, 'verbose', False):
+    if results and getattr(args, "verbose", False):
         first = results[0]
-        if hasattr(first, 'verse_id'):
+        if hasattr(first, "verse_id"):
             # Regular result
-            console.print(Panel(
-                f"[bold]{first.surah_name}[/bold] ({first.surah_transliteration})\n"
-                f"Ayet {first.verse_id} | {first.surah_type.capitalize()}\n\n"
-                f"[dim]Arabic:[/dim]\n{first.arabic_text}\n\n"
-                f"[dim]Translation:[/dim]\n{first.translation}",
-                title=f"[green]Top Result[/green]",
-                expand=False
-            ))
+            console.print(
+                Panel(
+                    f"[bold]{first.surah_name}[/bold] ({first.surah_transliteration})\n"
+                    f"Ayet {first.verse_id} | {first.surah_type.capitalize()}\n\n"
+                    f"[dim]Arabic:[/dim]\n{first.arabic_text}\n\n"
+                    f"[dim]Translation:[/dim]\n{first.translation}",
+                    title=f"[green]Top Result[/green]",
+                    expand=False,
+                )
+            )
         else:
             # Semantic chunk result
-            console.print(Panel(
-                f"[bold]{first.surah_name}[/bold] ({first.surah_transliteration})\n"
-                f"Ayetler {first.start_verse}-{first.end_verse} ({first.verse_count} ayet) | {first.surah_type.capitalize()}\n\n"
-                f"[dim]Arabic:[/dim]\n{first.combined_arabic}\n\n"
-                f"[dim]Translation:[/dim]\n{first.combined_translation}",
-                title=f"[green]Top Result (Semantic Chunk)[/green]",
-                expand=False
-            ))
-    
+            console.print(
+                Panel(
+                    f"[bold]{first.surah_name}[/bold] ({first.surah_transliteration})\n"
+                    f"Ayetler {first.start_verse}-{first.end_verse} ({first.verse_count} ayet) | {first.surah_type.capitalize()}\n\n"
+                    f"[dim]Arabic:[/dim]\n{first.combined_arabic}\n\n"
+                    f"[dim]Translation:[/dim]\n{first.combined_translation}",
+                    title=f"[green]Top Result (Semantic Chunk)[/green]",
+                    expand=False,
+                )
+            )
+
     return 0
 
 
@@ -153,24 +174,28 @@ def cmd_search(args):
     """Search Quran data using Ultimate RAG Pipeline"""
     query = args.query
     limit = args.limit
-    
+
     console.print("\n[bold magenta]🚀 Ultimate RAG Pipeline[/bold magenta]")
-    console.print("[dim]Combining: Enhance + Multi-Query + Semantic + RRF Fusion[/dim]\n")
-    
+    console.print(
+        "[dim]Combining: Enhance + Multi-Query + Semantic + RRF Fusion[/dim]\n"
+    )
+
     try:
         from src.ultimate_rag import UltimateRAG
+
         rag = UltimateRAG(
             qdrant_url=args.qdrant_url,
             enable_multi_query=True,
             search_mode="semantic",
             final_top_k=limit,
-            verbose=True
+            verbose=True,
         )
         results = rag.search_quran(query, top_k=limit)
         return display_quran_results(args, results, query)
     except Exception as e:
         console.print(f"[red][ERROR] Ultimate RAG failed: {e}[/red]")
         import traceback
+
         traceback.print_exc()
         return 1
 
@@ -178,22 +203,22 @@ def cmd_search(args):
 def cmd_info(args):
     """Show collection info for all or specific collections"""
     from qdrant_client import QdrantClient
-    
+
     console.print("\n[bold blue]Collection Info[/bold blue]\n")
-    
+
     try:
         client = QdrantClient(url=args.qdrant_url)
         collections = client.get_collections().collections
-        
+
         if not collections:
             console.print("[yellow]No collections found.[/yellow]")
             return 0
-        
+
         # Filter collections based on flags
-        show_quran = args.quran if hasattr(args, 'quran') else False
-        show_bible = args.bible if hasattr(args, 'bible') else False
+        show_quran = args.quran if hasattr(args, "quran") else False
+        show_bible = args.bible if hasattr(args, "bible") else False
         show_all = not show_quran and not show_bible
-        
+
         # Create main table
         table = Table(title="Available Collections", show_lines=True)
         table.add_column("Collection", style="cyan", width=20)
@@ -201,11 +226,11 @@ def cmd_info(args):
         table.add_column("Points", style="green", justify="right", width=10)
         table.add_column("Vectors", style="yellow", justify="right", width=10)
         table.add_column("Status", style="white", width=10)
-        
+
         found_any = False
         for collection in collections:
             name = collection.name
-            
+
             # Determine collection type
             if name == "quran_tr":
                 col_type = "Quran"
@@ -220,32 +245,34 @@ def cmd_info(args):
                 col_type = "Other"
                 if not show_all:
                     continue
-            
+
             # Get detailed info
             info = client.get_collection(name)
             points = info.points_count
-            vectors = getattr(info, 'vectors_count', points)
+            vectors = getattr(info, "vectors_count", points)
             status = str(info.status).replace("CollectionStatus.", "")
-            
+
             table.add_row(name, col_type, str(points), str(vectors), status)
             found_any = True
-        
+
         if found_any:
             console.print(table)
-            
+
             # Show summary
-            console.print("\n[dim]Tip: Use --quran or --bible to filter collections[/dim]")
+            console.print(
+                "\n[dim]Tip: Use --quran or --bible to filter collections[/dim]"
+            )
         else:
             console.print("[yellow]No matching collections found.[/yellow]")
-            
+
     except Exception as e:
         console.print(f"[red][ERROR] Error: {e}[/red]")
-        console.print("[dim]Make sure Qdrant is running: docker run -p 6333:6333 qdrant/qdrant[/dim]")
+        console.print(
+            "[dim]Make sure Qdrant is running: docker run -p 6333:6333 qdrant/qdrant[/dim]"
+        )
         return 1
-    
+
     return 0
-
-
 
 
 def cmd_search_bible(args):
@@ -253,80 +280,90 @@ def cmd_search_bible(args):
     query = args.query
     translation = args.translation
     limit = args.limit
-    
+
     console.print("\n[bold magenta]🚀 Ultimate RAG Pipeline (Bible)[/bold magenta]")
-    console.print("[dim]Combining: Enhance + Multi-Query + Semantic + RRF Fusion[/dim]\n")
-    
+    console.print(
+        "[dim]Combining: Enhance + Multi-Query + Semantic + RRF Fusion[/dim]\n"
+    )
+
     try:
         from src.ultimate_rag import UltimateRAG
+
         rag = UltimateRAG(
             qdrant_url=args.qdrant_url,
             enable_multi_query=True,
             search_mode="semantic",
             final_top_k=limit,
-            verbose=True
+            verbose=True,
         )
         results = rag.search_bible(query, translation=translation, top_k=limit)
-        
+
         if not results:
             console.print("[yellow]No results found.[/yellow]")
             return 0
-        
+
         # Create results table
         table = Table(title=f"Search Results ({len(results)} found)", show_lines=True)
         table.add_column("#", style="dim", width=3)
         table.add_column("Reference", style="cyan", width=20)
         table.add_column("Score", style="green", width=8)
         table.add_column("Text", style="white")
-        
+
         # Testament display mapping for Turkish
-        testament_names = {
-            "OT": "Eski Ahit",
-            "NT": "Yeni Ahit",
-            "Apocrypha": "Apokrif"
-        }
-        
+        testament_names = {"OT": "Eski Ahit", "NT": "Yeni Ahit", "Apocrypha": "Apokrif"}
+
         for i, result in enumerate(results, 1):
             testament_display = testament_names.get(result.testament, result.testament)
-            
+
             # Handle both single verses and semantic chunks
-            if hasattr(result, 'verse'):
+            if hasattr(result, "verse"):
                 # Single verse result
                 ref = f"{result.book_name} {result.chapter}:{result.verse}\n({testament_display})"
             else:
                 # Semantic chunk result
-                verse_range = f"{result.start_verse}-{result.end_verse}" if result.start_verse != result.end_verse else str(result.start_verse)
+                verse_range = (
+                    f"{result.start_verse}-{result.end_verse}"
+                    if result.start_verse != result.end_verse
+                    else str(result.start_verse)
+                )
                 ref = f"{result.book_name} {result.chapter}:{verse_range}\n({testament_display})"
-            
+
             score = f"{result.score:.3f}"
             text = result.text[:150] + ("..." if len(result.text) > 150 else "")
             table.add_row(str(i), ref, score, text)
-        
+
         console.print(table)
-        
+
         # Show detailed first result
         if results and args.verbose:
             first = results[0]
             testament_display = testament_names.get(first.testament, first.testament)
-            
-            if hasattr(first, 'verse'):
+
+            if hasattr(first, "verse"):
                 ref_text = f"{first.book_name} {first.chapter}:{first.verse}"
             else:
-                verse_range = f"{first.start_verse}-{first.end_verse}" if first.start_verse != first.end_verse else str(first.start_verse)
+                verse_range = (
+                    f"{first.start_verse}-{first.end_verse}"
+                    if first.start_verse != first.end_verse
+                    else str(first.start_verse)
+                )
                 ref_text = f"{first.book_name} {first.chapter}:{verse_range}"
-            
-            console.print(Panel(
-                f"[bold]{ref_text}[/bold]\n"
-                f"{testament_display} | {getattr(first, 'translation', getattr(first, 'verse_count', 'N/A') + ' verses')}\n\n"
-                f"[dim]Text:[/dim]\n{first.text}",
-                title=f"[green]Top Result[/green]",
-                expand=False
-            ))
-        
+
+            console.print(
+                Panel(
+                    f"[bold]{ref_text}[/bold]\n"
+                    f"{testament_display} | {getattr(first, 'translation', getattr(first, 'verse_count', 'N/A') + ' verses')}\n\n"
+                    f"[dim]Text:[/dim]\n{first.text}",
+                    title=f"[green]Top Result[/green]",
+                    expand=False,
+                )
+            )
+
         return 0
     except Exception as e:
         console.print(f"[red][ERROR] Ultimate RAG failed: {e}[/red]")
         import traceback
+
         traceback.print_exc()
         return 1
 
@@ -335,40 +372,44 @@ def cmd_ask(args):
     """Ask a question about Quran - Full RAG Q&A with citations"""
     query = args.query
     limit = args.limit
-    
+
     console.print("\n[bold magenta]🧠 Ultimate RAG Q&A Pipeline (Kuran)[/bold magenta]")
     console.print("[dim]Search + Answer Generation with Citations[/dim]\n")
-    
+
     try:
         from src.ultimate_rag import UltimateRAG
+
         rag = UltimateRAG(
             qdrant_url=args.qdrant_url,
             enable_multi_query=True,
             search_mode="semantic",
             final_top_k=limit,
-            verbose=True
+            verbose=True,
         )
-        
+
         answer = rag.ask_quran(query, top_k=limit)
-        
+
         # Display answer
-        console.print(Panel(
-            f"[bold white]{answer.text}[/bold white]",
-            title=f"[green]Cevap (Güven: {answer.confidence:.0%})[/green]",
-            subtitle=f"[dim]{len(answer.citations)} kaynak kullanıldı[/dim]",
-            expand=False
-        ))
-        
+        console.print(
+            Panel(
+                f"[bold white]{answer.text}[/bold white]",
+                title=f"[green]Cevap (Güven: {answer.confidence:.0%})[/green]",
+                subtitle=f"[dim]{len(answer.citations)} kaynak kullanıldı[/dim]",
+                expand=False,
+            )
+        )
+
         # Show citations
         if answer.citations:
             console.print("\n[cyan]📖 Kaynaklar:[/cyan]")
             for i, ref in enumerate(answer.citations, 1):
                 console.print(f"  {i}. {ref}")
-        
+
         return 0
     except Exception as e:
         console.print(f"[red][ERROR] Q&A failed: {e}[/red]")
         import traceback
+
         traceback.print_exc()
         return 1
 
@@ -378,40 +419,46 @@ def cmd_ask_bible(args):
     query = args.query
     translation = args.translation
     limit = args.limit
-    
-    console.print(f"\n[bold magenta]🧠 Ultimate RAG Q&A Pipeline (Bible - {translation})[/bold magenta]")
+
+    console.print(
+        f"\n[bold magenta]🧠 Ultimate RAG Q&A Pipeline (Bible - {translation})[/bold magenta]"
+    )
     console.print("[dim]Search + Answer Generation with Citations[/dim]\n")
-    
+
     try:
         from src.ultimate_rag import UltimateRAG
+
         rag = UltimateRAG(
             qdrant_url=args.qdrant_url,
             enable_multi_query=True,
             search_mode="semantic",
             final_top_k=limit,
-            verbose=True
+            verbose=True,
         )
-        
+
         answer = rag.ask_bible(query, translation=translation, top_k=limit)
-        
+
         # Display answer
-        console.print(Panel(
-            f"[bold white]{answer.text}[/bold white]",
-            title=f"[green]Cevap (Güven: {answer.confidence:.0%})[/green]",
-            subtitle=f"[dim]{len(answer.citations)} kaynak kullanıldı[/dim]",
-            expand=False
-        ))
-        
+        console.print(
+            Panel(
+                f"[bold white]{answer.text}[/bold white]",
+                title=f"[green]Cevap (Güven: {answer.confidence:.0%})[/green]",
+                subtitle=f"[dim]{len(answer.citations)} kaynak kullanıldı[/dim]",
+                expand=False,
+            )
+        )
+
         # Show citations
         if answer.citations:
             console.print("\n[cyan]📖 Kaynaklar:[/cyan]")
             for i, ref in enumerate(answer.citations, 1):
                 console.print(f"  {i}. {ref}")
-        
+
         return 0
     except Exception as e:
         console.print(f"[red][ERROR] Q&A failed: {e}[/red]")
         import traceback
+
         traceback.print_exc()
         return 1
 
@@ -422,23 +469,32 @@ def cmd_compare(args):
     verses = args.verses
     translation = args.translation
     multi_agent = args.multi_agent
-    
+
     if multi_agent:
-        console.print(f"\n[bold magenta]📚 Multi-Agent Comparative Scripture Analysis[/bold magenta]")
-        console.print("[dim]4 Specialist Agents (OT, NT, Apocrypha, Quran) + Synthesis Agent[/dim]\n")
+        console.print(
+            f"\n[bold magenta]📚 Multi-Agent Comparative Scripture Analysis[/bold magenta]"
+        )
+        console.print(
+            "[dim]4 Specialist Agents (OT, NT, Apocrypha, Quran) + Synthesis Agent[/dim]\n"
+        )
     else:
-        console.print("\n[bold magenta]📚 Comparative Scripture Analysis[/bold magenta]")
-        console.print("[dim]Searching Quran + Bible → Comparative Theological Essay[/dim]\n")
-    
+        console.print(
+            "\n[bold magenta]📚 Comparative Scripture Analysis[/bold magenta]"
+        )
+        console.print(
+            "[dim]Searching Quran + Bible → Comparative Theological Essay[/dim]\n"
+        )
+
     try:
         from src.comparative_rag import ComparativeRAG
+
         rag = ComparativeRAG(
             qdrant_url=args.qdrant_url,
             bible_translation=translation,
             verses_per_search=verses,
-            verbose=True
+            verbose=True,
         )
-        
+
         if multi_agent:
             result = rag.compare_multi_agent(query)
             essay_text = result.to_essay()
@@ -453,25 +509,28 @@ def cmd_compare(args):
             essay_text = result.essay
             confidence = result.confidence
             all_refs = result.all_references
-        
+
         # Display essay
-        console.print(Panel(
-            f"[white]{essay_text}[/white]",
-            title=f"[green]Karşılaştırmalı Analiz (Güven: {confidence:.0%})[/green]",
-            expand=False,
-            padding=(1, 2)
-        ))
-        
+        console.print(
+            Panel(
+                f"[white]{essay_text}[/white]",
+                title=f"[green]Karşılaştırmalı Analiz (Güven: {confidence:.0%})[/green]",
+                expand=False,
+                padding=(1, 2),
+            )
+        )
+
         # Show references
         if all_refs:
             console.print("\n[bold cyan]📖 Kullanılan Kaynaklar:[/bold cyan]")
             for i, ref in enumerate(all_refs, 1):
                 console.print(f"  {i}. {ref}")
-        
+
         return 0
     except Exception as e:
         console.print(f"[red][ERROR] Comparative analysis failed: {e}[/red]")
         import traceback
+
         traceback.print_exc()
         return 1
 
@@ -479,45 +538,54 @@ def cmd_compare(args):
 def cmd_build_bible_semantic_chunks(args):
     """Build semantic chunks for Bible"""
     import asyncio
+
     translation = args.translation
-    console.print(f"\n[bold blue]Building Semantic Chunks for Bible ({translation})[/bold blue]\n")
-    
+    console.print(
+        f"\n[bold blue]Building Semantic Chunks for Bible ({translation})[/bold blue]\n"
+    )
+
     from src.bible_semantic_chunker import BibleSemanticVerseChunker
-    
+
     # Initialize chunker
     chunker = BibleSemanticVerseChunker(
         translation=translation,
         similarity_threshold=args.threshold,
-        max_chunk_size=args.max_size
+        max_chunk_size=args.max_size,
     )
-    
+
     # Create chunks
     console.print("[yellow]Creating semantic chunks...[/yellow]")
     console.print(f"  Threshold: {args.threshold} ({args.threshold_type})")
     console.print(f"  Max Size: {args.max_size}")
-    
-    chunks = chunker.create_semantic_chunks(show_progress=True, threshold_type=args.threshold_type)
-    
+
+    chunks = chunker.create_semantic_chunks(
+        show_progress=True, threshold_type=args.threshold_type
+    )
+
     if args.analyze_only:
         console.print("[yellow]Analysis mode: Skipping indexing[/yellow]")
         return 0
-    
+
     # Save to file
     chunker.save_chunks(chunks)
-    
+
     # Index using async for speed
     console.print("\n[yellow]Indexing semantic chunks (async mode)...[/yellow]")
     from src.indexer import BibleSemanticChunkIndexer
-    
-    indexer = BibleSemanticChunkIndexer(translation=translation, qdrant_url=args.qdrant_url)
+
+    indexer = BibleSemanticChunkIndexer(
+        translation=translation, qdrant_url=args.qdrant_url
+    )
     indexer.create_collection(recreate=args.recreate)
-    
+
     # Use async indexer for 2-3x speed improvement
     asyncio.run(indexer.index_chunks_async(chunks))
-    
+
     info = indexer.get_collection_info()
-    console.print(f"\n[green][OK][/green] Successfully indexed {info['points_count']} semantic chunks!")
-    
+    console.print(
+        f"\n[green][OK][/green] Successfully indexed {info['points_count']} semantic chunks!"
+    )
+
     return 0
 
 
@@ -526,430 +594,392 @@ def cmd_search_bible_semantic(args):
     query = args.query
     limit = args.limit
     translation = args.translation
-    
+
     console.print(f"\n[bold blue]Bible Semantic Search ({translation})[/bold blue]\n")
     console.print(f"[dim]Query: {query}[/dim]")
-    
+
     from src.search import BibleSemanticChunkSearcher
-    
-    searcher = BibleSemanticChunkSearcher(translation=translation, qdrant_url=args.qdrant_url)
-    
+
+    searcher = BibleSemanticChunkSearcher(
+        translation=translation, qdrant_url=args.qdrant_url
+    )
+
     if not searcher.collection_exists():
         console.print(f"[red]Collection not found: {searcher.collection_name}[/red]")
-        console.print(f"[yellow]Run 'python main.py build-bible-semantic-chunks --translation {translation}' first.[/yellow]")
+        console.print(
+            f"[yellow]Run 'python main.py build-bible-semantic-chunks --translation {translation}' first.[/yellow]"
+        )
         return 1
-    
+
     results = searcher.search(query, limit=limit)
-    
+
     if not results:
         console.print("[yellow]No results found.[/yellow]")
         return 0
-    
+
     # Create results table
-    table = Table(title=f"Semantic Chunk Results ({len(results)} found)", show_lines=True)
+    table = Table(
+        title=f"Semantic Chunk Results ({len(results)} found)", show_lines=True
+    )
     table.add_column("#", style="dim", width=3)
     table.add_column("Reference", style="cyan", width=20)
     table.add_column("Score", style="green", width=8)
     table.add_column("Text", style="white")
-    
+
     for i, result in enumerate(results, 1):
-        verse_range = f"{result.start_verse}-{result.end_verse}" if result.start_verse != result.end_verse else str(result.start_verse)
+        verse_range = (
+            f"{result.start_verse}-{result.end_verse}"
+            if result.start_verse != result.end_verse
+            else str(result.start_verse)
+        )
         ref = f"{result.book_name} {result.chapter}:{verse_range}\n({result.testament})"
         score = f"{result.score:.3f}"
         text = result.text[:150] + ("..." if len(result.text) > 150 else "")
         table.add_row(str(i), ref, score, text)
-    
+
     console.print(table)
-    
+
     if results and args.verbose:
         first = results[0]
         verse_range = f"{first.start_verse}-{first.end_verse}"
-        console.print(Panel(
-            f"[bold]{first.book_name} {first.chapter}:{verse_range}[/bold]\n"
-            f"{first.testament} | {first.verse_count} verses\n\n"
-            f"[dim]Text:[/dim]\n{first.text}",
-            title=f"[green]Top Semantic Result[/green]",
-            expand=False
-        ))
-    
+        console.print(
+            Panel(
+                f"[bold]{first.book_name} {first.chapter}:{verse_range}[/bold]\n"
+                f"{first.testament} | {first.verse_count} verses\n\n"
+                f"[dim]Text:[/dim]\n{first.text}",
+                title=f"[green]Top Semantic Result[/green]",
+                expand=False,
+            )
+        )
+
     return 0
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Sacred Texts Hybrid Search - Semantic + BM25 search for Quran and Bible"
+        description="Clarus - Semantic + BM25 search for Quran and Bible"
     )
     parser.add_argument(
-        "--qdrant-url", 
-        default="http://localhost:6333",
-        help="Qdrant server URL"
+        "--qdrant-url", default="http://localhost:6333", help="Qdrant server URL"
     )
-    
+
     subparsers = parser.add_subparsers(dest="command", help="Commands")
-    
+
     # Setup command (Runs everything)
-    setup_parser = subparsers.add_parser("setup", help="Full setup: Index Quran, Semantic Chunks, and Bible")
+    setup_parser = subparsers.add_parser(
+        "setup", help="Full setup: Index Quran, Semantic Chunks, and Bible"
+    )
     setup_parser.add_argument(
-        "--recreate", 
+        "--recreate",
         action="store_true",
-        help="Recreate all collections (delete existing)"
+        help="Recreate all collections (delete existing)",
     )
     setup_parser.add_argument(
         "--batch-size",
         type=int,
         default=100,
-        help="Batch size for indexing (default: 100)"
+        help="Batch size for indexing (default: 100)",
     )
     # Bible args
     setup_parser.add_argument(
         "--translation",
         default="kjva",
         choices=["kjva", "kjv"],
-        help="Bible translation to index (default: kjva)"
+        help="Bible translation to index (default: kjva)",
     )
     setup_parser.add_argument(
         "--parallel",
         type=int,
         default=20,
-        help="Max concurrent API calls for Bible (default: 20)"
+        help="Max concurrent API calls for Bible (default: 20)",
     )
     # Semantic args
     setup_parser.add_argument(
         "--semantic-threshold",
         type=float,
         default=10,
-        help="Semantic chunking threshold (default: 10)"
+        help="Semantic chunking threshold (default: 10)",
     )
     setup_parser.add_argument(
         "--threshold-type",
         type=str,
         default="percentile",
         choices=["percentile", "gradient", "interquartile", "std", "fixed"],
-        help="Threshold strategy (default: percentile)"
+        help="Threshold strategy (default: percentile)",
     )
     setup_parser.add_argument(
         "--semantic-max-size",
         type=int,
         default=10,
-        help="Maximum verses per chunk (default: 10)"
+        help="Maximum verses per chunk (default: 10)",
     )
-    
+
     # Index Quran command
     index_parser = subparsers.add_parser("index", help="Index Quran data")
     index_parser.add_argument(
-        "--recreate", 
-        action="store_true",
-        help="Recreate collection (delete existing)"
+        "--recreate", action="store_true", help="Recreate collection (delete existing)"
     )
     index_parser.add_argument(
-        "--batch-size",
-        type=int,
-        default=100,
-        help="Batch size for indexing"
+        "--batch-size", type=int, default=100, help="Batch size for indexing"
     )
-    
+
     # Search Quran command (uses Ultimate RAG Pipeline)
     search_parser = subparsers.add_parser("search", help="Search Quran (Ultimate RAG)")
     search_parser.add_argument("query", help="Search query")
     search_parser.add_argument(
-        "--limit",
-        type=int,
-        default=10,
-        help="Number of results"
+        "--limit", type=int, default=10, help="Number of results"
     )
     search_parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Show detailed first result"
+        "-v", "--verbose", action="store_true", help="Show detailed first result"
     )
 
-    
     # Search Bible command (uses Ultimate RAG Pipeline)
-    search_bible_parser = subparsers.add_parser("search-bible", help="Search Bible (Ultimate RAG)")
+    search_bible_parser = subparsers.add_parser(
+        "search-bible", help="Search Bible (Ultimate RAG)"
+    )
     search_bible_parser.add_argument("query", help="Search query")
     search_bible_parser.add_argument(
         "--translation",
         default="kjva",
-        help="Bible translation to search (default: kjva)"
+        help="Bible translation to search (default: kjva)",
     )
     search_bible_parser.add_argument(
-        "--limit",
-        type=int,
-        default=10,
-        help="Number of results"
+        "--limit", type=int, default=10, help="Number of results"
     )
     search_bible_parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Show detailed first result"
+        "-v", "--verbose", action="store_true", help="Show detailed first result"
     )
-    
+
     # Ask Quran command (Full RAG Q&A with citations)
-    ask_parser = subparsers.add_parser("ask", help="Ask a question about Quran (RAG Q&A)")
+    ask_parser = subparsers.add_parser(
+        "ask", help="Ask a question about Quran (RAG Q&A)"
+    )
     ask_parser.add_argument("query", help="Question to ask")
     ask_parser.add_argument(
         "--limit",
         type=int,
         default=10,
-        help="Number of search results to use as context"
+        help="Number of search results to use as context",
     )
-    
+
     # Ask Bible command (Full RAG Q&A with citations)
-    ask_bible_parser = subparsers.add_parser("ask-bible", help="Ask a question about Bible (RAG Q&A)")
+    ask_bible_parser = subparsers.add_parser(
+        "ask-bible", help="Ask a question about Bible (RAG Q&A)"
+    )
     ask_bible_parser.add_argument("query", help="Question to ask")
     ask_bible_parser.add_argument(
-        "--translation",
-        default="kjva",
-        help="Bible translation to use (default: kjva)"
+        "--translation", default="kjva", help="Bible translation to use (default: kjva)"
     )
     ask_bible_parser.add_argument(
         "--limit",
         type=int,
         default=10,
-        help="Number of search results to use as context"
+        help="Number of search results to use as context",
     )
-    
+
     # Comparative Scripture Analysis command
-    compare_parser = subparsers.add_parser("compare", help="Comparative scripture analysis (Quran + Bible)")
+    compare_parser = subparsers.add_parser(
+        "compare", help="Comparative scripture analysis (Quran + Bible)"
+    )
     compare_parser.add_argument("query", help="Religious/philosophical question")
     compare_parser.add_argument(
         "--verses",
         type=int,
         default=20,
-        help="Verses per search type (default: 20, total: 80)"
+        help="Verses per search type (default: 20, total: 80)",
     )
     compare_parser.add_argument(
-        "--translation",
-        default="kjva",
-        help="Bible translation to use (default: kjva)"
+        "--translation", default="kjva", help="Bible translation to use (default: kjva)"
     )
     compare_parser.add_argument(
         "--multi-agent",
         action="store_true",
-        help="Use multi-agent system (5 paragraphs: OT, NT, Apocrypha, Quran, Synthesis)"
+        help="Use multi-agent system (5 paragraphs: OT, NT, Apocrypha, Quran, Synthesis)",
     )
-    
+
     # Info command
     info_parser = subparsers.add_parser("info", help="Show collection info")
     info_parser.add_argument(
-        "--quran",
-        action="store_true",
-        help="Show only Quran collection"
+        "--quran", action="store_true", help="Show only Quran collection"
     )
     info_parser.add_argument(
-        "--bible",
-        action="store_true",
-        help="Show only Bible collections"
+        "--bible", action="store_true", help="Show only Bible collections"
     )
-    
+
     # GraphRAG commands
     build_graph_parser = subparsers.add_parser(
-        "build-graph",
-        help="Build knowledge graph from indexed data"
+        "build-graph", help="Build knowledge graph from indexed data"
     )
     build_graph_parser.add_argument(
         "--collection",
         type=str,
         default="quran_tr",
-        help="Qdrant collection to process (default: quran_tr)"
+        help="Qdrant collection to process (default: quran_tr)",
     )
     build_graph_parser.add_argument(
         "--limit",
         type=int,
         default=None,
-        help="Limit documents to process (default: all)"
+        help="Limit documents to process (default: all)",
     )
     build_graph_parser.add_argument(
-        "--clear",
-        action="store_true",
-        help="Clear existing graph before building"
+        "--clear", action="store_true", help="Clear existing graph before building"
     )
     build_graph_parser.add_argument(
-        "--resume",
-        action="store_true",
-        help="Resume from last checkpoint"
+        "--resume", action="store_true", help="Resume from last checkpoint"
     )
     build_graph_parser.add_argument(
         "--workers",
         type=int,
         default=4,
-        help="Number of concurrent workers (default: 4)"
+        help="Number of concurrent workers (default: 4)",
     )
     build_graph_parser.add_argument(
         "--batch-size",
         type=int,
         default=50,
-        help="Batch size for fetching from Qdrant (default: 50)"
+        help="Batch size for fetching from Qdrant (default: 50)",
     )
     build_graph_parser.add_argument(
         "--checkpoint-interval",
         type=int,
         default=100,
-        help="Save checkpoint every N documents (default: 100)"
+        help="Save checkpoint every N documents (default: 100)",
     )
-    
+
     graph_info_parser = subparsers.add_parser(
-        "graph-info",
-        help="Show knowledge graph statistics"
+        "graph-info", help="Show knowledge graph statistics"
     )
-    
+
     # Add --graph flag to search parsers
     search_parser.add_argument(
         "--graph",
         action="store_true",
-        help="Enable graph-enhanced search (requires Neo4j)"
+        help="Enable graph-enhanced search (requires Neo4j)",
     )
     search_bible_parser.add_argument(
         "--graph",
         action="store_true",
-        help="Enable graph-enhanced search (requires Neo4j)"
+        help="Enable graph-enhanced search (requires Neo4j)",
     )
-    
+
     # Semantic Chunking commands
     build_chunks_parser = subparsers.add_parser(
-        "build-semantic-chunks",
-        help="Build semantic chunks from Quran verses"
+        "build-semantic-chunks", help="Build semantic chunks from Quran verses"
     )
     build_chunks_parser.add_argument(
         "--threshold",
         type=float,
         default=10,
-        help="Threshold value (meaning depends on --threshold-type, default: 10 for percentile)"
+        help="Threshold value (meaning depends on --threshold-type, default: 10 for percentile)",
     )
     build_chunks_parser.add_argument(
         "--threshold-type",
         type=str,
         default="percentile",
         choices=["percentile", "gradient", "interquartile", "std", "fixed"],
-        help="Threshold strategy: percentile (default), gradient, interquartile, std, or fixed"
+        help="Threshold strategy: percentile (default), gradient, interquartile, std, or fixed",
     )
     build_chunks_parser.add_argument(
         "--max-size",
         type=int,
         default=10,
-        help="Maximum verses per chunk (default: 10)"
+        help="Maximum verses per chunk (default: 10)",
     )
     build_chunks_parser.add_argument(
-        "--recreate",
-        action="store_true",
-        help="Recreate collection (delete existing)"
+        "--recreate", action="store_true", help="Recreate collection (delete existing)"
     )
     build_chunks_parser.add_argument(
-        "--analyze-only",
-        action="store_true",
-        help="Only analyze chunks, don't index"
+        "--analyze-only", action="store_true", help="Only analyze chunks, don't index"
     )
-    
+
     search_semantic_parser = subparsers.add_parser(
-        "search-semantic",
-        help="Search using semantic chunks"
+        "search-semantic", help="Search using semantic chunks"
     )
     search_semantic_parser.add_argument("query", help="Search query")
     search_semantic_parser.add_argument(
-        "--limit",
-        type=int,
-        default=5,
-        help="Number of results (default: 5)"
+        "--limit", type=int, default=5, help="Number of results (default: 5)"
     )
     search_semantic_parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Show detailed results"
+        "-v", "--verbose", action="store_true", help="Show detailed results"
     )
-    
+
     analyze_chunks_parser = subparsers.add_parser(
-        "analyze-chunks",
-        help="Analyze semantic chunks for a surah"
+        "analyze-chunks", help="Analyze semantic chunks for a surah"
     )
     analyze_chunks_parser.add_argument(
-        "--surah",
-        type=int,
-        default=1,
-        help="Surah number to analyze (default: 1)"
+        "--surah", type=int, default=1, help="Surah number to analyze (default: 1)"
     )
-    
+
     # Bible Semantic Chunking commands
     build_bible_chunks_parser = subparsers.add_parser(
-        "build-bible-semantic-chunks",
-        help="Build semantic chunks from Bible verses"
+        "build-bible-semantic-chunks", help="Build semantic chunks from Bible verses"
     )
     build_bible_chunks_parser.add_argument(
         "--translation",
         default="kjva",
         choices=["kjva", "kjv"],
-        help="Bible translation (default: kjva)"
+        help="Bible translation (default: kjva)",
     )
     build_bible_chunks_parser.add_argument(
         "--threshold",
         type=float,
         default=0.75,
-        help="Similarity threshold (default: 0.75)"
+        help="Similarity threshold (default: 0.75)",
     )
     build_bible_chunks_parser.add_argument(
         "--threshold-type",
         type=str,
         default="percentile",
         choices=["percentile", "gradient", "interquartile", "std", "fixed"],
-        help="Threshold strategy (default: percentile)"
+        help="Threshold strategy (default: percentile)",
     )
     build_bible_chunks_parser.add_argument(
         "--max-size",
         type=int,
         default=10,
-        help="Maximum verses per chunk (default: 10)"
+        help="Maximum verses per chunk (default: 10)",
     )
     build_bible_chunks_parser.add_argument(
-        "--recreate",
-        action="store_true",
-        help="Recreate collection (delete existing)"
+        "--recreate", action="store_true", help="Recreate collection (delete existing)"
     )
     build_bible_chunks_parser.add_argument(
-        "--analyze-only",
-        action="store_true",
-        help="Only analyze chunks, don't index"
+        "--analyze-only", action="store_true", help="Only analyze chunks, don't index"
     )
-    
+
     search_bible_semantic_parser = subparsers.add_parser(
-        "search-bible-semantic",
-        help="Search Bible semantic chunks"
+        "search-bible-semantic", help="Search Bible semantic chunks"
     )
     search_bible_semantic_parser.add_argument("query", help="Search query")
     search_bible_semantic_parser.add_argument(
         "--translation",
         default="kjva",
-        help="Bible translation to search (default: kjva)"
+        help="Bible translation to search (default: kjva)",
     )
     search_bible_semantic_parser.add_argument(
-        "--limit",
-        type=int,
-        default=5,
-        help="Number of results (default: 5)"
+        "--limit", type=int, default=5, help="Number of results (default: 5)"
     )
     search_bible_semantic_parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Show detailed results"
+        "-v", "--verbose", action="store_true", help="Show detailed results"
     )
-    
+
     # Cache management commands
     cache_info_parser = subparsers.add_parser(
-        "cache-info",
-        help="Show semantic cache statistics"
+        "cache-info", help="Show semantic cache statistics"
     )
-    
+
     cache_clear_parser = subparsers.add_parser(
-        "cache-clear",
-        help="Clear semantic cache"
+        "cache-clear", help="Clear semantic cache"
     )
     cache_clear_parser.add_argument(
         "--older-than",
         type=int,
         default=None,
-        help="Only clear entries older than N hours (default: clear all)"
+        help="Only clear entries older than N hours (default: clear all)",
     )
-    
+
     args = parser.parse_args()
-    
+
     if args.command == "index":
         return cmd_index(args)
     elif args.command == "search":
@@ -993,28 +1023,28 @@ def main():
 def cmd_cache_info(args):
     """Show semantic cache statistics"""
     console.print("\n[bold blue]Semantic Cache Info[/bold blue]\n")
-    
+
     try:
         from src.semantic_cache import SemanticCache
-        
+
         cache = SemanticCache(qdrant_url=args.qdrant_url)
         stats = cache.get_stats()
-        
+
         table = Table(title="Cache Statistics")
         table.add_column("Metric", style="cyan")
         table.add_column("Value", style="green", justify="right")
-        
+
         table.add_row("Total Entries", str(stats.total_entries))
         table.add_row("Session Hits", str(stats.hits))
         table.add_row("Session Misses", str(stats.misses))
         table.add_row("Hit Rate", f"{stats.hit_rate:.1%}")
         table.add_row("Avg Similarity", f"{stats.avg_similarity:.3f}")
         table.add_row("Oldest Entry", f"{stats.oldest_entry_hours:.1f} hours")
-        
+
         console.print(table)
-        
+
         return 0
-        
+
     except Exception as e:
         console.print(f"[red][ERROR] {e}[/red]")
         return 1
@@ -1023,23 +1053,25 @@ def cmd_cache_info(args):
 def cmd_cache_clear(args):
     """Clear semantic cache"""
     console.print("\n[bold blue]Clear Semantic Cache[/bold blue]\n")
-    
+
     try:
         from src.semantic_cache import SemanticCache
-        
+
         cache = SemanticCache(qdrant_url=args.qdrant_url)
-        older_than = getattr(args, 'older_than', None)
-        
+        older_than = getattr(args, "older_than", None)
+
         if older_than:
-            console.print(f"[yellow]Clearing entries older than {older_than} hours...[/yellow]")
+            console.print(
+                f"[yellow]Clearing entries older than {older_than} hours...[/yellow]"
+            )
         else:
             console.print("[yellow]Clearing all cache entries...[/yellow]")
-        
+
         deleted = cache.clear(older_than_hours=older_than)
         console.print(f"[green][OK][/green] Cleared {deleted} cache entries")
-        
+
         return 0
-        
+
     except Exception as e:
         console.print(f"[red][ERROR] {e}[/red]")
         return 1
@@ -1048,22 +1080,22 @@ def cmd_cache_clear(args):
 def cmd_build_graph(args):
     """Build knowledge graph from indexed data"""
     console.print("\n[bold blue]Building Knowledge Graph[/bold blue]\n")
-    
+
     try:
         from src.graph_rag import GraphRAGBuilder
-        
+
         builder = GraphRAGBuilder(qdrant_url=args.qdrant_url)
-        
+
         if args.clear:
             console.print("[yellow]Clearing existing graph...[/yellow]")
             builder.clear_graph()
-        
+
         console.print(f"[yellow]Building graph from '{args.collection}'...[/yellow]")
-        
+
         # Get batch_size from args (argparse uses hyphen, we need to use getattr)
-        batch_size = getattr(args, 'batch_size', 50)
-        checkpoint_interval = getattr(args, 'checkpoint_interval', 100)
-        
+        batch_size = getattr(args, "batch_size", 50)
+        checkpoint_interval = getattr(args, "checkpoint_interval", 100)
+
         entities, relationships = builder.build_from_collection(
             collection_name=args.collection,
             limit=args.limit,
@@ -1071,22 +1103,22 @@ def cmd_build_graph(args):
             show_progress=True,
             workers=args.workers,
             resume=args.resume,
-            checkpoint_interval=checkpoint_interval
+            checkpoint_interval=checkpoint_interval,
         )
-        
+
         # Show stats
         stats = builder.get_graph_stats()
         console.print(f"\n[green][OK][/green] Knowledge graph built!")
         console.print(f"  Nodes: {stats['total_nodes']}")
         console.print(f"  Relationships: {stats['total_relationships']}")
-        
-        if stats.get('entity_types'):
+
+        if stats.get("entity_types"):
             console.print("\n  Entity types:")
-            for etype, count in stats['entity_types'].items():
+            for etype, count in stats["entity_types"].items():
                 console.print(f"    - {etype}: {count}")
-        
+
         return 0
-        
+
     except ImportError as e:
         console.print(f"[red][ERROR] Neo4j not available: {e}[/red]")
         console.print("[dim]Install with: pip install neo4j[/dim]")
@@ -1100,34 +1132,34 @@ def cmd_build_graph(args):
 def cmd_graph_info(args):
     """Show knowledge graph statistics"""
     console.print("\n[bold blue]Knowledge Graph Info[/bold blue]\n")
-    
+
     try:
         from src.graph_rag import GraphRAGBuilder
-        
+
         builder = GraphRAGBuilder(qdrant_url=args.qdrant_url)
         stats = builder.get_graph_stats()
-        
+
         table = Table(title="Graph Statistics")
         table.add_column("Metric", style="cyan")
         table.add_column("Value", style="green", justify="right")
-        
-        table.add_row("Total Nodes", str(stats['total_nodes']))
-        table.add_row("Total Relationships", str(stats['total_relationships']))
-        
+
+        table.add_row("Total Nodes", str(stats["total_nodes"]))
+        table.add_row("Total Relationships", str(stats["total_relationships"]))
+
         console.print(table)
-        
-        if stats.get('entity_types'):
+
+        if stats.get("entity_types"):
             type_table = Table(title="Entity Types")
             type_table.add_column("Type", style="cyan")
             type_table.add_column("Count", style="green", justify="right")
-            
-            for etype, count in stats['entity_types'].items():
+
+            for etype, count in stats["entity_types"].items():
                 type_table.add_row(etype, str(count))
-            
+
             console.print(type_table)
-        
+
         return 0
-        
+
     except ImportError as e:
         console.print(f"[red][ERROR] Neo4j not available: {e}[/red]")
         return 1
@@ -1139,30 +1171,38 @@ def cmd_graph_info(args):
 def cmd_build_semantic_chunks(args):
     """Build semantic chunks from Quran verses"""
     console.print("\n[bold blue]Building Semantic Chunks[/bold blue]\n")
-    
-    threshold_type = getattr(args, 'threshold_type', 'percentile')
-    
+
+    threshold_type = getattr(args, "threshold_type", "percentile")
+
     try:
         # Initialize chunker
-        console.print(f"[yellow]Initializing chunker (threshold={args.threshold}, type={threshold_type}, max_size={args.max_size})...[/yellow]")
+        console.print(
+            f"[yellow]Initializing chunker (threshold={args.threshold}, type={threshold_type}, max_size={args.max_size})...[/yellow]"
+        )
         chunker = SemanticVerseChunker(
             similarity_threshold=args.threshold,
             max_chunk_size=args.max_size,
-            respect_surah_boundary=True
+            respect_surah_boundary=True,
         )
-        
+
         # Create chunks with specified threshold type
-        console.print("[yellow]Creating semantic chunks (this may take a while)...[/yellow]")
-        chunks = chunker.create_semantic_chunks(show_progress=True, threshold_type=threshold_type)
-        
+        console.print(
+            "[yellow]Creating semantic chunks (this may take a while)...[/yellow]"
+        )
+        chunks = chunker.create_semantic_chunks(
+            show_progress=True, threshold_type=threshold_type
+        )
+
         # Show statistics
         stats = chunker.get_statistics()
         console.print(f"\n[green][OK][/green] Created {len(chunks)} semantic chunks")
         console.print(f"  Total verses: {stats['num_verses']}")
-        console.print(f"  Avg chunk size: {stats['num_verses'] / len(chunks):.2f} verses")
+        console.print(
+            f"  Avg chunk size: {stats['num_verses'] / len(chunks):.2f} verses"
+        )
         console.print(f"  Similarity mean: {stats['similarity_mean']:.4f}")
         console.print(f"  Similarity std: {stats['similarity_std']:.4f}")
-        
+
         if args.analyze_only:
             # Just save and analyze
             chunker.save_chunks(chunks)
@@ -1170,28 +1210,31 @@ def cmd_build_semantic_chunks(args):
             for surah_id in [1, 2, 3]:
                 analyze_surah_chunks(chunks, surah_id)
             return 0
-        
+
         # Index chunks
         console.print("\n[yellow]Indexing semantic chunks to Qdrant...[/yellow]")
         indexer = SemanticChunkIndexer(qdrant_url=args.qdrant_url)
         indexer.create_collection(recreate=args.recreate)
         count = indexer.index_chunks(chunks, batch_size=50)
-        
+
         # Save chunks for later use
         chunker.save_chunks(chunks)
-        
+
         # Show info
         info = indexer.get_collection_info()
-        console.print(f"\n[green][OK][/green] Successfully indexed {count} semantic chunks!")
+        console.print(
+            f"\n[green][OK][/green] Successfully indexed {count} semantic chunks!"
+        )
         console.print(f"  Collection: {info['name']}")
         console.print(f"  Points: {info['points_count']}")
         console.print(f"  Status: {info['status']}")
-        
+
         return 0
-        
+
     except Exception as e:
         console.print(f"[red][ERROR] {e}[/red]")
         import traceback
+
         traceback.print_exc()
         return 1
 
@@ -1200,103 +1243,122 @@ def cmd_search_semantic(args):
     """Search using semantic chunks"""
     query = args.query
     limit = args.limit
-    
+
     console.print(f"\n[bold magenta]🔍 Semantic Chunk Search[/bold magenta]")
     console.print(f"[dim]Query: {query}[/dim]\n")
-    
+
     try:
         searcher = SemanticChunkSearcher(qdrant_url=args.qdrant_url)
-        
+
         if not searcher.collection_exists():
             console.print("[yellow]Semantic chunks collection not found.[/yellow]")
-            console.print("[dim]Run 'python main.py build-semantic-chunks' first.[/dim]")
+            console.print(
+                "[dim]Run 'python main.py build-semantic-chunks' first.[/dim]"
+            )
             return 1
-        
+
         results = searcher.hybrid_search(query, limit=limit)
-        
+
         if not results:
             console.print("[yellow]No results found.[/yellow]")
             return 0
-        
+
         # Create results table
-        table = Table(title=f"Semantic Chunk Results ({len(results)} found)", show_lines=True)
+        table = Table(
+            title=f"Semantic Chunk Results ({len(results)} found)", show_lines=True
+        )
         table.add_column("#", style="dim", width=3)
         table.add_column("Reference", style="cyan", width=18)
         table.add_column("Score", style="green", width=8)
         table.add_column("Verses", style="yellow", width=6)
         table.add_column("Combined Translation", style="white")
-        
+
         for i, result in enumerate(results, 1):
-            verse_range = f"{result.start_verse}-{result.end_verse}" if result.start_verse != result.end_verse else str(result.start_verse)
+            verse_range = (
+                f"{result.start_verse}-{result.end_verse}"
+                if result.start_verse != result.end_verse
+                else str(result.start_verse)
+            )
             ref = f"{result.surah_id}:{verse_range}\n{result.surah_name}"
             score = f"{result.score:.3f}"
             verses = str(result.verse_count)
-            translation = result.combined_translation[:180] + ("..." if len(result.combined_translation) > 180 else "")
+            translation = result.combined_translation[:180] + (
+                "..." if len(result.combined_translation) > 180 else ""
+            )
             table.add_row(str(i), ref, score, verses, translation)
-        
+
         console.print(table)
-        
+
         # Show detailed first result
         if args.verbose and results:
             first = results[0]
-            console.print(Panel(
-                f"[bold]{first.surah_name}[/bold] ({first.surah_transliteration})\n"
-                f"Verses {first.start_verse}-{first.end_verse} | {first.surah_type.capitalize()}\n"
-                f"Verse IDs: {', '.join(first.verse_ids)}\n\n"
-                f"[dim]Arabic:[/dim]\n{first.combined_arabic}\n\n"
-                f"[dim]Translation:[/dim]\n{first.combined_translation}",
-                title=f"[green]Top Result ({first.verse_count} verses)[/green]",
-                expand=False
-            ))
-        
+            console.print(
+                Panel(
+                    f"[bold]{first.surah_name}[/bold] ({first.surah_transliteration})\n"
+                    f"Verses {first.start_verse}-{first.end_verse} | {first.surah_type.capitalize()}\n"
+                    f"Verse IDs: {', '.join(first.verse_ids)}\n\n"
+                    f"[dim]Arabic:[/dim]\n{first.combined_arabic}\n\n"
+                    f"[dim]Translation:[/dim]\n{first.combined_translation}",
+                    title=f"[green]Top Result ({first.verse_count} verses)[/green]",
+                    expand=False,
+                )
+            )
+
         return 0
-        
+
     except Exception as e:
         console.print(f"[red][ERROR] {e}[/red]")
         import traceback
+
         traceback.print_exc()
         return 1
 
 
 def cmd_analyze_chunks(args):
     """Analyze semantic chunks for a specific surah"""
-    console.print(f"\n[bold blue]Analyzing Semantic Chunks - Surah {args.surah}[/bold blue]\n")
-    
+    console.print(
+        f"\n[bold blue]Analyzing Semantic Chunks - Surah {args.surah}[/bold blue]\n"
+    )
+
     try:
         from pathlib import Path
-        
+
         chunks_path = Path("data/semantic_chunks.json")
-        
+
         if not chunks_path.exists():
             console.print("[yellow]Semantic chunks file not found.[/yellow]")
-            console.print("[dim]Run 'python main.py build-semantic-chunks' first.[/dim]")
+            console.print(
+                "[dim]Run 'python main.py build-semantic-chunks' first.[/dim]"
+            )
             return 1
-        
+
         # Load chunks
         chunker = SemanticVerseChunker()
         chunks = chunker.load_chunks(chunks_path)
-        
+
         # Analyze specified surah
         analyze_surah_chunks(chunks, args.surah)
-        
+
         return 0
-        
+
     except Exception as e:
         console.print(f"[red][ERROR] {e}[/red]")
         return 1
 
 
-
 def cmd_setup(args):
     """Redirect to unified setup script"""
-    console.print("\n[bold yellow]⚠️  Deprecated: Use unified script instead[/bold yellow]\n")
+    console.print(
+        "\n[bold yellow]⚠️  Deprecated: Use unified script instead[/bold yellow]\n"
+    )
     console.print("Run the following command for complete setup:")
     console.print("  [cyan]python scripts/setup_all_collections.py[/cyan]\n")
-    console.print("This creates all collections (quran_tr, bible_ot, bible_nt, bible_apocrypha)")
+    console.print(
+        "This creates all collections (quran_tr, bible_ot, bible_nt, bible_apocrypha)"
+    )
     console.print("with testament-split Bible indexing for better search accuracy.\n")
     return 0
 
 
 if __name__ == "__main__":
     sys.exit(main())
-

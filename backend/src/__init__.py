@@ -1,4 +1,4 @@
-# Sacred Texts Hybrid Search Package
+# Clarus - Hybrid Search Package
 from .data_loader import QuranDataLoader
 from .embeddings import DenseEncoder, SparseEncoder, HybridEncoder, AsyncDenseEncoder
 from .indexer import QuranIndexer, SemanticChunkIndexer

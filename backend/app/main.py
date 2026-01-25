@@ -21,8 +21,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Holly Search API",
-    description="Sacred Texts RAG Search API - Kuran, Incil, Tevrat",
+    title="Clarus API",
+    description="Clarus RAG Search API - Kuran, Incil, Tevrat",
     version="2.0.0",
     lifespan=lifespan,
 )
