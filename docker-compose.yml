@@ -26,7 +26,7 @@ services:
       - "6333:6333"
       - "6334:6334"
     volumes:
-      - ./qdrant_data:/qdrant/storage
+      - qdrant_storage:/qdrant/storage
     environment:
       QDRANT__SERVICE__GRPC_PORT: 6334
 
@@ -46,3 +46,4 @@ services:
 
 volumes:
   postgres_data:
+  qdrant_storage:
