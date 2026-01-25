@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -10,6 +10,7 @@ import { GlowCard } from "@/components/ui/glow-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useSSE } from "@/lib/hooks/use-sse";
 import {
   LogOut,
   User,
@@ -49,6 +50,8 @@ export default function ComparePage() {
   const { user, isLoading: authLoading, logout } = useAuth();
   const router = useRouter();
 
+  const { data: sseData, isStreaming, error: sseError, startStream } = useSSE();
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/login");
@@ -73,14 +76,8 @@ export default function ComparePage() {
     });
   };
 
-  const handleCompare = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!topic.trim()) return;
-
+  const performBatchCompare = async (topicToCompare: string) => {
     setIsLoading(true);
-    setResult(null);
-    setExpandedParagraphs(new Set([0, 1, 2, 3, 4])); // Expand all by default
-
     try {
       const token = localStorage.getItem("access_token");
       const response = await fetch("http://localhost:8000/api/compare/", {
@@ -89,7 +86,7 @@ export default function ComparePage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ topic, use_multi_agent: true }),
+        body: JSON.stringify({ topic: topicToCompare, use_multi_agent: true }),
       });
 
       if (!response.ok) {
@@ -105,6 +102,81 @@ export default function ComparePage() {
       toast.error("Analysis failed. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Handle SSE Data updates
+  useEffect(() => {
+    if (sseData.length === 0) return;
+
+    // Check for complete message
+    const completeMsg = sseData.find((m) => m.type === "complete");
+    if (completeMsg?.result) {
+      setResult(completeMsg.result as CompareResult);
+      setIsLoading(false);
+      return;
+    }
+
+    // Handle progressive updates
+    const paragraphs = sseData
+      .filter((m: any) => m.type === "section" || m.type === "paragraph")
+      .map((m: any) => m.data || m.result || m.content)
+      .filter(Boolean);
+
+    if (paragraphs.length > 0) {
+      setResult((prev) => {
+        const base = prev || {
+          topic,
+          essay: "",
+          paragraphs: [],
+          citations: {},
+          confidence: 0,
+          total_verses: 0,
+          total_citations: 0,
+          latency_ms: 0,
+        };
+        
+        // Auto-expand new paragraphs
+        setExpandedParagraphs((prevSet) => {
+          const newSet = new Set(prevSet);
+          paragraphs.forEach((_, idx) => newSet.add(idx));
+          return newSet;
+        });
+
+        return {
+          ...base,
+          paragraphs: paragraphs as ParagraphData[],
+          total_citations: paragraphs.reduce((acc: number, p: any) => acc + (p.citations?.length || 0), 0)
+        };
+      });
+      setIsLoading(false);
+    }
+  }, [sseData, topic]);
+
+  // Handle SSE Errors
+  useEffect(() => {
+    if (sseError) {
+      toast.error("Streaming connection lost. Falling back to standard analysis...");
+      performBatchCompare(topic);
+    }
+  }, [sseError]);
+
+  const handleCompare = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!topic.trim()) return;
+
+    setIsLoading(true);
+    setResult(null);
+    setExpandedParagraphs(new Set()); 
+
+    // Start SSE Stream
+    try {
+      const baseUrl = "http://localhost:8000";
+      const url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(topic)}`;
+      startStream(url);
+    } catch (err) {
+      // Fallback
+      performBatchCompare(topic);
     }
   };
 
@@ -185,18 +257,24 @@ export default function ComparePage() {
           </form>
         </motion.div>
 
-        {/* Loading State */}
-        {isLoading && (
+        {/* Loading State & Streaming Progress */}
+        {(isLoading || isStreaming) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="space-y-4"
+            className="space-y-4 mb-8"
           >
             <div className="flex items-center gap-2 text-[var(--color-text-muted)] mb-4">
               <Sparkles className="h-4 w-4 animate-pulse" />
-              <span>Running multi-agent analysis...</span>
+              <span>
+                {result?.paragraphs?.length 
+                  ? `Analyzing... (${result.paragraphs.length}/5 agents completed)`
+                  : "Initializing multi-agent analysis..."}
+              </span>
             </div>
-            {[...Array(5)].map((_, i) => (
+            
+            {/* Show remaining skeletons */}
+            {[...Array(Math.max(0, 5 - (result?.paragraphs?.length || 0)))].map((_, i) => (
               <Skeleton key={i} className="h-32 w-full" />
             ))}
           </motion.div>

@@ -1,4 +1,3 @@
-
 ## Task 10b: New Testament Browse Page (2026-01-25)
 
 ### Implementation Details
@@ -59,3 +58,27 @@
 - **Error Handling**: Implemented automatic fallback to batch search if SSE connection fails.
 - **State Management**: Used `streamedAnswer` state to accumulate tokens and `results` state for final references.
 - **Note**: The SSE endpoint unifies Quran/Bible search via the `source` parameter, simplifying the logic compared to the separate batch endpoints.
+
+## Task 12: Compare Page SSE Integration (2026-01-25)
+
+### Implementation Details
+- **Modified**: `frontend/app/compare/page.tsx`
+- **Integrated**: `useSSE` hook for real-time multi-agent progress.
+- **Features**:
+  - Replaced standard `fetch` with `startStream` for `/api/stream/compare`.
+  - Implemented progressive paragraph rendering:
+    - Paragraphs appear one by one as agents complete their tasks.
+    - Skeletons automatically adjust count based on received paragraphs (5 - count).
+    - Progress text updates: "Analyzing... (X/5 agents completed)".
+  - Automatic Fallback:
+    - If SSE fails (`sseError`), catches error and triggers `performBatchCompare` seamlessly.
+    - Ensures user experience isn't broken by network/backend streaming issues.
+
+### Key Design Decisions
+1. **Progressive State Updates**:
+   - Used a reducer-like pattern in `useEffect` to merge incoming `section`/`paragraph` events into the `CompareResult` state.
+   - Initialized empty `CompareResult` structure on first byte to allow partial rendering.
+
+2. **UI Feedback**:
+   - Combined `isLoading` (initial wait) and `isStreaming` (active stream) states.
+   - Skeletons represent "remaining work" rather than "all work", providing better visual feedback of progress.

@@ -759,7 +759,7 @@ Finalization:
 
 ---
 
-- [ ] 12. Add SSE streaming to Compare page
+- [x] 12. Add SSE streaming to Compare page
 
   **What to do**:
   - Update `frontend/app/compare/page.tsx`
