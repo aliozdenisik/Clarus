@@ -1,6 +1,7 @@
 {
   "active_plan": "/home/freyja/qdrant/.sisyphus/plans/frontend-completion.md",
   "started_at": "2026-01-25T05:34:02.115Z",
+  "completed_at": "2026-01-25T17:35:00.000Z",
   "session_ids": [
     "ses_40c5ae68effes9yM9HLoRVRTA0",
     "ses_40c28e147ffen4KbR6sMBeXZeR",
@@ -11,5 +12,9 @@
     "ses_40aa15005ffe8bZP2GURZzZhuT",
     "ses_40a994fe7ffeIPu5FLKqJYD9sH"
   ],
-  "plan_name": "frontend-completion"
+  "plan_name": "frontend-completion",
+  "status": "COMPLETE",
+  "tasks_completed": 15,
+  "tasks_total": 15,
+  "completion_percentage": 100
 }
