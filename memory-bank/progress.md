@@ -66,10 +66,13 @@
 
 ### Frontend Enhancements
 
-- [ ] Bible search page
+- [x] Bible search page (4-tab interface)
 - [x] User preferences page
 - [x] Search history page
-- [ ] SSE streaming integration
+- [x] SSE streaming integration
+- [x] Browse pages (Quran, OT, NT, Apocrypha)
+- [x] Global navigation
+- [x] Vitest + RTL testing (36 tests)
 
 ### Production Deployment
 
