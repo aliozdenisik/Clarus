@@ -8,6 +8,21 @@
 
 ## Recent Changes
 
+### Google OAuth Integration (2026-01-26)
+
+Frontend `AuthContext` updated to support Google OAuth login:
+
+**Changes:**
+- Added `loginWithGoogle(credential: string)` to `AuthContextType`.
+- Implemented `loginWithGoogle` in `AuthProvider` using TDD.
+- Function exchanges Google ID token for JWT via `/api/auth/google`.
+- Tokens are stored in `localStorage` and `user` state is updated.
+- Comprehensive error handling for network and backend errors.
+
+**Test Results:**
+- 5 new test cases added to `frontend/__tests__/auth-context.test.tsx`.
+- All tests passed.
+
 ### Arabic Font Fix (2026-01-26)
 
 Kuran ayetleri sayfasındaki bozuk Arapça görüntüleme düzeltildi:
