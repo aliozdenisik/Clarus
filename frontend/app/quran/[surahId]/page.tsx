@@ -176,7 +176,7 @@ export default function SurahDetailPage() {
               <GlowCard className="p-6">
                 <div className="flex gap-4">
                   <div className="flex-shrink-0">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-bg-secondary)] text-sm font-medium text-[var(--color-accent-primary)]">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-bg-secondary)] text-xl font-medium text-[var(--color-accent-primary)]">
                       {verse.id}
                     </div>
                   </div>
@@ -193,12 +193,12 @@ export default function SurahDetailPage() {
                     {verse.translation ? (
                       <p 
                         lang="tr" 
-                        className="text-base leading-relaxed text-[var(--color-text-muted)]"
+                        className="text-2xl leading-relaxed text-[var(--color-text-secondary)]"
                       >
                         {verse.translation}
                       </p>
                     ) : (
-                      <p className="text-sm text-[var(--color-text-muted)] italic">
+                      <p className="text-sm text-[var(--color-text-secondary)] italic">
                         Translation not available
                       </p>
                     )}
