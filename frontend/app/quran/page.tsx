@@ -190,7 +190,7 @@ export default function QuranPage() {
                   transition={{ ...springPresets.snappy, delay: i * 0.02 }}
                 >
                   <button
-                    onClick={() => router.push(`/search?surah=${surah.id}`)}
+                    onClick={() => router.push(`/quran/${surah.id}`)}
                     className="w-full text-left"
                   >
                     <GlowCard className="h-full hover:border-[var(--color-accent-primary)] transition-colors">

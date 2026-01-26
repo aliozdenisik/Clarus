@@ -15,7 +15,7 @@ import { toast } from "sonner";
 interface Book {
   nr: number;
   name: string;
-  chapter_count: number;
+  chapters_count: number;
   testament: string;
 }
 
@@ -79,17 +79,14 @@ export default function OldTestamentPage() {
     const fetchBooks = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        // Using relative path, expecting proxy or same origin. 
-        // If quran page uses localhost:8000, maybe I should too, but relative is safer if configured.
-        // I will keep relative for now as my test expects it.
-        const response = await fetch("/api/metadata/bible/books?testament=ot", {
+        const response = await fetch("http://localhost:8000/api/metadata/bible/books?testament=old_testament", {
            headers: {
              Authorization: `Bearer ${token}`,
            },
         });
         if (!response.ok) throw new Error("Failed to fetch books");
         const data = await response.json();
-        setBooks(data);
+        setBooks(data.data?.books || []);
       } catch (error) {
         console.error(error);
         toast.error("Failed to load books");
@@ -205,19 +202,14 @@ export default function OldTestamentPage() {
                     ...springPresets.snappy,
                     delay: i * 0.03, // Stagger effect
                   }}
-                  onClick={() => router.push(`/search?source=ot&book=${book.nr}`)}
+                  onClick={() => router.push(`/bible/${book.nr}`)}
                   className="cursor-pointer"
                 >
                   <GlowCard
                     className="h-full hover:border-[var(--color-accent-glow)] transition-colors group"
                   >
                     <div className="flex flex-col h-full justify-between">
-                      <div>
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="text-xs font-mono text-[var(--color-text-muted)] bg-[var(--color-bg-elevated)] px-2 py-0.5 rounded">
-                            #{book.nr}
-                          </span>
-                        </div>
+                        <div>
                         <h3 className="text-xl font-bold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent-primary)] transition-colors">
                           {book.name}
                         </h3>
@@ -226,7 +218,7 @@ export default function OldTestamentPage() {
                         </p>
                       </div>
                       <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)] flex items-center justify-between text-xs text-[var(--color-text-muted)]">
-                        <span>{book.chapter_count} chapters</span>
+                        <span>{book.chapters_count} chapters</span>
                         <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--color-accent-primary)] font-medium">
                           Read &rarr;
                         </span>

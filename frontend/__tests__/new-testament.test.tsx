@@ -41,9 +41,9 @@ vi.mock('next/navigation', () => ({
 
 describe('New Testament Browse Page', () => {
   const mockBooks = [
-    { nr: 1, name: 'Matthew', chapter_count: 28, testament: 'nt' },
-    { nr: 2, name: 'Mark', chapter_count: 16, testament: 'nt' },
-    { nr: 3, name: 'Luke', chapter_count: 24, testament: 'nt' },
+    { nr: 1, name: 'Matthew', chapters_count: 28, testament: 'new_testament' },
+    { nr: 2, name: 'Mark', chapters_count: 16, testament: 'new_testament' },
+    { nr: 3, name: 'Luke', chapters_count: 24, testament: 'new_testament' },
   ];
 
   beforeEach(() => {
@@ -54,13 +54,13 @@ describe('New Testament Browse Page', () => {
   it('fetches and displays NT books', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockBooks,
+      json: async () => ({ data: { books: mockBooks } }),
     });
 
     render(<NewTestamentPage />);
 
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/metadata/bible/books?testament=nt'),
+      expect.stringContaining('/api/metadata/bible/books?testament=new_testament'),
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: expect.stringContaining('Bearer'),
@@ -80,7 +80,7 @@ describe('New Testament Browse Page', () => {
   it('filters books by name', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockBooks,
+      json: async () => ({ data: { books: mockBooks } }),
     });
 
     render(<NewTestamentPage />);
@@ -99,7 +99,7 @@ describe('New Testament Browse Page', () => {
   it('navigates to search on book click', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockBooks,
+      json: async () => ({ data: { books: mockBooks } }),
     });
 
     render(<NewTestamentPage />);
@@ -117,7 +117,7 @@ describe('New Testament Browse Page', () => {
     // Test loading state if applicable, or empty result
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
-      json: async () => [],
+      json: async () => ({ data: { books: [] } }),
     });
 
     render(<NewTestamentPage />);

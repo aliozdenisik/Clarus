@@ -41,9 +41,9 @@ vi.mock('next/navigation', () => ({
 
 describe('Old Testament Browse Page', () => {
   const mockBooks = [
-    { nr: 1, name: 'Genesis', chapter_count: 50, testament: 'ot' },
-    { nr: 2, name: 'Exodus', chapter_count: 40, testament: 'ot' },
-    { nr: 3, name: 'Leviticus', chapter_count: 27, testament: 'ot' },
+    { nr: 1, name: 'Genesis', chapters_count: 50, testament: 'old_testament' },
+    { nr: 2, name: 'Exodus', chapters_count: 40, testament: 'old_testament' },
+    { nr: 3, name: 'Leviticus', chapters_count: 27, testament: 'old_testament' },
   ];
 
   beforeEach(() => {
@@ -54,13 +54,13 @@ describe('Old Testament Browse Page', () => {
   it('fetches and displays OT books', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockBooks,
+      json: async () => ({ data: { books: mockBooks } }),
     });
 
     render(<OldTestamentPage />);
 
     expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/metadata/bible/books?testament=ot'),
+      expect.stringContaining('/api/metadata/bible/books?testament=old_testament'),
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: expect.stringContaining('Bearer'),
@@ -80,7 +80,7 @@ describe('Old Testament Browse Page', () => {
   it('filters books by name', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockBooks,
+      json: async () => ({ data: { books: mockBooks } }),
     });
 
     render(<OldTestamentPage />);
@@ -99,7 +99,7 @@ describe('Old Testament Browse Page', () => {
   it('navigates to search on book click', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockBooks,
+      json: async () => ({ data: { books: mockBooks } }),
     });
 
     render(<OldTestamentPage />);
@@ -117,7 +117,7 @@ describe('Old Testament Browse Page', () => {
     // Test loading state if applicable, or empty result
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
-      json: async () => [],
+      json: async () => ({ data: { books: [] } }),
     });
 
     render(<OldTestamentPage />);

@@ -41,9 +41,9 @@ vi.mock('next/navigation', () => ({
 
 describe('Apocrypha Browse Page', () => {
   const mockBooks = [
-    { nr: 1, name: 'Tobit', chapter_count: 14, testament: 'apocrypha' },
-    { nr: 2, name: 'Judith', chapter_count: 16, testament: 'apocrypha' },
-    { nr: 3, name: 'Wisdom', chapter_count: 19, testament: 'apocrypha' },
+    { nr: 1, name: 'Tobit', chapters_count: 14, testament: 'apocrypha' },
+    { nr: 2, name: 'Judith', chapters_count: 16, testament: 'apocrypha' },
+    { nr: 3, name: 'Wisdom', chapters_count: 19, testament: 'apocrypha' },
   ];
 
   beforeEach(() => {
@@ -54,7 +54,7 @@ describe('Apocrypha Browse Page', () => {
   it('fetches and displays Apocrypha books', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockBooks,
+      json: async () => ({ data: { books: mockBooks } }),
     });
 
     render(<ApocryphaPage />);
@@ -80,7 +80,7 @@ describe('Apocrypha Browse Page', () => {
   it('filters books by name', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockBooks,
+      json: async () => ({ data: { books: mockBooks } }),
     });
 
     render(<ApocryphaPage />);
@@ -99,7 +99,7 @@ describe('Apocrypha Browse Page', () => {
   it('navigates to search on book click', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockBooks,
+      json: async () => ({ data: { books: mockBooks } }),
     });
 
     render(<ApocryphaPage />);
@@ -116,7 +116,7 @@ describe('Apocrypha Browse Page', () => {
   it('handles empty state or loading', async () => {
     (global.fetch as any).mockResolvedValueOnce({
       ok: true,
-      json: async () => [],
+      json: async () => ({ data: { books: [] } }),
     });
 
     render(<ApocryphaPage />);
