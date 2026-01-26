@@ -14,6 +14,7 @@ interface VerseDetail {
   verse: number;
   source: string;
   translation: string;
+  book_nr?: number;
 }
 
 interface SourceReferenceCardProps {
@@ -30,8 +31,22 @@ const SOURCE_MAP: Record<string, SourceType> = {
   'bible_apocrypha': 'apocrypha'
 };
 
+function buildVerseUrl(verse: VerseDetail): string | null {
+  if (verse.source === 'quran_tr') {
+    return `/quran/${verse.chapter}?verse=${verse.verse}`;
+  }
+  
+  // Bible sources require book_nr
+  if (verse.source.startsWith('bible_') && verse.book_nr !== undefined) {
+    return `/bible/${verse.book_nr}?chapter=${verse.chapter}&verse=${verse.verse}`;
+  }
+  
+  return null;
+}
+
 export function SourceReferenceCard({ verse, reference, isHighlighted, index = 0 }: SourceReferenceCardProps) {
   const displaySource = SOURCE_MAP[verse.source] || 'quran';
+  const verseUrl = buildVerseUrl(verse);
   
   return (
     <motion.div
@@ -55,7 +70,24 @@ export function SourceReferenceCard({ verse, reference, isHighlighted, index = 0
               {reference}
             </span>
           </div>
-          <ExternalLink className="w-4 h-4 text-[var(--color-text-muted)]" />
+          {verseUrl ? (
+            <a
+              href={verseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Go to verse"
+              className={cn(
+                "cursor-pointer text-[var(--color-text-muted)]",
+                "hover:text-[var(--color-accent-primary)]",
+                "focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)] focus:ring-offset-2 focus:ring-offset-[var(--color-bg-primary)]",
+                "rounded transition-colors duration-200"
+              )}
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          ) : (
+            <ExternalLink className="w-4 h-4 text-[var(--color-text-muted)]" />
+          )}
         </div>
         
         {/* Translation info */}
