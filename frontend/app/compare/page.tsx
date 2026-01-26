@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -23,6 +23,10 @@ import {
   Search,
 } from "lucide-react";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
+import { FilterTabs, FilterType } from "@/components/compare/filter-tabs";
+import { SourceReferenceCard } from "@/components/compare/source-reference-card";
+import { InlineCitation } from "@/components/compare/inline-citation";
+import { parseCitations } from "@/lib/utils/parse-citations";
 
 interface ParagraphData {
   title: string;
@@ -49,6 +53,14 @@ interface CompareResult {
   }>;
 }
 
+const FILTER_TO_SOURCE: Record<string, string[]> = {
+  'all': ['quran_tr', 'bible_ot', 'bible_nt', 'bible_apocrypha'],
+  'quran': ['quran_tr'],
+  'old_testament': ['bible_ot'],
+  'new_testament': ['bible_nt'],
+  'apocrypha': ['bible_apocrypha']
+};
+
 export default function ComparePage() {
   const [topic, setTopic] = useState("");
   const [result, setResult] = useState<CompareResult | null>(null);
@@ -56,6 +68,9 @@ export default function ComparePage() {
   const [expandedParagraphs, setExpandedParagraphs] = useState<Set<number>>(
     new Set()
   );
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
+  const highlightTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { user, isLoading: authLoading, logout } = useAuth();
   const router = useRouter();
 
@@ -85,6 +100,57 @@ export default function ComparePage() {
       return newSet;
     });
   };
+
+  const scrollToVerse = useCallback((reference: string) => {
+    const element = document.querySelector(`[data-verse-id="${reference}"]`);
+    
+    if (!element) {
+      console.warn(`Verse card not found for: ${reference}`);
+      return;
+    }
+    
+    // Cancel previous timer
+    if (highlightTimerRef.current) {
+      clearTimeout(highlightTimerRef.current);
+    }
+    
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setHighlightedVerse(reference);
+    
+    highlightTimerRef.current = setTimeout(() => {
+      setHighlightedVerse(null);
+    }, 2000);
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (highlightTimerRef.current) {
+        clearTimeout(highlightTimerRef.current);
+      }
+    };
+  }, []);
+
+  const filteredVerses = useMemo(() => {
+    if (!result?.verse_details) return [];
+    const entries = Object.entries(result.verse_details);
+    if (activeFilter === 'all') return entries;
+    return entries.filter(([_, verse]) => 
+      FILTER_TO_SOURCE[activeFilter].includes(verse.source)
+    );
+  }, [result?.verse_details, activeFilter]);
+
+  const counts = useMemo(() => {
+    if (!result?.verse_details) return { all: 0, quran: 0, old_testament: 0, new_testament: 0, apocrypha: 0 };
+    const verses = Object.values(result.verse_details);
+    return {
+      all: verses.length,
+      quran: verses.filter(v => v.source === 'quran_tr').length,
+      old_testament: verses.filter(v => v.source === 'bible_ot').length,
+      new_testament: verses.filter(v => v.source === 'bible_nt').length,
+      apocrypha: verses.filter(v => v.source === 'bible_apocrypha').length,
+    };
+  }, [result?.verse_details]);
 
   const performBatchCompare = async (topicToCompare: string) => {
     setIsLoading(true);
@@ -391,7 +457,28 @@ export default function ComparePage() {
                           >
                             <div className="mt-4 border-t border-[var(--color-border-subtle)] pt-4">
                               <p className="text-[var(--color-text-primary)] leading-relaxed whitespace-pre-wrap">
-                                {paragraph.content}
+                                {parseCitations(paragraph.content).map((part, i) => {
+                                  if (typeof part === 'string') {
+                                    return <span key={i}>{part}</span>;
+                                  }
+                                  
+                                  const verse = result.verse_details?.[part.reference];
+                                  if (!verse) {
+                                    return (
+                                      <span key={i} className="text-[var(--color-text-muted)]">
+                                        [{part.reference}]
+                                      </span>
+                                    );
+                                  }
+                                  
+                                  return (
+                                    <InlineCitation
+                                      key={i}
+                                      reference={part.reference}
+                                      onClick={() => scrollToVerse(part.reference)}
+                                    />
+                                  );
+                                })}
                               </p>
 
                               {/* Citations */}
@@ -420,6 +507,52 @@ export default function ComparePage() {
                   </motion.div>
                 ))}
               </div>
+
+              {/* Kaynak Referanslari */}
+              {result.verse_details && Object.keys(result.verse_details).length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    ...springPresets.snappy,
+                    delay: result.paragraphs.length * 0.1 + 0.1,
+                  }}
+                  className="mt-6"
+                >
+                  <GlowCard>
+                    <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
+                      Kaynak Referanslari
+                    </h3>
+                    
+                    <FilterTabs
+                      activeFilter={activeFilter}
+                      onFilterChange={setActiveFilter}
+                      counts={counts}
+                    />
+                    
+                    <div className="space-y-4 mt-4">
+                      {filteredVerses.length > 0 ? (
+                        filteredVerses.map(([reference, verse], index) => (
+                          <SourceReferenceCard
+                            key={reference}
+                            reference={reference}
+                            verse={verse}
+                            isHighlighted={highlightedVerse === reference}
+                            index={index}
+                          />
+                        ))
+                      ) : (
+                        <p className="text-[var(--color-text-muted)] text-center py-8">
+                          Bu kategori icin sonuc bulunamadi.
+                          {activeFilter !== 'all' && (
+                            <span> Tum sonuclari gormek icin "Tumu" sekmesine tiklayin.</span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  </GlowCard>
+                </motion.div>
+              )}
 
               {/* All Citations Summary */}
               {Object.keys(result.citations).length > 0 && (
