@@ -143,3 +143,17 @@
     font-feature-settings: 'cv05', 'cv08', 'ss01';
   }
 }
+
+/* Arabic typography support - Scheherazade New font */
+.font-arabic {
+  font-family: var(--font-arabic), 'Scheherazade New', serif;
+  /*
+   * Fallback chain:
+   * 1. var(--font-arabic) - Next.js optimized font (primary, fastest)
+   * 2. 'Scheherazade New' - Direct name (if loaded via CDN fallback)
+   * 3. serif - Browser default (last resort, will look broken)
+   */
+  line-height: 2;        /* Extra space for diacritics (harakat) */
+  direction: rtl;        /* Right-to-left text direction */
+  text-align: right;     /* Align text to right edge */
+}
