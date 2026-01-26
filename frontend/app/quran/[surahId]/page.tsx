@@ -13,7 +13,8 @@ import { ArrowLeft, BookOpen, User, LogOut } from "lucide-react";
 
 interface Verse {
   id: number;
-  text: string;
+  text: string;           // Arabic text (always present)
+  translation: string;    // Turkish translation (always present in API)
 }
 
 interface SurahDetail {
@@ -179,9 +180,29 @@ export default function SurahDetailPage() {
                       {verse.id}
                     </div>
                   </div>
-                  <p className="text-lg leading-relaxed text-[var(--color-text-primary)]">
-                    {verse.text}
-                  </p>
+                  <div className="flex flex-col gap-3 flex-1">
+                    {/* Arabic text - RTL with proper font */}
+                    <p 
+                      lang="ar" 
+                      className="font-arabic text-2xl text-[var(--color-text-primary)]"
+                    >
+                      {verse.text}
+                    </p>
+                    
+                    {/* Turkish translation - with fallback for safety */}
+                    {verse.translation ? (
+                      <p 
+                        lang="tr" 
+                        className="text-base leading-relaxed text-[var(--color-text-muted)]"
+                      >
+                        {verse.translation}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-[var(--color-text-muted)] italic">
+                        Translation not available
+                      </p>
+                    )}
+                  </div>
                 </div>
               </GlowCard>
             </motion.div>
