@@ -52,6 +52,19 @@ class ParagraphData(BaseModel):
     citations: List[str]
 
 
+class VerseDetail(BaseModel):
+    """Full verse metadata for rich reference display."""
+
+    text: str  # Full verse text (max ~400 chars)
+    book_name: str  # "Genesis", "Bakara", etc.
+    chapter: int  # Chapter/Surah number
+    verse: int  # Verse number
+    source: str  # Collection: 'quran_tr', 'bible_ot', 'bible_nt', 'bible_apocrypha'
+    translation: (
+        str  # "Diyanet Isleri Baskanligi" or "King James Version with Apocrypha"
+    )
+
+
 class CompareResponse(BaseModel):
     """Compare response schema - rich format for frontend."""
 
@@ -67,6 +80,8 @@ class CompareResponse(BaseModel):
     total_verses: int
     total_citations: int
     latency_ms: int
+    # Rich verse metadata for citations
+    verse_details: Optional[Dict[str, VerseDetail]] = None
 
 
 @router.post("/", response_model=CompareResponse)
