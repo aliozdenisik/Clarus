@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple
 import sys
 import os
 from dotenv import load_dotenv
@@ -22,6 +22,7 @@ from app.db import get_db
 from app.models import User, SearchHistory
 from app.api.auth import get_current_user, check_rate_limit
 from src.comparative_rag import ComparativeRAG
+from src.search import SearchResult, BibleSearchResult
 
 
 router = APIRouter()
@@ -84,6 +85,38 @@ class CompareResponse(BaseModel):
     verse_details: Optional[Dict[str, VerseDetail]] = None
 
 
+def extract_quran_verse_detail(result: SearchResult) -> Tuple[str, VerseDetail]:
+    """Extract citation reference and verse detail from a Quran SearchResult."""
+    # Citation format: "SurahName:VerseId" e.g., "Bakara:153" (NO BRACKETS!)
+    reference = f"{result.surah_name}:{result.verse_id}"
+
+    return reference, VerseDetail(
+        text=result.translation[:400],  # Truncate long verses
+        book_name=result.surah_name,
+        chapter=result.surah_id,
+        verse=result.verse_id,
+        source="quran_tr",
+        translation="Diyanet Isleri Baskanligi",
+    )
+
+
+def extract_bible_verse_detail(
+    result: BibleSearchResult, source: str
+) -> Tuple[str, VerseDetail]:
+    """Extract citation reference and verse detail from a Bible BibleSearchResult."""
+    # Citation format: "BookName Chapter:Verse" e.g., "Genesis 1:1" (NO BRACKETS!)
+    reference = f"{result.book_name} {result.chapter}:{result.verse}"
+
+    return reference, VerseDetail(
+        text=result.text[:400],  # Truncate long verses
+        book_name=result.book_name,
+        chapter=result.chapter,
+        verse=result.verse,
+        source=source,
+        translation="King James Version with Apocrypha",
+    )
+
+
 @router.post("/", response_model=CompareResponse)
 async def compare_scriptures(
     request: CompareRequest,
@@ -109,7 +142,40 @@ async def compare_scriptures(
     rag = get_comparative_rag()
 
     if request.use_multi_agent:
-        result = rag.compare_multi_agent(request.topic)
+        # Step 1: Get search results directly (bypass compare_multi_agent)
+        search_result = rag.search_all(request.topic)
+
+        # Step 2: Build verse_details from search results
+        verse_details: Dict[str, VerseDetail] = {}
+
+        for r in search_result.quran:
+            ref, detail = extract_quran_verse_detail(r)
+            if ref not in verse_details:  # Deduplicate
+                verse_details[ref] = detail
+
+        for r in search_result.ot:
+            ref, detail = extract_bible_verse_detail(r, "bible_ot")
+            if ref not in verse_details:
+                verse_details[ref] = detail
+
+        for r in search_result.nt:
+            ref, detail = extract_bible_verse_detail(r, "bible_nt")
+            if ref not in verse_details:
+                verse_details[ref] = detail
+
+        for r in search_result.apocrypha:
+            ref, detail = extract_bible_verse_detail(r, "bible_apocrypha")
+            if ref not in verse_details:
+                verse_details[ref] = detail
+
+        # Step 3: Generate multi-agent answer using search results
+        result = rag.multi_agent_generator.generate(
+            query=request.topic,
+            quran_verses=search_result.quran,
+            ot_verses=search_result.ot,
+            nt_verses=search_result.nt,
+            apocrypha_verses=search_result.apocrypha,
+        )
 
         # Build structured paragraphs from MultiAgentAnswer
         paragraphs = []
@@ -183,6 +249,7 @@ async def compare_scriptures(
             total_verses=total_verses,
             total_citations=total_citations,
             latency_ms=latency_ms,
+            verse_details=verse_details,
         )
     else:
         # Single essay mode (ComparativeAnswer)
