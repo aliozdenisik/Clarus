@@ -123,6 +123,55 @@ npm test                    # Vitest tests
 npx @hey-api/openapi-ts     # Regenerate API client
 ```
 
+## ARABIC FONT
+
+Arabic text uses **Amiri** font from Google Fonts (classic Naskh calligraphy style).
+
+### Configuration
+
+**layout.tsx:**
+```typescript
+import { Inter, Amiri } from "next/font/google";
+
+const amiri = Amiri({
+  subsets: ["arabic"],
+  weight: ["400", "700"],
+  variable: "--font-arabic",
+  display: "swap",
+});
+```
+
+**globals.css:**
+```css
+.font-arabic {
+  font-family: var(--font-arabic), 'Amiri', serif;
+  line-height: 2;        /* Extra space for diacritics */
+  direction: rtl;        /* Right-to-left */
+  text-align: right;
+}
+```
+
+### Usage
+
+```tsx
+<p lang="ar" className="font-arabic text-2xl">
+  بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ
+</p>
+```
+
+### Changing Font
+
+To switch Arabic font, update only `layout.tsx`:
+1. Change import: `Amiri` → `Scheherazade_New`, `Noto_Naskh_Arabic`, etc.
+2. Update const name and reference in body className
+
+Available Google Fonts for Arabic:
+- `Amiri` - Classic calligraphy (current)
+- `Scheherazade_New` - Traditional Naskh
+- `Noto_Naskh_Arabic` - Clean, modern
+- `Cairo` - Sans-serif
+- `Tajawal` - Modern sans-serif
+
 ## NOTES
 
 - **Zombie status**: Documentation claims "frontend removed" but code exists. Verify intent before major changes.
