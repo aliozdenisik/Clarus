@@ -1,6 +1,6 @@
 # CLARUS - PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-01-25
+**Generated:** 2026-01-26
 **Commit:** e0377c1
 **Branch:** main
 
@@ -58,8 +58,14 @@ qdrant/                         # Root (project named after Qdrant DB it uses)
 | `embeddings.py` | backend/src/ | 653 | OpenAI text-embedding-3-large + BM25 |
 | `multi_agent_answer_generator.py` | backend/src/ | 530 | 5-agent system (Quran, OT, NT, Apocrypha, Summary) |
 | `indexer.py` | backend/src/ | 722 | Qdrant collection management |
+| `compare.py` | backend/app/api/ | 291 | Compare API + VerseDetail schema |
 | `types.gen.ts` | frontend/lib/api/ | 1003 | Generated TypeScript API types |
-| `compare/page.tsx` | frontend/app/ | 462 | Multi-agent comparison UI |
+| `compare/page.tsx` | frontend/app/ | 600+ | Multi-agent comparison UI + rich references |
+| `source-badge.tsx` | frontend/components/compare/ | 30 | Colored source badge component |
+| `source-reference-card.tsx` | frontend/components/compare/ | 74 | Verse card with badge + text |
+| `filter-tabs.tsx` | frontend/components/compare/ | 45 | Filter tabs for source filtering |
+| `inline-citation.tsx` | frontend/components/compare/ | 15 | Clickable inline citation |
+| `parse-citations.ts` | frontend/lib/utils/ | 25 | Citation parsing utility |
 
 ## CONVENTIONS
 

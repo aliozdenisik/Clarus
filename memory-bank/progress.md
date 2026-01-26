@@ -52,6 +52,13 @@
 - [x] Framer Motion animations
 - [x] GlowCard components
 - [x] Navigation between pages
+- [x] Rich source reference cards (verse details)
+- [x] Filter tabs (by scripture source)
+- [x] Clickable inline citations with scroll navigation
+- [x] 2-second highlight animation on scroll target
+- [x] Quran detail page (`/quran/[surahId]`) - Arapça ayetler
+- [x] Bible detail page (`/bible/[bookNr]`) - Chapter seçimi + ayetler
+- [x] Clean browse cards (removed `#nr` global numbering)
 
 ### CLI Commands
 
@@ -72,7 +79,7 @@
 - [x] SSE streaming integration
 - [x] Browse pages (Quran, OT, NT, Apocrypha)
 - [x] Global navigation
-- [x] Vitest + RTL testing (36 tests)
+- [x] Vitest + RTL testing (71 tests)
 
 ### Production Deployment
 
@@ -99,7 +106,7 @@
 | REST API | Complete | FastAPI + JWT |
 | Frontend | Complete | Next.js 15 + Framer Motion |
 | Docker Setup | Complete | PostgreSQL + Qdrant |
-| Browser Tests | Passed | Login ✅, Search, Compare |
+| Browser Tests | Passed | Login ✅, Search ✅, Compare ✅ (rich refs) |
 
 ## Known Issues
 

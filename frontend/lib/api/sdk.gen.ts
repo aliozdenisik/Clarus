@@ -149,7 +149,14 @@ export const deleteHistoryItemApiSearchHistoryHistoryIdDelete = <ThrowOnError ex
 /**
  * Compare Scriptures
  *
- * Compare a topic across scriptures.
+ * Compare a topic across scriptures (Quran, Old Testament, New Testament, Apocrypha).
+ *
+ * Returns structured multi-agent analysis with 5 paragraphs:
+ * - Old Testament perspective
+ * - New Testament perspective
+ * - Apocrypha perspective
+ * - Quran perspective
+ * - Comparative synthesis
  */
 export const compareScripturesApiComparePost = <ThrowOnError extends boolean = false>(options: Options<CompareScripturesApiComparePostData, ThrowOnError>) => (options.client ?? client).post<CompareScripturesApiComparePostResponses, CompareScripturesApiComparePostErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -165,23 +172,19 @@ export const compareScripturesApiComparePost = <ThrowOnError extends boolean = f
  * Stream Search
  *
  * Stream search results with AI answer generation.
+ *
+ * Note: SSE/EventSource API doesn't support custom headers, so token must be passed as query param.
  */
-export const streamSearchApiStreamSearchGet = <ThrowOnError extends boolean = false>(options: Options<StreamSearchApiStreamSearchGetData, ThrowOnError>) => (options.client ?? client).get<StreamSearchApiStreamSearchGetResponses, StreamSearchApiStreamSearchGetErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/stream/search',
-    ...options
-});
+export const streamSearchApiStreamSearchGet = <ThrowOnError extends boolean = false>(options: Options<StreamSearchApiStreamSearchGetData, ThrowOnError>) => (options.client ?? client).get<StreamSearchApiStreamSearchGetResponses, StreamSearchApiStreamSearchGetErrors, ThrowOnError>({ url: '/api/stream/search', ...options });
 
 /**
  * Stream Compare
  *
  * Stream comparative analysis with multi-agent output.
+ *
+ * Note: SSE/EventSource API doesn't support custom headers, so token must be passed as query param.
  */
-export const streamCompareApiStreamCompareGet = <ThrowOnError extends boolean = false>(options: Options<StreamCompareApiStreamCompareGetData, ThrowOnError>) => (options.client ?? client).get<StreamCompareApiStreamCompareGetResponses, StreamCompareApiStreamCompareGetErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/stream/compare',
-    ...options
-});
+export const streamCompareApiStreamCompareGet = <ThrowOnError extends boolean = false>(options: Options<StreamCompareApiStreamCompareGetData, ThrowOnError>) => (options.client ?? client).get<StreamCompareApiStreamCompareGetResponses, StreamCompareApiStreamCompareGetErrors, ThrowOnError>({ url: '/api/stream/compare', ...options });
 
 /**
  * Get Stats
