@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -30,8 +30,10 @@ interface SurahDetail {
 export default function SurahDetailPage() {
   const params = useParams();
   const surahId = params.surahId as string;
+  const searchParams = useSearchParams();
   const [surah, setSurah] = useState<SurahDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [highlightedVerse, setHighlightedVerse] = useState<number | null>(null);
   const { user, isLoading: authLoading, logout } = useAuth();
   const router = useRouter();
 
@@ -40,6 +42,33 @@ export default function SurahDetailPage() {
       router.push("/login");
     }
   }, [user, authLoading, router]);
+
+  // Read verse parameter from URL on mount
+  useEffect(() => {
+    const verseParam = searchParams.get('verse');
+    if (verseParam) {
+      const verseId = parseInt(verseParam, 10);
+      if (!isNaN(verseId)) {
+        setHighlightedVerse(verseId);
+      }
+    }
+  }, [searchParams]);
+
+  // Scroll to verse when content loads and highlightedVerse is set
+  useEffect(() => {
+    if (highlightedVerse && surah) {
+      // Small delay to ensure DOM is fully rendered
+      const timer = setTimeout(() => {
+        const element = document.querySelector(`[data-verse-id="${highlightedVerse}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Clear highlight after 2 seconds
+          setTimeout(() => setHighlightedVerse(null), 2000);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedVerse, surah]);
 
   useEffect(() => {
     const fetchSurah = async () => {
@@ -172,6 +201,12 @@ export default function SurahDetailPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ ...springPresets.snappy, delay: i * 0.02 }}
+              data-verse-id={verse.id}
+              className={
+                highlightedVerse === verse.id
+                  ? "ring-2 ring-[var(--color-accent-primary)] shadow-lg shadow-[var(--color-accent-primary)]/20 transition-all duration-500 rounded-lg"
+                  : "transition-all duration-500"
+              }
             >
               <GlowCard className="p-6">
                 <div className="flex gap-4">
