@@ -4,9 +4,46 @@
 
 **Date**: 2026-01-26
 
-**Completed**: Browse Detail Pages - Kitap/sure içeriklerini görüntüleme sayfaları eklendi.
+**Completed**: Arabic Font Fix - Kuran ayetleri sayfasında Arapça font ve Türkçe çeviri düzeltmesi.
 
 ## Recent Changes
+
+### Arabic Font Fix (2026-01-26)
+
+Kuran ayetleri sayfasındaki bozuk Arapça görüntüleme düzeltildi:
+
+**Problem:**
+- Arapça harfler birleşmiyor, izole görünüyordu
+- Harekeler (fatha, kasra, sukun) yanlış konumluydu
+- Eksik glyph kutuları (□) görünüyordu
+- Türkçe meal gösterilmiyordu
+
+**Çözüm:**
+- **Amiri** fontu eklendi (Google Fonts - klasik Arap kaligrafi tarzı)
+- `.font-arabic` CSS sınıfı tanımlandı (RTL, line-height: 2)
+- Türkçe çeviri her ayetin altında gösteriliyor
+- Ayet numaraları büyütüldü (48px daire, 20px font)
+
+**Değişen Dosyalar:**
+- `frontend/app/layout.tsx` - Amiri font import
+- `frontend/app/globals.css` - `.font-arabic` class
+- `frontend/app/quran/[surahId]/page.tsx` - Verse interface + rendering
+
+**Stil Değerleri:**
+| Öğe | Değer |
+|-----|-------|
+| Arapça font | Amiri (Google Fonts) |
+| Arapça boyut | `text-2xl` (24px) |
+| Türkçe boyut | `text-2xl` (24px) |
+| Türkçe renk | `--color-text-secondary` (#a1a1aa) |
+| Ayet numarası | `h-12 w-12` daire, `text-xl` font |
+| Satır aralığı | `line-height: 2` (harekeler için) |
+
+**Commits:**
+- `fix(frontend): add Arabic font support with Scheherazade New`
+- `feat(frontend): display Turkish translation below Arabic verses`
+- `style(frontend): increase translation and verse number sizes for better readability`
+- `style(frontend): switch Arabic font from Scheherazade New to Amiri`
 
 ### Browse Detail Pages (2026-01-26)
 

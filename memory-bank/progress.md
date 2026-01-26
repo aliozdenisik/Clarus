@@ -56,9 +56,11 @@
 - [x] Filter tabs (by scripture source)
 - [x] Clickable inline citations with scroll navigation
 - [x] 2-second highlight animation on scroll target
-- [x] Quran detail page (`/quran/[surahId]`) - Arapça ayetler
+- [x] Quran detail page (`/quran/[surahId]`) - Arapça ayetler + Türkçe meal
 - [x] Bible detail page (`/bible/[bookNr]`) - Chapter seçimi + ayetler
 - [x] Clean browse cards (removed `#nr` global numbering)
+- [x] Arabic font support (Amiri - classic Naskh calligraphy)
+- [x] Turkish translation display below Arabic verses
 
 ### CLI Commands
 
@@ -90,7 +92,7 @@
 
 ### Potential Enhancements
 
-- [ ] Arabic font optimization
+- [x] Arabic font optimization (Amiri font + RTL support)
 - [ ] Save/Share functionality
 - [ ] Multi-language support
 - [ ] Batch query API
