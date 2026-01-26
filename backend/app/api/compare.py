@@ -64,6 +64,7 @@ class VerseDetail(BaseModel):
     translation: (
         str  # "Diyanet Isleri Baskanligi" or "King James Version with Apocrypha"
     )
+    book_nr: Optional[int] = None  # Bible book number (None for Quran)
 
 
 class CompareResponse(BaseModel):
@@ -114,6 +115,7 @@ def extract_bible_verse_detail(
         verse=result.verse,
         source=source,
         translation="King James Version with Apocrypha",
+        book_nr=result.book_id,
     )
 
 
