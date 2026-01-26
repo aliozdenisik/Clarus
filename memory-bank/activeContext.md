@@ -2,13 +2,78 @@
 
 ## Current Work Focus
 
-**Date**: 2026-01-25
+**Date**: 2026-01-26
 
-**Constraint**: Delegation System Failure (2026-01-24) - `delegate_task(run_in_background=false)` fails. Strategy: Execute synchronous tasks directly.
-
-**Rebranding Complete** - Project rebranded from "Sacred Texts Search" to "Clarus".
+**Completed**: Browse Detail Pages - Kitap/sure içeriklerini görüntüleme sayfaları eklendi.
 
 ## Recent Changes
+
+### Browse Detail Pages (2026-01-26)
+
+Browse sayfalarından kitap/sure tıklandığında içerik görüntüleme sayfaları eklendi:
+
+**Yeni Sayfalar:**
+- `/quran/[surahId]/page.tsx` - Sure detay sayfası (Arapça ayetler)
+- `/bible/[bookNr]/page.tsx` - Kitap detay sayfası (chapter seçimi + İngilizce ayetler)
+
+**Özellikler:**
+- **Quran Detay**: Sure başlığı (Arapça + transliterasyon), ayet listesi, "Back to Quran" navigasyon
+- **Bible Detay**: Kitap başlığı, testament bilgisi, chapter seçim butonları, ayet listesi
+- Chapter 1 otomatik yükleniyor
+- Animasyonlu geçişler (Framer Motion)
+
+**UI İyileştirmeleri:**
+- `#67` gibi global kitap numaraları kaldırıldı (OT, NT, Apocrypha browse sayfalarından)
+- Daha temiz kitap kartları (sadece isim + chapter sayısı)
+
+**Düzenlenen Dosyalar:**
+- `frontend/app/old-testament/page.tsx` - `#nr` kaldırıldı, `/bible/{nr}` yönlendirmesi
+- `frontend/app/new-testament/page.tsx` - `#nr` kaldırıldı, `/bible/{nr}` yönlendirmesi
+- `frontend/app/apocrypha/page.tsx` - `#nr` kaldırıldı, `/bible/{nr}` yönlendirmesi
+- `frontend/app/quran/page.tsx` - `/quran/{id}` yönlendirmesi
+
+**Backend API Kullanımı:**
+- `GET /api/metadata/quran/surahs/{surah_id}` - Sure + ayetler
+- `GET /api/metadata/bible/books/{book_nr}` - Kitap + chapter özeti
+- `GET /api/metadata/bible/books/{book_nr}/chapters/{chapter_nr}` - Chapter + ayetler
+
+**Test Sonuçları:**
+- Quran: Al-Fatihah → 7 Arapça ayet ✅
+- Bible: Genesis → Chapter 1 → 31 ayet ✅
+- Console hatası yok ✅
+
+### Compare Page Reference Enhancement (2026-01-26)
+
+Compare sayfasına zengin kaynak referansları ve interaktif alıntılar eklendi:
+
+**Backend Değişiklikleri:**
+- `VerseDetail` Pydantic modeli eklendi (text, book_name, chapter, verse, source, translation)
+- `verse_details: Optional[Dict[str, VerseDetail]]` field'ı CompareResponse'a eklendi
+- `extract_quran_verse_detail()` ve `extract_bible_verse_detail()` helper fonksiyonları
+- API response boyutu: 28KB (100KB limitinin altında)
+
+**Frontend Bileşenleri (TDD ile):**
+- `SourceBadge` - Kaynak renk badge'i (Kuran: Emerald, Eski Ahit: Blue, Yeni Ahit: Amber, Apokrifa: Purple)
+- `SourceReferenceCard` - Ayet detayları kartı (badge + referans + çeviri + metin)
+- `FilterTabs` - Kaynak filtreleme sekmeleri (Tümü, Kuran, Eski Ahit, Yeni Ahit, Apokrifa)
+- `InlineCitation` - Tıklanabilir paragraf içi alıntılar
+
+**Yeni Özellikler:**
+- Tam ayet metinleri kaynak kartlarında görünür
+- Kaynaklara göre filtreleme (20 ayet/kaynak)
+- Paragraf içi `[Bakara:153]` alıntılarına tıklayınca ilgili karta scroll + 2sn highlight
+- Çeviri bilgisi: "Diyanet Isleri Baskanligi" (Kuran), "King James Version with Apocrypha" (İncil)
+
+**Test Sonuçları:**
+- 71 test geçti (13 test dosyası)
+- E2E browser testi başarılı
+- Konsol hatası yok
+
+**Dosyalar:**
+- `backend/app/api/compare.py` - VerseDetail schema + helper functions
+- `frontend/components/compare/` - 4 yeni bileşen
+- `frontend/lib/utils/parse-citations.ts` - Citation parsing utility
+- `frontend/__tests__/` - 5 yeni test dosyası (35 test)
 
 ### Rebranding to Clarus (2026-01-25)
 

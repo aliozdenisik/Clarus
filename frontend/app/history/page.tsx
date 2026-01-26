@@ -218,7 +218,7 @@ export default function HistoryPage() {
               View and manage your past search queries
             </p>
           </div>
-          {items.length > 0 && (
+          {items && items.length > 0 && (
             <Button
               variant="destructive"
               size="sm"
@@ -240,7 +240,7 @@ export default function HistoryPage() {
               <Skeleton key={i} className="h-24 w-full" />
             ))}
           </div>
-        ) : items.length === 0 ? (
+        ) : !items || items.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
