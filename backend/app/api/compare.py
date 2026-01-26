@@ -56,6 +56,8 @@ class ParagraphData(BaseModel):
 class VerseDetail(BaseModel):
     """Full verse metadata for rich reference display."""
 
+    model_config = {"ser_json_timedelta": "iso8601"}  # Force all fields to serialize
+
     text: str  # Full verse text (max ~400 chars)
     book_name: str  # "Genesis", "Bakara", etc.
     chapter: int  # Chapter/Surah number
@@ -64,7 +66,7 @@ class VerseDetail(BaseModel):
     translation: (
         str  # "Diyanet Isleri Baskanligi" or "King James Version with Apocrypha"
     )
-    book_nr: Optional[int] = None  # Bible book number (None for Quran)
+    book_nr: int | None = None  # Bible book number (None for Quran)
 
 
 class CompareResponse(BaseModel):

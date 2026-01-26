@@ -50,6 +50,7 @@ interface CompareResult {
     verse: number;
     source: string;
     translation: string;
+    book_nr?: number;  // Bible book number (null for Quran)
   }>;
 }
 
@@ -122,6 +123,39 @@ export default function ComparePage() {
     }, 2000);
   }, []);
 
+  // Navigate to verse page (opens in new tab)
+  const navigateToVerse = useCallback((reference: string) => {
+    if (!result?.verse_details) {
+      console.warn('No verse_details available for navigation');
+      scrollToVerse(reference);
+      return;
+    }
+
+    const verse = result.verse_details[reference];
+    if (!verse) {
+      console.warn(`Verse details not found for: ${reference}`);
+      scrollToVerse(reference);
+      return;
+    }
+
+    let url: string;
+    if (verse.source === 'quran_tr') {
+      // Quran: /quran/{surahId}?verse={verseId}
+      url = `/quran/${verse.chapter}?verse=${verse.verse}`;
+    } else {
+      // Bible: /bible/{bookNr}?chapter={chapter}&verse={verse}
+      if (!verse.book_nr) {
+        console.warn(`Bible book_nr not available for: ${reference}`);
+        scrollToVerse(reference);
+        return;
+      }
+      url = `/bible/${verse.book_nr}?chapter=${verse.chapter}&verse=${verse.verse}`;
+    }
+
+    // Open in new tab
+    window.open(url, '_blank');
+  }, [result?.verse_details, scrollToVerse]);
+
   // Cleanup timer on unmount
   useEffect(() => {
     return () => {
@@ -191,6 +225,27 @@ export default function ComparePage() {
       setResult(completeMsg.result as CompareResult);
       setIsLoading(false);
       return;
+    }
+
+    // Handle verse_details from streaming (sent before text)
+    const verseDetailsMsg = sseData.find((m: any) => m.verse_details);
+    if (verseDetailsMsg?.verse_details) {
+      setResult((prev) => {
+        const base = prev || {
+          topic,
+          essay: "",
+          paragraphs: [],
+          citations: {},
+          confidence: 0,
+          total_verses: 0,
+          total_citations: 0,
+          latency_ms: 0,
+        };
+        return {
+          ...base,
+          verse_details: verseDetailsMsg.verse_details,
+        };
+      });
     }
 
     // Handle progressive updates
@@ -475,7 +530,7 @@ export default function ComparePage() {
                                     <InlineCitation
                                       key={i}
                                       reference={part.reference}
-                                      onClick={() => scrollToVerse(part.reference)}
+                                      onClick={() => navigateToVerse(part.reference)}
                                     />
                                   );
                                 })}
