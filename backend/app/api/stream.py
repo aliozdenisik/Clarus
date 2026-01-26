@@ -23,6 +23,11 @@ sys.path.insert(
 from app.db import get_db
 from app.models import User, SearchHistory
 from app.api.auth import get_current_user, get_current_user_from_token, check_rate_limit
+from app.api.compare import (
+    VerseDetail,
+    extract_quran_verse_detail,
+    extract_bible_verse_detail,
+)
 from src.ultimate_rag import UltimateRAG
 from src.comparative_rag import ComparativeRAG
 
@@ -194,14 +199,65 @@ async def stream_compare(
         await asyncio.sleep(0.1)
 
         try:
-            logger.info("[COMPARE] Starting compare_multi_agent...")
-            print("[COMPARE] Starting compare_multi_agent...")
-            result = rag.compare_multi_agent(topic)
+            # Step 1: Get search results first (same pattern as non-streaming endpoint)
+            logger.info("[COMPARE] Starting search_all...")
+            print("[COMPARE] Starting search_all...")
+            search_result = rag.search_all(topic)
             logger.info(
-                f"[COMPARE] compare_multi_agent completed, result type: {type(result)}"
+                f"[COMPARE] search_all completed, found {len(search_result.quran)} Quran, "
+                f"{len(search_result.ot)} OT, {len(search_result.nt)} NT, {len(search_result.apocrypha)} Apocrypha"
             )
             print(
-                f"[COMPARE] compare_multi_agent completed, result type: {type(result)}"
+                f"[COMPARE] search_all completed, found {len(search_result.quran)} Quran, "
+                f"{len(search_result.ot)} OT, {len(search_result.nt)} NT, {len(search_result.apocrypha)} Apocrypha"
+            )
+
+            # Step 2: Build verse_details from search results
+            verse_details: dict[str, dict] = {}
+
+            for r in search_result.quran:
+                ref, detail = extract_quran_verse_detail(r)
+                if ref not in verse_details:
+                    verse_details[ref] = detail.model_dump()
+
+            for r in search_result.ot:
+                ref, detail = extract_bible_verse_detail(r, "bible_ot")
+                if ref not in verse_details:
+                    verse_details[ref] = detail.model_dump()
+
+            for r in search_result.nt:
+                ref, detail = extract_bible_verse_detail(r, "bible_nt")
+                if ref not in verse_details:
+                    verse_details[ref] = detail.model_dump()
+
+            for r in search_result.apocrypha:
+                ref, detail = extract_bible_verse_detail(r, "bible_apocrypha")
+                if ref not in verse_details:
+                    verse_details[ref] = detail.model_dump()
+
+            logger.info(
+                f"[COMPARE] Built verse_details with {len(verse_details)} references"
+            )
+            print(f"[COMPARE] Built verse_details with {len(verse_details)} references")
+
+            # Send verse_details BEFORE streaming text (so frontend has it ready for lookups)
+            yield f"data: {json.dumps({'verse_details': verse_details})}\n\n"
+
+            # Step 3: Generate multi-agent answer using search results
+            logger.info("[COMPARE] Starting multi_agent_generator.generate...")
+            print("[COMPARE] Starting multi_agent_generator.generate...")
+            result = rag.multi_agent_generator.generate(
+                query=topic,
+                quran_verses=search_result.quran,
+                ot_verses=search_result.ot,
+                nt_verses=search_result.nt,
+                apocrypha_verses=search_result.apocrypha,
+            )
+            logger.info(
+                f"[COMPARE] multi_agent_generator completed, result type: {type(result)}"
+            )
+            print(
+                f"[COMPARE] multi_agent_generator completed, result type: {type(result)}"
             )
 
             # Get analysis text - handle both MultiAgentAnswer and dict
