@@ -9,9 +9,9 @@ describe('InlineCitation', () => {
     expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
-  it('displays reference text with brackets', () => {
+  it('displays reference text without brackets', () => {
     render(<InlineCitation reference="Genesis 1:1" onClick={vi.fn()} />);
-    expect(screen.getByText('[Genesis 1:1]')).toBeInTheDocument();
+    expect(screen.getByText('Genesis 1:1')).toBeInTheDocument();
   });
 
   it('has accessible aria-label', () => {
@@ -28,7 +28,7 @@ describe('InlineCitation', () => {
 
   it('handles Quran citation format', () => {
     render(<InlineCitation reference="Bakara:153" onClick={vi.fn()} />);
-    expect(screen.getByText('[Bakara:153]')).toBeInTheDocument();
+    expect(screen.getByText('Bakara:153')).toBeInTheDocument();
     expect(screen.getByRole('button')).toHaveAttribute('aria-label', 'Jump to Bakara:153 reference');
   });
 });
