@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -10,6 +10,7 @@ import { GlowCard } from "@/components/ui/glow-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ArrowLeft, BookOpen, User, LogOut, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ChapterSummary {
   chapter: number;
@@ -37,11 +38,13 @@ interface ChapterContent {
 export default function BookDetailPage() {
   const params = useParams();
   const bookNr = params.bookNr as string;
+  const searchParams = useSearchParams();
   const [book, setBook] = useState<BookDetail | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
   const [chapterContent, setChapterContent] = useState<ChapterContent | null>(null);
   const [isLoadingBook, setIsLoadingBook] = useState(true);
   const [isLoadingChapter, setIsLoadingChapter] = useState(false);
+  const [highlightedVerse, setHighlightedVerse] = useState<number | null>(null);
   const { user, isLoading: authLoading, logout } = useAuth();
   const router = useRouter();
 
@@ -50,6 +53,25 @@ export default function BookDetailPage() {
       router.push("/login");
     }
   }, [user, authLoading, router]);
+
+  // Read URL params on mount
+  useEffect(() => {
+    const chapterParam = searchParams.get('chapter');
+    const verseParam = searchParams.get('verse');
+    
+    if (chapterParam) {
+      const chapterNum = parseInt(chapterParam, 10);
+      if (!isNaN(chapterNum)) {
+        setSelectedChapter(chapterNum);
+      }
+    }
+    if (verseParam) {
+      const verseNum = parseInt(verseParam, 10);
+      if (!isNaN(verseNum)) {
+        setHighlightedVerse(verseNum);
+      }
+    }
+  }, [searchParams]);
 
   // Fetch book details
   useEffect(() => {
@@ -71,8 +93,8 @@ export default function BookDetailPage() {
 
         const data = await response.json();
         setBook(data.data?.book || null);
-        // Auto-select chapter 1
-        if (data.data?.book?.chapters?.length > 0) {
+        // Auto-select chapter 1 only if no chapter param in URL
+        if (data.data?.book?.chapters?.length > 0 && !searchParams.get('chapter')) {
           setSelectedChapter(1);
         }
       } catch (error) {
@@ -85,7 +107,7 @@ export default function BookDetailPage() {
     if (user && bookNr) {
       fetchBook();
     }
-  }, [user, bookNr]);
+  }, [user, bookNr, searchParams]);
 
   // Fetch chapter content when selected
   useEffect(() => {
@@ -121,6 +143,20 @@ export default function BookDetailPage() {
       fetchChapter();
     }
   }, [user, bookNr, selectedChapter]);
+
+  // Scroll to verse when chapter content loads and highlightedVerse is set
+  useEffect(() => {
+    if (highlightedVerse && chapterContent) {
+      const timer = setTimeout(() => {
+        const element = document.querySelector(`[data-verse-id="${highlightedVerse}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => setHighlightedVerse(null), 2000);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedVerse, chapterContent]);
 
   const handleLogout = async () => {
     await logout();
@@ -291,7 +327,15 @@ export default function BookDetailPage() {
                 </h3>
                 <div className="space-y-3">
                   {chapterContent.verses.map((verse) => (
-                    <p key={verse.verse} className="text-[var(--color-text-primary)] leading-relaxed">
+                    <p 
+                      key={verse.verse} 
+                      data-verse-id={verse.verse}
+                      className={cn(
+                        "text-[var(--color-text-primary)] leading-relaxed",
+                        highlightedVerse === verse.verse && 
+                          "ring-2 ring-[var(--color-accent-primary)] shadow-lg shadow-[var(--color-accent-primary)]/20 rounded-lg p-2 transition-all duration-500"
+                      )}
+                    >
                       <span className="text-sm font-bold text-[var(--color-accent-primary)] mr-2">
                         {verse.verse}
                       </span>
