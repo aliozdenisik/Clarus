@@ -39,6 +39,14 @@ interface CompareResult {
   total_verses: number;
   total_citations: number;
   latency_ms: number;
+  verse_details?: Record<string, {
+    text: string;
+    book_name: string;
+    chapter: number;
+    verse: number;
+    source: string;
+    translation: string;
+  }>;
 }
 
 export default function ComparePage() {
