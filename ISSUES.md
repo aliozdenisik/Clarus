@@ -10,9 +10,10 @@ This file tracks known issues, bugs, and technical debt discovered during develo
 
 ### Issue #1: Pre-existing Frontend Test Failures (Navigation URL Mismatch)
 
-**Status:** Open
+**Status:** ✅ Resolved
 **Priority:** Low
 **Discovered:** 2026-01-27
+**Resolved:** 2026-01-27
 **Location:** `frontend/__tests__/`
 
 **Affected Files:**
@@ -23,66 +24,29 @@ This file tracks known issues, bugs, and technical debt discovered during develo
 **Description:**
 Three browse page tests fail due to navigation URL mismatch. Tests expect `/search?source=ot&book=1` but actual navigation goes to `/bible/1`.
 
-**Error Message:**
-```
-AssertionError: expected "spy" to be called with arguments: [ '/search?source=ot&book=1' ]
-Received: [ '/bible/1' ]
-```
-
-**Root Cause:**
-The page components were updated to use direct Bible routes (`/bible/{bookNr}`) instead of search routes with query parameters. Tests were not updated to match.
-
-**Fix Required:**
-Update test assertions to expect the new URL format:
-```typescript
-// OLD (incorrect)
-expect(mockPush).toHaveBeenCalledWith('/search?source=ot&book=1');
-
-// NEW (correct)
-expect(mockPush).toHaveBeenCalledWith('/bible/1');
-```
-
-**Files to Modify:**
-- `frontend/__tests__/old-testament.test.tsx` line 113
-- `frontend/__tests__/new-testament.test.tsx` line 113
-- `frontend/__tests__/apocrypha.test.tsx` line 113
+**Resolution:**
+Updated test assertions to expect the new URL format `/bible/1` instead of `/search?source=ot&book=1`. All 167 tests now pass.
 
 ---
 
 ### Issue #2: Pydantic V2 Deprecation Warnings (Backend)
 
-**Status:** Open
+**Status:** ✅ Resolved
 **Priority:** Low
 **Discovered:** 2026-01-27
+**Resolved:** 2026-01-27
 **Location:** `backend/app/`
 
 **Affected Files:**
-- `backend/app/config.py:6`
-- `backend/app/auth/schemas.py:21`
-- `backend/app/schemas/common.py:18`
+- `backend/app/config.py`
+- `backend/app/auth/schemas.py`
+- `backend/app/schemas/common.py`
 
 **Description:**
-Pydantic V2 deprecation warnings about class-based `config`. Should migrate to `ConfigDict`.
+Pydantic V2 deprecation warnings about class-based `config`. Migrated to `ConfigDict`.
 
-**Warning Message:**
-```
-PydanticDeprecatedSince20: Support for class-based `config` is deprecated, 
-use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0.
-```
-
-**Fix Required:**
-```python
-# OLD
-class Settings(BaseSettings):
-    class Config:
-        env_file = ".env"
-
-# NEW
-from pydantic import ConfigDict
-
-class Settings(BaseSettings):
-    model_config = ConfigDict(env_file=".env")
-```
+**Resolution:**
+Migrated all 3 files from `class Config` to `model_config = ConfigDict(...)`. No more Pydantic deprecation warnings.
 
 ---
 
@@ -109,7 +73,13 @@ DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
 
 ## Resolved Issues
 
-*No resolved issues yet.*
+### Issue #1: Pre-existing Frontend Test Failures (Navigation URL Mismatch)
+**Resolved:** 2026-01-27
+**Fix:** Updated test assertions from `/search?source=ot&book=1` to `/bible/1` in 3 test files.
+
+### Issue #2: Pydantic V2 Deprecation Warnings (Backend)
+**Resolved:** 2026-01-27
+**Fix:** Migrated from `class Config` to `model_config = ConfigDict(...)` in 3 backend files.
 
 ---
 
