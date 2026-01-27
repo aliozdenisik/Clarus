@@ -17,6 +17,8 @@ import re
 import json
 import logging
 import requests
+import time
+import sentry_sdk
 from typing import List, Optional, Dict, Any, Tuple
 from dataclasses import dataclass, field
 from tenacity import (
@@ -279,81 +281,95 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
     )
     def _call_llm(self, query: str, context: str) -> dict:
         """Call OpenRouter API for comparative essay generation"""
-        messages = [{"role": "system", "content": self.SYSTEM_PROMPT}]
-        messages.extend(self.FEW_SHOT)
-        messages.append({"role": "user", "content": f"SORU: {query}\n\n{context}"})
+        with sentry_sdk.start_span(
+            op="llm.openrouter.comparative",
+            description="Comparative essay generation LLM call",
+        ) as span:
+            start_time = time.time()
+            span.set_data("model", self.model)
 
-        try:
-            response = llm_with_breaker(
-                lambda: requests.post(
-                    self.OPENROUTER_URL,
-                    headers=self._headers,
-                    json={
-                        "model": self.model,
-                        "messages": messages,
-                        "response_format": {"type": "json_object"},
-                        "max_tokens": 4000,  # Longer for essay
-                        "temperature": 0.4,
-                    },
-                    timeout=120,  # Longer timeout for complex generation
+            messages = [{"role": "system", "content": self.SYSTEM_PROMPT}]
+            messages.extend(self.FEW_SHOT)
+            messages.append({"role": "user", "content": f"SORU: {query}\n\n{context}"})
+
+            try:
+                response = llm_with_breaker(
+                    lambda: requests.post(
+                        self.OPENROUTER_URL,
+                        headers=self._headers,
+                        json={
+                            "model": self.model,
+                            "messages": messages,
+                            "response_format": {"type": "json_object"},
+                            "max_tokens": 4000,  # Longer for essay
+                            "temperature": 0.4,
+                        },
+                        timeout=120,  # Longer timeout for complex generation
+                    )
                 )
-            )
-            response.raise_for_status()
-            content = response.json()["choices"][0]["message"]["content"].strip()
-            return json.loads(content)
-        except CircuitBreakerError:
-            # Circuit breaker open - fail fast, do NOT retry
-            logger.warning(
-                "Circuit breaker OPEN for LLM - comparative essay generation failed"
-            )
-            return {
-                "essay": "Karşılaştırmalı analiz üretilemedi (servis geçici olarak kullanılamıyor).",
-                "quran_citations": [],
-                "bible_citations": [],
-                "all_references_ordered": [],
-                "confidence": 0.0,
-            }
-        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
-            # Let these propagate to @retry decorator
-            raise
-        except requests.exceptions.RequestException as e:
-            # Other HTTP errors - don't retry
-            logger.error(f"API request failed: {e}")
-            return {
-                "essay": "Karşılaştırmalı analiz üretilemedi.",
-                "quran_citations": [],
-                "bible_citations": [],
-                "all_references_ordered": [],
-                "confidence": 0.0,
-            }
-        except (json.JSONDecodeError, KeyError) as e:
-            # Parse errors - don't retry
-            logger.error(f"Response parsing failed: {e}")
-            return {
-                "essay": "Karşılaştırmalı analiz üretilemedi.",
-                "quran_citations": [],
-                "bible_citations": [],
-                "all_references_ordered": [],
-                "confidence": 0.0,
-            }
-        except requests.exceptions.RequestException as e:
-            print(f"API request failed: {e}")
-            return {
-                "essay": "Karşılaştırmalı analiz üretilemedi.",
-                "quran_citations": [],
-                "bible_citations": [],
-                "all_references_ordered": [],
-                "confidence": 0.0,
-            }
-        except (json.JSONDecodeError, KeyError) as e:
-            print(f"Response parsing failed: {e}")
-            return {
-                "essay": "Karşılaştırmalı analiz üretilemedi.",
-                "quran_citations": [],
-                "bible_citations": [],
-                "all_references_ordered": [],
-                "confidence": 0.0,
-            }
+                response.raise_for_status()
+                content = response.json()["choices"][0]["message"]["content"].strip()
+                result = json.loads(content)
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return result
+            except CircuitBreakerError:
+                # Circuit breaker open - fail fast, do NOT retry
+                logger.warning(
+                    "Circuit breaker OPEN for LLM - comparative essay generation failed"
+                )
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return {
+                    "essay": "Karşılaştırmalı analiz üretilemedi (servis geçici olarak kullanılamıyor).",
+                    "quran_citations": [],
+                    "bible_citations": [],
+                    "all_references_ordered": [],
+                    "confidence": 0.0,
+                }
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+                # Let these propagate to @retry decorator
+                raise
+            except requests.exceptions.RequestException as e:
+                # Other HTTP errors - don't retry
+                logger.error(f"API request failed: {e}")
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return {
+                    "essay": "Karşılaştırmalı analiz üretilemedi.",
+                    "quran_citations": [],
+                    "bible_citations": [],
+                    "all_references_ordered": [],
+                    "confidence": 0.0,
+                }
+            except (json.JSONDecodeError, KeyError) as e:
+                # Parse errors - don't retry
+                logger.error(f"Response parsing failed: {e}")
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return {
+                    "essay": "Karşılaştırmalı analiz üretilemedi.",
+                    "quran_citations": [],
+                    "bible_citations": [],
+                    "all_references_ordered": [],
+                    "confidence": 0.0,
+                }
+            except requests.exceptions.RequestException as e:
+                print(f"API request failed: {e}")
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return {
+                    "essay": "Karşılaştırmalı analiz üretilemedi.",
+                    "quran_citations": [],
+                    "bible_citations": [],
+                    "all_references_ordered": [],
+                    "confidence": 0.0,
+                }
+            except (json.JSONDecodeError, KeyError) as e:
+                print(f"Response parsing failed: {e}")
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return {
+                    "essay": "Karşılaştırmalı analiz üretilemedi.",
+                    "quran_citations": [],
+                    "bible_citations": [],
+                    "all_references_ordered": [],
+                    "confidence": 0.0,
+                }
 
     def generate_comparative_answer(
         self,

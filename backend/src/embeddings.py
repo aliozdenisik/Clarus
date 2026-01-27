@@ -20,6 +20,8 @@ import time
 from tqdm import tqdm
 from pathlib import Path
 
+import sentry_sdk
+
 from src.circuit_breaker import embeddings_with_breaker, CircuitBreakerError
 
 # Optional imports for caching and rate limiting
@@ -124,19 +126,29 @@ class DenseEncoder:
 
     def _api_call(self, text: str) -> List[float]:
         """Make API call with rate limiting and circuit breaker"""
-        self._rate_limit_wait()
+        with sentry_sdk.start_span(
+            op="embedding.openai.single", description="Single embedding"
+        ) as span:
+            start_time = time.time()
+            span.set_data("model", self.model_name)
+            span.set_data("text_length", len(text))
 
-        response = embeddings_with_breaker(
-            lambda: requests.post(
-                self.OPENROUTER_API_URL,
-                headers=self._headers,
-                json={"model": self.model_name, "input": text},
-                timeout=60,
+            self._rate_limit_wait()
+
+            response = embeddings_with_breaker(
+                lambda: requests.post(
+                    self.OPENROUTER_API_URL,
+                    headers=self._headers,
+                    json={"model": self.model_name, "input": text},
+                    timeout=60,
+                )
             )
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data["data"][0]["embedding"]
+            response.raise_for_status()
+            data = response.json()
+            result = data["data"][0]["embedding"]
+
+            span.set_data("latency_ms", (time.time() - start_time) * 1000)
+            return result
 
     def encode(self, text: str) -> List[float]:
         """
@@ -177,68 +189,78 @@ class DenseEncoder:
             show_progress: Show progress bar
             max_retries: Maximum retry attempts per batch
         """
-        import time
+        with sentry_sdk.start_span(
+            op="embedding.openai.batch", description="Batch embedding"
+        ) as span:
+            start_time = time.time()
+            span.set_data("model", self.model_name)
+            span.set_data("batch_size", batch_size)
+            span.set_data("total_texts", len(texts))
 
-        all_embeddings = []
+            all_embeddings = []
 
-        iterator = range(0, len(texts), batch_size)
-        if show_progress:
-            iterator = tqdm(iterator, desc="Encoding dense vectors")
+            iterator = range(0, len(texts), batch_size)
+            if show_progress:
+                iterator = tqdm(iterator, desc="Encoding dense vectors")
 
-        for i in iterator:
-            batch = texts[i : i + batch_size]
+            for i in iterator:
+                batch = texts[i : i + batch_size]
 
-            # Retry logic with exponential backoff
-            for attempt in range(max_retries):
-                try:
-                    response = embeddings_with_breaker(
-                        lambda: requests.post(
-                            self.OPENROUTER_API_URL,
-                            headers=self._headers,
-                            json={"model": self.model_name, "input": batch},
-                            timeout=180,  # Increased timeout
+                # Retry logic with exponential backoff
+                for attempt in range(max_retries):
+                    try:
+                        response = embeddings_with_breaker(
+                            lambda: requests.post(
+                                self.OPENROUTER_API_URL,
+                                headers=self._headers,
+                                json={"model": self.model_name, "input": batch},
+                                timeout=180,  # Increased timeout
+                            )
                         )
-                    )
-                    response.raise_for_status()
-                    data = response.json()
+                        response.raise_for_status()
+                        data = response.json()
 
-                    # Sort by index to maintain order
-                    sorted_data = sorted(data["data"], key=lambda x: x["index"])
-                    batch_embeddings = [item["embedding"] for item in sorted_data]
-                    all_embeddings.extend(batch_embeddings)
-                    break  # Success, exit retry loop
+                        # Sort by index to maintain order
+                        sorted_data = sorted(data["data"], key=lambda x: x["index"])
+                        batch_embeddings = [item["embedding"] for item in sorted_data]
+                        all_embeddings.extend(batch_embeddings)
+                        break  # Success, exit retry loop
 
-                except CircuitBreakerError:
-                    print(
-                        "\nCircuit breaker OPEN for embeddings - batch encoding failed"
-                    )
-                    raise  # Propagate immediately, no retry
-
-                except (
-                    requests.exceptions.Timeout,
-                    requests.exceptions.ReadTimeout,
-                ) as e:
-                    if attempt < max_retries - 1:
-                        wait_time = 2**attempt * 5  # 5s, 10s, 20s
+                    except CircuitBreakerError:
                         print(
-                            f"\nTimeout error, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})"
+                            "\nCircuit breaker OPEN for embeddings - batch encoding failed"
                         )
-                        time.sleep(wait_time)
-                    else:
-                        print(f"\nFailed after {max_retries} attempts. Raising error.")
-                        raise
+                        raise  # Propagate immediately, no retry
 
-                except requests.exceptions.RequestException as e:
-                    if attempt < max_retries - 1:
-                        wait_time = 2**attempt * 5
-                        print(
-                            f"\nAPI error: {e}, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})"
-                        )
-                        time.sleep(wait_time)
-                    else:
-                        raise
+                    except (
+                        requests.exceptions.Timeout,
+                        requests.exceptions.ReadTimeout,
+                    ) as e:
+                        if attempt < max_retries - 1:
+                            wait_time = 2**attempt * 5  # 5s, 10s, 20s
+                            print(
+                                f"\nTimeout error, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})"
+                            )
+                            time.sleep(wait_time)
+                        else:
+                            print(
+                                f"\nFailed after {max_retries} attempts. Raising error."
+                            )
+                            raise
 
-        return all_embeddings
+                    except requests.exceptions.RequestException as e:
+                        if attempt < max_retries - 1:
+                            wait_time = 2**attempt * 5
+                            print(
+                                f"\nAPI error: {e}, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})"
+                            )
+                            time.sleep(wait_time)
+                        else:
+                            raise
+
+            span.set_data("latency_ms", (time.time() - start_time) * 1000)
+            span.set_data("embeddings_generated", len(all_embeddings))
+            return all_embeddings
 
     @property
     def dimension(self) -> int:

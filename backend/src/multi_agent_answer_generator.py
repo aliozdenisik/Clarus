@@ -29,6 +29,8 @@ import os
 import json
 import logging
 import requests
+import time
+import sentry_sdk
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -172,40 +174,51 @@ class BaseSpecialistAgent:
     )
     def _call_llm(self, messages: List[Dict], max_tokens: int = 1000) -> dict:
         """Call OpenRouter API"""
-        try:
-            response = llm_with_breaker(
-                lambda: requests.post(
-                    self.OPENROUTER_URL,
-                    headers=self._headers,
-                    json={
-                        "model": self.MODEL,
-                        "messages": messages,
-                        "response_format": {"type": "json_object"},
-                        "max_tokens": max_tokens,
-                        "temperature": 0.3,
-                    },
-                    timeout=60,
+        with sentry_sdk.start_span(
+            op="llm.openrouter.agent", description="Agent LLM call"
+        ) as span:
+            start_time = time.time()
+            span.set_data("model", self.MODEL)
+
+            try:
+                response = llm_with_breaker(
+                    lambda: requests.post(
+                        self.OPENROUTER_URL,
+                        headers=self._headers,
+                        json={
+                            "model": self.MODEL,
+                            "messages": messages,
+                            "response_format": {"type": "json_object"},
+                            "max_tokens": max_tokens,
+                            "temperature": 0.3,
+                        },
+                        timeout=60,
+                    )
                 )
-            )
-            response.raise_for_status()
-            content = response.json()["choices"][0]["message"]["content"].strip()
-            return json.loads(content)
-        except CircuitBreakerError:
-            # Circuit breaker open - fail fast, do NOT retry
-            logger.warning(
-                "Circuit breaker OPEN for LLM - multi-agent generation failed"
-            )
-            return {"commentary": "", "citations": [], "confidence": 0.0}
-        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
-            # Let these propagate to @retry decorator
-            raise
-        except Exception as e:
-            # Other errors - don't retry
-            logger.error(f"LLM call failed: {e}")
-            return {"commentary": "", "citations": [], "confidence": 0.0}
-        except Exception as e:
-            print(f"LLM call failed: {e}")
-            return {"commentary": "", "citations": [], "confidence": 0.0}
+                response.raise_for_status()
+                content = response.json()["choices"][0]["message"]["content"].strip()
+                result = json.loads(content)
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return result
+            except CircuitBreakerError:
+                # Circuit breaker open - fail fast, do NOT retry
+                logger.warning(
+                    "Circuit breaker OPEN for LLM - multi-agent generation failed"
+                )
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return {"commentary": "", "citations": [], "confidence": 0.0}
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+                # Let these propagate to @retry decorator
+                raise
+            except Exception as e:
+                # Other errors - don't retry
+                logger.error(f"LLM call failed: {e}")
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return {"commentary": "", "citations": [], "confidence": 0.0}
+            except Exception as e:
+                print(f"LLM call failed: {e}")
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return {"commentary": "", "citations": [], "confidence": 0.0}
 
 
 class OldTestamentAgent(BaseSpecialistAgent):

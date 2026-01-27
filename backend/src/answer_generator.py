@@ -17,6 +17,8 @@ import os
 import json
 import logging
 import requests
+import time
+import sentry_sdk
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass, field
 from tenacity import (
@@ -249,79 +251,95 @@ VERSES:
     )
     def _call_llm(self, query: str, context: str, source: str) -> dict:
         """Call OpenRouter API for answer generation"""
-        # Select appropriate prompt based on source
-        if "quran" in source:
-            system_prompt = self.SYSTEM_PROMPT_QURAN
-            examples = self.FEW_SHOT_QURAN
-            user_content = f"SORU: {query}\n\nAYETLER:\n{context}"
-        else:
-            system_prompt = self.SYSTEM_PROMPT_BIBLE
-            examples = self.FEW_SHOT_BIBLE
-            user_content = f"QUESTION: {query}\n\nVERSES:\n{context}"
+        with sentry_sdk.start_span(
+            op="llm.openrouter.answer", description="Answer generation LLM call"
+        ) as span:
+            start_time = time.time()
+            span.set_data("model", self.model)
+            span.set_data("source", source)
 
-        messages = [{"role": "system", "content": system_prompt}]
-        messages.extend(examples)
-        messages.append({"role": "user", "content": user_content})
+            # Select appropriate prompt based on source
+            if "quran" in source:
+                system_prompt = self.SYSTEM_PROMPT_QURAN
+                examples = self.FEW_SHOT_QURAN
+                user_content = f"SORU: {query}\n\nAYETLER:\n{context}"
+            else:
+                system_prompt = self.SYSTEM_PROMPT_BIBLE
+                examples = self.FEW_SHOT_BIBLE
+                user_content = f"QUESTION: {query}\n\nVERSES:\n{context}"
 
-        try:
-            response = llm_with_breaker(
-                lambda: requests.post(
-                    self.OPENROUTER_URL,
-                    headers=self._headers,
-                    json={
-                        "model": self.model,
-                        "messages": messages,
-                        "response_format": {"type": "json_object"},
-                        "max_tokens": 1500,
-                        "temperature": 0.3,
-                    },
-                    timeout=60,
+            messages = [{"role": "system", "content": system_prompt}]
+            messages.extend(examples)
+            messages.append({"role": "user", "content": user_content})
+
+            try:
+                response = llm_with_breaker(
+                    lambda: requests.post(
+                        self.OPENROUTER_URL,
+                        headers=self._headers,
+                        json={
+                            "model": self.model,
+                            "messages": messages,
+                            "response_format": {"type": "json_object"},
+                            "max_tokens": 1500,
+                            "temperature": 0.3,
+                        },
+                        timeout=60,
+                    )
                 )
-            )
-            response.raise_for_status()
-            content = response.json()["choices"][0]["message"]["content"].strip()
-            return json.loads(content)
-        except CircuitBreakerError:
-            # Circuit breaker open - fail fast, do NOT retry
-            logger.warning("Circuit breaker OPEN for LLM - answer generation failed")
-            return {
-                "answer": "Cevap üretilemedi (servis geçici olarak kullanılamıyor).",
-                "cited_references": [],
-                "confidence": 0.0,
-            }
-        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
-            # Let these propagate to @retry decorator
-            raise
-        except requests.exceptions.RequestException as e:
-            # Other HTTP errors - don't retry
-            logger.error(f"API request failed: {e}")
-            return {
-                "answer": "Cevap üretilemedi.",
-                "cited_references": [],
-                "confidence": 0.0,
-            }
-        except (json.JSONDecodeError, KeyError) as e:
-            # Parse errors - don't retry
-            logger.error(f"Response parsing failed: {e}")
-            return {
-                "answer": "Cevap üretilemedi.",
-                "cited_references": [],
-                "confidence": 0.0,
-            }
-        except requests.exceptions.RequestException as e:
-            print(f"API request failed: {e}")
-            return {
-                "answer": "Cevap üretilemedi.",
-                "cited_references": [],
-                "confidence": 0.0,
-            }
-        except (json.JSONDecodeError, KeyError) as e:
-            print(f"Response parsing failed: {e}")
-            return {
-                "answer": "Cevap üretilemedi.",
-                "cited_references": [],
-                "confidence": 0.0,
-            }
+                response.raise_for_status()
+                content = response.json()["choices"][0]["message"]["content"].strip()
+                result = json.loads(content)
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return result
+            except CircuitBreakerError:
+                # Circuit breaker open - fail fast, do NOT retry
+                logger.warning(
+                    "Circuit breaker OPEN for LLM - answer generation failed"
+                )
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return {
+                    "answer": "Cevap üretilemedi (servis geçici olarak kullanılamıyor).",
+                    "cited_references": [],
+                    "confidence": 0.0,
+                }
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+                # Let these propagate to @retry decorator
+                raise
+            except requests.exceptions.RequestException as e:
+                # Other HTTP errors - don't retry
+                logger.error(f"API request failed: {e}")
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return {
+                    "answer": "Cevap üretilemedi.",
+                    "cited_references": [],
+                    "confidence": 0.0,
+                }
+            except (json.JSONDecodeError, KeyError) as e:
+                # Parse errors - don't retry
+                logger.error(f"Response parsing failed: {e}")
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return {
+                    "answer": "Cevap üretilemedi.",
+                    "cited_references": [],
+                    "confidence": 0.0,
+                }
+            except requests.exceptions.RequestException as e:
+                print(f"API request failed: {e}")
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return {
+                    "answer": "Cevap üretilemedi.",
+                    "cited_references": [],
+                    "confidence": 0.0,
+                }
+            except (json.JSONDecodeError, KeyError) as e:
+                print(f"Response parsing failed: {e}")
+                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                return {
+                    "answer": "Cevap üretilemedi.",
+                    "cited_references": [],
+                    "confidence": 0.0,
+                }
 
     def generate_answer(
         self,

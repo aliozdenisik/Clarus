@@ -26,6 +26,7 @@ Usage:
 
 import pybreaker
 import logging
+import sentry_sdk
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +65,11 @@ def qdrant_with_breaker(func):
         return qdrant_breaker.call(func)
     except pybreaker.CircuitBreakerError:
         logger.warning("Circuit breaker OPEN for qdrant")
+        sentry_sdk.capture_message(
+            "Circuit breaker OPEN: qdrant",
+            level="warning",
+            tags={"breaker_name": "qdrant", "state": "open"},
+        )
         raise
 
 
@@ -88,6 +94,11 @@ def llm_with_breaker(func):
         return llm_breaker.call(func)
     except pybreaker.CircuitBreakerError:
         logger.warning("Circuit breaker OPEN for openrouter")
+        sentry_sdk.capture_message(
+            "Circuit breaker OPEN: openrouter",
+            level="warning",
+            tags={"breaker_name": "openrouter", "state": "open"},
+        )
         raise
 
 
@@ -112,6 +123,11 @@ def embeddings_with_breaker(func):
         return embeddings_breaker.call(func)
     except pybreaker.CircuitBreakerError:
         logger.warning("Circuit breaker OPEN for embeddings")
+        sentry_sdk.capture_message(
+            "Circuit breaker OPEN: embeddings",
+            level="warning",
+            tags={"breaker_name": "embeddings", "state": "open"},
+        )
         raise
 
 
