@@ -17,7 +17,7 @@ We take the security of Clarus seriously. If you have discovered a security vuln
 
 ### How to Report
 
-Please email us at [security@yourdomain.com] with a description of the vulnerability and steps to reproduce it. We will acknowledge your report within 48 hours and provide an estimated timeline for a fix.
+Please email us at [aliozden21@gmail.com] with a description of the vulnerability and steps to reproduce it. We will acknowledge your report within 48 hours and provide an estimated timeline for a fix.
 
 ### Response Process
 

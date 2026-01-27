@@ -578,6 +578,10 @@ class UltimateRAG:
 
         For English translations (kjva, kjv), automatically translates Turkish queries to English
         and uses the translated query for reranking to ensure proper cross-lingual matching.
+
+        If testament is specified (e.g., "ot", "nt", "apocrypha"), searches only that collection.
+        Otherwise, searches all 3 Bible collections (bible_ot, bible_nt, bible_apocrypha) and
+        merges results using RRF fusion.
         """
         original_query = query
         translated_query = None
@@ -595,12 +599,16 @@ class UltimateRAG:
                 if self.verbose:
                     console.print(f"[yellow]Translation warning: {e}[/yellow]")
 
-        # Determine source string
-        source = f"bible_{testament}" if testament else f"bible_{translation}"
+        # If testament is specified, search only that collection
+        if testament:
+            source = f"bible_{testament}"
+            return self.search(
+                query, source=source, top_k=top_k, rerank_query=translated_query
+            )
 
-        # Pass translated query for reranking to fix language mismatch
-        return self.search(
-            query, source=source, top_k=top_k, rerank_query=translated_query
+        # Otherwise, search all 3 Bible collections and merge with RRF
+        return self._search_all_bible_collections(
+            query, top_k=top_k, rerank_query=translated_query
         )
 
     # ============= ANSWER GENERATION (RAG) =============
