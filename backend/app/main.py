@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+import asyncio
 import logging
 
 from app.config import settings
@@ -14,10 +16,42 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # STARTUP
     logger.info("Initializing database...")
     await init_db()
     logger.info("Database initialized")
-    yield
+
+    yield  # <-- App runs here
+
+    # SHUTDOWN (triggered by uvicorn on SIGTERM/SIGINT)
+    logger.info("Shutting down, cleaning up...")
+
+    # Close database connections with timeout and error handling
+    from app.db import engine
+
+    try:
+        await asyncio.wait_for(engine.dispose(), timeout=5.0)
+        logger.info("Database connections closed")
+    except asyncio.TimeoutError:
+        logger.warning("Database disposal timed out after 5s, proceeding with shutdown")
+    except Exception as e:
+        logger.error(f"Error disposing database engine: {e}")
+
+    # Cancel any pending tasks (best effort)
+    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+    for task in tasks:
+        task.cancel()
+
+    # Wait for task cancellation with timeout
+    if tasks:
+        try:
+            await asyncio.wait_for(
+                asyncio.gather(*tasks, return_exceptions=True), timeout=5.0
+            )
+        except asyncio.TimeoutError:
+            logger.warning(f"{len(tasks)} tasks did not cancel within timeout")
+
+    logger.info("Shutdown complete")
 
 
 app = FastAPI(
@@ -72,11 +106,37 @@ app.include_router(preferences.router, prefix="/api/preferences", tags=["prefere
 
 @app.get("/api/health")
 async def health_check():
-    return {
-        "status": "healthy",
-        "version": "2.0.0",
-        "environment": settings.app_env,
-    }
+    status = "healthy"
+    qdrant_status = "connected"
+    event_loop_status = "ok"
+
+    # Test event loop responsiveness (detects blocking)
+    try:
+        await asyncio.wait_for(asyncio.sleep(0.1), timeout=1.0)
+    except asyncio.TimeoutError:
+        status = "unhealthy"
+        event_loop_status = "blocked"
+
+    # Test Qdrant connectivity with 2s timeout
+    try:
+        from qdrant_client import QdrantClient
+
+        client = QdrantClient(host="localhost", port=6333, timeout=2)
+        await asyncio.wait_for(asyncio.to_thread(client.get_collections), timeout=2.0)
+    except Exception:
+        if status == "healthy":
+            status = "degraded"
+        qdrant_status = "disconnected"
+
+    return JSONResponse(
+        status_code=200 if status == "healthy" else 503,
+        content={
+            "status": status,
+            "version": "2.0.0",
+            "event_loop": event_loop_status,
+            "qdrant": qdrant_status,
+        },
+    )
 
 
 @app.get("/api/config")

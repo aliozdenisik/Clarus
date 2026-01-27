@@ -1,0 +1,19 @@
+# This is a TEMPLATE - run systemd-install.sh to generate actual service file
+# DO NOT copy this directly to /etc/systemd/system/
+
+[Unit]
+Description=Clarus Backend API
+After=network.target docker.service
+
+[Service]
+Type=simple
+User=REPLACE_USER
+EnvironmentFile=REPLACE_BACKEND_PATH/.env
+WorkingDirectory=REPLACE_BACKEND_PATH
+ExecStart=REPLACE_VENV_PATH/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 30
+Restart=always
+RestartSec=5
+# NOTE: WatchdogSec intentionally omitted - requires sd_notify integration (future work)
+
+[Install]
+WantedBy=multi-user.target
