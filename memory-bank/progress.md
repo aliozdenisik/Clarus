@@ -31,6 +31,12 @@
 
 ### Backend API
 
+- [x] Circuit breaker protection (pybreaker)
+- [x] Tenacity retry decorators on LLM calls
+- [x] Enhanced health check (event_loop + Qdrant status)
+- [x] Graceful shutdown in lifespan manager
+- [x] SSE heartbeats (4 points in stream.py)
+- [x] systemd service template and installer
 - [x] CORS production configuration
 - [x] Standardized error responses
 - [x] Rate limit headers (X-RateLimit-*)
@@ -43,6 +49,10 @@
 
 ### Frontend (Next.js 15)
 
+- [x] SSE reconnection with exponential backoff
+- [x] Auth timeout (10s) with offline detection
+- [x] Offline banner component
+- [x] backendStatus state in AuthContext
 - [x] Landing page with animations
 - [x] Login / Register pages
 - [x] Search page (Kuran)
@@ -70,6 +80,28 @@
 - [x] `compare` - Comparative analysis
 - [x] `info` - Collection info
 - [x] `cache-info` / `cache-clear` - Cache management
+
+## Test Coverage Improvements (2026-01-27)
+
+### New Frontend Test Files (Vitest + RTL)
+| File | Tests | Coverage |
+|------|-------|----------|
+| `__tests__/use-sse.test.tsx` | 28 | SSE hook: reconnection, exponential backoff, state management |
+| `__tests__/offline-banner.test.tsx` | 10 | Offline UI: render states, styling |
+| `__tests__/compare-page.test.tsx` | 9 | Compare page: form, SSE streaming, filters |
+| `__tests__/search-page.test.tsx` | 9 | Search page: input, results, loading states |
+| `__tests__/auth-context.test.tsx` | +10 | Extended: timeout, backendStatus |
+
+### New Backend Test Files (pytest)
+| File | Tests | Coverage |
+|------|-------|----------|
+| `tests/test_circuit_breaker.py` | 39 | Circuit breakers: thresholds, wrappers, state transitions |
+| `tests/test_health_endpoint.py` | 37 | Health API: response structure, status codes, Qdrant connectivity |
+
+### Test Summary
+- Frontend: 167 total tests (164 passing, 3 pre-existing failures)
+- Backend: 76 unit tests (all passing)
+- Total new tests added: 142
 
 ## What's Left to Build
 
@@ -115,6 +147,8 @@
 1. **Port conflicts**: Ensure no existing Qdrant on 6333
 2. **Google OAuth**: Requires credentials in .env
 3. **Rate limiting**: 50/day per user (configurable)
+4. **SSE 30s gap**: During multi-agent generation, no heartbeats (partial mitigation via reconnection)
+5. **Circuit breaker silent degradation**: Returns empty results instead of error (intentional for UX)
 
 ## Evolution of Project
 

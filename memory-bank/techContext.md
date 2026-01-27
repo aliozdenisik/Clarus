@@ -86,6 +86,10 @@ qdrant-client>=1.7.0
 fastembed>=0.2.0
 rich>=13.0.0
 
+# Resilience
+pybreaker>=1.0.0
+tenacity>=8.2.0
+
 # REST API
 fastapi>=0.110.0
 uvicorn[standard]>=0.27.0
@@ -163,5 +167,34 @@ qdrant/
 | `/api/admin/users` | GET | User list (paginated) |
 | `/api/admin/system` | GET | System info |
 | `/api/config` | GET | Public config (rate limits, etc) |
-| `/api/health` | GET | Health check |
+| `/api/health` | GET | Health check (event_loop, qdrant connectivity, status) |
 | `/docs` | GET | OpenAPI documentation |
+
+## Resilience Infrastructure
+
+### systemd Service
+
+Install script and template at `backend/scripts/`:
+
+```bash
+# Install service
+./backend/scripts/systemd-install.sh /path/to/backend /path/to/venv
+
+# Service management
+sudo systemctl enable --now clarus-backend
+sudo systemctl status clarus-backend
+journalctl -u clarus-backend -f
+```
+
+### Health Check Response
+
+```json
+{
+  "status": "healthy",     // healthy | degraded | unhealthy
+  "version": "2.0.0",
+  "event_loop": "ok",      // ok | blocked
+  "qdrant": "connected"    // connected | disconnected
+}
+```
+- HTTP 200: healthy
+- HTTP 503: degraded or unhealthy

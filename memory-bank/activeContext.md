@@ -2,9 +2,53 @@
 
 ## Current Work Focus
 
-**Date**: 2026-01-26
+**Date**: 2026-01-27
 
-**Completed**: Arabic Font Fix - Kuran ayetleri sayfasında Arapça font ve Türkçe çeviri düzeltmesi.
+**Completed**: 
+- Reliability & Known Issues Fixes: Implemented circuit breakers, retry logic, SSE improvements, and offline handling.
+- Test Coverage Improvements: Added 142 new tests across frontend and backend, achieving high coverage for critical reliability features.
+
+### Reliability & Known Issues Fixes (2026-01-27)
+
+Implemented comprehensive reliability improvements addressing 6 critical issues:
+
+**Backend Improvements:**
+- **Circuit Breaker Pattern** (pybreaker): Protects against Qdrant and OpenRouter failures
+  - `qdrant_breaker`: fail_max=5, reset_timeout=60s
+  - `llm_breaker`: fail_max=3, reset_timeout=30s
+  - `embeddings_breaker`: fail_max=10, reset_timeout=120s
+- **Tenacity Retry Decorators**: Exponential backoff on LLM calls (3 attempts, 2s→4s→8s)
+- **Enhanced Health Check**: `/api/health` now returns event_loop status and Qdrant connectivity
+- **Graceful Shutdown**: Proper cleanup in lifespan manager (5s timeout for DB/tasks)
+- **SSE Heartbeats**: 4 heartbeat points in stream.py to prevent connection drops
+- **systemd Service**: Template and install script at `backend/scripts/`
+
+**Frontend Improvements:**
+- **SSE Reconnection**: 3 retries with exponential backoff (1s→2s→4s)
+- **Auth Timeout**: 10s AbortController timeout on auth check
+- **Offline Banner**: Red banner when backend is unreachable
+- **backendStatus State**: 'online' | 'offline' | 'unknown' in AuthContext
+
+**New Files:**
+- `backend/src/circuit_breaker.py` - Circuit breaker module
+- `backend/scripts/systemd-install.sh` - Service installer
+- `backend/scripts/clarus-backend.service.template` - Service template
+- `frontend/components/layout/offline-banner.tsx` - Offline banner component
+
+**Modified Files (14 total):**
+- Backend: search.py, ultimate_rag.py, comparative_rag.py, query_enhancer.py, answer_generator.py, multi_agent_answer_generator.py, comparative_answer_generator.py, embeddings.py, app/main.py, app/api/stream.py
+- Frontend: use-sse.ts, auth-context.tsx, providers.tsx
+
+**Playwright Tests Verified:**
+- Health check API: ✅ Returns healthy/degraded/unhealthy status
+- SSE streaming: ✅ 80 verses returned across 4 sources
+- Offline banner: ✅ Appears within 10s when backend down
+- Online recovery: ✅ Banner disappears when backend restored
+
+### Test Coverage Improvements (2026-01-27)
+- Added 142 new tests (56 frontend, 76 backend unit tests, 10 extended auth tests).
+- Verified reliability features: circuit breakers, health endpoints, and SSE reconnection.
+- **Note**: Some pre-existing frontend tests are still failing. Refer to `ISSUES.md` for details on known test failures and resolution status.
 
 ## Recent Changes
 
