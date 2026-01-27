@@ -146,6 +146,11 @@ temp/
 .sisyphus/
 
 # ----------------
+# Sentry CLI
+# ----------------
+.sentry/
+
+# ----------------
 # Test Credentials
 # ----------------
 test-credentials.json
