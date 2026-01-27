@@ -95,6 +95,11 @@ Thumbs.db
 .env.local
 .env.*.local
 *.env
+backend/.env
+
+# Google OAuth Credentials (NEVER commit!)
+client_secret*.json
+*client_secret*.json
 
 # ----------------
 # Cache & Generated Data
