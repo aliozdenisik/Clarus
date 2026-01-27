@@ -76,6 +76,7 @@ describe('LoginPage', () => {
     vi.mocked(useAuth).mockReturnValue({
       user: null,
       isLoading: false,
+      backendStatus: 'online',
       login: mockLogin,
       loginWithGoogle: mockLoginWithGoogle,
       register: vi.fn(),
