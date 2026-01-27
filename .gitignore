@@ -154,3 +154,8 @@ temp/
 # Test Credentials
 # ----------------
 test-credentials.json
+
+# ----------------
+# Internal Documentation (not for public repo)
+# ----------------
+Frontend-info/
