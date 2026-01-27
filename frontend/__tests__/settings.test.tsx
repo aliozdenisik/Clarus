@@ -33,10 +33,10 @@ describe('SettingsPage', () => {
   const mockReset = vi.fn();
 
   const defaultPreferences = {
-    theme: 'system',
-    language: 'tr',
-    default_search_source: 'quran',
-    default_bible_testament: 'all',
+    theme: 'system' as const,
+    language: 'tr' as const,
+    default_search_source: 'quran' as const,
+    default_bible_testament: 'all' as const,
     results_per_page: 10,
     enable_streaming: true,
     enable_multi_agent: false,
@@ -64,7 +64,9 @@ describe('SettingsPage', () => {
     vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
       user: { id: 1, email: 'test@example.com', name: 'Test User', created_at: '2023-01-01' },
       isLoading: false,
+      backendStatus: 'online',
       login: vi.fn(),
+      loginWithGoogle: vi.fn(),
       register: vi.fn(),
       logout: vi.fn(),
     });
