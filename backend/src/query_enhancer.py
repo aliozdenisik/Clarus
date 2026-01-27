@@ -204,7 +204,25 @@ Adım 3: JSON formatında ver.
                     )
                 )
                 response.raise_for_status()
-                content = response.json()["choices"][0]["message"]["content"].strip()
+                response_json = response.json()
+                content = response_json["choices"][0]["message"]["content"].strip()
+
+                # Token tracking
+                usage = response_json.get("usage", {})
+                input_tokens = usage.get("prompt_tokens", 0)
+                output_tokens = usage.get("completion_tokens", 0)
+
+                sentry_sdk.set_measurement("llm.tokens.input", input_tokens, "none")
+                sentry_sdk.set_measurement("llm.tokens.output", output_tokens, "none")
+
+                # Simple cost estimate (OpenRouter typical pricing)
+                estimated_cost = (
+                    input_tokens * 0.15 + output_tokens * 0.60
+                ) / 1_000_000
+                sentry_sdk.set_measurement("llm.cost.estimated", estimated_cost, "none")
+
+                span.set_data("input_tokens", input_tokens)
+                span.set_data("output_tokens", output_tokens)
 
                 # Set latency before return
                 latency_ms = (time.time() - start_time) * 1000

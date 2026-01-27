@@ -214,6 +214,10 @@ class UltimateRAG:
                 if cached:
                     duration = (time.time() - start) * 1000
                     span.set_data("cache_hit", True)
+                    sentry_sdk.set_measurement(
+                        "rag.query.enhance_latency_ms", duration, "millisecond"
+                    )
+                    sentry_sdk.set_measurement("rag.cache.hit", 1, "none")
                     self._log(
                         f"   [CACHE HIT] Enhanced ({corpus}) in {duration:.0f}ms: {cached[:80]}..."
                     )
@@ -228,6 +232,10 @@ class UltimateRAG:
                 self.llm_cache.set(query, cache_key, enhanced)
 
             duration = (time.time() - start) * 1000
+            sentry_sdk.set_measurement(
+                "rag.query.enhance_latency_ms", duration, "millisecond"
+            )
+            sentry_sdk.set_measurement("rag.cache.hit", 0, "none")
             self._log(f"   Enhanced ({corpus}) in {duration:.0f}ms: {enhanced[:80]}...")
             return enhanced
 
@@ -295,6 +303,9 @@ class UltimateRAG:
                     unique.append(q)
 
             duration = (time.time() - start) * 1000
+            sentry_sdk.set_measurement(
+                "rag.query.multi_latency_ms", duration, "millisecond"
+            )
             span.set_data("query_count", len(unique))
             self._log(f"   Generated {len(unique)} queries in {duration:.0f}ms")
             return unique
@@ -469,6 +480,9 @@ class UltimateRAG:
                 merged_results.append(result)
 
             duration = (time.time() - start) * 1000
+            sentry_sdk.set_measurement(
+                "rag.query.search_latency_ms", duration, "millisecond"
+            )
             span.set_data("result_count", len(merged_results))
             self._log(
                 f"   Found {len(merged_results)} unique results in {duration:.0f}ms"

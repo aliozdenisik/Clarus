@@ -828,6 +828,9 @@ class ComparativeRAG:
 
             gen_duration = (time.time() - gen_start) * 1000
             total_duration = (time.time() - total_start) * 1000
+            sentry_sdk.set_measurement(
+                "rag.compare.total_latency_ms", total_duration, "millisecond"
+            )
 
             if self.verbose:
                 self._log(
