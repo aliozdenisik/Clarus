@@ -29,16 +29,13 @@ Sentry.init({
   },
   
   // Adjust transaction handling for long-running SSE streams
-  beforeSendTransaction(transaction) {
-    if (transaction.name?.includes('/compare') || 
-        transaction.name?.includes('/stream')) {
-      if (transaction.contexts) {
-        transaction.contexts.trace = {
-          ...transaction.contexts.trace,
-          op: 'sse.stream',
-        };
+  beforeSendTransaction(event) {
+    if (event.transaction?.includes('/compare') || 
+        event.transaction?.includes('/stream')) {
+      if (event.contexts?.trace) {
+        event.contexts.trace.op = 'sse.stream';
       }
     }
-    return transaction;
+    return event;
   },
 });
