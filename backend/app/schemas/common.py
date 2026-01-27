@@ -1,6 +1,6 @@
 """Common schemas for standardized API responses."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import TypeVar, Generic, Optional, Any
 from datetime import datetime
 
@@ -33,15 +33,8 @@ class ErrorResponse(BaseModel):
     }
     """
 
-    success: bool = Field(default=False, description="Always false for errors")
-    error: dict = Field(..., description="Error information")
-    request_id: Optional[str] = Field(None, description="Request ID for tracing")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Error timestamp"
-    )
-
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "success": False,
                 "error": {
@@ -55,6 +48,14 @@ class ErrorResponse(BaseModel):
                 "timestamp": "2026-01-24T10:30:00Z",
             }
         }
+    )
+
+    success: bool = Field(default=False, description="Always false for errors")
+    error: dict = Field(..., description="Error information")
+    request_id: Optional[str] = Field(None, description="Request ID for tracing")
+    timestamp: datetime = Field(
+        default_factory=datetime.utcnow, description="Error timestamp"
+    )
 
 
 class SuccessResponse(BaseModel, Generic[T]):
