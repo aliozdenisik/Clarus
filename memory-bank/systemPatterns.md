@@ -112,3 +112,88 @@
 4. Token returned to client
 5. Subsequent requests include: Authorization: Bearer <token>
 ```
+
+## Resilience Patterns
+
+### Circuit Breaker (pybreaker)
+
+Protects external service calls from cascading failures:
+
+```
+                    ┌─────────────┐
+                    │   CLOSED    │ ← Normal operation
+                    │  (passing)  │
+                    └──────┬──────┘
+                           │ fail_max failures
+                           ▼
+                    ┌─────────────┐
+                    │    OPEN     │ ← Fast-fail, no calls
+                    │  (blocking) │
+                    └──────┬──────┘
+                           │ reset_timeout
+                           ▼
+                    ┌─────────────┐
+                    │  HALF_OPEN  │ ← Test single call
+                    │  (testing)  │
+                    └─────────────┘
+```
+
+| Breaker | fail_max | reset_timeout | Purpose |
+|---------|----------|---------------|---------|
+| `qdrant_breaker` | 5 | 60s | Database operations |
+| `llm_breaker` | 3 | 30s | LLM API calls |
+| `embeddings_breaker` | 10 | 120s | Batch embeddings |
+
+**Usage Pattern (CRITICAL - use lambda):**
+```python
+from src.circuit_breaker import qdrant_with_breaker
+
+# ✅ CORRECT
+results = qdrant_with_breaker(lambda: client.query_points(...))
+
+# ❌ WRONG - executes immediately
+results = qdrant_with_breaker(client.query_points(...))
+```
+
+### Retry with Exponential Backoff (Tenacity)
+
+Applied to all LLM calls:
+```python
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    retry=retry_if_exception_type((Timeout, ConnectionError))
+)
+def _call_llm(self, ...):
+    response = llm_with_breaker(lambda: requests.post(...))
+```
+
+**Key Design**: CircuitBreakerError is NOT retried (fail-fast when circuit open).
+
+### SSE Connection Resilience
+
+**Backend**: Heartbeats at 4 processing stages
+```python
+yield ": heartbeat\n\n"  # SSE comment format - invisible to EventSource
+```
+
+**Frontend**: Reconnection with exponential backoff
+```typescript
+const MAX_RETRIES = 3;
+const delay = Math.pow(2, retryCount) * 1000;  // 1s, 2s, 4s
+```
+
+### Health Check Flow
+
+```
+GET /api/health
+     │
+     ├─► Event loop test (0.1s async sleep, 1s timeout)
+     │   └─► blocked → status: "unhealthy"
+     │
+     ├─► Qdrant connectivity (2s timeout)
+     │   └─► disconnected → status: "degraded"
+     │
+     └─► Response: {"status", "event_loop", "qdrant", "version"}
+         └─► HTTP 200 (healthy) or 503 (degraded/unhealthy)
+```
