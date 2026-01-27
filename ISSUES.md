@@ -52,22 +52,17 @@ Migrated all 3 files from `class Config` to `model_config = ConfigDict(...)`. No
 
 ### Issue #3: Python crypt Module Deprecation Warning
 
-**Status:** Open
+**Status:** ✅ Resolved
 **Priority:** Low
 **Discovered:** 2026-01-27
-**Location:** `passlib` dependency
+**Resolved:** 2026-01-27
+**Location:** `backend/app/auth/__init__.py`
 
 **Description:**
 The `passlib` library uses the deprecated `crypt` module which will be removed in Python 3.13.
 
-**Warning Message:**
-```
-DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
-```
-
-**Fix Required:**
-- Update `passlib` to a newer version when available
-- Or migrate to `argon2-cffi` or `bcrypt` directly
+**Resolution:**
+Migrated from passlib to bcrypt directly. Removed passlib dependency, using bcrypt>=4.0.0 instead. Existing password hashes remain compatible (both use $2b$ format).
 
 ---
 
@@ -80,6 +75,10 @@ DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
 ### Issue #2: Pydantic V2 Deprecation Warnings (Backend)
 **Resolved:** 2026-01-27
 **Fix:** Migrated from `class Config` to `model_config = ConfigDict(...)` in 3 backend files.
+
+### Issue #3: Python crypt Module Deprecation Warning
+**Resolved:** 2026-01-27
+**Fix:** Migrated from passlib to bcrypt directly in `backend/app/auth/__init__.py`.
 
 ---
 
