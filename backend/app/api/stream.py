@@ -196,6 +196,7 @@ async def stream_compare(
 
         # Status updates
         yield f"data: {json.dumps({'status': 'analyzing', 'message': 'Metinler analiz ediliyor...'})}\n\n"
+        yield ": heartbeat\n\n"
         await asyncio.sleep(0.1)
 
         try:
@@ -211,6 +212,7 @@ async def stream_compare(
                 f"[COMPARE] search_all completed, found {len(search_result.quran)} Quran, "
                 f"{len(search_result.ot)} OT, {len(search_result.nt)} NT, {len(search_result.apocrypha)} Apocrypha"
             )
+            yield ": heartbeat\n\n"
 
             # Step 2: Build verse_details from search results
             verse_details: dict[str, dict] = {}
@@ -242,6 +244,7 @@ async def stream_compare(
 
             # Send verse_details BEFORE streaming text (so frontend has it ready for lookups)
             yield f"data: {json.dumps({'verse_details': verse_details})}\n\n"
+            yield ": heartbeat\n\n"
 
             # Step 3: Generate multi-agent answer using search results
             logger.info("[COMPARE] Starting multi_agent_generator.generate...")
@@ -291,6 +294,7 @@ async def stream_compare(
                         await asyncio.sleep(0.02)
 
                     yield f"data: {json.dumps({'token': '\\n\\n'})}\n\n"
+                    yield ": heartbeat\n\n"
 
             # Send metadata
             confidence = (
