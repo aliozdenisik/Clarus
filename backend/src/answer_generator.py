@@ -239,14 +239,25 @@ VERSES:
 
         return "\n".join(context_parts)
 
+    def _is_retryable_error(exception):
+        """Check if exception is retryable (timeout, connection, or rate limit)"""
+        if isinstance(
+            exception,
+            (requests.exceptions.Timeout, requests.exceptions.ConnectionError),
+        ):
+            return True
+        if isinstance(exception, requests.exceptions.HTTPError):
+            return (
+                exception.response is not None and exception.response.status_code == 429
+            )
+        return False
+
     @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception_type(
-            (requests.exceptions.Timeout, requests.exceptions.ConnectionError)
-        ),
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, min=2, max=60),
+        retry=retry_if_exception_type(requests.exceptions.RequestException),
         before_sleep=lambda rs: logger.info(
-            f"Retrying LLM call, attempt {rs.attempt_number}/3"
+            f"Retrying LLM call, attempt {rs.attempt_number}/5"
         ),
     )
     def _call_llm(self, query: str, context: str, source: str) -> dict:
@@ -289,7 +300,22 @@ VERSES:
                 )
                 response.raise_for_status()
                 response_json = response.json()
-                content = response_json["choices"][0]["message"]["content"].strip()
+
+                # Defensive parsing for LLM response
+                if "choices" not in response_json or not response_json["choices"]:
+                    logger.error(
+                        f"Invalid LLM response: missing 'choices'. Response: {response_json}"
+                    )
+                    raise ValueError("Invalid LLM response: missing 'choices' field")
+
+                choice = response_json["choices"][0]
+                if "message" not in choice or "content" not in choice.get(
+                    "message", {}
+                ):
+                    logger.error(f"Invalid LLM response structure: {choice}")
+                    raise ValueError("Invalid LLM response: missing message content")
+
+                content = choice["message"]["content"].strip()
                 result = json.loads(content)
 
                 # Token tracking
@@ -334,25 +360,9 @@ VERSES:
                     "cited_references": [],
                     "confidence": 0.0,
                 }
-            except (json.JSONDecodeError, KeyError) as e:
+            except (json.JSONDecodeError, KeyError, ValueError) as e:
                 # Parse errors - don't retry
                 logger.error(f"Response parsing failed: {e}")
-                span.set_data("latency_ms", (time.time() - start_time) * 1000)
-                return {
-                    "answer": "Cevap üretilemedi.",
-                    "cited_references": [],
-                    "confidence": 0.0,
-                }
-            except requests.exceptions.RequestException as e:
-                print(f"API request failed: {e}")
-                span.set_data("latency_ms", (time.time() - start_time) * 1000)
-                return {
-                    "answer": "Cevap üretilemedi.",
-                    "cited_references": [],
-                    "confidence": 0.0,
-                }
-            except (json.JSONDecodeError, KeyError) as e:
-                print(f"Response parsing failed: {e}")
                 span.set_data("latency_ms", (time.time() - start_time) * 1000)
                 return {
                     "answer": "Cevap üretilemedi.",

@@ -270,13 +270,11 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         return "\n".join(sections)
 
     @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception_type(
-            (requests.exceptions.Timeout, requests.exceptions.ConnectionError)
-        ),
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, min=2, max=60),
+        retry=retry_if_exception_type(requests.exceptions.RequestException),
         before_sleep=lambda rs: logger.info(
-            f"Retrying LLM call, attempt {rs.attempt_number}/3"
+            f"Retrying LLM call, attempt {rs.attempt_number}/5"
         ),
     )
     def _call_llm(self, query: str, context: str) -> dict:
@@ -308,7 +306,23 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
                     )
                 )
                 response.raise_for_status()
-                content = response.json()["choices"][0]["message"]["content"].strip()
+                response_json = response.json()
+
+                # Defensive parsing for LLM response
+                if "choices" not in response_json or not response_json["choices"]:
+                    logger.error(
+                        f"Invalid LLM response: missing 'choices'. Response: {response_json}"
+                    )
+                    raise ValueError("Invalid LLM response: missing 'choices' field")
+
+                choice = response_json["choices"][0]
+                if "message" not in choice or "content" not in choice.get(
+                    "message", {}
+                ):
+                    logger.error(f"Invalid LLM response structure: {choice}")
+                    raise ValueError("Invalid LLM response: missing message content")
+
+                content = choice["message"]["content"].strip()
                 result = json.loads(content)
                 span.set_data("latency_ms", (time.time() - start_time) * 1000)
                 return result
@@ -339,29 +353,9 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
                     "all_references_ordered": [],
                     "confidence": 0.0,
                 }
-            except (json.JSONDecodeError, KeyError) as e:
+            except (json.JSONDecodeError, KeyError, ValueError) as e:
                 # Parse errors - don't retry
                 logger.error(f"Response parsing failed: {e}")
-                span.set_data("latency_ms", (time.time() - start_time) * 1000)
-                return {
-                    "essay": "Karşılaştırmalı analiz üretilemedi.",
-                    "quran_citations": [],
-                    "bible_citations": [],
-                    "all_references_ordered": [],
-                    "confidence": 0.0,
-                }
-            except requests.exceptions.RequestException as e:
-                print(f"API request failed: {e}")
-                span.set_data("latency_ms", (time.time() - start_time) * 1000)
-                return {
-                    "essay": "Karşılaştırmalı analiz üretilemedi.",
-                    "quran_citations": [],
-                    "bible_citations": [],
-                    "all_references_ordered": [],
-                    "confidence": 0.0,
-                }
-            except (json.JSONDecodeError, KeyError) as e:
-                print(f"Response parsing failed: {e}")
                 span.set_data("latency_ms", (time.time() - start_time) * 1000)
                 return {
                     "essay": "Karşılaştırmalı analiz üretilemedi.",

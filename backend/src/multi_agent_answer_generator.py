@@ -163,13 +163,11 @@ class BaseSpecialistAgent:
         return "\n".join(lines)
 
     @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception_type(
-            (requests.exceptions.Timeout, requests.exceptions.ConnectionError)
-        ),
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, min=2, max=60),
+        retry=retry_if_exception_type(requests.exceptions.RequestException),
         before_sleep=lambda rs: logger.info(
-            f"Retrying LLM call, attempt {rs.attempt_number}/3"
+            f"Retrying LLM call, attempt {rs.attempt_number}/5"
         ),
     )
     def _call_llm(self, messages: List[Dict], max_tokens: int = 1000) -> dict:
@@ -196,7 +194,23 @@ class BaseSpecialistAgent:
                     )
                 )
                 response.raise_for_status()
-                content = response.json()["choices"][0]["message"]["content"].strip()
+                response_json = response.json()
+
+                # Defensive parsing for LLM response
+                if "choices" not in response_json or not response_json["choices"]:
+                    logger.error(
+                        f"Invalid LLM response: missing 'choices'. Response: {response_json}"
+                    )
+                    raise ValueError("Invalid LLM response: missing 'choices' field")
+
+                choice = response_json["choices"][0]
+                if "message" not in choice or "content" not in choice.get(
+                    "message", {}
+                ):
+                    logger.error(f"Invalid LLM response structure: {choice}")
+                    raise ValueError("Invalid LLM response: missing message content")
+
+                content = choice["message"]["content"].strip()
                 result = json.loads(content)
                 span.set_data("latency_ms", (time.time() - start_time) * 1000)
                 return result
@@ -210,13 +224,14 @@ class BaseSpecialistAgent:
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
                 # Let these propagate to @retry decorator
                 raise
-            except Exception as e:
-                # Other errors - don't retry
-                logger.error(f"LLM call failed: {e}")
+            except (json.JSONDecodeError, KeyError, ValueError) as e:
+                # Parse errors - don't retry
+                logger.error(f"Response parsing failed: {e}")
                 span.set_data("latency_ms", (time.time() - start_time) * 1000)
                 return {"commentary": "", "citations": [], "confidence": 0.0}
             except Exception as e:
-                print(f"LLM call failed: {e}")
+                # Other errors - don't retry
+                logger.error(f"LLM call failed: {e}")
                 span.set_data("latency_ms", (time.time() - start_time) * 1000)
                 return {"commentary": "", "citations": [], "confidence": 0.0}
 

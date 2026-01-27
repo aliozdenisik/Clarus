@@ -566,6 +566,102 @@ class UltimateRAG:
             span.set_data("query", query[:50])  # Truncate for privacy
             return self.search(query, source="quran_tr", top_k=top_k)
 
+    def _search_all_bible_collections(
+        self, query: str, top_k: int = None, rerank_query: str = None
+    ) -> List:
+        """
+        Search all 3 Bible collections (OT, NT, Apocrypha) and merge with RRF fusion.
+
+        This is used when no specific testament is requested.
+        """
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        if top_k is None:
+            top_k = self.final_top_k
+
+        # Search each collection in parallel
+        pool_size = top_k * 2  # Get more results for better fusion
+
+        def search_collection(source: str):
+            try:
+                searcher = self._get_searcher(source)
+                results = searcher.search(query, mode=self.search_mode, limit=pool_size)
+                return (source, results)
+            except CircuitBreakerError:
+                logger.warning(
+                    f"Qdrant unavailable (circuit breaker open) for {source}"
+                )
+                return (source, [])
+            except Exception as e:
+                logger.error(f"Search failed for {source}: {e}")
+                return (source, [])
+
+        # Parallel search across all 3 collections
+        results_by_source = {}
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            futures = [
+                executor.submit(search_collection, "bible_ot"),
+                executor.submit(search_collection, "bible_nt"),
+                executor.submit(search_collection, "bible_apocrypha"),
+            ]
+
+            for future in as_completed(futures):
+                source, results = future.result()
+                results_by_source[source] = results
+
+        # Merge results with RRF fusion
+        all_results = [
+            results_by_source["bible_ot"],
+            results_by_source["bible_nt"],
+            results_by_source["bible_apocrypha"],
+        ]
+
+        # Filter out empty result lists
+        all_results = [r for r in all_results if r]
+
+        if not all_results:
+            return []
+
+        # Apply RRF fusion
+        fused_results = self._rrf_fusion(all_results, k=60)
+
+        # Return top_k results
+        return fused_results[:top_k]
+
+    def _rrf_fusion(self, result_lists: List[List], k: int = 60) -> List:
+        """
+        Reciprocal Rank Fusion - merges multiple ranked lists.
+
+        RRF score = sum(1 / (k + rank)) for each list where item appears
+
+        Args:
+            result_lists: List of search result lists
+            k: RRF constant (default: 60)
+        """
+        rrf_scores = {}
+
+        for result_list in result_lists:
+            for rank, result in enumerate(result_list, start=1):
+                # Use result ID as key
+                result_id = result.id
+
+                # Calculate RRF score contribution
+                score_contribution = 1.0 / (k + rank)
+
+                if result_id not in rrf_scores:
+                    rrf_scores[result_id] = (result, 0.0)
+
+                # Accumulate RRF score
+                current_result, current_score = rrf_scores[result_id]
+                rrf_scores[result_id] = (
+                    current_result,
+                    current_score + score_contribution,
+                )
+
+        # Sort by RRF score descending
+        sorted_results = sorted(rrf_scores.values(), key=lambda x: x[1], reverse=True)
+        return [item[0] for item in sorted_results]
+
     def search_bible(
         self,
         query: str,
@@ -589,7 +685,8 @@ class UltimateRAG:
         # For English Bible translations, translate Turkish query to English
         if translation in ("kjva", "kjv"):
             try:
-                translated_query = self.enhancer.translate_for_bible(query)
+                # Use expand_query with corpus="bible" to translate Turkish to English
+                translated_query = self.enhancer.expand_query(query, corpus="bible")
                 if self.verbose:
                     console.print(
                         f"[dim]📝 Translated: {query} → {translated_query}[/dim]"
