@@ -194,33 +194,42 @@ class UltimateRAG:
 
         Uses semantic cache to avoid redundant LLM calls for similar queries.
         """
-        self._log("⚡ Step 1: Query Enhancement...")
-        start = time.time()
+        import sentry_sdk
 
-        # Determine corpus from source
-        corpus = "quran" if "quran" in source else "bible"
-        cache_key = f"{corpus}:expand"
+        with sentry_sdk.start_span(
+            op="rag.enhance_query", description="LLM query enhancement"
+        ) as span:
+            # Determine corpus from source
+            corpus = "quran" if "quran" in source else "bible"
+            span.set_data("corpus", corpus)
 
-        # Check LLM cache first
-        if self.enable_llm_cache and self.llm_cache:
-            cached = self.llm_cache.get(query, cache_key)
-            if cached:
-                duration = (time.time() - start) * 1000
-                self._log(
-                    f"   [CACHE HIT] Enhanced ({corpus}) in {duration:.0f}ms: {cached[:80]}..."
-                )
-                return cached
+            self._log("⚡ Step 1: Query Enhancement...")
+            start = time.time()
 
-        # LLM call (cache miss)
-        enhanced = self.enhancer.expand_query(query, corpus=corpus)
+            cache_key = f"{corpus}:expand"
 
-        # Cache the result
-        if self.enable_llm_cache and self.llm_cache:
-            self.llm_cache.set(query, cache_key, enhanced)
+            # Check LLM cache first
+            if self.enable_llm_cache and self.llm_cache:
+                cached = self.llm_cache.get(query, cache_key)
+                if cached:
+                    duration = (time.time() - start) * 1000
+                    span.set_data("cache_hit", True)
+                    self._log(
+                        f"   [CACHE HIT] Enhanced ({corpus}) in {duration:.0f}ms: {cached[:80]}..."
+                    )
+                    return cached
 
-        duration = (time.time() - start) * 1000
-        self._log(f"   Enhanced ({corpus}) in {duration:.0f}ms: {enhanced[:80]}...")
-        return enhanced
+            # LLM call (cache miss)
+            span.set_data("cache_hit", False)
+            enhanced = self.enhancer.expand_query(query, corpus=corpus)
+
+            # Cache the result
+            if self.enable_llm_cache and self.llm_cache:
+                self.llm_cache.set(query, cache_key, enhanced)
+
+            duration = (time.time() - start) * 1000
+            self._log(f"   Enhanced ({corpus}) in {duration:.0f}ms: {enhanced[:80]}...")
+            return enhanced
 
     def _generate_multi_queries(
         self, query: str, enhanced_query: str, source: str = "bible_kjva", n: int = 3
@@ -230,208 +239,241 @@ class UltimateRAG:
 
         Uses semantic cache to avoid redundant LLM calls.
         """
-        if not self.enable_multi_query:
-            return [enhanced_query]
+        import sentry_sdk
 
-        self._log("🔄 Step 2: Multi-Query Generation...")
-        start = time.time()
+        with sentry_sdk.start_span(
+            op="rag.multi_query", description="Multi-query generation"
+        ) as span:
+            span.set_data("n", n)
 
-        # Determine corpus from source
-        corpus = "quran" if "quran" in source else "bible"
-        cache_key = f"{corpus}:multi_query"
+            if not self.enable_multi_query:
+                return [enhanced_query]
 
-        # Always include original and enhanced
-        queries = [query, enhanced_query]
+            self._log("🔄 Step 2: Multi-Query Generation...")
+            start = time.time()
 
-        # Check LLM cache for multi-queries
-        multi = None
-        if self.enable_llm_cache and self.llm_cache:
-            cached = self.llm_cache.get(enhanced_query, cache_key)
-            if cached:
-                multi = cached
-                self._log(f"   [CACHE HIT] Multi-query from cache")
+            # Determine corpus from source
+            corpus = "quran" if "quran" in source else "bible"
+            span.set_data("corpus", corpus)
+            cache_key = f"{corpus}:multi_query"
 
-        # Generate if not cached
-        if multi is None:
-            try:
-                multi = self.enhancer.generate_multi_query(
-                    enhanced_query, n=n, corpus=corpus
-                )
-                # Cache the result
-                if self.enable_llm_cache and self.llm_cache:
-                    self.llm_cache.set(enhanced_query, cache_key, multi)
-            except Exception as e:
-                self._log(f"   Warning: Multi-query failed: {e}", "yellow")
-                multi = []
+            # Always include original and enhanced
+            queries = [query, enhanced_query]
 
-        queries.extend(multi)
+            # Check LLM cache for multi-queries
+            multi = None
+            if self.enable_llm_cache and self.llm_cache:
+                cached = self.llm_cache.get(enhanced_query, cache_key)
+                if cached:
+                    multi = cached
+                    span.set_data("cache_hit", True)
+                    self._log(f"   [CACHE HIT] Multi-query from cache")
 
-        # Deduplicate while preserving order
-        seen = set()
-        unique = []
-        for q in queries:
-            q_lower = q.lower().strip()
-            if q_lower not in seen:
-                seen.add(q_lower)
-                unique.append(q)
+            # Generate if not cached
+            if multi is None:
+                span.set_data("cache_hit", False)
+                try:
+                    multi = self.enhancer.generate_multi_query(
+                        enhanced_query, n=n, corpus=corpus
+                    )
+                    # Cache the result
+                    if self.enable_llm_cache and self.llm_cache:
+                        self.llm_cache.set(enhanced_query, cache_key, multi)
+                except Exception as e:
+                    self._log(f"   Warning: Multi-query failed: {e}", "yellow")
+                    multi = []
 
-        duration = (time.time() - start) * 1000
-        self._log(f"   Generated {len(unique)} queries in {duration:.0f}ms")
-        return unique
+            queries.extend(multi)
+
+            # Deduplicate while preserving order
+            seen = set()
+            unique = []
+            for q in queries:
+                q_lower = q.lower().strip()
+                if q_lower not in seen:
+                    seen.add(q_lower)
+                    unique.append(q)
+
+            duration = (time.time() - start) * 1000
+            span.set_data("query_count", len(unique))
+            self._log(f"   Generated {len(unique)} queries in {duration:.0f}ms")
+            return unique
 
     def _search_all_queries(
         self, queries: List[str], source: str, limit: int = 30
     ) -> List:
         """Step 3: Search with all queries and merge results (RRF)"""
-        self._log(f"🔍 Step 3: Searching with {len(queries)} queries...")
-        start = time.time()
+        import sentry_sdk
 
-        searcher = self._get_searcher(source)
+        with sentry_sdk.start_span(
+            op="rag.search", description=f"Search {source}"
+        ) as span:
+            span.set_data("source", source)
+            span.set_data("query_count", len(queries))
+            span.set_data("limit", limit)
 
-        # Collect all results with their ranks
-        all_results = {}  # id -> (result, rrf_score)
-        k = 60  # RRF constant
+            self._log(f"🔍 Step 3: Searching with {len(queries)} queries...")
+            start = time.time()
 
-        # Search single-verse collection
-        for i, query in enumerate(queries):
-            try:
-                results = searcher.search(query, mode=self.search_mode, limit=limit)
+            searcher = self._get_searcher(source)
 
-                for rank, result in enumerate(results, 1):
-                    result_id = result.id if hasattr(result, "id") else f"{i}_{rank}"
-                    rrf_contribution = 1 / (k + rank)
+            # Collect all results with their ranks
+            all_results = {}  # id -> (result, rrf_score)
+            k = 60  # RRF constant
 
-                    if result_id in all_results:
-                        # Accumulate RRF score
-                        existing_result, existing_score, matched = all_results[
-                            result_id
-                        ]
-                        all_results[result_id] = (
-                            existing_result,
-                            existing_score + rrf_contribution,
-                            matched + [query],
-                        )
-                    else:
-                        all_results[result_id] = (result, rrf_contribution, [query])
-
-            except CircuitBreakerError:
-                logger.warning(
-                    "Qdrant unavailable (circuit breaker open), returning empty results for query: %s",
-                    query,
-                )
-                # Continue with other queries - don't fail entire search
-            except Exception as e:
-                self._log(f"   Warning: Search failed for query: {e}", "yellow")
-
-        # Parallel search: Semantic chunks (if enabled)
-        if self.enable_semantic_chunks:
-            # Handle Quran Semantic Chunks
-            if source == "quran_tr":
+            # Search single-verse collection
+            for i, query in enumerate(queries):
                 try:
-                    chunk_searcher = self._get_semantic_chunk_searcher()
-                    if chunk_searcher.collection_exists():
-                        self._log(
-                            "   📦 Including semantic chunks in search (Quran)..."
+                    results = searcher.search(query, mode=self.search_mode, limit=limit)
+
+                    for rank, result in enumerate(results, 1):
+                        result_id = (
+                            result.id if hasattr(result, "id") else f"{i}_{rank}"
                         )
+                        rrf_contribution = 1 / (k + rank)
 
-                        for i, query in enumerate(queries):
-                            try:
-                                chunk_results = chunk_searcher.search(
-                                    query, mode=self.search_mode, limit=limit // 2
-                                )
+                        if result_id in all_results:
+                            # Accumulate RRF score
+                            existing_result, existing_score, matched = all_results[
+                                result_id
+                            ]
+                            all_results[result_id] = (
+                                existing_result,
+                                existing_score + rrf_contribution,
+                                matched + [query],
+                            )
+                        else:
+                            all_results[result_id] = (result, rrf_contribution, [query])
 
-                                for rank, chunk_result in enumerate(chunk_results, 1):
-                                    chunk_id = chunk_result.chunk_id
-                                    rrf_contribution = 1 / (k + rank)
-
-                                    if chunk_id in all_results:
-                                        existing_result, existing_score, matched = (
-                                            all_results[chunk_id]
-                                        )
-                                        all_results[chunk_id] = (
-                                            existing_result,
-                                            existing_score + rrf_contribution,
-                                            matched + [query],
-                                        )
-                                    else:
-                                        all_results[chunk_id] = (
-                                            chunk_result,
-                                            rrf_contribution,
-                                            [query],
-                                        )
-                            except CircuitBreakerError:
-                                logger.warning(
-                                    "Qdrant unavailable for Quran semantic chunks, skipping"
-                                )
-                            except Exception as e:
-                                pass
-                except Exception as e:
-                    self._log(f"   Warning: Quran semantic chunks error: {e}", "yellow")
-
-            # Handle Bible Semantic Chunks
-            elif source.startswith("bible_"):
-                try:
-                    translation = source.replace("bible_", "")
-                    # Initialize on demand
-                    from src.search import BibleSemanticChunkSearcher
-
-                    bible_chunk_searcher = BibleSemanticChunkSearcher(
-                        translation=translation, qdrant_url=self.qdrant_url
+                except CircuitBreakerError:
+                    logger.warning(
+                        "Qdrant unavailable (circuit breaker open), returning empty results for query: %s",
+                        query,
                     )
+                    # Continue with other queries - don't fail entire search
+                except Exception as e:
+                    self._log(f"   Warning: Search failed for query: {e}", "yellow")
 
-                    if bible_chunk_searcher.collection_exists():
+            # Parallel search: Semantic chunks (if enabled)
+            if self.enable_semantic_chunks:
+                # Handle Quran Semantic Chunks
+                if source == "quran_tr":
+                    try:
+                        chunk_searcher = self._get_semantic_chunk_searcher()
+                        if chunk_searcher.collection_exists():
+                            self._log(
+                                "   📦 Including semantic chunks in search (Quran)..."
+                            )
+
+                            for i, query in enumerate(queries):
+                                try:
+                                    chunk_results = chunk_searcher.search(
+                                        query, mode=self.search_mode, limit=limit // 2
+                                    )
+
+                                    for rank, chunk_result in enumerate(
+                                        chunk_results, 1
+                                    ):
+                                        chunk_id = chunk_result.chunk_id
+                                        rrf_contribution = 1 / (k + rank)
+
+                                        if chunk_id in all_results:
+                                            existing_result, existing_score, matched = (
+                                                all_results[chunk_id]
+                                            )
+                                            all_results[chunk_id] = (
+                                                existing_result,
+                                                existing_score + rrf_contribution,
+                                                matched + [query],
+                                            )
+                                        else:
+                                            all_results[chunk_id] = (
+                                                chunk_result,
+                                                rrf_contribution,
+                                                [query],
+                                            )
+                                except CircuitBreakerError:
+                                    logger.warning(
+                                        "Qdrant unavailable for Quran semantic chunks, skipping"
+                                    )
+                                except Exception as e:
+                                    pass
+                    except Exception as e:
                         self._log(
-                            f"   📦 Including semantic chunks in search (Bible {translation})..."
+                            f"   Warning: Quran semantic chunks error: {e}", "yellow"
                         )
 
-                        for i, query in enumerate(queries):
-                            try:
-                                chunk_results = bible_chunk_searcher.search(
-                                    query, mode=self.search_mode, limit=limit // 2
-                                )
+                # Handle Bible Semantic Chunks
+                elif source.startswith("bible_"):
+                    try:
+                        translation = source.replace("bible_", "")
+                        # Initialize on demand
+                        from src.search import BibleSemanticChunkSearcher
 
-                                for rank, chunk_result in enumerate(chunk_results, 1):
-                                    chunk_id = chunk_result.chunk_id
-                                    rrf_contribution = 1 / (k + rank)
+                        bible_chunk_searcher = BibleSemanticChunkSearcher(
+                            translation=translation, qdrant_url=self.qdrant_url
+                        )
 
-                                    if chunk_id in all_results:
-                                        existing_result, existing_score, matched = (
-                                            all_results[chunk_id]
-                                        )
-                                        all_results[chunk_id] = (
-                                            existing_result,
-                                            existing_score + rrf_contribution,
-                                            matched + [query],
-                                        )
-                                    else:
-                                        all_results[chunk_id] = (
-                                            chunk_result,
-                                            rrf_contribution,
-                                            [query],
-                                        )
-                            except CircuitBreakerError:
-                                logger.warning(
-                                    "Qdrant unavailable for Bible semantic chunks, skipping"
-                                )
-                            except Exception as e:
-                                pass
-                except Exception as e:
-                    self._log(f"   Warning: Bible semantic chunks error: {e}", "yellow")
+                        if bible_chunk_searcher.collection_exists():
+                            self._log(
+                                f"   📦 Including semantic chunks in search (Bible {translation})..."
+                            )
 
-        # Sort by RRF score and return top results
-        sorted_results = sorted(all_results.values(), key=lambda x: x[1], reverse=True)[
-            : self.search_pool_size
-        ]
+                            for i, query in enumerate(queries):
+                                try:
+                                    chunk_results = bible_chunk_searcher.search(
+                                        query, mode=self.search_mode, limit=limit // 2
+                                    )
 
-        # Attach RRF info to results
-        merged_results = []
-        for result, rrf_score, matched_queries in sorted_results:
-            result.score = rrf_score
-            merged_results.append(result)
+                                    for rank, chunk_result in enumerate(
+                                        chunk_results, 1
+                                    ):
+                                        chunk_id = chunk_result.chunk_id
+                                        rrf_contribution = 1 / (k + rank)
 
-        duration = (time.time() - start) * 1000
-        self._log(f"   Found {len(merged_results)} unique results in {duration:.0f}ms")
-        return merged_results
+                                        if chunk_id in all_results:
+                                            existing_result, existing_score, matched = (
+                                                all_results[chunk_id]
+                                            )
+                                            all_results[chunk_id] = (
+                                                existing_result,
+                                                existing_score + rrf_contribution,
+                                                matched + [query],
+                                            )
+                                        else:
+                                            all_results[chunk_id] = (
+                                                chunk_result,
+                                                rrf_contribution,
+                                                [query],
+                                            )
+                                except CircuitBreakerError:
+                                    logger.warning(
+                                        "Qdrant unavailable for Bible semantic chunks, skipping"
+                                    )
+                                except Exception as e:
+                                    pass
+                    except Exception as e:
+                        self._log(
+                            f"   Warning: Bible semantic chunks error: {e}", "yellow"
+                        )
+
+            # Sort by RRF score and return top results
+            sorted_results = sorted(
+                all_results.values(), key=lambda x: x[1], reverse=True
+            )[: self.search_pool_size]
+
+            # Attach RRF info to results
+            merged_results = []
+            for result, rrf_score, matched_queries in sorted_results:
+                result.score = rrf_score
+                merged_results.append(result)
+
+            duration = (time.time() - start) * 1000
+            span.set_data("result_count", len(merged_results))
+            self._log(
+                f"   Found {len(merged_results)} unique results in {duration:.0f}ms"
+            )
+            return merged_results
 
     def _get_top_results(self, results: List, top_k: int = None) -> List:
         """
@@ -502,7 +544,13 @@ class UltimateRAG:
 
     def search_quran(self, query: str, top_k: int = None) -> List:
         """Shortcut for Quran search"""
-        return self.search(query, source="quran_tr", top_k=top_k)
+        import sentry_sdk
+
+        with sentry_sdk.start_span(
+            op="rag.pipeline.quran", description="Quran search pipeline"
+        ) as span:
+            span.set_data("query", query[:50])  # Truncate for privacy
+            return self.search(query, source="quran_tr", top_k=top_k)
 
     def search_bible(
         self,

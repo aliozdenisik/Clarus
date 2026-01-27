@@ -496,16 +496,43 @@ class MultiAgentOrchestrator:
         results = {}
 
         def run_ot():
-            return ("ot", self.ot_agent.generate(query, ot_verses))
+            import sentry_sdk
+
+            with sentry_sdk.start_span(
+                op="rag.agent.oldtestament", description="OT commentary"
+            ) as span:
+                span.set_data("verse_count", len(ot_verses))
+                return ("ot", self.ot_agent.generate(query, ot_verses))
 
         def run_nt():
-            return ("nt", self.nt_agent.generate(query, nt_verses))
+            import sentry_sdk
+
+            with sentry_sdk.start_span(
+                op="rag.agent.newtestament", description="NT commentary"
+            ) as span:
+                span.set_data("verse_count", len(nt_verses))
+                return ("nt", self.nt_agent.generate(query, nt_verses))
 
         def run_apocrypha():
-            return ("apocrypha", self.apocrypha_agent.generate(query, apocrypha_verses))
+            import sentry_sdk
+
+            with sentry_sdk.start_span(
+                op="rag.agent.apocrypha", description="Apocrypha commentary"
+            ) as span:
+                span.set_data("verse_count", len(apocrypha_verses))
+                return (
+                    "apocrypha",
+                    self.apocrypha_agent.generate(query, apocrypha_verses),
+                )
 
         def run_quran():
-            return ("quran", self.quran_agent.generate(query, quran_verses))
+            import sentry_sdk
+
+            with sentry_sdk.start_span(
+                op="rag.agent.quran", description="Quran commentary"
+            ) as span:
+                span.set_data("verse_count", len(quran_verses))
+                return ("quran", self.quran_agent.generate(query, quran_verses))
 
         self._log("Running 4 specialist agents in parallel...")
         with ThreadPoolExecutor(max_workers=4) as executor:

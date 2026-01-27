@@ -278,71 +278,86 @@ class ComparativeRAG:
         Searches: Quran, Old Testament, New Testament, Apocrypha
         Each returns up to pool_size results.
         """
-        self._log(
-            f"🔍 Step 2: Multi-Query Search ({len(quran_queries)}q×4 collections)..."
-        )
-        start = time.time()
+        import sentry_sdk
 
-        results = {"quran": [], "ot": [], "nt": [], "apocrypha": []}
+        with sentry_sdk.start_span(
+            op="rag.parallel_search", description="4-collection parallel search"
+        ) as span:
+            span.set_data("collections", 4)
+            span.set_data("quran_query_count", len(quran_queries))
+            span.set_data("bible_query_count", len(bible_queries))
 
-        def search_quran():
-            searcher = self._get_quran_searcher()
-            return (
-                "quran",
-                self._search_quadrant_multi_query(
-                    quran_queries, searcher, limit_per_query=30
-                )[:pool_size],
+            self._log(
+                f"🔍 Step 2: Multi-Query Search ({len(quran_queries)}q×4 collections)..."
             )
+            start = time.time()
 
-        def search_ot():
-            searcher = self._get_ot_searcher()
-            return (
-                "ot",
-                self._search_quadrant_multi_query(
-                    bible_queries, searcher, limit_per_query=30
-                )[:pool_size],
+            results = {"quran": [], "ot": [], "nt": [], "apocrypha": []}
+
+            def search_quran():
+                searcher = self._get_quran_searcher()
+                return (
+                    "quran",
+                    self._search_quadrant_multi_query(
+                        quran_queries, searcher, limit_per_query=30
+                    )[:pool_size],
+                )
+
+            def search_ot():
+                searcher = self._get_ot_searcher()
+                return (
+                    "ot",
+                    self._search_quadrant_multi_query(
+                        bible_queries, searcher, limit_per_query=30
+                    )[:pool_size],
+                )
+
+            def search_nt():
+                searcher = self._get_nt_searcher()
+                return (
+                    "nt",
+                    self._search_quadrant_multi_query(
+                        bible_queries, searcher, limit_per_query=30
+                    )[:pool_size],
+                )
+
+            def search_apocrypha():
+                searcher = self._get_apocrypha_searcher()
+                return (
+                    "apocrypha",
+                    self._search_quadrant_multi_query(
+                        bible_queries, searcher, limit_per_query=30
+                    )[:pool_size],
+                )
+
+            # All 4 collections in parallel
+            with ThreadPoolExecutor(max_workers=4) as executor:
+                futures = [
+                    executor.submit(search_quran),
+                    executor.submit(search_ot),
+                    executor.submit(search_nt),
+                    executor.submit(search_apocrypha),
+                ]
+
+                for future in as_completed(futures):
+                    key, result = future.result()
+                    results[key] = result
+
+            duration = (time.time() - start) * 1000
+
+            counts = {k: len(v) for k, v in results.items()}
+            span.set_data("result_counts", counts)
+            self._log(
+                f"   Quran: {counts['quran']}, OT: {counts['ot']}, NT: {counts['nt']}, Apoc: {counts['apocrypha']}"
             )
+            self._log(f"   Multi-Query searches completed in {duration:.0f}ms")
 
-        def search_nt():
-            searcher = self._get_nt_searcher()
             return (
-                "nt",
-                self._search_quadrant_multi_query(
-                    bible_queries, searcher, limit_per_query=30
-                )[:pool_size],
+                results["quran"],
+                results["ot"],
+                results["nt"],
+                results["apocrypha"],
             )
-
-        def search_apocrypha():
-            searcher = self._get_apocrypha_searcher()
-            return (
-                "apocrypha",
-                self._search_quadrant_multi_query(
-                    bible_queries, searcher, limit_per_query=30
-                )[:pool_size],
-            )
-
-        # All 4 collections in parallel
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            futures = [
-                executor.submit(search_quran),
-                executor.submit(search_ot),
-                executor.submit(search_nt),
-                executor.submit(search_apocrypha),
-            ]
-
-            for future in as_completed(futures):
-                key, result = future.result()
-                results[key] = result
-
-        duration = (time.time() - start) * 1000
-
-        counts = {k: len(v) for k, v in results.items()}
-        self._log(
-            f"   Quran: {counts['quran']}, OT: {counts['ot']}, NT: {counts['nt']}, Apoc: {counts['apocrypha']}"
-        )
-        self._log(f"   Multi-Query searches completed in {duration:.0f}ms")
-
-        return (results["quran"], results["ot"], results["nt"], results["apocrypha"])
 
     # ==================== END MULTI-QUERY SUPPORT ====================
 
@@ -760,55 +775,74 @@ class ComparativeRAG:
         Returns:
             MultiAgentAnswer with 5 paragraphs (OT, NT, Apocrypha, Quran, Synthesis)
         """
-        total_start = time.time()
+        import sentry_sdk
 
-        if self.verbose:
-            console.print(
-                f"\n[bold blue]📚 Multi-Agent Comparative Scripture Analysis[/bold blue]"
-            )
-            console.print(f'[dim]Question: "{query}"[/dim]\n')
+        with sentry_sdk.start_span(
+            op="rag.compare", description="Multi-agent comparison"
+        ) as span:
+            span.set_data("query", query[:50])  # Truncate for privacy
 
-        # Steps 1-2: Search all 4 collections (now pre-separated by testament)
-        search_result = self.search_all(query)
+            total_start = time.time()
 
-        # Results are now directly available per testament - no splitting needed!
-        quran_verses = search_result.quran
-        ot_verses = search_result.ot
-        nt_verses = search_result.nt
-        apocrypha_verses = search_result.apocrypha
+            if self.verbose:
+                console.print(
+                    f"\n[bold blue]📚 Multi-Agent Comparative Scripture Analysis[/bold blue]"
+                )
+                console.print(f'[dim]Question: "{query}"[/dim]\n')
 
-        self._log(
-            f"📋 Verses: Quran={len(quran_verses)}, OT={len(ot_verses)}, "
-            f"NT={len(nt_verses)}, Apoc={len(apocrypha_verses)}"
-        )
+            # Steps 1-2: Search all 4 collections (now pre-separated by testament)
+            search_result = self.search_all(query)
 
-        # Step 3: Multi-agent generation
-        self._log("📝 Step 3: Running 4 specialist agents + summary agent...")
-        gen_start = time.time()
+            # Results are now directly available per testament - no splitting needed!
+            quran_verses = search_result.quran
+            ot_verses = search_result.ot
+            nt_verses = search_result.nt
+            apocrypha_verses = search_result.apocrypha
 
-        answer = self.multi_agent_generator.generate(
-            query=query,
-            quran_verses=quran_verses,
-            ot_verses=ot_verses,
-            nt_verses=nt_verses,
-            apocrypha_verses=apocrypha_verses,
-        )
-
-        gen_duration = (time.time() - gen_start) * 1000
-        total_duration = (time.time() - total_start) * 1000
-
-        if self.verbose:
-            self._log(f"   Multi-agent generation completed in {gen_duration:.0f}ms")
-            console.print(
-                f"\n[green]✨ Multi-Agent Analysis complete in {total_duration:.0f}ms[/green]"
-            )
-            total_citations = sum(len(c) for c in answer.citations.values())
-            console.print(
-                f"[dim]  {search_result.total_verses} verses → 5 paragraphs → "
-                f"{total_citations} citations → confidence: {answer.confidence:.0%}[/dim]\n"
+            span.set_data(
+                "verse_counts",
+                {
+                    "quran": len(quran_verses),
+                    "ot": len(ot_verses),
+                    "nt": len(nt_verses),
+                    "apocrypha": len(apocrypha_verses),
+                },
             )
 
-        return answer
+            self._log(
+                f"📋 Verses: Quran={len(quran_verses)}, OT={len(ot_verses)}, "
+                f"NT={len(nt_verses)}, Apoc={len(apocrypha_verses)}"
+            )
+
+            # Step 3: Multi-agent generation
+            self._log("📝 Step 3: Running 4 specialist agents + summary agent...")
+            gen_start = time.time()
+
+            answer = self.multi_agent_generator.generate(
+                query=query,
+                quran_verses=quran_verses,
+                ot_verses=ot_verses,
+                nt_verses=nt_verses,
+                apocrypha_verses=apocrypha_verses,
+            )
+
+            gen_duration = (time.time() - gen_start) * 1000
+            total_duration = (time.time() - total_start) * 1000
+
+            if self.verbose:
+                self._log(
+                    f"   Multi-agent generation completed in {gen_duration:.0f}ms"
+                )
+                console.print(
+                    f"\n[green]✨ Multi-Agent Analysis complete in {total_duration:.0f}ms[/green]"
+                )
+                total_citations = sum(len(c) for c in answer.citations.values())
+                console.print(
+                    f"[dim]  {search_result.total_verses} verses → 5 paragraphs → "
+                    f"{total_citations} citations → confidence: {answer.confidence:.0%}[/dim]\n"
+                )
+
+            return answer
 
 
 # Convenience function
