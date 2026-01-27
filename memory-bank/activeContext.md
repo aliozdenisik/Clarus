@@ -7,6 +7,21 @@
 **Completed**: 
 - Reliability & Known Issues Fixes: Implemented circuit breakers, retry logic, SSE improvements, and offline handling.
 - Test Coverage Improvements: Added 142 new tests across frontend and backend, achieving high coverage for critical reliability features.
+- Sentry Observability Documentation: Documented environment variables and setup for Sentry in backend, frontend, and technical context.
+
+### Sentry Observability Documentation (2026-01-27)
+
+Documented Sentry integration for both backend and frontend to ensure observability is properly configured in all environments.
+
+**Changes:**
+- Updated `backend/.env.example` with Sentry configuration variables.
+- Updated `frontend/.env.example` with Sentry DSN, org slug, and auth token examples.
+- Added comprehensive "Sentry Observability" section to `memory-bank/techContext.md` covering:
+  - Configuration variables table
+  - Sampling rate tuning guide
+  - Expected error volume and false positive filtering
+  - SSE streaming specific notes
+  - Instructions for adding new error filters
 
 ### Reliability & Known Issues Fixes (2026-01-27)
 
