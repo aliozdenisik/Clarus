@@ -21,6 +21,45 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database initialized")
 
+    # Initialize Sentry if enabled
+    if settings.sentry_enabled and settings.sentry_dsn_backend:
+        import sentry_sdk
+        from sentry_sdk.integrations.fastapi import FastApiIntegration
+        from sentry_sdk.integrations.starlette import StarletteIntegration
+
+        def before_send(event, hint):
+            """Redact sensitive query text from Sentry events"""
+            if "request" in event:
+                # Redact JSON body query fields
+                if "data" in event["request"]:
+                    data = event["request"]["data"]
+                    if isinstance(data, dict):
+                        # Redact common query field names
+                        for key in ["query", "q", "search_query", "text"]:
+                            if key in data:
+                                data[key] = "[REDACTED]"
+                    # Don't attempt to parse string bodies - too risky
+
+                # Redact query parameters
+                if "query_string" in event["request"]:
+                    event["request"]["query_string"] = "[QUERY_PARAMS_REDACTED]"
+
+            return event
+
+        sentry_sdk.init(
+            dsn=settings.sentry_dsn_backend,
+            integrations=[
+                StarletteIntegration(transaction_style="endpoint"),
+                FastApiIntegration(transaction_style="endpoint"),
+            ],
+            traces_sample_rate=settings.sentry_traces_sample_rate,
+            environment=settings.sentry_environment,
+            release="clarus-backend@2.0.0",
+            send_default_pii=False,
+            before_send=before_send,
+        )
+        logger.info(f"Sentry initialized for {settings.sentry_environment}")
+
     yield  # <-- App runs here
 
     # SHUTDOWN (triggered by uvicorn on SIGTERM/SIGINT)

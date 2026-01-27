@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     app_env: str = "development"
     debug: bool = True
 
+    # Sentry Configuration
+    sentry_enabled: bool = False
+    sentry_dsn_backend: str = ""
+    sentry_environment: str = "development"
+    sentry_traces_sample_rate: float = 1.0
+
     class Config:
         env_file = ".env"
         extra = "ignore"
