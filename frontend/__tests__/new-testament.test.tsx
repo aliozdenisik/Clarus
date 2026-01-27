@@ -110,7 +110,7 @@ describe('New Testament Browse Page', () => {
 
     fireEvent.click(screen.getByText('Matthew'));
 
-    expect(mockPush).toHaveBeenCalledWith('/search?source=nt&book=1');
+    expect(mockPush).toHaveBeenCalledWith('/bible/1');
   });
 
   it('handles empty state or loading', async () => {
