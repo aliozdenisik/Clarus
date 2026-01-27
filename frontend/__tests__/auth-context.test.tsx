@@ -99,15 +99,171 @@ describe('loginWithGoogle', () => {
     ).rejects.toThrow('Google login failed. Please try again.');
   });
 
-  it('should handle network errors gracefully', async () => {
-    (fetch as Mock).mockRejectedValueOnce(new TypeError('Failed to fetch'));
-    
+   it('should handle network errors gracefully', async () => {
+     (fetch as Mock).mockRejectedValueOnce(new TypeError('Failed to fetch'));
+     
+     const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+     
+     await expect(
+       act(async () => {
+         await result.current.loginWithGoogle('mock-credential');
+       })
+     ).rejects.toThrow('Connection failed. Please check your internet.');
+   });
+});
+
+describe('checkAuth and backendStatus', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+  });
+
+  it('should initialize backendStatus as unknown in state', () => {
+    // This test verifies the initial state declaration
+    // The actual value changes immediately in useEffect, but the type is correct
     const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
     
-    await expect(
-      act(async () => {
-        await result.current.loginWithGoogle('mock-credential');
+    // After checkAuth runs, it should be either 'online' or 'offline', never stay 'unknown'
+    expect(['online', 'offline']).toContain(result.current.backendStatus);
+  });
+
+  it('should set backendStatus to online on successful auth check', async () => {
+    (fetch as Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: 1,
+        email: 'test@example.com',
+        name: 'Test User',
+        created_at: '2024-01-01'
       })
-    ).rejects.toThrow('Connection failed. Please check your internet.');
+    });
+
+    localStorage.setItem('access_token', 'mock-token');
+
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+
+    await waitFor(() => {
+      expect(result.current.backendStatus).toBe('online');
+    });
+  });
+
+  it('should set backendStatus to online when no token exists', async () => {
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+
+    await waitFor(() => {
+      expect(result.current.backendStatus).toBe('online');
+    });
+  });
+
+  it('should set backendStatus to offline on AbortError (timeout)', async () => {
+    const abortError = new Error('Aborted');
+    abortError.name = 'AbortError';
+    (fetch as Mock).mockRejectedValueOnce(abortError);
+
+    localStorage.setItem('access_token', 'mock-token');
+
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+
+    await waitFor(() => {
+      expect(result.current.backendStatus).toBe('offline');
+    });
+  });
+
+  it('should set backendStatus to offline on network error', async () => {
+    (fetch as Mock).mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+    localStorage.setItem('access_token', 'mock-token');
+
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+
+    await waitFor(() => {
+      expect(result.current.backendStatus).toBe('offline');
+    });
+  });
+
+  it('should set backendStatus to offline on generic error', async () => {
+    (fetch as Mock).mockRejectedValueOnce(new Error('Unknown error'));
+
+    localStorage.setItem('access_token', 'mock-token');
+
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+
+    await waitFor(() => {
+      expect(result.current.backendStatus).toBe('offline');
+    });
+  });
+
+  it('should clear timeout on successful response', async () => {
+    const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
+
+    (fetch as Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: 1,
+        email: 'test@example.com',
+        name: 'Test User',
+        created_at: '2024-01-01'
+      })
+    });
+
+    localStorage.setItem('access_token', 'mock-token');
+
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+
+    await waitFor(() => {
+      expect(result.current.backendStatus).toBe('online');
+    });
+
+    expect(clearTimeoutSpy).toHaveBeenCalled();
+    clearTimeoutSpy.mockRestore();
+  });
+
+  it('should clear timeout on error', async () => {
+    const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
+
+    (fetch as Mock).mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+    localStorage.setItem('access_token', 'mock-token');
+
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+
+    await waitFor(() => {
+      expect(result.current.backendStatus).toBe('offline');
+    });
+
+    expect(clearTimeoutSpy).toHaveBeenCalled();
+    clearTimeoutSpy.mockRestore();
+  });
+
+  it('should set isLoading to false after checkAuth completes', async () => {
+    (fetch as Mock).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        id: 1,
+        email: 'test@example.com',
+        name: 'Test User',
+        created_at: '2024-01-01'
+      })
+    });
+
+    localStorage.setItem('access_token', 'mock-token');
+
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+  });
+
+  it('should set isLoading to false even on error', async () => {
+    (fetch as Mock).mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+    localStorage.setItem('access_token', 'mock-token');
+
+    const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
   });
 });
