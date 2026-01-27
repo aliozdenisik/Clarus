@@ -26,18 +26,45 @@ async def lifespan(app: FastAPI):
         import sentry_sdk
         from sentry_sdk.integrations.fastapi import FastApiIntegration
         from sentry_sdk.integrations.starlette import StarletteIntegration
+        from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
         def before_send(event, hint):
-            """Redact sensitive query text from Sentry events"""
+            """Redact sensitive data from Sentry events - PII and LLM content"""
+
+            # Define keys to scrub
+            pii_keys = {"user_email", "user_name", "email", "name", "user_id"}
+            llm_keys = {"llm_response", "content", "response", "answer", "completion"}
+
+            def scrub_dict(d, keys_to_scrub):
+                """Recursively scrub specified keys in a dictionary"""
+                if not isinstance(d, dict):
+                    return
+                for key in keys_to_scrub:
+                    if key in d:
+                        d[key] = "[REDACTED]"
+
+            # Scrub spans data (performance monitoring)
+            if "spans" in event:
+                for span in event.get("spans", []):
+                    if isinstance(span, dict) and "data" in span:
+                        scrub_dict(span["data"], pii_keys | llm_keys)
+
+            # Scrub breadcrumbs data
+            if "breadcrumbs" in event:
+                breadcrumbs = event.get("breadcrumbs", {})
+                if isinstance(breadcrumbs, dict):
+                    for breadcrumb in breadcrumbs.get("values", []):
+                        if isinstance(breadcrumb, dict) and "data" in breadcrumb:
+                            scrub_dict(breadcrumb["data"], pii_keys | llm_keys)
+
+            # Scrub request data (preserve query text for debugging)
             if "request" in event:
                 # Redact JSON body query fields
                 if "data" in event["request"]:
                     data = event["request"]["data"]
                     if isinstance(data, dict):
-                        # Redact common query field names
-                        for key in ["query", "q", "search_query", "text"]:
-                            if key in data:
-                                data[key] = "[REDACTED]"
+                        # Redact PII and LLM response fields
+                        scrub_dict(data, pii_keys | llm_keys)
                     # Don't attempt to parse string bodies - too risky
 
                 # Redact query parameters
@@ -51,6 +78,7 @@ async def lifespan(app: FastAPI):
             integrations=[
                 StarletteIntegration(transaction_style="endpoint"),
                 FastApiIntegration(transaction_style="endpoint"),
+                SqlalchemyIntegration(),
             ],
             traces_sample_rate=settings.sentry_traces_sample_rate,
             environment=settings.sentry_environment,

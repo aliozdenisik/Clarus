@@ -82,7 +82,7 @@ def test_backend_error():
         # Initialize Sentry if not already done
         from app.config import settings
 
-        if not sentry_sdk.Hub.current.client:
+        if not sentry_sdk.get_client():
             from sentry_sdk.integrations.fastapi import FastApiIntegration
             from sentry_sdk.integrations.starlette import StarletteIntegration
 
@@ -143,7 +143,7 @@ def test_performance_spans():
         # Initialize Sentry with tracing
         from app.config import settings
 
-        if not sentry_sdk.Hub.current.client:
+        if not sentry_sdk.get_client():
             sentry_sdk.init(
                 dsn=settings.sentry_dsn_backend,
                 environment=settings.sentry_environment,
