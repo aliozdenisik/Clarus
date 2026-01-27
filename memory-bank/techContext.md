@@ -82,6 +82,49 @@ RATE_LIMIT_PER_DAY=50
 | `SENTRY_ORG` | Frontend | Organization slug for source maps |
 | `SENTRY_AUTH_TOKEN` | Frontend/CI | Auth token for source map upload |
 
+### Backend Instrumentation
+
+| Span Op | File | Description |
+|---------|------|-------------|
+| `llm.openrouter.query_enhancer` | query_enhancer.py | Query enhancement LLM calls |
+| `llm.openrouter.answer` | answer_generator.py | Answer generation LLM calls |
+| `llm.openrouter.comparative` | comparative_answer_generator.py | Comparative analysis LLM |
+| `llm.openrouter.agent` | multi_agent_answer_generator.py | Multi-agent LLM calls |
+| `embedding.openai.single` | embeddings.py | Single text embedding |
+| `embedding.openai.batch` | embeddings.py | Batch embedding |
+| `rag.enhance_query` | ultimate_rag.py | Query enhancement step |
+| `rag.multi_query` | ultimate_rag.py | Multi-query generation |
+| `rag.search` | ultimate_rag.py | Search with RRF fusion |
+
+**Integrations**: SqlAlchemy (DB queries), FastAPI, Starlette
+
+**Circuit Breaker Events**: Warning messages captured when breakers OPEN (qdrant, openrouter, embeddings)
+
+### Frontend Instrumentation
+
+- **Error Boundary**: Global React error capture with fallback UI (`components/error-boundary.tsx`)
+- **SSE Capture**: Connection errors tracked with `source: 'sse-*'` tags
+- **API Mutations**: Global error handler via QueryClient
+- **User Context**: ID only (no PII - email/name scrubbed)
+
+### Custom Metrics
+
+| Metric | Unit | Description |
+|--------|------|-------------|
+| `rag.query.enhance_latency_ms` | millisecond | Query enhancement time |
+| `rag.query.multi_latency_ms` | millisecond | Multi-query generation time |
+| `rag.query.search_latency_ms` | millisecond | Search time |
+| `rag.cache.hit` | none | Cache hit (1) or miss (0) |
+| `rag.compare.total_latency_ms` | millisecond | Total compare time |
+| `llm.tokens.input` | none | Input token count |
+| `llm.tokens.output` | none | Output token count |
+| `llm.cost.estimated` | none | Estimated cost in USD |
+
+### PII Scrubbing (before_send hook)
+
+- **Scrubbed**: user_email, user_name, email, name, user_id, llm_response, content, response, answer
+- **Preserved**: Query text (for debugging), error messages
+
 ### Sampling Rate Tuning
 
 | Environment | Rate | Use Case |
@@ -90,10 +133,28 @@ RATE_LIMIT_PER_DAY=50
 | Production (low traffic) | `0.1` (10%) | Balance visibility vs cost |
 | Production (high traffic) | `0.01` (1%) | Reduce if performance impact |
 
-### Expected Error Volume (Production)
+### Alert Rules (Configure in Sentry UI)
 
-- **Normal**: 5-10 errors/day (real bugs that need fixing)
-- **High**: >50 errors/day (likely false positives, tune filters)
+| Alert | Condition | Level |
+|-------|-----------|-------|
+| Error Rate | >50 events/hour | Warning |
+| Latency | p95 >60s on `rag.*` | Warning |
+| Circuit Breaker | "Circuit breaker OPEN" event | Alert |
+| LLM Error Rate | >20% on `llm.*` spans | Critical |
+
+### Runbooks
+
+See `backend/RUNBOOKS.md` for alert response procedures.
+
+### Chaos Testing
+
+```bash
+cd backend
+python scripts/chaos_sentry_test.py --all  # Test all alerts
+python scripts/chaos_sentry_test.py --error-burst  # 100 errors
+python scripts/chaos_sentry_test.py --slow-query   # 35s slow query
+python scripts/chaos_sentry_test.py --circuit-open # Force breaker open
+```
 
 ### Common False Positives (Already Filtered)
 
@@ -106,16 +167,6 @@ RATE_LIMIT_PER_DAY=50
 - Compare endpoint streams take 40-60 seconds (normal)
 - Transactions use `op: 'sse.stream'` to avoid "slow" marking
 - Reconnection attempts are filtered (not sent to Sentry)
-
-### Adding New Error Filters
-
-Edit `beforeSend` in `frontend/sentry.client.config.ts`:
-
-```typescript
-if (error.message?.includes('specific-pattern')) {
-  return null; // Don't send to Sentry
-}
-```
 
 ## URLs
 

@@ -18,6 +18,8 @@ interface SSEMessage {
   verse_details?: any;
   token?: string;
   done?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  stats?: any;
 }
 
 /**

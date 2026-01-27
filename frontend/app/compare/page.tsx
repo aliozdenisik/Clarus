@@ -220,7 +220,7 @@ export default function ComparePage() {
     if (sseData.length === 0) return;
 
     // Check for complete message
-    const completeMsg = sseData.find((m) => m.type === "complete");
+    const completeMsg = sseData.findLast((m) => m.type === "complete");
     if (completeMsg?.result) {
       setResult(completeMsg.result as CompareResult);
       setIsLoading(false);
@@ -228,7 +228,7 @@ export default function ComparePage() {
     }
 
     // Handle verse_details from streaming (sent before text)
-    const verseDetailsMsg = sseData.find((m: any) => m.verse_details);
+    const verseDetailsMsg = sseData.findLast((m: any) => m.verse_details);
     if (verseDetailsMsg?.verse_details) {
       setResult((prev) => {
         const base = prev || {
@@ -244,6 +244,29 @@ export default function ComparePage() {
         return {
           ...base,
           verse_details: verseDetailsMsg.verse_details,
+        };
+      });
+    }
+
+    // Extract stats from most recent SSE messages
+    const statsMsg = sseData.findLast((m: any) => m.stats);
+    if (statsMsg?.stats) {
+      setResult((prev) => {
+        const base = prev || {
+          topic,
+          essay: "",
+          paragraphs: [],
+          citations: {},
+          confidence: 0,
+          total_verses: 0,
+          total_citations: 0,
+          latency_ms: 0,
+        };
+        return {
+          ...base,
+          confidence: statsMsg.stats.confidence || base.confidence,
+          latency_ms: statsMsg.stats.latency_ms || base.latency_ms,
+          total_verses: statsMsg.stats.total_verses || base.total_verses,
         };
       });
     }

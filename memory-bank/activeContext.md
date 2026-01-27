@@ -9,19 +9,40 @@
 - Test Coverage Improvements: Added 142 new tests across frontend and backend, achieving high coverage for critical reliability features.
 - Sentry Observability Documentation: Documented environment variables and setup for Sentry in backend, frontend, and technical context.
 
-### Sentry Observability Documentation (2026-01-27)
+### Sentry Comprehensive Observability Implementation (2026-01-27)
 
-Documented Sentry integration for both backend and frontend to ensure observability is properly configured in all environments.
+Full-stack Sentry observability implementation with end-to-end tracing, custom metrics, and production-ready alerts.
 
-**Changes:**
-- Updated `backend/.env.example` with Sentry configuration variables.
-- Updated `frontend/.env.example` with Sentry DSN, org slug, and auth token examples.
-- Added comprehensive "Sentry Observability" section to `memory-bank/techContext.md` covering:
-  - Configuration variables table
-  - Sampling rate tuning guide
-  - Expected error volume and false positive filtering
-  - SSE streaming specific notes
-  - Instructions for adding new error filters
+**Backend Instrumentation:**
+- SqlAlchemy integration for DB query tracing
+- LLM spans: query_enhancer, answer_generator, comparative, multi-agent
+- Embedding spans: single and batch operations
+- Circuit breaker events: Warning capture on OPEN state
+- PII scrubbing: user data and LLM responses redacted
+
+**Frontend Instrumentation:**
+- Global Error Boundary with Sentry capture and fallback UI
+- SSE error capture (parse, connection, init errors)
+- API mutation global error handler
+- User context (ID only, no PII)
+
+**Custom Metrics:**
+- RAG pipeline: enhance_latency, multi_latency, search_latency, cache_hit
+- LLM cost tracking: tokens.input, tokens.output, cost.estimated
+
+**Operational:**
+- Chaos test script (`scripts/chaos_sentry_test.py`)
+- RUNBOOKS.md with alert response procedures
+- Alert rules documented (configure in Sentry UI)
+
+**Files Created:**
+- `frontend/components/error-boundary.tsx`
+- `backend/scripts/chaos_sentry_test.py`
+- `backend/RUNBOOKS.md`
+
+**Files Modified (15+):**
+- Backend: app/main.py, query_enhancer.py, answer_generator.py, comparative_answer_generator.py, multi_agent_answer_generator.py, embeddings.py, circuit_breaker.py, ultimate_rag.py, comparative_rag.py, test_sentry.py
+- Frontend: providers.tsx, use-sse.ts, auth-context.tsx, api-provider.tsx, compare/page.tsx
 
 ### Reliability & Known Issues Fixes (2026-01-27)
 
@@ -325,6 +346,26 @@ class CompareResponse:
    - Arabic font optimization
    - Batch query API
    - WebSocket support for real-time chat
+
+## Security Tracking
+
+### CVE-2026-0994 - Protobuf JSON Recursion DoS (2026-01-27)
+
+| Field | Value |
+|-------|-------|
+| **CVE** | CVE-2026-0994 |
+| **CVSS** | 8.6 HIGH |
+| **Affected** | protobuf ≤6.33.4 (installed: 6.33.2) |
+| **Patched** | None yet |
+| **Risk** | LOW - Not exploitable in Clarus |
+
+**Assessment**: Vulnerability is in `json_format.ParseDict()`. Clarus uses protobuf only for internal gRPC (qdrant-client) and ONNX inference (fastembed) - neither accepts untrusted JSON input. No exposed attack surface.
+
+**Tracking**: 
+- PR: https://github.com/protocolbuffers/protobuf/pull/25239
+- Comment added to `backend/requirements.txt`
+
+**Action**: Upgrade protobuf when patch is released.
 
 ## Active Decisions
 
