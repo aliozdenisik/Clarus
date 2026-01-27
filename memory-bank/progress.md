@@ -18,6 +18,7 @@
 - [x] Comparative RAG (4 parallel searches)
 - [x] Multi-Agent Answer Generation (5 paragraphs)
 - [x] Semantic LLM Cache (60-80% API cost reduction)
+- [x] Sentry Observability Documentation (Backend & Frontend)
 
 ### Interfaces
 

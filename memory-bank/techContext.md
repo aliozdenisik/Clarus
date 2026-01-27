@@ -68,7 +68,56 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 RATE_LIMIT_PER_DAY=50
 ```
 
-### URLs
+## Sentry Observability
+
+### Configuration
+
+| Variable | Location | Description |
+|----------|----------|-------------|
+| `SENTRY_ENABLED` | Backend | Enable/disable Sentry (`true`/`false`) |
+| `SENTRY_DSN_BACKEND` | Backend | Backend project DSN from Sentry |
+| `SENTRY_ENVIRONMENT` | Backend | Environment tag (`development`/`production`) |
+| `SENTRY_TRACES_SAMPLE_RATE` | Backend | Performance trace sampling (0.0-1.0) |
+| `NEXT_PUBLIC_SENTRY_DSN` | Frontend | Frontend project DSN from Sentry |
+| `SENTRY_ORG` | Frontend | Organization slug for source maps |
+| `SENTRY_AUTH_TOKEN` | Frontend/CI | Auth token for source map upload |
+
+### Sampling Rate Tuning
+
+| Environment | Rate | Use Case |
+|-------------|------|----------|
+| Development | `1.0` (100%) | Capture everything for debugging |
+| Production (low traffic) | `0.1` (10%) | Balance visibility vs cost |
+| Production (high traffic) | `0.01` (1%) | Reduce if performance impact |
+
+### Expected Error Volume (Production)
+
+- **Normal**: 5-10 errors/day (real bugs that need fixing)
+- **High**: >50 errors/day (likely false positives, tune filters)
+
+### Common False Positives (Already Filtered)
+
+- EventSource reconnection errors (SSE retry behavior)
+- ResizeObserver loop warnings (browser-specific)
+- Network timeouts during development
+
+### SSE Streaming Notes
+
+- Compare endpoint streams take 40-60 seconds (normal)
+- Transactions use `op: 'sse.stream'` to avoid "slow" marking
+- Reconnection attempts are filtered (not sent to Sentry)
+
+### Adding New Error Filters
+
+Edit `beforeSend` in `frontend/sentry.client.config.ts`:
+
+```typescript
+if (error.message?.includes('specific-pattern')) {
+  return null; // Don't send to Sentry
+}
+```
+
+## URLs
 
 | Service | URL |
 |---------|-----|
