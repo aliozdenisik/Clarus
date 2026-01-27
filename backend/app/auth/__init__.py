@@ -3,7 +3,8 @@
 from datetime import datetime, timedelta
 from typing import Optional
 import bcrypt
-from jose import jwt, JWTError
+import jwt
+from jwt.exceptions import InvalidTokenError
 
 from app.config import settings
 
@@ -43,5 +44,5 @@ def decode_access_token(token: str) -> Optional[dict]:
             token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
         )
         return payload
-    except JWTError:
+    except InvalidTokenError:
         return None

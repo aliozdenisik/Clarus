@@ -1,0 +1,19 @@
+# Code Owners for Clarus
+# These owners will be requested for review when someone opens a pull request.
+
+# Global owners (fallback)
+* @aliozdenisik
+
+# Backend (Python/FastAPI)
+/backend/ @aliozdenisik
+
+# Frontend (Next.js)
+/frontend/ @aliozdenisik
+
+# Infrastructure
+/docker-compose.yml @aliozdenisik
+/.github/ @aliozdenisik
+
+# Documentation
+*.md @aliozdenisik
+/docs/ @aliozdenisik

@@ -7,6 +7,7 @@
 Comparative theological analysis across Quran and Bible with 5-agent LLM synthesis
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![CI](https://github.com/aliozdenisik/Clarus/actions/workflows/ci.yml/badge.svg)](https://github.com/aliozdenisik/Clarus/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776ab.svg?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688.svg?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Qdrant](https://img.shields.io/badge/Qdrant-DC382D.svg?style=flat-square&logo=qdrant&logoColor=white)](https://qdrant.tech)
