@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
+import * as Sentry from '@sentry/nextjs';
 
 /**
  * SSE Message format from backend
@@ -87,14 +88,15 @@ export function useSSE(): UseSSEReturn {
             setIsStreaming(false);
           }
         } catch (parseError) {
-          const errorMsg =
-            parseError instanceof Error
-              ? parseError.message
-              : 'Failed to parse message';
-          setError(errorMsg);
-          eventSource.close();
-          setIsStreaming(false);
-        }
+           const errorMsg =
+             parseError instanceof Error
+               ? parseError.message
+               : 'Failed to parse message';
+           Sentry.captureException(parseError, { tags: { source: 'sse-parse' } });
+           setError(errorMsg);
+           eventSource.close();
+           setIsStreaming(false);
+         }
       };
 
       /**
@@ -126,22 +128,26 @@ export function useSSE(): UseSSEReturn {
               retryCountRef.current += 1;
               startStreamInternalRef.current?.(currentUrlRef.current!);
             }, delay);
-          } else {
-            // Max retries reached - fall back to POST
-            setError('Connection failed after 3 retries. Falling back to standard request.');
-            setIsStreaming(false);
-            toast.error('Connection failed', {
-              description: 'Falling back to standard request...',
-            });
-          }
+           } else {
+             // Max retries reached - fall back to POST
+             Sentry.captureException(new Error('SSE connection failed after max retries'), {
+               tags: { source: 'sse-connection' },
+             });
+             setError('Connection failed after 3 retries. Falling back to standard request.');
+             setIsStreaming(false);
+             toast.error('Connection failed', {
+               description: 'Falling back to standard request...',
+             });
+           }
         }
       };
-    } catch (err) {
-      const errorMsg =
-        err instanceof Error ? err.message : 'Failed to start stream';
-      setError(errorMsg);
-      setIsStreaming(false);
-    }
+     } catch (err) {
+       const errorMsg =
+         err instanceof Error ? err.message : 'Failed to start stream';
+       Sentry.captureException(err, { tags: { source: 'sse-init' } });
+       setError(errorMsg);
+       setIsStreaming(false);
+     }
   }, []);
 
   // Store function reference for recursive calls (in effect to avoid render-time ref update)

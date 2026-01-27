@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 
 interface User {
   id: number;
@@ -57,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       clearTimeout(timeoutId);
+      Sentry.captureException(error, { tags: { source: 'auth-check' } });
       if (error instanceof Error && error.name === 'AbortError') {
         console.error("Auth check timed out after 10s");
         setBackendStatus('offline');

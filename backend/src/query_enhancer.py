@@ -10,6 +10,8 @@ import os
 import json
 import logging
 import requests
+import time
+import sentry_sdk
 from typing import List, Optional, Dict, Any
 from tenacity import (
     retry,
@@ -176,42 +178,55 @@ Adım 3: JSON formatında ver.
         self, prompt: str, system_prompt: str, examples: List[Dict]
     ) -> Dict[str, Any]:
         """Generic JSON LLM caller with dynamic context"""
-        messages = [{"role": "system", "content": system_prompt}]
-        messages.extend(examples)
-        messages.append({"role": "user", "content": prompt})
+        with sentry_sdk.start_span(
+            op="llm.openrouter.query_enhancer", description="Query enhancement LLM call"
+        ) as span:
+            start_time = time.time()
+            span.set_data("model", self.model)
 
-        try:
-            response = llm_with_breaker(
-                lambda: requests.post(
-                    self.OPENROUTER_URL,
-                    headers=self._headers,
-                    json={
-                        "model": self.model,
-                        "messages": messages,
-                        "response_format": {"type": "json_object"},
-                        "max_tokens": 500,
-                        "temperature": 0.3,
-                    },
-                    timeout=30,
+            messages = [{"role": "system", "content": system_prompt}]
+            messages.extend(examples)
+            messages.append({"role": "user", "content": prompt})
+
+            try:
+                response = llm_with_breaker(
+                    lambda: requests.post(
+                        self.OPENROUTER_URL,
+                        headers=self._headers,
+                        json={
+                            "model": self.model,
+                            "messages": messages,
+                            "response_format": {"type": "json_object"},
+                            "max_tokens": 500,
+                            "temperature": 0.3,
+                        },
+                        timeout=30,
+                    )
                 )
-            )
-            response.raise_for_status()
-            content = response.json()["choices"][0]["message"]["content"].strip()
-            return json.loads(content)
-        except CircuitBreakerError:
-            # Circuit breaker open - fail fast, do NOT retry
-            logger.warning("Circuit breaker OPEN for LLM - query enhancement failed")
-            return {}
-        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
-            # Let these propagate to @retry decorator
-            raise
-        except Exception as e:
-            # Other errors (JSON parse, HTTP errors, etc.) - don't retry
-            logger.error(f"API Call failed: {e}")
-            return {}
-        except Exception as e:
-            print(f"API Call failed: {e}")
-            return {}
+                response.raise_for_status()
+                content = response.json()["choices"][0]["message"]["content"].strip()
+
+                # Set latency before return
+                latency_ms = (time.time() - start_time) * 1000
+                span.set_data("latency_ms", latency_ms)
+
+                return json.loads(content)
+            except CircuitBreakerError:
+                # Circuit breaker open - fail fast, do NOT retry
+                logger.warning(
+                    "Circuit breaker OPEN for LLM - query enhancement failed"
+                )
+                return {}
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+                # Let these propagate to @retry decorator
+                raise
+            except Exception as e:
+                # Other errors (JSON parse, HTTP errors, etc.) - don't retry
+                logger.error(f"API Call failed: {e}")
+                return {}
+            except Exception as e:
+                print(f"API Call failed: {e}")
+                return {}
 
     def expand_query(self, query: str, corpus: str = "bible") -> str:
         """
