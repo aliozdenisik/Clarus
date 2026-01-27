@@ -1,0 +1,117 @@
+{
+  "title": "RAG Pipeline Performance",
+  "description": "Real-time monitoring of Clarus RAG pipeline performance, LLM costs, and agent metrics",
+  "widgets": [
+    {
+      "title": "Query Count (24h)",
+      "displayType": "big_number",
+      "queries": [
+        {
+          "name": "Total Queries",
+          "fields": ["count()"],
+          "conditions": "transaction:app.api.stream.* OR transaction:rag.*",
+          "aggregates": ["count()"]
+        }
+      ],
+      "layout": {"x": 0, "y": 0, "w": 2, "h": 1}
+    },
+    {
+      "title": "Average Latency",
+      "displayType": "table",
+      "queries": [
+        {
+          "name": "Latency Percentiles",
+          "fields": ["transaction", "p50(transaction.duration)", "p95(transaction.duration)", "p99(transaction.duration)"],
+          "conditions": "transaction:app.api.stream.* OR transaction:rag.*",
+          "orderby": "-p95(transaction.duration)"
+        }
+      ],
+      "layout": {"x": 2, "y": 0, "w": 4, "h": 2}
+    },
+    {
+      "title": "Error Rate (%)",
+      "displayType": "line",
+      "queries": [
+        {
+          "name": "Error Rate",
+          "fields": ["failure_rate()"],
+          "conditions": "transaction:app.api.stream.* OR transaction:rag.*"
+        }
+      ],
+      "layout": {"x": 0, "y": 1, "w": 2, "h": 2}
+    },
+    {
+      "title": "Per-Agent Breakdown",
+      "displayType": "table",
+      "queries": [
+        {
+          "name": "Agent Performance",
+          "fields": ["span.op", "count()", "avg(span.duration)", "p95(span.duration)"],
+          "conditions": "span.op:rag.agent.*",
+          "orderby": "-count()"
+        }
+      ],
+      "layout": {"x": 0, "y": 3, "w": 3, "h": 2}
+    },
+    {
+      "title": "Cache Hit Rate",
+      "displayType": "big_number",
+      "queries": [
+        {
+          "name": "Cache Hits",
+          "fields": ["count_if(span.data.cache_hit, equals, true)", "count()"],
+          "conditions": "span.op:embedding.* OR span.op:llm.*"
+        }
+      ],
+      "layout": {"x": 3, "y": 3, "w": 2, "h": 1}
+    },
+    {
+      "title": "LLM Cost (Daily)",
+      "displayType": "line",
+      "queries": [
+        {
+          "name": "Estimated Cost",
+          "fields": ["sum(measurements.llm.cost.estimated)"],
+          "conditions": "has:measurements.llm.cost.estimated"
+        }
+      ],
+      "layout": {"x": 3, "y": 4, "w": 3, "h": 2}
+    },
+    {
+      "title": "LLM Token Usage",
+      "displayType": "area",
+      "queries": [
+        {
+          "name": "Input Tokens",
+          "fields": ["sum(measurements.llm.tokens.input)"],
+          "conditions": "has:measurements.llm.tokens.input"
+        },
+        {
+          "name": "Output Tokens",
+          "fields": ["sum(measurements.llm.tokens.output)"],
+          "conditions": "has:measurements.llm.tokens.output"
+        }
+      ],
+      "layout": {"x": 0, "y": 5, "w": 3, "h": 2}
+    },
+    {
+      "title": "Top Slow Transactions",
+      "displayType": "table",
+      "queries": [
+        {
+          "name": "Slowest",
+          "fields": ["transaction", "count()", "p95(transaction.duration)"],
+          "conditions": "transaction:app.api.* OR transaction:rag.*",
+          "orderby": "-p95(transaction.duration)",
+          "limit": 10
+        }
+      ],
+      "layout": {"x": 3, "y": 6, "w": 3, "h": 2}
+    }
+  ],
+  "filters": {
+    "environment": ["production", "development"],
+    "projects": ["python", "javascript-nextjs"]
+  },
+  "dateRange": "24h"
+}

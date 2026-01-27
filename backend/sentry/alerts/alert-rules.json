@@ -1,0 +1,81 @@
+{
+  "alerts": [
+    {
+      "name": "High Error Rate",
+      "description": "Error rate exceeds 50 events per hour. See: RUNBOOKS.md#error-rate-high",
+      "type": "issue",
+      "conditions": {
+        "frequency": {
+          "interval": "1h",
+          "value": 50
+        }
+      },
+      "filters": {
+        "level": ["error", "fatal"]
+      },
+      "actions": {
+        "notify": "sentry_dashboard"
+      },
+      "environment": "production",
+      "project": "python"
+    },
+    {
+      "name": "High Latency (p95 > 60s)",
+      "description": "Transaction p95 latency exceeds 60 seconds. See: RUNBOOKS.md#latency-high",
+      "type": "metric",
+      "conditions": {
+        "metric": "transaction.duration",
+        "aggregation": "p95",
+        "comparison": ">",
+        "value": 60000,
+        "interval": "5m"
+      },
+      "filters": {
+        "transaction": ["app.api.stream.*", "rag.*"]
+      },
+      "actions": {
+        "notify": "sentry_dashboard"
+      },
+      "environment": "production",
+      "project": "python"
+    },
+    {
+      "name": "Circuit Breaker OPEN",
+      "description": "Circuit breaker has opened due to failures. See: RUNBOOKS.md#circuit-breaker-open",
+      "type": "issue",
+      "conditions": {
+        "firstSeen": true
+      },
+      "filters": {
+        "message": "Circuit breaker OPEN"
+      },
+      "actions": {
+        "notify": "sentry_dashboard"
+      },
+      "environment": "production",
+      "project": "python"
+    },
+    {
+      "name": "LLM Error Rate Critical",
+      "description": "LLM call failure rate exceeds 20%. See: RUNBOOKS.md#llm-error-rate",
+      "type": "metric",
+      "conditions": {
+        "metric": "span.failure_rate",
+        "aggregation": "percentage",
+        "comparison": ">",
+        "value": 20,
+        "interval": "15m"
+      },
+      "filters": {
+        "span.op": ["llm.openrouter.*", "http.client"],
+        "span.description": "*openrouter*"
+      },
+      "actions": {
+        "notify": "sentry_dashboard",
+        "severity": "critical"
+      },
+      "environment": "production",
+      "project": "python"
+    }
+  ]
+}
