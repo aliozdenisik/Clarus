@@ -110,7 +110,7 @@ describe('Apocrypha Browse Page', () => {
 
     fireEvent.click(screen.getByText('Tobit'));
 
-    expect(mockPush).toHaveBeenCalledWith('/search?source=apocrypha&book=1');
+    expect(mockPush).toHaveBeenCalledWith('/bible/1');
   });
 
   it('handles empty state or loading', async () => {

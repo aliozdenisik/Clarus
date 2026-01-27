@@ -110,7 +110,7 @@ describe('Old Testament Browse Page', () => {
 
     fireEvent.click(screen.getByText('Genesis'));
 
-    expect(mockPush).toHaveBeenCalledWith('/search?source=ot&book=1');
+    expect(mockPush).toHaveBeenCalledWith('/bible/1');
   });
 
   it('handles empty state or loading', async () => {
