@@ -1,15 +1,22 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { toast } from 'sonner';
 
 /**
  * SSE Message format from backend
  */
 interface SSEMessage {
-  type: 'token' | 'complete' | 'error';
+  type?: 'token' | 'complete' | 'error' | 'section' | 'paragraph';
   content?: string;
   result?: unknown;
   error?: string;
+  status?: string;
+  message?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  verse_details?: any;
+  token?: string;
+  done?: boolean;
 }
 
 /**
@@ -36,22 +43,25 @@ export interface UseSSEReturn {
  *   startStream('/api/stream/search?q=test&source=quran');
  * };
  */
+const MAX_RETRIES = 3;
+
 export function useSSE(): UseSSEReturn {
   const [data, setData] = useState<SSEMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const currentUrlRef = useRef<string | null>(null);
+  const retryCountRef = useRef(0);
+  const startStreamInternalRef = useRef<((url: string) => void) | null>(null);
 
-  const startStream = useCallback((url: string) => {
+  const startStreamInternal = useCallback((url: string) => {
     // Clean up any existing connection
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
 
-    // Reset state
-    setData([]);
-    setError(null);
-    setIsStreaming(true);
+    // Store current URL for reconnection
+    currentUrlRef.current = url;
 
     try {
       // Create EventSource with credentials for auth
@@ -92,24 +102,39 @@ export function useSSE(): UseSSEReturn {
        */
       eventSource.onopen = () => {
         setError(null);
+        retryCountRef.current = 0;
       };
 
       /**
-       * Handle errors
+       * Handle errors with reconnection logic
        */
       eventSource.onerror = (event: Event) => {
         const eventSource = event.target as EventSource;
+        eventSource.close();
 
         if (eventSource.readyState === EventSource.CLOSED) {
-          // Connection closed normally
-          setIsStreaming(false);
-        } else {
-          // Connection error
-          setError('Connection error. Stream interrupted.');
-          setIsStreaming(false);
-        }
+          // Check if we should retry
+          if (retryCountRef.current < MAX_RETRIES && currentUrlRef.current) {
+            // Calculate exponential backoff: 1s, 2s, 4s
+            const delay = Math.pow(2, retryCountRef.current) * 1000;
+            
+            toast.info('Connection lost', {
+              description: `Reconnecting... (${retryCountRef.current + 1}/${MAX_RETRIES})`,
+            });
 
-        eventSource.close();
+            setTimeout(() => {
+              retryCountRef.current += 1;
+              startStreamInternalRef.current?.(currentUrlRef.current!);
+            }, delay);
+          } else {
+            // Max retries reached - fall back to POST
+            setError('Connection failed after 3 retries. Falling back to standard request.');
+            setIsStreaming(false);
+            toast.error('Connection failed', {
+              description: 'Falling back to standard request...',
+            });
+          }
+        }
       };
     } catch (err) {
       const errorMsg =
@@ -118,6 +143,21 @@ export function useSSE(): UseSSEReturn {
       setIsStreaming(false);
     }
   }, []);
+
+  // Store function reference for recursive calls (in effect to avoid render-time ref update)
+  useEffect(() => {
+    startStreamInternalRef.current = startStreamInternal;
+  }, [startStreamInternal]);
+
+  const startStream = useCallback((url: string) => {
+    // Reset state for new stream
+    setData([]);
+    setError(null);
+    setIsStreaming(true);
+    retryCountRef.current = 0;
+    
+    startStreamInternal(url);
+  }, [startStreamInternal]);
 
   const stopStream = useCallback(() => {
     if (eventSourceRef.current) {

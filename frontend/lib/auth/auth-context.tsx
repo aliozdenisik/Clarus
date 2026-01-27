@@ -12,6 +12,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  backendStatus: 'online' | 'offline' | 'unknown';
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
@@ -23,28 +24,49 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [backendStatus, setBackendStatus] = useState<'online' | 'offline' | 'unknown'>('unknown');
 
   useEffect(() => {
     checkAuth();
   }, []);
 
   const checkAuth = async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    
     try {
       const token = localStorage.getItem("access_token");
       if (token) {
         const response = await fetch("http://localhost:8000/api/auth/me", {
           headers: { Authorization: `Bearer ${token}` },
+          signal: controller.signal,
         });
+        clearTimeout(timeoutId);
+        
         if (response.ok) {
           const data = await response.json();
           setUser(data);
+          setBackendStatus('online');
         } else {
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
+          setBackendStatus('online');  // Backend reachable, just auth failed
         }
+      } else {
+        setBackendStatus('online');  // No token, but backend assumed online
       }
     } catch (error) {
-      console.error("Auth check failed:", error);
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error("Auth check timed out after 10s");
+        setBackendStatus('offline');
+      } else if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.error("Auth check failed: network error");
+        setBackendStatus('offline');
+      } else {
+        console.error("Auth check failed:", error);
+        setBackendStatus('offline');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -131,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, loginWithGoogle, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, backendStatus, login, loginWithGoogle, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
