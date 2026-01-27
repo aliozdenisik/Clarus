@@ -7,6 +7,13 @@ import uuid
 import traceback
 import logging
 
+try:
+    import sentry_sdk
+
+    SENTRY_AVAILABLE = True
+except ImportError:
+    SENTRY_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -96,6 +103,9 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
 
         except APIError as e:
             logger.warning(f"[{request_id}] APIError: {e.code} - {e.message}")
+            # Don't capture rate limit errors in Sentry (expected behavior)
+            if SENTRY_AVAILABLE and not isinstance(e, RateLimitError):
+                sentry_sdk.capture_exception(e)
             return create_error_response(
                 request_id=request_id,
                 code=e.code,
@@ -108,6 +118,13 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
             logger.error(
                 f"[{request_id}] Unhandled error: {str(e)}\n{traceback.format_exc()}"
             )
+            # Capture unhandled exceptions in Sentry with user context
+            if SENTRY_AVAILABLE:
+                # User ID is set by add_user_id_to_state middleware in main.py:81-95
+                # It extracts user_id from JWT payload["sub"] and stores as integer
+                if hasattr(request.state, "user_id") and request.state.user_id:
+                    sentry_sdk.set_user({"id": str(request.state.user_id)})
+                sentry_sdk.capture_exception(e)
             return create_error_response(
                 request_id=request_id,
                 code="INTERNAL_ERROR",
