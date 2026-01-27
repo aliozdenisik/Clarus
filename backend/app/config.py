@@ -1,9 +1,12 @@
 from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
 from functools import lru_cache
 from typing import Optional
 
 
 class Settings(BaseSettings):
+    model_config = ConfigDict(env_file=".env", extra="ignore")
+
     database_url: str = (
         "postgresql+asyncpg://postgres:postgres@localhost:54322/postgres"
     )
@@ -39,10 +42,6 @@ class Settings(BaseSettings):
     sentry_dsn_backend: str = ""
     sentry_environment: str = "development"
     sentry_traces_sample_rate: float = 1.0
-
-    class Config:
-        env_file = ".env"
-        extra = "ignore"
 
     @property
     def cors_origins_list(self) -> list[str]:
