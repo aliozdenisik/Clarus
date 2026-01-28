@@ -67,6 +67,11 @@ htmlcov/
 .dmypy.json
 dmypy.json
 
+# Playwright E2E Test Artifacts
+.playwright-mcp/
+playwright-report/
+test-results/
+
 # ----------------
 # Logs
 # ----------------
@@ -159,3 +164,14 @@ test-credentials.json
 # Internal Documentation (not for public repo)
 # ----------------
 Frontend-info/
+
+# ----------------
+# Node.js & Frontend
+# ----------------
+node_modules/
+.next/
+out/
+.vercel/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
