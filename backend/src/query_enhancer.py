@@ -336,6 +336,35 @@ Adım 3: JSON formatında ver.
         result = self._call_llm_json(prompt, system_prompt, examples)
         return result.get("queries", [query])[:n]
 
+    def translate_for_bible(self, query: str) -> str:
+        """
+        Translate Turkish query to English for Bible (KJV) search.
+
+        Bible (KJV) is in English, so Turkish queries must be translated
+        to get accurate search results.
+        """
+        system_prompt = """You are a translation expert specializing in Biblical terminology.
+Your task: Translate the Turkish query into English for searching the King James Version (KJV) Bible.
+
+RULES:
+1. Translate accurately, preserving religious/theological meaning
+2. Use KJV-appropriate English vocabulary where possible (e.g., "thee", "thou" for archaic terms)
+3. If the query is already in English, return it as-is
+
+Output valid JSON only:
+{"english_query": "the translated query in English"}"""
+
+        prompt = f"Translate this Turkish query to English for KJV Bible search: '{query}'"
+
+        result = self._call_llm_json(prompt, system_prompt, [])
+        translated = result.get("english_query", query)
+
+        # If translation failed, return original query
+        if not translated or translated == query:
+            logger.warning(f"Translation may have failed for: {query}")
+
+        return translated
+
 
 if __name__ == "__main__":
     try:

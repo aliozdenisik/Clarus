@@ -775,6 +775,19 @@ class UltimateRAG:
 
         Turkish query → English search → Turkish answer with English citations.
         """
+        # For English Bible translations, translate Turkish query to English
+        if translation in ("kjva", "kjv"):
+            try:
+                translated_query = self.enhancer.translate_for_bible(query)
+                if self.verbose:
+                    console.print(
+                        f"[dim]📝 Translated for ask: {query} → {translated_query}[/dim]"
+                    )
+                query = translated_query
+            except Exception as e:
+                if self.verbose:
+                    console.print(f"[yellow]Translation warning: {e}[/yellow]")
+
         source = f"bible_{testament}" if testament else f"bible_{translation}"
         return self.ask(query, source=source, top_k=top_k)
 

@@ -175,3 +175,18 @@ out/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# ----------------
+# Claude Code (Local AI Configuration)
+# ----------------
+.claude/
+
+# ----------------
+# Windows WSL Artifacts
+# ----------------
+*:Zone.Identifier
+
+# ----------------
+# Temporary Test Scripts
+# ----------------
+test_citation_fix.py

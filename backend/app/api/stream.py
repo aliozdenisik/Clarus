@@ -13,6 +13,8 @@ import time
 import traceback
 from dotenv import load_dotenv
 
+logger = logging.getLogger(__name__)
+
 # Load .env before importing RAG modules
 env_path = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"
@@ -44,7 +46,7 @@ async def generate_sse_events(data_generator) -> AsyncGenerator[str, None]:
                 yield f"data: {json.dumps({'token': chunk})}\n\n"
                 await asyncio.sleep(0.01)  # Small delay for smooth streaming
 
-        yield f"data: {json.dumps({'done': True})}\n\n"
+        yield f"data: {json.dumps({'type': 'complete'})}\n\n"
     except Exception as e:
         yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
@@ -74,10 +76,12 @@ async def stream_search(
     await db.commit()
 
     async def generate():
+        logger.info(f"[SSE /search] Starting stream for query: {q}, source: {source}")
         rag = UltimateRAG()
 
         # First, send search status
         yield f"data: {json.dumps({'status': 'searching', 'message': 'Aranıyor...'})}\n\n"
+        logger.info("[SSE /search] Sent search status")
         await asyncio.sleep(0.1)
 
         # Perform search
@@ -96,10 +100,13 @@ async def stream_search(
 
         # Send "generating" status
         yield f"data: {json.dumps({'status': 'generating', 'message': 'Yanıt oluşturuluyor...'})}\n\n"
+        yield ": heartbeat\n\n"  # Keep connection alive during LLM call
+        logger.info("[SSE /search] Sent generating status + heartbeat, calling LLM...")
         await asyncio.sleep(0.1)
 
         # Generate answer (simulated streaming - actual LLM may not stream)
         try:
+            logger.info("[SSE /search] Starting LLM call...")
             if source == "quran":
                 answer = rag.ask_quran(q)
             elif source in ["ot", "nt", "apocrypha"]:
@@ -119,10 +126,12 @@ async def stream_search(
                 answer_text = str(answer)
             words = answer_text.split()
 
+            logger.info(f"[SSE /search] LLM returned answer, streaming {len(words)} words")
             for i, word in enumerate(words):
-                yield f"data: {json.dumps({'token': word + ' '})}\n\n"
+                yield f"data: {json.dumps({'type': 'token', 'content': word + ' '})}\n\n"
                 await asyncio.sleep(0.03)  # 30ms per word
 
+            logger.info("[SSE /search] Finished streaming words, sending citations")
             # Send citations
             if hasattr(answer, "citations"):
                 citations = answer.citations
@@ -132,10 +141,59 @@ async def stream_search(
                 citations = []
             yield f"data: {json.dumps({'citations': citations})}\n\n"
 
-        except Exception as e:
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            # Build verse_details and results_data from search results
+            verse_details: dict[str, dict] = {}
+            results_data = []
 
-        yield f"data: {json.dumps({'done': True})}\n\n"
+            for r in results:
+                # Determine source and build reference string
+                if source == "quran":
+                    # Quran result: use surah_name:verse_id format
+                    ref_str = f"{r.surah_name}:{r.verse_id}" if hasattr(r, "surah_name") else ""
+                    ref, detail = extract_quran_verse_detail(r)
+                    if ref not in verse_details:
+                        verse_details[ref] = detail.model_dump()
+                    result_source = "quran"
+                else:
+                    # Bible result: use book_name chapter:verse format
+                    ref_str = f"{r.book_name} {r.chapter}:{r.verse}" if hasattr(r, "book_name") else ""
+                    # Map source to bible_ot, bible_nt, or bible_apocrypha
+                    if source == "ot":
+                        bible_source = "bible_ot"
+                    elif source == "nt":
+                        bible_source = "bible_nt"
+                    else:
+                        bible_source = "bible_apocrypha"
+                    ref, detail = extract_bible_verse_detail(r, bible_source)
+                    if ref not in verse_details:
+                        verse_details[ref] = detail.model_dump()
+                    result_source = bible_source
+
+                results_data.append({
+                    "source": result_source,
+                    "reference": ref_str,
+                    "text": r.text if hasattr(r, "text") else str(r),
+                    "score": r.score if hasattr(r, "score") else 0.0
+                })
+
+            # Send verse_details before complete (so frontend has it ready for lookups)
+            yield f"data: {json.dumps({'verse_details': verse_details})}\n\n"
+            await asyncio.sleep(0.05)
+
+            logger.info("[SSE /search] Stream complete, sending complete with results")
+            yield f"data: {json.dumps({
+                'type': 'complete',
+                'result': {
+                    'results': results_data,
+                    'answer': answer_text,
+                    'citations': citations
+                }
+            })}\n\n"
+
+        except Exception as e:
+            logger.error(f"[SSE /search] Error during generation: {e}")
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            yield f"data: {json.dumps({'type': 'complete'})}\n\n"
 
     return StreamingResponse(
         generate(),
@@ -184,7 +242,7 @@ async def stream_compare(
             logger.error(f"[COMPARE] Failed to create RAG: {e}")
             logger.error(traceback.format_exc())
             yield f"data: {json.dumps({'error': f'RAG creation failed: {str(e)}'})}\n\n"
-            yield f"data: {json.dumps({'done': True})}\n\n"
+            yield f"data: {json.dumps({'type': 'complete'})}\n\n"
             return
 
         # Status updates
@@ -261,7 +319,7 @@ async def stream_compare(
             logger.error(traceback.format_exc())
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
-        yield f"data: {json.dumps({'done': True})}\n\n"
+        yield f"data: {json.dumps({'type': 'complete'})}\n\n"
 
     return StreamingResponse(
         generate(),

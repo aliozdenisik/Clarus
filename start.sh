@@ -1,111 +1,156 @@
 #!/bin/bash
-# Holly Search - Tek Tuşla Başlatma Scripti
 
-set -e
+# Clarus - One-Command Startup Script
+# Starts: Docker (Qdrant + PostgreSQL) → Backend API → Frontend Dev Server
 
-# Renkler
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
+set -e  # Exit on error
+
+# Colors
 RED='\033[0;31m'
-NC='\033[0m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
-# Proje dizini
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$PROJECT_ROOT"
+# Log functions
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
 
-echo -e "${BLUE}"
-echo "╔═══════════════════════════════════════════════╗"
-echo "║         Holly Search - Başlatılıyor           ║"
-echo "╚═══════════════════════════════════════════════╝"
-echo -e "${NC}"
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
 
-# PID'leri sakla
-BACKEND_PID=""
-FRONTEND_PID=""
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
 
-# Temizlik fonksiyonu
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Cleanup function
 cleanup() {
-    echo -e "\n${YELLOW}Servisler durduruluyor...${NC}"
+    log_warn "Shutting down services..."
 
-    # Backend'i durdur
-    if [ -n "$BACKEND_PID" ] && kill -0 "$BACKEND_PID" 2>/dev/null; then
-        kill "$BACKEND_PID" 2>/dev/null
-        echo -e "${GREEN}✓ Backend durduruldu${NC}"
+    if [ ! -z "$BACKEND_PID" ]; then
+        kill $BACKEND_PID 2>/dev/null || true
     fi
 
-    # Frontend'i durdur
-    if [ -n "$FRONTEND_PID" ] && kill -0 "$FRONTEND_PID" 2>/dev/null; then
-        kill "$FRONTEND_PID" 2>/dev/null
-        echo -e "${GREEN}✓ Frontend durduruldu${NC}"
+    if [ ! -z "$FRONTEND_PID" ]; then
+        kill $FRONTEND_PID 2>/dev/null || true
     fi
 
-    # Docker servislerini durdur
-    docker compose stop 2>/dev/null
-    echo -e "${GREEN}✓ Docker servisleri durduruldu${NC}"
-
-    echo -e "\n${GREEN}Tüm servisler durduruldu.${NC}"
+    log_info "Services stopped. Docker containers still running (use 'docker compose down' to stop)"
     exit 0
 }
 
-trap cleanup SIGINT SIGTERM
+trap cleanup INT TERM
 
-# Docker kontrolü
-if ! command -v docker &> /dev/null; then
-    echo -e "${RED}✗ Docker yüklü değil. Lütfen Docker'ı yükleyin.${NC}"
-    exit 1
-fi
+# Check if ports are available
+check_port() {
+    local port=$1
+    local service=$2
 
-# 1. Docker servislerini başlat
-echo -e "${BLUE}[1/4] Docker servisleri başlatılıyor...${NC}"
-docker compose up -d
+    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
+        log_error "Port $port is already in use (required for $service)"
+        log_info "Find process: lsof -i :$port"
+        return 1
+    fi
+    return 0
+}
 
-# PostgreSQL'i bekle
-echo -e "${BLUE}[2/4] PostgreSQL bekleniyor...${NC}"
-until docker exec holly-postgres pg_isready -U postgres > /dev/null 2>&1; do
-    sleep 1
-done
-echo -e "${GREEN}✓ PostgreSQL hazır${NC}"
+# Main startup sequence
+main() {
+    log_info "Starting Clarus Application..."
 
-# Qdrant'ı bekle
-echo -e "${BLUE}[3/4] Qdrant bekleniyor...${NC}"
-until curl -s http://localhost:6333/health > /dev/null 2>&1; do
-    sleep 1
-done
-echo -e "${GREEN}✓ Qdrant hazır${NC}"
+    # Step 1: Check required ports
+    log_info "Checking port availability..."
+    check_port 6333 "Qdrant" || exit 1
+    check_port 54322 "PostgreSQL" || exit 1
+    check_port 8000 "Backend API" || exit 1
+    check_port 3000 "Frontend" || exit 1
+    log_success "All ports available"
 
-# Python venv aktive et
-echo -e "${BLUE}[4/4] Uygulamalar başlatılıyor...${NC}"
+    # Step 2: Start Docker services
+    log_info "Starting Docker services (Qdrant + PostgreSQL)..."
+    docker compose up -d
 
-if [ -f "$PROJECT_ROOT/venv/bin/activate" ]; then
-    source "$PROJECT_ROOT/venv/bin/activate"
-fi
+    if [ $? -ne 0 ]; then
+        log_error "Failed to start Docker services"
+        exit 1
+    fi
 
-# Backend'i başlat
-cd "$PROJECT_ROOT/backend"
-PYTHONPATH=. uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
-BACKEND_PID=$!
-echo -e "${GREEN}✓ Backend başlatıldı (PID: $BACKEND_PID)${NC}"
+    log_success "Docker services started"
+    log_info "Waiting for services to be ready..."
+    sleep 3
 
-# Frontend'i başlat
-cd "$PROJECT_ROOT/frontend"
-npm run dev &
-FRONTEND_PID=$!
-echo -e "${GREEN}✓ Frontend başlatıldı (PID: $FRONTEND_PID)${NC}"
+    # Step 3: Check backend .env
+    if [ ! -f backend/.env ]; then
+        log_error "backend/.env not found"
+        log_info "Create backend/.env with OPENROUTER_API_KEY"
+        exit 1
+    fi
 
-# Başarı mesajı
-echo -e "\n${GREEN}"
-echo "╔═══════════════════════════════════════════════╗"
-echo "║           Tüm servisler çalışıyor!            ║"
-echo "╠═══════════════════════════════════════════════╣"
-echo "║  Frontend:  http://localhost:3000             ║"
-echo "║  Backend:   http://localhost:8000             ║"
-echo "║  API Docs:  http://localhost:8000/docs        ║"
-echo "║  Qdrant:    http://localhost:6333/dashboard   ║"
-echo "╠═══════════════════════════════════════════════╣"
-echo "║  Durdurmak için: Ctrl+C                       ║"
-echo "╚═══════════════════════════════════════════════╝"
-echo -e "${NC}"
+    # Step 4: Start Backend API
+    log_info "Starting Backend API on :8000..."
 
-# Bekle
-wait
+    if [ ! -d venv ]; then
+        log_error "Virtual environment not found at ./venv"
+        exit 1
+    fi
+
+    cd backend
+    source ../venv/bin/activate
+
+    # Start uvicorn in background
+    uvicorn app.main:app --reload > ../logs/backend.log 2>&1 &
+    BACKEND_PID=$!
+    cd ..
+
+    log_success "Backend API started (PID: $BACKEND_PID)"
+    log_info "Backend logs: tail -f logs/backend.log"
+    sleep 2
+
+    # Step 5: Start Frontend
+    log_info "Starting Frontend on :3000..."
+
+    cd frontend
+
+    # Install dependencies if node_modules missing
+    if [ ! -d node_modules ]; then
+        log_warn "node_modules not found, running npm install..."
+        npm install
+    fi
+
+    # Start Next.js dev server in background
+    npm run dev > ../logs/frontend.log 2>&1 &
+    FRONTEND_PID=$!
+    cd ..
+
+    log_success "Frontend started (PID: $FRONTEND_PID)"
+    log_info "Frontend logs: tail -f logs/frontend.log"
+
+    # Step 6: Summary
+    echo ""
+    log_success "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    log_success "✓ Clarus is running!"
+    log_success "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo -e "  ${BLUE}Frontend:${NC}  http://localhost:3000"
+    echo -e "  ${BLUE}Backend:${NC}   http://localhost:8000"
+    echo -e "  ${BLUE}API Docs:${NC}  http://localhost:8000/docs"
+    echo -e "  ${BLUE}Qdrant:${NC}    http://localhost:6333/dashboard"
+    echo ""
+    log_info "Press Ctrl+C to stop all services"
+    echo ""
+
+    # Keep script running
+    wait
+}
+
+# Create logs directory
+mkdir -p logs
+
+# Run main
+main

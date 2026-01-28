@@ -16,61 +16,65 @@
   "agent_output": {
     "old_testament": {
       "has_commentary": true,
-      "commentary_length": 695,
+      "commentary_length": 683,
       "citations": [
-        "Lamentations 3:26",
         "Proverbs 14:29",
         "Proverbs 16:32",
-        "Numbers 14:18",
+        "Ecclesiastes 7:8",
+        "Lamentations 3:26",
         "Psalms 27:14",
-        "Ecclesiastes 7:8"
+        "Proverbs 25:15",
+        "Ecclesiastes 10:4"
       ]
     },
     "new_testament": {
       "has_commentary": true,
-      "commentary_length": 620,
+      "commentary_length": 594,
       "citations": [
         "James 1:3",
         "James 1:4",
         "James 5:7",
         "James 5:8",
-        "Ephesians 4:2",
-        "Luke 21:19",
+        "James 5:10",
+        "Hebrews 6:15",
         "Hebrews 10:36",
         "Romans 5:4",
-        "2 Peter 3:15"
+        "Luke 21:19",
+        "Revelation 14:12"
       ]
     },
     "apocrypha": {
       "has_commentary": true,
-      "commentary_length": 669,
+      "commentary_length": 710,
       "citations": [
         "Sirach 1:23",
         "Sirach 18:11",
         "Sirach 2:2",
         "Sirach 2:14",
-        "Wisdom 2:19"
+        "Baruch 4:25"
       ]
     },
     "quran": {
       "has_commentary": true,
-      "commentary_length": 582,
+      "commentary_length": 823,
       "citations": [
-        "Nahl:127",
         "Bakara:153",
-        "Yûnus:109",
+        "Nahl:127",
+        "Âl-i İmrân:186",
         "Beled:17",
-        "Âl-i İmrân:200",
-        "Hûd:11",
-        "İnsân:12"
+        "İnsân:24",
+        "Şûrâ:43",
+        "İnsân:12",
+        "Müddessir:7",
+        "Enfâl:46"
       ]
     }
   },
-  "synthesis_length": 662,
-  "confidence": 0.96,
+  "synthesis_length": 710,
+  "confidence": 0.95,
   "timing": {
-    "search_time_s": 31.229777574539185,
-    "generation_time_s": 8.841300964355469,
-    "total_time_s": 40.07458996772766
+    "search_time_s": 65.3272316455841,
+    "generation_time_s": 40.59821343421936,
+    "total_time_s": 105.92884492874146
   }
 }
