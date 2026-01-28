@@ -3,11 +3,14 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Dict
 import asyncio
 import json
+import logging
 import sys
 import os
+import time
+import traceback
 from dotenv import load_dotenv
 
 # Load .env before importing RAG modules
@@ -33,6 +36,7 @@ from src.comparative_rag import ComparativeRAG
 
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 async def generate_sse_events(data_generator) -> AsyncGenerator[str, None]:
@@ -171,25 +175,18 @@ async def stream_compare(
     db.add(history)
     await db.commit()
 
-    async def generate():
-        import logging
-        import traceback
-
-        logger = logging.getLogger(__name__)
-
+    async def generate() -> AsyncGenerator[str, None]:
         logger.info(f"[COMPARE] Starting compare for topic: {topic}")
-        print(f"[COMPARE] Starting compare for topic: {topic}")
+
+        start_time = time.time()
 
         try:
             logger.info("[COMPARE] Creating ComparativeRAG instance...")
-            print("[COMPARE] Creating ComparativeRAG instance...")
             rag = ComparativeRAG(verbose=True)
             logger.info("[COMPARE] ComparativeRAG created successfully")
-            print("[COMPARE] ComparativeRAG created successfully")
         except Exception as e:
             logger.error(f"[COMPARE] Failed to create RAG: {e}")
-            print(f"[COMPARE] Failed to create RAG: {e}")
-            traceback.print_exc()
+            logger.error(traceback.format_exc())
             yield f"data: {json.dumps({'error': f'RAG creation failed: {str(e)}'})}\n\n"
             yield f"data: {json.dumps({'done': True})}\n\n"
             return
@@ -202,20 +199,15 @@ async def stream_compare(
         try:
             # Step 1: Get search results first (same pattern as non-streaming endpoint)
             logger.info("[COMPARE] Starting search_all...")
-            print("[COMPARE] Starting search_all...")
             search_result = rag.search_all(topic)
             logger.info(
-                f"[COMPARE] search_all completed, found {len(search_result.quran)} Quran, "
-                f"{len(search_result.ot)} OT, {len(search_result.nt)} NT, {len(search_result.apocrypha)} Apocrypha"
-            )
-            print(
                 f"[COMPARE] search_all completed, found {len(search_result.quran)} Quran, "
                 f"{len(search_result.ot)} OT, {len(search_result.nt)} NT, {len(search_result.apocrypha)} Apocrypha"
             )
             yield ": heartbeat\n\n"
 
             # Step 2: Build verse_details from search results
-            verse_details: dict[str, dict] = {}
+            verse_details: Dict[str, dict] = {}
 
             for r in search_result.quran:
                 ref, detail = extract_quran_verse_detail(r)
@@ -240,7 +232,6 @@ async def stream_compare(
             logger.info(
                 f"[COMPARE] Built verse_details with {len(verse_details)} references"
             )
-            print(f"[COMPARE] Built verse_details with {len(verse_details)} references")
 
             # Send verse_details BEFORE streaming text (so frontend has it ready for lookups)
             yield f"data: {json.dumps({'verse_details': verse_details})}\n\n"
@@ -248,7 +239,6 @@ async def stream_compare(
 
             # Step 3: Generate multi-agent answer using search results
             logger.info("[COMPARE] Starting multi_agent_generator.generate...")
-            print("[COMPARE] Starting multi_agent_generator.generate...")
             result = rag.multi_agent_generator.generate(
                 query=topic,
                 quran_verses=search_result.quran,
@@ -259,59 +249,73 @@ async def stream_compare(
             logger.info(
                 f"[COMPARE] multi_agent_generator completed, result type: {type(result)}"
             )
-            print(
-                f"[COMPARE] multi_agent_generator completed, result type: {type(result)}"
-            )
 
-            # Get analysis text - handle both MultiAgentAnswer and dict
-            if hasattr(result, "to_essay"):
-                logger.info("[COMPARE] Using to_essay() method")
-                print("[COMPARE] Using to_essay() method")
-                analysis = result.to_essay()
-            elif hasattr(result, "full_text"):
-                analysis = result.full_text
-            elif isinstance(result, dict):
-                analysis = result.get("analysis", "")
-            else:
-                analysis = str(result)
+            # Build structured paragraphs (same pattern as batch endpoint in compare.py)
+            paragraphs = []
 
-            logger.info(f"[COMPARE] Analysis length: {len(analysis)} chars")
-            print(f"[COMPARE] Analysis length: {len(analysis)} chars")
+            if result.old_testament_commentary:
+                paragraphs.append({
+                    "title": "Eski Ahit (Old Testament)",
+                    "content": result.old_testament_commentary,
+                    "citations": result.citations.get("old_testament", [])
+                })
 
-            # Stream section by section
-            sections = analysis.split("##")
-            logger.info(f"[COMPARE] Streaming {len(sections)} sections...")
-            print(f"[COMPARE] Streaming {len(sections)} sections...")
+            if result.new_testament_commentary:
+                paragraphs.append({
+                    "title": "Yeni Ahit (New Testament)",
+                    "content": result.new_testament_commentary,
+                    "citations": result.citations.get("new_testament", [])
+                })
 
-            for section in sections:
-                if section.strip():
-                    # Stream each word
-                    words = section.split()
-                    yield f"data: {json.dumps({'token': '## '})}\n\n"
+            if result.apocrypha_commentary:
+                paragraphs.append({
+                    "title": "Apokrifa (Apocrypha)",
+                    "content": result.apocrypha_commentary,
+                    "citations": result.citations.get("apocrypha", [])
+                })
 
-                    for word in words:
-                        yield f"data: {json.dumps({'token': word + ' '})}\n\n"
-                        await asyncio.sleep(0.02)
+            if result.quran_commentary:
+                paragraphs.append({
+                    "title": "Kuran-ı Kerim",
+                    "content": result.quran_commentary,
+                    "citations": result.citations.get("quran", [])
+                })
 
-                    yield f"data: {json.dumps({'token': '\\n\\n'})}\n\n"
-                    yield ": heartbeat\n\n"
+            if result.synthesis:
+                paragraphs.append({
+                    "title": "Karşılaştırmalı Değerlendirme",
+                    "content": result.synthesis,
+                    "citations": []  # Synthesis has no additional citations
+                })
 
-            # Send metadata
-            confidence = (
-                getattr(result, "confidence", 0)
-                if hasattr(result, "confidence")
-                else result.get("confidence", 0)
-                if isinstance(result, dict)
-                else 0
-            )
-            yield f"data: {json.dumps({'confidence': confidence, 'latency': 0})}\n\n"
+            logger.info(f"[COMPARE] Streaming {len(paragraphs)} structured paragraphs...")
+
+            # Stream paragraphs one by one
+            for idx, para in enumerate(paragraphs, 1):
+                yield f"data: {json.dumps({'type': 'paragraph', 'data': para})}\n\n"
+                yield ": heartbeat\n\n"
+                logger.info(f"[COMPARE] Sent paragraph {idx}/{len(paragraphs)}: {para['title']}")
+                await asyncio.sleep(0.1)  # Small delay for UI smoothness
+
+            # Calculate and send complete statistics
+            total_citations = sum(len(refs) for refs in result.citations.values())
+            total_verses = sum(result.verses_provided.values())  # Align with batch endpoint
+            latency_ms = int((time.time() - start_time) * 1000)
+
+            stats_data = {
+                "confidence": result.confidence,
+                "latency_ms": latency_ms,
+                "total_verses": total_verses,
+                "total_citations": total_citations
+            }
+            yield f"data: {json.dumps({'type': 'stats', 'data': stats_data})}\n\n"
+            logger.info(f"[COMPARE] Sent stats: {total_verses} verses, {total_citations} citations, {latency_ms}ms")
+
             logger.info("[COMPARE] Streaming completed successfully")
-            print("[COMPARE] Streaming completed successfully")
 
         except Exception as e:
             logger.error(f"[COMPARE] Error during compare: {e}")
-            print(f"[COMPARE] Error during compare: {e}")
-            traceback.print_exc()
+            logger.error(traceback.format_exc())
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
         yield f"data: {json.dumps({'done': True})}\n\n"
