@@ -47,6 +47,7 @@
 - [x] Pagination for list endpoints
 - [x] Input validation & XSS prevention
 - [x] Compare API with rich response schema
+- [x] **SSE streaming format fix** (structured paragraphs + stats)
 
 ### Frontend (Next.js 15)
 
@@ -99,10 +100,16 @@
 | `tests/test_circuit_breaker.py` | 39 | Circuit breakers: thresholds, wrappers, state transitions |
 | `tests/test_health_endpoint.py` | 37 | Health API: response structure, status codes, Qdrant connectivity |
 
+### Playwright E2E Tests (2026-01-28)
+| File | Tests | Coverage |
+|------|-------|----------|
+| `e2e/compare.spec.ts` | 2 | Compare page: auth, 5 paragraphs, stats, verse cards, filters, citations |
+
 ### Test Summary
 - Frontend: 167 total tests (164 passing, 3 pre-existing failures)
+- Frontend E2E: 2 Playwright tests (core functionality verified ✅, timing issues to fix)
 - Backend: 76 unit tests (all passing)
-- Total new tests added: 142
+- Total new tests added: 144
 
 ## What's Left to Build
 
@@ -150,6 +157,16 @@
 3. **Rate limiting**: 50/day per user (configurable)
 4. **SSE 30s gap**: During multi-agent generation, no heartbeats (partial mitigation via reconnection)
 5. **Circuit breaker silent degradation**: Returns empty results instead of error (intentional for UX)
+6. ~~**SSE streaming format mismatch**: Compare page essay not displayed~~ → **FIXED** (2026-01-28)
+
+## Technical Debt (GitHub Issues)
+
+| Issue | Description | Priority |
+|-------|-------------|----------|
+| [#10](https://github.com/aliozdenisik/Clarus/issues/10) | DRY: Verse detail extraction (~25 lines duplicated) | Medium |
+| [#11](https://github.com/aliozdenisik/Clarus/issues/11) | DRY: Paragraph building (~35 lines duplicated) | Medium |
+| [#12](https://github.com/aliozdenisik/Clarus/issues/12) | Playwright E2E test timing issues | Medium |
+| [#13](https://github.com/aliozdenisik/Clarus/issues/13) | Parent Epic: Post-Deployment Cleanup | - |
 
 ## Evolution of Project
 
