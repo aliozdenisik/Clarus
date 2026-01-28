@@ -109,7 +109,7 @@ export default function HomePage() {
             >
               <div className="absolute inset-0 blur-2xl bg-[var(--color-accent-primary)] opacity-20 rounded-full scale-150" />
               <Image
-                src="/logo.png"
+                src="/logo-dark-nobg.png"
                 alt="Clarus"
                 width={180}
                 height={180}
@@ -546,7 +546,7 @@ export default function HomePage() {
             {/* Brand Column */}
             <div className="md:col-span-4">
               <div className="flex items-center gap-3 mb-4">
-                <Image src="/logo.png" alt="Clarus" width={40} height={40} />
+                <Image src="/logo-dark-nobg.png" alt="Clarus" width={40} height={40} />
                 <span className="text-xl font-semibold text-[var(--color-text-primary)]">
                   Clarus
                 </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -14,6 +14,10 @@ import { LogOut, User, GitCompare } from "lucide-react";
 import { SearchTabs, SearchSource } from "@/components/search/search-tabs";
 import { useSSE } from "@/lib/hooks/use-sse";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
+import { parseCitations, CitationPart } from "@/lib/utils/parse-citations";
+import { InlineCitation } from "@/components/compare/inline-citation";
+import { VerseTooltip, VerseDetail } from "@/components/search/verse-tooltip";
+import { SourceBadge, SourceType } from "@/components/compare/source-badge";
 
 interface SearchResult {
   source: string;
@@ -28,6 +32,11 @@ function SearchContent() {
   const [isSearching, setIsSearching] = useState(false);
   const [activeTab, setActiveTab] = useState<SearchSource>("quran");
   const [streamedAnswer, setStreamedAnswer] = useState("");
+  const [verseDetails, setVerseDetails] = useState<Record<string, VerseDetail>>({});
+  const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
+  const [openPopover, setOpenPopover] = useState<string | null>(null);
+  const resultsContainerRef = useRef<HTMLDivElement>(null);
+  const hasHandledSSEError = useRef(false);
 
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
@@ -56,22 +65,21 @@ function SearchContent() {
       .join("");
     setStreamedAnswer(tokens);
 
+    // Handle verse_details message
+    const verseDetailsMsg = sseData.find((m) => m.verse_details);
+    if (verseDetailsMsg?.verse_details) {
+      setVerseDetails(verseDetailsMsg.verse_details as Record<string, VerseDetail>);
+    }
+
     const completeMsg = sseData.find((m) => m.type === "complete");
     if (completeMsg?.result) {
-      const data = completeMsg.result as any;
+      const data = completeMsg.result as { results?: SearchResult[] };
       if (data.results) {
         setResults(data.results);
         setIsSearching(false);
       }
     }
   }, [sseData]);
-
-  useEffect(() => {
-    if (sseError) {
-      toast.error("Streaming failed. Switching to standard search.");
-      performBatchSearch();
-    }
-  }, [sseError]);
 
   const handleLogout = async () => {
     await logout();
@@ -83,8 +91,65 @@ function SearchContent() {
     setActiveTab(tab);
     setResults([]);
     setStreamedAnswer("");
+    setVerseDetails({});
+    setHighlightedVerse(null);
+    setOpenPopover(null);
     router.push(`/search?source=${tab}`);
   };
+
+  const mapSourceToType = useCallback((source: string): SourceType => {
+    switch (source) {
+      case "quran":
+        return "quran";
+      case "bible_ot":
+      case "ot":
+        return "old_testament";
+      case "bible_nt":
+      case "nt":
+        return "new_testament";
+      case "bible_apocrypha":
+      case "apocrypha":
+        return "apocrypha";
+      default:
+        return "quran";
+    }
+  }, []);
+
+  const scrollToVerse = useCallback((reference: string) => {
+    const element = document.querySelector(`[data-verse-id="${reference}"]`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightedVerse(reference);
+      setTimeout(() => setHighlightedVerse(null), 2000);
+    }
+  }, []);
+
+  const navigateToVerse = useCallback((reference: string) => {
+    const verse = verseDetails[reference];
+    if (!verse) {
+      console.warn(`No verse details for ${reference}, falling back to scroll`);
+      scrollToVerse(reference);  // Fallback: scroll instead of navigate
+      return;
+    }
+
+    let url = "";
+    if (verse.source === "quran_tr" || verse.source === "quran") {
+      // Use surah_id and verse_id for Quran (handle both source formats)
+      const surahId = verse.surah_id || verse.chapter;
+      const verseId = verse.verse_id || verse.verse;
+      url = `/quran/${surahId}?verse=${verseId}`;
+    } else if (verse.source.startsWith("bible_")) {
+      // Use book_nr for Bible
+      const bookNr = verse.book_nr || 1;
+      url = `/bible/${bookNr}?chapter=${verse.chapter}&verse=${verse.verse}`;
+    } else {
+      console.warn(`Unknown source format: ${verse.source}`);
+      scrollToVerse(reference);
+      return;
+    }
+
+    window.open(url, "_blank");
+  }, [verseDetails, scrollToVerse]);
 
   const getPlaceholder = () => {
     switch (activeTab) {
@@ -101,13 +166,13 @@ function SearchContent() {
     }
   };
 
-  const performBatchSearch = async () => {
+  const performBatchSearch = useCallback(async () => {
     setIsSearching(true);
     setResults([]);
 
     try {
       const token = localStorage.getItem("access_token");
-      
+
       let url = "http://localhost:8000/api/search/quran";
       let body: any = { query, mode: "semantic", top_k: 10 };
 
@@ -131,13 +196,28 @@ function SearchContent() {
 
       const data = await response.json();
       setResults(data.results);
+
+      // NEW: Store verse_details if available
+      if (data.verse_details) {
+        setVerseDetails(data.verse_details);
+      }
+
       toast.success(`Found ${data.results.length} results`);
     } catch (error) {
       toast.error("Search failed. Please try again.");
     } finally {
       setIsSearching(false);
     }
-  };
+  }, [query, activeTab]);
+
+  // Handle SSE errors by falling back to batch search
+  useEffect(() => {
+    if (sseError && !hasHandledSSEError.current) {
+      hasHandledSSEError.current = true;
+      toast.error("Streaming failed. Switching to standard search.");
+      performBatchSearch();
+    }
+  }, [sseError, performBatchSearch]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,6 +225,10 @@ function SearchContent() {
 
     setResults([]);
     setStreamedAnswer("");
+    setVerseDetails({});
+    setHighlightedVerse(null);
+    setOpenPopover(null);
+    hasHandledSSEError.current = false;  // Reset error handler flag
 
     if (enable_streaming) {
       setIsSearching(true);
@@ -247,7 +331,43 @@ function SearchContent() {
             >
               <GlowCard className="bg-[var(--color-bg-secondary)]">
                 <h3 className="mb-2 text-sm font-medium text-[var(--color-accent-primary)]">AI Answer</h3>
-                <p className="whitespace-pre-wrap text-[var(--color-text-primary)]">{streamedAnswer}</p>
+                <div className="whitespace-pre-wrap text-[var(--color-text-primary)] leading-relaxed">
+                  {parseCitations(streamedAnswer).map((part, i) => {
+                    if (typeof part === "string") {
+                      return <span key={i}>{part}</span>;
+                    }
+
+                    const verse = verseDetails[part.reference];
+                    if (!verse) {
+                      return (
+                        <span
+                          key={i}
+                          className="text-[var(--color-text-muted)]"
+                        >
+                          {part.reference}
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <VerseTooltip
+                        key={i}
+                        reference={part.reference}
+                        verseDetail={verse}
+                        onNavigate={navigateToVerse}
+                        isOpen={openPopover === part.reference}
+                        onOpenChange={(open) => {
+                          setOpenPopover(open ? part.reference : null);
+                        }}
+                      >
+                        <InlineCitation
+                          reference={part.reference}
+                          onClick={() => navigateToVerse(part.reference)}
+                        />
+                      </VerseTooltip>
+                    );
+                  })}
+                </div>
               </GlowCard>
             </motion.div>
           )}
@@ -270,30 +390,46 @@ function SearchContent() {
           </div>
         )}
 
-        <AnimatePresence mode="popLayout">
-          {results.map((result, i) => (
-            <motion.div
-              key={`${result.reference}-${i}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ ...springPresets.snappy, delay: i * 0.05 }}
-              className="mb-4"
-            >
-              <GlowCard>
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-medium text-[var(--color-accent-primary)]">
-                    {result.reference}
-                  </span>
-                  <span className="text-xs text-[var(--color-text-muted)]">
-                    Score: {(result.score * 100).toFixed(1)}%
-                  </span>
-                </div>
-                <p className="text-[var(--color-text-primary)]">{result.text}</p>
-              </GlowCard>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        <div ref={resultsContainerRef}>
+          <AnimatePresence mode="popLayout">
+            {results.map((result, i) => (
+              <motion.div
+                key={`${result.reference}-${i}`}
+                data-verse-id={result.reference}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  scale: highlightedVerse === result.reference ? 1.02 : 1,
+                }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ ...springPresets.snappy, delay: i * 0.05 }}
+                className="mb-4"
+              >
+                <GlowCard
+                  className={
+                    highlightedVerse === result.reference
+                      ? "ring-2 ring-[var(--color-accent-primary)] transition-all duration-300"
+                      : ""
+                  }
+                >
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-[var(--color-accent-primary)]">
+                        {result.reference || "Unknown Reference"}
+                      </span>
+                      <SourceBadge source={mapSourceToType(result.source)} />
+                    </div>
+                    <span className="text-xs text-[var(--color-text-muted)]">
+                      {(result.score * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <p className="text-[var(--color-text-primary)] leading-relaxed">{result.text}</p>
+                </GlowCard>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );

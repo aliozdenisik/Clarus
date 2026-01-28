@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Dict, Tuple
 import sys
 import os
 from dotenv import load_dotenv
@@ -22,6 +22,7 @@ from app.api.auth import get_current_user, check_rate_limit
 from app.config import settings
 from app.schemas.common import PaginatedResponse, PaginationMeta, QueryValidation
 from src.ultimate_rag import UltimateRAG
+from app.api.compare import VerseDetail, extract_quran_verse_detail, extract_bible_verse_detail
 
 
 router = APIRouter()
@@ -54,6 +55,7 @@ class SearchResponse(BaseModel):
     query: str
     results: list[VerseResult]
     total: int
+    verse_details: Optional[Dict[str, VerseDetail]] = None  # NEW: Rich verse metadata for citations
 
 
 class HistoryItem(BaseModel):
@@ -98,6 +100,13 @@ async def search_quran(
     rag = get_rag()
     results = rag.search_quran(validated_query, top_k=request.top_k)
 
+    # Build verse_details dict for citation navigation
+    verse_details: Dict[str, VerseDetail] = {}
+    for r in results:
+        ref, detail = extract_quran_verse_detail(r)
+        if ref not in verse_details:  # Deduplicate
+            verse_details[ref] = detail
+
     history = SearchHistory(
         user_id=current_user.id, query=validated_query, search_type="search_quran"
     )
@@ -107,14 +116,19 @@ async def search_quran(
     verses = [
         VerseResult(
             source="Kuran",
-            reference=f"{r.surah_name} {r.surah_id}:{r.verse_id}",
+            reference=f"{r.surah_name}:{r.verse_id}",  # FIXED: Match citation format (removed surah_id)
             text=r.translation,
             score=r.score,
         )
         for r in results
     ]
 
-    return SearchResponse(query=validated_query, results=verses, total=len(verses))
+    return SearchResponse(
+        query=validated_query,
+        results=verses,
+        total=len(verses),
+        verse_details=verse_details  # NEW: Include verse metadata
+    )
 
 
 @router.post("/bible", response_model=SearchResponse)
@@ -132,6 +146,30 @@ async def search_bible(
     results = rag.search_bible(
         validated_query, testament=testament, top_k=request.top_k
     )
+
+    # Build verse_details dict for citation navigation
+    verse_details: Dict[str, VerseDetail] = {}
+    for r in results:
+        # Determine source collection from testament parameter or result attributes
+        if testament == "ot":
+            source = "bible_ot"
+        elif testament == "nt":
+            source = "bible_nt"
+        elif testament == "apocrypha":
+            source = "bible_apocrypha"
+        else:
+            # Fallback: Try to infer from result object
+            testament_attr = getattr(r, "testament", "OT")
+            if testament_attr == "OT":
+                source = "bible_ot"
+            elif testament_attr == "NT":
+                source = "bible_nt"
+            else:
+                source = "bible_apocrypha"
+
+        ref, detail = extract_bible_verse_detail(r, source)
+        if ref not in verse_details:  # Deduplicate
+            verse_details[ref] = detail
 
     history = SearchHistory(
         user_id=current_user.id,
@@ -151,7 +189,12 @@ async def search_bible(
         for r in results
     ]
 
-    return SearchResponse(query=validated_query, results=verses, total=len(verses))
+    return SearchResponse(
+        query=validated_query,
+        results=verses,
+        total=len(verses),
+        verse_details=verse_details  # NEW: Include verse metadata
+    )
 
 
 @router.get("/history")

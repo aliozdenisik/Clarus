@@ -2,7 +2,7 @@
 Comparative Answer Generator Module
 
 Generates comparative theological essays from multi-scripture search results.
-Uses Gemini 2.5 Flash via OpenRouter for answer generation.
+Uses Gemini 3.0 Flash via OpenRouter for answer generation.
 
 Features:
 - Multi-scripture context (Quran + Bible)
@@ -60,7 +60,7 @@ class ComparativeAnswerGenerator:
     """
 
     OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-    MODEL = "google/gemini-2.5-flash"  # Gemini 2.5 Flash normal
+    MODEL = "google/gemini-3-flash-preview"  # Gemini 2.5 Flash normal
 
     SYSTEM_PROMPT = """You are an expert comparative theologian and scholar of Abrahamic religions.
 Your task: Write a comprehensive, comparative theological essay that synthesizes content from both the Quran and the Bible to answer the user's question.
