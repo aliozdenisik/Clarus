@@ -409,6 +409,7 @@ export default function ComparePage() {
           <form onSubmit={handleCompare} className="mb-8 flex gap-4">
             <Input
               type="text"
+              data-testid="compare-topic-input"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="Enter a topic (e.g., patience, forgiveness, creation)..."
@@ -416,6 +417,7 @@ export default function ComparePage() {
             />
             <Button
               type="submit"
+              data-testid="compare-analyze-button"
               disabled={isLoading || !topic.trim()}
               className="bg-[var(--color-accent-primary)] min-w-[120px]"
             >
@@ -596,9 +598,13 @@ export default function ComparePage() {
                     delay: result.paragraphs.length * 0.1 + 0.1,
                   }}
                   className="mt-6"
+                  data-testid="verse-references-section"
                 >
                   <GlowCard>
-                    <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
+                    <h3
+                      className="text-lg font-semibold text-[var(--color-text-primary)] mb-4"
+                      data-testid="verse-references-heading"
+                    >
                       Kaynak Referanslari
                     </h3>
                     
