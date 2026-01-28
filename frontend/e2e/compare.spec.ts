@@ -46,10 +46,10 @@ test.describe('Compare Page E2E Tests', () => {
 
     // ============ STEP 3: Submit Query ============
     test.step('Submit topic for analysis', async () => {
-      const input = page.locator('input[placeholder*="topic"]').first();
+      const input = page.locator('[data-testid="compare-topic-input"]');
       await input.fill(TEST_TOPIC);
 
-      const analyzeButton = page.locator('button:has-text("Analyze")');
+      const analyzeButton = page.locator('[data-testid="compare-analyze-button"]');
       await analyzeButton.click();
 
       // Verify loading state appears
@@ -116,10 +116,19 @@ test.describe('Compare Page E2E Tests', () => {
       console.log(`✅ Issue #2 RESOLVED: Stats = ${verseCount} verses, ${citationsCount} citations, ${latencySeconds}s, ${confidence}% confidence`);
     });
 
+    // ============ STEP 5.5: Wait for SSE Completion ============
+    test.step('Wait for SSE streaming to complete', async () => {
+      // Wait for "Analyzing..." to disappear (signals streaming complete)
+      await expect(page.locator('text=Analyzing')).not.toBeVisible({ timeout: 90000 });
+
+      // Verify all async data loaded
+      await page.waitForLoadState('networkidle', { timeout: 10000 });
+    });
+
     // ============ STEP 6: Verify Verse Cards ============
     test.step('Verify verse reference cards are displayed', async () => {
-      // Scroll to verse references section
-      await page.locator('text=Kaynak Referanslari').scrollIntoViewIfNeeded();
+      // Scroll to verse references section using data-testid
+      await page.locator('[data-testid="verse-references-section"]').scrollIntoViewIfNeeded();
 
       // Verify filter tabs exist
       await expect(page.locator('text=Tumu')).toBeVisible();
@@ -165,8 +174,8 @@ test.describe('Compare Page E2E Tests', () => {
 
     // ============ STEP 8: Test Filter Functionality ============
     test.step('Test source filter tabs', async () => {
-      // Scroll to filters
-      await page.locator('text=Kaynak Referanslari').scrollIntoViewIfNeeded();
+      // Scroll to filters using data-testid
+      await page.locator('[data-testid="verse-references-section"]').scrollIntoViewIfNeeded();
 
       // Get initial count (All)
       const allCount = await page.locator('[data-verse-id]').count();
@@ -258,9 +267,9 @@ test.describe('Compare Page E2E Tests', () => {
     // Navigate to search page
     await page.goto('/search');
 
-    // Submit a simple query
-    await page.fill('input[placeholder*="search"]', 'mercy');
-    await page.click('button:has-text("Search")');
+    // Submit a simple query using data-testid selectors
+    await page.fill('[data-testid="search-input"]', 'mercy');
+    await page.click('[data-testid="search-submit-button"]');
 
     // Verify search results appear
     await expect(page.locator('text=/\\d+ results/')).toBeVisible({ timeout: 30000 });

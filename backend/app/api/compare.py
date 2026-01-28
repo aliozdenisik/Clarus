@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict
 import sys
 import os
 from dotenv import load_dotenv
@@ -21,8 +21,13 @@ sys.path.insert(
 from app.db import get_db
 from app.models import User, SearchHistory
 from app.api.auth import get_current_user, check_rate_limit
+from app.api.compare_helpers import (
+    build_verse_details,
+    build_paragraphs,
+    VerseDetail,
+    ParagraphData,
+)
 from src.comparative_rag import ComparativeRAG
-from src.search import SearchResult, BibleSearchResult
 
 
 router = APIRouter()
@@ -45,28 +50,7 @@ class CompareRequest(BaseModel):
     use_multi_agent: bool = True
 
 
-class ParagraphData(BaseModel):
-    """Individual paragraph with metadata."""
-
-    title: str
-    content: str
-    citations: List[str]
-
-
-class VerseDetail(BaseModel):
-    """Full verse metadata for rich reference display."""
-
-    model_config = {"ser_json_timedelta": "iso8601"}  # Force all fields to serialize
-
-    text: str  # Full verse text (max ~400 chars)
-    book_name: str  # "Genesis", "Bakara", etc.
-    chapter: int  # Chapter/Surah number
-    verse: int  # Verse number
-    source: str  # Collection: 'quran_tr', 'bible_ot', 'bible_nt', 'bible_apocrypha'
-    translation: (
-        str  # "Diyanet Isleri Baskanligi" or "King James Version with Apocrypha"
-    )
-    book_nr: int | None = None  # Bible book number (None for Quran)
+# Note: ParagraphData and VerseDetail are imported from compare_helpers
 
 
 class CompareResponse(BaseModel):
@@ -86,39 +70,6 @@ class CompareResponse(BaseModel):
     latency_ms: int
     # Rich verse metadata for citations
     verse_details: Optional[Dict[str, VerseDetail]] = None
-
-
-def extract_quran_verse_detail(result: SearchResult) -> Tuple[str, VerseDetail]:
-    """Extract citation reference and verse detail from a Quran SearchResult."""
-    # Citation format: "SurahName:VerseId" e.g., "Bakara:153" (NO BRACKETS!)
-    reference = f"{result.surah_name}:{result.verse_id}"
-
-    return reference, VerseDetail(
-        text=result.translation[:400],  # Truncate long verses
-        book_name=result.surah_name,
-        chapter=result.surah_id,
-        verse=result.verse_id,
-        source="quran_tr",
-        translation="Diyanet Isleri Baskanligi",
-    )
-
-
-def extract_bible_verse_detail(
-    result: BibleSearchResult, source: str
-) -> Tuple[str, VerseDetail]:
-    """Extract citation reference and verse detail from a Bible BibleSearchResult."""
-    # Citation format: "BookName Chapter:Verse" e.g., "Genesis 1:1" (NO BRACKETS!)
-    reference = f"{result.book_name} {result.chapter}:{result.verse}"
-
-    return reference, VerseDetail(
-        text=result.text[:400],  # Truncate long verses
-        book_name=result.book_name,
-        chapter=result.chapter,
-        verse=result.verse,
-        source=source,
-        translation="King James Version with Apocrypha",
-        book_nr=result.book_id,
-    )
 
 
 @router.post("/", response_model=CompareResponse)
@@ -149,28 +100,14 @@ async def compare_scriptures(
         # Step 1: Get search results directly (bypass compare_multi_agent)
         search_result = rag.search_all(request.topic)
 
-        # Step 2: Build verse_details from search results
-        verse_details: Dict[str, VerseDetail] = {}
-
-        for r in search_result.quran:
-            ref, detail = extract_quran_verse_detail(r)
-            if ref not in verse_details:  # Deduplicate
-                verse_details[ref] = detail
-
-        for r in search_result.ot:
-            ref, detail = extract_bible_verse_detail(r, "bible_ot")
-            if ref not in verse_details:
-                verse_details[ref] = detail
-
-        for r in search_result.nt:
-            ref, detail = extract_bible_verse_detail(r, "bible_nt")
-            if ref not in verse_details:
-                verse_details[ref] = detail
-
-        for r in search_result.apocrypha:
-            ref, detail = extract_bible_verse_detail(r, "bible_apocrypha")
-            if ref not in verse_details:
-                verse_details[ref] = detail
+        # Step 2: Build verse_details from search results (using shared helper)
+        verse_details = build_verse_details(
+            quran_results=search_result.quran,
+            ot_results=search_result.ot,
+            nt_results=search_result.nt,
+            apocrypha_results=search_result.apocrypha,
+            as_dict=False,
+        )
 
         # Step 3: Generate multi-agent answer using search results
         result = rag.multi_agent_generator.generate(
@@ -181,53 +118,8 @@ async def compare_scriptures(
             apocrypha_verses=search_result.apocrypha,
         )
 
-        # Build structured paragraphs from MultiAgentAnswer
-        paragraphs = []
-
-        if result.old_testament_commentary:
-            paragraphs.append(
-                ParagraphData(
-                    title="Eski Ahit (Old Testament)",
-                    content=result.old_testament_commentary,
-                    citations=result.citations.get("old_testament", []),
-                )
-            )
-
-        if result.new_testament_commentary:
-            paragraphs.append(
-                ParagraphData(
-                    title="Yeni Ahit (New Testament)",
-                    content=result.new_testament_commentary,
-                    citations=result.citations.get("new_testament", []),
-                )
-            )
-
-        if result.apocrypha_commentary:
-            paragraphs.append(
-                ParagraphData(
-                    title="Apokrifa (Apocrypha)",
-                    content=result.apocrypha_commentary,
-                    citations=result.citations.get("apocrypha", []),
-                )
-            )
-
-        if result.quran_commentary:
-            paragraphs.append(
-                ParagraphData(
-                    title="Kuran-ı Kerim",
-                    content=result.quran_commentary,
-                    citations=result.citations.get("quran", []),
-                )
-            )
-
-        if result.synthesis:
-            paragraphs.append(
-                ParagraphData(
-                    title="Karşılaştırmalı Değerlendirme",
-                    content=result.synthesis,
-                    citations=[],
-                )
-            )
+        # Step 4: Build structured paragraphs (using shared helper)
+        paragraphs = build_paragraphs(result, as_dict=False)
 
         # Calculate totals
         total_citations = sum(len(refs) for refs in result.citations.values())

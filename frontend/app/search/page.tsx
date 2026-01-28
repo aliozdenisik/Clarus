@@ -220,6 +220,7 @@ function SearchContent() {
           <form onSubmit={handleSearch} className="mb-8 flex gap-4">
             <Input
               type="text"
+              data-testid="search-input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={getPlaceholder()}
@@ -227,6 +228,7 @@ function SearchContent() {
             />
             <Button
               type="submit"
+              data-testid="search-submit-button"
               disabled={(isSearching && !isStreaming) || !query.trim()}
               className="bg-[var(--color-accent-primary)]"
             >

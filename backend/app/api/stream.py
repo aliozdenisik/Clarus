@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import AsyncGenerator, Dict
+from typing import AsyncGenerator
 import asyncio
 import json
 import logging
@@ -26,11 +26,7 @@ sys.path.insert(
 from app.db import get_db
 from app.models import User, SearchHistory
 from app.api.auth import get_current_user, get_current_user_from_token, check_rate_limit
-from app.api.compare import (
-    VerseDetail,
-    extract_quran_verse_detail,
-    extract_bible_verse_detail,
-)
+from app.api.compare_helpers import build_verse_details, build_paragraphs
 from src.ultimate_rag import UltimateRAG
 from src.comparative_rag import ComparativeRAG
 
@@ -206,31 +202,13 @@ async def stream_compare(
             )
             yield ": heartbeat\n\n"
 
-            # Step 2: Build verse_details from search results
-            verse_details: Dict[str, dict] = {}
-
-            for r in search_result.quran:
-                ref, detail = extract_quran_verse_detail(r)
-                if ref not in verse_details:
-                    verse_details[ref] = detail.model_dump()
-
-            for r in search_result.ot:
-                ref, detail = extract_bible_verse_detail(r, "bible_ot")
-                if ref not in verse_details:
-                    verse_details[ref] = detail.model_dump()
-
-            for r in search_result.nt:
-                ref, detail = extract_bible_verse_detail(r, "bible_nt")
-                if ref not in verse_details:
-                    verse_details[ref] = detail.model_dump()
-
-            for r in search_result.apocrypha:
-                ref, detail = extract_bible_verse_detail(r, "bible_apocrypha")
-                if ref not in verse_details:
-                    verse_details[ref] = detail.model_dump()
-
-            logger.info(
-                f"[COMPARE] Built verse_details with {len(verse_details)} references"
+            # Step 2: Build verse_details from search results (using shared helper)
+            verse_details = build_verse_details(
+                quran_results=search_result.quran,
+                ot_results=search_result.ot,
+                nt_results=search_result.nt,
+                apocrypha_results=search_result.apocrypha,
+                as_dict=True,
             )
 
             # Send verse_details BEFORE streaming text (so frontend has it ready for lookups)
@@ -250,43 +228,8 @@ async def stream_compare(
                 f"[COMPARE] multi_agent_generator completed, result type: {type(result)}"
             )
 
-            # Build structured paragraphs (same pattern as batch endpoint in compare.py)
-            paragraphs = []
-
-            if result.old_testament_commentary:
-                paragraphs.append({
-                    "title": "Eski Ahit (Old Testament)",
-                    "content": result.old_testament_commentary,
-                    "citations": result.citations.get("old_testament", [])
-                })
-
-            if result.new_testament_commentary:
-                paragraphs.append({
-                    "title": "Yeni Ahit (New Testament)",
-                    "content": result.new_testament_commentary,
-                    "citations": result.citations.get("new_testament", [])
-                })
-
-            if result.apocrypha_commentary:
-                paragraphs.append({
-                    "title": "Apokrifa (Apocrypha)",
-                    "content": result.apocrypha_commentary,
-                    "citations": result.citations.get("apocrypha", [])
-                })
-
-            if result.quran_commentary:
-                paragraphs.append({
-                    "title": "Kuran-ı Kerim",
-                    "content": result.quran_commentary,
-                    "citations": result.citations.get("quran", [])
-                })
-
-            if result.synthesis:
-                paragraphs.append({
-                    "title": "Karşılaştırmalı Değerlendirme",
-                    "content": result.synthesis,
-                    "citations": []  # Synthesis has no additional citations
-                })
+            # Build structured paragraphs (using shared helper)
+            paragraphs = build_paragraphs(result, as_dict=True)
 
             logger.info(f"[COMPARE] Streaming {len(paragraphs)} structured paragraphs...")
 
