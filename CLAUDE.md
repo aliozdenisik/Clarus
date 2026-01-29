@@ -581,6 +581,48 @@ Then edit `frontend/.env.local` if needed:
 - `NEXT_PUBLIC_SENTRY_DSN` - Sentry DSN for frontend error tracking
 - `SENTRY_ORG` / `SENTRY_AUTH_TOKEN` - For source map uploads (CI/CD only)
 
+### Logging Configuration
+
+#### Backend Logging Variables
+
+| Variable | Options | Default | Description |
+|----------|---------|---------|-------------|
+| `LOG_LEVEL` | `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` | `INFO` | Minimum log level to output |
+| `LOG_FORMAT` | `console`, `json` | `console` | Output format for log messages |
+| `LOG_FILE` | File path or empty | (none) | Optional file path for log output |
+
+**Development settings:**
+```bash
+LOG_LEVEL=DEBUG
+LOG_FORMAT=console
+# LOG_FILE not set (logs to stdout only)
+```
+
+**Production settings:**
+```bash
+LOG_LEVEL=INFO
+LOG_FORMAT=json
+LOG_FILE=/var/log/clarus/backend.log
+```
+
+#### Frontend Logging Variables
+
+| Variable | Options | Default | Description |
+|----------|---------|---------|-------------|
+| `NEXT_PUBLIC_LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `info` | Minimum log level for frontend |
+
+**Development settings:**
+```bash
+NEXT_PUBLIC_LOG_LEVEL=debug
+```
+
+**Production settings:**
+```bash
+NEXT_PUBLIC_LOG_LEVEL=warn
+```
+
+**Note**: Frontend log levels use lowercase to align with browser console methods.
+
 ### Settings Location
 
 - Backend: `backend/app/config.py` (pydantic-settings)

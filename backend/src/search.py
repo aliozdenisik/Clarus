@@ -4,6 +4,7 @@ Hybrid Search Module
 Provides semantic, keyword, and hybrid search capabilities for Quran data.
 """
 
+import time
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
@@ -20,6 +21,9 @@ from qdrant_client.models import (
 from .embeddings import DenseEncoder, SparseEncoder
 from .turkish_utils import expand_turkish_query, normalize_turkish
 from .circuit_breaker import qdrant_with_breaker, CircuitBreakerError
+from app.logging_config import get_logger, log_performance
+
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -100,6 +104,7 @@ class QuranSearcher:
             limit: Number of results to return
             normalize: If True, expand query with Turkish character variants
         """
+        start = time.perf_counter()
         query_vector = self.dense_encoder.encode(query)
 
         results = qdrant_with_breaker(
@@ -112,7 +117,13 @@ class QuranSearcher:
             )
         )
 
-        return self._parse_results(results)
+        parsed = self._parse_results(results)
+        latency_ms = (time.perf_counter() - start) * 1000
+        log_performance(
+            logger, "semantic_search", latency_ms,
+            collection=self.COLLECTION_NAME, mode="semantic", results=len(parsed)
+        )
+        return parsed
 
     def keyword_search(
         self, query: str, limit: int = 10, normalize: bool = True
@@ -126,6 +137,7 @@ class QuranSearcher:
             limit: Number of results to return
             normalize: If True, expand query with Turkish character variants
         """
+        start = time.perf_counter()
         # Expand query with Turkish character variants
         search_query = expand_turkish_query(query) if normalize else query
         indices, values = self.sparse_encoder.query_embed(search_query)
@@ -140,7 +152,13 @@ class QuranSearcher:
             )
         )
 
-        return self._parse_results(results)
+        parsed = self._parse_results(results)
+        latency_ms = (time.perf_counter() - start) * 1000
+        log_performance(
+            logger, "keyword_search", latency_ms,
+            collection=self.COLLECTION_NAME, mode="keyword", results=len(parsed)
+        )
+        return parsed
 
     def hybrid_search(
         self,
@@ -164,6 +182,8 @@ class QuranSearcher:
             normalize: If True, expand query with Turkish character variants for keyword search
         """
         import sentry_sdk
+
+        start = time.perf_counter()
 
         with sentry_sdk.start_span(
             op="db.query.qdrant", description="Qdrant hybrid search"
@@ -209,7 +229,19 @@ class QuranSearcher:
                 )
             )
 
-            return self._parse_results(results)
+            parsed = self._parse_results(results)
+            latency_ms = (time.perf_counter() - start) * 1000
+            log_performance(
+                logger, "hybrid_search", latency_ms,
+                collection=self.COLLECTION_NAME,
+                mode="hybrid",
+                fusion=fusion,
+                rrf_k=rrf_k,
+                dense_prefetch=prefetch_limit,
+                sparse_prefetch=prefetch_limit,
+                results=len(parsed)
+            )
+            return parsed
 
     def multi_query_search(
         self,
@@ -488,6 +520,7 @@ class BibleSearcher:
         Perform semantic search using dense vectors only.
         Good for conceptual/meaning-based queries.
         """
+        start = time.perf_counter()
         query_vector = self.dense_encoder.encode(query)
 
         results = qdrant_with_breaker(
@@ -500,13 +533,20 @@ class BibleSearcher:
             )
         )
 
-        return self._parse_results(results)
+        parsed = self._parse_results(results)
+        latency_ms = (time.perf_counter() - start) * 1000
+        log_performance(
+            logger, "semantic_search", latency_ms,
+            collection=self.collection_name, mode="semantic", results=len(parsed)
+        )
+        return parsed
 
     def keyword_search(self, query: str, limit: int = 10) -> List[BibleSearchResult]:
         """
         Perform keyword search using sparse vectors (BM25).
         Good for exact term matching.
         """
+        start = time.perf_counter()
         indices, values = self.sparse_encoder.query_embed(query)
 
         results = qdrant_with_breaker(
@@ -519,7 +559,13 @@ class BibleSearcher:
             )
         )
 
-        return self._parse_results(results)
+        parsed = self._parse_results(results)
+        latency_ms = (time.perf_counter() - start) * 1000
+        log_performance(
+            logger, "keyword_search", latency_ms,
+            collection=self.collection_name, mode="keyword", results=len(parsed)
+        )
+        return parsed
 
     def hybrid_search(
         self,
@@ -541,6 +587,8 @@ class BibleSearcher:
             rrf_k: RRF k parameter (higher = more consensus-based ranking)
         """
         import sentry_sdk
+
+        start = time.perf_counter()
 
         with sentry_sdk.start_span(
             op="db.query.qdrant", description="Qdrant hybrid search"
@@ -582,7 +630,19 @@ class BibleSearcher:
                 )
             )
 
-            return self._parse_results(results)
+            parsed = self._parse_results(results)
+            latency_ms = (time.perf_counter() - start) * 1000
+            log_performance(
+                logger, "hybrid_search", latency_ms,
+                collection=self.collection_name,
+                mode="hybrid",
+                fusion=fusion,
+                rrf_k=rrf_k,
+                dense_prefetch=prefetch_limit,
+                sparse_prefetch=prefetch_limit,
+                results=len(parsed)
+            )
+            return parsed
 
     def search(
         self, query: str, mode: str = "hybrid", limit: int = 10
@@ -696,6 +756,7 @@ class SemanticChunkSearcher:
             limit: Number of results to return
             normalize: If True, expand query with Turkish character variants
         """
+        start = time.perf_counter()
         if normalize:
             query = expand_turkish_query(query)
 
@@ -710,7 +771,13 @@ class SemanticChunkSearcher:
             )
         )
 
-        return self._parse_results(results.points)
+        parsed = self._parse_results(results.points)
+        latency_ms = (time.perf_counter() - start) * 1000
+        log_performance(
+            logger, "semantic_chunk_search", latency_ms,
+            collection=self.COLLECTION_NAME, mode="semantic", results=len(parsed)
+        )
+        return parsed
 
     def keyword_search(
         self, query: str, limit: int = 10, normalize: bool = True
@@ -723,6 +790,7 @@ class SemanticChunkSearcher:
             limit: Number of results to return
             normalize: If True, normalize Turkish characters
         """
+        start = time.perf_counter()
         if normalize:
             query = normalize_turkish(query)
 
@@ -737,7 +805,13 @@ class SemanticChunkSearcher:
             )
         )
 
-        return self._parse_results(results.points)
+        parsed = self._parse_results(results.points)
+        latency_ms = (time.perf_counter() - start) * 1000
+        log_performance(
+            logger, "keyword_chunk_search", latency_ms,
+            collection=self.COLLECTION_NAME, mode="keyword", results=len(parsed)
+        )
+        return parsed
 
     def hybrid_search(
         self,
@@ -759,6 +833,8 @@ class SemanticChunkSearcher:
             normalize: If True, apply Turkish normalization
         """
         import sentry_sdk
+
+        start = time.perf_counter()
 
         with sentry_sdk.start_span(
             op="db.query.qdrant", description="Qdrant hybrid search"
@@ -801,7 +877,18 @@ class SemanticChunkSearcher:
                 )
             )
 
-            return self._parse_results(results.points)
+            parsed = self._parse_results(results.points)
+            latency_ms = (time.perf_counter() - start) * 1000
+            log_performance(
+                logger, "hybrid_chunk_search", latency_ms,
+                collection=self.COLLECTION_NAME,
+                mode="hybrid",
+                rrf_k=rrf_k,
+                dense_prefetch=prefetch_limit,
+                sparse_prefetch=prefetch_limit,
+                results=len(parsed)
+            )
+            return parsed
 
     def search(
         self, query: str, mode: str = "hybrid", limit: int = 10
@@ -911,6 +998,7 @@ class BibleSemanticChunkSearcher:
         self, query: str, limit: int = 10
     ) -> List[BibleSemanticChunkSearchResult]:
         """Perform semantic search on chunk collection."""
+        start = time.perf_counter()
         query_vector = self.dense_encoder.encode(query)
 
         results = qdrant_with_breaker(
@@ -922,12 +1010,19 @@ class BibleSemanticChunkSearcher:
             )
         )
 
-        return self._parse_results(results.points)
+        parsed = self._parse_results(results.points)
+        latency_ms = (time.perf_counter() - start) * 1000
+        log_performance(
+            logger, "bible_semantic_chunk_search", latency_ms,
+            collection=self.collection_name, mode="semantic", results=len(parsed)
+        )
+        return parsed
 
     def keyword_search(
         self, query: str, limit: int = 10
     ) -> List[BibleSemanticChunkSearchResult]:
         """Perform keyword (BM25) search on chunk collection."""
+        start = time.perf_counter()
         sparse_indices, sparse_values = self.sparse_encoder.query_embed(query)
 
         results = qdrant_with_breaker(
@@ -939,13 +1034,21 @@ class BibleSemanticChunkSearcher:
             )
         )
 
-        return self._parse_results(results.points)
+        parsed = self._parse_results(results.points)
+        latency_ms = (time.perf_counter() - start) * 1000
+        log_performance(
+            logger, "bible_keyword_chunk_search", latency_ms,
+            collection=self.collection_name, mode="keyword", results=len(parsed)
+        )
+        return parsed
 
     def hybrid_search(
         self, query: str, limit: int = 10, prefetch_limit: int = 50, rrf_k: int = 40
     ) -> List[BibleSemanticChunkSearchResult]:
         """Perform hybrid search combining semantic and keyword search."""
         import sentry_sdk
+
+        start = time.perf_counter()
 
         with sentry_sdk.start_span(
             op="db.query.qdrant", description="Qdrant hybrid search"
@@ -977,7 +1080,18 @@ class BibleSemanticChunkSearcher:
                 )
             )
 
-            return self._parse_results(results.points)
+            parsed = self._parse_results(results.points)
+            latency_ms = (time.perf_counter() - start) * 1000
+            log_performance(
+                logger, "bible_hybrid_chunk_search", latency_ms,
+                collection=self.collection_name,
+                mode="hybrid",
+                rrf_k=rrf_k,
+                dense_prefetch=prefetch_limit,
+                sparse_prefetch=prefetch_limit,
+                results=len(parsed)
+            )
+            return parsed
 
     def search(
         self, query: str, mode: str = "hybrid", limit: int = 10

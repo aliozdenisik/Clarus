@@ -15,7 +15,6 @@ Usage:
 
 import os
 import json
-import logging
 import requests
 import time
 import sentry_sdk
@@ -29,8 +28,9 @@ from tenacity import (
 )
 
 from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
+from app.logging_config import get_logger, log_performance
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -257,7 +257,8 @@ VERSES:
         wait=wait_exponential(multiplier=2, min=2, max=60),
         retry=retry_if_exception_type(requests.exceptions.RequestException),
         before_sleep=lambda rs: logger.info(
-            f"Retrying LLM call, attempt {rs.attempt_number}/5"
+            "Retrying LLM call",
+            extra={"attempt": rs.attempt_number, "max_attempts": 5}
         ),
     )
     def _call_llm(self, query: str, context: str, source: str) -> dict:
@@ -265,9 +266,14 @@ VERSES:
         with sentry_sdk.start_span(
             op="llm.openrouter.answer", description="Answer generation LLM call"
         ) as span:
-            start_time = time.time()
+            start_time = time.perf_counter()
             span.set_data("model", self.model)
             span.set_data("source", source)
+
+            logger.info(
+                "LLM call started",
+                extra={"operation": "answer_generation", "model": self.model, "source": source}
+            )
 
             # Select appropriate prompt based on source
             if "quran" in source:
@@ -335,14 +341,21 @@ VERSES:
                 span.set_data("input_tokens", input_tokens)
                 span.set_data("output_tokens", output_tokens)
 
-                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                latency_ms = (time.perf_counter() - start_time) * 1000
+                span.set_data("latency_ms", latency_ms)
+                log_performance(
+                    logger, "llm_answer_generation", latency_ms,
+                    model=self.model, source=source,
+                    input_tokens=input_tokens, output_tokens=output_tokens
+                )
                 return result
             except CircuitBreakerError:
                 # Circuit breaker open - fail fast, do NOT retry
                 logger.warning(
-                    "Circuit breaker OPEN for LLM - answer generation failed"
+                    "Circuit breaker OPEN for LLM - answer generation failed",
+                    extra={"model": self.model, "source": source}
                 )
-                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {
                     "answer": "Cevap üretilemedi (servis geçici olarak kullanılamıyor).",
                     "cited_references": [],
@@ -353,8 +366,8 @@ VERSES:
                 raise
             except requests.exceptions.RequestException as e:
                 # Other HTTP errors - don't retry
-                logger.error(f"API request failed: {e}")
-                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                logger.error("API request failed", extra={"error": str(e), "model": self.model})
+                span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {
                     "answer": "Cevap üretilemedi.",
                     "cited_references": [],
@@ -362,8 +375,8 @@ VERSES:
                 }
             except (json.JSONDecodeError, KeyError, ValueError) as e:
                 # Parse errors - don't retry
-                logger.error(f"Response parsing failed: {e}")
-                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                logger.error("Response parsing failed", extra={"error": str(e), "model": self.model})
+                span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {
                     "answer": "Cevap üretilemedi.",
                     "cited_references": [],
@@ -389,7 +402,13 @@ VERSES:
         Returns:
             AnswerResult with text, citations, and confidence
         """
+        logger.info(
+            "Answer generation started",
+            extra={"source": source, "context_count": len(search_results), "query": query[:50]}
+        )
+
         if not search_results:
+            logger.warning("No search results for answer generation", extra={"source": source})
             return AnswerResult(
                 text="Verilen kaynaklarda bu soruyla ilgili bilgi bulunamadı.",
                 citations=[],
@@ -405,9 +424,15 @@ VERSES:
         # Call LLM for answer generation
         llm_result = self._call_llm(query, context, source)
 
+        citations = llm_result.get("cited_references", [])
+        logger.info(
+            "Citation extraction completed",
+            extra={"source": source, "citation_count": len(citations), "citations": citations[:5]}
+        )
+
         return AnswerResult(
             text=llm_result.get("answer", "Cevap üretilemedi."),
-            citations=llm_result.get("cited_references", []),
+            citations=citations,
             confidence=llm_result.get("confidence", 0.0),
             source=source,
             query=query,

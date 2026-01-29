@@ -8,7 +8,6 @@ Supports strictly separated modes for Bible (English/KJV) and Quran (Turkish).
 
 import os
 import json
-import logging
 import requests
 import time
 import sentry_sdk
@@ -21,8 +20,9 @@ from tenacity import (
 )
 
 from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
+from app.logging_config import get_logger, log_performance
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class QueryEnhancer:
@@ -266,6 +266,11 @@ Adım 3: JSON formatında ver.
         corpus='bible': Translates to English, adds KJV terms.
         corpus='quran': Keeps/Translates to Turkish, adds Islamic terms.
         """
+        logger.info(
+            "Query expansion started",
+            extra={"corpus": corpus, "original_query": query[:50]}
+        )
+
         if corpus == "quran":
             prompt = f"Bu sorguyu Kuran araması için hazırla. Sorgu: '{query}'"
             system_prompt = self.SYSTEM_PROMPT_QURAN
@@ -307,18 +312,27 @@ Adım 3: JSON formatında ver.
             filtered_terms = [t for t in terms if t.lower() not in blacklist]
             final_query = " ".join(filtered_terms)
 
+        logger.info(
+            "Query expansion completed",
+            extra={"corpus": corpus, "expanded_query": final_query[:80]}
+        )
         return final_query
 
     def generate_multi_query(
         self, query: str, n: int = 3, corpus: str = "bible"
     ) -> List[str]:
         """Generate multiple query perspectives based on corpus."""
+        logger.info(
+            "Multi-query generation started",
+            extra={"corpus": corpus, "n": n, "original_query": query[:50]}
+        )
+
         if corpus == "quran":
             system_prompt = """Sen uzman bir İslam Alimisin.
             Görev: Kullanıcı sorgusunu temel alarak Türkçe Kuran araması için 3-5 farklı arama varyasyonu üret.
-            
+
             KRİTİK KURAL: Çıktıların tümü TÜRKÇE olmalıdır. İngilizce sorgu gelirse Türkçeye çevir.
-            
+
             Sadece geçerli JSON çıktısı ver:
             {"queries": ["sorgu 1", "sorgu 2 (eşanlamlılar)", "sorgu 3 (kavramsal)"]}"""
             prompt = f"Sorgu için {n} farklı Kuran arama perspektifi üret: '{query}'"
@@ -327,14 +341,20 @@ Adım 3: JSON formatında ver.
             system_prompt = """You are an expert Biblical Scholar.
             Task: Generate 3-5 different search queries for the King James Version (KJV) Bible.
             CRITICAL RULE: ALL OUTPUT MUST BE IN ENGLISH. If Turkish, translate first.
-            
+
             Output valid JSON only:
             {"queries": ["query 1", "query 2", "query 3"]}"""
             prompt = f"Generate {n} KJV search perspectives for: '{query}'"
             examples = []
 
         result = self._call_llm_json(prompt, system_prompt, examples)
-        return result.get("queries", [query])[:n]
+        queries = result.get("queries", [query])[:n]
+
+        logger.info(
+            "Multi-query generation completed",
+            extra={"corpus": corpus, "query_count": len(queries), "queries": queries[:3]}
+        )
+        return queries
 
     def translate_for_bible(self, query: str) -> str:
         """

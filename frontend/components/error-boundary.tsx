@@ -2,6 +2,7 @@
 
 import React from "react";
 import * as Sentry from "@sentry/nextjs";
+import { logger } from "@/lib/logger";
 
 interface Props {
   children: React.ReactNode;
@@ -23,6 +24,14 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Log the error with full context
+    logger.error("React component error caught by ErrorBoundary", error, {
+      component: "ErrorBoundary",
+      action: "componentDidCatch",
+      componentStack: errorInfo.componentStack || undefined,
+    });
+
+    // Capture to Sentry and get event ID for user feedback
     const eventId = Sentry.captureException(error, {
       extra: { componentStack: errorInfo.componentStack },
     });

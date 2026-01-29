@@ -27,7 +27,6 @@ Output: 5 paragraphs (OT, NT, Apocrypha, Quran, Synthesis)
 
 import os
 import json
-import logging
 import requests
 import time
 import sentry_sdk
@@ -42,8 +41,9 @@ from tenacity import (
 )
 
 from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
+from app.logging_config import get_logger, log_performance
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -167,7 +167,8 @@ class BaseSpecialistAgent:
         wait=wait_exponential(multiplier=2, min=2, max=60),
         retry=retry_if_exception_type(requests.exceptions.RequestException),
         before_sleep=lambda rs: logger.info(
-            f"Retrying LLM call, attempt {rs.attempt_number}/5"
+            "Retrying LLM call",
+            extra={"attempt": rs.attempt_number, "max_attempts": 5}
         ),
     )
     def _call_llm(self, messages: List[Dict], max_tokens: int = 1000) -> dict:
@@ -175,7 +176,7 @@ class BaseSpecialistAgent:
         with sentry_sdk.start_span(
             op="llm.openrouter.agent", description="Agent LLM call"
         ) as span:
-            start_time = time.time()
+            start_time = time.perf_counter()
             span.set_data("model", self.MODEL)
 
             try:
@@ -212,27 +213,30 @@ class BaseSpecialistAgent:
 
                 content = choice["message"]["content"].strip()
                 result = json.loads(content)
-                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                latency_ms = (time.perf_counter() - start_time) * 1000
+                span.set_data("latency_ms", latency_ms)
+                log_performance(logger, "agent_llm_call", latency_ms, model=self.MODEL)
                 return result
             except CircuitBreakerError:
                 # Circuit breaker open - fail fast, do NOT retry
                 logger.warning(
-                    "Circuit breaker OPEN for LLM - multi-agent generation failed"
+                    "Circuit breaker OPEN for LLM - multi-agent generation failed",
+                    extra={"model": self.MODEL}
                 )
-                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {"commentary": "", "citations": [], "confidence": 0.0}
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
                 # Let these propagate to @retry decorator
                 raise
             except (json.JSONDecodeError, KeyError, ValueError) as e:
                 # Parse errors - don't retry
-                logger.error(f"Response parsing failed: {e}")
-                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                logger.error("Response parsing failed", extra={"error": str(e), "model": self.MODEL})
+                span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {"commentary": "", "citations": [], "confidence": 0.0}
             except Exception as e:
                 # Other errors - don't retry
-                logger.error(f"LLM call failed: {e}")
-                span.set_data("latency_ms", (time.time() - start_time) * 1000)
+                logger.error("LLM call failed", extra={"error": str(e), "model": self.MODEL})
+                span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {"commentary": "", "citations": [], "confidence": 0.0}
 
 
@@ -489,9 +493,9 @@ class MultiAgentOrchestrator:
             self._summary_agent = SummaryAgent(self.api_key)
         return self._summary_agent
 
-    def _log(self, message: str):
+    def _log(self, message: str, **extra):
         if self.verbose:
-            print(f"[MultiAgent] {message}")
+            logger.info(message, extra=extra)
 
     def generate(
         self,
@@ -514,11 +518,17 @@ class MultiAgentOrchestrator:
         Returns:
             MultiAgentAnswer with 5 paragraphs
         """
-        self._log(f"Starting multi-agent generation for: {query[:50]}...")
-        self._log(
-            f"Verses: OT={len(ot_verses)}, NT={len(nt_verses)}, "
-            f"Apoc={len(apocrypha_verses)}, Quran={len(quran_verses)}"
+        logger.info(
+            "Multi-agent generation started",
+            extra={
+                "query": query[:50],
+                "ot_verses": len(ot_verses),
+                "nt_verses": len(nt_verses),
+                "apocrypha_verses": len(apocrypha_verses),
+                "quran_verses": len(quran_verses)
+            }
         )
+        start_time = time.perf_counter()
 
         # Step 1: Run 4 specialist agents in parallel
         results = {}
@@ -562,7 +572,8 @@ class MultiAgentOrchestrator:
                 span.set_data("verse_count", len(quran_verses))
                 return ("quran", self.quran_agent.generate(query, quran_verses))
 
-        self._log("Running 4 specialist agents in parallel...")
+        logger.info("Running 4 specialist agents in parallel")
+        parallel_start = time.perf_counter()
         with ThreadPoolExecutor(max_workers=4) as executor:
             futures = [
                 executor.submit(run_ot),
@@ -586,13 +597,18 @@ class MultiAgentOrchestrator:
         apoc_commentary = apoc_result.get("commentary", "")
         quran_commentary = quran_result.get("commentary", "")
 
-        self._log(
-            f"Specialist results: OT={len(ot_commentary)}ch, NT={len(nt_commentary)}ch, "
-            f"Apoc={len(apoc_commentary)}ch, Quran={len(quran_commentary)}ch"
+        parallel_latency_ms = (time.perf_counter() - parallel_start) * 1000
+        log_performance(
+            logger, "parallel_agents", parallel_latency_ms,
+            ot_len=len(ot_commentary),
+            nt_len=len(nt_commentary),
+            apoc_len=len(apoc_commentary),
+            quran_len=len(quran_commentary)
         )
 
         # Step 2: Run summary agent
-        self._log("Running summary agent...")
+        logger.info("Running summary agent")
+        summary_start = time.perf_counter()
         summary_result = self.summary_agent.generate(
             query=query,
             ot_commentary=ot_commentary,
@@ -602,6 +618,8 @@ class MultiAgentOrchestrator:
         )
 
         synthesis = summary_result.get("synthesis", "")
+        summary_latency_ms = (time.perf_counter() - summary_start) * 1000
+        log_performance(logger, "summary_agent", summary_latency_ms, synthesis_len=len(synthesis))
 
         # Calculate average confidence
         confidences = [
@@ -619,7 +637,15 @@ class MultiAgentOrchestrator:
             else 0.0
         )
 
-        self._log(f"Generation complete. Confidence: {avg_confidence:.0%}")
+        total_latency_ms = (time.perf_counter() - start_time) * 1000
+        log_performance(
+            logger, "multi_agent_generation", total_latency_ms,
+            confidence=avg_confidence,
+            ot_citations=len(ot_result.get("citations", [])),
+            nt_citations=len(nt_result.get("citations", [])),
+            apoc_citations=len(apoc_result.get("citations", [])),
+            quran_citations=len(quran_result.get("citations", []))
+        )
 
         return MultiAgentAnswer(
             old_testament_commentary=ot_commentary,

@@ -18,6 +18,7 @@ import { parseCitations, CitationPart } from "@/lib/utils/parse-citations";
 import { InlineCitation } from "@/components/compare/inline-citation";
 import { VerseTooltip, VerseDetail } from "@/components/search/verse-tooltip";
 import { SourceBadge, SourceType } from "@/components/compare/source-badge";
+import { useLogger } from "@/lib/logger";
 
 interface SearchResult {
   source: string;
@@ -38,6 +39,7 @@ function SearchContent() {
   const resultsContainerRef = useRef<HTMLDivElement>(null);
   const hasHandledSSEError = useRef(false);
 
+  const log = useLogger("SearchPage");
   const { user, isLoading, logout } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -127,7 +129,10 @@ function SearchContent() {
   const navigateToVerse = useCallback((reference: string) => {
     const verse = verseDetails[reference];
     if (!verse) {
-      console.warn(`No verse details for ${reference}, falling back to scroll`);
+      log.warn("No verse details for reference, falling back to scroll", {
+        action: "navigateToVerse",
+        reference,
+      });
       scrollToVerse(reference);  // Fallback: scroll instead of navigate
       return;
     }
@@ -143,13 +148,17 @@ function SearchContent() {
       const bookNr = verse.book_nr || 1;
       url = `/bible/${bookNr}?chapter=${verse.chapter}&verse=${verse.verse}`;
     } else {
-      console.warn(`Unknown source format: ${verse.source}`);
+      log.warn("Unknown source format, falling back to scroll", {
+        action: "navigateToVerse",
+        reference,
+        source: verse.source,
+      });
       scrollToVerse(reference);
       return;
     }
 
     window.open(url, "_blank");
-  }, [verseDetails, scrollToVerse]);
+  }, [verseDetails, scrollToVerse, log]);
 
   const getPlaceholder = () => {
     switch (activeTab) {

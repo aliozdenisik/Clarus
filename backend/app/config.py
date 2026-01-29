@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     sentry_environment: str = "development"
     sentry_traces_sample_rate: float = 1.0
 
+    # Logging Configuration
+    log_level: str = "INFO"
+    log_format: str = "console"  # "console" or "json"
+    log_file: Optional[str] = None
+
     @property
     def cors_origins_list(self) -> list[str]:
         if self.cors_origins == "*":

@@ -3,20 +3,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import asyncio
-import logging
 
 from app.config import settings
 from app.api import auth, search, compare, stream, admin, metadata, preferences
 from app.db import init_db
 from app.middleware.error_handler import ErrorHandlerMiddleware
+from app.middleware.correlation import CorrelationIDMiddleware
+from app.logging_config import setup_logging, LoggingConfig, get_logger
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # STARTUP
+    # Initialize structured logging first
+    setup_logging(LoggingConfig.from_settings(settings))
+    logger.info("Structured logging initialized", extra={"log_level": settings.log_level, "log_format": settings.log_format})
+
     logger.info("Initializing database...")
     await init_db()
     logger.info("Database initialized")
@@ -86,12 +90,12 @@ async def lifespan(app: FastAPI):
             send_default_pii=False,
             before_send=before_send,
         )
-        logger.info(f"Sentry initialized for {settings.sentry_environment}")
+        logger.info("Sentry initialized", extra={"environment": settings.sentry_environment, "traces_sample_rate": settings.sentry_traces_sample_rate})
 
     yield  # <-- App runs here
 
     # SHUTDOWN (triggered by uvicorn on SIGTERM/SIGINT)
-    logger.info("Shutting down, cleaning up...")
+    logger.info("Shutdown initiated", extra={"reason": "lifespan_end"})
 
     # Close database connections with timeout and error handling
     from app.db import engine
@@ -100,9 +104,9 @@ async def lifespan(app: FastAPI):
         await asyncio.wait_for(engine.dispose(), timeout=5.0)
         logger.info("Database connections closed")
     except asyncio.TimeoutError:
-        logger.warning("Database disposal timed out after 5s, proceeding with shutdown")
+        logger.warning("Database disposal timed out", extra={"timeout_seconds": 5})
     except Exception as e:
-        logger.error(f"Error disposing database engine: {e}")
+        logger.error("Error disposing database engine", extra={"error_type": type(e).__name__}, exc_info=True)
 
     # Cancel any pending tasks (best effort)
     tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
@@ -116,7 +120,7 @@ async def lifespan(app: FastAPI):
                 asyncio.gather(*tasks, return_exceptions=True), timeout=5.0
             )
         except asyncio.TimeoutError:
-            logger.warning(f"{len(tasks)} tasks did not cancel within timeout")
+            logger.warning("Tasks did not cancel within timeout", extra={"pending_tasks": len(tasks), "timeout_seconds": 5})
 
     logger.info("Shutdown complete")
 
@@ -128,7 +132,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Middleware order: Last added = first executed
+# Execution order: CorrelationIDMiddleware -> ErrorHandlerMiddleware -> CORSMiddleware -> route
 app.add_middleware(ErrorHandlerMiddleware)
+app.add_middleware(CorrelationIDMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -138,6 +145,7 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=[
         "X-Request-ID",
+        "X-Correlation-ID",
         "X-RateLimit-Limit",
         "X-RateLimit-Remaining",
         "X-RateLimit-Reset",

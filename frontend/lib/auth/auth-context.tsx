@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
+import { logger } from "@/lib/logger";
 
 interface User {
   id: number;
@@ -58,15 +58,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       clearTimeout(timeoutId);
-      Sentry.captureException(error, { tags: { source: 'auth-check' } });
       if (error instanceof Error && error.name === 'AbortError') {
-        console.error("Auth check timed out after 10s");
+        logger.error("Auth check timed out after 10s", error, {
+          component: "AuthContext",
+          action: "checkAuth",
+          reason: "timeout",
+        });
         setBackendStatus('offline');
       } else if (error instanceof TypeError && error.message === 'Failed to fetch') {
-        console.error("Auth check failed: network error");
+        logger.error("Auth check failed: network error", error, {
+          component: "AuthContext",
+          action: "checkAuth",
+          reason: "network_error",
+        });
         setBackendStatus('offline');
       } else {
-        console.error("Auth check failed:", error);
+        logger.error("Auth check failed", error, {
+          component: "AuthContext",
+          action: "checkAuth",
+        });
         setBackendStatus('offline');
       }
     } finally {
