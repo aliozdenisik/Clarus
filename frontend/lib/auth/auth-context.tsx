@@ -28,61 +28,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [backendStatus, setBackendStatus] = useState<'online' | 'offline' | 'unknown'>('unknown');
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-    
-    try {
-      const token = localStorage.getItem("access_token");
-      if (token) {
-        const response = await fetch("http://localhost:8000/api/auth/me", {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data);
-          setBackendStatus('online');
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        if (token) {
+          timeoutId = setTimeout(() => controller.abort("timeout"), 10000); // 10s timeout
+          const response = await fetch("http://localhost:8000/api/auth/me", {
+            headers: { Authorization: `Bearer ${token}` },
+            signal: controller.signal,
+          });
+          if (timeoutId) clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const data = await response.json();
+            setUser(data);
+            setBackendStatus('online');
+          } else {
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("refresh_token");
+            setBackendStatus('online');  // Backend reachable, just auth failed
+          }
         } else {
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("refresh_token");
-          setBackendStatus('online');  // Backend reachable, just auth failed
+          setBackendStatus('unknown');  // No token, don't assume backend status
         }
-      } else {
-        setBackendStatus('online');  // No token, but backend assumed online
+      } catch (error) {
+        if (timeoutId) clearTimeout(timeoutId);
+        if (error instanceof Error && error.name === 'AbortError') {
+          if (controller.signal.reason === "unmount") {
+            // Silent — component unmounted, don't update state
+            return;
+          }
+          // Timeout case
+          logger.warn("Auth check timed out after 10s", {
+            component: "AuthContext",
+            action: "checkAuth",
+            reason: "timeout",
+          });
+          setBackendStatus('offline');
+        } else if (error instanceof TypeError) {
+          // Network errors: Chrome="Failed to fetch", Firefox="NetworkError...", Safari="Load failed"
+          logger.warn("Auth check failed: network error", {
+            component: "AuthContext",
+            action: "checkAuth",
+            reason: "network_error",
+          });
+          setBackendStatus('offline');
+        } else {
+          // Any other fetch failure (e.g., Next.js/Turbopack wrapped errors) — still a connectivity issue
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          logger.warn("Auth check failed: unexpected error", {
+            component: "AuthContext",
+            action: "checkAuth",
+            reason: errorMessage,
+          });
+          setBackendStatus('offline');
+        }
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      clearTimeout(timeoutId);
-      if (error instanceof Error && error.name === 'AbortError') {
-        logger.error("Auth check timed out after 10s", error, {
-          component: "AuthContext",
-          action: "checkAuth",
-          reason: "timeout",
-        });
-        setBackendStatus('offline');
-      } else if (error instanceof TypeError && error.message === 'Failed to fetch') {
-        logger.error("Auth check failed: network error", error, {
-          component: "AuthContext",
-          action: "checkAuth",
-          reason: "network_error",
-        });
-        setBackendStatus('offline');
-      } else {
-        logger.error("Auth check failed", error, {
-          component: "AuthContext",
-          action: "checkAuth",
-        });
-        setBackendStatus('offline');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    checkAuth();
+
+    return () => {
+      controller.abort("unmount");
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, []);
 
   const login = async (email: string, password: string) => {
     const response = await fetch("http://localhost:8000/api/auth/login", {
