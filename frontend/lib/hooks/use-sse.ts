@@ -8,7 +8,7 @@ import * as Sentry from '@sentry/nextjs';
  * SSE Message format from backend
  */
 interface SSEMessage {
-  type?: 'token' | 'complete' | 'error' | 'section' | 'paragraph';
+  type?: 'token' | 'complete' | 'error' | 'section' | 'paragraph' | 'stats' | 'no_results';
   content?: string;
   result?: unknown;
   error?: string;
@@ -20,6 +20,8 @@ interface SSEMessage {
   done?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   stats?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: any;
 }
 
 /**
