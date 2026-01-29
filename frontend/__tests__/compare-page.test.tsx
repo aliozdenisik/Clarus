@@ -3,13 +3,15 @@ import { vi, describe, it, expect, beforeEach } from "vitest";
 import ComparePage from "@/app/compare/page";
 import { useSSE } from "@/lib/hooks/use-sse";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
+import { useSearchParams } from "next/navigation";
 
 // Mock imports
+const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push: mockPush,
   }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/auth-context", () => ({
@@ -92,28 +94,31 @@ const mockCompareResult = {
 };
 
 describe("ComparePage", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      json: async () => mockCompareResult,
-    });
-    // Reset localStorage for token
-    localStorage.setItem("access_token", "test-token");
+   beforeEach(() => {
+     vi.clearAllMocks();
+     (global.fetch as any).mockResolvedValue({
+       ok: true,
+       json: async () => mockCompareResult,
+     });
+     // Reset localStorage for token
+     localStorage.setItem("access_token", "test-token");
 
-    // Default mock implementations
-    vi.mocked(useSSE).mockReturnValue({
-      data: [],
-      isStreaming: false,
-      error: null,
-      startStream: mockStartStream,
-      stopStream: mockStopStream,
-    });
+     // Default mock implementations
+     vi.mocked(useSSE).mockReturnValue({
+       data: [],
+       isStreaming: false,
+       error: null,
+       startStream: mockStartStream,
+       stopStream: mockStopStream,
+     });
 
-    vi.mocked(usePreferencesStore).mockReturnValue({
-      enable_streaming: true,
-    });
-  });
+     vi.mocked(usePreferencesStore).mockReturnValue({
+       enable_streaming: true,
+     });
+
+     // Default useSearchParams mock (no params)
+     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams() as any);
+   });
 
   it("renders the page title and description", () => {
     render(<ComparePage />);
@@ -250,24 +255,58 @@ describe("ComparePage", () => {
     });
   });
 
-  it("displays error message when streaming fails", async () => {
-    const { rerender } = render(<ComparePage />);
+   it("displays error message when streaming fails", async () => {
+     const { rerender } = render(<ComparePage />);
 
-    // Simulate SSE error
-    vi.mocked(useSSE).mockReturnValue({
-      data: [],
-      isStreaming: false,
-      error: "Connection lost",
-      startStream: mockStartStream,
-      stopStream: mockStopStream,
-    });
+     // Simulate SSE error
+     vi.mocked(useSSE).mockReturnValue({
+       data: [],
+       isStreaming: false,
+       error: "Connection lost",
+       startStream: mockStartStream,
+       stopStream: mockStopStream,
+     });
 
-    rerender(<ComparePage />);
+     rerender(<ComparePage />);
 
-    // It should fallback to batch compare
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalled();
-    });
-  });
+     // It should fallback to batch compare
+     await waitFor(() => {
+       expect(global.fetch).toHaveBeenCalled();
+     });
+   });
+
+   it("auto-executes comparison when q param is present", async () => {
+     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("q=creation") as any);
+     
+     render(<ComparePage />);
+     
+     await waitFor(() => {
+       expect(mockStartStream).toHaveBeenCalled();
+       const callUrl = mockStartStream.mock.calls[0][0];
+       expect(callUrl).toContain("topic=creation");
+     });
+   });
+
+   it("does not auto-execute when q param is empty", async () => {
+     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("q=") as any);
+     
+     render(<ComparePage />);
+     
+     await waitFor(() => {
+       expect(mockStartStream).not.toHaveBeenCalled();
+       expect(global.fetch).not.toHaveBeenCalled();
+     });
+   });
+
+   it("does not auto-execute when q param is absent", async () => {
+     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("") as any);
+     
+     render(<ComparePage />);
+     
+     await waitFor(() => {
+       expect(mockStartStream).not.toHaveBeenCalled();
+       expect(global.fetch).not.toHaveBeenCalled();
+     });
+   });
 });
 
