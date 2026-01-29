@@ -157,6 +157,35 @@ Fixed all 6 bugs in the `/history` page and modernized the API integration.
 - `d9bd662` fix(frontend): add exhaustive search_type display mapping for history page
 - `957bcdc` test(frontend): update history tests to match real API contract and SDK client
 
+### History Re-run Search — RFC-001 (2026-01-29) - NEW
+
+Implemented RFC-001: Clicking history cards navigates to the appropriate search/compare page with the query pre-filled and auto-executed.
+
+**Frontend Changes (3 files):**
+- `frontend/app/history/page.tsx` — Added `getHistoryItemUrl()` mapping all 13 `search_type` values to URLs, `handleHistoryClick()` with `router.push()`, `cursor-pointer` on cards, `e.stopPropagation()` on delete button
+- `frontend/app/search/page.tsx` — Added `queryOverride` parameter to `performBatchSearch`, `hasAutoExecuted` ref, auto-trigger `useEffect` reading `q` URL param
+- `frontend/app/compare/page.tsx` — Added `Suspense` wrapper (renamed `ComparePage` → `CompareContent`), `useSearchParams` hook, `hasAutoExecuted` ref + auto-trigger `useEffect`
+
+**Tests Added (12 new):**
+- `history.test.tsx` — 5 tests (routing, compare routing, stopPropagation, special chars, fallback)
+- `search-page.test.tsx` — 4 tests (auto-execute, empty q, absent q, source tab)
+- `compare-page.test.tsx` — 3 tests (auto-execute, empty q, absent q)
+
+**Pre-existing Test Fixes:**
+- Fixed score assertion in "performs batch search" test (`"Score: 95.0%"` → `"95.0%"`)
+- Removed obsolete "handles logout" test (button no longer rendered after UI redesign)
+
+**Git Commits (5):**
+- `4060329` feat(frontend): add clickable history cards with search_type routing
+- `20e41a9` feat(frontend): add q URL param auto-search on search page
+- `0e746d8` feat(frontend): add Suspense wrapper and q URL param auto-compare on compare page
+- `89c5d4c` test(frontend): add tests for history re-run search feature
+- `18cb5ff` fix(frontend): fix 2 pre-existing failing tests in search-page.test.tsx
+
+### RFC-002: History Result Snapshots (2026-01-29) - DEFERRED
+
+Created `docs/rfcs/002-history-result-snapshots.md` documenting the future possibility of storing search result snapshots in the database. Currently, clicking history re-runs the search. The RFC proposes adding a `snapshot` JSON column to `SearchHistory` for instant result recall. **Decision: Deferred** — semantic cache handles most repeat queries.
+
 ### Streaming Format Fix (2026-01-28) - CRITICAL
 
 Fixed P0 blocker preventing essay display in compare page.
@@ -550,6 +579,7 @@ class CompareResponse:
    - Arabic font optimization
    - Batch query API
    - WebSocket support for real-time chat
+   - History result snapshots (RFC-002 — deferred)
 
 ## Security Tracking
 
