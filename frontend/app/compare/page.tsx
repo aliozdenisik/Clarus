@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from "rea
 import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { useAuth } from "@/lib/auth/auth-context";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { GlowCard } from "@/components/ui/glow-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -406,8 +405,16 @@ function CompareContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-app)] p-8">
-      <div className="mx-auto max-w-4xl">
+    <div className="relative min-h-screen bg-[var(--color-bg-app)]">
+      {/* Ambient warm gradient */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[500px]"
+        style={{
+          background: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(91, 168, 181, 0.04), transparent 70%)",
+        }}
+      />
+      <div className="relative pt-12 pb-2 px-6">
+        <div className="mx-auto max-w-3xl">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -447,35 +454,43 @@ function CompareContent() {
           animate={{ opacity: 1, y: 0 }}
           transition={springPresets.fluid}
         >
-          <h1 className="mb-2 text-3xl font-bold text-[var(--color-text-primary)]">
+          <h1 className="font-display text-4xl font-normal text-[var(--color-text-primary)] mb-1 tracking-tight">
             Comparative Scripture Analysis
           </h1>
-          <p className="mb-8 text-[var(--color-text-muted)]">
+          <p className="text-sm text-[var(--color-text-muted)] mb-8">
             Multi-agent analysis across Quran, Old Testament, New Testament, and
             Apocrypha
           </p>
 
           {/* Search Form */}
-          <form onSubmit={handleCompare} className="mb-8 flex gap-4">
-            <Input
-              type="text"
-              data-testid="compare-topic-input"
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              placeholder="Enter a topic (e.g., patience, forgiveness, creation)..."
-              className="flex-1"
-            />
-            <Button
-              type="submit"
-              data-testid="compare-analyze-button"
-              disabled={isLoading || !topic.trim()}
-              className="bg-[var(--color-accent-primary)] min-w-[120px]"
-            >
-              {isLoading ? "Analyzing..." : "Analyze"}
-            </Button>
+          <form onSubmit={handleCompare} className="relative mb-4">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[var(--color-text-muted)]" />
+              <input
+                type="text"
+                data-testid="compare-topic-input"
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                placeholder="Enter a topic (e.g., patience, forgiveness, creation)..."
+                className="w-full h-12 pl-12 pr-32 bg-[var(--color-bg-surface)] rounded-xl text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] border border-[var(--color-border-subtle)] focus:border-[var(--color-border-glow)] focus:outline-none transition-all duration-300 text-[15px]"
+              />
+              <Button
+                type="submit"
+                data-testid="compare-analyze-button"
+                disabled={isLoading || !topic.trim()}
+                className="absolute right-2 top-1/2 -translate-y-1/2 bg-[var(--color-accent-primary)] text-[#09090b] hover:bg-[var(--color-accent-hover)] font-medium rounded-lg px-5 h-8 text-sm tracking-wide disabled:opacity-40"
+              >
+                {isLoading ? "Analyzing..." : "Analyze"}
+              </Button>
+            </div>
           </form>
         </motion.div>
+        </div>
+      </div>
 
+      {/* Content */}
+      <div className="relative px-6 pb-16">
+        <div className="mx-auto max-w-3xl">
         {/* Loading State & Streaming Progress */}
         {(isLoading || isStreaming) && (
           <motion.div
@@ -585,25 +600,30 @@ function CompareContent() {
                             transition={springPresets.snappy}
                             className="overflow-hidden"
                           >
-                            <div className="mt-4 border-t border-[var(--color-border-subtle)] pt-4">
-                              <p className="text-[var(--color-text-primary)] leading-relaxed whitespace-pre-wrap">
-                                {parseCitations(paragraph.content).map((part, i) => {
-                                  if (typeof part === 'string') {
-                                    return <span key={i}>{part}</span>;
-                                  }
-                                  
-                                  const verse = result.verse_details?.[part.reference];
-                                  
-                                  return (
-                                    <InlineCitation
-                                      key={i}
-                                      reference={part.reference}
-                                      verseDetail={verse}
-                                      onNavigate={navigateToVerse}
-                                    />
-                                  );
-                                })}
-                              </p>
+                            <div className="mt-4 pt-4">
+                              <div className="relative pl-6 border-l-2 border-[var(--color-accent-primary)] py-1">
+                                <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-[var(--color-accent-primary)] mb-3 block opacity-70">
+                                  AI Interpretation
+                                </span>
+                                <p className="text-[var(--color-text-primary)] leading-[1.85] text-[15px] whitespace-pre-wrap">
+                                  {parseCitations(paragraph.content).map((part, i) => {
+                                    if (typeof part === 'string') {
+                                      return <span key={i}>{part}</span>;
+                                    }
+                                    
+                                    const verse = result.verse_details?.[part.reference];
+                                    
+                                    return (
+                                      <InlineCitation
+                                        key={i}
+                                        reference={part.reference}
+                                        verseDetail={verse}
+                                        onNavigate={navigateToVerse}
+                                      />
+                                    );
+                                  })}
+                                </p>
+                              </div>
 
                               {/* Citations */}
                               {paragraph.citations.length > 0 && (
@@ -631,6 +651,15 @@ function CompareContent() {
                   </motion.div>
                 ))}
               </div>
+
+              {/* Ornamental divider */}
+              {result.paragraphs.length > 0 && result.verse_details && (
+                <div className="flex items-center gap-4 my-8">
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--color-border-subtle)] to-transparent" />
+                  <div className="w-1 h-1 rotate-45 bg-[var(--color-accent-primary)] opacity-30" />
+                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--color-border-subtle)] to-transparent" />
+                </div>
+              )}
 
               {/* Kaynak Referanslari */}
               {result.verse_details && Object.keys(result.verse_details).length > 0 && (
@@ -725,6 +754,7 @@ function CompareContent() {
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </div>
     </div>
   );
