@@ -78,6 +78,8 @@
 - [x] Clean browse cards (removed `#nr` global numbering)
 - [x] Arabic font support (Amiri - classic Naskh calligraphy)
 - [x] Turkish translation display below Arabic verses
+- [x] History re-run search (RFC-001) — clickable history cards, auto-search/compare via URL params
+- [x] Pre-existing test fixes — score assertion + removed obsolete logout test
 
 ### CLI Commands
 
@@ -111,7 +113,7 @@
 | `e2e/compare.spec.ts` | 2 | Compare page: auth, 5 paragraphs, stats, verse cards, filters, citations |
 
 ### Test Summary
-- Frontend: 167 total tests (all history tests updated to SDK mocks)
+- Frontend: 178 total tests (12 new for history re-run, 2 pre-existing fixes)
 - Frontend E2E: 2 Playwright tests (core functionality verified ✅, timing issues to fix)
 - Backend: 76 unit tests (all passing)
 - Total new tests added: 144
@@ -141,6 +143,7 @@
 - [ ] Save/Share functionality
 - [ ] Multi-language support
 - [ ] Batch query API
+- [ ] History result snapshots (RFC-002 — store search response JSON for instant recall)
 
 ## Current Status
 

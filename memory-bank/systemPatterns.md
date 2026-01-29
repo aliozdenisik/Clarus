@@ -132,6 +132,43 @@ Frontend API calls use a globally configured SDK client that auto-injects auth t
 - No manual token handling in components — SDK auto-injects
 - Auth token stored as `access_token` in localStorage (set by AuthContext)
 
+### History Re-run Flow
+
+When a user clicks a history card, the app navigates to the appropriate page with the query pre-filled:
+
+```
+History Card Click
+      │
+      ▼
+getHistoryItemUrl(item)
+      │
+      ├── search_type matches "search_*" → /search?source={src}&q={query}
+      ├── search_type matches "stream_search_*" → /search?source={src}&q={query}
+      └── search_type matches "compare*" or "stream_compare" → /compare?q={query}
+      │
+      ▼
+router.push(url)
+      │
+      ▼
+Target Page Loads
+      │
+      ▼
+useEffect reads `q` param from URL
+      │
+      ├── q is empty/absent → Do nothing
+      └── q has value + hasAutoExecuted.current === false
+            │
+            ├── Set hasAutoExecuted.current = true
+            ├── Set input value to q
+            └── Call performBatchSearch(q) or performBatchCompare(q)
+```
+
+**Key Design Decisions:**
+- `hasAutoExecuted` ref prevents infinite re-execution (not state — avoids re-render loops)
+- `encodeURIComponent` on query for URL safety (special chars, Arabic text)
+- `e.stopPropagation()` on delete button prevents navigation when deleting
+- Compare page uses `Suspense` wrapper for `useSearchParams` (Next.js 15 requirement)
+
 ## Resilience Patterns
 
 ### Circuit Breaker (pybreaker)
