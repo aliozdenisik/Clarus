@@ -297,8 +297,9 @@ function CompareContent() {
     }
 
     // Extract stats from most recent SSE messages
-    const statsMsg = sseData.findLast((m: any) => m.stats);
-    if (statsMsg?.stats) {
+    // Backend sends: {"type": "stats", "data": {confidence, latency_ms, total_verses, total_citations}}
+    const statsMsg = sseData.findLast((m: any) => m.type === "stats");
+    if (statsMsg?.data) {
       setResult((prev) => {
         const base = prev || {
           topic,
@@ -312,9 +313,10 @@ function CompareContent() {
         };
         return {
           ...base,
-          confidence: statsMsg.stats.confidence || base.confidence,
-          latency_ms: statsMsg.stats.latency_ms || base.latency_ms,
-          total_verses: statsMsg.stats.total_verses || base.total_verses,
+          confidence: statsMsg.data.confidence || base.confidence,
+          latency_ms: statsMsg.data.latency_ms || base.latency_ms,
+          total_verses: statsMsg.data.total_verses || base.total_verses,
+          total_citations: statsMsg.data.total_citations || base.total_citations,
         };
       });
     }
