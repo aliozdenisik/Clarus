@@ -19,16 +19,14 @@ Usage:
 
 import os
 import time
-import logging
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass, field
 from concurrent.futures import ThreadPoolExecutor
-from rich.console import Console
 
 from src.circuit_breaker import CircuitBreakerError
+from app.logging_config import get_logger, log_performance, set_extra_context
 
-console = Console()
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass
@@ -105,8 +103,7 @@ class UltimateRAG:
             from src.query_enhancer import QueryEnhancer
 
             self._enhancer = QueryEnhancer()
-            if self.verbose:
-                console.print("[dim]Loaded QueryEnhancer[/dim]")
+            logger.debug("Loaded QueryEnhancer")
         return self._enhancer
 
     @property
@@ -119,10 +116,10 @@ class UltimateRAG:
                 similarity_threshold=self.llm_cache_threshold,
                 ttl_seconds=self.llm_cache_ttl,
             )
-            if self.verbose:
-                console.print(
-                    f"[dim]Loaded Semantic LLM Cache (θ={self.llm_cache_threshold}, TTL={self.llm_cache_ttl // 86400}d)[/dim]"
-                )
+            logger.debug(
+                "Loaded Semantic LLM Cache",
+                extra={"threshold": self.llm_cache_threshold, "ttl_days": self.llm_cache_ttl // 86400}
+            )
         return self._llm_cache
 
     @property
@@ -132,10 +129,7 @@ class UltimateRAG:
             from src.answer_generator import AnswerGenerator
 
             self._answer_generator = AnswerGenerator()
-            if self.verbose:
-                console.print(
-                    "[dim]Loaded AnswerGenerator (Gemini 2.5 Flash Lite)[/dim]"
-                )
+            logger.debug("Loaded AnswerGenerator", extra={"model": "gemini-flash"})
         return self._answer_generator
 
     def _get_searcher(self, source: str):
@@ -183,10 +177,10 @@ class UltimateRAG:
             )
         return self._semantic_chunk_searcher
 
-    def _log(self, message: str, style: str = "dim"):
+    def _log(self, message: str, style: str = "dim", **extra):
         """Log message if verbose"""
         if self.verbose:
-            console.print(f"[{style}]{message}[/{style}]")
+            logger.info(message, extra=extra)
 
     def _enhance_query(self, query: str, source: str = "bible_kjva") -> str:
         """
@@ -203,8 +197,8 @@ class UltimateRAG:
             corpus = "quran" if "quran" in source else "bible"
             span.set_data("corpus", corpus)
 
-            self._log("⚡ Step 1: Query Enhancement...")
-            start = time.time()
+            logger.info("Pipeline stage started", extra={"stage": "enhance", "query": query[:50], "corpus": corpus})
+            start = time.perf_counter()
 
             cache_key = f"{corpus}:expand"
 
@@ -212,15 +206,17 @@ class UltimateRAG:
             if self.enable_llm_cache and self.llm_cache:
                 cached = self.llm_cache.get(query, cache_key)
                 if cached:
-                    duration = (time.time() - start) * 1000
+                    latency_ms = (time.perf_counter() - start) * 1000
                     span.set_data("cache_hit", True)
                     sentry_sdk.set_measurement(
-                        "rag.query.enhance_latency_ms", duration, "millisecond"
+                        "rag.query.enhance_latency_ms", latency_ms, "millisecond"
                     )
                     sentry_sdk.set_measurement("rag.cache.hit", 1, "none")
-                    self._log(
-                        f"   [CACHE HIT] Enhanced ({corpus}) in {duration:.0f}ms: {cached[:80]}..."
+                    logger.info(
+                        "Cache hit",
+                        extra={"cache": "llm", "stage": "enhance", "corpus": corpus}
                     )
+                    log_performance(logger, "enhance_query", latency_ms, corpus=corpus, cache_hit=True)
                     return cached
 
             # LLM call (cache miss)
@@ -231,12 +227,16 @@ class UltimateRAG:
             if self.enable_llm_cache and self.llm_cache:
                 self.llm_cache.set(query, cache_key, enhanced)
 
-            duration = (time.time() - start) * 1000
+            latency_ms = (time.perf_counter() - start) * 1000
             sentry_sdk.set_measurement(
-                "rag.query.enhance_latency_ms", duration, "millisecond"
+                "rag.query.enhance_latency_ms", latency_ms, "millisecond"
             )
             sentry_sdk.set_measurement("rag.cache.hit", 0, "none")
-            self._log(f"   Enhanced ({corpus}) in {duration:.0f}ms: {enhanced[:80]}...")
+            logger.info(
+                "Cache miss",
+                extra={"cache": "llm", "stage": "enhance", "corpus": corpus}
+            )
+            log_performance(logger, "enhance_query", latency_ms, corpus=corpus, cache_hit=False)
             return enhanced
 
     def _generate_multi_queries(
@@ -257,8 +257,8 @@ class UltimateRAG:
             if not self.enable_multi_query:
                 return [enhanced_query]
 
-            self._log("🔄 Step 2: Multi-Query Generation...")
-            start = time.time()
+            logger.info("Pipeline stage started", extra={"stage": "multi_query", "n": n})
+            start = time.perf_counter()
 
             # Determine corpus from source
             corpus = "quran" if "quran" in source else "bible"
@@ -270,12 +270,14 @@ class UltimateRAG:
 
             # Check LLM cache for multi-queries
             multi = None
+            cache_hit = False
             if self.enable_llm_cache and self.llm_cache:
                 cached = self.llm_cache.get(enhanced_query, cache_key)
                 if cached:
                     multi = cached
+                    cache_hit = True
                     span.set_data("cache_hit", True)
-                    self._log(f"   [CACHE HIT] Multi-query from cache")
+                    logger.info("Cache hit", extra={"cache": "llm", "stage": "multi_query"})
 
             # Generate if not cached
             if multi is None:
@@ -288,7 +290,7 @@ class UltimateRAG:
                     if self.enable_llm_cache and self.llm_cache:
                         self.llm_cache.set(enhanced_query, cache_key, multi)
                 except Exception as e:
-                    self._log(f"   Warning: Multi-query failed: {e}", "yellow")
+                    logger.warning("Multi-query generation failed", extra={"error": str(e)})
                     multi = []
 
             queries.extend(multi)
@@ -302,12 +304,12 @@ class UltimateRAG:
                     seen.add(q_lower)
                     unique.append(q)
 
-            duration = (time.time() - start) * 1000
+            latency_ms = (time.perf_counter() - start) * 1000
             sentry_sdk.set_measurement(
-                "rag.query.multi_latency_ms", duration, "millisecond"
+                "rag.query.multi_latency_ms", latency_ms, "millisecond"
             )
             span.set_data("query_count", len(unique))
-            self._log(f"   Generated {len(unique)} queries in {duration:.0f}ms")
+            log_performance(logger, "multi_query", latency_ms, query_count=len(unique), cache_hit=cache_hit)
             return unique
 
     def _search_all_queries(
@@ -323,8 +325,11 @@ class UltimateRAG:
             span.set_data("query_count", len(queries))
             span.set_data("limit", limit)
 
-            self._log(f"🔍 Step 3: Searching with {len(queries)} queries...")
-            start = time.time()
+            logger.info(
+                "Pipeline stage started",
+                extra={"stage": "search", "source": source, "query_count": len(queries), "limit": limit}
+            )
+            start = time.perf_counter()
 
             searcher = self._get_searcher(source)
 
@@ -479,13 +484,14 @@ class UltimateRAG:
                 result.score = rrf_score
                 merged_results.append(result)
 
-            duration = (time.time() - start) * 1000
+            latency_ms = (time.perf_counter() - start) * 1000
             sentry_sdk.set_measurement(
-                "rag.query.search_latency_ms", duration, "millisecond"
+                "rag.query.search_latency_ms", latency_ms, "millisecond"
             )
             span.set_data("result_count", len(merged_results))
-            self._log(
-                f"   Found {len(merged_results)} unique results in {duration:.0f}ms"
+            log_performance(
+                logger, "search", latency_ms,
+                source=source, query_count=len(queries), result_count=len(merged_results)
             )
             return merged_results
 
@@ -524,11 +530,12 @@ class UltimateRAG:
             List of reranked search results
         """
         top_k = top_k or self.final_top_k
-        total_start = time.time()
+        total_start = time.perf_counter()
 
-        if self.verbose:
-            console.print(f"\n[bold blue]🚀 Ultimate RAG Pipeline[/bold blue]")
-            console.print(f'[dim]Query: "{query}"[/dim]\n')
+        logger.info(
+            "Pipeline started",
+            extra={"pipeline": "search", "source": source, "top_k": top_k, "query": query[:50]}
+        )
 
         # Step 1: Enhance query
         enhanced_query = self._enhance_query(query, source=source)
@@ -544,15 +551,15 @@ class UltimateRAG:
         final_query = rerank_query or query
         final_results = self._get_top_results(search_results, top_k=top_k)
 
-        total_duration = (time.time() - total_start) * 1000
+        total_latency_ms = (time.perf_counter() - total_start) * 1000
 
-        if self.verbose:
-            console.print(
-                f"\n[green]✓ Pipeline complete in {total_duration:.0f}ms[/green]"
-            )
-            console.print(
-                f"[dim]  Enhanced → {len(all_queries)} queries → {len(search_results)} candidates → {len(final_results)} final[/dim]\n"
-            )
+        log_performance(
+            logger, "pipeline_search", total_latency_ms,
+            source=source,
+            query_count=len(all_queries),
+            candidates=len(search_results),
+            final_results=len(final_results)
+        )
 
         return final_results
 
@@ -687,14 +694,13 @@ class UltimateRAG:
             try:
                 # Use expand_query with corpus="bible" to translate Turkish to English
                 translated_query = self.enhancer.expand_query(query, corpus="bible")
-                if self.verbose:
-                    console.print(
-                        f"[dim]📝 Translated: {query} → {translated_query}[/dim]"
-                    )
+                logger.debug(
+                    "Query translated for Bible search",
+                    extra={"original": query[:50], "translated": translated_query[:50]}
+                )
                 query = translated_query
             except Exception as e:
-                if self.verbose:
-                    console.print(f"[yellow]Translation warning: {e}[/yellow]")
+                logger.warning("Translation failed for Bible search", extra={"error": str(e)})
 
         # If testament is specified, search only that collection
         if testament:
@@ -728,34 +734,38 @@ class UltimateRAG:
         from src.answer_generator import AnswerResult
 
         top_k = top_k or self.final_top_k
-        total_start = time.time()
+        total_start = time.perf_counter()
 
-        if self.verbose:
-            console.print(f"\n[bold blue]🧠 Ultimate RAG Q&A Pipeline[/bold blue]")
-            console.print(f'[dim]Question: "{query}"[/dim]\n')
+        logger.info(
+            "Pipeline started",
+            extra={"pipeline": "ask", "source": source, "top_k": top_k, "query": query[:50]}
+        )
 
         # Step 1-4: Search pipeline (enhance, multi-query, search, rerank)
         search_results = self.search(query, source=source, top_k=top_k)
 
         # Step 5: Generate answer with citations
-        self._log("💬 Step 5: Generating answer with citations...")
-        answer_start = time.time()
+        logger.info("Pipeline stage started", extra={"stage": "answer_generation"})
+        answer_start = time.perf_counter()
 
         answer = self.answer_generator.generate_answer(
             query, search_results, source=source
         )
 
-        answer_duration = (time.time() - answer_start) * 1000
-        total_duration = (time.time() - total_start) * 1000
+        answer_latency_ms = (time.perf_counter() - answer_start) * 1000
+        total_latency_ms = (time.perf_counter() - total_start) * 1000
 
-        if self.verbose:
-            self._log(f"   Answer generated in {answer_duration:.0f}ms")
-            console.print(
-                f"\n[green]✓ Q&A Pipeline complete in {total_duration:.0f}ms[/green]"
-            )
-            console.print(
-                f"[dim]  {len(search_results)} verses → {len(answer.citations)} citations → confidence: {answer.confidence:.0%}[/dim]\n"
-            )
+        log_performance(
+            logger, "answer_generation", answer_latency_ms,
+            citations=len(answer.citations), confidence=answer.confidence
+        )
+        log_performance(
+            logger, "pipeline_ask", total_latency_ms,
+            source=source,
+            verses=len(search_results),
+            citations=len(answer.citations),
+            confidence=answer.confidence
+        )
 
         return answer
 
@@ -779,14 +789,13 @@ class UltimateRAG:
         if translation in ("kjva", "kjv"):
             try:
                 translated_query = self.enhancer.translate_for_bible(query)
-                if self.verbose:
-                    console.print(
-                        f"[dim]📝 Translated for ask: {query} → {translated_query}[/dim]"
-                    )
+                logger.debug(
+                    "Query translated for Bible Q&A",
+                    extra={"original": query[:50], "translated": translated_query[:50]}
+                )
                 query = translated_query
             except Exception as e:
-                if self.verbose:
-                    console.print(f"[yellow]Translation warning: {e}[/yellow]")
+                logger.warning("Translation failed for Bible Q&A", extra={"error": str(e)})
 
         source = f"bible_{testament}" if testament else f"bible_{translation}"
         return self.ask(query, source=source, top_k=top_k)
@@ -807,11 +816,15 @@ def ultimate_search(query: str, source: str = "quran_tr", top_k: int = 10) -> Li
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
+    from app.logging_config import setup_logging, LoggingConfig
 
     load_dotenv()
 
+    # Setup logging for test
+    setup_logging(LoggingConfig(level="DEBUG", format="console"))
+
     # Test the Ultimate RAG Pipeline
-    console.print("[bold]Testing Ultimate RAG Pipeline[/bold]\n")
+    logger.info("Testing Ultimate RAG Pipeline")
 
     rag = UltimateRAG()
 
@@ -819,10 +832,10 @@ if __name__ == "__main__":
         "Kur'an'da şefaat kavramı nasıl açıklanır?",
     ]
 
-    console.print("\n[bold green]--- QURAN TESTS ---[/bold green]")
+    logger.info("--- QURAN TESTS ---")
     for query in test_queries_quran:
         results = rag.search_quran(query, top_k=3)
-        console.print(f"\n[bold cyan]Query: {query}[/bold cyan]")
+        logger.info(f"Query: {query}")
         for i, r in enumerate(results, 1):
             # Handle standard PointStruct or SemanticChunkSearchResult
             payload = getattr(r, "payload", {}) or {}
@@ -840,16 +853,16 @@ if __name__ == "__main__":
             ref = f"{surah}:{verse}"
             text = getattr(r, "translation", payload.get("translation", ""))[:100]
 
-            console.print(f"  {i}. [{ref}] (score: {r.score:.4f})")
-            console.print(f"     {text}...")
+            print(f"  {i}. [{ref}] (score: {r.score:.4f})")
+            print(f"     {text}...")
 
-    console.print("\n[bold green]--- BIBLE TESTS ---[/bold green]")
+    logger.info("--- BIBLE TESTS ---")
     test_queries_bible = [
         "God's love and mercy",
     ]
     for query in test_queries_bible:
         results = rag.search_bible(query, top_k=3)
-        console.print(f"\n[bold cyan]Query: {query}[/bold cyan]")
+        logger.info(f"Query: {query}")
         for i, r in enumerate(results, 1):
             payload = getattr(r, "payload", {}) or {}
             book = getattr(r, "book_name", payload.get("book_name", "Unknown"))
@@ -861,5 +874,5 @@ if __name__ == "__main__":
                 :100
             ]
 
-            console.print(f"  {i}. [{ref}] (score: {r.score:.4f})")
-            console.print(f"     {text}...")
+            print(f"  {i}. [{ref}] (score: {r.score:.4f})")
+            print(f"     {text}...")

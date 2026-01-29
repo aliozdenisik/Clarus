@@ -3,7 +3,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState } from "react";
-import * as Sentry from "@sentry/nextjs";
+import { logger } from "@/lib/logger";
+
+// Initialize API client interceptors (correlation ID, logging)
+import "@/lib/api-client-setup";
 
 export function ApiProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -16,8 +19,9 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
           },
           mutations: {
             onError: (error) => {
-              Sentry.captureException(error, {
-                tags: { source: 'api-mutation' },
+              logger.error("API mutation failed", error, {
+                component: "ApiProvider",
+                action: "mutation",
               });
             },
           },

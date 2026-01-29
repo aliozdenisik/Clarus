@@ -4,8 +4,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from typing import Optional
 from datetime import datetime
 import uuid
-import traceback
-import logging
+
+from app.logging_config import get_logger, set_user_id
 
 try:
     import sentry_sdk
@@ -14,7 +14,7 @@ try:
 except ImportError:
     SENTRY_AVAILABLE = False
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class APIError(Exception):
@@ -92,17 +92,37 @@ def create_error_response(
 
 
 class ErrorHandlerMiddleware(BaseHTTPMiddleware):
+    """
+    Error handling middleware that catches and formats API errors.
+
+    Note: This middleware runs AFTER CorrelationIDMiddleware, so correlation_id
+    and request_id are already set in request.state by the time this runs.
+    Context cleanup is handled by CorrelationIDMiddleware.
+    """
+
     async def dispatch(self, request: Request, call_next):
-        request_id = request.headers.get("X-Request-ID", str(uuid.uuid4())[:8])
-        request.state.request_id = request_id
+        # Use request_id from CorrelationIDMiddleware if available, otherwise generate
+        request_id = getattr(request.state, "request_id", None) or str(uuid.uuid4())[:8]
+
+        # Set user_id in logging context if available from auth middleware
+        if hasattr(request.state, "user_id") and request.state.user_id:
+            set_user_id(request.state.user_id)
 
         try:
             response = await call_next(request)
-            response.headers["X-Request-ID"] = request_id
             return response
 
         except APIError as e:
-            logger.warning(f"[{request_id}] APIError: {e.code} - {e.message}")
+            logger.warning(
+                "API error occurred",
+                extra={
+                    "error_code": e.code,
+                    "error_message": e.message,
+                    "status_code": e.status_code,
+                    "path": request.url.path,
+                    "method": request.method,
+                }
+            )
             # Don't capture rate limit errors in Sentry (expected behavior)
             if SENTRY_AVAILABLE and not isinstance(e, RateLimitError):
                 sentry_sdk.capture_exception(e)
@@ -116,11 +136,18 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
 
         except Exception as e:
             logger.error(
-                f"[{request_id}] Unhandled error: {str(e)}\n{traceback.format_exc()}"
+                "Unhandled exception",
+                extra={
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "path": request.url.path,
+                    "method": request.method,
+                },
+                exc_info=True
             )
             # Capture unhandled exceptions in Sentry with user context
             if SENTRY_AVAILABLE:
-                # User ID is set by add_user_id_to_state middleware in main.py:81-95
+                # User ID is set by add_user_id_to_state middleware in main.py
                 # It extracts user_id from JWT payload["sub"] and stores as integer
                 if hasattr(request.state, "user_id") and request.state.user_id:
                     sentry_sdk.set_user({"id": str(request.state.user_id)})

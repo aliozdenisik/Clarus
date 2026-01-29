@@ -27,6 +27,7 @@ import { FilterTabs, FilterType } from "@/components/compare/filter-tabs";
 import { SourceReferenceCard } from "@/components/compare/source-reference-card";
 import { InlineCitation } from "@/components/compare/inline-citation";
 import { parseCitations } from "@/lib/utils/parse-citations";
+import { useLogger } from "@/lib/logger";
 
 interface ParagraphData {
   title: string;
@@ -72,6 +73,7 @@ export default function ComparePage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
   const highlightTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const log = useLogger("ComparePage");
   const { user, isLoading: authLoading, logout } = useAuth();
   const router = useRouter();
 
@@ -104,36 +106,45 @@ export default function ComparePage() {
 
   const scrollToVerse = useCallback((reference: string) => {
     const element = document.querySelector(`[data-verse-id="${reference}"]`);
-    
+
     if (!element) {
-      console.warn(`Verse card not found for: ${reference}`);
+      log.warn("Verse card not found for scroll", {
+        action: "scrollToVerse",
+        reference,
+      });
       return;
     }
-    
+
     // Cancel previous timer
     if (highlightTimerRef.current) {
       clearTimeout(highlightTimerRef.current);
     }
-    
+
     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     setHighlightedVerse(reference);
-    
+
     highlightTimerRef.current = setTimeout(() => {
       setHighlightedVerse(null);
     }, 2000);
-  }, []);
+  }, [log]);
 
   // Navigate to verse page (opens in new tab)
   const navigateToVerse = useCallback((reference: string) => {
     if (!result?.verse_details) {
-      console.warn('No verse_details available for navigation');
+      log.warn("No verse_details available for navigation", {
+        action: "navigateToVerse",
+        reference,
+      });
       scrollToVerse(reference);
       return;
     }
 
     const verse = result.verse_details[reference];
     if (!verse) {
-      console.warn(`Verse details not found for: ${reference}`);
+      log.warn("Verse details not found for reference", {
+        action: "navigateToVerse",
+        reference,
+      });
       scrollToVerse(reference);
       return;
     }
@@ -145,7 +156,11 @@ export default function ComparePage() {
     } else {
       // Bible: /bible/{bookNr}?chapter={chapter}&verse={verse}
       if (!verse.book_nr) {
-        console.warn(`Bible book_nr not available for: ${reference}`);
+        log.warn("Bible book_nr not available for reference", {
+          action: "navigateToVerse",
+          reference,
+          source: verse.source,
+        });
         scrollToVerse(reference);
         return;
       }
@@ -154,7 +169,7 @@ export default function ComparePage() {
 
     // Open in new tab
     window.open(url, '_blank');
-  }, [result?.verse_details, scrollToVerse]);
+  }, [result?.verse_details, scrollToVerse, log]);
 
   // Cleanup timer on unmount
   useEffect(() => {
