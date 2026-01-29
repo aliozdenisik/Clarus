@@ -253,3 +253,32 @@ GET /api/health
      └─► Response: {"status", "event_loop", "qdrant", "version"}
          └─► HTTP 200 (healthy) or 503 (degraded/unhealthy)
 ```
+
+### Citation Architecture (Defense-in-Depth)
+
+Three-layer defense against malformed LLM citations:
+
+```
+LLM Output → Backend Sanitizer → Frontend Parser → HoverCard Renderer
+    │              │                    │                   │
+    │         strip [[]]            require ':'         accent link
+    │         trim spaces           expand ranges       verse preview
+    │         normalize commas      expand commas       source badge
+    │              │                    │                   │
+    ▼              ▼                    ▼                   ▼
+  Raw text    [X] format          CitationPart[]      Visual render
+```
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| Sanitizer | `backend/src/citation_sanitizer.py` | Normalize `[[X]]` → `[X]`, trim, comma spacing |
+| API Wiring | `backend/app/api/compare.py` | Apply sanitizer to all agent output |
+| Parser | `frontend/lib/utils/parse-citations.ts` | Extract citations (colon-required), expand ranges |
+| HoverCard | `frontend/components/compare/citation-hover-card.tsx` | Render as accent link with verse preview |
+| InlineCitation | `frontend/components/compare/inline-citation.tsx` | Smart wrapper: HoverCard or muted fallback |
+
+**Key Design Decisions:**
+- Colon requirement (`:`): Distinguishes citations `[Bakara:45]` from non-citations `[sic]`
+- No brackets in output: Parser returns `CitationPart[]` without `[` or `]` strings
+- Idempotent sanitizer: Safe to apply multiple times
+- Prompt + sanitizer: Defense-in-depth (prompts prevent, sanitizer catches)

@@ -4,7 +4,63 @@
 
 **Date**: 2026-01-29
 
+### Citation System Overhaul — Issue #16 (2026-01-29) - NEW
+
+Replaced the fragile bracket-based citation system with a defense-in-depth architecture resolving GitHub Issue #16 (NT agent double-bracket citations).
+
+**Architecture: Sanitizer → Parser → HoverCard**
+
+1. **Backend Citation Sanitizer** (`backend/src/citation_sanitizer.py`)
+   - Pure-function post-processing: strips double brackets, trims whitespace, normalizes commas
+   - Wired into `backend/app/api/compare.py` — sanitizes ALL agent output before API response
+   - Idempotent transformations (safe to apply multiple times)
+
+2. **Strengthened LLM Prompts** (`multi_agent_answer_generator.py`, `comparative_answer_generator.py`)
+   - All 4 specialist agents + comparative generator have explicit anti-double-bracket rules
+   - "ATIF FORMAT KURALLARI" section added to each prompt
+   - Zero `[[` patterns in prompt files (verified via grep)
+
+3. **Rewritten Frontend Parser** (`frontend/lib/utils/parse-citations.ts`)
+   - Tighter regex: only matches `[content]` containing colon `:` (filters `[sic]`, `[Note]`)
+   - No bracket characters in output — citations are clean objects
+   - Range expansion: `Bakara:4-5` → individual verse citations
+   - Comma handling: `Enfal:2, 9` → expanded references
+   - 35 comprehensive Vitest tests (all passing)
+
+4. **Radix HoverCard Component** (`frontend/components/compare/citation-hover-card.tsx`)
+   - Accent-colored inline text links (no brackets visible)
+   - Hover shows: source badge, reference title, verse text preview, "Open verse" link
+   - Framer Motion animations (springPresets.snappy)
+   - Graceful fallback when verse_details missing
+
+5. **Integration** (`backend/app/api/compare.py`, `frontend/app/compare/page.tsx`)
+   - Backend: sanitize_citations() applied to all 5 commentaries + citations dict
+   - Frontend: InlineCitation passes verseDetail + onNavigate to HoverCard
+
+**Files Created:**
+- `backend/src/citation_sanitizer.py` (127 lines)
+- `frontend/components/compare/citation-hover-card.tsx` (97 lines)
+
+**Files Modified:**
+- `backend/src/multi_agent_answer_generator.py` — prompt strengthening
+- `backend/src/comparative_answer_generator.py` — prompt strengthening
+- `backend/app/api/compare.py` — sanitizer integration
+- `frontend/lib/utils/parse-citations.ts` — rewritten parser
+- `frontend/components/compare/inline-citation.tsx` — HoverCard wrapper
+- `frontend/app/compare/page.tsx` — passes verseDetail to InlineCitation
+- `frontend/__tests__/parse-citations.test.tsx` — 35 comprehensive tests
+- `frontend/__tests__/inline-citation.test.tsx` — updated tests
+
+**Git Commits (6):**
+- `dc308df` feat(backend): add citation sanitizer for LLM output normalization
+- `5bbe176` fix(prompts): strengthen citation format rules to prevent double-bracket drift
+- `6c3606b` test(frontend): add comprehensive citation parser unit tests
+- `b343c1a` refactor(frontend): rewrite citation parser with tighter pattern matching
+- `c197ba2` feat(frontend): add HoverCard citation component with verse preview
+- `6fe44f6` feat: integrate citation sanitizer across compare pipeline
+
 **Completed**:
+- **Citation System Overhaul (2026-01-29)**: Replaced bracket-based citations with defense-in-depth architecture: backend sanitizer + rewritten parser + Radix HoverCard. Resolves Issue #16.
 - **Landing Page Redesign (2026-01-29)**: Full marketing-ready overhaul of `frontend/app/page.tsx` for non-technical audience (theology/philosophy researchers). Utilitarian luxury design audit against Linear/Vercel/Raycast standards.
 - **History Page Fix (2026-01-29)**: Complete overhaul of `/history` page — added `result_count` to SearchHistory model + DB migration, configured SDK client global auth, migrated from raw `fetch()` to generated SDK client, fixed search_type display with 13-value exhaustive mapping, updated tests to use SDK mocks.
 - **History Page Test Update**: Replaced `global.fetch` mocking with SDK function mocks in `frontend/__tests__/history.test.tsx` and updated mock data to match the real API contract.
