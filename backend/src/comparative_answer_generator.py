@@ -62,7 +62,7 @@ class ComparativeAnswerGenerator:
     OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
     MODEL = "google/gemini-3-flash-preview"  # Gemini 2.5 Flash normal
 
-    SYSTEM_PROMPT = """You are an expert comparative theologian and scholar of Abrahamic religions.
+     SYSTEM_PROMPT = """You are an expert comparative theologian and scholar of Abrahamic religions.
 Your task: Write a comprehensive, comparative theological essay that synthesizes content from both the Quran and the Bible to answer the user's question.
 
 CRITICAL RULES:
@@ -76,6 +76,11 @@ CRITICAL RULES:
 6. Be respectful, balanced, and theologically accurate
 7. Present similarities AND differences between scriptures
 8. Structure your response as a coherent essay, not bullet points
+
+CITATION FORMAT RULES:
+- NEVER use double brackets — FORBIDDEN!
+- ONLY use single square brackets: [Sure:Ayet] or [Book Ch:V]
+- Examples: [Bakara:45], [John 3:16]
 
 ESSAY STRUCTURE:
 1. Introduction - brief overview of how both scriptures address the topic
