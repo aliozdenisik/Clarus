@@ -217,7 +217,7 @@ qdrant/
 ├── frontend/               # Next.js 15 Web App
 │   ├── app/                # App Router pages
 │   ├── components/         # UI Components
-│   └── lib/                # Utilities & API client
+│   └── lib/                # Utilities, API client & auth config
 ├── src/                    # Python RAG modules
 ├── data/                   # Quran + Bible JSON
 ├── scripts/                # Setup scripts
@@ -245,6 +245,7 @@ qdrant/
 | `/api/search/bible` | POST | Bible search (validated, paginated) |
 | `/api/search/history` | GET | Search history (paginated) |
 | `/api/search/history/{id}` | DELETE | Delete history item |
+| `/api/search/history` | DELETE | Clear all history |
 | `/api/stream/search` | GET | SSE streaming search |
 | `/api/stream/compare` | GET | SSE streaming compare |
 
@@ -298,3 +299,171 @@ journalctl -u clarus-backend -f
 ```
 - HTTP 200: healthy
 - HTTP 503: degraded or unhealthy
+
+## Logging Architecture
+
+The Clarus logging system provides structured, correlation-enabled logging across frontend and backend with Sentry integration.
+
+**Documentation:**
+- Backend: `backend/LOGGING.md`
+- Frontend: `frontend/LOGGING.md`
+
+### Structured Logging Fields
+
+| Field | Source | Description |
+|-------|--------|-------------|
+| `timestamp` | Auto | ISO 8601 UTC timestamp |
+| `level` | Auto | DEBUG, INFO, WARNING, ERROR, CRITICAL |
+| `logger` | Auto | Module/component name |
+| `message` | Code | Log message |
+| `request_id` | Middleware | Unique per HTTP request (8 chars) |
+| `correlation_id` | Client | UUID tracking user action across services |
+| `user_id` | Auth | Authenticated user ID |
+
+### Correlation ID Flow
+
+```
+[Frontend]                    [Backend]                     [Logs]
+    │                             │                            │
+    │ User clicks "Search"        │                            │
+    │ Generate UUID               │                            │
+    ├─────────────────────────────┤                            │
+    │ X-Correlation-ID: abc123    │                            │
+    │ POST /api/search            │                            │
+    │                             ├────────────────────────────┤
+    │                             │ correlation_id=abc123      │
+    │                             │ request_id=def456          │
+    │                             │ INFO: Search started       │
+    │                             │                            │
+    │                             ├────────────────────────────┤
+    │                             │ correlation_id=abc123      │
+    │                             │ INFO: Qdrant query         │
+    │                             │                            │
+    │ Response                    │                            │
+    │ X-Correlation-ID: abc123    │                            │
+    │ X-Request-ID: def456        │                            │
+    ├─────────────────────────────┤                            │
+    │ Log: Search completed       │                            │
+    │ correlation_id=abc123       │                            │
+```
+
+**Tracing a user action:**
+```bash
+# Find all logs for a single user action
+grep "correlation_id.*abc123" /var/log/clarus/backend.log
+
+# Backend (JSON format)
+jq 'select(.correlation_id == "abc123")' backend.log
+```
+
+### Backend Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `LOG_LEVEL` | `INFO` | Minimum log level |
+| `LOG_FORMAT` | `console` | `console` (dev) or `json` (prod) |
+| `LOG_FILE` | None | Optional file path (rotates at 10MB) |
+
+### Frontend Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NEXT_PUBLIC_LOG_LEVEL` | `info` | Minimum log level (`debug`, `info`, `warn`, `error`) |
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `backend/app/logging_config.py` | Python logging setup, formatters, context injection |
+| `backend/app/middleware/correlation.py` | Request/correlation ID middleware |
+| `frontend/lib/logger.ts` | TypeScript logger service with Sentry integration |
+
+### Output Formats
+
+**Console (Development):**
+```
+[2024-01-15 10:30:00] INFO  app.api.search - Search completed [req=abc12345, user=42, latency_ms=150.25]
+```
+
+**JSON (Production):**
+```json
+{"timestamp":"2024-01-15T10:30:00.123Z","level":"INFO","logger":"app.api.search","message":"Search completed","request_id":"abc12345","user_id":42,"latency_ms":150.25}
+```
+
+### Sentry Integration
+
+- **Backend**: Errors logged with `exc_info=True` captured automatically
+- **Frontend**: `logger.error()` with Error object captured via Sentry SDK
+- **Breadcrumbs**: Warnings create Sentry breadcrumbs for debugging context
+- **Tags**: `component`, `action`, `correlationId` added to Sentry events
+
+## SDK Client Auth Pattern
+
+The frontend uses `@hey-api/openapi-ts` generated SDK client with global auth configuration.
+
+**Configuration File:** `frontend/lib/api/config.ts`
+
+```typescript
+import { client } from './client.gen';
+
+export function configureApiClient() {
+  client.setConfig({
+    auth: () => {
+      if (typeof window === 'undefined') return undefined;
+      return localStorage.getItem('access_token') || undefined;
+    },
+  });
+}
+```
+
+**Initialization:** Called at module scope in `frontend/app/layout.tsx`:
+```typescript
+import { configureApiClient } from "@/lib/api/config";
+configureApiClient();
+```
+
+**How it works:**
+1. SDK functions define `security: [{scheme: 'bearer', type: 'http'}]`
+2. Client calls the auth function before each request
+3. Function reads `access_token` from localStorage (browser-only)
+4. SDK prepends `Bearer ` automatically → `Authorization: Bearer <token>`
+5. SSR-safe: Returns `undefined` on server (no localStorage)
+
+**Usage:** SDK functions auto-inject auth — no manual headers needed:
+```typescript
+// Auth is automatic — just call the function
+const response = await getSearchHistoryApiSearchHistoryGet({ query: { page: 1, limit: 20 } });
+```
+
+## SearchHistory Model
+
+The `SearchHistory` model tracks all user search and compare operations.
+
+**Table:** `search_history`
+
+| Column | Type | Nullable | Description |
+|--------|------|----------|-------------|
+| `id` | INTEGER | NOT NULL | Primary key |
+| `user_id` | INTEGER | NOT NULL | FK → users.id |
+| `query` | TEXT | NOT NULL | Search query text |
+| `search_type` | VARCHAR(50) | NOT NULL | Operation type (13 values) |
+| `created_at` | TIMESTAMP | NOT NULL | UTC timestamp |
+| `result_count` | INTEGER | NULL | Result count (null for streaming) |
+
+**13 search_type values:**
+
+| Value | Source | Label |
+|-------|--------|-------|
+| `search_quran` | search.py | Quran |
+| `search_bible_all` | search.py | Bible |
+| `search_bible_ot` | search.py | Old Testament |
+| `search_bible_nt` | search.py | New Testament |
+| `search_bible_apocrypha` | search.py | Apocrypha |
+| `stream_search_quran` | stream.py | Quran |
+| `stream_search_bible` | stream.py | Bible |
+| `stream_search_ot` | stream.py | Old Testament |
+| `stream_search_nt` | stream.py | New Testament |
+| `stream_search_apocrypha` | stream.py | Apocrypha |
+| `compare_multi_agent` | compare.py | Multi-Agent |
+| `compare` | compare.py | Compare |
+| `stream_compare` | stream.py | Compare |

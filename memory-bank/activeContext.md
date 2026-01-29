@@ -2,13 +2,121 @@
 
 ## Current Work Focus
 
-**Date**: 2026-01-28
+**Date**: 2026-01-29
 
 **Completed**:
+- **History Page Fix (2026-01-29)**: Complete overhaul of `/history` page — added `result_count` to SearchHistory model + DB migration, configured SDK client global auth, migrated from raw `fetch()` to generated SDK client, fixed search_type display with 13-value exhaustive mapping, updated tests to use SDK mocks.
+- **History Page Test Update**: Replaced `global.fetch` mocking with SDK function mocks in `frontend/__tests__/history.test.tsx` and updated mock data to match the real API contract.
+- **Advanced Logging System**: Implemented comprehensive structured logging for both frontend and backend with correlation ID tracking.
 - **Streaming Format Fix (P0)**: Fixed critical SSE streaming format mismatch in compare endpoint. Essay paragraphs and statistics now display correctly.
 - Reliability & Known Issues Fixes: Implemented circuit breakers, retry logic, SSE improvements, and offline handling.
 - Test Coverage Improvements: Added 142 new tests across frontend and backend, achieving high coverage for critical reliability features.
 - Sentry Observability Documentation: Documented environment variables and setup for Sentry in backend, frontend, and technical context.
+
+### Advanced Logging System (2026-01-28) - NEW
+
+Implemented industry-standard structured logging for full observability across the stack.
+
+**Backend (Python):**
+- `backend/app/logging_config.py` - Core logging module with:
+  - `JSONFormatter` for production (machine-parseable)
+  - `ConsoleFormatter` for development (colored, human-readable)
+  - `RequestContextFilter` for automatic context injection
+  - Context vars: `request_id`, `correlation_id`, `user_id`
+  - `log_performance()` helper for latency tracking
+  - `LogContext` context manager for scoped logging
+
+- Integrated into all modules:
+  - `app/main.py` - Startup logging with config info
+  - `app/middleware/error_handler.py` - Structured error logging
+  - `app/middleware/correlation.py` - NEW: Correlation ID middleware
+  - `app/api/search.py`, `app/api/compare.py` - Request/response logging
+  - `src/ultimate_rag.py`, `src/search.py` - Pipeline stage logging
+  - `src/query_enhancer.py`, `src/answer_generator.py` - LLM call logging
+  - `src/multi_agent_answer_generator.py` - Agent execution logging
+
+**Frontend (TypeScript):**
+- `frontend/lib/logger.ts` - Singleton Logger class with:
+  - Log levels: DEBUG, INFO, WARN, ERROR
+  - Sentry integration (errors auto-captured)
+  - Correlation ID support
+  - `useLogger()` hook for React components
+  - `logPerformance()` helper
+
+- `frontend/lib/correlation.ts` - Correlation ID utilities:
+  - `startCorrelation()`, `endCorrelation()`
+  - `getCorrelationHeaders()` for API requests
+
+- Integrated into:
+  - `lib/api-provider.tsx` - API error logging
+  - `lib/auth/auth-context.tsx` - Auth flow logging
+  - `components/error-boundary.tsx` - Error boundary logging
+  - `app/search/page.tsx`, `app/compare/page.tsx` - Page logging
+
+**Configuration:**
+```bash
+# Backend
+LOG_LEVEL=INFO|DEBUG|WARNING|ERROR|CRITICAL
+LOG_FORMAT=console|json
+LOG_FILE=/path/to/file.log  # Optional
+
+# Frontend
+NEXT_PUBLIC_LOG_LEVEL=debug|info|warn|error
+```
+
+**Documentation:**
+- `backend/LOGGING.md` - Backend logging guide
+- `frontend/LOGGING.md` - Frontend logging guide
+- `memory-bank/techContext.md` - Updated with logging architecture
+- `CLAUDE.md` - Updated with logging configuration
+
+### History Page Fix (2026-01-29) - NEW
+
+Fixed all 6 bugs in the `/history` page and modernized the API integration.
+
+**Backend Changes:**
+- Added `result_count: Mapped[Optional[int]]` column to `SearchHistory` model (`backend/app/models.py`)
+- Created idempotent migration script (`backend/scripts/add_result_count.py`)
+- All 6 `SearchHistory` save points now include `result_count`:
+  - `search.py`: `search_quran` (len results), `search_bible_{testament}` (len results)
+  - `compare.py`: `compare_multi_agent` (total_verses), `compare` (total_citations)
+  - `stream.py`: `stream_search_{source}` (None), `stream_compare` (None)
+- `GET /history` response includes `result_count` in each item
+- HistoryItem schema: `result_count: Optional[int] = None`
+
+**Frontend Changes:**
+- Created `frontend/lib/api/config.ts` — SDK client global auth configuration
+  - `configureApiClient()` called at module scope in `layout.tsx`
+  - Auto-injects `Authorization: Bearer <token>` via `client.setConfig({ auth: ... })`
+  - SSR-safe: `typeof window` check for localStorage
+- Migrated `/history` page from raw `fetch()` to SDK client:
+  - `getSearchHistoryApiSearchHistoryGet` for listing
+  - `deleteHistoryItemApiSearchHistoryHistoryIdDelete` for single delete
+  - `clearHistoryApiSearchHistoryDelete` for clear all
+- Fixed response parsing: `response.data.data` (items) + `response.data.pagination`
+- Added exhaustive `SEARCH_TYPE_LABELS` map (13 values) with `getSearchTypeLabel()` helper
+- Updated `result_count` display: null-safe, singular/plural
+
+**Test Updates:**
+- Replaced `global.fetch` mocking with `vi.mock('@/lib/api/sdk.gen')`
+- Mock data uses real `search_type` values (`search_quran`, `search_bible_ot`)
+- All 7 tests pass
+
+**6 Bugs Fixed:**
+1. Data key mismatch (`data.items` → `response.data.data`)
+2. Pagination format mismatch (`per_page` → `limit`, `total` → `total_items`)
+3. Query param mismatch (`per_page=20` → `limit=20`)
+4. `result_count` missing → new column + null-safe display
+5. `search_type` display broken → 13-value exhaustive mapping
+6. Hardcoded `localhost:8000` → SDK client with global auth
+
+**Git Commits (6):**
+- `495dc0d` feat(backend): add result_count to SearchHistory model and API response
+- `8fb5d26` feat(backend): add result_count database migration script
+- `6722fc5` fix(frontend): configure SDK client global auth via @hey-api setConfig
+- `a3568aa` fix(frontend): migrate history page from raw fetch to SDK client
+- `d9bd662` fix(frontend): add exhaustive search_type display mapping for history page
+- `957bcdc` test(frontend): update history tests to match real API contract and SDK client
 
 ### Streaming Format Fix (2026-01-28) - CRITICAL
 
@@ -376,10 +484,15 @@ class CompareResponse:
 ## Next Steps
 
 1. **Immediate (Git Push)**
-   - Push 6 commits to origin/main
+   - Push logging system commits to origin/main
    - Verify deployment
 
-2. **Post-Deployment Cleanup (GitHub Issues)**
+2. **Logging Verification**
+   - Test JSON output in production mode
+   - Verify correlation ID flow end-to-end
+   - Monitor Sentry for any regressions
+
+3. **Post-Deployment Cleanup (GitHub Issues)**
    - #12: Fix Playwright E2E test timing issues
    - #10: Refactor verse detail extraction (DRY)
    - #11: Refactor paragraph building (DRY)
@@ -390,9 +503,9 @@ class CompareResponse:
    - Google OAuth credentials setup
 
 4. **Frontend Enhancements**
-   - Bible search page
-   - User preferences page
-   - Search history page
+   - ~~Bible search page~~ ✅
+   - ~~User preferences page~~ ✅
+   - ~~Search history page~~ ✅ (Fixed 2026-01-29)
 
 5. **Optional Enhancements**
    - Arabic font optimization
@@ -444,3 +557,5 @@ Browser testleri icin kullanilir (`.gitignore`'da):
 3. **SSE streaming** provides good UX for long-running LLM calls
 4. **Semantic LLM Cache** significantly reduces API costs (60-80%)
 5. **MultiAgentAnswer.to_essay()** metodu API serialization icin kullanilmali
+6. **Structured logging** with correlation IDs enables end-to-end request tracing
+7. **Context vars** (Python) and singletons (TS) enable clean context propagation

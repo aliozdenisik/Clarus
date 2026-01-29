@@ -100,7 +100,7 @@
 3. Rate limit checked (50/day)
 4. RAG pipeline executes search
 5. SSE streams tokens to client
-6. Search saved to history
+6. Search saved to history (with result_count)
 ```
 
 ### Authentication Flow (API only)
@@ -112,6 +112,25 @@
 4. Token returned to client
 5. Subsequent requests include: Authorization: Bearer <token>
 ```
+
+### SDK Client Auth Pattern
+
+Frontend API calls use a globally configured SDK client that auto-injects auth tokens:
+
+```
+1. App initializes → configureApiClient() called in layout.tsx
+2. client.setConfig({ auth: () => localStorage.getItem('access_token') })
+3. SDK function called (e.g., getSearchHistory)
+4. Client reads auth function → gets token
+5. SDK prepends "Bearer " → Authorization header injected
+6. Request sent with auth → Backend validates JWT
+```
+
+**Key Design Decisions:**
+- Module-scope initialization (not React hook) — works in Server Components
+- SSR-safe: `typeof window` check prevents server-side crashes
+- No manual token handling in components — SDK auto-injects
+- Auth token stored as `access_token` in localStorage (set by AuthContext)
 
 ## Resilience Patterns
 

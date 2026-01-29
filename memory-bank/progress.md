@@ -32,6 +32,8 @@
 
 ### Backend API
 
+- [x] SearchHistory `result_count` column + migration script
+- [x] History API `result_count` in response items
 - [x] Circuit breaker protection (pybreaker)
 - [x] Tenacity retry decorators on LLM calls
 - [x] Enhanced health check (event_loop + Qdrant status)
@@ -51,6 +53,8 @@
 
 ### Frontend (Next.js 15)
 
+- [x] Search history page — SDK client migration, result_count display, search_type mapping
+- [x] SDK client global auth (`lib/api/config.ts` — auto-injects Bearer token)
 - [x] SSE reconnection with exponential backoff
 - [x] Auth timeout (10s) with offline detection
 - [x] Offline banner component
@@ -106,7 +110,7 @@
 | `e2e/compare.spec.ts` | 2 | Compare page: auth, 5 paragraphs, stats, verse cards, filters, citations |
 
 ### Test Summary
-- Frontend: 167 total tests (164 passing, 3 pre-existing failures)
+- Frontend: 167 total tests (all history tests updated to SDK mocks)
 - Frontend E2E: 2 Playwright tests (core functionality verified ✅, timing issues to fix)
 - Backend: 76 unit tests (all passing)
 - Total new tests added: 144

@@ -25,13 +25,14 @@ frontend/
 │   └── providers.tsx           # Root provider composition
 ├── lib/
 │   ├── api/                    # Generated client (1003+ lines)
+│   │   ├── config.ts           # SDK client global auth configuration
 │   │   ├── types.gen.ts        # TypeScript types from OpenAPI
 │   │   ├── sdk.gen.ts          # API methods
 │   │   └── @tanstack/          # React Query hooks
 │   ├── stores/                 # Zustand stores
 │   ├── hooks/                  # Custom hooks (SSE, etc.)
 │   └── auth/                   # Auth context
-├── __tests__/                  # Vitest + RTL (8 files)
+├── __tests__/                  # Vitest + RTL (9 files)
 └── messages/                   # i18n (en.json, tr.json)
 ```
 
@@ -71,6 +72,13 @@ fetch('/api/search/quran', { ... });  // Avoid
 ```
 
 **Exception**: Auth endpoints and SSE streaming use raw `fetch` (circular dependency avoidance).
+
+**SDK Auth Configuration:**
+```typescript
+// Global auth configured in lib/api/config.ts — called once in layout.tsx
+// All SDK functions auto-inject Authorization header
+// No manual token handling needed in components
+```
 
 ### Streaming (SSE)
 
