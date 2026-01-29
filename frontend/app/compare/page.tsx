@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { GlowCard } from "@/components/ui/glow-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSSE } from "@/lib/hooks/use-sse";
 import {
   LogOut,
@@ -63,7 +63,7 @@ const FILTER_TO_SOURCE: Record<string, string[]> = {
   'apocrypha': ['bible_apocrypha']
 };
 
-export default function ComparePage() {
+function CompareContent() {
   const [topic, setTopic] = useState("");
   const [result, setResult] = useState<CompareResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -73,9 +73,11 @@ export default function ComparePage() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
   const highlightTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasAutoExecuted = useRef(false);
   const log = useLogger("ComparePage");
   const { user, isLoading: authLoading, logout } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const { data: sseData, isStreaming, error: sseError, startStream } = useSSE();
   const { enable_streaming } = usePreferencesStore();
@@ -228,7 +230,38 @@ export default function ComparePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+   };
+
+  // Auto-execute comparison from URL q param (history re-run)
+  useEffect(() => {
+    const q = searchParams?.get("q");
+    if (q && q.trim() && !hasAutoExecuted.current) {
+      hasAutoExecuted.current = true;
+      setTopic(q);           // Populate input field for display
+      setIsLoading(true);
+      setResult(null);
+      setExpandedParagraphs(new Set());
+
+      if (enable_streaming) {
+        try {
+          const baseUrl = "http://localhost:8000";
+          const token = localStorage.getItem("access_token");
+          if (!token) {
+            toast.error("Authentication required");
+            performBatchCompare(q);  // Fallback to batch
+            return;
+          }
+          // Build SSE URL using q directly (NOT topic state, which may not be updated yet)
+          const url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(q)}&token=${encodeURIComponent(token)}`;
+          startStream(url);
+        } catch (err) {
+          performBatchCompare(q);    // Fallback to batch
+        }
+      } else {
+        performBatchCompare(q);      // q passed directly as topicToCompare parameter
+      }
+    }
+  }, [searchParams, enable_streaming, startStream, performBatchCompare]);
 
   // Handle SSE Data updates
   useEffect(() => {
@@ -698,5 +731,17 @@ export default function ComparePage() {
         </AnimatePresence>
       </div>
     </div>
+  );
+}
+
+export default function ComparePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
+        <div className="text-[var(--color-text-secondary)]">Loading...</div>
+      </div>
+    }>
+      <CompareContent />
+    </Suspense>
   );
 }
