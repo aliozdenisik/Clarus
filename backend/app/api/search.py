@@ -5,7 +5,12 @@ from pydantic import BaseModel, Field
 from typing import Optional, Dict, Tuple
 import sys
 import os
+import time
 from dotenv import load_dotenv
+
+from app.logging_config import get_logger, log_performance
+
+logger = get_logger(__name__)
 
 env_path = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"
@@ -22,7 +27,11 @@ from app.api.auth import get_current_user, check_rate_limit
 from app.config import settings
 from app.schemas.common import PaginatedResponse, PaginationMeta, QueryValidation
 from src.ultimate_rag import UltimateRAG
-from app.api.compare import VerseDetail, extract_quran_verse_detail, extract_bible_verse_detail
+from app.api.compare import (
+    VerseDetail,
+    extract_quran_verse_detail,
+    extract_bible_verse_detail,
+)
 
 
 router = APIRouter()
@@ -55,7 +64,9 @@ class SearchResponse(BaseModel):
     query: str
     results: list[VerseResult]
     total: int
-    verse_details: Optional[Dict[str, VerseDetail]] = None  # NEW: Rich verse metadata for citations
+    verse_details: Optional[Dict[str, VerseDetail]] = (
+        None  # NEW: Rich verse metadata for citations
+    )
 
 
 class HistoryItem(BaseModel):
@@ -63,6 +74,7 @@ class HistoryItem(BaseModel):
     query: str
     search_type: str
     created_at: str
+    result_count: Optional[int] = None
 
 
 def _sanitize_query(query: str) -> str:
@@ -93,6 +105,17 @@ async def search_quran(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    start = time.perf_counter()
+    logger.info(
+        "Search request received",
+        extra={
+            "query": request.query[:50],
+            "collection": "quran_tr",
+            "top_k": request.top_k,
+            "user_id": current_user.id,
+        },
+    )
+
     await check_rate_limit(current_user, db)
 
     validated_query = _validate_query(request.query)
@@ -108,7 +131,10 @@ async def search_quran(
             verse_details[ref] = detail
 
     history = SearchHistory(
-        user_id=current_user.id, query=validated_query, search_type="search_quran"
+        user_id=current_user.id,
+        query=validated_query,
+        search_type="search_quran",
+        result_count=len(results) if results else 0,
     )
     db.add(history)
     await db.commit()
@@ -123,11 +149,16 @@ async def search_quran(
         for r in results
     ]
 
+    latency_ms = (time.perf_counter() - start) * 1000
+    log_performance(
+        logger, "search_quran", latency_ms, collection="quran_tr", results=len(results)
+    )
+
     return SearchResponse(
         query=validated_query,
         results=verses,
         total=len(verses),
-        verse_details=verse_details  # NEW: Include verse metadata
+        verse_details=verse_details,  # NEW: Include verse metadata
     )
 
 
@@ -138,6 +169,18 @@ async def search_bible(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    start = time.perf_counter()
+    collection = f"bible_{testament}" if testament else "bible_all"
+    logger.info(
+        "Search request received",
+        extra={
+            "query": request.query[:50],
+            "collection": collection,
+            "top_k": request.top_k,
+            "user_id": current_user.id,
+        },
+    )
+
     await check_rate_limit(current_user, db)
 
     validated_query = _validate_query(request.query)
@@ -175,6 +218,7 @@ async def search_bible(
         user_id=current_user.id,
         query=validated_query,
         search_type=f"search_bible_{testament or 'all'}",
+        result_count=len(results) if results else 0,
     )
     db.add(history)
     await db.commit()
@@ -189,11 +233,16 @@ async def search_bible(
         for r in results
     ]
 
+    latency_ms = (time.perf_counter() - start) * 1000
+    log_performance(
+        logger, "search_bible", latency_ms, collection=collection, results=len(results)
+    )
+
     return SearchResponse(
         query=validated_query,
         results=verses,
         total=len(verses),
-        verse_details=verse_details  # NEW: Include verse metadata
+        verse_details=verse_details,  # NEW: Include verse metadata
     )
 
 
@@ -229,6 +278,7 @@ async def get_search_history(
             query=h.query,
             search_type=h.search_type,
             created_at=h.created_at.isoformat(),
+            result_count=h.result_count,
         )
         for h in history
     ]

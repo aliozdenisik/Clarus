@@ -6,7 +6,12 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Tuple
 import sys
 import os
+import time as time_module
 from dotenv import load_dotenv
+
+from app.logging_config import get_logger, log_performance
+
+logger = get_logger(__name__)
 
 # Load .env before importing RAG modules
 env_path = os.path.join(
@@ -105,9 +110,9 @@ def extract_quran_verse_detail(result: SearchResult) -> Tuple[str, VerseDetail]:
         verse=result.verse_id,
         source="quran_tr",
         translation="Diyanet Isleri Baskanligi",
-        surah_id=result.surah_id,      # NEW: Required for Quran URL construction
+        surah_id=result.surah_id,  # NEW: Required for Quran URL construction
         surah_name=result.surah_name,  # NEW: Required for Quran URL construction
-        verse_id=result.verse_id,      # NEW: Required for Quran URL construction
+        verse_id=result.verse_id,  # NEW: Required for Quran URL construction
     )
 
 
@@ -145,9 +150,15 @@ async def compare_scriptures(
     - Quran perspective
     - Comparative synthesis
     """
-    import time
-
-    start_time = time.time()
+    start_time = time_module.perf_counter()
+    logger.info(
+        "Compare request received",
+        extra={
+            "topic": request.topic[:50],
+            "use_multi_agent": request.use_multi_agent,
+            "user_id": current_user.id,
+        },
+    )
 
     await check_rate_limit(current_user, db)
 
@@ -241,13 +252,25 @@ async def compare_scriptures(
         total_citations = sum(len(refs) for refs in result.citations.values())
         total_verses = sum(result.verses_provided.values())
 
-        latency_ms = int((time.time() - start_time) * 1000)
+        latency_ms = int((time_module.perf_counter() - start_time) * 1000)
+
+        # Log performance with agent breakdown
+        log_performance(
+            logger,
+            "compare_multi_agent",
+            latency_ms,
+            agents=5,
+            total_verses=total_verses,
+            total_citations=total_citations,
+            confidence=result.confidence,
+        )
 
         # Save to history
         history = SearchHistory(
             user_id=current_user.id,
             query=request.topic,
             search_type="compare_multi_agent",
+            result_count=total_verses if total_verses else 0,
         )
         db.add(history)
         await db.commit()
@@ -267,11 +290,29 @@ async def compare_scriptures(
         # Single essay mode (ComparativeAnswer)
         result = rag.compare(request.topic)
 
-        latency_ms = int((time.time() - start_time) * 1000)
+        latency_ms = int((time_module.perf_counter() - start_time) * 1000)
+
+        total_citations_count = len(result.all_references)
+        verses_count = (
+            result.verses_provided if hasattr(result, "verses_provided") else 80
+        )
+
+        # Log performance for single-agent mode
+        log_performance(
+            logger,
+            "compare_single",
+            latency_ms,
+            agents=1,
+            total_citations=total_citations_count,
+            confidence=result.confidence,
+        )
 
         # Save to history
         history = SearchHistory(
-            user_id=current_user.id, query=request.topic, search_type="compare"
+            user_id=current_user.id,
+            query=request.topic,
+            search_type="compare",
+            result_count=total_citations_count,
         )
         db.add(history)
         await db.commit()
@@ -294,9 +335,7 @@ async def compare_scriptures(
                 "bible": result.bible_references,
             },
             confidence=result.confidence,
-            total_verses=result.verses_provided
-            if hasattr(result, "verses_provided")
-            else 80,
-            total_citations=len(result.all_references),
+            total_verses=verses_count,
+            total_citations=total_citations_count,
             latency_ms=latency_ms,
         )

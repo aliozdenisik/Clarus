@@ -41,6 +41,7 @@ class SearchHistory(Base):
     query: Mapped[str] = mapped_column(Text, nullable=False)
     search_type: Mapped[str] = mapped_column(String(50), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    result_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="search_history")
 

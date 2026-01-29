@@ -70,7 +70,10 @@ async def stream_search(
 
     # Save to history
     history = SearchHistory(
-        user_id=current_user.id, query=q, search_type=f"stream_search_{source}"
+        user_id=current_user.id,
+        query=q,
+        search_type=f"stream_search_{source}",
+        result_count=None,
     )
     db.add(history)
     await db.commit()
@@ -126,7 +129,9 @@ async def stream_search(
                 answer_text = str(answer)
             words = answer_text.split()
 
-            logger.info(f"[SSE /search] LLM returned answer, streaming {len(words)} words")
+            logger.info(
+                f"[SSE /search] LLM returned answer, streaming {len(words)} words"
+            )
             for i, word in enumerate(words):
                 yield f"data: {json.dumps({'type': 'token', 'content': word + ' '})}\n\n"
                 await asyncio.sleep(0.03)  # 30ms per word
@@ -149,14 +154,22 @@ async def stream_search(
                 # Determine source and build reference string
                 if source == "quran":
                     # Quran result: use surah_name:verse_id format
-                    ref_str = f"{r.surah_name}:{r.verse_id}" if hasattr(r, "surah_name") else ""
+                    ref_str = (
+                        f"{r.surah_name}:{r.verse_id}"
+                        if hasattr(r, "surah_name")
+                        else ""
+                    )
                     ref, detail = extract_quran_verse_detail(r)
                     if ref not in verse_details:
                         verse_details[ref] = detail.model_dump()
                     result_source = "quran"
                 else:
                     # Bible result: use book_name chapter:verse format
-                    ref_str = f"{r.book_name} {r.chapter}:{r.verse}" if hasattr(r, "book_name") else ""
+                    ref_str = (
+                        f"{r.book_name} {r.chapter}:{r.verse}"
+                        if hasattr(r, "book_name")
+                        else ""
+                    )
                     # Map source to bible_ot, bible_nt, or bible_apocrypha
                     if source == "ot":
                         bible_source = "bible_ot"
@@ -169,26 +182,32 @@ async def stream_search(
                         verse_details[ref] = detail.model_dump()
                     result_source = bible_source
 
-                results_data.append({
-                    "source": result_source,
-                    "reference": ref_str,
-                    "text": r.text if hasattr(r, "text") else str(r),
-                    "score": r.score if hasattr(r, "score") else 0.0
-                })
+                results_data.append(
+                    {
+                        "source": result_source,
+                        "reference": ref_str,
+                        "text": r.text if hasattr(r, "text") else str(r),
+                        "score": r.score if hasattr(r, "score") else 0.0,
+                    }
+                )
 
             # Send verse_details before complete (so frontend has it ready for lookups)
             yield f"data: {json.dumps({'verse_details': verse_details})}\n\n"
             await asyncio.sleep(0.05)
 
             logger.info("[SSE /search] Stream complete, sending complete with results")
-            yield f"data: {json.dumps({
-                'type': 'complete',
-                'result': {
-                    'results': results_data,
-                    'answer': answer_text,
-                    'citations': citations
-                }
-            })}\n\n"
+            yield f"data: {
+                json.dumps(
+                    {
+                        'type': 'complete',
+                        'result': {
+                            'results': results_data,
+                            'answer': answer_text,
+                            'citations': citations,
+                        },
+                    }
+                )
+            }\n\n"
 
         except Exception as e:
             logger.error(f"[SSE /search] Error during generation: {e}")
@@ -224,7 +243,10 @@ async def stream_compare(
 
     # Save to history
     history = SearchHistory(
-        user_id=current_user.id, query=topic, search_type="stream_compare"
+        user_id=current_user.id,
+        query=topic,
+        search_type="stream_compare",
+        result_count=None,
     )
     db.add(history)
     await db.commit()
@@ -289,28 +311,36 @@ async def stream_compare(
             # Build structured paragraphs (using shared helper)
             paragraphs = build_paragraphs(result, as_dict=True)
 
-            logger.info(f"[COMPARE] Streaming {len(paragraphs)} structured paragraphs...")
+            logger.info(
+                f"[COMPARE] Streaming {len(paragraphs)} structured paragraphs..."
+            )
 
             # Stream paragraphs one by one
             for idx, para in enumerate(paragraphs, 1):
                 yield f"data: {json.dumps({'type': 'paragraph', 'data': para})}\n\n"
                 yield ": heartbeat\n\n"
-                logger.info(f"[COMPARE] Sent paragraph {idx}/{len(paragraphs)}: {para['title']}")
+                logger.info(
+                    f"[COMPARE] Sent paragraph {idx}/{len(paragraphs)}: {para['title']}"
+                )
                 await asyncio.sleep(0.1)  # Small delay for UI smoothness
 
             # Calculate and send complete statistics
             total_citations = sum(len(refs) for refs in result.citations.values())
-            total_verses = sum(result.verses_provided.values())  # Align with batch endpoint
+            total_verses = sum(
+                result.verses_provided.values()
+            )  # Align with batch endpoint
             latency_ms = int((time.time() - start_time) * 1000)
 
             stats_data = {
                 "confidence": result.confidence,
                 "latency_ms": latency_ms,
                 "total_verses": total_verses,
-                "total_citations": total_citations
+                "total_citations": total_citations,
             }
             yield f"data: {json.dumps({'type': 'stats', 'data': stats_data})}\n\n"
-            logger.info(f"[COMPARE] Sent stats: {total_verses} verses, {total_citations} citations, {latency_ms}ms")
+            logger.info(
+                f"[COMPARE] Sent stats: {total_verses} verses, {total_citations} citations, {latency_ms}ms"
+            )
 
             logger.info("[COMPARE] Streaming completed successfully")
 
