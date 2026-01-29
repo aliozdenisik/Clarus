@@ -49,6 +49,7 @@ vi.mock("lucide-react", () => ({
   User: () => <div data-testid="user-icon" />,
   LogOut: () => <div data-testid="logout-icon" />,
   GitCompare: () => <div data-testid="compare-icon" />,
+  ExternalLink: () => <div data-testid="external-link-icon" />,
 }));
 
 // Mock fetch
@@ -228,38 +229,84 @@ describe("SearchPage", () => {
     });
   });
   
-  it("uses SSE when streaming is enabled", async () => {
-    vi.mocked(usePreferencesStore).mockReturnValue({
-      enable_streaming: true,
-    } as any);
-    
-    // Mock localStorage for token
-    const localStorageMock = (function() {
-      let store: Record<string, string> = {
-        'access_token': 'mock-token'
-      };
-      return {
-        getItem: function(key: string) {
-          return store[key];
-        },
-        setItem: function(key: string, value: string) {
-          store[key] = value;
-        },
-        clear: function() {
-          store = {};
-        }
-      };
-    })();
-    Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+   it("uses SSE when streaming is enabled", async () => {
+     vi.mocked(usePreferencesStore).mockReturnValue({
+       enable_streaming: true,
+     } as any);
+     
+     // Mock localStorage for token
+     const localStorageMock = (function() {
+       let store: Record<string, string> = {
+         'access_token': 'mock-token'
+       };
+       return {
+         getItem: function(key: string) {
+           return store[key];
+         },
+         setItem: function(key: string, value: string) {
+           store[key] = value;
+         },
+         clear: function() {
+           store = {};
+         }
+       };
+     })();
+     Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
-    render(<SearchPage />);
-    
-    const input = screen.getByPlaceholderText("Search Quran...");
-    await userEvent.type(input, "test streaming");
-    fireEvent.click(screen.getByRole("button", { name: /search/i }));
+     render(<SearchPage />);
+     
+     const input = screen.getByPlaceholderText("Search Quran...");
+     await userEvent.type(input, "test streaming");
+     fireEvent.click(screen.getByRole("button", { name: /search/i }));
 
-    expect(mockStartStream).toHaveBeenCalledWith(
-      expect.stringContaining("/api/stream/search?q=test%20streaming&source=quran&token=mock-token")
-    );
-  });
+     expect(mockStartStream).toHaveBeenCalledWith(
+       expect.stringContaining("/api/stream/search?q=test%20streaming&source=quran&token=mock-token")
+     );
+   });
+
+   it("auto-executes search when q param is present", async () => {
+     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("source=quran&q=sabir") as any);
+     
+     render(<SearchPage />);
+     
+     await waitFor(() => {
+       expect(global.fetch).toHaveBeenCalledWith(
+         expect.stringContaining("/api/search/quran"),
+         expect.objectContaining({
+           method: "POST",
+           body: expect.stringContaining('"query":"sabir"')
+         })
+       );
+     });
+   });
+
+   it("does not auto-execute when q param is empty", async () => {
+     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("q=") as any);
+     
+     render(<SearchPage />);
+     
+     await waitFor(() => {
+       expect(global.fetch).not.toHaveBeenCalled();
+     });
+   });
+
+   it("does not auto-execute when q param is absent", async () => {
+     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("") as any);
+     
+     render(<SearchPage />);
+     
+     await waitFor(() => {
+       expect(global.fetch).not.toHaveBeenCalled();
+     });
+   });
+
+   it("sets correct source tab from URL param before auto-search", async () => {
+     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("source=nt&q=love") as any);
+     
+     render(<SearchPage />);
+     
+     await waitFor(() => {
+       expect(screen.getByPlaceholderText("Search New Testament...")).toBeInTheDocument();
+     });
+   });
 });

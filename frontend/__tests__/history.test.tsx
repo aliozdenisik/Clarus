@@ -205,19 +205,116 @@ describe("HistoryPage", () => {
     });
   });
 
-  it("displays empty state", async () => {
-    (getSearchHistoryApiSearchHistoryGet as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      data: {
-        success: true,
-        data: [],
-        pagination: { page: 1, limit: 20, total_items: 0, total_pages: 0, has_next: false, has_prev: false },
-      },
-    });
+   it("displays empty state", async () => {
+     (getSearchHistoryApiSearchHistoryGet as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+       data: {
+         success: true,
+         data: [],
+         pagination: { page: 1, limit: 20, total_items: 0, total_pages: 0, has_next: false, has_prev: false },
+       },
+     });
 
-    render(<HistoryPage />);
+     render(<HistoryPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText("No search history found")).toBeInTheDocument();
-    });
-  });
+     await waitFor(() => {
+       expect(screen.getByText("No search history found")).toBeInTheDocument();
+     });
+   });
+
+   it("navigates to search page when clicking a Quran search history item", async () => {
+     render(<HistoryPage />);
+
+     await waitFor(() => {
+       expect(screen.getByText("test query 1")).toBeInTheDocument();
+     });
+
+     const queryText = screen.getByText("test query 1");
+     const cardContainer = queryText.closest('[class*="cursor-pointer"]');
+     fireEvent.click(cardContainer!);
+
+     expect(mockPush).toHaveBeenCalledWith("/search?source=quran&q=test%20query%201");
+   });
+
+   it("navigates to compare page when clicking a compare history item", async () => {
+     const compareItem = { id: 3, query: "creation", search_type: "compare_multi_agent", created_at: "2024-01-22T12:00:00Z", result_count: 5 };
+     (getSearchHistoryApiSearchHistoryGet as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+       data: {
+         success: true,
+         data: [compareItem],
+         pagination: { page: 1, limit: 20, total_items: 1, total_pages: 1, has_next: false, has_prev: false },
+       },
+     });
+
+     render(<HistoryPage />);
+
+     await waitFor(() => {
+       expect(screen.getByText("creation")).toBeInTheDocument();
+     });
+
+     const queryText = screen.getByText("creation");
+     const cardContainer = queryText.closest('[class*="cursor-pointer"]');
+     fireEvent.click(cardContainer!);
+
+     expect(mockPush).toHaveBeenCalledWith("/compare?q=creation");
+   });
+
+   it("does not navigate when clicking delete button", async () => {
+     mockPush.mockClear();
+     render(<HistoryPage />);
+
+     await waitFor(() => {
+       expect(screen.getByText("test query 1")).toBeInTheDocument();
+     });
+
+     const deleteButtons = screen.getAllByRole("button", { name: /delete/i });
+     fireEvent.click(deleteButtons[0]);
+
+     expect(mockPush).not.toHaveBeenCalled();
+   });
+
+   it("encodes special characters in query URL", async () => {
+     const specialItem = { id: 4, query: "faith & works?", search_type: "search_quran", created_at: "2024-01-23T12:00:00Z", result_count: 3 };
+     (getSearchHistoryApiSearchHistoryGet as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+       data: {
+         success: true,
+         data: [specialItem],
+         pagination: { page: 1, limit: 20, total_items: 1, total_pages: 1, has_next: false, has_prev: false },
+       },
+     });
+
+     render(<HistoryPage />);
+
+     await waitFor(() => {
+       expect(screen.getByText("faith & works?")).toBeInTheDocument();
+     });
+
+     const queryText = screen.getByText("faith & works?");
+     const cardContainer = queryText.closest('[class*="cursor-pointer"]');
+     fireEvent.click(cardContainer!);
+
+     expect(mockPush).toHaveBeenCalledWith("/search?source=quran&q=faith%20%26%20works%3F");
+   });
+
+   it("falls back to /search for unknown search_type", async () => {
+     const unknownItem = { id: 5, query: "unknown", search_type: "unknown_type", created_at: "2024-01-24T12:00:00Z", result_count: 1 };
+     (getSearchHistoryApiSearchHistoryGet as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+       data: {
+         success: true,
+         data: [unknownItem],
+         pagination: { page: 1, limit: 20, total_items: 1, total_pages: 1, has_next: false, has_prev: false },
+       },
+     });
+
+     render(<HistoryPage />);
+
+     await waitFor(() => {
+       expect(screen.getByText("unknown")).toBeInTheDocument();
+     });
+
+     const queryText = screen.getByText("unknown");
+     const cardContainer = queryText.closest('[class*="cursor-pointer"]');
+     fireEvent.click(cardContainer!);
+
+     expect(mockPush).toHaveBeenCalledWith("/search?q=unknown");
+   });
 });
