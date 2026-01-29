@@ -91,7 +91,7 @@ export default function Navigation() {
                   <Link href="/new-testament">New Testament (27 Books)</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/apocrypha">Apocrypha</Link>
+                  <Link href="/apocrypha">Apocrypha (14 Books)</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -250,7 +250,7 @@ export default function Navigation() {
                   className="block px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white rounded-md"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Apocrypha
+                  Apocrypha (14 Books)
                 </Link>
               </div>
 
