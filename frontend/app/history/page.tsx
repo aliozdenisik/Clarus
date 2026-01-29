@@ -20,13 +20,18 @@ import {
   History as HistoryIcon,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import {
+  getSearchHistoryApiSearchHistoryGet,
+  deleteHistoryItemApiSearchHistoryHistoryIdDelete,
+  clearHistoryApiSearchHistoryDelete,
+} from '@/lib/api/sdk.gen';
 
 interface HistoryItem {
   id: number;
   query: string;
   search_type: string;
   created_at: string;
-  result_count: number;
+  result_count: number | null;
 }
 
 interface PaginationData {
@@ -53,28 +58,33 @@ export default function HistoryPage() {
   const fetchHistory = async (page = 1) => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem("access_token");
-      const response = await fetch(
-        `http://localhost:8000/api/search/history?page=${page}&per_page=20`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch history");
-      }
-
-      const data = await response.json();
-      setItems(data.items);
-      setPagination({
-        total: data.total,
-        page: data.page,
-        per_page: data.per_page,
-        pages: data.pages,
+      const response = await getSearchHistoryApiSearchHistoryGet({
+        query: { page, limit: 20 },
       });
+
+      // ACTUAL backend response structure (from backend/app/api/search.py:262-273):
+      // { success: true, data: [...], pagination: { page, limit, total_items, total_pages, has_next, has_prev } }
+      if (response.data) {
+        const body = response.data as {
+          success: boolean;
+          data: HistoryItem[];
+          pagination: {
+            page: number;
+            limit: number;
+            total_items: number;
+            total_pages: number;
+            has_next: boolean;
+            has_prev: boolean;
+          };
+        };
+        setItems(body.data);
+        setPagination({
+          total: body.pagination.total_items,
+          page: body.pagination.page,
+          per_page: body.pagination.limit,
+          pages: body.pagination.total_pages,
+        });
+      }
     } catch (error) {
       toast.error("Failed to load history");
     } finally {
@@ -96,25 +106,13 @@ export default function HistoryPage() {
 
   const handleDelete = async (id: number) => {
     try {
-      const token = localStorage.getItem("access_token");
-      const response = await fetch(
-        `http://localhost:8000/api/search/history/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to delete item");
-      }
+      await deleteHistoryItemApiSearchHistoryHistoryIdDelete({
+        path: { history_id: id },
+      });
 
       setItems((prev) => prev.filter((item) => item.id !== id));
       toast.success("Item deleted");
-      
-      // Refresh if empty to get correct pagination state
+
       if (items.length === 1 && pagination && pagination.page > 1) {
         fetchHistory(pagination.page - 1);
       } else if (items.length === 1) {
@@ -130,17 +128,7 @@ export default function HistoryPage() {
 
     try {
       setIsClearing(true);
-      const token = localStorage.getItem("access_token");
-      const response = await fetch("http://localhost:8000/api/search/history", {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to clear history");
-      }
+      await clearHistoryApiSearchHistoryDelete();
 
       setItems([]);
       setPagination(null);
@@ -286,9 +274,11 @@ export default function HistoryPage() {
                         <p className="text-lg font-medium text-[var(--color-text-primary)]">
                           {item.query}
                         </p>
-                        <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                          {item.result_count} results
-                        </p>
+                        {item.result_count != null && item.result_count > 0 && (
+                          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                            {item.result_count} {item.result_count === 1 ? 'result' : 'results'}
+                          </p>
+                        )}
                       </div>
                       <Button
                         variant="ghost"
