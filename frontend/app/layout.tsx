@@ -4,6 +4,9 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { Toaster } from "sonner";
 import Navigation from "@/components/layout/navigation";
+import { configureApiClient } from "@/lib/api/config";
+
+configureApiClient();
 
 const inter = Inter({
   subsets: ["latin"],
