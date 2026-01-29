@@ -41,6 +41,29 @@ interface PaginationData {
   pages: number;
 }
 
+const SEARCH_TYPE_LABELS: Record<string, string> = {
+  // Standard search
+  search_quran: "Quran",
+  search_bible_all: "Bible",
+  search_bible_ot: "Old Testament",
+  search_bible_nt: "New Testament",
+  search_bible_apocrypha: "Apocrypha",
+  // Streaming search
+  stream_search_quran: "Quran",
+  stream_search_bible: "Bible",
+  stream_search_ot: "Old Testament",
+  stream_search_nt: "New Testament",
+  stream_search_apocrypha: "Apocrypha",
+  // Compare
+  compare: "Compare",
+  compare_multi_agent: "Multi-Agent",
+  stream_compare: "Compare",
+};
+
+function getSearchTypeLabel(searchType: string): string {
+  return SEARCH_TYPE_LABELS[searchType] || "Search";
+}
+
 export default function HistoryPage() {
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [pagination, setPagination] = useState<PaginationData | null>(null);
@@ -262,7 +285,7 @@ export default function HistoryPage() {
                       <div className="flex-1">
                         <div className="mb-1 flex items-center gap-3">
                           <span className="text-sm font-medium uppercase text-[var(--color-accent-primary)]">
-                            {item.search_type === "quran" ? "Quran" : "Bible"}
+                            {getSearchTypeLabel(item.search_type)}
                           </span>
                           <span className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
                             <Clock className="h-3 w-3" />
