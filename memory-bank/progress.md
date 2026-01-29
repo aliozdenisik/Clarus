@@ -85,6 +85,10 @@
 - [x] Citation system overhaul — defense-in-depth: backend sanitizer + rewritten parser + Radix HoverCard (Issue #16)
 - [x] HoverCard verse preview on citation hover
 - [x] 35 citation parser unit tests (comprehensive coverage)
+- [x] SSE stats parsing fix — aligned with backend message format (Issue #17)
+- [x] Search navigation — 4-collection dropdown matching search page tabs (Issue #18)
+- [x] Apocrypha book count in navigation menu (Issue #19)
+- [x] Compare page UI alignment — matched search page design standards (Issue #20)
 
 ### CLI Commands
 
@@ -173,6 +177,7 @@
 5. **Circuit breaker silent degradation**: Returns empty results instead of error (intentional for UX)
 6. ~~**SSE streaming format mismatch**: Compare page essay not displayed~~ → **FIXED** (2026-01-28)
 7. ~~**New Testament Citation Bug**: Backend agent generates citations with incorrect double brackets~~ → **FIXED** (2026-01-29, Issue #16 — citation system overhaul)
+8. ~~**SSE Stats Format Mismatch**: Compare page stats (confidence, latency, verses) showing zero values~~ → **FIXED** (2026-01-29, Issue #17 — SSE message format alignment)
 
 ## Technical Debt (GitHub Issues)
 
@@ -182,6 +187,10 @@
 | [#11](https://github.com/aliozdenisik/Clarus/issues/11) | DRY: Paragraph building (~35 lines duplicated) | Medium |
 | [#12](https://github.com/aliozdenisik/Clarus/issues/12) | Playwright E2E test timing issues | Medium |
 | [#13](https://github.com/aliozdenisik/Clarus/issues/13) | Parent Epic: Post-Deployment Cleanup | - |
+| ~~[#17](https://github.com/aliozdenisik/Clarus/issues/17)~~ | ~~SSE stats message format mismatch~~ | ~~High~~ → **CLOSED** |
+| ~~[#18](https://github.com/aliozdenisik/Clarus/issues/18)~~ | ~~Inconsistent search navigation options~~ | ~~Medium~~ → **CLOSED** |
+| ~~[#19](https://github.com/aliozdenisik/Clarus/issues/19)~~ | ~~Missing Apocrypha book count~~ | ~~Low~~ → **CLOSED** |
+| ~~[#20](https://github.com/aliozdenisik/Clarus/issues/20)~~ | ~~Compare page UI alignment~~ | ~~Medium~~ → **CLOSED** |
 
 ## Evolution of Project
 

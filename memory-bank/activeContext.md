@@ -4,6 +4,48 @@
 
 **Date**: 2026-01-29
 
+### GitHub Project Board — Batch Issue Resolution (2026-01-29) - NEW
+
+Processed 4 Todo issues from the GitHub Projects (V2) board (#2 "Clarus Ussues and Pull Requests"). All issues solved, committed, and closed.
+
+**Issue #17 — [Bug] Stats Zeroed Out** (P0)
+- **File:** `frontend/app/compare/page.tsx` (lines 299-320)
+- **Root Cause:** SSE message format mismatch — frontend looked for `m.stats` but backend sends `{"type": "stats", "data": {...}}`
+- **Fix:** `m.stats` → `m.type === "stats"`, `statsMsg.stats.*` → `statsMsg.data.*`, added `total_citations` extraction
+- **Commit:** `a7f560f`
+
+**Issue #18 — [UX] Inconsistent Search Navigation**
+- **File:** `frontend/components/layout/navigation.tsx`
+- **Root Cause:** Header "Search" dropdown had only 2 options (Quran/Bible) but search page supports 4 collections
+- **Fix:** Replaced with 4-option dropdown: Quran Search, Old Testament Search, New Testament Search, Apocrypha Search
+- **Updated both:** Desktop dropdown + Mobile menu
+- **Commit:** `22bfe89`
+
+**Issue #19 — [UI] Missing Apocrypha Book Count**
+- **File:** `frontend/components/layout/navigation.tsx`
+- **Root Cause:** Browse menu showed "Apocrypha" without book count (others had counts)
+- **Fix:** Changed to "Apocrypha (14 Books)" — verified from `bible_kjva.json` (books with nr ≥ 67)
+- **Commit:** `0bd9c60`
+
+**Issue #20 — [UI/UX] Compare Page UI Alignment**
+- **File:** `frontend/app/compare/page.tsx`
+- **Root Cause:** Compare page used different visual language than the redesigned Search page
+- **Fix:** Aligned 7 design elements with Search page standards:
+  1. Added ambient teal radial gradient background
+  2. Title: `text-3xl font-bold` → `font-display text-4xl font-normal tracking-tight`
+  3. Subtitle: Added `text-sm` sizing
+  4. Search input: `<Input>` component → custom `rounded-xl` input with search icon
+  5. Button: Positioned inside input, accent bg + dark text
+  6. Paragraph sections: Added "AI INTERPRETATION" label + `border-l-2` accent left border
+  7. Added ornamental diamond dividers between sections
+- **Commit:** `4309d4c`
+
+**Git Commits (4):**
+- `a7f560f` fix(frontend): align SSE stats parsing with backend message format (#17)
+- `22bfe89` fix(frontend): align search navigation with 4-collection search modes (#18)
+- `0bd9c60` fix(frontend): add book count for Apocrypha in navigation menu (#19)
+- `4309d4c` feat(frontend): align compare page UI with search page design standards (#20)
+
 ### Citation System Overhaul — Issue #16 (2026-01-29) - NEW
 
 Replaced the fragile bracket-based citation system with a defense-in-depth architecture resolving GitHub Issue #16 (NT agent double-bracket citations).
@@ -617,6 +659,10 @@ class CompareResponse:
    - Monitor Sentry for any regressions
 
 3. **Post-Deployment Cleanup (GitHub Issues)**
+   - ~~#17: Stats zeroed out~~ ✅ FIXED
+   - ~~#18: Inconsistent search navigation~~ ✅ FIXED
+   - ~~#19: Missing Apocrypha book count~~ ✅ FIXED
+   - ~~#20: Compare page UI alignment~~ ✅ FIXED
    - #12: Fix Playwright E2E test timing issues
    - #10: Refactor verse detail extraction (DRY)
    - #11: Refactor paragraph building (DRY)
