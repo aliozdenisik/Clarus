@@ -67,6 +67,7 @@
 - [x] Linear-style dark theme
 - [x] Framer Motion animations
 - [x] GlowCard components
+- [x] Landing page redesign — utilitarian luxury (Linear/Vercel standard), non-technical audience
 - [x] Navigation between pages
 - [x] Rich source reference cards (verse details)
 - [x] Filter tabs (by scripture source)
@@ -150,6 +151,7 @@
 | Multi-Agent | Complete | 5-paragraph output |
 | CLI | Complete | Rich formatting |
 | REST API | Complete | FastAPI + JWT |
+| Landing Page | Complete | Utilitarian luxury redesign, non-technical |
 | Frontend | Complete | Next.js 15 + Framer Motion |
 | Docker Setup | Complete | PostgreSQL + Qdrant |
 | Browser Tests | Passed | Login ✅, Search ✅, Compare ✅ (rich refs) |
@@ -179,7 +181,8 @@
 - **v1**: CLI-only Python application
 - **v2**: Added multi-agent answer generation
 - **v3**: Added FastAPI REST API
-- **v3.1**: Removed Vue 3 frontend, CLI/API focus (current)
+- **v3.1**: Removed Vue 3 frontend, CLI/API focus
+- **v4**: Next.js 15 frontend with utilitarian luxury landing page (current)
 
 ### Key Decisions
 

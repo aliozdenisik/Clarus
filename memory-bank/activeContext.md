@@ -5,6 +5,7 @@
 **Date**: 2026-01-29
 
 **Completed**:
+- **Landing Page Redesign (2026-01-29)**: Full marketing-ready overhaul of `frontend/app/page.tsx` for non-technical audience (theology/philosophy researchers). Utilitarian luxury design audit against Linear/Vercel/Raycast standards.
 - **History Page Fix (2026-01-29)**: Complete overhaul of `/history` page — added `result_count` to SearchHistory model + DB migration, configured SDK client global auth, migrated from raw `fetch()` to generated SDK client, fixed search_type display with 13-value exhaustive mapping, updated tests to use SDK mocks.
 - **History Page Test Update**: Replaced `global.fetch` mocking with SDK function mocks in `frontend/__tests__/history.test.tsx` and updated mock data to match the real API contract.
 - **Advanced Logging System**: Implemented comprehensive structured logging for both frontend and backend with correlation ID tracking.
@@ -12,6 +13,44 @@
 - Reliability & Known Issues Fixes: Implemented circuit breakers, retry logic, SSE improvements, and offline handling.
 - Test Coverage Improvements: Added 142 new tests across frontend and backend, achieving high coverage for critical reliability features.
 - Sentry Observability Documentation: Documented environment variables and setup for Sentry in backend, frontend, and technical context.
+
+### Landing Page Redesign (2026-01-29) - NEW
+
+Full redesign of `frontend/app/page.tsx` to marketing-ready, utilitarian luxury standard for non-technical audience (theology/philosophy researchers, religious studies scholars).
+
+**Design Principles Applied:**
+- **Utilitarian luxury** (Linear/Vercel/Raycast style): restraint, whitespace, precision over persuasion
+- **Non-technical language**: No "semantic search", "multi-agent analysis", "vector dimensions"
+- **Neutrality**: No mezhep/denomination affiliation — every agent presents the text itself
+- **Centered symmetry**: All card content, icons, text centered and height-aligned
+
+**Sections Added:**
+- **Multi-Agent Analysis Showcase** — 4 color-coded specialist agent cards (emerald/amber/sky/purple) + convergence visual + Synthesis Agent card with output tags
+- **CTA Section** — Linear-style radial glow, gradient headline ("Start exploring sacred texts"), button with blur glow shadow, no card container
+
+**Sections Redesigned:**
+- **Features ("Why Clarus")** — Rewritten for humanities audience: "Understands What You Mean", "Every Scripture at Once", "Traceable to the Source" with tech footnotes at bottom
+- **How It Works ("From Question to Insight")** — Steps renamed Ask→Enrich→Discover→Understand, all descriptions non-technical, centered card content
+- **Hero** — Logo reduced 180→110px, bounce animation removed (restraint), subheadline rewritten to remove jargon
+- **Footer** — Stripped from 4-column heavy (stats cards, trust badges, scripture sources) to minimal 2-row: logo+nav → copyright
+
+**Sections Removed (redundant):**
+- "What's Inside" Sources section (same data as agent cards)
+- Stats Bar (43,055 / 4 / 5 — already communicated elsewhere)
+- "Running in parallel" animated badge (dev monitoring aesthetic)
+
+**Agent Card Text (Neutrality):**
+- "Islamic Scholar" → "Quran Specialist"
+- "classical Islamic tafsir tradition" → "the Quran's own words on any topic"
+- "Judeo-Christian exegetical lens" → "the scripture in its own voice"
+- "Christological perspective" → "the text as it was written"
+
+**Cleanup:**
+- Removed unused imports: `Zap`, `GlowCard`, `Database`
+- Removed unused `sources` data array
+- All builds pass clean
+
+**File Modified:** `frontend/app/page.tsx` (single file, ~940 lines → ~850 lines)
 
 ### Advanced Logging System (2026-01-28) - NEW
 
