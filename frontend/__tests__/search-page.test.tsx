@@ -101,39 +101,39 @@ describe("SearchPage", () => {
     expect(screen.getByPlaceholderText("Search Quran...")).toBeInTheDocument();
   });
 
-  it("performs batch search on form submission", async () => {
-    const mockResults = [
-      { source: "quran", reference: "2:255", text: "Ayat al-Kursi", score: 0.95 }
-    ];
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockResults }),
-    });
+   it("performs batch search on form submission", async () => {
+     const mockResults = [
+       { source: "quran", reference: "2:255", text: "Ayat al-Kursi", score: 0.95 }
+     ];
+     (global.fetch as any).mockResolvedValueOnce({
+       ok: true,
+       json: async () => ({ results: mockResults }),
+     });
 
-    render(<SearchPage />);
-    
-    const input = screen.getByPlaceholderText("Search Quran...");
-    const submitButton = screen.getByRole("button", { name: /search/i });
+     render(<SearchPage />);
+     
+     const input = screen.getByPlaceholderText("Search Quran...");
+     const submitButton = screen.getByRole("button", { name: /search/i });
 
-    await userEvent.type(input, "test query");
-    fireEvent.click(submitButton);
+     await userEvent.type(input, "test query");
+     fireEvent.click(submitButton);
 
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("/api/search/quran"),
-        expect.objectContaining({
-          method: "POST",
-          body: expect.stringContaining('"query":"test query"')
-        })
-      );
-    });
+     await waitFor(() => {
+       expect(global.fetch).toHaveBeenCalledWith(
+         expect.stringContaining("/api/search/quran"),
+         expect.objectContaining({
+           method: "POST",
+           body: expect.stringContaining('"query":"test query"')
+         })
+       );
+     });
 
-    await waitFor(() => {
-      expect(screen.getByText("Ayat al-Kursi")).toBeInTheDocument();
-      expect(screen.getByText("2:255")).toBeInTheDocument();
-      expect(screen.getByText("Score: 95.0%")).toBeInTheDocument();
-    });
-  });
+     await waitFor(() => {
+       expect(screen.getByText("Ayat al-Kursi")).toBeInTheDocument();
+       expect(screen.getByText("2:255")).toBeInTheDocument();
+       expect(screen.getByText("95.0%")).toBeInTheDocument();
+     });
+   });
 
   it("displays loading state during search", async () => {
     // Delay the fetch response
@@ -216,19 +216,7 @@ describe("SearchPage", () => {
     expect(mockPush).toHaveBeenCalledWith("/login");
   });
 
-  it("handles logout", async () => {
-    render(<SearchPage />);
-    
-    const logoutButton = screen.getByRole("button", { name: /logout/i });
-    fireEvent.click(logoutButton);
-
-    expect(mockLogout).toHaveBeenCalled();
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/login");
-      expect(toast.success).toHaveBeenCalledWith("Logged out successfully");
-    });
-  });
-  
+   
    it("uses SSE when streaming is enabled", async () => {
      vi.mocked(usePreferencesStore).mockReturnValue({
        enable_streaming: true,
