@@ -28,6 +28,7 @@ from app.models import User, SearchHistory
 from app.api.auth import get_current_user, check_rate_limit
 from src.comparative_rag import ComparativeRAG
 from src.search import SearchResult, BibleSearchResult
+from src.citation_sanitizer import sanitize_citations
 
 
 router = APIRouter()
@@ -200,6 +201,23 @@ async def compare_scriptures(
             apocrypha_verses=search_result.apocrypha,
         )
 
+        # Sanitize agent output (defense-in-depth against malformed citations)
+        result.old_testament_commentary = sanitize_citations(
+            result.old_testament_commentary
+        )
+        result.new_testament_commentary = sanitize_citations(
+            result.new_testament_commentary
+        )
+        result.apocrypha_commentary = sanitize_citations(result.apocrypha_commentary)
+        result.quran_commentary = sanitize_citations(result.quran_commentary)
+        result.synthesis = sanitize_citations(result.synthesis)
+
+        # Sanitize citations dict values
+        for source_key, citation_list in result.citations.items():
+            result.citations[source_key] = [
+                sanitize_citations(c) for c in citation_list
+            ]
+
         # Build structured paragraphs from MultiAgentAnswer
         paragraphs = []
 
@@ -289,6 +307,18 @@ async def compare_scriptures(
     else:
         # Single essay mode (ComparativeAnswer)
         result = rag.compare(request.topic)
+
+        # Sanitize essay output
+        result.essay = sanitize_citations(result.essay)
+
+        # Sanitize references
+        result.quran_references = [
+            sanitize_citations(r) for r in result.quran_references
+        ]
+        result.bible_references = [
+            sanitize_citations(r) for r in result.bible_references
+        ]
+        result.all_references = [sanitize_citations(r) for r in result.all_references]
 
         latency_ms = int((time_module.perf_counter() - start_time) * 1000)
 
