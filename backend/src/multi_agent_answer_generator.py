@@ -167,8 +167,7 @@ class BaseSpecialistAgent:
         wait=wait_exponential(multiplier=2, min=2, max=60),
         retry=retry_if_exception_type(requests.exceptions.RequestException),
         before_sleep=lambda rs: logger.info(
-            "Retrying LLM call",
-            extra={"attempt": rs.attempt_number, "max_attempts": 5}
+            "Retrying LLM call", extra={"attempt": rs.attempt_number, "max_attempts": 5}
         ),
     )
     def _call_llm(self, messages: List[Dict], max_tokens: int = 1000) -> dict:
@@ -221,7 +220,7 @@ class BaseSpecialistAgent:
                 # Circuit breaker open - fail fast, do NOT retry
                 logger.warning(
                     "Circuit breaker OPEN for LLM - multi-agent generation failed",
-                    extra={"model": self.MODEL}
+                    extra={"model": self.MODEL},
                 )
                 span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {"commentary": "", "citations": [], "confidence": 0.0}
@@ -230,12 +229,17 @@ class BaseSpecialistAgent:
                 raise
             except (json.JSONDecodeError, KeyError, ValueError) as e:
                 # Parse errors - don't retry
-                logger.error("Response parsing failed", extra={"error": str(e), "model": self.MODEL})
+                logger.error(
+                    "Response parsing failed",
+                    extra={"error": str(e), "model": self.MODEL},
+                )
                 span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {"commentary": "", "citations": [], "confidence": 0.0}
             except Exception as e:
                 # Other errors - don't retry
-                logger.error("LLM call failed", extra={"error": str(e), "model": self.MODEL})
+                logger.error(
+                    "LLM call failed", extra={"error": str(e), "model": self.MODEL}
+                )
                 span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {"commentary": "", "citations": [], "confidence": 0.0}
 
@@ -243,7 +247,7 @@ class BaseSpecialistAgent:
 class OldTestamentAgent(BaseSpecialistAgent):
     """Specialist agent for Old Testament (Eski Ahit) interpretation"""
 
-     SYSTEM_PROMPT = """Sen uzman bir Eski Ahit (Tevrat/Zebur) alimi ve tefsircisisin.
+    SYSTEM_PROMPT = """Sen uzman bir Eski Ahit (Tevrat/Zebur) alimi ve tefsircisisin.
 Görevin: Kullanıcının sorusunu, sana verilen Eski Ahit ayetlerine dayanarak yorumlamak.
 
 KRİTİK KURALLAR:
@@ -284,7 +288,7 @@ ATIF FORMAT KURALLARI:
 class NewTestamentAgent(BaseSpecialistAgent):
     """Specialist agent for New Testament (Yeni Ahit) interpretation"""
 
-     SYSTEM_PROMPT = """Sen uzman bir Yeni Ahit (İncil) alimi ve tefsircisisin.
+    SYSTEM_PROMPT = """Sen uzman bir Yeni Ahit (İncil) alimi ve tefsircisisin.
 Görevin: Kullanıcının sorusunu, sana verilen Yeni Ahit ayetlerine dayanarak yorumlamak.
 
 KRİTİK KURALLAR:
@@ -325,7 +329,7 @@ ATIF FORMAT KURALLARI:
 class ApocryphaAgent(BaseSpecialistAgent):
     """Specialist agent for Apocryphal/Deuterocanonical texts interpretation"""
 
-     SYSTEM_PROMPT = """Sen uzman bir Apokrifa (Deuterokanonik kitaplar) alimi ve tefsircisisin.
+    SYSTEM_PROMPT = """Sen uzman bir Apokrifa (Deuterokanonik kitaplar) alimi ve tefsircisisin.
 Görevin: Kullanıcının sorusunu, sana verilen Apokrifa ayetlerine dayanarak yorumlamak.
 
 Bu kitaplar şunları içerir: Tobit, Judith, 1-2 Maccabees, Wisdom of Solomon, Sirach (Ecclesiasticus), Baruch, vb.
@@ -368,7 +372,7 @@ ATIF FORMAT KURALLARI:
 class QuranAgent(BaseSpecialistAgent):
     """Specialist agent for Quran interpretation (İslami tefsir)"""
 
-     SYSTEM_PROMPT = """Sen uzman bir İslam Alimi ve Kuran tefsircisisin.
+    SYSTEM_PROMPT = """Sen uzman bir İslam Alimi ve Kuran tefsircisisin.
 Görevin: Kullanıcının sorusunu, sana verilen Kuran ayetlerine dayanarak yorumlamak.
 
 KRİTİK KURALLAR:
@@ -545,8 +549,8 @@ class MultiAgentOrchestrator:
                 "ot_verses": len(ot_verses),
                 "nt_verses": len(nt_verses),
                 "apocrypha_verses": len(apocrypha_verses),
-                "quran_verses": len(quran_verses)
-            }
+                "quran_verses": len(quran_verses),
+            },
         )
         start_time = time.perf_counter()
 
@@ -619,11 +623,13 @@ class MultiAgentOrchestrator:
 
         parallel_latency_ms = (time.perf_counter() - parallel_start) * 1000
         log_performance(
-            logger, "parallel_agents", parallel_latency_ms,
+            logger,
+            "parallel_agents",
+            parallel_latency_ms,
             ot_len=len(ot_commentary),
             nt_len=len(nt_commentary),
             apoc_len=len(apoc_commentary),
-            quran_len=len(quran_commentary)
+            quran_len=len(quran_commentary),
         )
 
         # Step 2: Run summary agent
@@ -639,7 +645,9 @@ class MultiAgentOrchestrator:
 
         synthesis = summary_result.get("synthesis", "")
         summary_latency_ms = (time.perf_counter() - summary_start) * 1000
-        log_performance(logger, "summary_agent", summary_latency_ms, synthesis_len=len(synthesis))
+        log_performance(
+            logger, "summary_agent", summary_latency_ms, synthesis_len=len(synthesis)
+        )
 
         # Calculate average confidence
         confidences = [
@@ -659,12 +667,14 @@ class MultiAgentOrchestrator:
 
         total_latency_ms = (time.perf_counter() - start_time) * 1000
         log_performance(
-            logger, "multi_agent_generation", total_latency_ms,
+            logger,
+            "multi_agent_generation",
+            total_latency_ms,
             confidence=avg_confidence,
             ot_citations=len(ot_result.get("citations", [])),
             nt_citations=len(nt_result.get("citations", [])),
             apoc_citations=len(apoc_result.get("citations", [])),
-            quran_citations=len(quran_result.get("citations", []))
+            quran_citations=len(quran_result.get("citations", [])),
         )
 
         return MultiAgentAnswer(

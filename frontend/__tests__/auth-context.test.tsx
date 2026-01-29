@@ -123,8 +123,8 @@ describe('checkAuth and backendStatus', () => {
     // The actual value changes immediately in useEffect, but the type is correct
     const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
     
-    // After checkAuth runs, it should be either 'online' or 'offline', never stay 'unknown'
-    expect(['online', 'offline']).toContain(result.current.backendStatus);
+    // After checkAuth runs: 'online'/'offline' if token exists, 'unknown' if no token (no backend check)
+    expect(['online', 'offline', 'unknown']).toContain(result.current.backendStatus);
   });
 
   it('should set backendStatus to online on successful auth check', async () => {
@@ -147,11 +147,12 @@ describe('checkAuth and backendStatus', () => {
     });
   });
 
-  it('should set backendStatus to online when no token exists', async () => {
+  it('should set backendStatus to unknown when no token exists', async () => {
+    // No token = no fetch attempt = can't determine backend status
     const { result } = renderHook(() => useAuth(), { wrapper: AuthProvider });
 
     await waitFor(() => {
-      expect(result.current.backendStatus).toBe('online');
+      expect(result.current.backendStatus).toBe('unknown');
     });
   });
 

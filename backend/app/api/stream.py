@@ -29,6 +29,7 @@ from app.db import get_db
 from app.models import User, SearchHistory
 from app.api.auth import get_current_user, get_current_user_from_token, check_rate_limit
 from app.api.compare_helpers import build_verse_details, build_paragraphs
+from app.api.compare import extract_quran_verse_detail, extract_bible_verse_detail
 from src.ultimate_rag import UltimateRAG
 from src.comparative_rag import ComparativeRAG
 

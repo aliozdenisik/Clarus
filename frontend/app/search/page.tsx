@@ -15,7 +15,7 @@ import { useSSE } from "@/lib/hooks/use-sse";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { parseCitations, CitationPart } from "@/lib/utils/parse-citations";
 import { InlineCitation } from "@/components/compare/inline-citation";
-import { VerseTooltip, VerseDetail } from "@/components/search/verse-tooltip";
+import { VerseDetail } from "@/components/search/verse-tooltip";
 import { SourceBadge, SourceType } from "@/components/compare/source-badge";
 import { useLogger } from "@/lib/logger";
 
@@ -389,33 +389,14 @@ function SearchContent() {
                       }
 
                       const verse = verseDetails[part.reference];
-                      if (!verse) {
-                        return (
-                          <span
-                            key={i}
-                            className="text-[var(--color-text-muted)]"
-                          >
-                            {part.reference}
-                          </span>
-                        );
-                      }
 
                       return (
-                        <VerseTooltip
+                        <InlineCitation
                           key={i}
                           reference={part.reference}
                           verseDetail={verse}
                           onNavigate={navigateToVerse}
-                          isOpen={openPopover === part.reference}
-                          onOpenChange={(open) => {
-                            setOpenPopover(open ? part.reference : null);
-                          }}
-                        >
-                          <InlineCitation
-                            reference={part.reference}
-                            onClick={() => navigateToVerse(part.reference)}
-                          />
-                        </VerseTooltip>
+                        />
                       );
                     })}
                   </div>
