@@ -64,6 +64,44 @@ function getSearchTypeLabel(searchType: string): string {
   return SEARCH_TYPE_LABELS[searchType] || "Search";
 }
 
+function getHistoryItemUrl(item: HistoryItem): string {
+  const encodedQuery = encodeURIComponent(item.query);
+  
+  switch (item.search_type) {
+    // Quran search
+    case "search_quran":
+    case "stream_search_quran":
+      return `/search?source=quran&q=${encodedQuery}`;
+    
+    // Bible search (all / OT)
+    case "search_bible_all":
+    case "stream_search_bible":
+    case "search_bible_ot":
+    case "stream_search_ot":
+      return `/search?source=ot&q=${encodedQuery}`;
+    
+    // Bible NT
+    case "search_bible_nt":
+    case "stream_search_nt":
+      return `/search?source=nt&q=${encodedQuery}`;
+    
+    // Bible Apocrypha
+    case "search_bible_apocrypha":
+    case "stream_search_apocrypha":
+      return `/search?source=apocrypha&q=${encodedQuery}`;
+    
+    // Compare
+    case "compare":
+    case "compare_multi_agent":
+    case "stream_compare":
+      return `/compare?q=${encodedQuery}`;
+    
+    // Fallback for unknown types
+    default:
+      return `/search?q=${encodedQuery}`;
+  }
+}
+
 export default function HistoryPage() {
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [pagination, setPagination] = useState<PaginationData | null>(null);
@@ -169,6 +207,10 @@ export default function HistoryPage() {
     }
   };
 
+  const handleHistoryClick = (item: HistoryItem) => {
+    router.push(getHistoryItemUrl(item));
+  };
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
@@ -271,15 +313,17 @@ export default function HistoryPage() {
         ) : (
           <div className="space-y-4">
             <AnimatePresence mode="popLayout">
-              {items.map((item, i) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ ...springPresets.snappy, delay: i * 0.05 }}
-                  layout
-                >
+               {items.map((item, i) => (
+                 <motion.div
+                   key={item.id}
+                   initial={{ opacity: 0, y: 20 }}
+                   animate={{ opacity: 1, y: 0 }}
+                   exit={{ opacity: 0, scale: 0.95 }}
+                   transition={{ ...springPresets.snappy, delay: i * 0.05 }}
+                   layout
+                   onClick={() => handleHistoryClick(item)}
+                   className="cursor-pointer"
+                 >
                   <GlowCard className="group relative overflow-hidden">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
@@ -303,13 +347,16 @@ export default function HistoryPage() {
                           </p>
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(item.id)}
-                        className="opacity-0 transition-opacity group-hover:opacity-100 text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-500/10"
-                        aria-label="Delete item"
-                      >
+                       <Button
+                         variant="ghost"
+                         size="icon"
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           handleDelete(item.id);
+                         }}
+                         className="opacity-0 transition-opacity group-hover:opacity-100 text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-500/10"
+                         aria-label="Delete item"
+                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
