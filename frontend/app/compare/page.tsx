@@ -591,19 +591,13 @@ function CompareContent() {
                                   }
                                   
                                   const verse = result.verse_details?.[part.reference];
-                                  if (!verse) {
-                                    return (
-                                      <span key={i} className="text-[var(--color-text-muted)]">
-                                        [{part.reference}]
-                                      </span>
-                                    );
-                                  }
                                   
                                   return (
                                     <InlineCitation
                                       key={i}
                                       reference={part.reference}
-                                      onClick={() => navigateToVerse(part.reference)}
+                                      verseDetail={verse}
+                                      onNavigate={navigateToVerse}
                                     />
                                   );
                                 })}
