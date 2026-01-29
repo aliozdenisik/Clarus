@@ -1,8 +1,9 @@
 # Core dependencies
 # SECURITY: CVE-2026-0994 - protobuf DoS via json_format.ParseDict()
-# Status: No patch available (affects <=6.33.4)
+# Status: No patch available (affects <=6.33.4, latest=6.33.4 still vulnerable)
 # Risk: LOW - Not exploitable (protobuf used only for internal gRPC/ONNX, no user-controlled JSON parsing)
 # Track: https://github.com/protocolbuffers/protobuf/pull/25239
+# SECURITY: ecdsa Minerva timing attack (CVE pending) - no patch, risk LOW (PyJWT transitive dep, not directly used)
 qdrant-client>=1.7.0
 grpcio>=1.59.0
 fastembed>=0.2.0
