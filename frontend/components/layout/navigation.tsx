@@ -59,8 +59,15 @@ export default function Navigation() {
                 <DropdownMenuItem asChild>
                   <Link href="/search">Quran Search</Link>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/search?source=bible">Bible Search</Link>
+                  <Link href="/search?source=ot">Old Testament Search</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/search?source=nt">New Testament Search</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/search?source=apocrypha">Apocrypha Search</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -190,11 +197,25 @@ export default function Navigation() {
                   Quran Search
                 </Link>
                 <Link
-                  href="/search?source=bible"
+                  href="/search?source=ot"
                   className="block px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white rounded-md"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Bible Search
+                  Old Testament Search
+                </Link>
+                <Link
+                  href="/search?source=nt"
+                  className="block px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  New Testament Search
+                </Link>
+                <Link
+                  href="/search?source=apocrypha"
+                  className="block px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white rounded-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Apocrypha Search
                 </Link>
               </div>
 
