@@ -50,6 +50,8 @@
 - [x] Input validation & XSS prevention
 - [x] Compare API with rich response schema
 - [x] **SSE streaming format fix** (structured paragraphs + stats)
+- [x] Citation sanitizer for LLM output normalization
+- [x] Strengthened LLM prompts against double-bracket drift
 
 ### Frontend (Next.js 15)
 
@@ -80,6 +82,9 @@
 - [x] Turkish translation display below Arabic verses
 - [x] History re-run search (RFC-001) — clickable history cards, auto-search/compare via URL params
 - [x] Pre-existing test fixes — score assertion + removed obsolete logout test
+- [x] Citation system overhaul — defense-in-depth: backend sanitizer + rewritten parser + Radix HoverCard (Issue #16)
+- [x] HoverCard verse preview on citation hover
+- [x] 35 citation parser unit tests (comprehensive coverage)
 
 ### CLI Commands
 
@@ -167,6 +172,7 @@
 4. **SSE 30s gap**: During multi-agent generation, no heartbeats (partial mitigation via reconnection)
 5. **Circuit breaker silent degradation**: Returns empty results instead of error (intentional for UX)
 6. ~~**SSE streaming format mismatch**: Compare page essay not displayed~~ → **FIXED** (2026-01-28)
+7. ~~**New Testament Citation Bug**: Backend agent generates citations with incorrect double brackets~~ → **FIXED** (2026-01-29, Issue #16 — citation system overhaul)
 
 ## Technical Debt (GitHub Issues)
 
