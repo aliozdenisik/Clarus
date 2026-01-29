@@ -1,8 +1,21 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
+
+// Mock SDK BEFORE imports
+vi.mock('@/lib/api/sdk.gen', () => ({
+  getSearchHistoryApiSearchHistoryGet: vi.fn(),
+  deleteHistoryItemApiSearchHistoryHistoryIdDelete: vi.fn(),
+  clearHistoryApiSearchHistoryDelete: vi.fn(),
+}));
+
 import HistoryPage from "../app/history/page";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useRouter } from "next/navigation";
+import {
+  getSearchHistoryApiSearchHistoryGet,
+  deleteHistoryItemApiSearchHistoryHistoryIdDelete,
+  clearHistoryApiSearchHistoryDelete,
+} from '@/lib/api/sdk.gen';
 
 // Mock hooks
 vi.mock("@/lib/auth/auth-context", () => ({
@@ -48,20 +61,8 @@ vi.mock("framer-motion", () => ({
 }));
 
 const mockHistoryItems = [
-  {
-    id: 1,
-    query: "test query 1",
-    search_type: "quran",
-    created_at: "2024-01-20T10:00:00Z",
-    result_count: 5,
-  },
-  {
-    id: 2,
-    query: "test query 2",
-    search_type: "bible",
-    created_at: "2024-01-21T11:00:00Z",
-    result_count: 10,
-  },
+  { id: 1, query: "test query 1", search_type: "search_quran", created_at: "2024-01-20T10:00:00Z", result_count: 5 },
+  { id: 2, query: "test query 2", search_type: "search_bible_ot", created_at: "2024-01-21T11:00:00Z", result_count: 10 },
 ];
 
 describe("HistoryPage", () => {
@@ -70,22 +71,38 @@ describe("HistoryPage", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useRouter as any).mockReturnValue({ push: mockPush });
-    (useAuth as any).mockReturnValue({
+    (useRouter as ReturnType<typeof vi.fn>).mockReturnValue({ push: mockPush });
+    (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
       user: mockUser,
       isLoading: false,
       logout: vi.fn(),
     });
-    
-    // Mock global fetch
-    global.fetch = vi.fn();
-    
+
     // Mock window.confirm
     window.confirm = vi.fn(() => true);
+
+    // DEFAULT mock: successful history fetch
+    (getSearchHistoryApiSearchHistoryGet as ReturnType<typeof vi.fn>).mockResolvedValue({
+      data: {
+        success: true,
+        data: mockHistoryItems,
+        pagination: { page: 1, limit: 20, total_items: 2, total_pages: 1, has_next: false, has_prev: false },
+      },
+    });
+
+    // DEFAULT: delete succeeds
+    (deleteHistoryItemApiSearchHistoryHistoryIdDelete as ReturnType<typeof vi.fn>).mockResolvedValue({
+      data: { success: true },
+    });
+
+    // DEFAULT: clear all succeeds
+    (clearHistoryApiSearchHistoryDelete as ReturnType<typeof vi.fn>).mockResolvedValue({
+      data: { success: true },
+    });
   });
 
   it("redirects to login if user is not authenticated", () => {
-    (useAuth as any).mockReturnValue({
+    (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
       user: null,
       isLoading: false,
       logout: vi.fn(),
@@ -96,7 +113,7 @@ describe("HistoryPage", () => {
   });
 
   it("shows loading state initially", () => {
-    (useAuth as any).mockReturnValue({
+    (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
       user: mockUser,
       isLoading: true,
       logout: vi.fn(),
@@ -107,17 +124,6 @@ describe("HistoryPage", () => {
   });
 
   it("fetches and displays history items", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        items: mockHistoryItems,
-        total: 2,
-        page: 1,
-        per_page: 20,
-        pages: 1,
-      }),
-    });
-
     render(<HistoryPage />);
 
     expect(screen.getByText("Loading history...")).toBeInTheDocument();
@@ -127,32 +133,28 @@ describe("HistoryPage", () => {
       expect(screen.getByText("test query 2")).toBeInTheDocument();
     });
 
+    // search_type labels from SEARCH_TYPE_LABELS map
     expect(screen.getByText("Quran")).toBeInTheDocument();
-    expect(screen.getByText("Bible")).toBeInTheDocument();
+    expect(screen.getByText("Old Testament")).toBeInTheDocument();
     expect(screen.getByText("5 results")).toBeInTheDocument();
   });
 
   it("handles pagination", async () => {
-    (global.fetch as any)
+    // First call: page 1 with pagination
+    (getSearchHistoryApiSearchHistoryGet as ReturnType<typeof vi.fn>)
       .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          items: mockHistoryItems,
-          total: 30,
-          page: 1,
-          per_page: 20,
-          pages: 2,
-        }),
+        data: {
+          success: true,
+          data: mockHistoryItems,
+          pagination: { page: 1, limit: 20, total_items: 30, total_pages: 2, has_next: true, has_prev: false },
+        },
       })
       .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          items: [],
-          total: 30,
-          page: 2,
-          per_page: 20,
-          pages: 2,
-        }),
+        data: {
+          success: true,
+          data: [],
+          pagination: { page: 2, limit: 20, total_items: 30, total_pages: 2, has_next: false, has_prev: true },
+        },
       });
 
     render(<HistoryPage />);
@@ -165,30 +167,14 @@ describe("HistoryPage", () => {
     fireEvent.click(nextButton);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(2);
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("page=2"),
-        expect.anything()
+      expect(getSearchHistoryApiSearchHistoryGet).toHaveBeenCalledTimes(2);
+      expect(getSearchHistoryApiSearchHistoryGet).toHaveBeenCalledWith(
+        expect.objectContaining({ query: { page: 2, limit: 20 } })
       );
     });
   });
 
   it("deletes a history item", async () => {
-    (global.fetch as any)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          items: mockHistoryItems,
-          total: 2,
-          page: 1,
-          per_page: 20,
-          pages: 1,
-        }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-      });
-
     render(<HistoryPage />);
 
     await waitFor(() => {
@@ -199,31 +185,13 @@ describe("HistoryPage", () => {
     fireEvent.click(deleteButtons[0]);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/api/search/history/1",
-        expect.objectContaining({
-          method: "DELETE",
-        })
+      expect(deleteHistoryItemApiSearchHistoryHistoryIdDelete).toHaveBeenCalledWith(
+        expect.objectContaining({ path: { history_id: 1 } })
       );
     });
   });
 
   it("clears all history", async () => {
-    (global.fetch as any)
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          items: mockHistoryItems,
-          total: 2,
-          page: 1,
-          per_page: 20,
-          pages: 1,
-        }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-      });
-
     render(<HistoryPage />);
 
     await waitFor(() => {
@@ -233,25 +201,17 @@ describe("HistoryPage", () => {
     fireEvent.click(screen.getByText("Clear All"));
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/api/search/history",
-        expect.objectContaining({
-          method: "DELETE",
-        })
-      );
+      expect(clearHistoryApiSearchHistoryDelete).toHaveBeenCalled();
     });
   });
 
   it("displays empty state", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        items: [],
-        total: 0,
-        page: 1,
-        per_page: 20,
-        pages: 1,
-      }),
+    (getSearchHistoryApiSearchHistoryGet as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      data: {
+        success: true,
+        data: [],
+        pagination: { page: 1, limit: 20, total_items: 0, total_pages: 0, has_next: false, has_prev: false },
+      },
     });
 
     render(<HistoryPage />);
