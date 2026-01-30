@@ -18,6 +18,7 @@ import { InlineCitation } from "@/components/compare/inline-citation";
 import { VerseDetail } from "@/components/search/verse-tooltip";
 import { SourceBadge, SourceType } from "@/components/compare/source-badge";
 import { useLogger } from "@/lib/logger";
+import { LanguageSelector } from "@/components/search/language-selector";
 
 interface SearchResult {
   source: string;
@@ -35,6 +36,8 @@ function SearchContent() {
   const [verseDetails, setVerseDetails] = useState<Record<string, VerseDetail>>({});
   const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
   const [openPopover, setOpenPopover] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+  const [detectedLanguage, setDetectedLanguage] = useState<string | undefined>(undefined);
    const resultsContainerRef = useRef<HTMLDivElement>(null);
    const hasHandledSSEError = useRef(false);
    const hasAutoExecuted = useRef(false);
@@ -96,6 +99,10 @@ function SearchContent() {
         if (result.results.length === 0) {
           setStreamedAnswer("");
         }
+      }
+      const completeResult = completeMsg as any;
+      if (completeResult.result?.detected_language || completeResult.detected_language) {
+        setDetectedLanguage(completeResult.result?.detected_language || completeResult.detected_language);
       }
       setIsSearching(false);
     }
@@ -208,6 +215,9 @@ function SearchContent() {
 
        let url = "http://localhost:8000/api/search/quran";
        let body: any = { query: searchQuery, mode: "semantic", top_k: 10 };
+       if (selectedLanguage) {
+         body.language = selectedLanguage;
+       }
 
       if (activeTab !== "quran") {
         url = "http://localhost:8000/api/search/bible";
@@ -234,13 +244,17 @@ function SearchContent() {
         setVerseDetails(data.verse_details);
       }
 
+      if (data.detected_language) {
+        setDetectedLanguage(data.detected_language);
+      }
+
       toast.success(`Found ${data.results.length} results`);
     } catch (error) {
       toast.error("Search failed. Please try again.");
-    } finally {
-      setIsSearching(false);
-    }
-  }, [query, activeTab]);
+     } finally {
+       setIsSearching(false);
+     }
+   }, [query, activeTab, selectedLanguage]);
 
   useEffect(() => {
     if (sseError && !hasHandledSSEError.current) {
@@ -268,7 +282,10 @@ function SearchContent() {
          const baseUrl = "http://localhost:8000";
          const token = localStorage.getItem("access_token");
          if (token) {
-           const url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(q)}&source=${activeTab}&token=${encodeURIComponent(token)}`;
+           let url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(q)}&source=${activeTab}&token=${encodeURIComponent(token)}`;
+           if (selectedLanguage) {
+             url += `&language=${encodeURIComponent(selectedLanguage)}`;
+           }
            startStream(url);
          } else {
            performBatchSearch(q);
@@ -277,7 +294,7 @@ function SearchContent() {
          performBatchSearch(q);    // Pass q directly — state may not be updated yet
        }
      }
-   }, [searchParams, activeTab, enable_streaming, startStream, performBatchSearch]);
+   }, [searchParams, activeTab, enable_streaming, startStream, performBatchSearch, selectedLanguage]);
 
    const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -299,7 +316,10 @@ function SearchContent() {
         performBatchSearch();
         return;
       }
-      const url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}&token=${encodeURIComponent(token)}`;
+      let url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}&token=${encodeURIComponent(token)}`;
+      if (selectedLanguage) {
+        url += `&language=${encodeURIComponent(selectedLanguage)}`;
+      }
       startStream(url);
     } else {
       performBatchSearch();
@@ -342,24 +362,31 @@ function SearchContent() {
             <SearchTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
             <form onSubmit={handleSearch} className="relative mb-4">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[var(--color-text-muted)]" />
-                <input
-                  type="text"
-                  data-testid="search-input"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder={getPlaceholder()}
-                  className="w-full h-12 pl-12 pr-32 bg-[var(--color-bg-surface)] rounded-xl text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] border border-[var(--color-border-subtle)] focus:border-[var(--color-border-glow)] focus:outline-none transition-all duration-300 text-[15px]"
+              <div className="flex gap-2 items-center">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[var(--color-text-muted)]" />
+                  <input
+                    type="text"
+                    data-testid="search-input"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder={getPlaceholder()}
+                    className="w-full h-12 pl-12 pr-32 bg-[var(--color-bg-surface)] rounded-xl text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] border border-[var(--color-border-subtle)] focus:border-[var(--color-border-glow)] focus:outline-none transition-all duration-300 text-[15px]"
+                  />
+                  <Button
+                    type="submit"
+                    data-testid="search-submit-button"
+                    disabled={(isSearching && !isStreaming) || !query.trim()}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-[var(--color-accent-primary)] text-[#09090b] hover:bg-[var(--color-accent-hover)] font-medium rounded-lg px-5 h-8 text-sm tracking-wide disabled:opacity-40"
+                  >
+                    {isSearching || isStreaming ? "Searching..." : "Search"}
+                  </Button>
+                </div>
+                <LanguageSelector
+                  value={selectedLanguage}
+                  onChange={setSelectedLanguage}
+                  detectedLanguage={detectedLanguage}
                 />
-                <Button
-                  type="submit"
-                  data-testid="search-submit-button"
-                  disabled={(isSearching && !isStreaming) || !query.trim()}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-[var(--color-accent-primary)] text-[#09090b] hover:bg-[var(--color-accent-hover)] font-medium rounded-lg px-5 h-8 text-sm tracking-wide disabled:opacity-40"
-                >
-                  {isSearching || isStreaming ? "Searching..." : "Search"}
-                </Button>
               </div>
             </form>
           </motion.div>
