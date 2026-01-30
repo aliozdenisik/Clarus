@@ -24,6 +24,8 @@ from dataclasses import dataclass, field
 from concurrent.futures import ThreadPoolExecutor
 
 from src.circuit_breaker import CircuitBreakerError
+from src.query_translator import QueryTranslator, TranslationResult, TranslationError
+from src.query_translator import CORPUS_LANGUAGES
 from app.logging_config import get_logger, log_performance, set_extra_context
 
 logger = get_logger(__name__)
@@ -91,6 +93,7 @@ class UltimateRAG:
 
         # Lazy load components
         self._enhancer = None
+        self._translator = None
         self._llm_cache = None
         self._answer_generator = None
         self._searchers = {}
@@ -108,6 +111,14 @@ class UltimateRAG:
             self._enhancer = QueryEnhancer()
             logger.debug("Loaded QueryEnhancer")
         return self._enhancer
+
+    @property
+    def translator(self):
+        """Lazy load Query Translator"""
+        if self._translator is None:
+            self._translator = QueryTranslator()
+            logger.debug("Loaded QueryTranslator")
+        return self._translator
 
     @property
     def llm_cache(self):
@@ -618,7 +629,9 @@ class UltimateRAG:
 
         return final_results
 
-    def search_quran(self, query: str, top_k: int = None) -> List:
+    def search_quran(
+        self, query: str, top_k: int = None, detected_language: Optional[str] = None
+    ) -> List:
         """Shortcut for Quran search"""
         import sentry_sdk
 
@@ -626,6 +639,30 @@ class UltimateRAG:
             op="rag.pipeline.quran", description="Quran search pipeline"
         ) as span:
             span.set_data("query", query[:50])  # Truncate for privacy
+
+            # Translate query to Turkish if needed (Quran corpus is Turkish)
+            if detected_language is None:
+                try:
+                    result = self.translator.translate_query(query, "quran")
+                    detected_language = result.detected_language
+                    if result.was_translated:
+                        query = result.translated_query
+                        logger.info(
+                            "Query translated for Quran search",
+                            extra={
+                                "from": result.detected_language,
+                                "to": CORPUS_LANGUAGES.get("quran", "tr"),
+                                "original": query[:50],
+                                "translated": result.translated_query[:50],
+                            },
+                        )
+                except TranslationError as e:
+                    logger.error(
+                        "Translation failed for Quran search",
+                        extra={"error": str(e)},
+                    )
+                    raise
+
             return self.search(query, source="quran_tr", top_k=top_k)
 
     def _search_all_bible_collections(
@@ -730,11 +767,12 @@ class UltimateRAG:
         translation: str = "kjva",
         testament: str = None,
         top_k: int = None,
+        detected_language: Optional[str] = None,
     ) -> List:
         """
         Shortcut for Bible search.
 
-        For English translations (kjva, kjv), automatically translates Turkish queries to English
+        Automatically translates non-English queries to English using QueryTranslator
         and uses the translated query for reranking to ensure proper cross-lingual matching.
 
         If testament is specified (e.g., "ot", "nt", "apocrypha"), searches only that collection.
@@ -744,20 +782,29 @@ class UltimateRAG:
         original_query = query
         translated_query = None
 
-        # For English Bible translations, translate Turkish query to English
-        if translation in ("kjva", "kjv"):
+        # Translate query to English for Bible search
+        if detected_language is None:
             try:
-                # Use expand_query with corpus="bible" to translate Turkish to English
-                translated_query = self.enhancer.expand_query(query, corpus="bible")
-                logger.debug(
-                    "Query translated for Bible search",
-                    extra={"original": query[:50], "translated": translated_query[:50]},
+                result = self.translator.translate_query(query, "bible")
+                detected_language = result.detected_language
+                if result.was_translated:
+                    translated_query = result.translated_query
+                    query = translated_query
+                    logger.info(
+                        "Query translated for Bible search",
+                        extra={
+                            "from": result.detected_language,
+                            "to": CORPUS_LANGUAGES.get("bible", "en"),
+                            "original": original_query[:50],
+                            "translated": result.translated_query[:50],
+                        },
+                    )
+            except TranslationError as e:
+                logger.error(
+                    "Translation failed for Bible search",
+                    extra={"error": str(e)},
                 )
-                query = translated_query
-            except Exception as e:
-                logger.warning(
-                    "Translation failed for Bible search", extra={"error": str(e)}
-                )
+                raise
 
         # If testament is specified, search only that collection
         if testament:
@@ -839,8 +886,33 @@ class UltimateRAG:
 
         return answer
 
-    def ask_quran(self, query: str, top_k: int = None):
+    def ask_quran(
+        self, query: str, top_k: int = None, detected_language: Optional[str] = None
+    ):
         """Shortcut for Quran Q&A - Turkish in, Turkish out"""
+        # Translate query to Turkish if needed (Quran corpus is Turkish)
+        if detected_language is None:
+            try:
+                result = self.translator.translate_query(query, "quran")
+                detected_language = result.detected_language
+                if result.was_translated:
+                    query = result.translated_query
+                    logger.info(
+                        "Query translated for Quran Q&A",
+                        extra={
+                            "from": result.detected_language,
+                            "to": CORPUS_LANGUAGES.get("quran", "tr"),
+                            "original": query[:50],
+                            "translated": result.translated_query[:50],
+                        },
+                    )
+            except TranslationError as e:
+                logger.error(
+                    "Translation failed for Quran Q&A",
+                    extra={"error": str(e)},
+                )
+                raise
+
         return self.ask(query, source="quran_tr", top_k=top_k)
 
     def ask_bible(
@@ -849,25 +921,35 @@ class UltimateRAG:
         translation: str = "kjva",
         testament: str = None,
         top_k: int = None,
+        detected_language: Optional[str] = None,
     ):
         """
         Shortcut for Bible Q&A.
 
-        Turkish query → English search → Turkish answer with English citations.
+        Non-English query → English search → answer with English citations.
         """
-        # For English Bible translations, translate Turkish query to English
-        if translation in ("kjva", "kjv"):
+        # Translate query to English for Bible search
+        if detected_language is None:
             try:
-                translated_query = self.enhancer.translate_for_bible(query)
-                logger.debug(
-                    "Query translated for Bible Q&A",
-                    extra={"original": query[:50], "translated": translated_query[:50]},
+                result = self.translator.translate_query(query, "bible")
+                detected_language = result.detected_language
+                if result.was_translated:
+                    query = result.translated_query
+                    logger.info(
+                        "Query translated for Bible Q&A",
+                        extra={
+                            "from": result.detected_language,
+                            "to": CORPUS_LANGUAGES.get("bible", "en"),
+                            "original": query[:50],
+                            "translated": result.translated_query[:50],
+                        },
+                    )
+            except TranslationError as e:
+                logger.error(
+                    "Translation failed for Bible Q&A",
+                    extra={"error": str(e)},
                 )
-                query = translated_query
-            except Exception as e:
-                logger.warning(
-                    "Translation failed for Bible Q&A", extra={"error": str(e)}
-                )
+                raise
 
         source = f"bible_{testament}" if testament else f"bible_{translation}"
         return self.ask(query, source=source, top_k=top_k)

@@ -8,6 +8,7 @@ Supports strictly separated modes for Bible (English/KJV) and Quran (Turkish).
 
 import os
 import json
+import warnings
 import requests
 import time
 import sentry_sdk
@@ -268,7 +269,7 @@ Adım 3: JSON formatında ver.
         """
         logger.info(
             "Query expansion started",
-            extra={"corpus": corpus, "original_query": query[:50]}
+            extra={"corpus": corpus, "original_query": query[:50]},
         )
 
         if corpus == "quran":
@@ -314,7 +315,7 @@ Adım 3: JSON formatında ver.
 
         logger.info(
             "Query expansion completed",
-            extra={"corpus": corpus, "expanded_query": final_query[:80]}
+            extra={"corpus": corpus, "expanded_query": final_query[:80]},
         )
         return final_query
 
@@ -324,7 +325,7 @@ Adım 3: JSON formatında ver.
         """Generate multiple query perspectives based on corpus."""
         logger.info(
             "Multi-query generation started",
-            extra={"corpus": corpus, "n": n, "original_query": query[:50]}
+            extra={"corpus": corpus, "n": n, "original_query": query[:50]},
         )
 
         if corpus == "quran":
@@ -352,7 +353,11 @@ Adım 3: JSON formatında ver.
 
         logger.info(
             "Multi-query generation completed",
-            extra={"corpus": corpus, "query_count": len(queries), "queries": queries[:3]}
+            extra={
+                "corpus": corpus,
+                "query_count": len(queries),
+                "queries": queries[:3],
+            },
         )
         return queries
 
@@ -362,7 +367,15 @@ Adım 3: JSON formatında ver.
 
         Bible (KJV) is in English, so Turkish queries must be translated
         to get accurate search results.
+
+        .. deprecated::
+            Use :class:`QueryTranslator.translate_query()` instead.
         """
+        warnings.warn(
+            "translate_for_bible() is deprecated. Use QueryTranslator.translate_query() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         system_prompt = """You are a translation expert specializing in Biblical terminology.
 Your task: Translate the Turkish query into English for searching the King James Version (KJV) Bible.
 
@@ -374,7 +387,9 @@ RULES:
 Output valid JSON only:
 {"english_query": "the translated query in English"}"""
 
-        prompt = f"Translate this Turkish query to English for KJV Bible search: '{query}'"
+        prompt = (
+            f"Translate this Turkish query to English for KJV Bible search: '{query}'"
+        )
 
         result = self._call_llm_json(prompt, system_prompt, [])
         translated = result.get("english_query", query)
