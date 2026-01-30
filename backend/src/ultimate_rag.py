@@ -96,6 +96,9 @@ class UltimateRAG:
         self._searchers = {}
         self._semantic_chunk_searcher = None
 
+        # RRF score statistics (populated after search)
+        self._last_score_stats: dict = {}
+
     @property
     def enhancer(self):
         """Lazy load Query Enhancer"""
@@ -118,7 +121,10 @@ class UltimateRAG:
             )
             logger.debug(
                 "Loaded Semantic LLM Cache",
-                extra={"threshold": self.llm_cache_threshold, "ttl_days": self.llm_cache_ttl // 86400}
+                extra={
+                    "threshold": self.llm_cache_threshold,
+                    "ttl_days": self.llm_cache_ttl // 86400,
+                },
             )
         return self._llm_cache
 
@@ -197,7 +203,10 @@ class UltimateRAG:
             corpus = "quran" if "quran" in source else "bible"
             span.set_data("corpus", corpus)
 
-            logger.info("Pipeline stage started", extra={"stage": "enhance", "query": query[:50], "corpus": corpus})
+            logger.info(
+                "Pipeline stage started",
+                extra={"stage": "enhance", "query": query[:50], "corpus": corpus},
+            )
             start = time.perf_counter()
 
             cache_key = f"{corpus}:expand"
@@ -214,9 +223,15 @@ class UltimateRAG:
                     sentry_sdk.set_measurement("rag.cache.hit", 1, "none")
                     logger.info(
                         "Cache hit",
-                        extra={"cache": "llm", "stage": "enhance", "corpus": corpus}
+                        extra={"cache": "llm", "stage": "enhance", "corpus": corpus},
                     )
-                    log_performance(logger, "enhance_query", latency_ms, corpus=corpus, cache_hit=True)
+                    log_performance(
+                        logger,
+                        "enhance_query",
+                        latency_ms,
+                        corpus=corpus,
+                        cache_hit=True,
+                    )
                     return cached
 
             # LLM call (cache miss)
@@ -234,9 +249,11 @@ class UltimateRAG:
             sentry_sdk.set_measurement("rag.cache.hit", 0, "none")
             logger.info(
                 "Cache miss",
-                extra={"cache": "llm", "stage": "enhance", "corpus": corpus}
+                extra={"cache": "llm", "stage": "enhance", "corpus": corpus},
             )
-            log_performance(logger, "enhance_query", latency_ms, corpus=corpus, cache_hit=False)
+            log_performance(
+                logger, "enhance_query", latency_ms, corpus=corpus, cache_hit=False
+            )
             return enhanced
 
     def _generate_multi_queries(
@@ -257,7 +274,9 @@ class UltimateRAG:
             if not self.enable_multi_query:
                 return [enhanced_query]
 
-            logger.info("Pipeline stage started", extra={"stage": "multi_query", "n": n})
+            logger.info(
+                "Pipeline stage started", extra={"stage": "multi_query", "n": n}
+            )
             start = time.perf_counter()
 
             # Determine corpus from source
@@ -277,7 +296,9 @@ class UltimateRAG:
                     multi = cached
                     cache_hit = True
                     span.set_data("cache_hit", True)
-                    logger.info("Cache hit", extra={"cache": "llm", "stage": "multi_query"})
+                    logger.info(
+                        "Cache hit", extra={"cache": "llm", "stage": "multi_query"}
+                    )
 
             # Generate if not cached
             if multi is None:
@@ -290,7 +311,9 @@ class UltimateRAG:
                     if self.enable_llm_cache and self.llm_cache:
                         self.llm_cache.set(enhanced_query, cache_key, multi)
                 except Exception as e:
-                    logger.warning("Multi-query generation failed", extra={"error": str(e)})
+                    logger.warning(
+                        "Multi-query generation failed", extra={"error": str(e)}
+                    )
                     multi = []
 
             queries.extend(multi)
@@ -309,7 +332,13 @@ class UltimateRAG:
                 "rag.query.multi_latency_ms", latency_ms, "millisecond"
             )
             span.set_data("query_count", len(unique))
-            log_performance(logger, "multi_query", latency_ms, query_count=len(unique), cache_hit=cache_hit)
+            log_performance(
+                logger,
+                "multi_query",
+                latency_ms,
+                query_count=len(unique),
+                cache_hit=cache_hit,
+            )
             return unique
 
     def _search_all_queries(
@@ -327,7 +356,12 @@ class UltimateRAG:
 
             logger.info(
                 "Pipeline stage started",
-                extra={"stage": "search", "source": source, "query_count": len(queries), "limit": limit}
+                extra={
+                    "stage": "search",
+                    "source": source,
+                    "query_count": len(queries),
+                    "limit": limit,
+                },
             )
             start = time.perf_counter()
 
@@ -478,6 +512,16 @@ class UltimateRAG:
                 all_results.values(), key=lambda x: x[1], reverse=True
             )[: self.search_pool_size]
 
+            # Compute score statistics for confidence scoring
+            rrf_scores = [rrf_score for _, rrf_score, _ in sorted_results]
+            self._last_score_stats = {
+                "max": max(rrf_scores) if rrf_scores else 0.0,
+                "min": min(rrf_scores) if rrf_scores else 0.0,
+                "mean": sum(rrf_scores) / len(rrf_scores) if rrf_scores else 0.0,
+                "count": len(rrf_scores),
+                "num_queries": len(queries),
+            }
+
             # Attach RRF info to results
             merged_results = []
             for result, rrf_score, matched_queries in sorted_results:
@@ -490,8 +534,12 @@ class UltimateRAG:
             )
             span.set_data("result_count", len(merged_results))
             log_performance(
-                logger, "search", latency_ms,
-                source=source, query_count=len(queries), result_count=len(merged_results)
+                logger,
+                "search",
+                latency_ms,
+                source=source,
+                query_count=len(queries),
+                result_count=len(merged_results),
             )
             return merged_results
 
@@ -534,7 +582,12 @@ class UltimateRAG:
 
         logger.info(
             "Pipeline started",
-            extra={"pipeline": "search", "source": source, "top_k": top_k, "query": query[:50]}
+            extra={
+                "pipeline": "search",
+                "source": source,
+                "top_k": top_k,
+                "query": query[:50],
+            },
         )
 
         # Step 1: Enhance query
@@ -554,11 +607,13 @@ class UltimateRAG:
         total_latency_ms = (time.perf_counter() - total_start) * 1000
 
         log_performance(
-            logger, "pipeline_search", total_latency_ms,
+            logger,
+            "pipeline_search",
+            total_latency_ms,
             source=source,
             query_count=len(all_queries),
             candidates=len(search_results),
-            final_results=len(final_results)
+            final_results=len(final_results),
         )
 
         return final_results
@@ -696,11 +751,13 @@ class UltimateRAG:
                 translated_query = self.enhancer.expand_query(query, corpus="bible")
                 logger.debug(
                     "Query translated for Bible search",
-                    extra={"original": query[:50], "translated": translated_query[:50]}
+                    extra={"original": query[:50], "translated": translated_query[:50]},
                 )
                 query = translated_query
             except Exception as e:
-                logger.warning("Translation failed for Bible search", extra={"error": str(e)})
+                logger.warning(
+                    "Translation failed for Bible search", extra={"error": str(e)}
+                )
 
         # If testament is specified, search only that collection
         if testament:
@@ -738,7 +795,12 @@ class UltimateRAG:
 
         logger.info(
             "Pipeline started",
-            extra={"pipeline": "ask", "source": source, "top_k": top_k, "query": query[:50]}
+            extra={
+                "pipeline": "ask",
+                "source": source,
+                "top_k": top_k,
+                "query": query[:50],
+            },
         )
 
         # Step 1-4: Search pipeline (enhance, multi-query, search, rerank)
@@ -749,22 +811,30 @@ class UltimateRAG:
         answer_start = time.perf_counter()
 
         answer = self.answer_generator.generate_answer(
-            query, search_results, source=source
+            query,
+            search_results,
+            source=source,
+            score_stats=self._last_score_stats,
         )
 
         answer_latency_ms = (time.perf_counter() - answer_start) * 1000
         total_latency_ms = (time.perf_counter() - total_start) * 1000
 
         log_performance(
-            logger, "answer_generation", answer_latency_ms,
-            citations=len(answer.citations), confidence=answer.confidence
+            logger,
+            "answer_generation",
+            answer_latency_ms,
+            citations=len(answer.citations),
+            confidence=answer.confidence,
         )
         log_performance(
-            logger, "pipeline_ask", total_latency_ms,
+            logger,
+            "pipeline_ask",
+            total_latency_ms,
             source=source,
             verses=len(search_results),
             citations=len(answer.citations),
-            confidence=answer.confidence
+            confidence=answer.confidence,
         )
 
         return answer
@@ -791,11 +861,13 @@ class UltimateRAG:
                 translated_query = self.enhancer.translate_for_bible(query)
                 logger.debug(
                     "Query translated for Bible Q&A",
-                    extra={"original": query[:50], "translated": translated_query[:50]}
+                    extra={"original": query[:50], "translated": translated_query[:50]},
                 )
                 query = translated_query
             except Exception as e:
-                logger.warning("Translation failed for Bible Q&A", extra={"error": str(e)})
+                logger.warning(
+                    "Translation failed for Bible Q&A", extra={"error": str(e)}
+                )
 
         source = f"bible_{testament}" if testament else f"bible_{translation}"
         return self.ask(query, source=source, top_k=top_k)
