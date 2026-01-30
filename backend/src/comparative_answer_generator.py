@@ -64,7 +64,7 @@ class ComparativeAnswerGenerator:
     OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
     MODEL = "google/gemini-3-flash-preview"  # Gemini 2.5 Flash normal
 
-     SYSTEM_PROMPT = """You are an expert comparative theologian and scholar of Abrahamic religions.
+    SYSTEM_PROMPT = """You are an expert comparative theologian and scholar of Abrahamic religions.
 Your task: Write a comprehensive, comparative theological essay that synthesizes content from both the Quran and the Bible to answer the user's question.
 
 CRITICAL RULES:
@@ -429,22 +429,30 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
             all_rrf_scores = collection_stats.get("all_rrf_scores", [])
             num_queries = collection_stats.get("num_queries", 1)
             total_verses_context = collection_stats.get("total_verses", 80)
-            collections_with_results = collection_stats.get("collections_with_results", 4)
+            collections_with_results = collection_stats.get(
+                "collections_with_results", 4
+            )
         else:
             # Fallback: build from search results
             all_rrf_scores = sorted(
-                [r.score for r in quran_semantic] +
-                [r.score for r in quran_chunks] +
-                [r.score for r in bible_semantic] +
-                [r.score for r in bible_chunks],
-                reverse=True
+                [r.score for r in quran_semantic]
+                + [r.score for r in quran_chunks]
+                + [r.score for r in bible_semantic]
+                + [r.score for r in bible_chunks],
+                reverse=True,
             )
             num_queries = 1
             total_verses_context = total_verses
-            collections_with_results = sum(1 for lst in [quran_semantic, quran_chunks, bible_semantic, bible_chunks] if lst)
+            collections_with_results = sum(
+                1
+                for lst in [quran_semantic, quran_chunks, bible_semantic, bible_chunks]
+                if lst
+            )
 
         # Count citations from LLM response
-        cited_count = len(llm_result.get("quran_citations", [])) + len(llm_result.get("bible_citations", []))
+        cited_count = len(llm_result.get("quran_citations", [])) + len(
+            llm_result.get("bible_citations", [])
+        )
 
         breakdown = self.confidence_scorer.compute(
             scores=all_rrf_scores,
