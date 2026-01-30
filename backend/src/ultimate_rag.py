@@ -199,7 +199,12 @@ class UltimateRAG:
         if self.verbose:
             logger.info(message, extra=extra)
 
-    def _enhance_query(self, query: str, source: str = "bible_kjva") -> str:
+    def _enhance_query(
+        self,
+        query: str,
+        source: str = "bible_kjva",
+        detected_language: Optional[str] = None,
+    ) -> str:
         """
         Step 1: Enhance query with LLM (with semantic caching)
 
@@ -251,7 +256,9 @@ class UltimateRAG:
 
             # Cache the result
             if self.enable_llm_cache and self.llm_cache:
-                self.llm_cache.set(query, cache_key, enhanced)
+                self.llm_cache.set(
+                    query, cache_key, enhanced, source_language=detected_language
+                )
 
             latency_ms = (time.perf_counter() - start) * 1000
             sentry_sdk.set_measurement(
@@ -268,7 +275,12 @@ class UltimateRAG:
             return enhanced
 
     def _generate_multi_queries(
-        self, query: str, enhanced_query: str, source: str = "bible_kjva", n: int = 3
+        self,
+        query: str,
+        enhanced_query: str,
+        source: str = "bible_kjva",
+        n: int = 3,
+        detected_language: Optional[str] = None,
     ) -> List[str]:
         """
         Step 2: Generate multiple query perspectives (with semantic caching)
@@ -320,7 +332,12 @@ class UltimateRAG:
                     )
                     # Cache the result
                     if self.enable_llm_cache and self.llm_cache:
-                        self.llm_cache.set(enhanced_query, cache_key, multi)
+                        self.llm_cache.set(
+                            enhanced_query,
+                            cache_key,
+                            multi,
+                            source_language=detected_language,
+                        )
                 except Exception as e:
                     logger.warning(
                         "Multi-query generation failed", extra={"error": str(e)}
@@ -575,6 +592,7 @@ class UltimateRAG:
         source: str = "quran_tr",
         top_k: int = None,
         rerank_query: str = None,  # Optional: use different query for reranking
+        detected_language: Optional[str] = None,
     ) -> List:
         """
         Execute Ultimate RAG Pipeline
@@ -584,6 +602,7 @@ class UltimateRAG:
             source: Data source - "quran_tr", "bible_kjva"
             top_k: Number of final results (default: self.final_top_k)
             rerank_query: Optional query to use for reranking (useful for translated queries)
+            detected_language: Detected language of the query (for cache metadata)
 
         Returns:
             List of reranked search results
@@ -602,10 +621,14 @@ class UltimateRAG:
         )
 
         # Step 1: Enhance query
-        enhanced_query = self._enhance_query(query, source=source)
+        enhanced_query = self._enhance_query(
+            query, source=source, detected_language=detected_language
+        )
 
         # Step 2: Generate multi-queries
-        all_queries = self._generate_multi_queries(query, enhanced_query, source=source)
+        all_queries = self._generate_multi_queries(
+            query, enhanced_query, source=source, detected_language=detected_language
+        )
 
         # Step 3: Search with all queries (RRF merge)
         search_results = self._search_all_queries(all_queries, source)
@@ -663,10 +686,19 @@ class UltimateRAG:
                     )
                     raise
 
-            return self.search(query, source="quran_tr", top_k=top_k)
+            return self.search(
+                query,
+                source="quran_tr",
+                top_k=top_k,
+                detected_language=detected_language,
+            )
 
     def _search_all_bible_collections(
-        self, query: str, top_k: int = None, rerank_query: str = None
+        self,
+        query: str,
+        top_k: int = None,
+        rerank_query: str = None,
+        detected_language: Optional[str] = None,
     ) -> List:
         """
         Search all 3 Bible collections (OT, NT, Apocrypha) and merge with RRF fusion.
@@ -810,12 +842,19 @@ class UltimateRAG:
         if testament:
             source = f"bible_{testament}"
             return self.search(
-                query, source=source, top_k=top_k, rerank_query=translated_query
+                query,
+                source=source,
+                top_k=top_k,
+                rerank_query=translated_query,
+                detected_language=detected_language,
             )
 
         # Otherwise, search all 3 Bible collections and merge with RRF
         return self._search_all_bible_collections(
-            query, top_k=top_k, rerank_query=translated_query
+            query,
+            top_k=top_k,
+            rerank_query=translated_query,
+            detected_language=detected_language,
         )
 
     # ============= ANSWER GENERATION (RAG) =============
