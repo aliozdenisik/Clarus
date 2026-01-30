@@ -13,7 +13,6 @@ import { useSSE } from "@/lib/hooks/use-sse";
 import {
   LogOut,
   User,
-  BookOpen,
   Clock,
   Sparkles,
   ChevronDown,
@@ -25,8 +24,9 @@ import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { FilterTabs, FilterType } from "@/components/compare/filter-tabs";
 import { SourceReferenceCard } from "@/components/compare/source-reference-card";
 import { InlineCitation } from "@/components/compare/inline-citation";
-import { parseCitations } from "@/lib/utils/parse-citations";
+import { parseCitations, parseBareReferences } from "@/lib/utils/parse-citations";
 import { useLogger } from "@/lib/logger";
+import { LanguageSelector } from "@/components/search/language-selector";
 
 interface ParagraphData {
   title: string;
@@ -71,6 +71,8 @@ function CompareContent() {
   );
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
+  const [detectedLanguage, setDetectedLanguage] = useState<string | undefined>(undefined);
   const highlightTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasAutoExecuted = useRef(false);
   const log = useLogger("ComparePage");
@@ -212,7 +214,11 @@ function CompareContent() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ topic: topicToCompare, use_multi_agent: true }),
+        body: JSON.stringify({ 
+          topic: topicToCompare, 
+          use_multi_agent: true,
+          ...(selectedLanguage && { language: selectedLanguage })
+        }),
       });
 
       if (!response.ok) {
@@ -221,6 +227,9 @@ function CompareContent() {
 
       const data = await response.json();
       setResult(data);
+      if (data.detected_language) {
+        setDetectedLanguage(data.detected_language);
+      }
       toast.success(
         `Analysis complete in ${(data.latency_ms / 1000).toFixed(1)}s`
       );
@@ -251,7 +260,10 @@ function CompareContent() {
             return;
           }
           // Build SSE URL using q directly (NOT topic state, which may not be updated yet)
-          const url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(q)}&token=${encodeURIComponent(token)}`;
+          let url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(q)}&token=${encodeURIComponent(token)}`;
+          if (selectedLanguage) {
+            url += `&language=${encodeURIComponent(selectedLanguage)}`;
+          }
           startStream(url);
         } catch (err) {
           performBatchCompare(q);    // Fallback to batch
@@ -260,7 +272,7 @@ function CompareContent() {
         performBatchCompare(q);      // q passed directly as topicToCompare parameter
       }
     }
-  }, [searchParams, enable_streaming, startStream, performBatchCompare]);
+  }, [searchParams, enable_streaming, startStream, performBatchCompare, selectedLanguage]);
 
   // Handle SSE Data updates
   useEffect(() => {
@@ -270,6 +282,9 @@ function CompareContent() {
     const completeMsg = sseData.findLast((m) => m.type === "complete");
     if (completeMsg?.result) {
       setResult(completeMsg.result as CompareResult);
+      if ((completeMsg.result as any).detected_language) {
+        setDetectedLanguage((completeMsg.result as any).detected_language);
+      }
       setIsLoading(false);
       return;
     }
@@ -384,7 +399,10 @@ function CompareContent() {
           return;
         }
         // SSE/EventSource doesn't support custom headers, so pass token as query param
-        const url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(topic)}&token=${encodeURIComponent(token)}`;
+        let url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(topic)}&token=${encodeURIComponent(token)}`;
+        if (selectedLanguage) {
+          url += `&language=${encodeURIComponent(selectedLanguage)}`;
+        }
         startStream(url);
       } catch (err) {
         // Fallback
@@ -464,24 +482,31 @@ function CompareContent() {
 
           {/* Search Form */}
           <form onSubmit={handleCompare} className="relative mb-4">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[var(--color-text-muted)]" />
-              <input
-                type="text"
-                data-testid="compare-topic-input"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="Enter a topic (e.g., patience, forgiveness, creation)..."
-                className="w-full h-12 pl-12 pr-32 bg-[var(--color-bg-surface)] rounded-xl text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] border border-[var(--color-border-subtle)] focus:border-[var(--color-border-glow)] focus:outline-none transition-all duration-300 text-[15px]"
+            <div className="flex gap-2 items-center">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[var(--color-text-muted)]" />
+                <input
+                  type="text"
+                  data-testid="compare-topic-input"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder="Enter a topic (e.g., patience, forgiveness, creation)..."
+                  className="w-full h-12 pl-12 pr-32 bg-[var(--color-bg-surface)] rounded-xl text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] border border-[var(--color-border-subtle)] focus:border-[var(--color-border-glow)] focus:outline-none transition-all duration-300 text-[15px]"
+                />
+                <Button
+                  type="submit"
+                  data-testid="compare-analyze-button"
+                  disabled={isLoading || !topic.trim()}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-[var(--color-accent-primary)] text-[#09090b] hover:bg-[var(--color-accent-hover)] font-medium rounded-lg px-5 h-8 text-sm tracking-wide disabled:opacity-40"
+                >
+                  {isLoading ? "Analyzing..." : "Analyze"}
+                </Button>
+              </div>
+              <LanguageSelector
+                value={selectedLanguage}
+                onChange={setSelectedLanguage}
+                detectedLanguage={detectedLanguage}
               />
-              <Button
-                type="submit"
-                data-testid="compare-analyze-button"
-                disabled={isLoading || !topic.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-[var(--color-accent-primary)] text-[#09090b] hover:bg-[var(--color-accent-hover)] font-medium rounded-lg px-5 h-8 text-sm tracking-wide disabled:opacity-40"
-              >
-                {isLoading ? "Analyzing..." : "Analyze"}
-              </Button>
             </div>
           </form>
         </motion.div>
@@ -532,12 +557,8 @@ function CompareContent() {
                       Analysis Complete
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-4 text-sm text-[var(--color-text-muted)]">
-                    <div className="flex items-center gap-1">
-                      <BookOpen className="h-4 w-4" />
-                      <span>{result.total_verses} verses</span>
-                    </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex flex-wrap gap-4 text-sm text-[var(--color-text-muted)]">
+                     <div className="flex items-center gap-1">
                       <Quote className="h-4 w-4" />
                       <span>{result.total_citations} citations</span>
                     </div>
@@ -606,7 +627,7 @@ function CompareContent() {
                                   AI Interpretation
                                 </span>
                                 <p className="text-[var(--color-text-primary)] leading-[1.85] text-[15px] whitespace-pre-wrap">
-                                  {parseCitations(paragraph.content).map((part, i) => {
+                                  {parseBareReferences(parseCitations(paragraph.content), paragraph.citations).map((part, i) => {
                                     if (typeof part === 'string') {
                                       return <span key={i}>{part}</span>;
                                     }
