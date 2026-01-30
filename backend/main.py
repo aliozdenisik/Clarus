@@ -44,6 +44,41 @@ from src.semantic_chunker import SemanticVerseChunker, analyze_surah_chunks
 console = Console()
 
 
+def format_confidence_display(confidence: float, breakdown=None) -> str:
+    """Format confidence with optional breakdown for Rich display.
+
+    Args:
+        confidence: Overall confidence score (0.0-1.0)
+        breakdown: Optional dict with keys: retrieval_quality, score_clarity,
+                   citation_coverage, source_breadth, result_volume, llm_confidence
+
+    Returns:
+        Formatted string for Rich console display with color coding
+    """
+    # Color based on thresholds
+    if confidence >= 0.8:
+        color = "green"
+    elif confidence >= 0.6:
+        color = "yellow"
+    else:
+        color = "red"
+
+    conf_str = f"[{color}]Güven: {confidence:.0%}[/{color}]"
+
+    if breakdown:
+        details = (
+            f"Retrieval: {breakdown.get('retrieval_quality', 0):.0%} | "
+            f"Clarity: {breakdown.get('score_clarity', 0):.0%} | "
+            f"Citations: {breakdown.get('citation_coverage', 0):.0%} | "
+            f"Sources: {breakdown.get('source_breadth', 0):.0%} | "
+            f"Volume: {breakdown.get('result_volume', 0):.0%} | "
+            f"LLM: {breakdown.get('llm_confidence', 0):.0%}"
+        )
+        conf_str += f" [dim]({details})[/dim]"
+
+    return conf_str
+
+
 def cmd_index(args):
     """Index Quran data into Qdrant"""
     import asyncio
@@ -393,7 +428,7 @@ def cmd_ask(args):
         console.print(
             Panel(
                 f"[bold white]{answer.text}[/bold white]",
-                title=f"[green]Cevap (Güven: {answer.confidence:.0%})[/green]",
+                title=f"Cevap ({format_confidence_display(answer.confidence, getattr(answer, 'confidence_breakdown', None))})",
                 subtitle=f"[dim]{len(answer.citations)} kaynak kullanıldı[/dim]",
                 expand=False,
             )
@@ -442,7 +477,7 @@ def cmd_ask_bible(args):
         console.print(
             Panel(
                 f"[bold white]{answer.text}[/bold white]",
-                title=f"[green]Cevap (Güven: {answer.confidence:.0%})[/green]",
+                title=f"Cevap ({format_confidence_display(answer.confidence, getattr(answer, 'confidence_breakdown', None))})",
                 subtitle=f"[dim]{len(answer.citations)} kaynak kullanıldı[/dim]",
                 expand=False,
             )
@@ -499,6 +534,7 @@ def cmd_compare(args):
             result = rag.compare_multi_agent(query)
             essay_text = result.to_essay()
             confidence = result.confidence
+            confidence_breakdown = getattr(result, "confidence_breakdown", None)
             citations = result.citations
             # Flatten citations for display
             all_refs = []
@@ -508,13 +544,14 @@ def cmd_compare(args):
             result = rag.compare(query)
             essay_text = result.essay
             confidence = result.confidence
+            confidence_breakdown = getattr(result, "confidence_breakdown", None)
             all_refs = result.all_references
 
         # Display essay
         console.print(
             Panel(
                 f"[white]{essay_text}[/white]",
-                title=f"[green]Karşılaştırmalı Analiz (Güven: {confidence:.0%})[/green]",
+                title=f"Karşılaştırmalı Analiz ({format_confidence_display(confidence, confidence_breakdown)})",
                 expand=False,
                 padding=(1, 2),
             )
