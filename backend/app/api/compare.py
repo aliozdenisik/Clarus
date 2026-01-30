@@ -50,6 +50,11 @@ class CompareRequest(BaseModel):
 
     topic: str
     use_multi_agent: bool = True
+    language: Optional[str] = Field(
+        None,
+        pattern=r"^(en|tr|es|fr|it|pt|ar|de)$",
+        description="Response language (auto-detect if omitted)",
+    )
 
 
 class ParagraphData(BaseModel):
@@ -300,7 +305,10 @@ async def compare_scriptures(
         await db.commit()
 
         # Response translation: translate essay + paragraphs for non-Turkish/English users
-        detected_language = search_result.search_stats.get("detected_language")
+        # Use request.language if provided, otherwise auto-detect from search_result
+        detected_language = request.language or search_result.search_stats.get(
+            "detected_language"
+        )
         essay_text = result.to_essay()
         response_language = "tr"  # Default: essay is in Turkish
 
