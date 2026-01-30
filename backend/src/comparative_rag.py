@@ -37,6 +37,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from rich.console import Console
 
 from src.circuit_breaker import CircuitBreakerError
+from src.query_translator import QueryTranslator, TranslationResult, TranslationError
+from src.query_translator import CORPUS_LANGUAGES
 
 console = Console()
 logger = logging.getLogger(__name__)
@@ -88,6 +90,7 @@ class ComparativeRAG:
 
         # Lazy load components
         self._enhancer = None
+        self._translator = None
         self._answer_generator = None
         self._quran_searcher = None
         # Testament-specific Bible searchers (replaces single _bible_searcher)
@@ -97,6 +100,8 @@ class ComparativeRAG:
 
         # Per-collection result statistics for confidence scoring
         self._last_collection_stats: dict = {}
+        # Detected user language from last query (for response translation)
+        self._last_detected_language: Optional[str] = None
 
     @property
     def enhancer(self):
@@ -108,6 +113,15 @@ class ComparativeRAG:
             if self.verbose:
                 console.print("[dim]Loaded QueryEnhancer[/dim]")
         return self._enhancer
+
+    @property
+    def translator(self):
+        """Lazy load Query Translator"""
+        if self._translator is None:
+            self._translator = QueryTranslator()
+            if self.verbose:
+                console.print("[dim]Loaded QueryTranslator[/dim]")
+        return self._translator
 
     @property
     def answer_generator(self):
@@ -364,9 +378,76 @@ class ComparativeRAG:
 
     # ==================== END MULTI-QUERY SUPPORT ====================
 
-    def _enhance_query_parallel(self, query: str) -> Tuple[str, str]:
+    def _translate_query_parallel(self, query: str) -> Tuple[str, str, str]:
         """
-        Step 1: Enhance query for both scriptures in parallel
+        Step 0: Translate query for both corpora in parallel.
+
+        Detects the user's language and translates to Turkish (Quran) and
+        English (Bible) simultaneously using ThreadPoolExecutor.
+
+        Returns:
+            (quran_query, bible_query, detected_language) tuple
+        """
+        self._log("🌐 Step 0: Parallel Query Translation...")
+        start = time.time()
+
+        def translate_for_quran() -> TranslationResult:
+            return self.translator.translate_query(query, "quran")
+
+        def translate_for_bible() -> TranslationResult:
+            return self.translator.translate_query(query, "bible")
+
+        try:
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                quran_future = executor.submit(translate_for_quran)
+                bible_future = executor.submit(translate_for_bible)
+
+                quran_result: TranslationResult = quran_future.result()
+                bible_result: TranslationResult = bible_future.result()
+
+            detected_language = quran_result.detected_language
+            quran_query = quran_result.translated_query
+            bible_query = bible_result.translated_query
+
+            duration = (time.time() - start) * 1000
+
+            if quran_result.was_translated:
+                logger.info(
+                    "Query translated for Quran corpus: '%s' → '%s' (%s → %s)",
+                    query[:50],
+                    quran_query[:50],
+                    detected_language,
+                    CORPUS_LANGUAGES.get("quran", "tr"),
+                )
+            if bible_result.was_translated:
+                logger.info(
+                    "Query translated for Bible corpus: '%s' → '%s' (%s → %s)",
+                    query[:50],
+                    bible_query[:50],
+                    detected_language,
+                    CORPUS_LANGUAGES.get("bible", "en"),
+                )
+
+            self._log(f"   Detected language: {detected_language}")
+            self._log(f"   Quran query: {quran_query[:60]}...")
+            self._log(f"   Bible query: {bible_query[:60]}...")
+            self._log(f"   Translated in {duration:.0f}ms")
+
+            return quran_query, bible_query, detected_language
+
+        except TranslationError:
+            logger.error("Translation failed in comparative pipeline", exc_info=True)
+            raise
+
+    def _enhance_query_parallel(
+        self, quran_query: str, bible_query: str
+    ) -> Tuple[str, str]:
+        """
+        Step 1: Enhance pre-translated queries for both scriptures in parallel.
+
+        Args:
+            quran_query: Query already translated to Turkish for Quran corpus.
+            bible_query: Query already translated to English for Bible corpus.
 
         Returns:
             (quran_enhanced, bible_enhanced) tuple
@@ -375,10 +456,10 @@ class ComparativeRAG:
         start = time.time()
 
         def enhance_quran():
-            return self.enhancer.expand_query(query, corpus="quran")
+            return self.enhancer.expand_query(quran_query, corpus="quran")
 
         def enhance_bible():
-            return self.enhancer.expand_query(query, corpus="bible")
+            return self.enhancer.expand_query(bible_query, corpus="bible")
 
         with ThreadPoolExecutor(max_workers=2) as executor:
             quran_future = executor.submit(enhance_quran)
@@ -547,6 +628,11 @@ class ComparativeRAG:
 
         If enable_multi_query=True: Uses 5 queries + RRF fusion for better accuracy.
         If enable_multi_query=False: Uses single enhanced query (faster).
+
+        Translation is applied first: the user's query is translated to Turkish
+        (for Quran) and English (for Bible) before any enhancement or search.
+        The detected source language is stored in ``search_stats`` for downstream
+        response translation.
         """
         total_start = time.time()
 
@@ -558,17 +644,26 @@ class ComparativeRAG:
             )
             console.print(f'[dim]Query: "{query}"[/dim]\n')
 
+        # ===== Step 0: Translate query for both corpora =====
+        quran_translated, bible_translated, detected_language = (
+            self._translate_query_parallel(query)
+        )
+
         if self.enable_multi_query:
             # ===== MULTI-QUERY PATH (5 queries + RRF) =====
             self._log("⚡ Step 1: Generating Multi-Queries...")
             start = time.time()
 
-            # Generate query variations in parallel
+            # Generate query variations in parallel (using translated queries)
             def gen_quran():
-                return self._generate_multi_queries(query, corpus="quran", n=3)
+                return self._generate_multi_queries(
+                    quran_translated, corpus="quran", n=3
+                )
 
             def gen_bible():
-                return self._generate_multi_queries(query, corpus="bible", n=3)
+                return self._generate_multi_queries(
+                    bible_translated, corpus="bible", n=3
+                )
 
             with ThreadPoolExecutor(max_workers=2) as executor:
                 quran_future = executor.submit(gen_quran)
@@ -616,13 +711,15 @@ class ComparativeRAG:
                 "num_queries": len(quran_queries),
             }
 
-            quran_query = query
-            bible_query = query
+            quran_query = quran_translated
+            bible_query = bible_translated
 
         else:
             # ===== SINGLE-QUERY PATH =====
-            # Step 1: Parallel query enhancement
-            quran_query, bible_query = self._enhance_query_parallel(query)
+            # Step 1: Parallel query enhancement (using translated queries)
+            quran_query, bible_query = self._enhance_query_parallel(
+                quran_translated, bible_translated
+            )
 
             # Step 2: 4 parallel testament searches (fallback for single query mode)
             self._log("🔍 Step 2: Parallel Testament Searches...")
@@ -702,6 +799,7 @@ class ComparativeRAG:
 
         total_duration = (time.time() - total_start) * 1000
 
+        # Store detected_language in search_stats for response translation (Task 5)
         result = ComparativeScriptureResult(
             quran=quran_results,
             ot=ot_results,
@@ -712,6 +810,7 @@ class ComparativeRAG:
                 "quran_query": quran_query,
                 "bible_query": bible_query,
                 "mode": mode_label,
+                "detected_language": detected_language,
             },
         )
 
@@ -738,8 +837,13 @@ class ComparativeRAG:
             console.print(f"\n[bold blue]📚 Comparative Scripture Analysis[/bold blue]")
             console.print(f'[dim]Question: "{query}"[/dim]\n')
 
-        # Steps 1-3: Search and select top results
+        # Steps 0-3: Translate, enhance, search and select top results
         search_result = self.search_all(query)
+
+        # Store detected language for response translation (Task 5)
+        self._last_detected_language = search_result.search_stats.get(
+            "detected_language"
+        )
 
         # Step 4: Generate comparative essay
         # Combine testament results for the answer generator
@@ -851,8 +955,13 @@ class ComparativeRAG:
                 )
                 console.print(f'[dim]Question: "{query}"[/dim]\n')
 
-            # Steps 1-2: Search all 4 collections (now pre-separated by testament)
+            # Steps 0-2: Translate, search all 4 collections (pre-separated by testament)
             search_result = self.search_all(query)
+
+            # Store detected language for response translation (Task 5)
+            self._last_detected_language = search_result.search_stats.get(
+                "detected_language"
+            )
 
             # Results are now directly available per testament - no splitting needed!
             quran_verses = search_result.quran
