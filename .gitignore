@@ -102,6 +102,11 @@ Thumbs.db
 *.env
 backend/.env
 
+# ----------------
+# Machine Learning Models
+# ----------------
+backend/models/
+
 # Google OAuth Credentials (NEVER commit!)
 client_secret*.json
 *client_secret*.json
