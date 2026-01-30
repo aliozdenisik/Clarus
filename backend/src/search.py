@@ -39,6 +39,7 @@ class SearchResult:
     arabic_text: str
     translation: str
     surah_type: str
+    original_score: float = 0.0
 
     def __str__(self) -> str:
         return (
@@ -88,6 +89,7 @@ class QuranSearcher:
                 arabic_text=payload.get("arabic_text", ""),
                 translation=payload.get("translation", ""),
                 surah_type=payload.get("surah_type", ""),
+                original_score=point.score,
             )
             search_results.append(result)
         return search_results
@@ -120,8 +122,12 @@ class QuranSearcher:
         parsed = self._parse_results(results)
         latency_ms = (time.perf_counter() - start) * 1000
         log_performance(
-            logger, "semantic_search", latency_ms,
-            collection=self.COLLECTION_NAME, mode="semantic", results=len(parsed)
+            logger,
+            "semantic_search",
+            latency_ms,
+            collection=self.COLLECTION_NAME,
+            mode="semantic",
+            results=len(parsed),
         )
         return parsed
 
@@ -155,8 +161,12 @@ class QuranSearcher:
         parsed = self._parse_results(results)
         latency_ms = (time.perf_counter() - start) * 1000
         log_performance(
-            logger, "keyword_search", latency_ms,
-            collection=self.COLLECTION_NAME, mode="keyword", results=len(parsed)
+            logger,
+            "keyword_search",
+            latency_ms,
+            collection=self.COLLECTION_NAME,
+            mode="keyword",
+            results=len(parsed),
         )
         return parsed
 
@@ -232,14 +242,16 @@ class QuranSearcher:
             parsed = self._parse_results(results)
             latency_ms = (time.perf_counter() - start) * 1000
             log_performance(
-                logger, "hybrid_search", latency_ms,
+                logger,
+                "hybrid_search",
+                latency_ms,
                 collection=self.COLLECTION_NAME,
                 mode="hybrid",
                 fusion=fusion,
                 rrf_k=rrf_k,
                 dense_prefetch=prefetch_limit,
                 sparse_prefetch=prefetch_limit,
-                results=len(parsed)
+                results=len(parsed),
             )
             return parsed
 
@@ -429,6 +441,7 @@ class BibleSearchResult:
     verse: int
     text: str
     testament: str
+    original_score: float = 0.0
 
     def __str__(self) -> str:
         testament_display = {
@@ -511,6 +524,7 @@ class BibleSearcher:
                 verse=payload.get("verse", 0),
                 text=payload.get("text", ""),
                 testament=payload.get("testament", ""),
+                original_score=point.score,
             )
             search_results.append(result)
         return search_results
@@ -536,8 +550,12 @@ class BibleSearcher:
         parsed = self._parse_results(results)
         latency_ms = (time.perf_counter() - start) * 1000
         log_performance(
-            logger, "semantic_search", latency_ms,
-            collection=self.collection_name, mode="semantic", results=len(parsed)
+            logger,
+            "semantic_search",
+            latency_ms,
+            collection=self.collection_name,
+            mode="semantic",
+            results=len(parsed),
         )
         return parsed
 
@@ -562,8 +580,12 @@ class BibleSearcher:
         parsed = self._parse_results(results)
         latency_ms = (time.perf_counter() - start) * 1000
         log_performance(
-            logger, "keyword_search", latency_ms,
-            collection=self.collection_name, mode="keyword", results=len(parsed)
+            logger,
+            "keyword_search",
+            latency_ms,
+            collection=self.collection_name,
+            mode="keyword",
+            results=len(parsed),
         )
         return parsed
 
@@ -633,14 +655,16 @@ class BibleSearcher:
             parsed = self._parse_results(results)
             latency_ms = (time.perf_counter() - start) * 1000
             log_performance(
-                logger, "hybrid_search", latency_ms,
+                logger,
+                "hybrid_search",
+                latency_ms,
                 collection=self.collection_name,
                 mode="hybrid",
                 fusion=fusion,
                 rrf_k=rrf_k,
                 dense_prefetch=prefetch_limit,
                 sparse_prefetch=prefetch_limit,
-                results=len(parsed)
+                results=len(parsed),
             )
             return parsed
 
@@ -679,6 +703,7 @@ class SemanticChunkSearchResult:
     combined_arabic: str
     verse_count: int
     surah_type: str
+    original_score: float = 0.0
 
     def __str__(self):
         verse_range = (
@@ -741,6 +766,7 @@ class SemanticChunkSearcher:
                     combined_arabic=payload.get("combined_arabic", ""),
                     verse_count=payload.get("verse_count", 1),
                     surah_type=payload.get("surah_type", ""),
+                    original_score=result.score,
                 )
             )
         return parsed
@@ -774,8 +800,12 @@ class SemanticChunkSearcher:
         parsed = self._parse_results(results.points)
         latency_ms = (time.perf_counter() - start) * 1000
         log_performance(
-            logger, "semantic_chunk_search", latency_ms,
-            collection=self.COLLECTION_NAME, mode="semantic", results=len(parsed)
+            logger,
+            "semantic_chunk_search",
+            latency_ms,
+            collection=self.COLLECTION_NAME,
+            mode="semantic",
+            results=len(parsed),
         )
         return parsed
 
@@ -808,8 +838,12 @@ class SemanticChunkSearcher:
         parsed = self._parse_results(results.points)
         latency_ms = (time.perf_counter() - start) * 1000
         log_performance(
-            logger, "keyword_chunk_search", latency_ms,
-            collection=self.COLLECTION_NAME, mode="keyword", results=len(parsed)
+            logger,
+            "keyword_chunk_search",
+            latency_ms,
+            collection=self.COLLECTION_NAME,
+            mode="keyword",
+            results=len(parsed),
         )
         return parsed
 
@@ -880,13 +914,15 @@ class SemanticChunkSearcher:
             parsed = self._parse_results(results.points)
             latency_ms = (time.perf_counter() - start) * 1000
             log_performance(
-                logger, "hybrid_chunk_search", latency_ms,
+                logger,
+                "hybrid_chunk_search",
+                latency_ms,
                 collection=self.COLLECTION_NAME,
                 mode="hybrid",
                 rrf_k=rrf_k,
                 dense_prefetch=prefetch_limit,
                 sparse_prefetch=prefetch_limit,
-                results=len(parsed)
+                results=len(parsed),
             )
             return parsed
 
@@ -933,6 +969,7 @@ class BibleSemanticChunkSearchResult:
     text: str
     verse_count: int
     testament: str
+    original_score: float = 0.0
 
     def __str__(self):
         verse_range = (
@@ -990,6 +1027,7 @@ class BibleSemanticChunkSearcher:
                     text=payload.get("text", ""),
                     verse_count=payload.get("verse_count", 1),
                     testament=payload.get("testament", ""),
+                    original_score=result.score,
                 )
             )
         return parsed
@@ -1013,8 +1051,12 @@ class BibleSemanticChunkSearcher:
         parsed = self._parse_results(results.points)
         latency_ms = (time.perf_counter() - start) * 1000
         log_performance(
-            logger, "bible_semantic_chunk_search", latency_ms,
-            collection=self.collection_name, mode="semantic", results=len(parsed)
+            logger,
+            "bible_semantic_chunk_search",
+            latency_ms,
+            collection=self.collection_name,
+            mode="semantic",
+            results=len(parsed),
         )
         return parsed
 
@@ -1037,8 +1079,12 @@ class BibleSemanticChunkSearcher:
         parsed = self._parse_results(results.points)
         latency_ms = (time.perf_counter() - start) * 1000
         log_performance(
-            logger, "bible_keyword_chunk_search", latency_ms,
-            collection=self.collection_name, mode="keyword", results=len(parsed)
+            logger,
+            "bible_keyword_chunk_search",
+            latency_ms,
+            collection=self.collection_name,
+            mode="keyword",
+            results=len(parsed),
         )
         return parsed
 
@@ -1083,13 +1129,15 @@ class BibleSemanticChunkSearcher:
             parsed = self._parse_results(results.points)
             latency_ms = (time.perf_counter() - start) * 1000
             log_performance(
-                logger, "bible_hybrid_chunk_search", latency_ms,
+                logger,
+                "bible_hybrid_chunk_search",
+                latency_ms,
                 collection=self.collection_name,
                 mode="hybrid",
                 rrf_k=rrf_k,
                 dense_prefetch=prefetch_limit,
                 sparse_prefetch=prefetch_limit,
-                results=len(parsed)
+                results=len(parsed),
             )
             return parsed
 
