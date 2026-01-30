@@ -1,15 +1,17 @@
 {
   "metadata": {
-    "version": "1.0",
-    "total_tests": 28,
+    "version": "1.1",
+    "total_tests": 40,
     "created_at": "2026-01-19",
-    "description": "Teolojik ve Kutsal Metinler (Kur'an ve Bible-KJV) için Yüksek Spesifikasyonlu RAG Erişim Doğruluk Test Kiti (RRATK) veri seti."
+    "updated_at": "2026-01-30",
+    "description": "Teolojik ve Kutsal Metinler (Kur'an ve Bible-KJV) için Yüksek Spesifikasyonlu RAG Erişim Doğruluk Test Kiti (RRATK) veri seti. Includes multilingual query translation tests (MQ-01 through MQ-12)."
   },
   "tests": [
     {
       "id": "Q-01",
       "source": "quran",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Kuran sabr-ı cemil ayeti sure no",
       "expected_verses": [
         "12:18",
@@ -20,6 +22,7 @@
       "id": "Q-02",
       "source": "quran",
       "difficulty": "hard",
+      "query_language": "native",
       "question": "Kuran miras ayetleri Nisa suresi kaçıncı ayetler",
       "expected_verses": [
         "4:11-12",
@@ -30,6 +33,7 @@
       "id": "Q-03",
       "source": "quran",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Hz. İsa beşikte konuşması hangi sure ayet",
       "expected_verses": [
         "19:29-33",
@@ -41,6 +45,7 @@
       "id": "Q-04",
       "source": "quran",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Kuran abdest ayeti Maide kaç",
       "expected_verses": [
         "5:6"
@@ -50,6 +55,7 @@
       "id": "Q-05",
       "source": "quran",
       "difficulty": "hard",
+      "query_language": "native",
       "question": "Kuran demir indirilmesi Hadid kaç",
       "expected_verses": [
         "57:25"
@@ -59,6 +65,7 @@
       "id": "Q-06",
       "source": "quran",
       "difficulty": "hard",
+      "query_language": "native",
       "question": "Kuran örümcek evi Ankebut kaç",
       "expected_verses": [
         "29:41"
@@ -68,6 +75,7 @@
       "id": "Q-07",
       "source": "quran",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Kuran Rum suresi Rumların galibiyeti ayetleri",
       "expected_verses": [
         "30:1-6"
@@ -77,6 +85,7 @@
       "id": "Q-08",
       "source": "quran",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Kuran Muhammed hatemül enbiya Ahzab kaç",
       "expected_verses": [
         "33:40"
@@ -86,6 +95,7 @@
       "id": "Q-09",
       "source": "quran",
       "difficulty": "hard",
+      "query_language": "native",
       "question": "Kuran Ashab-ı Kehf kaç yıl kaldı ayet no",
       "expected_verses": [
         "18:25"
@@ -95,6 +105,7 @@
       "id": "Q-10",
       "source": "quran",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Kuran Zülkarneyn demir kütleleri ayet no",
       "expected_verses": [
         "18:94-97"
@@ -104,6 +115,7 @@
       "id": "Q-11",
       "source": "quran",
       "difficulty": "easy",
+      "query_language": "native",
       "question": "Kuran Yunus balık karnı ayet no",
       "expected_verses": [
         "21:87",
@@ -114,6 +126,7 @@
       "id": "Q-12",
       "source": "quran",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Kuran Musa asasıyla denizi yarması ayet no",
       "expected_verses": [
         "26:63",
@@ -124,6 +137,7 @@
       "id": "Q-13",
       "source": "quran",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Kuran Süleyman Hüdhüd kuşu ayet no",
       "expected_verses": [
         "27:20-28"
@@ -133,6 +147,7 @@
       "id": "Q-14",
       "source": "quran",
       "difficulty": "easy",
+      "query_language": "native",
       "question": "Kuran Kevser suresi ayet sayısı",
       "expected_verses": [
         "108:1-3"
@@ -142,6 +157,7 @@
       "id": "Q-15",
       "source": "quran",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Kuran Ebabil kuşları ayet no",
       "expected_verses": [
         "105:1-5"
@@ -151,6 +167,7 @@
       "id": "Q-16",
       "source": "quran",
       "difficulty": "easy",
+      "query_language": "native",
       "question": "Kuran Kadir gecesi bin aydan hayırlıdır ayet no",
       "expected_verses": [
         "97:3"
@@ -160,6 +177,7 @@
       "id": "B-01",
       "source": "bible",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Bible KJV Love is patient love is kind verse",
       "expected_verses": [
         "1 Corinthians 13:4-8"
@@ -169,6 +187,7 @@
       "id": "B-02",
       "source": "bible",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Bible KJV Fruit of the Spirit verse",
       "expected_verses": [
         "Galatians 5:22-23"
@@ -178,6 +197,7 @@
       "id": "B-03",
       "source": "bible",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Bible KJV David and Goliath chapter",
       "expected_verses": [
         "1 Samuel 17"
@@ -187,6 +207,7 @@
       "id": "B-04",
       "source": "bible",
       "difficulty": "easy",
+      "query_language": "native",
       "question": "Bible KJV Wedding at Cana water to wine verses",
       "expected_verses": [
         "John 2:1-11"
@@ -196,6 +217,7 @@
       "id": "B-05",
       "source": "bible",
       "difficulty": "hard",
+      "query_language": "native",
       "question": "Bible KJV Faith without works is dead verse James",
       "expected_verses": [
         "James 2:17-26"
@@ -205,6 +227,7 @@
       "id": "B-06",
       "source": "bible",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Bible KJV Armor of God verses range",
       "expected_verses": [
         "Ephesians 6:11-18"
@@ -214,6 +237,7 @@
       "id": "B-07",
       "source": "bible",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Bible KJV Ten Commandments Exodus 20 verses range",
       "expected_verses": [
         "Exodus 20:1-17"
@@ -223,6 +247,7 @@
       "id": "B-08",
       "source": "bible",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Bible KJV Beatitudes Matthew 5 verses range",
       "expected_verses": [
         "Matthew 5:3-12"
@@ -232,6 +257,7 @@
       "id": "B-09",
       "source": "bible",
       "difficulty": "hard",
+      "query_language": "native",
       "question": "Bible KJV Lord's Prayer Matthew 6 verses range",
       "expected_verses": [
         "Matthew 6:9-13"
@@ -241,6 +267,7 @@
       "id": "B-10",
       "source": "bible",
       "difficulty": "easy",
+      "query_language": "native",
       "question": "Bible KJV Daniel lions den verses",
       "expected_verses": [
         "Daniel 6"
@@ -250,6 +277,7 @@
       "id": "B-11",
       "source": "bible",
       "difficulty": "easy",
+      "query_language": "native",
       "question": "Bible KJV Noah ark dimensions verse",
       "expected_verses": [
         "Genesis 6:15"
@@ -259,9 +287,133 @@
       "id": "B-12",
       "source": "bible",
       "difficulty": "medium",
+      "query_language": "native",
       "question": "Bible KJV Burning Bush Exodus 3 verse",
       "expected_verses": [
         "Exodus 3:1-6"
+      ]
+    },
+    {
+      "id": "MQ-01",
+      "source": "quran",
+      "difficulty": "medium",
+      "query_language": "en",
+      "question": "Quran beautiful patience verse surah number",
+      "expected_verses": [
+        "12:18",
+        "12:83"
+      ]
+    },
+    {
+      "id": "MQ-02",
+      "source": "quran",
+      "difficulty": "medium",
+      "query_language": "en",
+      "question": "Quran ablution verse Maidah which",
+      "expected_verses": [
+        "5:6"
+      ]
+    },
+    {
+      "id": "MQ-03",
+      "source": "quran",
+      "difficulty": "medium",
+      "query_language": "en",
+      "question": "Quran Moses parting the sea verse number",
+      "expected_verses": [
+        "26:63",
+        "44:24"
+      ]
+    },
+    {
+      "id": "MQ-04",
+      "source": "quran",
+      "difficulty": "easy",
+      "query_language": "en",
+      "question": "Quran Night of Power better than a thousand months verse",
+      "expected_verses": [
+        "97:3"
+      ]
+    },
+    {
+      "id": "MQ-05",
+      "source": "bible",
+      "difficulty": "medium",
+      "query_language": "tr",
+      "question": "Incil KJV sevgi sabırlıdır iyidir ayeti",
+      "expected_verses": [
+        "1 Corinthians 13:4-8"
+      ]
+    },
+    {
+      "id": "MQ-06",
+      "source": "bible",
+      "difficulty": "medium",
+      "query_language": "tr",
+      "question": "Incil KJV Tanrı'nın tüm zırhı ayetleri",
+      "expected_verses": [
+        "Ephesians 6:11-18"
+      ]
+    },
+    {
+      "id": "MQ-07",
+      "source": "bible",
+      "difficulty": "medium",
+      "query_language": "tr",
+      "question": "Incil KJV On Emir Çıkış 20 ayet aralığı",
+      "expected_verses": [
+        "Exodus 20:1-17"
+      ]
+    },
+    {
+      "id": "MQ-08",
+      "source": "bible",
+      "difficulty": "easy",
+      "query_language": "tr",
+      "question": "Incil KJV Daniel aslan çukuru ayetleri",
+      "expected_verses": [
+        "Daniel 6"
+      ]
+    },
+    {
+      "id": "MQ-09",
+      "source": "quran",
+      "difficulty": "medium",
+      "query_language": "es",
+      "question": "¿Cuál es el versículo del Corán sobre la paciencia hermosa?",
+      "expected_verses": [
+        "12:18",
+        "12:83"
+      ]
+    },
+    {
+      "id": "MQ-10",
+      "source": "quran",
+      "difficulty": "easy",
+      "query_language": "es",
+      "question": "Corán versículo sobre la Noche del Destino",
+      "expected_verses": [
+        "97:3"
+      ]
+    },
+    {
+      "id": "MQ-11",
+      "source": "bible",
+      "difficulty": "medium",
+      "query_language": "fr",
+      "question": "Bible KJV l'amour est patient versets",
+      "expected_verses": [
+        "1 Corinthians 13:4-8"
+      ]
+    },
+    {
+      "id": "MQ-12",
+      "source": "bible",
+      "difficulty": "medium",
+      "query_language": "fr",
+      "question": "Bible KJV les Béatitudes Matthieu 5 versets",
+      "expected_verses": [
+        "Matthew 5:3-12"
       ]
     }
   ]
