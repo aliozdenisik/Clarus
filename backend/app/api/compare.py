@@ -29,6 +29,7 @@ from app.api.auth import get_current_user, check_rate_limit
 from src.comparative_rag import ComparativeRAG
 from src.search import SearchResult, BibleSearchResult
 from src.citation_sanitizer import sanitize_citations
+from src.query_translator import QueryTranslator, TranslationError
 
 
 router = APIRouter()
@@ -98,6 +99,9 @@ class CompareResponse(BaseModel):
     latency_ms: int
     # Rich verse metadata for citations
     verse_details: Optional[Dict[str, VerseDetail]] = None
+    # Language metadata (for multilingual support)
+    detected_language: Optional[str] = None
+    response_language: Optional[str] = None
 
 
 def extract_quran_verse_detail(result: SearchResult) -> Tuple[str, VerseDetail]:
@@ -165,6 +169,7 @@ async def compare_scriptures(
     await check_rate_limit(current_user, db)
 
     rag = get_comparative_rag()
+    translator = QueryTranslator()
 
     if request.use_multi_agent:
         # Step 1: Get search results directly (bypass compare_multi_agent)
@@ -294,9 +299,47 @@ async def compare_scriptures(
         db.add(history)
         await db.commit()
 
+        # Response translation: translate essay + paragraphs for non-Turkish/English users
+        detected_language = search_result.search_stats.get("detected_language")
+        essay_text = result.to_essay()
+        response_language = "tr"  # Default: essay is in Turkish
+
+        if detected_language and detected_language not in ("tr", "en"):
+            try:
+                logger.info(
+                    "Translating compare response",
+                    extra={
+                        "detected_language": detected_language,
+                        "paragraph_count": len(paragraphs),
+                    },
+                )
+                # Translate full essay (one LLM call)
+                essay_text = translator.translate_response(
+                    essay_text,
+                    target_lang=detected_language,
+                    preserve_citations=True,
+                )
+                # Translate each paragraph's content and title
+                for para in paragraphs:
+                    para.content = translator.translate_response(
+                        para.content,
+                        target_lang=detected_language,
+                        preserve_citations=True,
+                    )
+                    para.title = translator.translate_response(
+                        para.title, target_lang=detected_language
+                    )
+                response_language = detected_language
+            except TranslationError:
+                logger.error(
+                    "Response translation failed, returning original text",
+                    exc_info=True,
+                )
+                # Graceful degradation: return untranslated essay
+
         return CompareResponse(
             topic=request.topic,
-            essay=result.to_essay(),
+            essay=essay_text,
             paragraphs=paragraphs,
             citations=result.citations,
             confidence=result.confidence,
@@ -305,6 +348,8 @@ async def compare_scriptures(
             total_citations=total_citations,
             latency_ms=latency_ms,
             verse_details=verse_details,
+            detected_language=detected_language,
+            response_language=response_language,
         )
     else:
         # Single essay mode (ComparativeAnswer)
@@ -358,9 +403,37 @@ async def compare_scriptures(
             )
         ]
 
+        # Response translation for single-essay mode
+        detected_language = getattr(rag, "_last_detected_language", None)
+        essay_text = result.essay
+        response_language = "tr"
+
+        if detected_language and detected_language not in ("tr", "en"):
+            try:
+                essay_text = translator.translate_response(
+                    essay_text,
+                    target_lang=detected_language,
+                    preserve_citations=True,
+                )
+                for para in paragraphs:
+                    para.content = translator.translate_response(
+                        para.content,
+                        target_lang=detected_language,
+                        preserve_citations=True,
+                    )
+                    para.title = translator.translate_response(
+                        para.title, target_lang=detected_language
+                    )
+                response_language = detected_language
+            except TranslationError:
+                logger.error(
+                    "Response translation failed in single-essay mode",
+                    exc_info=True,
+                )
+
         return CompareResponse(
             topic=request.topic,
-            essay=result.essay,
+            essay=essay_text,
             paragraphs=paragraphs,
             citations={
                 "quran": result.quran_references,
@@ -371,4 +444,6 @@ async def compare_scriptures(
             total_verses=verses_count,
             total_citations=total_citations_count,
             latency_ms=latency_ms,
+            detected_language=detected_language,
+            response_language=response_language,
         )
