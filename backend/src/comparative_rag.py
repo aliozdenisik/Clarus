@@ -95,6 +95,9 @@ class ComparativeRAG:
         self._nt_searcher = None
         self._apocrypha_searcher = None
 
+        # Per-collection result statistics for confidence scoring
+        self._last_collection_stats: dict = {}
+
     @property
     def enhancer(self):
         """Lazy load Query Enhancer"""
@@ -584,6 +587,35 @@ class ComparativeRAG:
                 self._search_all_multi_query(quran_queries, bible_queries, pool_size=20)
             )
 
+            # Compute per-collection statistics for confidence scoring
+            collection_results = {
+                "quran": len(quran_results),
+                "ot": len(ot_results),
+                "nt": len(nt_results),
+                "apocrypha": len(apocrypha_results),
+            }
+            collections_with_results = sum(
+                1 for v in collection_results.values() if v > 0
+            )
+            total_verses = sum(collection_results.values())
+
+            all_rrf_scores = sorted(
+                [r.score for r in quran_results]
+                + [r.score for r in ot_results]
+                + [r.score for r in nt_results]
+                + [r.score for r in apocrypha_results],
+                reverse=True,
+            )
+
+            self._last_collection_stats = {
+                "collection_results": collection_results,
+                "collections_with_results": collections_with_results,
+                "total_collections": 4,
+                "total_verses": total_verses,
+                "all_rrf_scores": all_rrf_scores,
+                "num_queries": len(quran_queries),
+            }
+
             quran_query = query
             bible_query = query
 
@@ -632,6 +664,35 @@ class ComparativeRAG:
             ot_results = results["ot"]
             nt_results = results["nt"]
             apocrypha_results = results["apocrypha"]
+
+            # Compute per-collection statistics for confidence scoring
+            collection_results = {
+                "quran": len(quran_results),
+                "ot": len(ot_results),
+                "nt": len(nt_results),
+                "apocrypha": len(apocrypha_results),
+            }
+            collections_with_results = sum(
+                1 for v in collection_results.values() if v > 0
+            )
+            total_verses = sum(collection_results.values())
+
+            all_rrf_scores = sorted(
+                [r.score for r in quran_results]
+                + [r.score for r in ot_results]
+                + [r.score for r in nt_results]
+                + [r.score for r in apocrypha_results],
+                reverse=True,
+            )
+
+            self._last_collection_stats = {
+                "collection_results": collection_results,
+                "collections_with_results": collections_with_results,
+                "total_collections": 4,
+                "total_verses": total_verses,
+                "all_rrf_scores": all_rrf_scores,
+                "num_queries": 1,
+            }
 
             duration = (time.time() - start) * 1000
             self._log(
@@ -824,6 +885,7 @@ class ComparativeRAG:
                 ot_verses=ot_verses,
                 nt_verses=nt_verses,
                 apocrypha_verses=apocrypha_verses,
+                collection_stats=self._last_collection_stats,
             )
 
             gen_duration = (time.time() - gen_start) * 1000

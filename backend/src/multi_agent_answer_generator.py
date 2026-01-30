@@ -528,6 +528,7 @@ class MultiAgentOrchestrator:
         ot_verses: List,
         nt_verses: List,
         apocrypha_verses: List,
+        collection_stats: dict = None,
     ) -> MultiAgentAnswer:
         """
         Generate 5-paragraph answer using multi-agent architecture.
