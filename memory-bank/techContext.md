@@ -435,6 +435,67 @@ configureApiClient();
 const response = await getSearchHistoryApiSearchHistoryGet({ query: { page: 1, limit: 20 } });
 ```
 
+## Multilingual Query Translation
+
+### Architecture
+
+```
+User Query (any language) → QueryTranslator → Translated Query (corpus language) → RAG Pipeline → Answer → Response Translation → User Language
+```
+
+### Translation Flow
+
+| Step | Component | What Happens |
+|------|-----------|-------------|
+| 1. Heuristic Check | `QueryTranslator._heuristic_detect()` | Turkish chars + quran → skip LLM; ASCII + bible → skip LLM |
+| 2. LLM Detection + Translation | `QueryTranslator._call_llm_json()` | Single call via `google/gemini-2.5-flash-lite` |
+| 3. Search | `UltimateRAG` / `ComparativeRAG` | Uses translated query in corpus language |
+| 4. Response Translation | `QueryTranslator.translate_response()` | Translates answer back to user's language |
+
+### Supported Languages
+
+| Code | Language | Role |
+|------|----------|------|
+| `tr` | Turkish | Native for Quran corpus |
+| `en` | English | Native for Bible corpus |
+| `es` | Spanish | Translated |
+| `fr` | French | Translated |
+| `it` | Italian | Translated |
+| `pt` | Portuguese | Translated |
+| `ar` | Arabic | Translated |
+| `de` | German | Translated |
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `backend/src/query_translator.py` | Core translation module (614 lines) |
+| `backend/tests/test_query_translator.py` | Unit tests (15 tests, mocked LLM) |
+| `backend/tests/test_translation_accuracy.py` | Accuracy tests (40 pairs, 8 languages) |
+| `frontend/components/search/language-selector.tsx` | Language dropdown UI (Radix) |
+
+### API Changes
+
+| Endpoint | New Request Field | New Response Field |
+|----------|------------------|-------------------|
+| `POST /api/search/quran` | `language: Optional[str]` | `detected_language: Optional[str]` |
+| `POST /api/search/bible` | `language: Optional[str]` | `detected_language: Optional[str]` |
+| `POST /api/compare/` | `language: Optional[str]` | `detected_language`, `response_language` |
+| `GET /api/stream/search` | `language` query param | (in SSE events) |
+| `GET /api/stream/compare` | `language` query param | (in SSE events) |
+
+### Cost Impact
+
+- Translation adds ~$0.003/query (~20% increase)
+- Zero overhead for native queries (heuristic pre-filter skips LLM)
+- Cross-lingual cache: Turkish cache hit serves English user after response translation
+
+### Known Limitations
+
+- German `ö`/`ü` are in `TURKISH_CHARS` set → German queries with those chars + quran corpus trigger Turkish heuristic (false positive)
+- Pure ASCII foreign text (e.g., "amor en la Biblia") + bible corpus triggers English heuristic (false positive)
+- These are acceptable tradeoffs — search still works, just not translated
+
 ## SearchHistory Model
 
 The `SearchHistory` model tracks all user search and compare operations.

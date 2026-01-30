@@ -101,7 +101,113 @@ Replaced the fragile bracket-based citation system with a defense-in-depth archi
 - `c197ba2` feat(frontend): add HoverCard citation component with verse preview
 - `6fe44f6` feat: integrate citation sanitizer across compare pipeline
 
+### Confidence Scoring Overhaul (2026-01-30) - NEW
+
+Replaced the flawed 6-signal weighted arithmetic mean (which had a structural ceiling of ~72%) with a **Two-Phase Sigmoid-Calibrated** system aligned with industry standards (Perplexity/Cohere).
+
+**Problem:**
+- `llm_confidence` signal was always 0.0 (dead weight)
+- `citation_coverage` penalized concise answers (expected 100% of context to be cited)
+- Arithmetic mean diluted strong signals with weak ones
+- Result: Excellent answers scored ~70%, mediocre ones ~60% (no differentiation)
+
+**Solution (2.0 Methodology):**
+1. **Phase 1: Retrieval Confidence** (Search Quality)
+   - Median RRF Score (Sigmoid calibrated)
+   - Score Separation (Top vs 5th result ratio)
+   - Result Coverage
+
+2. **Phase 2: Answer Quality** (Groundedness)
+   - Citation Density (Citations per paragraph) instead of coverage ratio
+   - Top-K Usage (Did LLM use the best results?)
+   - Answer Substance (Word count)
+
+3. **Hybrid Fusion:**
+   - Geometric-Arithmetic blend: Bad retrieval tanks the score (GIGO principle)
+   - Final Sigmoid Calibration: Maps raw scores to meaningful **40-95%** range
+
+**Files Modified:**
+- `backend/src/confidence_scorer.py` - Complete rewrite
+- `backend/src/answer_generator.py` - Integration
+- `backend/src/multi_agent_answer_generator.py` - Integration & cleanup
+- `backend/src/comparative_answer_generator.py` - Integration
+- `backend/main.py` - Updated CLI display
+- `docs/CONFIDENCE_SCORING.md` - New documentation
+
+**Git Commits (8):**
+- `25b3540` feat(cli): display confidence breakdown in search/ask/compare output
+- `113f67e` feat(api): add confidence_breakdown to API and SSE responses
+- `25cf88e` feat(multi-agent): replace LLM confidence averaging with objective ConfidenceScorer
+- `0d464d0` feat(answer): integrate objective confidence scoring into single-source answer generator
+- `5fd7506` feat(rag): expose RRF score statistics from search pipeline
+- `0c8a6f1` feat(search): preserve original Qdrant similarity scores before RRF overwrite
+- `b67e8ad` feat(confidence): add ConfidenceScorer module with 5-signal computation
+- `(latest)` refactor(confidence): implement two-phase sigmoid calibration
+
+### RFC-003: Multilingual Query Translation (2026-01-30) - NEW
+
+Implemented Phase 1 of RFC-003: Automatic multilingual query translation so users can search in any of 8 supported languages and get results back in their language.
+
+**Architecture: Detect → Translate → Search → Translate Response**
+
+1. **QueryTranslator Module** (`backend/src/query_translator.py`, 614 lines)
+   - Single LLM call via OpenRouter (`google/gemini-2.5-flash-lite`) for language detection + translation
+   - Heuristic pre-filters: Turkish chars + quran → skip LLM; pure ASCII + bible → skip LLM
+   - Zero new dependencies (VPS constraint — no FastText, no lingua-py)
+   - Supported languages: en, tr, es, fr, it, pt, ar, de
+
+2. **Backend Integration**
+   - `UltimateRAG`: Translation in `search_quran()`, `search_bible()`, `ask_quran()`, `ask_bible()`
+   - `ComparativeRAG`: Parallel translation in `_translate_query_parallel()`
+   - API endpoints: `language` request field + `detected_language` response field
+   - Response translation for compare + SSE streaming endpoints
+   - Cross-lingual cache metadata with `source_language` tracking
+
+3. **Frontend Integration**
+   - `LanguageSelector` component (Radix DropdownMenu) in search + compare pages
+   - Session-based language selection (no persistence)
+   - Badge shows: "🌐 Auto", "🌐 Auto (ES)", or "🌐 ES"
+
+4. **Testing**
+   - 15 unit tests for QueryTranslator (mocked LLM)
+   - 40 translation accuracy tests across 8 language categories
+   - 12 multilingual retrieval accuracy test cases (EN→Quran, TR→Bible, ES→Quran, FR→Bible)
+   - Retrieval accuracy test now includes Stage 0: Query Translation + native vs translated metrics
+
+**Files Created:**
+- `backend/src/query_translator.py` (614 lines)
+- `backend/tests/test_query_translator.py` (686 lines)
+- `backend/tests/test_translation_accuracy.py` (~300 lines)
+- `frontend/components/search/language-selector.tsx` (103 lines)
+
+**Files Modified:**
+- `backend/src/ultimate_rag.py` — Translation integration
+- `backend/src/query_enhancer.py` — Deprecation warning on `translate_for_bible()`
+- `backend/src/comparative_rag.py` — Parallel translation
+- `backend/src/llm_cache.py` — Cross-lingual cache metadata
+- `backend/app/api/compare.py` — Response translation + `detected_language` field
+- `backend/app/api/search.py` — `language` request field
+- `backend/app/api/stream.py` — SSE language param + response translation
+- `backend/tests/test_data.json` — 12 multilingual test cases added
+- `backend/tests/run_retrieval_accuracy_test.py` — Stage 0 translation + native vs translated report
+- `frontend/app/search/page.tsx` — LanguageSelector integration
+- `frontend/app/compare/page.tsx` — LanguageSelector integration
+
+**Git Commits (11):**
+- `35d16b0` feat(backend): add QueryTranslator module with language detection and LLM translation
+- `6287914` test(backend): add unit tests for QueryTranslator translate_query and translate_response
+- `14934ab` feat(backend): integrate QueryTranslator into UltimateRAG search pipeline
+- `05c1b21` feat(backend): integrate QueryTranslator into ComparativeRAG pipeline
+- `e6142a4` feat(backend): add response translation for compare and search endpoints
+- `cd8e957` feat(backend): add language parameter to search and compare API schemas
+- `04f6050` feat(backend): optimize semantic cache for cross-lingual query hits
+- `d799515` feat(frontend): add language selector component for multilingual search
+- `7220661` feat(frontend): integrate language selector into search and compare pages
+- `f3f1deb` test(backend): add translation accuracy tests with 40 multilingual query pairs
+- (pending) docs: update project context for RFC-003 multilingual query translation
+
 **Completed**:
+- **Confidence Scoring Overhaul (2026-01-30)**: Implemented Two-Phase Sigmoid system. Scores now range 40-95%, accurately reflecting result quality.
 - **Citation System Overhaul (2026-01-29)**: Replaced bracket-based citations with defense-in-depth architecture: backend sanitizer + rewritten parser + Radix HoverCard. Resolves Issue #16.
 - **Landing Page Redesign (2026-01-29)**: Full marketing-ready overhaul of `frontend/app/page.tsx` for non-technical audience (theology/philosophy researchers). Utilitarian luxury design audit against Linear/Vercel/Raycast standards.
 - **History Page Fix (2026-01-29)**: Complete overhaul of `/history` page — added `result_count` to SearchHistory model + DB migration, configured SDK client global auth, migrated from raw `fetch()` to generated SDK client, fixed search_type display with 13-value exhaustive mapping, updated tests to use SDK mocks.
