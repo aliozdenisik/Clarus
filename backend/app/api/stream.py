@@ -25,6 +25,8 @@ sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
+from typing import Optional
+
 from app.db import get_db
 from app.models import User, SearchHistory
 from app.api.auth import get_current_user, get_current_user_from_token, check_rate_limit
@@ -32,6 +34,7 @@ from app.api.compare_helpers import build_verse_details, build_paragraphs
 from app.api.compare import extract_quran_verse_detail, extract_bible_verse_detail
 from src.ultimate_rag import UltimateRAG
 from src.comparative_rag import ComparativeRAG
+from src.query_translator import QueryTranslator, TranslationError
 
 
 router = APIRouter()
@@ -60,6 +63,9 @@ async def stream_search(
         ...,
         description="JWT access token (required for SSE - EventSource can't send headers)",
     ),
+    language: Optional[str] = Query(
+        None, description="Detected user language (ISO 639-1)"
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     """Stream search results with AI answer generation.
@@ -82,6 +88,7 @@ async def stream_search(
     async def generate():
         logger.info(f"[SSE /search] Starting stream for query: {q}, source: {source}")
         rag = UltimateRAG()
+        translator = QueryTranslator()
 
         # First, send search status
         yield f"data: {json.dumps({'status': 'searching', 'message': 'Aranıyor...'})}\n\n"
@@ -128,6 +135,32 @@ async def stream_search(
                 answer_text = answer.get("answer", "") or answer.get("text", "")
             else:
                 answer_text = str(answer)
+
+            # Detect language for response translation
+            detected_language = language  # From query param
+            if not detected_language:
+                try:
+                    detect_result = translator.translate_query(q, corpus=None)
+                    detected_language = detect_result.detected_language
+                except Exception:
+                    detected_language = None
+
+            # Translate answer if user's language differs from corpus language
+            corpus_lang = "tr" if source == "quran" else "en"
+            if detected_language and detected_language not in ("tr", "en"):
+                try:
+                    yield f"data: {json.dumps({'status': 'translating', 'message': 'Yanıt çevriliyor...'})}\n\n"
+                    answer_text = translator.translate_response(
+                        answer_text,
+                        target_lang=detected_language,
+                        preserve_citations=True,
+                    )
+                except TranslationError:
+                    logger.error(
+                        "Search stream response translation failed, sending original",
+                        exc_info=True,
+                    )
+
             words = answer_text.split()
 
             logger.info(
@@ -233,6 +266,9 @@ async def stream_compare(
         ...,
         description="JWT access token (required for SSE - EventSource can't send headers)",
     ),
+    language: Optional[str] = Query(
+        None, description="Detected user language (ISO 639-1)"
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     """Stream comparative analysis with multi-agent output.
@@ -260,6 +296,7 @@ async def stream_compare(
         try:
             logger.info("[COMPARE] Creating ComparativeRAG instance...")
             rag = ComparativeRAG(verbose=True)
+            compare_translator = QueryTranslator()
             logger.info("[COMPARE] ComparativeRAG created successfully")
         except Exception as e:
             logger.error(f"[COMPARE] Failed to create RAG: {e}")
@@ -312,12 +349,42 @@ async def stream_compare(
             # Build structured paragraphs (using shared helper)
             paragraphs = build_paragraphs(result, as_dict=True)
 
+            # Determine detected language for response translation
+            detected_language = language  # From query param (may be None)
+            if not detected_language:
+                detected_language = search_result.search_stats.get("detected_language")
+
             logger.info(
                 f"[COMPARE] Streaming {len(paragraphs)} structured paragraphs..."
+                + (
+                    f" (translating to {detected_language})"
+                    if detected_language and detected_language not in ("tr", "en")
+                    else ""
+                )
             )
 
-            # Stream paragraphs one by one
+            # Notify frontend if translation is happening
+            if detected_language and detected_language not in ("tr", "en"):
+                yield f"data: {json.dumps({'status': 'translating', 'message': 'Yanıt çevriliyor...'})}\n\n"
+
+            # Stream paragraphs one by one (with per-paragraph translation)
             for idx, para in enumerate(paragraphs, 1):
+                if detected_language and detected_language not in ("tr", "en"):
+                    try:
+                        para["content"] = compare_translator.translate_response(
+                            para["content"],
+                            target_lang=detected_language,
+                            preserve_citations=True,
+                        )
+                        para["title"] = compare_translator.translate_response(
+                            para["title"], target_lang=detected_language
+                        )
+                    except TranslationError as e:
+                        logger.error(
+                            "Paragraph translation failed during SSE",
+                            extra={"paragraph": idx, "error": str(e)},
+                        )
+                        # Graceful degradation: send untranslated paragraph
                 yield f"data: {json.dumps({'type': 'paragraph', 'data': para})}\n\n"
                 yield ": heartbeat\n\n"
                 logger.info(
