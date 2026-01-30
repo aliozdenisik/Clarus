@@ -29,6 +29,7 @@ from tenacity import (
 )
 
 from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
+from src.confidence_scorer import ConfidenceScorer
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ class ComparativeAnswer:
     confidence: float  # 0.0 - 1.0 confidence score
     query: str  # Original query
     verses_provided: int  # Total verses given to LLM (80)
+    confidence_breakdown: Optional[dict] = None  # Detailed confidence breakdown
 
 
 class ComparativeAnswerGenerator:
@@ -89,12 +91,13 @@ ESSAY STRUCTURE:
 4. Conclusion - summary of key insights
 
 OUTPUT FORMAT (JSON):
+Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
 {
     "essay": "Karşılaştırmalı essay metni [Sure:Ayet] ve [Book Ch:V] şeklinde kaynaklarla...",
     "quran_citations": ["Bakara:45", "Fatiha:1"],
     "bible_citations": ["John 3:16", "Genesis 1:1"],
     "all_references_ordered": ["Bakara:45", "John 3:16", ...],
-    "confidence": 0.85
+    "confidence": 0.0
 }"""
 
     FEW_SHOT = [
@@ -129,7 +132,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
                         "James 1:3",
                         "Romans 5:3",
                     ],
-                    "confidence": 0.92,
+                    "confidence": 0.0,
                 },
                 ensure_ascii=False,
             ),
@@ -149,6 +152,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
             "Content-Type": "application/json",
             "HTTP-Referer": "https://github.com/qdrant/qdrant",
         }
+        self.confidence_scorer = ConfidenceScorer()
         print(f"Initialized ComparativeAnswerGenerator with model: {self.model}")
 
     def _extract_reference(self, result, source: str) -> str:
@@ -377,6 +381,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         quran_chunks: List,
         bible_semantic: List,
         bible_chunks: List,
+        collection_stats: dict = None,
     ) -> ComparativeAnswer:
         """
         Generate a comparative theological essay from multi-scripture results.
@@ -387,6 +392,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
             quran_chunks: 20 results from Quran chunk search
             bible_semantic: 20 results from Bible semantic search
             bible_chunks: 20 results from Bible chunk search
+            collection_stats: Optional dict with search statistics for confidence computation
 
         Returns:
             ComparativeAnswer with essay, citations, and confidence
@@ -418,14 +424,49 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         print(f"Generating comparative essay with {total_verses} verses...")
         llm_result = self._call_llm(query, context)
 
+        # Compute objective confidence from collection stats
+        if collection_stats:
+            all_rrf_scores = collection_stats.get("all_rrf_scores", [])
+            num_queries = collection_stats.get("num_queries", 1)
+            total_verses_context = collection_stats.get("total_verses", 80)
+            collections_with_results = collection_stats.get("collections_with_results", 4)
+        else:
+            # Fallback: build from search results
+            all_rrf_scores = sorted(
+                [r.score for r in quran_semantic] +
+                [r.score for r in quran_chunks] +
+                [r.score for r in bible_semantic] +
+                [r.score for r in bible_chunks],
+                reverse=True
+            )
+            num_queries = 1
+            total_verses_context = total_verses
+            collections_with_results = sum(1 for lst in [quran_semantic, quran_chunks, bible_semantic, bible_chunks] if lst)
+
+        # Count citations from LLM response
+        cited_count = len(llm_result.get("quran_citations", [])) + len(llm_result.get("bible_citations", []))
+
+        breakdown = self.confidence_scorer.compute(
+            scores=all_rrf_scores,
+            num_queries=num_queries,
+            cited_count=cited_count,
+            total_context=total_verses_context,
+            collections_with_results=collections_with_results,
+            total_collections=4,
+            actual_results=total_verses,
+            expected_results=80,  # 4 collections × 20 verses
+            llm_confidence=llm_result.get("confidence", 0.0),
+        )
+
         return ComparativeAnswer(
             essay=llm_result.get("essay", "Analiz üretilemedi."),
             quran_references=llm_result.get("quran_citations", []),
             bible_references=llm_result.get("bible_citations", []),
             all_references=llm_result.get("all_references_ordered", []),
-            confidence=llm_result.get("confidence", 0.0),
+            confidence=breakdown.final_score,
             query=query,
             verses_provided=total_verses,
+            confidence_breakdown=breakdown.to_dict(),
         )
 
 
