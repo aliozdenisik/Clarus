@@ -334,6 +334,7 @@ async def stream_compare(
 
             stats_data = {
                 "confidence": result.confidence,
+                "confidence_breakdown": getattr(result, "confidence_breakdown", None),
                 "latency_ms": latency_ms,
                 "total_verses": total_verses,
                 "total_citations": total_citations,

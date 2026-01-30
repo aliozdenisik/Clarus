@@ -92,6 +92,7 @@ class CompareResponse(BaseModel):
     citations: Dict[str, List[str]]
     # Statistics
     confidence: float
+    confidence_breakdown: Optional[dict] = None
     total_verses: int
     total_citations: int
     latency_ms: int
@@ -299,6 +300,7 @@ async def compare_scriptures(
             paragraphs=paragraphs,
             citations=result.citations,
             confidence=result.confidence,
+            confidence_breakdown=getattr(result, "confidence_breakdown", None),
             total_verses=total_verses,
             total_citations=total_citations,
             latency_ms=latency_ms,
@@ -365,6 +367,7 @@ async def compare_scriptures(
                 "bible": result.bible_references,
             },
             confidence=result.confidence,
+            confidence_breakdown=getattr(result, "confidence_breakdown", None),
             total_verses=verses_count,
             total_citations=total_citations_count,
             latency_ms=latency_ms,
