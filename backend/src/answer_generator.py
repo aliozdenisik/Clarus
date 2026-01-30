@@ -28,6 +28,7 @@ from tenacity import (
 )
 
 from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
+from src.confidence_scorer import ConfidenceScorer, ConfidenceBreakdown
 from app.logging_config import get_logger, log_performance
 
 logger = get_logger(__name__)
@@ -43,6 +44,7 @@ class AnswerResult:
     source: str  # quran_tr, bible_kjva, etc.
     query: str  # Original query
     context_used: int  # Number of verses used as context
+    confidence_breakdown: Optional[dict] = None  # Detailed confidence signals
 
 
 class AnswerGenerator:
@@ -73,11 +75,13 @@ KRİTİK KURALLAR:
 4. Verilen ayetler yeterli değilse, bunu açıkça belirt
 5. Tefsir/yorum yaparken kaynağa bağlı kal
 
+Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
+
 ÇIKTI FORMATI (JSON):
 {
     "answer": "Cevap metni [Sure:Ayet] şeklinde kaynaklarla...",
     "cited_references": ["Bakara:45", "Nisa:11"],
-    "confidence": 0.85
+    "confidence": 0.0
 }"""
 
     FEW_SHOT_QURAN = [
@@ -95,7 +99,7 @@ AYETLER:
                 {
                     "answer": "Kuran'a göre sabır, müminin en önemli erdemlerinden biridir. Allah, müminlere zorluklar karşısında sabır ve namazla yardım dilemelerini emretmektedir [Bakara:45]. Sabrın önemi, Allah'ın sabredenlerle beraber olduğu müjdesiyle vurgulanır [Bakara:153]. Bu, sabrın sadece bir erdem değil, aynı zamanda Allah'ın yardımına ulaşmanın bir yolu olduğunu gösterir.",
                     "cited_references": ["Bakara:45", "Bakara:153"],
-                    "confidence": 0.95,
+                    "confidence": 0.0,
                 },
                 ensure_ascii=False,
             ),
@@ -113,11 +117,13 @@ CRITICAL RULES:
 4. If the verses are insufficient, clearly state this
 5. Be faithful to the source text
 
+Note: The "confidence" field will be computed by the system. Leave it as 0.0.
+
 OUTPUT FORMAT (JSON):
 {
     "answer": "Cevap Türkçe olarak [John 3:16] şeklinde kaynaklarla...",
     "cited_references": ["John 3:16", "Romans 5:8"],
-    "confidence": 0.85
+    "confidence": 0.0
 }"""
 
     FEW_SHOT_BIBLE = [
@@ -135,7 +141,7 @@ VERSES:
                 {
                     "answer": "İncil'e göre Tanrı'nın sevgisi benzersiz ve koşulsuzdur. Tanrı dünyayı o kadar çok sevdi ki, biricik Oğlu'nu verdi - bu, O'na iman edenlerin mahvolmaması, sonsuz yaşama kavuşması içindir [John 3:16]. Daha da dikkat çekici olan, Tanrı'nın bu sevgiyi biz henüz günahkârken göstermesidir; Mesih bizim için öldü [Romans 5:8]. Bu, ilahi sevginin insan liyakatine değil, Tanrı'nın merhametine dayandığını gösterir.",
                     "cited_references": ["John 3:16", "Romans 5:8"],
-                    "confidence": 0.95,
+                    "confidence": 0.0,
                 },
                 ensure_ascii=False,
             ),
@@ -155,6 +161,7 @@ VERSES:
             "Content-Type": "application/json",
             "HTTP-Referer": "https://github.com/qdrant/qdrant",
         }
+        self.confidence_scorer = ConfidenceScorer()
 
     def _extract_reference(self, result, source: str) -> str:
         """Extract reference string from search result based on source"""
@@ -257,8 +264,7 @@ VERSES:
         wait=wait_exponential(multiplier=2, min=2, max=60),
         retry=retry_if_exception_type(requests.exceptions.RequestException),
         before_sleep=lambda rs: logger.info(
-            "Retrying LLM call",
-            extra={"attempt": rs.attempt_number, "max_attempts": 5}
+            "Retrying LLM call", extra={"attempt": rs.attempt_number, "max_attempts": 5}
         ),
     )
     def _call_llm(self, query: str, context: str, source: str) -> dict:
@@ -272,7 +278,11 @@ VERSES:
 
             logger.info(
                 "LLM call started",
-                extra={"operation": "answer_generation", "model": self.model, "source": source}
+                extra={
+                    "operation": "answer_generation",
+                    "model": self.model,
+                    "source": source,
+                },
             )
 
             # Select appropriate prompt based on source
@@ -344,16 +354,20 @@ VERSES:
                 latency_ms = (time.perf_counter() - start_time) * 1000
                 span.set_data("latency_ms", latency_ms)
                 log_performance(
-                    logger, "llm_answer_generation", latency_ms,
-                    model=self.model, source=source,
-                    input_tokens=input_tokens, output_tokens=output_tokens
+                    logger,
+                    "llm_answer_generation",
+                    latency_ms,
+                    model=self.model,
+                    source=source,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
                 )
                 return result
             except CircuitBreakerError:
                 # Circuit breaker open - fail fast, do NOT retry
                 logger.warning(
                     "Circuit breaker OPEN for LLM - answer generation failed",
-                    extra={"model": self.model, "source": source}
+                    extra={"model": self.model, "source": source},
                 )
                 span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {
@@ -366,7 +380,9 @@ VERSES:
                 raise
             except requests.exceptions.RequestException as e:
                 # Other HTTP errors - don't retry
-                logger.error("API request failed", extra={"error": str(e), "model": self.model})
+                logger.error(
+                    "API request failed", extra={"error": str(e), "model": self.model}
+                )
                 span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {
                     "answer": "Cevap üretilemedi.",
@@ -375,7 +391,10 @@ VERSES:
                 }
             except (json.JSONDecodeError, KeyError, ValueError) as e:
                 # Parse errors - don't retry
-                logger.error("Response parsing failed", extra={"error": str(e), "model": self.model})
+                logger.error(
+                    "Response parsing failed",
+                    extra={"error": str(e), "model": self.model},
+                )
                 span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {
                     "answer": "Cevap üretilemedi.",
@@ -389,6 +408,7 @@ VERSES:
         search_results: List,
         source: str = "quran_tr",
         max_context_results: int = 15,
+        score_stats: dict = None,
     ) -> AnswerResult:
         """
         Generate a cited answer from search results.
@@ -404,11 +424,17 @@ VERSES:
         """
         logger.info(
             "Answer generation started",
-            extra={"source": source, "context_count": len(search_results), "query": query[:50]}
+            extra={
+                "source": source,
+                "context_count": len(search_results),
+                "query": query[:50],
+            },
         )
 
         if not search_results:
-            logger.warning("No search results for answer generation", extra={"source": source})
+            logger.warning(
+                "No search results for answer generation", extra={"source": source}
+            )
             return AnswerResult(
                 text="Verilen kaynaklarda bu soruyla ilgili bilgi bulunamadı.",
                 citations=[],
@@ -427,16 +453,37 @@ VERSES:
         citations = llm_result.get("cited_references", [])
         logger.info(
             "Citation extraction completed",
-            extra={"source": source, "citation_count": len(citations), "citations": citations[:5]}
+            extra={
+                "source": source,
+                "citation_count": len(citations),
+                "citations": citations[:5],
+            },
+        )
+
+        # Compute objective confidence
+        rrf_scores = [r.score for r in search_results]
+        rrf_scores.sort(reverse=True)
+
+        breakdown = self.confidence_scorer.compute(
+            scores=rrf_scores,
+            num_queries=score_stats.get("num_queries", 1) if score_stats else 1,
+            cited_count=len(citations),
+            total_context=len(search_results),
+            collections_with_results=1,  # single source
+            total_collections=1,  # single source
+            actual_results=len(search_results),
+            expected_results=10,  # final_top_k default
+            llm_confidence=llm_result.get("confidence", 0.0),
         )
 
         return AnswerResult(
             text=llm_result.get("answer", "Cevap üretilemedi."),
             citations=citations,
-            confidence=llm_result.get("confidence", 0.0),
+            confidence=breakdown.final_score,
             source=source,
             query=query,
             context_used=min(len(search_results), max_context_results),
+            confidence_breakdown=breakdown.to_dict(),
         )
 
 
