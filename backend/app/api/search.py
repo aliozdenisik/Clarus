@@ -50,6 +50,11 @@ class SearchRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=500)
     mode: str = Field(default="semantic", pattern="^(semantic|keyword)$")
     top_k: int = Field(default=10, ge=1, le=50)
+    language: Optional[str] = Field(
+        None,
+        pattern=r"^(en|tr|es|fr|it|pt|ar|de)$",
+        description="Response language (auto-detect if omitted)",
+    )
 
 
 class VerseResult(BaseModel):
@@ -67,6 +72,7 @@ class SearchResponse(BaseModel):
     verse_details: Optional[Dict[str, VerseDetail]] = (
         None  # NEW: Rich verse metadata for citations
     )
+    detected_language: Optional[str] = None
 
 
 class HistoryItem(BaseModel):
@@ -159,6 +165,8 @@ async def search_quran(
         results=verses,
         total=len(verses),
         verse_details=verse_details,  # NEW: Include verse metadata
+        detected_language=request.language
+        or "tr",  # Use provided language or default to Turkish (Quran corpus)
     )
 
 
@@ -243,6 +251,8 @@ async def search_bible(
         results=verses,
         total=len(verses),
         verse_details=verse_details,  # NEW: Include verse metadata
+        detected_language=request.language
+        or "en",  # Use provided language or default to English (Bible corpus)
     )
 
 
