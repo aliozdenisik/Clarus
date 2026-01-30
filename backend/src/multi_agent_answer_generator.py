@@ -41,6 +41,7 @@ from tenacity import (
 )
 
 from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
+from src.confidence_scorer import ConfidenceScorer
 from app.logging_config import get_logger, log_performance
 
 logger = get_logger(__name__)
@@ -58,6 +59,7 @@ class MultiAgentAnswer:
 
     citations: Dict[str, List[str]] = field(default_factory=dict)
     confidence: float = 0.0
+    confidence_breakdown: Optional[dict] = None
     query: str = ""
     verses_provided: Dict[str, int] = field(default_factory=dict)
 
@@ -262,11 +264,13 @@ ATIF FORMAT KURALLARI:
 - SADECE tek köşeli parantez kullan: [Kitap Bölüm:Ayet]
 - Örnek: [Genesis 1:1], [Psalms 23:1]
 
+Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
+
 ÇIKTI FORMATI (JSON):
 {
     "commentary": "Eski Ahit perspektifinden yorum paragrafı [Genesis 1:1] şeklinde kaynaklarla...",
     "citations": ["Genesis 1:1", "Psalms 23:1"],
-    "confidence": 0.85
+    "confidence": 0.0
 }"""
 
     def generate(self, query: str, verses: List) -> Dict[str, Any]:
@@ -303,11 +307,13 @@ ATIF FORMAT KURALLARI:
 - SADECE tek köşeli parantez kullan: [Kitap Bölüm:Ayet]
 - Örnek: [John 3:16], [Romans 5:8]
 
+Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
+
 ÇIKTI FORMATI (JSON):
 {
     "commentary": "Yeni Ahit perspektifinden yorum paragrafı [John 3:16] şeklinde kaynaklarla...",
     "citations": ["John 3:16", "Romans 5:8"],
-    "confidence": 0.85
+    "confidence": 0.0
 }"""
 
     def generate(self, query: str, verses: List) -> Dict[str, Any]:
@@ -346,11 +352,13 @@ ATIF FORMAT KURALLARI:
 - SADECE tek köşeli parantez kullan: [Kitap Bölüm:Ayet]
 - Örnek: [Wisdom 3:1], [Sirach 2:1]
 
+Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
+
 ÇIKTI FORMATI (JSON):
 {
     "commentary": "Apokrifa perspektifinden yorum paragrafı [Wisdom 3:1] şeklinde kaynaklarla...",
     "citations": ["Wisdom 3:1", "Sirach 2:1"],
-    "confidence": 0.85
+    "confidence": 0.0
 }"""
 
     def generate(self, query: str, verses: List) -> Dict[str, Any]:
@@ -387,11 +395,13 @@ ATIF FORMAT KURALLARI:
 - SADECE tek köşeli parantez kullan: [Sure:Ayet]
 - Örnek: [Bakara:45], [Fatiha:1-3]
 
+Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
+
 ÇIKTI FORMATI (JSON):
 {
     "commentary": "Kuran perspektifinden yorum paragrafı [Bakara:45] şeklinde kaynaklarla...",
     "citations": ["Bakara:45", "Bakara:153"],
-    "confidence": 0.85
+    "confidence": 0.0
 }"""
 
     def generate(self, query: str, verses: List) -> Dict[str, Any]:
@@ -421,12 +431,14 @@ KRİTİK KURALLAR:
 5. Cevabın TAMAMI Türkçe olmalı
 6. Yeni kaynak atıfı yapma, sadece sentez yap
 
+Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
+
 ÇIKTI FORMATI (JSON):
 {
     "synthesis": "Dört kutsal metin geleneğinin karşılaştırmalı özeti...",
     "common_themes": ["tema1", "tema2"],
     "key_differences": ["fark1", "fark2"],
-    "confidence": 0.85
+    "confidence": 0.0
 }"""
 
     def generate(
@@ -486,6 +498,9 @@ class MultiAgentOrchestrator:
         self._apocrypha_agent = None
         self._quran_agent = None
         self._summary_agent = None
+
+        # Initialize confidence scorer
+        self.confidence_scorer = ConfidenceScorer()
 
     @property
     def ot_agent(self) -> OldTestamentAgent:
@@ -650,7 +665,39 @@ class MultiAgentOrchestrator:
             logger, "summary_agent", summary_latency_ms, synthesis_len=len(synthesis)
         )
 
-        # Calculate average confidence
+        # === OBJECTIVE CONFIDENCE SCORING ===
+        # Defensive fallback for collection_stats
+        if collection_stats and collection_stats.get("all_rrf_scores"):
+            all_rrf_scores = collection_stats["all_rrf_scores"]
+        else:
+            logger.warning(
+                "collection_stats not provided or missing all_rrf_scores, computing from search results"
+            )
+            all_rrf_scores = sorted(
+                [r.score for r in (quran_verses or [])]
+                + [r.score for r in (ot_verses or [])]
+                + [r.score for r in (nt_verses or [])]
+                + [r.score for r in (apocrypha_verses or [])],
+                reverse=True,
+            )
+
+        num_queries = collection_stats.get("num_queries", 3) if collection_stats else 3
+
+        # Sum citations from ALL agent results
+        all_citations = 0
+        for agent_result_var in [ot_result, nt_result, apoc_result, quran_result]:
+            all_citations += len(agent_result_var.get("citations", []))
+
+        total_verses_provided = (
+            collection_stats.get("total_verses", 80) if collection_stats else 80
+        )
+        collections_with_results = (
+            collection_stats.get("collections_with_results", 4)
+            if collection_stats
+            else 4
+        )
+
+        # Keep LLM confidence as minor input (average of all agents)
         confidences = [
             ot_result.get("confidence", 0.0),
             nt_result.get("confidence", 0.0),
@@ -658,12 +705,23 @@ class MultiAgentOrchestrator:
             quran_result.get("confidence", 0.0),
             summary_result.get("confidence", 0.0),
         ]
-        # Filter out zeros for average
         valid_confidences = [c for c in confidences if c > 0]
-        avg_confidence = (
+        avg_llm_confidence = (
             sum(valid_confidences) / len(valid_confidences)
             if valid_confidences
             else 0.0
+        )
+
+        breakdown = self.confidence_scorer.compute(
+            scores=all_rrf_scores,
+            num_queries=num_queries,
+            cited_count=all_citations,
+            total_context=total_verses_provided,
+            collections_with_results=collections_with_results,
+            total_collections=4,
+            actual_results=total_verses_provided,
+            expected_results=80,  # 4 collections × 20 verses each
+            llm_confidence=avg_llm_confidence,
         )
 
         total_latency_ms = (time.perf_counter() - start_time) * 1000
@@ -671,7 +729,7 @@ class MultiAgentOrchestrator:
             logger,
             "multi_agent_generation",
             total_latency_ms,
-            confidence=avg_confidence,
+            confidence=breakdown.final_score,
             ot_citations=len(ot_result.get("citations", [])),
             nt_citations=len(nt_result.get("citations", [])),
             apoc_citations=len(apoc_result.get("citations", [])),
@@ -690,7 +748,8 @@ class MultiAgentOrchestrator:
                 "apocrypha": apoc_result.get("citations", []),
                 "quran": quran_result.get("citations", []),
             },
-            confidence=avg_confidence,
+            confidence=breakdown.final_score,
+            confidence_breakdown=breakdown.to_dict(),
             query=query,
             verses_provided={
                 "old_testament": len(ot_verses),
