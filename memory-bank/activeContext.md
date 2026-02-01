@@ -42,16 +42,40 @@ Implemented morphological root-based keyword search for the Quran, enabling acad
 - ✅ Regression: `python main.py info` works, `/api/health` healthy
 - ✅ Consistency: CLI and API return identical `total_occurrences` for same root
 
-**Git Commits (6):**
+**Git Commits (8):**
 - `ac47631` feat(morphology): add tashaphyne and pyarabic dependencies
 - `b4aa332` feat(morphology): add PostgreSQL schema for Quran morphological search
 - `862d557` feat(morphology): add ETL pipeline for Quran morphological data
 - `6f5ac75` feat(morphology): add search service with Arabic normalization
 - `b532aba` feat(morphology): add keyword-search CLI subcommand
-- (pending) feat(morphology): add REST API endpoints for keyword search
+- `b532aba` feat(morphology): add REST API endpoints for keyword search
+- `bad5652` fix(morphology): fix pg_trgm fuzzy match operator in Buckwalter search
+- `a09f16c` fix(morphology): fix Arabic hamza normalization mismatch and null byte crash
 
 **Bug Fixed During Verification:**
 - Fixed pg_trgm fuzzy match operator: `%%` → `%` in SQLAlchemy text() queries (Amn, Elm now work)
+
+**Hamza Normalization Fix (2026-02-01):**
+- Fixed Arabic hamza mismatch: `normalize_arabic()` strips hamza (أ→ا) but DB `root` column preserves hamza
+- Added SQL-side REPLACE normalization in `_find_root_arabic()` Step 3
+- 137 hamza roots (8% of 1,651) now findable: أله (2851), أمن (879), أيي (597), etc.
+- Null byte input crash fixed: strip `\x00` before DB query
+
+**Security Testing (48 vectors, 7 categories):**
+- SQL Injection: 10/10 ✅ (parameterized queries via SQLAlchemy)
+- XSS/Template Injection: 5/5 ✅
+- Command Injection: 6/6 ✅
+- DoS/Boundary: 7/7 ✅
+- Malformed JSON: 9/9 ✅
+- Unicode Attacks: 7/7 ✅
+- Zero vulnerabilities found
+
+**GitHub Issues Closed:**
+- #23 RFC-006: Concordance & Keyword Search (English proposal) ✅
+- #25 RFC-006: Kur'an Anahtar Kelime Arama (Turkish proposal) ✅
+- #26 Replace Quran data with Tanzil source ✅
+
+**All 8 commits pushed to `origin/main`.**
 
 ### GitHub Project Board — Batch Issue Resolution (2026-01-29) - NEW
 
@@ -804,25 +828,14 @@ class CompareResponse:
 
 ## Next Steps
 
-1. **Immediate (Git Push)**
-   - Push logging system commits to origin/main
-   - Verify deployment
-
-2. **Logging Verification**
-   - Test JSON output in production mode
-   - Verify correlation ID flow end-to-end
-   - Monitor Sentry for any regressions
-
-3. **Post-Deployment Cleanup (GitHub Issues)**
-   - ~~#17: Stats zeroed out~~ ✅ FIXED
-   - ~~#18: Inconsistent search navigation~~ ✅ FIXED
-   - ~~#19: Missing Apocrypha book count~~ ✅ FIXED
-   - ~~#20: Compare page UI alignment~~ ✅ FIXED
+1. **Post-Deployment Cleanup (GitHub Issues)**
+   - #22 (RFC-005 Save/Share)
+   - #24 (Markdown bug in Compare UI)
    - #12: Fix Playwright E2E test timing issues
    - #10: Refactor verse detail extraction (DRY)
    - #11: Refactor paragraph building (DRY)
 
-3. **Production Readiness**
+2. **Production Readiness**
    - Docker production build
    - HTTPS configuration
    - Google OAuth credentials setup

@@ -55,6 +55,9 @@
 - [x] Strengthened LLM prompts against double-bracket drift
 - [x] **Confidence Scoring 2.0**: Two-phase sigmoid calibration (40-95% range)
 - [x] Quran morphological keyword search API (`/api/search/keyword`) — root-based search, root listing, root info
+- [x] Quran morphological keyword search — hamza normalization fix (137 roots, 10K+ words)
+- [x] Null byte input sanitization (HTTP 500 → graceful 200)
+- [x] 48-vector security test suite passed (SQL injection, XSS, command injection, DoS, Unicode)
 
 ### Frontend (Next.js 15)
 
@@ -184,6 +187,8 @@
 6. ~~**SSE streaming format mismatch**: Compare page essay not displayed~~ → **FIXED** (2026-01-28)
 7. ~~**New Testament Citation Bug**: Backend agent generates citations with incorrect double brackets~~ → **FIXED** (2026-01-29, Issue #16 — citation system overhaul)
 8. ~~**SSE Stats Format Mismatch**: Compare page stats (confidence, latency, verses) showing zero values~~ → **FIXED** (2026-01-29, Issue #17 — SSE message format alignment)
+9. ~~**Arabic hamza normalization mismatch**: 137 roots unreachable via Arabic input~~ → **FIXED** (2026-02-01)
+10. ~~**Null byte crash**: HTTP 500 on null byte input~~ → **FIXED** (2026-02-01)
 
 ## Technical Debt (GitHub Issues)
 
@@ -197,6 +202,9 @@
 | ~~[#18](https://github.com/aliozdenisik/Clarus/issues/18)~~ | ~~Inconsistent search navigation options~~ | ~~Medium~~ → **CLOSED** |
 | ~~[#19](https://github.com/aliozdenisik/Clarus/issues/19)~~ | ~~Missing Apocrypha book count~~ | ~~Low~~ → **CLOSED** |
 | ~~[#20](https://github.com/aliozdenisik/Clarus/issues/20)~~ | ~~Compare page UI alignment~~ | ~~Medium~~ → **CLOSED** |
+| ~~[#23](...)~~ | ~~RFC-006: Concordance & Keyword Search~~ | ~~High~~ → **CLOSED** |
+| ~~[#25](...)~~ | ~~RFC-006: Kur'an Anahtar Kelime Arama~~ | ~~High~~ → **CLOSED** |
+| ~~[#26](...)~~ | ~~Tanzil data source integration~~ | ~~Medium~~ → **CLOSED** |
 
 ## Evolution of Project
 

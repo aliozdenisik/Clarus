@@ -260,6 +260,13 @@ qdrant/
 | `/api/metadata/bible/books/{nr}` | GET | Book detail with chapters |
 | `/api/metadata/testaments` | GET | Testament list |
 
+### Keyword Search (Morphological)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/search/keyword/` | POST | Root-based keyword search (Arabic or Buckwalter Latin input) |
+| `/api/search/keyword/roots` | GET | List all 1,651 Arabic roots with occurrence counts (paginated) |
+| `/api/search/keyword/root/{root}` | GET | Get info for a specific root |
+
 ### Preferences & Admin
 | Endpoint | Method | Description |
 |----------|--------|-------------|
@@ -528,3 +535,55 @@ The `SearchHistory` model tracks all user search and compare operations.
 | `compare_multi_agent` | compare.py | Multi-Agent |
 | `compare` | compare.py | Compare |
 | `stream_compare` | stream.py | Compare |
+
+## Quran Morphology Database
+
+### Schema (3 PostgreSQL Tables)
+
+| Table | Rows | Purpose |
+|-------|------|---------|
+| `qm_surahs` | 114 | Surah metadata (name_arabic, name_translit, name_english, revelation_type) |
+| `qm_ayahs` | 6,236 | Verse text (text_uthmani for display, text_clean for search) |
+| `qm_words` | 77,429 | Morphological word data (token, root, lemma, pos_tag, features) |
+
+### Key Columns (`qm_words`)
+
+| Column | Type | Purpose |
+|--------|------|---------|
+| `token` | VARCHAR(100) | Original form with diacritics (display) |
+| `token_clean` | VARCHAR(100) | Normalized form without diacritics (search) |
+| `root` | VARCHAR(20) | Arabic root (e.g., كتب) — nullable for particles |
+| `root_buckwalter` | VARCHAR(20) | Buckwalter Latin transliteration (e.g., ktb) |
+| `lemma` | VARCHAR(50) | Lemma/dictionary form |
+| `pos_tag` | VARCHAR(20) | Part of speech tag (N, V, P, etc.) |
+
+### Indexes
+
+| Index | Type | Column |
+|-------|------|--------|
+| `ix_qm_words_root` | B-Tree | root (exact match) |
+| `ix_qm_words_root_bw` | B-Tree | root_buckwalter (exact match) |
+| `ix_qm_words_root_bw_trgm` | GIN | root_buckwalter (fuzzy pg_trgm) |
+| `ix_qm_words_token_clean_trgm` | GIN | token_clean (fuzzy pg_trgm) |
+
+### Root Extraction Pipeline
+
+```
+User Input → is_arabic()?
+├── Arabic Path: normalize → token_clean exact → prefix strip → hamza-normalized root match → Tashaphyne fallback
+└── Latin Path: normalize → Buckwalter exact → pg_trgm fuzzy match
+```
+
+### Arabic Normalization (`arabic_normalizer.py`)
+- Strip tashkeel (diacritics)
+- Hamza: أ/إ/آ → ا, ؤ → و, ئ → ي
+- Ta-marbuta: ة → ه
+- Alef-maksura: ى → ي
+- Strip tatweel (ـ)
+- NFC Unicode normalization
+
+### Dependencies
+- `tashaphyne` — Arabic light stemmer (algorithmic fallback)
+- `pyarabic` — Arabic text normalization + Buckwalter transliteration
+- `psycopg2-binary` — PostgreSQL sync driver (for ETL scripts)
+
