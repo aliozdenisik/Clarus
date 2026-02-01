@@ -1,6 +1,7 @@
 "use client";
 
 import { CitationHoverCard } from "./citation-hover-card";
+import { buildUrlFromReference } from "@/lib/utils/verse-url";
 
 interface InlineCitationProps {
   reference: string;
@@ -17,10 +18,9 @@ interface InlineCitationProps {
     verse_id?: number;
   };
   onNavigate: (reference: string) => void;
-  onClick?: () => void;  // Backward compatibility (scrollToVerse)
 }
 
-export function InlineCitation({ reference, verseDetail, onNavigate, onClick }: InlineCitationProps) {
+export function InlineCitation({ reference, verseDetail, onNavigate }: InlineCitationProps) {
   // If verseDetail exists, render full HoverCard with verse preview
   if (verseDetail) {
     return (
@@ -32,10 +32,22 @@ export function InlineCitation({ reference, verseDetail, onNavigate, onClick }: 
     );
   }
 
-  // Fallback: render muted text (no verse data available)
+  // Fallback: parse reference string to build verse page URL directly
+  const handleClick = () => {
+    const url = buildUrlFromReference(reference);
+    if (url) {
+      window.open(url, '_blank');
+    }
+  };
+
   return (
-    <span className="text-[var(--color-text-muted)] font-medium">
+    <button
+      type="button"
+      aria-label={`View ${reference}`}
+      onClick={handleClick}
+      className="text-[var(--color-accent-primary)] hover:text-[var(--color-accent-hover)] font-medium underline underline-offset-2 decoration-dotted hover:decoration-solid transition-all duration-200"
+    >
       {reference}
-    </span>
+    </button>
   );
 }

@@ -460,20 +460,22 @@ VERSES:
             },
         )
 
-        # Compute objective confidence
+        # Compute objective confidence (two-phase sigmoid-calibrated)
         rrf_scores = [r.score for r in search_results]
         rrf_scores.sort(reverse=True)
 
+        answer_text = llm_result.get("answer", "")
         breakdown = self.confidence_scorer.compute(
             scores=rrf_scores,
             num_queries=score_stats.get("num_queries", 1) if score_stats else 1,
             cited_count=len(citations),
-            total_context=len(search_results),
+            num_paragraphs=self.confidence_scorer.count_paragraphs(answer_text),
+            total_results=len(search_results),
+            expected_results=10,  # final_top_k default
             collections_with_results=1,  # single source
             total_collections=1,  # single source
-            actual_results=len(search_results),
-            expected_results=10,  # final_top_k default
-            llm_confidence=llm_result.get("confidence", 0.0),
+            answer_length_words=self.confidence_scorer.count_words(answer_text),
+            query_type="ask",
         )
 
         return AnswerResult(

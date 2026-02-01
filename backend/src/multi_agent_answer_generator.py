@@ -665,7 +665,7 @@ class MultiAgentOrchestrator:
             logger, "summary_agent", summary_latency_ms, synthesis_len=len(synthesis)
         )
 
-        # === OBJECTIVE CONFIDENCE SCORING ===
+        # === OBJECTIVE CONFIDENCE SCORING (two-phase sigmoid-calibrated) ===
         # Defensive fallback for collection_stats
         if collection_stats and collection_stats.get("all_rrf_scores"):
             all_rrf_scores = collection_stats["all_rrf_scores"]
@@ -697,31 +697,17 @@ class MultiAgentOrchestrator:
             else 4
         )
 
-        # Keep LLM confidence as minor input (average of all agents)
-        confidences = [
-            ot_result.get("confidence", 0.0),
-            nt_result.get("confidence", 0.0),
-            apoc_result.get("confidence", 0.0),
-            quran_result.get("confidence", 0.0),
-            summary_result.get("confidence", 0.0),
-        ]
-        valid_confidences = [c for c in confidences if c > 0]
-        avg_llm_confidence = (
-            sum(valid_confidences) / len(valid_confidences)
-            if valid_confidences
-            else 0.0
-        )
-
         breakdown = self.confidence_scorer.compute(
             scores=all_rrf_scores,
             num_queries=num_queries,
             cited_count=all_citations,
-            total_context=total_verses_provided,
+            num_paragraphs=self.confidence_scorer.count_paragraphs(synthesis),
+            total_results=total_verses_provided,
+            expected_results=80,  # 4 collections × 20 verses each
             collections_with_results=collections_with_results,
             total_collections=4,
-            actual_results=total_verses_provided,
-            expected_results=80,  # 4 collections × 20 verses each
-            llm_confidence=avg_llm_confidence,
+            answer_length_words=self.confidence_scorer.count_words(synthesis),
+            query_type="compare",
         )
 
         total_latency_ms = (time.perf_counter() - start_time) * 1000

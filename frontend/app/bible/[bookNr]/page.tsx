@@ -144,18 +144,35 @@ export default function BookDetailPage() {
     }
   }, [user, bookNr, selectedChapter]);
 
-  // Scroll to verse when chapter content loads and highlightedVerse is set
+  // Scroll to verse when chapter content loads and highlightedVerse is set.
+  // Uses polling because AnimatePresence mode="wait" delays DOM mounting
+  // until the loading skeleton's exit animation completes (~300-600ms).
   useEffect(() => {
-    if (highlightedVerse && chapterContent) {
-      const timer = setTimeout(() => {
-        const element = document.querySelector(`[data-verse-id="${highlightedVerse}"]`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          setTimeout(() => setHighlightedVerse(null), 2000);
-        }
-      }, 100);
-      return () => clearTimeout(timer);
-    }
+    if (!highlightedVerse || !chapterContent) return;
+
+    let cancelled = false;
+
+    const tryScroll = () => {
+      const element = document.querySelector(`[data-verse-id="${highlightedVerse}"]`);
+      if (!element) return false;
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => {
+        if (!cancelled) setHighlightedVerse(null);
+      }, 2000);
+      return true;
+    };
+
+    let attempts = 0;
+    const interval = setInterval(() => {
+      if (cancelled || tryScroll() || ++attempts >= 15) {
+        clearInterval(interval);
+      }
+    }, 100);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, [highlightedVerse, chapterContent]);
 
   const handleLogout = async () => {

@@ -19,6 +19,7 @@
 - [x] Multi-Agent Answer Generation (5 paragraphs)
 - [x] Semantic LLM Cache (60-80% API cost reduction)
 - [x] Sentry Observability Documentation (Backend & Frontend)
+- [x] Confidence Scoring Documentation (`docs/CONFIDENCE_SCORING.md`)
 
 ### Interfaces
 
@@ -52,6 +53,7 @@
 - [x] **SSE streaming format fix** (structured paragraphs + stats)
 - [x] Citation sanitizer for LLM output normalization
 - [x] Strengthened LLM prompts against double-bracket drift
+- [x] **Confidence Scoring 2.0**: Two-phase sigmoid calibration (40-95% range)
 
 ### Frontend (Next.js 15)
 
