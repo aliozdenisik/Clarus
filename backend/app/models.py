@@ -1,5 +1,14 @@
 from datetime import datetime
-from sqlalchemy import String, Integer, DateTime, ForeignKey, Text, Boolean, JSON
+from sqlalchemy import (
+    String,
+    Integer,
+    DateTime,
+    ForeignKey,
+    Text,
+    Boolean,
+    JSON,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Optional
 
@@ -70,3 +79,66 @@ class UserPreferences(Base):
     )
 
     user: Mapped["User"] = relationship(back_populates="preferences")
+
+
+# ---------------------------------------------------------------------------
+# Quran Morphology Tables (qm_*)
+# ---------------------------------------------------------------------------
+
+
+class QMSurah(Base):
+    __tablename__ = "qm_surahs"
+
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=False
+    )  # 1-114, NOT auto-increment
+    name_arabic: Mapped[str] = mapped_column(String(100), nullable=False)
+    name_translit: Mapped[str] = mapped_column(String(100), nullable=False)
+    name_english: Mapped[str] = mapped_column(String(100), nullable=False)
+    revelation_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    total_verses: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    ayahs: Mapped[list["QMAyah"]] = relationship(
+        back_populates="surah", cascade="all, delete-orphan"
+    )
+
+
+class QMAyah(Base):
+    __tablename__ = "qm_ayahs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    surah_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("qm_surahs.id"), nullable=False
+    )
+    ayah_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    text_uthmani: Mapped[str] = mapped_column(Text, nullable=False)
+    text_clean: Mapped[str] = mapped_column(Text, nullable=False)
+
+    surah: Mapped["QMSurah"] = relationship(back_populates="ayahs")
+    words: Mapped[list["QMWord"]] = relationship(
+        back_populates="ayah", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        UniqueConstraint("surah_id", "ayah_number", name="uq_qm_ayah_surah_ayah"),
+    )
+
+
+class QMWord(Base):
+    __tablename__ = "qm_words"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ayah_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("qm_ayahs.id"), nullable=False
+    )
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    word_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    token: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    token_clean: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    root: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    root_buckwalter: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    lemma: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    pos_tag: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    features: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    ayah: Mapped["QMAyah"] = relationship(back_populates="words")
