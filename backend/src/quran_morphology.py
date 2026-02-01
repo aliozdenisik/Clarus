@@ -268,14 +268,14 @@ class QuranMorphologySearch:
                 return (row[0], "buckwalter_exact")
 
             # Step L2: Buckwalter fuzzy match via pg_trgm
-            # NOTE: %% escapes the % operator for SQLAlchemy text() params
+            # NOTE: Use literal_binds=False to avoid parameter escaping issues with %
             result = await session.execute(
                 sa_text(
                     """
                     SELECT DISTINCT root, root_buckwalter,
                            similarity(root_buckwalter, :q) AS sim
                     FROM qm_words
-                    WHERE root_buckwalter %% :q AND root IS NOT NULL
+                    WHERE root_buckwalter % :q AND root IS NOT NULL
                     ORDER BY sim DESC
                     LIMIT 5
                     """
