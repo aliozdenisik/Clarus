@@ -454,16 +454,18 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
             llm_result.get("bible_citations", [])
         )
 
+        essay_text = llm_result.get("essay", "")
         breakdown = self.confidence_scorer.compute(
             scores=all_rrf_scores,
             num_queries=num_queries,
             cited_count=cited_count,
-            total_context=total_verses_context,
+            num_paragraphs=self.confidence_scorer.count_paragraphs(essay_text),
+            total_results=total_verses,
+            expected_results=80,  # 4 collections × 20 verses
             collections_with_results=collections_with_results,
             total_collections=4,
-            actual_results=total_verses,
-            expected_results=80,  # 4 collections × 20 verses
-            llm_confidence=llm_result.get("confidence", 0.0),
+            answer_length_words=self.confidence_scorer.count_words(essay_text),
+            query_type="compare",
         )
 
         return ComparativeAnswer(

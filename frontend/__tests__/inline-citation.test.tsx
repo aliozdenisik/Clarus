@@ -89,7 +89,7 @@ describe('InlineCitation', () => {
   });
 
   describe('without verseDetail (fallback mode)', () => {
-    it('renders as muted text span', () => {
+    it('renders as clickable button with accent style', () => {
       render(
         <InlineCitation 
           reference="Genesis 1:1" 
@@ -97,20 +97,37 @@ describe('InlineCitation', () => {
         />
       );
       
-      const element = screen.getByText('Genesis 1:1');
-      expect(element.tagName).toBe('SPAN');
-      expect(element).toHaveClass('text-[var(--color-text-muted)]');
+      const element = screen.getByRole('button');
+      expect(element).toHaveTextContent('Genesis 1:1');
+      expect(element).toHaveAttribute('aria-label', 'View Genesis 1:1');
     });
 
-    it('does not render as button when no verseDetail', () => {
+    it('opens Bible verse page in new tab for Bible reference', async () => {
+      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
       render(
         <InlineCitation 
-          reference="Genesis 1:1" 
+          reference="1 Corinthians 15:46" 
           onNavigate={vi.fn()} 
         />
       );
       
-      expect(screen.queryByRole('button')).not.toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button'));
+      expect(openSpy).toHaveBeenCalledWith('/bible/46?chapter=15&verse=46', '_blank');
+      openSpy.mockRestore();
+    });
+
+    it('opens Quran verse page in new tab for Quran reference', async () => {
+      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+      render(
+        <InlineCitation 
+          reference="Bakara:153" 
+          onNavigate={vi.fn()} 
+        />
+      );
+      
+      await userEvent.click(screen.getByRole('button'));
+      expect(openSpy).toHaveBeenCalledWith('/quran/2?verse=153', '_blank');
+      openSpy.mockRestore();
     });
   });
 });

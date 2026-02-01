@@ -138,3 +138,25 @@ Ground truth: `tests/test_data.json`
 - **RRF k-parameter**: 60 (tuned for this corpus)
 - **Cache threshold**: 0.95 cosine similarity
 - **Rate limits**: Built into QueryEnhancer for OpenRouter
+
+## CONFIDENCE SCORING
+
+We use a **Two-Phase Sigmoid-Calibrated** system (see `docs/CONFIDENCE_SCORING.md`) instead of a simple weighted average.
+
+**Phase 1: Retrieval Confidence** (Search Quality)
+- `Score Quality`: Median RRF score of top-5 results (Sigmoid calibrated)
+- `Score Separation`: Ratio of Top-1 to Top-5 score (Clear winner detection)
+- `Result Coverage`: Actual vs Expected results ratio
+
+**Phase 2: Answer Quality** (Generation Quality)
+- `Citation Density`: Citations per paragraph (context-aware)
+- `Top-K Usage`: How many citations come from the top search results
+- `Substance`: Word count validation
+
+**Fusion**:
+geometric_mean(retrieval^0.6, answer^0.4) blended with arithmetic mean, then final sigmoid calibration. 
+Range: **40-95%** (Structural ceiling of 72% removed).
+
+**Removed Signals**:
+- `llm_confidence`: Removed (Dead signal, models always confident)
+- `citation_coverage`: Removed (Penalized concise answers)

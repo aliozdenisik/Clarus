@@ -121,7 +121,7 @@ export function parseCitations(content: string): CitationPart[] {
       parts.push(normalized.slice(lastIndex, match.index));
     }
 
-    const rawReference = match[1].trim(); // Trim whitespace inside brackets
+    const rawReference = match[1].replace(/\s+/g, ' ').trim(); // Normalize internal whitespace (newlines→space) and trim
 
     // Check if this is a multi-citation (contains comma)
     let citations: string[];
@@ -162,6 +162,72 @@ export function parseCitations(content: string): CitationPart[] {
   // If no citations were found, return the original normalized text
   if (parts.length === 0) {
     return [normalized];
+  }
+
+  return parts;
+}
+
+/**
+ * Second-pass parser: finds bare (unbracketed) references in remaining text parts.
+ * Uses the known citations list to catch references the LLM wrote without brackets.
+ * Handles whitespace variations (newlines treated as spaces for matching).
+ */
+export function parseBareReferences(
+  parts: CitationPart[],
+  knownCitations: string[]
+): CitationPart[] {
+  if (!knownCitations.length) return parts;
+
+  // Sort longest-first to prevent "John 1:1" matching before "1 John 1:1"
+  const sorted = [...knownCitations].sort((a, b) => b.length - a.length);
+
+  const patterns = sorted.map(citation => {
+    const escaped = citation.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const flexible = escaped.replace(/\s+/g, '\\s+');
+    return { citation, regex: new RegExp(flexible) };
+  });
+
+  const result: CitationPart[] = [];
+
+  for (const part of parts) {
+    if (typeof part !== 'string') {
+      result.push(part);
+      continue;
+    }
+
+    result.push(...splitByBareReferences(part, patterns));
+  }
+
+  return result;
+}
+
+function splitByBareReferences(
+  text: string,
+  patterns: { citation: string; regex: RegExp }[]
+): CitationPart[] {
+  const parts: CitationPart[] = [];
+  let remaining = text;
+
+  while (remaining.length > 0) {
+    let earliest: { index: number; length: number; citation: string } | null = null;
+
+    for (const { citation, regex } of patterns) {
+      const match = regex.exec(remaining);
+      if (match && (earliest === null || match.index < earliest.index)) {
+        earliest = { index: match.index, length: match[0].length, citation };
+      }
+    }
+
+    if (earliest) {
+      if (earliest.index > 0) {
+        parts.push(remaining.slice(0, earliest.index));
+      }
+      parts.push({ type: 'citation', reference: earliest.citation });
+      remaining = remaining.slice(earliest.index + earliest.length);
+    } else {
+      parts.push(remaining);
+      break;
+    }
   }
 
   return parts;

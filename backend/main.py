@@ -49,8 +49,10 @@ def format_confidence_display(confidence: float, breakdown=None) -> str:
 
     Args:
         confidence: Overall confidence score (0.0-1.0)
-        breakdown: Optional dict with keys: retrieval_quality, score_clarity,
-                   citation_coverage, source_breadth, result_volume, llm_confidence
+        breakdown: Optional dict with two-phase breakdown:
+                   Phase 1 (Retrieval): score_quality, score_separation, result_coverage
+                   Phase 2 (Answer): citation_density, top_k_citation_rate, answer_substance
+                   Composites: retrieval_confidence, answer_quality, source_breadth_bonus
 
     Returns:
         Formatted string for Rich console display with color coding
@@ -66,15 +68,19 @@ def format_confidence_display(confidence: float, breakdown=None) -> str:
     conf_str = f"[{color}]Güven: {confidence:.0%}[/{color}]"
 
     if breakdown:
+        retrieval = breakdown.get("retrieval_confidence", 0)
+        answer = breakdown.get("answer_quality", 0)
         details = (
-            f"Retrieval: {breakdown.get('retrieval_quality', 0):.0%} | "
-            f"Clarity: {breakdown.get('score_clarity', 0):.0%} | "
-            f"Citations: {breakdown.get('citation_coverage', 0):.0%} | "
-            f"Sources: {breakdown.get('source_breadth', 0):.0%} | "
-            f"Volume: {breakdown.get('result_volume', 0):.0%} | "
-            f"LLM: {breakdown.get('llm_confidence', 0):.0%}"
+            f"Retrieval: {retrieval:.0%} "
+            f"[dim](Q:{breakdown.get('score_quality', 0):.0%} "
+            f"S:{breakdown.get('score_separation', 0):.0%} "
+            f"C:{breakdown.get('result_coverage', 0):.0%})[/dim] | "
+            f"Answer: {answer:.0%} "
+            f"[dim](D:{breakdown.get('citation_density', 0):.0%} "
+            f"T:{breakdown.get('top_k_citation_rate', 0):.0%} "
+            f"W:{breakdown.get('answer_substance', 0):.0%})[/dim]"
         )
-        conf_str += f" [dim]({details})[/dim]"
+        conf_str += f"\n  {details}"
 
     return conf_str
 
