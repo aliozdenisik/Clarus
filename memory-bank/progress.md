@@ -54,6 +54,7 @@
 - [x] Citation sanitizer for LLM output normalization
 - [x] Strengthened LLM prompts against double-bracket drift
 - [x] **Confidence Scoring 2.0**: Two-phase sigmoid calibration (40-95% range)
+- [x] Quran morphological keyword search API (`/api/search/keyword`) — root-based search, root listing, root info
 
 ### Frontend (Next.js 15)
 
@@ -100,6 +101,7 @@
 - [x] `compare` - Comparative analysis
 - [x] `info` - Collection info
 - [x] `cache-info` / `cache-clear` - Cache management
+- [x] `keyword-search` - Morphological root-based Quran keyword search (Arabic + Buckwalter Latin)
 
 ## Test Coverage Improvements (2026-01-27)
 
@@ -151,6 +153,7 @@
 ### Potential Enhancements
 
 - [x] Arabic font optimization (Amiri font + RTL support)
+- [x] Keyword search frontend UI (RFC-006 Phase 2)
 - [ ] Save/Share functionality
 - [ ] Multi-language support
 - [ ] Batch query API
@@ -165,6 +168,7 @@
 | Multi-Agent | Complete | 5-paragraph output |
 | CLI | Complete | Rich formatting |
 | REST API | Complete | FastAPI + JWT |
+| Keyword Search | Complete | RFC-006: 77,429 words, 1,651 roots |
 | Landing Page | Complete | Utilitarian luxury redesign, non-technical |
 | Frontend | Complete | Next.js 15 + Framer Motion |
 | Docker Setup | Complete | PostgreSQL + Qdrant |
