@@ -153,7 +153,7 @@
 ### Potential Enhancements
 
 - [x] Arabic font optimization (Amiri font + RTL support)
-- [x] Keyword search frontend UI (RFC-006 Phase 2)
+- [ ] Keyword search frontend UI (RFC-006 Phase 2)
 - [ ] Save/Share functionality
 - [ ] Multi-language support
 - [ ] Batch query API
