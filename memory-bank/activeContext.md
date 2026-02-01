@@ -2,7 +2,56 @@
 
 ## Current Work Focus
 
-**Date**: 2026-01-29
+**Date**: 2026-02-01
+
+### RFC-006: Quran Morphological Root-Based Keyword Search (2026-02-01) - COMPLETE ✅
+
+Implemented morphological root-based keyword search for the Quran, enabling academics to find all words derived from an Arabic root with frequency analysis, verse locations, and surah distribution.
+
+**Architecture:**
+- PostgreSQL deterministic lookup (3 tables: surahs, ayahs, words) + Tashaphyne algorithmic fallback
+- Hybrid root extraction: DB exact match → prefix stripping → Tashaphyne
+- Buckwalter Latin input support with fuzzy matching via pg_trgm
+- CLI subcommand: `python main.py keyword-search "كتب"` (Arabic) or `keyword-search "ktb"` (Latin)
+- REST API: `POST /api/search/keyword/` + `GET /api/search/keyword/roots` + `GET /api/search/keyword/root/{root}`
+
+**Data:**
+- 114 surahs, 6,236 ayahs, 77,429 words, 1,651 unique roots
+- Dual-layer Arabic text: Uthmani (display) + Simple Clean (search)
+- Buckwalter transliteration for Latin input support
+
+**Files Created (7):**
+- `backend/requirements.txt` — Added tashaphyne, pyarabic
+- `backend/app/models.py` — QMSurah, QMAyah, QMWord models
+- `backend/scripts/create_morphology_tables.py` — Schema creation
+- `backend/scripts/setup_quran_morphology.py` — ETL pipeline
+- `backend/src/arabic_normalizer.py` — Normalization utilities
+- `backend/src/quran_morphology.py` — Search service
+- `backend/app/api/keyword_search.py` — REST API router
+- `backend/app/schemas/keyword_search.py` — Pydantic models
+
+**Files Modified (2):**
+- `backend/main.py` — CLI subcommand + dispatch
+- `backend/app/main.py` — Router registration
+
+**Verification Results (20 tests):**
+- ✅ CLI Arabic: كتب (319), صلو (99), أمن (879), قول (1722), علم (854)
+- ✅ CLI Latin: ktb (319), Slw (3), Amn (879), qwl (1722), Elm (854)
+- ✅ API Arabic: All 5 roots match CLI counts
+- ✅ API Latin: All 5 roots match CLI counts
+- ✅ Regression: `python main.py info` works, `/api/health` healthy
+- ✅ Consistency: CLI and API return identical `total_occurrences` for same root
+
+**Git Commits (6):**
+- `ac47631` feat(morphology): add tashaphyne and pyarabic dependencies
+- `b4aa332` feat(morphology): add PostgreSQL schema for Quran morphological search
+- `862d557` feat(morphology): add ETL pipeline for Quran morphological data
+- `6f5ac75` feat(morphology): add search service with Arabic normalization
+- `b532aba` feat(morphology): add keyword-search CLI subcommand
+- (pending) feat(morphology): add REST API endpoints for keyword search
+
+**Bug Fixed During Verification:**
+- Fixed pg_trgm fuzzy match operator: `%%` → `%` in SQLAlchemy text() queries (Amn, Elm now work)
 
 ### GitHub Project Board — Batch Issue Resolution (2026-01-29) - NEW
 
