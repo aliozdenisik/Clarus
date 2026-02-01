@@ -1,6 +1,24 @@
 export type CitationPart = string | { type: 'citation'; reference: string };
 
 /**
+ * Strips leading markdown headers and horizontal rules from paragraph content.
+ * Defense against LLM output that includes ## headers despite structured paragraph data.
+ * 
+ * Removes:
+ * - Lines starting with ## or ### (markdown headers)
+ * - Lines that are just --- or *** (horizontal rules)
+ * - Leading/trailing whitespace after stripping
+ */
+export function stripMarkdownHeaders(content: string): string {
+  if (!content) return content;
+  return content
+    .replace(/^#{1,6}\s+[^\n]*\n*/gm, '')  // Remove markdown headers (## Title\n)
+    .replace(/^---+\s*\n*/gm, '')           // Remove horizontal rules (---\n)
+    .replace(/^\*\*\*+\s*\n*/gm, '')        // Remove alt horizontal rules (***\n)
+    .trim();
+}
+
+/**
  * Expands a range reference like "Neml:2-4" or "John 3:16-18" into individual verses
  * Returns single element array for non-range references
  */
