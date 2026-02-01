@@ -119,6 +119,16 @@ class QuranMorphologySearch:
         self, query: str, page: int = 1, per_page: int = 50
     ) -> MorphologySearchResult:
         """Main entry point: detect language, find root, search database."""
+        # Sanitize: strip null bytes and control chars that PostgreSQL rejects
+        query = query.replace("\x00", "").strip()
+        if not query:
+            return MorphologySearchResult(
+                query=query,
+                root=None,
+                root_source="not_found",
+                page=max(page, 1),
+                per_page=min(per_page, 200),
+            )
         per_page = min(per_page, 200)
         page = max(page, 1)
 
@@ -217,8 +227,17 @@ class QuranMorphologySearch:
                         return (row[0], "prefix_stripped")
 
             # Step 3: Check if input itself IS a root
+            # Normalize both sides: user input is already normalized, but DB roots may contain hamza
+            # Use SQL REPLACE to normalize hamza variants (أ, إ, آ) to plain alef (ا)
             result = await session.execute(
-                sa_text("SELECT DISTINCT root FROM qm_words WHERE root = :q LIMIT 1"),
+                sa_text(
+                    """
+                    SELECT DISTINCT root FROM qm_words 
+                    WHERE REPLACE(REPLACE(REPLACE(root, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا') = :q 
+                    AND root IS NOT NULL 
+                    LIMIT 1
+                    """
+                ),
                 {"q": normalized},
             )
             row = result.fetchone()
