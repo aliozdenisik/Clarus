@@ -30,6 +30,7 @@ from src.comparative_rag import ComparativeRAG
 from src.search import SearchResult, BibleSearchResult
 from src.citation_sanitizer import sanitize_citations
 from src.query_translator import QueryTranslator, TranslationError
+from app.api.compare_helpers import strip_markdown_headers
 
 
 router = APIRouter()
@@ -327,15 +328,15 @@ async def compare_scriptures(
                     target_lang=detected_language,
                     preserve_citations=True,
                 )
-                # Translate each paragraph's content and title
+                # Translate each paragraph's content (titles are kept as-is:
+                # they are standard section names that should stay consistent)
                 for para in paragraphs:
-                    para.content = translator.translate_response(
-                        para.content,
-                        target_lang=detected_language,
-                        preserve_citations=True,
-                    )
-                    para.title = translator.translate_response(
-                        para.title, target_lang=detected_language
+                    para.content = strip_markdown_headers(
+                        translator.translate_response(
+                            para.content,
+                            target_lang=detected_language,
+                            preserve_citations=True,
+                        )
                     )
                 response_language = detected_language
             except TranslationError:
@@ -424,13 +425,12 @@ async def compare_scriptures(
                     preserve_citations=True,
                 )
                 for para in paragraphs:
-                    para.content = translator.translate_response(
-                        para.content,
-                        target_lang=detected_language,
-                        preserve_citations=True,
-                    )
-                    para.title = translator.translate_response(
-                        para.title, target_lang=detected_language
+                    para.content = strip_markdown_headers(
+                        translator.translate_response(
+                            para.content,
+                            target_lang=detected_language,
+                            preserve_citations=True,
+                        )
                     )
                 response_language = detected_language
             except TranslationError:
