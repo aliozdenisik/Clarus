@@ -5,7 +5,16 @@ from contextlib import asynccontextmanager
 import asyncio
 
 from app.config import settings
-from app.api import auth, search, compare, stream, admin, metadata, preferences
+from app.api import (
+    auth,
+    search,
+    compare,
+    stream,
+    admin,
+    metadata,
+    preferences,
+    keyword_search,
+)
 from app.db import init_db
 from app.middleware.error_handler import ErrorHandlerMiddleware
 from app.middleware.correlation import CorrelationIDMiddleware
@@ -19,7 +28,10 @@ async def lifespan(app: FastAPI):
     # STARTUP
     # Initialize structured logging first
     setup_logging(LoggingConfig.from_settings(settings))
-    logger.info("Structured logging initialized", extra={"log_level": settings.log_level, "log_format": settings.log_format})
+    logger.info(
+        "Structured logging initialized",
+        extra={"log_level": settings.log_level, "log_format": settings.log_format},
+    )
 
     logger.info("Initializing database...")
     await init_db()
@@ -90,7 +102,13 @@ async def lifespan(app: FastAPI):
             send_default_pii=False,
             before_send=before_send,
         )
-        logger.info("Sentry initialized", extra={"environment": settings.sentry_environment, "traces_sample_rate": settings.sentry_traces_sample_rate})
+        logger.info(
+            "Sentry initialized",
+            extra={
+                "environment": settings.sentry_environment,
+                "traces_sample_rate": settings.sentry_traces_sample_rate,
+            },
+        )
 
     yield  # <-- App runs here
 
@@ -106,7 +124,11 @@ async def lifespan(app: FastAPI):
     except asyncio.TimeoutError:
         logger.warning("Database disposal timed out", extra={"timeout_seconds": 5})
     except Exception as e:
-        logger.error("Error disposing database engine", extra={"error_type": type(e).__name__}, exc_info=True)
+        logger.error(
+            "Error disposing database engine",
+            extra={"error_type": type(e).__name__},
+            exc_info=True,
+        )
 
     # Cancel any pending tasks (best effort)
     tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
@@ -120,7 +142,10 @@ async def lifespan(app: FastAPI):
                 asyncio.gather(*tasks, return_exceptions=True), timeout=5.0
             )
         except asyncio.TimeoutError:
-            logger.warning("Tasks did not cancel within timeout", extra={"pending_tasks": len(tasks), "timeout_seconds": 5})
+            logger.warning(
+                "Tasks did not cancel within timeout",
+                extra={"pending_tasks": len(tasks), "timeout_seconds": 5},
+            )
 
     logger.info("Shutdown complete")
 
@@ -177,6 +202,9 @@ app.include_router(stream.router, prefix="/api/stream", tags=["stream"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 app.include_router(metadata.router, prefix="/api/metadata", tags=["metadata"])
 app.include_router(preferences.router, prefix="/api/preferences", tags=["preferences"])
+app.include_router(
+    keyword_search.router, prefix="/api/search/keyword", tags=["keyword"]
+)
 
 
 @app.get("/api/health")
