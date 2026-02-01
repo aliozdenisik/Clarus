@@ -29,6 +29,13 @@ Traditional keyword search fails for religious texts because:
 - References must be verifiable (Surah:Verse, Book:Chapter:Verse)
 - High confidence in generated content
 
+### 4. Root-Based Word Analysis
+
+- Academics need to find all occurrences of an Arabic root across the entire Quran
+- Must trace morphological derivations (كتب → كتاب، كاتب، كتب، يكتب)
+- Requires frequency analysis, surah distribution, and verse-level context
+- Supports both Arabic script and Buckwalter Latin transliteration input
+
 ## How It Works
 
 ```
@@ -39,6 +46,16 @@ User Question -> Enhance -> Search -> Rerank -> Generate Answer
                    +-- 4 parallel searches (4 testament collections)
                    +-- RRF fusion + reranking
                    +-- LLM generates cited answer
+```
+
+### Morphological Keyword Search (RFC-006)
+
+```
+Arabic/Latin Input → Normalize → Find Root → Query PostgreSQL → Aggregated Results
+                                    |
+                                    +-- Arabic: exact match → prefix strip → hamza normalize → Tashaphyne
+                                    +-- Latin: Buckwalter exact → pg_trgm fuzzy
+                                    +-- Return: root, frequency, derived words, surah distribution, verses
 ```
 
 ## User Experience Goals

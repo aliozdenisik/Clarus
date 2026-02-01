@@ -1,7 +1,7 @@
 # CLARUS - PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-01-26
-**Commit:** e0377c1
+**Generated:** 2026-02-01
+**Commit:** a09f16c
 **Branch:** main
 
 ## OVERVIEW
@@ -20,7 +20,7 @@ qdrant/                         # Root (project named after Qdrant DB it uses)
 │   │   ├── auth/               # JWT + Google OAuth
 │   │   ├── middleware/         # CORS, rate limiting
 │   │   └── schemas/            # Pydantic models
-│   ├── src/                    # RAG pipeline modules (17 files) ← CORE LOGIC
+│   ├── src/                    # RAG pipeline modules (19 files) ← CORE LOGIC
 │   ├── tests/                  # Custom accuracy benchmarks (NOT pytest)
 │   ├── scripts/                # Setup & dev scripts
 │   └── data/                   # Source JSON (quran_tr.json, bible_kjva.json)
@@ -58,7 +58,10 @@ qdrant/                         # Root (project named after Qdrant DB it uses)
 | `embeddings.py` | backend/src/ | 653 | OpenAI text-embedding-3-large + BM25 |
 | `multi_agent_answer_generator.py` | backend/src/ | 530 | 5-agent system (Quran, OT, NT, Apocrypha, Summary) |
 | `indexer.py` | backend/src/ | 722 | Qdrant collection management |
+| `arabic_normalizer.py` | backend/src/ | 67 | Arabic normalization + Buckwalter transliteration |
+| `quran_morphology.py` | backend/src/ | 428 | Root-based morphological keyword search service |
 | `compare.py` | backend/app/api/ | 291 | Compare API + VerseDetail schema |
+| `keyword_search.py` | backend/app/api/ | 149 | Keyword search REST API (3 endpoints) |
 | `types.gen.ts` | frontend/lib/api/ | 1003 | Generated TypeScript API types |
 | `compare/page.tsx` | frontend/app/ | 600+ | Multi-agent comparison UI + rich references |
 | `source-badge.tsx` | frontend/components/compare/ | 30 | Colored source badge component |
@@ -124,6 +127,8 @@ source ../venv/bin/activate
 python main.py search "sabir ve namaz"  # Quran search
 python main.py ask "Islam'da sabir?"    # Q&A with citations
 python main.py compare "Yaratilis"      # Multi-agent comparison
+python main.py keyword-search "كتب"   # Morphological root search
+python main.py keyword-search "ktb"    # Buckwalter Latin input
 python main.py info                     # Collection stats
 uvicorn app.main:app --reload           # Start API server
 
@@ -140,6 +145,7 @@ npm test                                # Run Vitest
 
 - **Rate limit**: 50 queries/day/user (configurable in `backend/app/config.py`)
 - **Collections total**: 43,055 vectors (Quran 6,236 + Bible OT 23,145 + NT 7,957 + Apocrypha 5,717)
+- **Morphology DB**: 77,429 words, 1,651 roots in PostgreSQL (qm_surahs, qm_ayahs, qm_words)
 - **LLM costs**: ~$0.013/query with semantic cache (60-80% reduction)
 - **Port conflicts**: Qdrant on 6333, PostgreSQL on 54322, API on 8000, Frontend on 3000
 - **Memory bank**: Always read `memory-bank/activeContext.md` before starting work

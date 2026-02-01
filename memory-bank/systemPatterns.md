@@ -282,3 +282,52 @@ LLM Output → Backend Sanitizer → Frontend Parser → HoverCard Renderer
 - No brackets in output: Parser returns `CitationPart[]` without `[` or `]` strings
 - Idempotent sanitizer: Safe to apply multiple times
 - Prompt + sanitizer: Defense-in-depth (prompts prevent, sanitizer catches)
+
+### Morphological Keyword Search Architecture
+
+Root-based deterministic search for Quran words, independent from the semantic RAG pipeline:
+
+```
+User Query (Arabic or Latin)
+     │
+     ▼
+is_arabic() detection
+     │
+     ├── ARABIC PATH                    │ LATIN PATH
+     │                                  │
+     │ normalize_arabic()               │ normalize_latin_query()
+     │ ↓                                │ ↓
+     │ Step 1: token_clean exact match  │ Step L1: Buckwalter exact match
+     │ ↓                                │ ↓
+     │ Step 2: Prefix stripping         │ Step L2: pg_trgm fuzzy match
+     │ (وال، ال، و، ف، ل، ب، ك)        │
+     │ ↓                                │
+     │ Step 3: Hamza-normalized root    │
+     │ (SQL REPLACE أ/إ/آ → ا)          │
+     │ ↓                                │
+     │ Step 4: Tashaphyne algorithmic   │
+     │                                  │
+     └──────────────┬───────────────────┘
+                    │
+                    ▼
+     PostgreSQL: qm_words → qm_ayahs → qm_surahs
+                    │
+                    ▼
+     MorphologySearchResult (root, count, derived words, surah distribution, paginated verses)
+```
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| Normalizer | `backend/src/arabic_normalizer.py` | Arabic/Latin text normalization |
+| Search Service | `backend/src/quran_morphology.py` | Hybrid root extraction + DB queries |
+| CLI | `backend/main.py` (`keyword-search`) | Rich terminal output |
+| API Router | `backend/app/api/keyword_search.py` | 3 REST endpoints |
+| Schemas | `backend/app/schemas/keyword_search.py` | Pydantic request/response models |
+| ETL | `backend/scripts/setup_quran_morphology.py` | Tanzil XML + TSV → PostgreSQL |
+
+**Key Design Decisions:**
+- PostgreSQL deterministic (not semantic/vector) — 100% accuracy for root matching
+- Independent from Qdrant collections — different data sources, different purposes
+- Hamza normalization at query time (SQL REPLACE) — preserves original DB data
+- Null byte sanitization — prevents PostgreSQL encoding crash
+
