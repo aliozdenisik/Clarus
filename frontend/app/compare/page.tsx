@@ -24,7 +24,7 @@ import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { FilterTabs, FilterType } from "@/components/compare/filter-tabs";
 import { SourceReferenceCard } from "@/components/compare/source-reference-card";
 import { InlineCitation } from "@/components/compare/inline-citation";
-import { parseCitations, parseBareReferences } from "@/lib/utils/parse-citations";
+import { parseCitations, parseBareReferences, stripMarkdownHeaders } from "@/lib/utils/parse-citations";
 import { useLogger } from "@/lib/logger";
 import { LanguageSelector } from "@/components/search/language-selector";
 
@@ -627,7 +627,7 @@ function CompareContent() {
                                   AI Interpretation
                                 </span>
                                 <p className="text-[var(--color-text-primary)] leading-[1.85] text-[15px] whitespace-pre-wrap">
-                                  {parseBareReferences(parseCitations(paragraph.content), paragraph.citations).map((part, i) => {
+                                  {parseBareReferences(parseCitations(stripMarkdownHeaders(paragraph.content)), paragraph.citations).map((part, i) => {
                                     if (typeof part === 'string') {
                                       return <span key={i}>{part}</span>;
                                     }
