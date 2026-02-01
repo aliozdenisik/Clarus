@@ -12,12 +12,39 @@ This module contains:
 
 from typing import List, Dict, Union, Tuple, cast
 import logging
+import re
 from pydantic import BaseModel
 
 from src.search import SearchResult, BibleSearchResult
 from src.multi_agent_answer_generator import MultiAgentAnswer
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# Text Post-Processing Helpers
+# =============================================================================
+
+
+def strip_markdown_headers(text: str) -> str:
+    """Strip markdown headers and horizontal rules from translated text.
+
+    Defense-in-depth against LLM translation output that injects
+    ## Headers or --- dividers into translated paragraph content.
+
+    Args:
+        text: Translated text that may contain injected markdown formatting.
+
+    Returns:
+        Cleaned text with headers and rules removed, multiple newlines collapsed.
+    """
+    if not text:
+        return text
+    text = re.sub(r"^#{1,6}\s+.*$", "", text, flags=re.MULTILINE)
+    text = re.sub(r"^-{3,}\s*$", "", text, flags=re.MULTILINE)
+    text = re.sub(r"^\*{3,}\s*$", "", text, flags=re.MULTILINE)
+    text = re.sub(r"\n{3,}", "\n\n", text)  # Collapse multiple newlines
+    return text.strip()
 
 
 # =============================================================================
@@ -43,7 +70,9 @@ class VerseDetail(BaseModel):
     chapter: int  # Chapter/Surah number
     verse: int  # Verse number
     source: str  # Collection: 'quran_tr', 'bible_ot', 'bible_nt', 'bible_apocrypha'
-    translation: str  # "Diyanet Isleri Baskanligi" or "King James Version with Apocrypha"
+    translation: (
+        str  # "Diyanet Isleri Baskanligi" or "King James Version with Apocrypha"
+    )
     book_nr: int | None = None  # Bible book number (None for Quran)
 
 

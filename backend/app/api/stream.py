@@ -30,7 +30,11 @@ from typing import Optional
 from app.db import get_db
 from app.models import User, SearchHistory
 from app.api.auth import get_current_user, get_current_user_from_token, check_rate_limit
-from app.api.compare_helpers import build_verse_details, build_paragraphs
+from app.api.compare_helpers import (
+    build_verse_details,
+    build_paragraphs,
+    strip_markdown_headers,
+)
 from app.api.compare import extract_quran_verse_detail, extract_bible_verse_detail
 from src.ultimate_rag import UltimateRAG
 from src.comparative_rag import ComparativeRAG
@@ -371,14 +375,15 @@ async def stream_compare(
             for idx, para in enumerate(paragraphs, 1):
                 if detected_language and detected_language not in ("tr", "en"):
                     try:
-                        para["content"] = compare_translator.translate_response(
-                            para["content"],
-                            target_lang=detected_language,
-                            preserve_citations=True,
+                        para["content"] = strip_markdown_headers(
+                            compare_translator.translate_response(
+                                para["content"],
+                                target_lang=detected_language,
+                                preserve_citations=True,
+                            )
                         )
-                        para["title"] = compare_translator.translate_response(
-                            para["title"], target_lang=detected_language
-                        )
+                        # Titles are kept as-is: standard section names
+                        # that should stay consistent across languages
                     except TranslationError as e:
                         logger.error(
                             "Paragraph translation failed during SSE",

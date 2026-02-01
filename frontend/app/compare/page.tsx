@@ -602,7 +602,7 @@ function CompareContent() {
                         className="flex w-full items-center justify-between text-left"
                       >
                         <h3 className="text-lg font-semibold text-[var(--color-accent-primary)]">
-                          {paragraph.title}
+                          {stripMarkdownHeaders(paragraph.title)}
                         </h3>
                         {expandedParagraphs.has(index) ? (
                           <ChevronUp className="h-5 w-5 text-[var(--color-text-muted)]" />

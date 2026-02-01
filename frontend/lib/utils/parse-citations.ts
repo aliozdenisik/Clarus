@@ -10,11 +10,12 @@ export type CitationPart = string | { type: 'citation'; reference: string };
  * - Leading/trailing whitespace after stripping
  */
 export function stripMarkdownHeaders(content: string): string {
-  if (!content) return content;
+  if (!content) return '';
   return content
-    .replace(/^#{1,6}\s+[^\n]*\n*/gm, '')  // Remove markdown headers (## Title\n)
-    .replace(/^---+\s*\n*/gm, '')           // Remove horizontal rules (---\n)
-    .replace(/^\*\*\*+\s*\n*/gm, '')        // Remove alt horizontal rules (***\n)
+    .replace(/^#{1,6}\s+.*$/gm, '')         // Remove full header lines
+    .replace(/^-{3,}\s*$/gm, '')            // Remove horizontal rules (---)
+    .replace(/^\*{3,}\s*$/gm, '')           // Remove alt horizontal rules (***)
+    .replace(/\n{3,}/g, '\n\n')             // Collapse 3+ newlines to 2
     .trim();
 }
 
