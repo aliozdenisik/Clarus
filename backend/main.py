@@ -1021,6 +1021,30 @@ def main():
         help="Only clear entries older than N hours (default: clear all)",
     )
 
+    # Keyword Search command (morphological root-based)
+    keyword_search_parser = subparsers.add_parser(
+        "keyword-search",
+        help="Search Quran by morphological root (Arabic or Buckwalter)",
+    )
+    keyword_search_parser.add_argument(
+        "query", help="Arabic word or Buckwalter root (e.g., كتب or ktb)"
+    )
+    keyword_search_parser.add_argument(
+        "--limit",
+        type=int,
+        default=50,
+        help="Number of verse results per page (default: 50)",
+    )
+    keyword_search_parser.add_argument(
+        "--page", type=int, default=1, help="Page number (default: 1)"
+    )
+    keyword_search_parser.add_argument(
+        "--format",
+        choices=["table", "json"],
+        default="table",
+        help="Output format (default: table)",
+    )
+
     args = parser.parse_args()
 
     if args.command == "index":
@@ -1058,6 +1082,8 @@ def main():
         return cmd_ask_bible(args)
     elif args.command == "compare":
         return cmd_compare(args)
+    elif args.command == "keyword-search":
+        return cmd_keyword_search(args)
     else:
         parser.print_help()
         return 0
@@ -1118,6 +1144,94 @@ def cmd_cache_clear(args):
     except Exception as e:
         console.print(f"[red][ERROR] {e}[/red]")
         return 1
+
+
+def cmd_keyword_search(args):
+    """Search Quran by morphological root."""
+    import asyncio
+    import json as json_module
+    from src.quran_morphology import QuranMorphologySearch
+
+    console.print(f"\n[bold blue]Keyword Search[/bold blue]: {args.query}\n")
+
+    async def run_search():
+        search = QuranMorphologySearch(
+            "postgresql+asyncpg://postgres:postgres@localhost:54322/postgres"
+        )
+        try:
+            return await search.search_by_root(
+                args.query, page=args.page, per_page=args.limit
+            )
+        finally:
+            await search.close()
+
+    result = asyncio.run(run_search())
+
+    if result.root is None:
+        console.print("[yellow]No results found.[/yellow]")
+        return 0
+
+    if args.format == "json":
+        print(json_module.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        return 0
+
+    # Rich table format
+    # 1. Header panel
+    console.print(
+        Panel(
+            f"Root: [bold green]{result.root}[/bold green]  |  "
+            f"Source: [cyan]{result.root_source}[/cyan]  |  "
+            f"Total Occurrences: [bold]{result.total_occurrences}[/bold]  |  "
+            f"Unique Words: [bold]{len(result.unique_words)}[/bold]  |  "
+            f"Verses: [bold]{result.total_verses}[/bold]",
+            title="Root Info",
+        )
+    )
+
+    # 2. Derived words
+    if result.unique_words:
+        words_text = "  ".join(result.unique_words[:30])  # Show max 30
+        if len(result.unique_words) > 30:
+            words_text += f"  ... (+{len(result.unique_words) - 30} more)"
+        console.print(Panel(words_text, title="Derived Words"))
+
+    # 3. Surah distribution table
+    if result.surah_distribution:
+        dist_table = Table(title="Surah Distribution")
+        dist_table.add_column("#", style="dim")
+        dist_table.add_column("Surah", style="green")
+        dist_table.add_column("Count", style="bold", justify="right")
+        for i, sd in enumerate(result.surah_distribution[:20], 1):  # Top 20
+            dist_table.add_row(
+                str(i), f"[{sd.surah_id}] {sd.surah_name}", str(sd.count)
+            )
+        if len(result.surah_distribution) > 20:
+            dist_table.add_row(
+                "...", f"(+{len(result.surah_distribution) - 20} more surahs)", ""
+            )
+        console.print(dist_table)
+
+    # 4. Verses table
+    if result.verses:
+        verse_table = Table(title=f"Verses (Page {result.page})")
+        verse_table.add_column("#", style="dim", width=4)
+        verse_table.add_column("Reference", style="cyan", width=15)
+        verse_table.add_column("Arabic Text (Uthmani)", min_width=40)
+        verse_table.add_column("Matched Words", style="yellow", width=20)
+        for i, v in enumerate(result.verses, 1):
+            ref = f"{v.surah_id}:{v.ayah_number}"
+            text = v.text_uthmani[:100] + ("..." if len(v.text_uthmani) > 100 else "")
+            matched = ", ".join(v.matched_words[:5])
+            verse_table.add_row(str(i), ref, text, matched)
+        console.print(verse_table)
+
+        # Pagination info
+        total_pages = (result.total_verses + result.per_page - 1) // result.per_page
+        console.print(
+            f"\n[dim]Page {result.page}/{total_pages} ({result.total_verses} total verses)[/dim]"
+        )
+
+    return 0
 
 
 def cmd_build_graph(args):
