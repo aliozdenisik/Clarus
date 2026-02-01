@@ -23,6 +23,10 @@ pybreaker>=1.0.0
 # Turkish lemmatization (for BM25)
 zeyrek>=0.1.0
 
+# Arabic NLP (morphological search)
+tashaphyne>=0.3.0
+pyarabic>=0.6.0
+
 # Web Application (FastAPI)
 fastapi>=0.110.0
 uvicorn[standard]>=0.27.0
