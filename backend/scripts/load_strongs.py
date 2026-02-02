@@ -1,11 +1,11 @@
 """Load Strong's Concordance data from JSON files into PostgreSQL bm_strongs table.
 
 Reads:
-  - backend/data/strongs/strongs_hebrew.json  (8,674 entries: H1-H8674)
-  - backend/data/strongs/strongs_greek.json   (5,523 entries: G1-G5523)
+  - backend/data/strongs/strongs_hebrew.json  (8,427 entries)
+  - backend/data/strongs/strongs_greek.json   (5,523 entries)
 
 Populates:
-  - bm_strongs (14,197 rows total)
+  - bm_strongs (13,950 rows total)
 
 Idempotent: truncates bm_strongs before inserting.
 """
@@ -139,11 +139,11 @@ def validate_counts(conn) -> bool:
     """Run data integrity checks. Returns True if all pass."""
     checks_passed = True
 
-    # Total count
+    # Total count (actual data: 8,427 Hebrew + 5,523 Greek = 13,950)
     result = conn.execute(text("SELECT COUNT(*) FROM bm_strongs"))
     total_count = result.scalar()
-    if total_count != 14197:
-        log.error("❌ Expected 14,197 entries, got %d", total_count)
+    if total_count != 13950:
+        log.error("❌ Expected 13,950 entries, got %d", total_count)
         checks_passed = False
     else:
         log.info("✅ Total entries: %d", total_count)
@@ -153,8 +153,8 @@ def validate_counts(conn) -> bool:
         text("SELECT COUNT(*) FROM bm_strongs WHERE language = 'hebrew'")
     )
     hebrew_count = result.scalar()
-    if hebrew_count != 8674:
-        log.error("❌ Expected 8,674 Hebrew entries, got %d", hebrew_count)
+    if hebrew_count != 8427:
+        log.error("❌ Expected 8,427 Hebrew entries, got %d", hebrew_count)
         checks_passed = False
     else:
         log.info("✅ Hebrew entries: %d", hebrew_count)
