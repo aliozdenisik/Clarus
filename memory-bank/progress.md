@@ -95,6 +95,8 @@
 - [x] Search navigation — 4-collection dropdown matching search page tabs (Issue #18)
 - [x] Apocrypha book count in navigation menu (Issue #19)
 - [x] Compare page UI alignment — matched search page design standards (Issue #20)
+- [x] Keyword search frontend (RFC-007) — `/keyword-search` page with 8 components, Recharts chart, root browser, 26 tests
+- [x] Keyword search QA fixes — Latin transliteration for surah names, API response nesting fix
 
 ### CLI Commands
 
@@ -156,7 +158,7 @@
 ### Potential Enhancements
 
 - [x] Arabic font optimization (Amiri font + RTL support)
-- [ ] Keyword search frontend UI (RFC-006 Phase 2)
+- [x] Keyword search frontend UI (RFC-007 — `/keyword-search` page, 8 components, 26 tests, 12 commits)
 - [ ] Save/Share functionality
 - [ ] Multi-language support
 - [ ] Batch query API

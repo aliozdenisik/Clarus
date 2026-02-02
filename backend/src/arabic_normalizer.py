@@ -10,6 +10,7 @@ import unicodedata
 
 from pyarabic import araby
 from pyarabic.trans import utf82latin as _arabic_to_buckwalter
+from pyarabic.trans import tim2utf8 as _buckwalter_to_arabic
 
 
 def normalize_arabic(text: str) -> str:
@@ -30,6 +31,8 @@ def normalize_arabic(text: str) -> str:
     result = result.replace("\u0622", "\u0627")  # آ → ا
     result = result.replace("\u0624", "\u0648")  # ؤ → و
     result = result.replace("\u0626", "\u064a")  # ئ → ي
+    # Hamzatu'l-wasl (alef wasla) normalization
+    result = result.replace("\u0671", "\u0627")  # ٱ → ا
     # Ta-marbuta → ha
     result = result.replace("\u0629", "\u0647")  # ة → ه
     # Alef-maksura → ya
@@ -54,6 +57,24 @@ def is_arabic(text: str) -> bool:
 def arabic_to_buckwalter(text: str) -> str:
     """Convert Arabic text to Buckwalter Latin transliteration."""
     return _arabic_to_buckwalter(text)
+
+
+def buckwalter_to_arabic(text: str) -> str:
+    """Convert Buckwalter Latin transliteration to Arabic text."""
+    return _buckwalter_to_arabic(text)
+
+
+def strip_buckwalter_vowels(text: str) -> str:
+    """Strip Buckwalter short-vowel diacritics from Latin input.
+
+    Removes characters that map to Arabic diacritics (harakat),
+    leaving only consonant letters. Handles the common case where
+    users type romanized Arabic words with vowels (e.g. 'kitab' → 'ktb').
+
+    Buckwalter diacritics removed: a(fatha), i(kasra), u(damma),
+    o(sukun), ~(shadda), _(superscript alef).
+    """
+    return "".join(c for c in text if c not in "aiuo~_")
 
 
 def normalize_latin_query(text: str) -> str:

@@ -20,6 +20,7 @@ interface SurahChartProps {
     surah_name: string;
     count: number;
   }>;
+  selectedWord?: string | null;
 }
 
 interface CustomYAxisTickProps {
@@ -68,7 +69,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   );
 }
 
-export function SurahChart({ data }: SurahChartProps) {
+export function SurahChart({ data, selectedWord }: SurahChartProps) {
   const [showAll, setShowAll] = useState(false);
 
   // Empty state
@@ -110,6 +111,11 @@ export function SurahChart({ data }: SurahChartProps) {
           </div>
           <h3 className="text-lg font-medium text-[var(--color-text-primary)] text-center">
             Surah Distribution
+            {selectedWord && (
+              <span className="text-sm font-normal text-[var(--color-text-muted)] ml-2">
+                — <span lang="ar" className="font-arabic">{selectedWord}</span>
+              </span>
+            )}
           </h3>
         </div>
 

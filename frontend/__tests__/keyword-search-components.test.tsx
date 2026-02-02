@@ -70,12 +70,14 @@ describe("RootCard", () => {
     expect(rootText).toHaveAttribute("lang", "ar");
   });
 
-  it("shows correct source badge color", () => {
+  it("displays root text without badge", () => {
     render(<RootCard root="كتب" rootSource="exact_match" />);
 
-    const badge = screen.getByRole("status");
-    expect(badge).toHaveTextContent("Exact Match");
-    expect(badge.className).toContain("bg-emerald-500");
+    // Root text should be displayed
+    expect(screen.getByText("كتب")).toBeInTheDocument();
+    
+    // Badge should NOT be displayed
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
   it("handles null root (not found)", () => {

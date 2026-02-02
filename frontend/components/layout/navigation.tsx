@@ -100,6 +100,18 @@ export default function Navigation() {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Word Search Link */}
+            <Link href="/keyword-search">
+              <Button
+                variant="ghost"
+                className={`text-gray-300 hover:text-white ${
+                  isActive('/keyword-search') ? 'text-purple-400 border-b-2 border-purple-400 rounded-none' : ''
+                }`}
+              >
+                Word Search
+              </Button>
+            </Link>
+
             {/* Compare Link */}
             <Link href="/compare">
               <Button

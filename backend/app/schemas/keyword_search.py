@@ -48,6 +48,8 @@ class KeywordSearchResponse(BaseModel):
     surah_distribution: list[SurahDistItem] = Field(default_factory=list)
     verses: list[VerseMatchItem] = Field(default_factory=list)
     pagination: PaginationInfo
+    root_buckwalter: Optional[str] = None
+    word_transliterations: dict[str, str] = Field(default_factory=dict)
 
 
 class RootListItem(BaseModel):
