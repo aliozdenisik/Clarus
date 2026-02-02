@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
 import { Search, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,49 +19,16 @@ export function SearchInput({
   isLoading,
   placeholder = "Search for Arabic roots...",
 }: SearchInputProps) {
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
-
-  const handleInputChange = (newValue: string) => {
-    onChange(newValue);
-    
-    // Clear existing timer
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
-    }
-
-    // Debounce search with 300ms delay
-    if (newValue.trim()) {
-      debounceTimer.current = setTimeout(() => {
-        onSearch(newValue);
-      }, 300);
-    }
-  };
-
   const handleClear = () => {
     onChange("");
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
-    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && value.trim()) {
       e.preventDefault();
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
       onSearch(value);
     }
   };
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-    };
-  }, []);
 
   return (
     <div className="space-y-2">
@@ -72,7 +38,7 @@ export function SearchInput({
           type="text"
           dir="auto"
           value={value}
-          onChange={(e) => handleInputChange(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={isLoading}

@@ -98,6 +98,8 @@ const mockSearchResponse = {
     root_source: "exact_match",
     total_occurrences: 319,
     unique_words: ["كتاب", "كتب", "اكتبوه"],
+    root_buckwalter: "ktb",
+    word_transliterations: { "كتاب": "ktAb", "كتب": "ktb", "اكتبوه": "AktbwhA" },
     surah_distribution: [
       { surah_id: 2, surah_name: "البقرة", count: 45 },
       { surah_id: 3, surah_name: "آل عمران", count: 23 },
@@ -138,6 +140,8 @@ const mockNotFoundResponse = {
     root_source: "not_found",
     total_occurrences: 0,
     unique_words: [],
+    root_buckwalter: null,
+    word_transliterations: {},
     surah_distribution: [],
     verses: [],
     pagination: {
@@ -204,7 +208,6 @@ describe("KeywordSearchPage", () => {
       // "كتب" appears in both RootCard and DerivedWords, so use getAllByText
       const elements = screen.getAllByText("كتب");
       expect(elements.length).toBeGreaterThanOrEqual(1);
-      expect(screen.getByText("Exact Match")).toBeInTheDocument();
     });
   });
 
@@ -330,8 +333,8 @@ describe("KeywordSearchPage", () => {
       expect(screen.getByText("Derived Words")).toBeInTheDocument();
     });
 
-    // Click on a derived word tag — "كتاب"
-    const wordTag = screen.getByRole("button", { name: "كتاب" });
+    // Click on a derived word tag — "كتاب" (accessible name now includes transliteration: "كتابktAb")
+    const wordTag = screen.getByRole("button", { name: /^كتابktAb$/ });
     fireEvent.click(wordTag);
 
     // After filtering, only verse with matched_words containing "الكتاب" should show
@@ -348,6 +351,119 @@ describe("KeywordSearchPage", () => {
       // The "All Words" button should no longer be the active one
       // The clicked word tag should now be active (bg-indigo-500)
       expect(wordTag).toBeInTheDocument();
+    });
+  });
+
+  it("selecting a derived word updates chart and stats", async () => {
+    // Use mock data where matched_words exactly match unique_words (after diacritics strip)
+    const detailedResponse = {
+      data: {
+        query: "كتب",
+        root: "كتب",
+        root_source: "exact_match",
+        total_occurrences: 319,
+        unique_words: ["كتاب", "اكتبوه"],
+        root_buckwalter: "ktb",
+        word_transliterations: { "كتاب": "ktAb", "اكتبوه": "AktbwhA" },
+        surah_distribution: [
+          { surah_id: 2, surah_name: "البقرة", count: 45 },
+          { surah_id: 3, surah_name: "آل عمران", count: 23 },
+        ],
+        verses: [
+          {
+            surah_id: 2,
+            surah_name: "البقرة",
+            ayah_number: 2,
+            text_uthmani: "ذَٰلِكَ ٱلۡكِتَٰبُ لَا رَيۡبَ فِيهِ",
+            text_clean: "ذلك الكتاب لا ريب فيه",
+            matched_words: ["كتاب"],
+          },
+          {
+            surah_id: 3,
+            surah_name: "آل عمران",
+            ayah_number: 7,
+            text_uthmani: "هُوَ ٱلَّذِي أَنزَلَ عَلَيۡكَ ٱلۡكِتَٰبَ",
+            text_clean: "هو الذي انزل عليك الكتاب",
+            matched_words: ["كتاب"],
+          },
+          {
+            surah_id: 2,
+            surah_name: "البقرة",
+            ayah_number: 282,
+            text_uthmani: "يَا أَيُّهَا الَّذِينَ آمَنُوا إِذَا تَدَايَنتُم",
+            text_clean: "يا ايها الذين امنوا اذا تداينتم",
+            matched_words: ["اكتبوه"],
+          },
+        ],
+        pagination: {
+          page: 1,
+          per_page: 50,
+          total_verses: 319,
+          total_pages: 7,
+          has_next: true,
+          has_prev: false,
+        },
+      },
+    };
+    mockSearchKeyword.mockResolvedValue(detailedResponse);
+
+    render(<KeywordSearchPage />);
+
+    const input = screen.getByPlaceholderText(/Search for Arabic roots/i);
+    await userEvent.type(input, "كتب");
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+    await waitFor(() => {
+      expect(screen.getByText("Derived Words")).toBeInTheDocument();
+    });
+
+    // Stats should show total: 319 occurrences initially
+    expect(screen.getByText("319")).toBeInTheDocument();
+    // 2 unique words — use getAllByText since "2" appears in multiple places (stats + surah distribution)
+    const initialTwos = screen.getAllByText("2");
+    expect(initialTwos.length).toBeGreaterThanOrEqual(1);
+
+    // Click a derived word — "كتاب" (accessible name includes transliteration: "كتابktAb")
+    const wordTag = screen.getByRole("button", { name: /^كتابktAb$/ });
+    fireEvent.click(wordTag);
+
+    // After filtering, stats should update:
+    // Filtered: 2 verses with كتاب (surah 2 + surah 3), 1 unique word, 2 surahs
+    // The "319" should disappear since totalOccurrences is now 2
+    await waitFor(() => {
+      expect(screen.queryByText("319")).not.toBeInTheDocument();
+    });
+
+    // uniqueWords should now be 1
+    await waitFor(() => {
+      expect(screen.getByText("1")).toBeInTheDocument();
+    });
+  });
+
+  it("deselecting a derived word reverts chart and stats", async () => {
+    mockSearchKeyword.mockResolvedValue(mockSearchResponse);
+
+    render(<KeywordSearchPage />);
+
+    const input = screen.getByPlaceholderText(/Search for Arabic roots/i);
+    await userEvent.type(input, "كتب");
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+    await waitFor(() => {
+      expect(screen.getByText("Derived Words")).toBeInTheDocument();
+    });
+
+    // Click a derived word to select
+    const wordTag = screen.getByRole("button", { name: /^كتابktAb$/ });
+    fireEvent.click(wordTag);
+
+    // Click same word again to deselect
+    fireEvent.click(wordTag);
+
+    // Stats should revert to original values
+    await waitFor(() => {
+      expect(screen.getByText("319")).toBeInTheDocument();
+      expect(screen.getByText("3")).toBeInTheDocument(); // 3 unique words
     });
   });
 

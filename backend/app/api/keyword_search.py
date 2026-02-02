@@ -79,6 +79,8 @@ async def search_keyword(request: KeywordSearchRequest):
             has_next=result.page < total_pages,
             has_prev=result.page > 1,
         ),
+        root_buckwalter=result.root_buckwalter,
+        word_transliterations=result.word_transliterations,
     )
 
 
@@ -145,4 +147,6 @@ async def get_root_info(
             has_next=result.page < total_pages,
             has_prev=result.page > 1,
         ),
+        root_buckwalter=result.root_buckwalter,
+        word_transliterations=result.word_transliterations,
     )

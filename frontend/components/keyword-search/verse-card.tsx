@@ -120,22 +120,6 @@ export function VerseCard({
             <span className="text-[var(--color-text-muted)] italic">Çeviri yüklenemedi</span>
           )}
         </div>
-
-        {/* Matched words tags */}
-        {matchedWords.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-4 pt-3 border-t border-zinc-800/50">
-            <span className="text-xs text-[var(--color-text-muted)]">Matched:</span>
-            {matchedWords.map((word, i) => (
-              <span
-                key={i}
-                className="font-arabic text-xs bg-indigo-500/10 text-indigo-400 px-1.5 py-0.5 rounded"
-                lang="ar"
-              >
-                {word}
-              </span>
-            ))}
-          </div>
-        )}
       </GlowCard>
     </motion.div>
   );

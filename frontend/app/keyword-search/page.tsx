@@ -13,6 +13,7 @@ import { DerivedWords } from "@/components/keyword-search/derived-words";
 import { SurahChart } from "@/components/keyword-search/surah-chart";
 import { VerseCard } from "@/components/keyword-search/verse-card";
 import { Pagination } from "@/components/keyword-search/pagination";
+import { stripArabicDiacritics } from "@/lib/utils/arabic";
 import { RootBrowser } from "@/components/keyword-search/root-browser";
 import { Skeleton } from "@/components/ui/skeleton";
 import { searchKeywordApiSearchKeywordPost, getSurahDetailApiMetadataQuranSurahsSurahIdGet, getQuranSurahsApiMetadataQuranSurahsGet } from "@/lib/api/sdk.gen";
@@ -172,10 +173,66 @@ function KeywordSearchContent() {
   const filteredVerses = useMemo(() => {
     if (!searchResult?.verses) return [];
     if (!selectedWord) return searchResult.verses;
+    const normalizedSelected = stripArabicDiacritics(selectedWord);
     return searchResult.verses.filter((v) =>
-      v.matched_words.includes(selectedWord)
+      v.matched_words.some(
+        (w) => stripArabicDiacritics(w) === normalizedSelected
+      )
     );
   }, [searchResult?.verses, selectedWord]);
+
+  // Compute chart data based on selected word (client-side)
+  const chartData = useMemo(() => {
+    // If no word selected, show full root distribution
+    if (!selectedWord || !searchResult?.surah_distribution) {
+      return searchResult?.surah_distribution || [];
+    }
+
+    // If word selected, compute distribution from filtered verses
+    if (!searchResult?.verses) return [];
+
+    const normalizedSelected = stripArabicDiacritics(selectedWord);
+    const wordFilteredVerses = searchResult.verses.filter((v) =>
+      v.matched_words.some(
+        (w) => stripArabicDiacritics(w) === normalizedSelected
+      )
+    );
+
+    // Aggregate by surah
+    const surahMap = new Map<number, { surah_id: number; surah_name: string; count: number }>();
+    for (const verse of wordFilteredVerses) {
+      const existing = surahMap.get(verse.surah_id);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        surahMap.set(verse.surah_id, {
+          surah_id: verse.surah_id,
+          surah_name: verse.surah_name,
+          count: 1,
+        });
+      }
+    }
+
+    return Array.from(surahMap.values());
+  }, [selectedWord, searchResult]);
+
+  // Compute filtered stats based on selected word
+  const filteredStats = useMemo(() => {
+    if (!selectedWord || !searchResult) {
+      return {
+        totalOccurrences: searchResult?.total_occurrences || 0,
+        uniqueWords: (searchResult?.unique_words || []).length,
+        surahCount: (searchResult?.surah_distribution || []).length,
+      };
+    }
+
+    // When word selected, compute from filtered data
+    return {
+      totalOccurrences: filteredVerses.length,
+      uniqueWords: 1,
+      surahCount: chartData.length,
+    };
+  }, [selectedWord, searchResult, filteredVerses, chartData]);
 
   if (authLoading) {
     return (
@@ -327,21 +384,26 @@ function KeywordSearchContent() {
                       <RootCard
                         root={searchResult.root || null}
                         rootSource={searchResult.root_source || ""}
+                        rootBuckwalter={searchResult.root_buckwalter}
                       />
                       <StatsBar
-                        totalOccurrences={searchResult.total_occurrences || 0}
-                        uniqueWords={(searchResult.unique_words || []).length}
-                        surahCount={(searchResult.surah_distribution || []).length}
+                        totalOccurrences={filteredStats.totalOccurrences}
+                        uniqueWords={filteredStats.uniqueWords}
+                        surahCount={filteredStats.surahCount}
                       />
                       <DerivedWords
                         words={searchResult.unique_words || []}
                         selectedWord={selectedWord}
                         onWordSelect={handleWordFilter}
+                        transliterations={searchResult.word_transliterations || {}}
                       />
-                      <SurahChart data={(searchResult.surah_distribution || []).map(d => ({
-                        ...d,
-                        surah_name: getSurahName(d.surah_id, d.surah_name)
-                      }))} />
+                      <SurahChart
+                        data={chartData.map(d => ({
+                          ...d,
+                          surah_name: getSurahName(d.surah_id, d.surah_name)
+                        }))}
+                        selectedWord={selectedWord}
+                      />
 
                       {/* Verse Cards */}
                       <div className="space-y-4">

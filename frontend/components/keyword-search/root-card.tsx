@@ -2,34 +2,14 @@
 
 import { motion } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
-import { cn } from "@/lib/utils";
 
 interface RootCardProps {
   root: string | null;
   rootSource: string;
+  rootBuckwalter?: string | null;
 }
 
-const ROOT_SOURCE_LABELS: Record<string, string> = {
-  exact_match: "Exact Match",
-  prefix_stripped: "Prefix Stripped",
-  algorithmic: "Algorithmic",
-  buckwalter_exact: "Buckwalter Exact",
-  buckwalter_fuzzy: "Buckwalter Fuzzy",
-  not_found: "Not Found",
-};
-
-const ROOT_SOURCE_COLORS: Record<string, string> = {
-  exact_match: "bg-emerald-500 text-white",
-  prefix_stripped: "bg-amber-500 text-white",
-  algorithmic: "bg-blue-500 text-white",
-  buckwalter_exact: "bg-purple-500 text-white",
-  buckwalter_fuzzy: "bg-purple-400 text-white",
-  not_found: "bg-zinc-500 text-white",
-};
-
-export function RootCard({ root, rootSource }: RootCardProps) {
-  const label = ROOT_SOURCE_LABELS[rootSource] || "Unknown";
-  const colorClass = ROOT_SOURCE_COLORS[rootSource] || "bg-zinc-500 text-white";
+export function RootCard({ root, rootSource, rootBuckwalter }: RootCardProps) {
 
   return (
     <motion.div
@@ -46,12 +26,11 @@ export function RootCard({ root, rootSource }: RootCardProps) {
           >
             {root}
           </p>
-          <span
-            role="status"
-            className={cn("px-3 py-1.5 rounded text-sm font-medium", colorClass)}
-          >
-            {label}
-          </span>
+          {rootBuckwalter && (
+            <p className="text-lg text-[var(--color-text-muted)] text-center tracking-wide">
+              {rootBuckwalter}
+            </p>
+          )}
         </>
       ) : (
         <p className="text-[var(--color-text-muted)] text-center">

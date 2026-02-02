@@ -26,6 +26,9 @@ from .arabic_normalizer import (
     normalize_arabic,
     is_arabic,
     normalize_latin_query,
+    buckwalter_to_arabic,
+    strip_buckwalter_vowels,
+    arabic_to_buckwalter,
 )
 
 logger = logging.getLogger(__name__)
@@ -71,6 +74,8 @@ class MorphologySearchResult:
     page: int = 1
     per_page: int = 50
     total_verses: int = 0
+    root_buckwalter: Optional[str] = None
+    word_transliterations: dict[str, str] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         """Serialize to plain dict for JSON responses."""
@@ -88,6 +93,32 @@ class QuranMorphologySearch:
     Creates its own async engine (independent of app.db) so it can be
     used from both CLI and API contexts.
     """
+
+    # Well-known terms whose roots can't be reliably derived algorithmically.
+    # Maps normalized forms (Arabic or lowercase Latin) → (root, source).
+    # Checked FIRST in _find_root, before any DB or algorithmic lookup.
+    SPECIAL_TERMS: dict[str, tuple[str, str]] = {
+        # Arabic forms — normalize_arabic() will strip diacritics/hamza
+        "الله": ("أله", "exact_match"),
+        "لله": ("أله", "exact_match"),
+        "بالله": ("أله", "exact_match"),
+        "والله": ("أله", "exact_match"),
+        "فالله": ("أله", "exact_match"),
+        "تالله": ("أله", "exact_match"),
+        "اللهم": ("أله", "exact_match"),
+        "اله": ("أله", "exact_match"),
+        "الاله": ("أله", "exact_match"),
+        "القران": ("قرأ", "exact_match"),
+        "قران": ("قرأ", "exact_match"),
+        "بالقران": ("قرأ", "exact_match"),
+        "والقران": ("قرأ", "exact_match"),
+        "قرانا": ("قرأ", "exact_match"),
+        # Latin forms — normalize_latin_query() will lowercase
+        "quran": ("قرأ", "buckwalter_exact"),
+        "kuran": ("قرأ", "buckwalter_exact"),
+        "quraan": ("قرأ", "buckwalter_exact"),
+        "allah": ("أله", "buckwalter_exact"),
+    }
 
     # Prefix strip order: longest first to avoid partial matches
     PREFIXES = [
@@ -189,7 +220,17 @@ class QuranMorphologySearch:
     # ------------------------------------------------------------------
 
     async def _find_root(self, query: str) -> tuple[Optional[str], str]:
-        """Hybrid root extraction: DB lookup -> prefix strip -> algorithmic (Arabic) or Buckwalter (Latin)."""
+        """Hybrid root extraction: special terms -> DB lookup -> prefix strip -> algorithmic (Arabic) or Buckwalter (Latin)."""
+        # Step 0: Check well-known terms before any other processing.
+        # Normalise the lookup key the same way each path would.
+        if is_arabic(query):
+            lookup_key = normalize_arabic(query)
+        else:
+            lookup_key = normalize_latin_query(query)
+        special = self.SPECIAL_TERMS.get(lookup_key)
+        if special:
+            return special
+
         if is_arabic(query):
             return await self._find_root_arabic(query)
         return await self._find_root_latin(query)
@@ -270,15 +311,30 @@ class QuranMorphologySearch:
         return (None, "not_found")
 
     async def _find_root_latin(self, query: str) -> tuple[Optional[str], str]:
-        """Latin path: normalize -> Buckwalter exact -> Buckwalter fuzzy (pg_trgm)."""
+        """Latin path: exact → vowel-strip → Arabic convert → fuzzy fallback.
+
+        Handles both strict Buckwalter input ('ktb') and common romanizations
+        ('kitab') by stripping short-vowel diacritics and converting to Arabic.
+        Fuzzy matching is the last resort to avoid false positives.
+        """
         normalized = normalize_latin_query(query)
 
         async with self._session_maker() as session:
-            # Step L1: Buckwalter exact match
+            # Step L1: Buckwalter match on root (case-insensitive)
+            # normalize_latin_query() lowercases input, but Buckwalter is
+            # case-sensitive (H=ح vs h=ه, S=ص vs s=س).  Use LOWER() to
+            # match regardless and pick the most frequent root when
+            # multiple case variants exist (e.g. hmd→Hmd/حمد over hmd/همد).
             result = await session.execute(
                 sa_text(
-                    "SELECT DISTINCT root FROM qm_words "
-                    "WHERE root_buckwalter = :q AND root IS NOT NULL LIMIT 1"
+                    """
+                    SELECT root, COUNT(*) as cnt
+                    FROM qm_words
+                    WHERE LOWER(root_buckwalter) = :q AND root IS NOT NULL
+                    GROUP BY root
+                    ORDER BY cnt DESC
+                    LIMIT 1
+                    """
                 ),
                 {"q": normalized},
             )
@@ -286,8 +342,79 @@ class QuranMorphologySearch:
             if row:
                 return (row[0], "buckwalter_exact")
 
-            # Step L2: Buckwalter fuzzy match via pg_trgm
-            # NOTE: Use literal_binds=False to avoid parameter escaping issues with %
+            # Step L2: Strip Buckwalter vowels and retry as root
+            # Handles romanized input: 'kitab' → 'ktb', 'salaam' → 'slm'
+            vowel_stripped = strip_buckwalter_vowels(normalized)
+            if vowel_stripped and vowel_stripped != normalized:
+                # L2a: Exact match with vowel-stripped form
+                result = await session.execute(
+                    sa_text(
+                        "SELECT DISTINCT root FROM qm_words "
+                        "WHERE root_buckwalter = :q AND root IS NOT NULL LIMIT 1"
+                    ),
+                    {"q": vowel_stripped},
+                )
+                row = result.fetchone()
+                if row:
+                    return (row[0], "buckwalter_vowel_stripped")
+
+                # L2b: Case-insensitive match (catches 'rahim'→'rhm' vs DB 'rHm')
+                # Pick the most frequent root when multiple case variants exist
+                result = await session.execute(
+                    sa_text(
+                        """
+                        SELECT root, COUNT(*) as cnt
+                        FROM qm_words
+                        WHERE LOWER(root_buckwalter) = :q AND root IS NOT NULL
+                        GROUP BY root
+                        ORDER BY cnt DESC
+                        LIMIT 1
+                        """
+                    ),
+                    {"q": vowel_stripped},
+                )
+                row = result.fetchone()
+                if row:
+                    return (row[0], "buckwalter_vowel_stripped")
+
+                # L2c: Triliteral fallback — most Arabic roots are 3 consonants.
+                # If vowel-stripped form is 4+ chars (e.g. 'rhmn' from 'rahman'),
+                # try the first 3 chars as a root candidate.
+                if len(vowel_stripped) >= 4:
+                    triliteral = vowel_stripped[:3]
+                    result = await session.execute(
+                        sa_text(
+                            """
+                            SELECT root, COUNT(*) as cnt
+                            FROM qm_words
+                            WHERE LOWER(root_buckwalter) = :q AND root IS NOT NULL
+                            GROUP BY root
+                            ORDER BY cnt DESC
+                            LIMIT 1
+                            """
+                        ),
+                        {"q": triliteral},
+                    )
+                    row = result.fetchone()
+                    if row:
+                        return (row[0], "buckwalter_vowel_stripped")
+
+        # Step L3: Convert Latin to Arabic via reverse Buckwalter, then use Arabic path
+        # 'kitab' → tim2utf8 → 'كِتَب' → normalize → 'كتب' → Arabic root lookup
+        try:
+            arabic_text = buckwalter_to_arabic(normalized)
+            if arabic_text:
+                arabic_normalized = normalize_arabic(arabic_text)
+                if arabic_normalized and is_arabic(arabic_normalized):
+                    root, source = await self._find_root_arabic(arabic_normalized)
+                    if root:
+                        return (root, "buckwalter_converted")
+        except Exception as exc:
+            logger.warning("Buckwalter→Arabic conversion failed: %s", exc)
+
+        # Step L4: Fuzzy match as last resort via pg_trgm
+        async with self._session_maker() as session:
+            # L4a: Fuzzy on original normalized input
             result = await session.execute(
                 sa_text(
                     """
@@ -304,6 +431,25 @@ class QuranMorphologySearch:
             rows = result.fetchall()
             if rows:
                 return (rows[0][0], "buckwalter_fuzzy")
+
+            # L4b: Fuzzy on vowel-stripped form
+            if vowel_stripped and vowel_stripped != normalized:
+                result = await session.execute(
+                    sa_text(
+                        """
+                        SELECT DISTINCT root, root_buckwalter,
+                               similarity(root_buckwalter, :q) AS sim
+                        FROM qm_words
+                        WHERE root_buckwalter % :q AND root IS NOT NULL
+                        ORDER BY sim DESC
+                        LIMIT 5
+                        """
+                    ),
+                    {"q": vowel_stripped},
+                )
+                rows = result.fetchall()
+                if rows:
+                    return (rows[0][0], "buckwalter_fuzzy")
 
         return (None, "not_found")
 
@@ -338,6 +484,15 @@ class QuranMorphologySearch:
                 {"root": root},
             )
             unique_words = [row[0] for row in words_result.fetchall()]
+
+            # Compute Buckwalter transliterations
+            root_buckwalter = arabic_to_buckwalter(root) if root else None
+            word_transliterations: dict[str, str] = {}
+            for word in unique_words:
+                try:
+                    word_transliterations[word] = arabic_to_buckwalter(word)
+                except Exception:
+                    word_transliterations[word] = word  # fallback to Arabic
 
             # 3. Surah distribution
             dist_result = await session.execute(
@@ -403,9 +558,9 @@ class QuranMorphologySearch:
 
                 words_in_verse = await session.execute(
                     sa_text(
-                        "SELECT DISTINCT token FROM qm_words "
+                        "SELECT DISTINCT token_clean FROM qm_words "
                         "WHERE ayah_id = :aid AND root = :root "
-                        "AND token IS NOT NULL"
+                        "AND token_clean IS NOT NULL"
                     ),
                     {"aid": ayah_db_id, "root": root},
                 )
@@ -433,4 +588,6 @@ class QuranMorphologySearch:
             page=page,
             per_page=per_page,
             total_verses=total_verses,
+            root_buckwalter=root_buckwalter,
+            word_transliterations=word_transliterations,
         )

@@ -78,8 +78,19 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
           }
         }
 
-        setRoots(allRoots);
-        setTotalCount(allRoots.length);
+        // Deduplicate roots by merging counts for identical root strings
+        // (Arabic Unicode normalization can cause GROUP BY to return
+        //  roots that are byte-different but render-identical)
+        const rootMap = new Map<string, number>();
+        for (const item of allRoots) {
+          rootMap.set(item.root, (rootMap.get(item.root) || 0) + item.count);
+        }
+        const dedupedRoots: RootListItem[] = Array.from(rootMap.entries()).map(
+          ([root, count]) => ({ root, count })
+        );
+
+        setRoots(dedupedRoots);
+        setTotalCount(dedupedRoots.length);
       } catch (err) {
         toast.error("Failed to load roots");
       } finally {
@@ -200,7 +211,7 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
         <div className="space-y-1">
           {displayRoots.map((rootItem, index) => (
             <RootRow
-              key={rootItem.root}
+              key={`${rootItem.root}-${index}`}
               root={rootItem.root}
               count={rootItem.count}
               index={index}

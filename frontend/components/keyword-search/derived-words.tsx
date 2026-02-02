@@ -8,9 +8,10 @@ interface DerivedWordsProps {
   words: string[];
   selectedWord: string | null;
   onWordSelect: (word: string | null) => void;
+  transliterations?: Record<string, string>;
 }
 
-export function DerivedWords({ words, selectedWord, onWordSelect }: DerivedWordsProps) {
+export function DerivedWords({ words, selectedWord, onWordSelect, transliterations }: DerivedWordsProps) {
   return (
     <div className="space-y-4">
       {/* Section Header */}
@@ -47,15 +48,17 @@ export function DerivedWords({ words, selectedWord, onWordSelect }: DerivedWords
             animate={{ opacity: 1, scale: 1 }}
             transition={{ ...springPresets.snappy, delay: (index + 1) * 0.03 }}
             onClick={() => onWordSelect(selectedWord === word ? null : word)}
-            lang="ar"
             className={cn(
-              "font-arabic px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+              "px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex flex-col items-center gap-0.5",
               selectedWord === word
                 ? "bg-indigo-500 text-white"
                 : "bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)]/80"
             )}
           >
-            {word}
+            <span lang="ar" className="font-arabic">{word}</span>
+            {transliterations?.[word] && (
+              <span className="text-[10px] opacity-70 font-sans">{transliterations[word]}</span>
+            )}
           </motion.button>
         ))}
       </div>

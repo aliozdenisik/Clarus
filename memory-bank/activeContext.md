@@ -2,7 +2,65 @@
 
 ## Current Work Focus
 
-**Date**: 2026-02-01
+**Date**: 2026-02-02
+
+### Keyword Search QA: SPECIAL_TERMS Fix (2026-02-02) - COMPLETE ✅
+
+Fixed the last 2 known limitations in keyword search: `الله` (Allah) and `quran` now resolve to correct roots.
+
+**Problem 1:** `الله` → root لهه (0 occurrences). DB has token `ٱلله` (hamzatu'l-wasl ٱ U+0671), user types `الله` (regular alef). Tashaphyne gives wrong root.
+**Problem 2:** `quran` → root قرن (horn, 36 occ) instead of قرأ (read, 88 occ). Vowel stripping produces "qrn".
+
+**Solution:** `SPECIAL_TERMS` dictionary in `quran_morphology.py` maps well-known terms directly to correct roots, bypassing algorithmic extraction. Also added hamzatu'l-wasl normalization (ٱ→ا) in `arabic_normalizer.py`.
+
+**Files Modified:**
+- `backend/src/quran_morphology.py` — SPECIAL_TERMS dict (18 entries), `_find_root()` early lookup
+- `backend/src/arabic_normalizer.py` — ٱ→ا normalization in `normalize_arabic()`
+
+**Test Results:** 20/20 PASS (API + Playwright web verification). See `test-results-keyword-search.md`.
+
+### RFC-007: Quran Keyword Search Frontend (2026-02-02) - COMPLETE ✅
+
+Built a dedicated `/keyword-search` page consuming the morphological keyword search API (3 endpoints), presenting root-based Arabic word search results in a scholarly concordance UI matching Clarus's utilitarian luxury design language.
+
+**Architecture:**
+- Next.js 15 page at `/keyword-search` with 8 custom components
+- Recharts horizontal bar chart for surah distribution (dark theme, academic styling)
+- Verse cards with Arabic (Uthmani) + Turkish translation + word highlighting
+- Root browser tab with search/filter for all 1,651 roots
+- Navigation integration (desktop dropdown + mobile menu)
+- OpenAPI client regeneration with keyword search types
+
+**Components Created (8):**
+- `frontend/app/keyword-search/page.tsx` — Main page (~437 lines)
+- `frontend/components/keyword-search/search-input.tsx` — Arabic/Latin search input
+- `frontend/components/keyword-search/root-card.tsx` — Arabic root display with source badge
+- `frontend/components/keyword-search/stats-bar.tsx` — Three-column statistics
+- `frontend/components/keyword-search/derived-words.tsx` — Clickable word filter tags
+- `frontend/components/keyword-search/surah-chart.tsx` — Recharts horizontal bar chart
+- `frontend/components/keyword-search/verse-card.tsx` — Verse display with highlighting
+- `frontend/components/keyword-search/pagination.tsx` — Page navigation
+- `frontend/components/keyword-search/root-browser.tsx` — Browse all 1,651 roots
+
+**Tests:** 26 keyword-search specific tests (10 integration + 16 unit), 244/244 total passing
+
+**Git Commits (12):**
+- `d637a49` chore(frontend): regenerate OpenAPI client with keyword search types
+- `14eab0c` feat(frontend): add keyword search page scaffold with search input
+- `44c903a` feat(frontend): add root card, stats bar, and derived words components
+- `ca61e81` feat(frontend): add Recharts surah distribution chart with academic styling
+- `6d91712` feat(frontend): add verse card with Arabic text, Turkish translation, and word highlighting
+- `c09bc50` feat(frontend): add pagination component for keyword search
+- `7d8b952` feat(frontend): add root browser tab with search and filtering
+- `92f590a` feat(frontend): add Word Search to navigation menu
+- `0b5aa48` feat(frontend): add empty state, loading skeletons, and error handling for keyword search
+- `faedcdd` test(frontend): add keyword search page and component tests
+- `5d9b6f6` fix(frontend): display surah names in Latin transliteration and link to specific verses
+- `1fc1ef0` fix(frontend): correct API response data nesting for surah transliterations and translations
+
+**Bugs Fixed During QA:**
+1. Surah names displayed in Arabic instead of Latin transliteration — fetched metadata, built transliteration map
+2. API response nesting: `response.data.data.X` (two levels of `.data`) due to MetadataResponse wrapper + SDK layer
 
 ### RFC-006: Quran Morphological Root-Based Keyword Search (2026-02-01) - COMPLETE ✅
 

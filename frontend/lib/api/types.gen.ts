@@ -175,6 +175,14 @@ export type KeywordSearchResponse = {
      */
     verses?: Array<VerseMatchItem>;
     pagination: PaginationInfo;
+    /**
+     * Root Buckwalter
+     */
+    root_buckwalter?: string | null;
+    /**
+     * Word Transliterations
+     */
+    word_transliterations?: Record<string, string>;
 };
 
 /**
