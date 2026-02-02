@@ -1,0 +1,869 @@
+"""Bible morphological root-based search service.
+
+Provides async database-backed search for Hebrew/Aramaic roots in the Bible.
+Supports Hebrew input (with nikud stripping and Strong's lookup),
+Latin transliteration input (with fuzzy matching via pg_trgm),
+and direct Strong's number input (H3789).
+
+Usage:
+    search = await BibleMorphologySearch.get_instance()
+    result = await search.search("כתב")       # Hebrew input
+    result = await search.search("H3789")      # Strong's number
+    result = await search.search("ktb")        # Latin transliteration
+    await search.close()
+"""
+
+import logging
+import re
+from dataclasses import dataclass, field, asdict
+from typing import Optional
+
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    AsyncSession,
+    async_sessionmaker,
+)
+from sqlalchemy import text as sa_text
+
+from .hebrew_normalizer import (
+    normalize_hebrew,
+    transliterate_hebrew,
+    detect_script,
+)
+
+logger = logging.getLogger(__name__)
+
+DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:54322/postgres"
+
+# Regex for Strong's number input: H or G followed by digits
+STRONGS_PATTERN = re.compile(r"^[HGhg]\d{1,5}$")
+
+
+# ---------------------------------------------------------------------------
+# Result Dataclasses
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class BookCount:
+    """Occurrence count of a root within a single book."""
+
+    book_id: int
+    book_name: str
+    count: int
+
+
+@dataclass
+class BibleVerseMatch:
+    """A single verse containing the searched root/word."""
+
+    book_id: int
+    book_name: str
+    chapter: int
+    verse: int
+    text_original: Optional[str]
+    text_english: Optional[str]
+    matched_words: list[str] = field(default_factory=list)
+    reference: str = ""
+
+
+@dataclass
+class BibleMorphologySearchResult:
+    """Complete result of a Bible morphological search."""
+
+    query: str
+    root: Optional[str]
+    root_source: (
+        str  # exact_match | strongs_lookup | transliteration | fuzzy | not_found
+    )
+    strong_number: Optional[str] = None
+    total_occurrences: int = 0
+    unique_words: list[str] = field(default_factory=list)
+    book_distribution: list[BookCount] = field(default_factory=list)
+    verses: list[BibleVerseMatch] = field(default_factory=list)
+    page: int = 1
+    per_page: int = 50
+    total_verses: int = 0
+    transliteration: Optional[str] = None
+    word_transliterations: dict[str, str] = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        """Serialize to plain dict for JSON responses."""
+        return asdict(self)
+
+
+# ---------------------------------------------------------------------------
+# Main Search Service
+# ---------------------------------------------------------------------------
+
+
+class BibleMorphologySearch:
+    """Root-based morphological search for the Bible (Hebrew/Aramaic).
+
+    Creates its own async engine (independent of app.db) so it can be
+    used from both CLI and API contexts. Uses singleton pattern with
+    in-memory Strong's cache for fast lookups.
+    """
+
+    _instance: Optional["BibleMorphologySearch"] = None
+
+    def __init__(self) -> None:
+        self._engine = create_async_engine(DATABASE_URL, echo=False, pool_pre_ping=True)
+        self._session_maker = async_sessionmaker(
+            self._engine, class_=AsyncSession, expire_on_commit=False
+        )
+        # Forward map: strong_number → {original_word, transliteration, definition, language}
+        self._strongs_cache: dict[str, dict] = {}
+        # Reverse map: normalized_original_word (no nikud) → strong_number
+        self._reverse_strongs: dict[str, list[str]] = {}
+        # Transliteration map: strongs_transliteration → strong_number
+        self._transliteration_map: dict[str, list[str]] = {}
+
+    @classmethod
+    async def get_instance(cls) -> "BibleMorphologySearch":
+        """Get or create singleton instance with loaded cache."""
+        if cls._instance is None:
+            cls._instance = cls()
+            await cls._instance._load_strongs_cache()
+        return cls._instance
+
+    async def _load_strongs_cache(self) -> None:
+        """Load ALL bm_strongs into memory (~14K entries, ~2MB).
+
+        Builds three lookup structures:
+        - Forward: number → {original_word, transliteration, definition, language}
+          (indexed by BOTH original key and zero-padded variant)
+        - Reverse: normalized_hebrew → [numbers]
+        - Transliteration: transliteration_lower → [numbers]
+        """
+        async with self._session_maker() as session:
+            result = await session.execute(
+                sa_text(
+                    "SELECT number, original_word, transliteration, definition, language "
+                    "FROM bm_strongs"
+                )
+            )
+            rows = result.fetchall()
+
+        for row in rows:
+            number, original_word, translit, definition, language = row
+            entry = {
+                "original_word": original_word,
+                "transliteration": translit,
+                "definition": definition,
+                "language": language,
+            }
+            self._strongs_cache[number] = entry
+
+            # Also index by zero-padded variant (H430 → H0430)
+            # bm_words uses H0430 format, bm_strongs uses H430
+            prefix = number[0] if number else ""
+            num_str = number[1:] if number else ""
+            try:
+                padded = f"{prefix}{int(num_str):04d}"
+                if padded != number:
+                    self._strongs_cache[padded] = entry
+            except ValueError:
+                pass
+
+            # Build reverse map: normalized Hebrew → Strong's numbers
+            if original_word:
+                normalized = normalize_hebrew(original_word)
+                if normalized not in self._reverse_strongs:
+                    self._reverse_strongs[normalized] = []
+                if number not in self._reverse_strongs[normalized]:
+                    self._reverse_strongs[normalized].append(number)
+
+            # Build transliteration map
+            if translit:
+                translit_lower = translit.lower().strip()
+                if translit_lower not in self._transliteration_map:
+                    self._transliteration_map[translit_lower] = []
+                if number not in self._transliteration_map[translit_lower]:
+                    self._transliteration_map[translit_lower].append(number)
+
+        logger.info(
+            "Loaded Strong's cache: %d entries, %d reverse mappings, %d transliterations",
+            len(self._strongs_cache),
+            len(self._reverse_strongs),
+            len(self._transliteration_map),
+        )
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    async def search(
+        self,
+        query: str,
+        page: int = 1,
+        per_page: int = 50,
+        language_filter: Optional[str] = None,
+        word_filter: Optional[str] = None,
+    ) -> BibleMorphologySearchResult:
+        """Main entry point: detect input type, find root/strong, search database.
+
+        Args:
+            query: Hebrew text, Strong's number (H3789), or Latin transliteration
+            page: Page number (1-based)
+            per_page: Results per page (max 200)
+            language_filter: Optional filter on bm_words.language ('hebrew', 'aramaic', or None)
+            word_filter: Optional filter to search within specific word forms
+        """
+        query = query.replace("\x00", "").strip()
+        if not query:
+            return BibleMorphologySearchResult(
+                query=query,
+                root=None,
+                root_source="not_found",
+                page=max(page, 1),
+                per_page=min(per_page, 200),
+            )
+        per_page = min(per_page, 200)
+        page = max(page, 1)
+
+        strong_number, root_source = await self._find_root(query)
+
+        if strong_number is None:
+            return BibleMorphologySearchResult(
+                query=query,
+                root=None,
+                root_source=root_source,
+                page=page,
+                per_page=per_page,
+            )
+
+        return await self._search_by_strong(
+            query=query,
+            strong_number=strong_number,
+            root_source=root_source,
+            page=page,
+            per_page=per_page,
+            language_filter=language_filter,
+            word_filter=word_filter,
+        )
+
+    async def list_roots(self, page: int = 1, per_page: int = 50) -> dict:
+        """List all available roots with occurrence counts, paginated."""
+        per_page = min(per_page, 200)
+        offset = (page - 1) * per_page
+
+        async with self._session_maker() as session:
+            total_result = await session.execute(
+                sa_text(
+                    "SELECT COUNT(DISTINCT strong_number) FROM bm_words "
+                    "WHERE strong_number IS NOT NULL"
+                )
+            )
+            total = total_result.scalar()
+
+            roots_result = await session.execute(
+                sa_text(
+                    """
+                    SELECT w.strong_number, s.original_word, s.transliteration, COUNT(*) as cnt
+                    FROM bm_words w
+                    LEFT JOIN bm_strongs s ON w.strong_number = s.number
+                    WHERE w.strong_number IS NOT NULL
+                    GROUP BY w.strong_number, s.original_word, s.transliteration
+                    ORDER BY cnt DESC
+                    LIMIT :limit OFFSET :offset
+                    """
+                ),
+                {"limit": per_page, "offset": offset},
+            )
+            roots = [
+                {
+                    "strong_number": r[0],
+                    "original_word": r[1],
+                    "transliteration": r[2],
+                    "count": r[3],
+                }
+                for r in roots_result.fetchall()
+            ]
+
+        return {
+            "roots": roots,
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+        }
+
+    async def get_stats(self) -> dict:
+        """Get overall Bible keyword search statistics."""
+        async with self._session_maker() as session:
+            # Total words in database
+            total_words_result = await session.execute(
+                sa_text("SELECT COUNT(*) FROM bm_words")
+            )
+            total_words = total_words_result.scalar() or 0
+
+            # Unique roots (Strong's numbers)
+            unique_roots_result = await session.execute(
+                sa_text(
+                    "SELECT COUNT(DISTINCT strong_number) FROM bm_words "
+                    "WHERE strong_number IS NOT NULL"
+                )
+            )
+            unique_roots = unique_roots_result.scalar() or 0
+
+            # Total books
+            total_books_result = await session.execute(
+                sa_text("SELECT COUNT(*) FROM bm_books")
+            )
+            total_books = total_books_result.scalar() or 0
+
+            # Total verses
+            total_verses_result = await session.execute(
+                sa_text("SELECT COUNT(*) FROM bm_verses")
+            )
+            total_verses = total_verses_result.scalar() or 0
+
+        return {
+            "total_words": total_words,
+            "unique_roots": unique_roots,
+            "total_books": total_books,
+            "total_verses": total_verses,
+        }
+
+    async def close(self) -> None:
+        """Dispose engine and release connection pool."""
+        await self._engine.dispose()
+
+    # ------------------------------------------------------------------
+    # Root / Strong's Finding (4-step cascade)
+    # ------------------------------------------------------------------
+
+    async def _find_root(self, query: str) -> tuple[Optional[str], str]:
+        """Find the Strong's number for a query.
+
+        Pipeline:
+        1. Script detection → route to Hebrew or Latin path
+        2. Hebrew: word_clean exact → Strong's reverse lookup → fuzzy
+        3. Latin: Strong's number check → transliteration → fuzzy
+        4. Not found
+
+        Returns:
+            (strong_number, source) where source describes how it was found
+        """
+        script = detect_script(query)
+
+        # Check for Strong's number input first (works for any script)
+        if STRONGS_PATTERN.match(query):
+            return await self._find_by_strongs_number(query)
+
+        if script == "hebrew":
+            return await self._find_root_hebrew(query)
+        return await self._find_root_latin(query)
+
+    async def _find_by_strongs_number(self, query: str) -> tuple[Optional[str], str]:
+        """Direct Strong's number lookup (e.g., H3789, G2316)."""
+        # Normalize: uppercase prefix, zero-pad to 4 digits
+        prefix = query[0].upper()
+        num_part = query[1:]
+        try:
+            formatted = f"{prefix}{int(num_part):04d}"
+        except ValueError:
+            formatted = f"{prefix}{num_part}"
+
+        # Check cache first
+        if formatted in self._strongs_cache:
+            return (formatted, "strongs_direct")
+
+        # Also try without zero-padding
+        unpadded = f"{prefix}{num_part}"
+        if unpadded in self._strongs_cache:
+            return (unpadded, "strongs_direct")
+
+        # Check if any words in DB have this strong_number
+        async with self._session_maker() as session:
+            result = await session.execute(
+                sa_text(
+                    "SELECT strong_number FROM bm_words "
+                    "WHERE strong_number = :sn LIMIT 1"
+                ),
+                {"sn": formatted},
+            )
+            row = result.fetchone()
+            if row:
+                return (formatted, "strongs_direct")
+
+        return (None, "not_found")
+
+    async def _find_root_hebrew(self, query: str) -> tuple[Optional[str], str]:
+        """Hebrew input path: normalize → exact match → Strong's reverse → fuzzy.
+
+        The root column in bm_words stores Strong's original_word with nikud,
+        which has non-standard Unicode combining character ordering. Direct
+        string equality on root is unreliable. Instead, we search via:
+        1. word_clean (nikud-stripped) → get strong_number
+        2. Strong's reverse lookup (normalize query → match strongs.original_word)
+        3. Fuzzy match on word_clean via pg_trgm
+        """
+        normalized = normalize_hebrew(query)
+
+        async with self._session_maker() as session:
+            # Step 1: Exact match on word_clean → get most frequent strong_number
+            result = await session.execute(
+                sa_text(
+                    """
+                    SELECT strong_number, COUNT(*) as cnt
+                    FROM bm_words
+                    WHERE word_clean = :q AND strong_number IS NOT NULL
+                    GROUP BY strong_number
+                    ORDER BY cnt DESC
+                    LIMIT 1
+                    """
+                ),
+                {"q": normalized},
+            )
+            row = result.fetchone()
+            if row:
+                return (row[0], "exact_match")
+
+            # Step 2: Strong's reverse lookup via in-memory cache
+            # User typed Hebrew without nikud → find matching Strong's entry
+            strongs_numbers = self._reverse_strongs.get(normalized)
+            if strongs_numbers:
+                # Verify the Strong's number exists in bm_words
+                for sn in strongs_numbers:
+                    result = await session.execute(
+                        sa_text(
+                            "SELECT strong_number FROM bm_words "
+                            "WHERE strong_number = :sn LIMIT 1"
+                        ),
+                        {"sn": sn},
+                    )
+                    if result.fetchone():
+                        return (sn, "strongs_lookup")
+
+            # Step 3: Fuzzy match on word_clean via pg_trgm
+            result = await session.execute(
+                sa_text(
+                    """
+                    SELECT strong_number, word_clean,
+                           similarity(word_clean, :q) AS sim
+                    FROM bm_words
+                    WHERE word_clean % :q AND strong_number IS NOT NULL
+                    ORDER BY sim DESC
+                    LIMIT 1
+                    """
+                ),
+                {"q": normalized},
+            )
+            row = result.fetchone()
+            if row:
+                return (row[0], "fuzzy")
+
+        return (None, "not_found")
+
+    async def _find_root_latin(self, query: str) -> tuple[Optional[str], str]:
+        """Latin input path: transliteration exact → cache lookup → fuzzy.
+
+        Handles SBL transliteration input (e.g., 'ktb', 'brʾšyt') and
+        common romanizations.
+        """
+        normalized = query.lower().strip()
+
+        async with self._session_maker() as session:
+            # Step L1: Exact match on bm_words.transliteration
+            result = await session.execute(
+                sa_text(
+                    """
+                    SELECT strong_number, COUNT(*) as cnt
+                    FROM bm_words
+                    WHERE transliteration = :q AND strong_number IS NOT NULL
+                    GROUP BY strong_number
+                    ORDER BY cnt DESC
+                    LIMIT 1
+                    """
+                ),
+                {"q": normalized},
+            )
+            row = result.fetchone()
+            if row:
+                return (row[0], "transliteration")
+
+            # Step L2: Strong's transliteration cache lookup
+            # The bm_strongs.transliteration field uses a different format
+            # (e.g., 'kâthab' for H3789), try matching
+            strongs_numbers = self._transliteration_map.get(normalized)
+            if strongs_numbers:
+                for sn in strongs_numbers:
+                    result = await session.execute(
+                        sa_text(
+                            "SELECT strong_number FROM bm_words "
+                            "WHERE strong_number = :sn LIMIT 1"
+                        ),
+                        {"sn": sn},
+                    )
+                    if result.fetchone():
+                        return (sn, "transliteration")
+
+            # Step L3: Try converting Latin to Hebrew via transliteration reverse
+            # Build a simple reverse: strip diacritics from SBL transliteration
+            # and match against bm_words.transliteration with LIKE
+            # Strip common diacritics for broader matching
+            stripped = _strip_transliteration_diacritics(normalized)
+            if stripped != normalized:
+                result = await session.execute(
+                    sa_text(
+                        """
+                        SELECT strong_number, COUNT(*) as cnt
+                        FROM bm_words
+                        WHERE transliteration = :q AND strong_number IS NOT NULL
+                        GROUP BY strong_number
+                        ORDER BY cnt DESC
+                        LIMIT 1
+                        """
+                    ),
+                    {"q": stripped},
+                )
+                row = result.fetchone()
+                if row:
+                    return (row[0], "transliteration")
+
+            # Step L4: Fuzzy match on transliteration via pg_trgm
+            result = await session.execute(
+                sa_text(
+                    """
+                    SELECT strong_number, transliteration,
+                           similarity(transliteration, :q) AS sim
+                    FROM bm_words
+                    WHERE transliteration % :q AND strong_number IS NOT NULL
+                    ORDER BY sim DESC
+                    LIMIT 1
+                    """
+                ),
+                {"q": normalized},
+            )
+            row = result.fetchone()
+            if row:
+                return (row[0], "fuzzy")
+
+            # Also try fuzzy on stripped form
+            if stripped != normalized:
+                result = await session.execute(
+                    sa_text(
+                        """
+                        SELECT strong_number, transliteration,
+                               similarity(transliteration, :q) AS sim
+                        FROM bm_words
+                        WHERE transliteration % :q AND strong_number IS NOT NULL
+                        ORDER BY sim DESC
+                        LIMIT 1
+                        """
+                    ),
+                    {"q": stripped},
+                )
+                row = result.fetchone()
+                if row:
+                    return (row[0], "fuzzy")
+
+        return (None, "not_found")
+
+    # ------------------------------------------------------------------
+    # Database Search (after Strong's number is found)
+    # ------------------------------------------------------------------
+
+    async def _search_by_strong(
+        self,
+        query: str,
+        strong_number: str,
+        root_source: str,
+        page: int,
+        per_page: int,
+        language_filter: Optional[str] = None,
+        word_filter: Optional[str] = None,
+    ) -> BibleMorphologySearchResult:
+        """Query all data for a given Strong's number.
+
+        Fetches: total occurrences, unique words, book distribution,
+        paginated verses with matched words.
+        """
+        # Get root info from Strong's cache
+        strongs_info = self._strongs_cache.get(strong_number, {})
+        root_word = strongs_info.get("original_word")
+        root_transliteration = strongs_info.get("transliteration")
+
+        # Build WHERE clause fragments for language and word filters
+        lang_clause = ""
+        lang_params: dict[str, object] = {}
+        if language_filter:
+            lang_clause = " AND w.language = :lang"
+            lang_params["lang"] = language_filter
+
+        word_clause = ""
+        word_params: dict[str, object] = {}
+        if word_filter:
+            word_clause = " AND w.word_clean = :word_filter"
+            word_params["word_filter"] = word_filter
+
+        async with self._session_maker() as session:
+            base_params: dict[str, object] = {"sn": strong_number}
+            all_params = {**base_params, **lang_params, **word_params}
+
+            # 1. Total occurrences
+            total_result = await session.execute(
+                sa_text(
+                    f"SELECT COUNT(*) FROM bm_words w "
+                    f"WHERE w.strong_number = :sn{lang_clause}"
+                ),
+                {**base_params, **lang_params},
+            )
+            total_occurrences = total_result.scalar() or 0
+
+            # 2. Unique derived words (word_clean, deduplicated)
+            words_result = await session.execute(
+                sa_text(
+                    f"SELECT DISTINCT w.word_clean FROM bm_words w "
+                    f"WHERE w.strong_number = :sn AND w.word_clean IS NOT NULL{lang_clause} "
+                    f"ORDER BY w.word_clean"
+                ),
+                {**base_params, **lang_params},
+            )
+            unique_words = [row[0] for row in words_result.fetchall()]
+
+            # Compute transliterations for unique words
+            word_transliterations: dict[str, str] = {}
+            for word in unique_words:
+                try:
+                    word_transliterations[word] = transliterate_hebrew(word)
+                except Exception:
+                    word_transliterations[word] = word
+
+            # 3. Book distribution
+            dist_result = await session.execute(
+                sa_text(
+                    f"""
+                    SELECT b.id, b.name_english, COUNT(*) as cnt
+                    FROM bm_words w
+                    JOIN bm_verses v ON w.verse_id = v.id
+                    JOIN bm_books b ON v.book_id = b.id
+                    WHERE w.strong_number = :sn{lang_clause}
+                    GROUP BY b.id, b.name_english
+                    ORDER BY cnt DESC
+                    """
+                ),
+                {**base_params, **lang_params},
+            )
+            book_distribution = [
+                BookCount(book_id=r[0], book_name=r[1], count=r[2])
+                for r in dist_result.fetchall()
+            ]
+
+            # 4. Count total distinct verses
+            count_sql = (
+                f"SELECT COUNT(DISTINCT v.id) "
+                f"FROM bm_words w JOIN bm_verses v ON w.verse_id = v.id "
+                f"WHERE w.strong_number = :sn{lang_clause}{word_clause}"
+            )
+            total_verses_result = await session.execute(sa_text(count_sql), all_params)
+            total_verses = total_verses_result.scalar() or 0
+
+            # 5. Paginated verses (keyset pagination)
+            # For page 1: start from v.id > 0
+            # For page N: find the starting ID by skipping (N-1)*per_page rows
+            start_id = 0
+            if page > 1:
+                skip_count = (page - 1) * per_page
+                start_id_result = await session.execute(
+                    sa_text(
+                        f"""
+                        SELECT v.id FROM (
+                            SELECT DISTINCT v.id
+                            FROM bm_words w
+                            JOIN bm_verses v ON w.verse_id = v.id
+                            WHERE w.strong_number = :sn{lang_clause}{word_clause}
+                            ORDER BY v.id
+                            LIMIT :skip
+                        ) sub
+                        JOIN bm_verses v ON v.id = sub.id
+                        ORDER BY v.id DESC
+                        LIMIT 1
+                        """
+                    ),
+                    {**all_params, "skip": skip_count},
+                )
+                row = start_id_result.fetchone()
+                if row:
+                    start_id = row[0]
+
+            verses_result = await session.execute(
+                sa_text(
+                    f"""
+                    SELECT DISTINCT v.id, v.book_id, b.name_english,
+                           v.chapter, v.verse, v.text_original, v.text_english,
+                           v.reference
+                    FROM bm_words w
+                    JOIN bm_verses v ON w.verse_id = v.id
+                    JOIN bm_books b ON v.book_id = b.id
+                    WHERE w.strong_number = :sn AND v.id > :start_id{lang_clause}{word_clause}
+                    ORDER BY v.id
+                    LIMIT :limit
+                    """
+                ),
+                {**all_params, "start_id": start_id, "limit": per_page},
+            )
+            verse_rows = verses_result.fetchall()
+
+            # 6. Batch-fetch matched words for all verses
+            verse_ids = [vr[0] for vr in verse_rows]
+            matched_words_map: dict[int, list[str]] = {vid: [] for vid in verse_ids}
+            if verse_ids:
+                placeholders = ",".join(str(vid) for vid in verse_ids)
+                batch_words_result = await session.execute(
+                    sa_text(
+                        f"SELECT DISTINCT verse_id, word_clean FROM bm_words "
+                        f"WHERE verse_id IN ({placeholders}) AND strong_number = :sn "
+                        f"AND word_clean IS NOT NULL"
+                    ),
+                    {"sn": strong_number},
+                )
+                for row in batch_words_result.fetchall():
+                    vid, token = row[0], row[1]
+                    if token not in matched_words_map[vid]:
+                        matched_words_map[vid].append(token)
+
+            verses: list[BibleVerseMatch] = []
+            for vr in verse_rows:
+                verses.append(
+                    BibleVerseMatch(
+                        book_id=vr[1],
+                        book_name=vr[2],
+                        chapter=vr[3],
+                        verse=vr[4],
+                        text_original=vr[5],
+                        text_english=vr[6],
+                        matched_words=matched_words_map.get(vr[0], []),
+                        reference=vr[7] or "",
+                    )
+                )
+
+        return BibleMorphologySearchResult(
+            query=query,
+            root=root_word,
+            root_source=root_source,
+            strong_number=strong_number,
+            total_occurrences=total_occurrences,
+            unique_words=unique_words,
+            book_distribution=book_distribution,
+            verses=verses,
+            page=page,
+            per_page=per_page,
+            total_verses=total_verses,
+            transliteration=root_transliteration,
+            word_transliterations=word_transliterations,
+        )
+
+
+# ---------------------------------------------------------------------------
+# Utility Functions
+# ---------------------------------------------------------------------------
+
+
+def _strip_transliteration_diacritics(text: str) -> str:
+    """Strip common diacritics from transliteration for broader matching.
+
+    Converts scholarly transliteration characters to plain ASCII:
+    - ʾ (alef) → removed
+    - ʿ (ayin) → removed
+    - ḥ → h, ṭ → t, ṣ → s
+    - š → s, ś → s
+    - â, ê, î, ô, û → a, e, i, o, u
+    """
+    replacements = {
+        "ʾ": "",
+        "ʿ": "",
+        "\u1e25": "h",  # ḥ
+        "\u1e6d": "t",  # ṭ
+        "\u1e63": "s",  # ṣ
+        "\u0161": "s",  # š
+        "\u015b": "s",  # ś
+        "\u00e2": "a",  # â
+        "\u00ea": "e",  # ê
+        "\u00ee": "i",  # î
+        "\u00f4": "o",  # ô
+        "\u00fb": "u",  # û
+    }
+    result = text
+    for old, new in replacements.items():
+        result = result.replace(old, new)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Inline Test
+# ---------------------------------------------------------------------------
+
+
+if __name__ == "__main__":
+    import asyncio
+    import sys
+
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
+    async def run_tests() -> None:
+        print("=" * 60)
+        print("BibleMorphologySearch — Inline Test")
+        print("=" * 60)
+
+        search = await BibleMorphologySearch.get_instance()
+        print(
+            f"\nStrong's cache loaded: {len(search._strongs_cache)} entries, "
+            f"{len(search._reverse_strongs)} reverse mappings, "
+            f"{len(search._transliteration_map)} transliterations"
+        )
+
+        test_cases = [
+            ("כתב", "Hebrew input (ktb/write)"),
+            ("H3789", "Strong's number (ktb/write)"),
+            ("ktb", "Latin transliteration (ktb/write)"),
+            ("אלהים", "Hebrew input (elohim/God)"),
+            ("H0430", "Strong's number (elohim/God)"),
+        ]
+
+        all_passed = True
+        for query, description in test_cases:
+            print(f"\n{'─' * 60}")
+            print(f"TEST: {description}")
+            print(f"Query: {query}")
+
+            try:
+                result = await search.search(query, page=1, per_page=5)
+                print(f"  Root: {result.root}")
+                print(f"  Root source: {result.root_source}")
+                print(f"  Strong's: {result.strong_number}")
+                print(f"  Total occurrences: {result.total_occurrences}")
+                print(f"  Unique words: {len(result.unique_words)}")
+                if result.unique_words[:5]:
+                    print(f"    Sample: {result.unique_words[:5]}")
+                print(f"  Total verses: {result.total_verses}")
+                print(f"  Books: {len(result.book_distribution)}")
+                if result.book_distribution[:3]:
+                    for bc in result.book_distribution[:3]:
+                        print(f"    {bc.book_name}: {bc.count}")
+                print(f"  Verses returned: {len(result.verses)}")
+                if result.verses:
+                    v = result.verses[0]
+                    print(f"    First: {v.reference} — {v.matched_words}")
+                print(f"  Transliteration: {result.transliteration}")
+
+                if result.root_source == "not_found":
+                    print("  ⚠ NOT FOUND")
+                    all_passed = False
+                else:
+                    print("  ✓ PASS")
+            except Exception as exc:
+                print(f"  ✗ FAIL: {exc}")
+                all_passed = False
+
+        print(f"\n{'=' * 60}")
+        if all_passed:
+            print("ALL TESTS PASSED ✓")
+        else:
+            print("SOME TESTS FAILED ✗")
+        print("=" * 60)
+
+        await search.close()
+
+    asyncio.run(run_tests())

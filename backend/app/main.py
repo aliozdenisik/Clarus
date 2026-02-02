@@ -14,6 +14,7 @@ from app.api import (
     metadata,
     preferences,
     keyword_search,
+    bible_keyword_search,
 )
 from app.db import init_db
 from app.middleware.error_handler import ErrorHandlerMiddleware
@@ -204,6 +205,11 @@ app.include_router(metadata.router, prefix="/api/metadata", tags=["metadata"])
 app.include_router(preferences.router, prefix="/api/preferences", tags=["preferences"])
 app.include_router(
     keyword_search.router, prefix="/api/search/keyword", tags=["keyword"]
+)
+app.include_router(
+    bible_keyword_search.router,
+    prefix="/api/keyword-search/bible",
+    tags=["bible-keyword"],
 )
 
 

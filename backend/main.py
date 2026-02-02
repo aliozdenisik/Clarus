@@ -1045,6 +1045,37 @@ def main():
         help="Output format (default: table)",
     )
 
+    # Bible Keyword Search command
+    bible_keyword_search_parser = subparsers.add_parser(
+        "bible-keyword-search",
+        help="Search Bible by morphological root (Hebrew, Aramaic, or Strong's number)",
+    )
+    bible_keyword_search_parser.add_argument(
+        "query",
+        help="Hebrew word, Strong's number, or Latin transliteration (e.g., כתב, H3789, ktb)",
+    )
+    bible_keyword_search_parser.add_argument(
+        "--limit",
+        type=int,
+        default=50,
+        help="Number of verse results per page (default: 50)",
+    )
+    bible_keyword_search_parser.add_argument(
+        "--page", type=int, default=1, help="Page number (default: 1)"
+    )
+    bible_keyword_search_parser.add_argument(
+        "--format",
+        choices=["table", "json"],
+        default="table",
+        help="Output format (default: table)",
+    )
+    bible_keyword_search_parser.add_argument(
+        "--language",
+        choices=["hebrew", "aramaic", "all"],
+        default="all",
+        help="Filter by language (default: all)",
+    )
+
     args = parser.parse_args()
 
     if args.command == "index":
@@ -1084,6 +1115,8 @@ def main():
         return cmd_compare(args)
     elif args.command == "keyword-search":
         return cmd_keyword_search(args)
+    elif args.command == "bible-keyword-search":
+        return cmd_bible_keyword_search(args)
     else:
         parser.print_help()
         return 0
@@ -1230,6 +1263,139 @@ def cmd_keyword_search(args):
         console.print(
             f"\n[dim]Page {result.page}/{total_pages} ({result.total_verses} total verses)[/dim]"
         )
+
+    return 0
+
+
+def cmd_bible_keyword_search(args):
+    """Search Bible by morphological root."""
+    import asyncio
+    import json as json_module
+    from src.bible_morphology import BibleMorphologySearch
+
+    console.print(f"\n[bold blue]Bible Keyword Search[/bold blue]: {args.query}\n")
+
+    language_filter = None if args.language == "all" else args.language
+
+    async def run_search():
+        search = await BibleMorphologySearch.get_instance()
+        try:
+            return await search.search(
+                args.query,
+                page=args.page,
+                per_page=args.limit,
+                language_filter=language_filter,
+            )
+        finally:
+            await search.close()
+
+    result = asyncio.run(run_search())
+
+    if result.root is None:
+        console.print("[yellow]No results found.[/yellow]")
+        return 0
+
+    if args.format == "json":
+        # Convert dataclass to dict for JSON output
+        output = {
+            "query": result.query,
+            "root": result.root,
+            "root_source": result.root_source,
+            "strong_number": result.strong_number,
+            "total_occurrences": result.total_occurrences,
+            "unique_words": result.unique_words,
+            "total_verses": result.total_verses,
+            "transliteration": result.transliteration,
+            "book_distribution": [
+                {"book_id": b.book_id, "book_name": b.book_name, "count": b.count}
+                for b in result.book_distribution
+            ],
+            "verses": [
+                {
+                    "book_name": v.book_name,
+                    "chapter": v.chapter,
+                    "verse": v.verse,
+                    "reference": v.reference,
+                    "text_original": v.text_original,
+                    "text_english": v.text_english,
+                    "matched_words": v.matched_words,
+                }
+                for v in result.verses
+            ],
+        }
+        print(json_module.dumps(output, ensure_ascii=False, indent=2))
+        return 0
+
+    # Rich table format
+    # 1. Header panel
+    strong_info = (
+        f"  |  Strong's: [magenta]{result.strong_number}[/magenta]"
+        if result.strong_number
+        else ""
+    )
+    translit_info = (
+        f"  |  Transliteration: [italic]{result.transliteration}[/italic]"
+        if result.transliteration
+        else ""
+    )
+    console.print(
+        Panel(
+            f"Root: [bold green]{result.root}[/bold green]  |  "
+            f"Source: [cyan]{result.root_source}[/cyan]  |  "
+            f"Total Occurrences: [bold]{result.total_occurrences}[/bold]  |  "
+            f"Unique Words: [bold]{len(result.unique_words)}[/bold]  |  "
+            f"Verses: [bold]{result.total_verses}[/bold]"
+            f"{strong_info}{translit_info}",
+            title="Root Info",
+        )
+    )
+
+    # 2. Derived words (Hebrew text, right-aligned)
+    if result.unique_words:
+        words_text = "  ".join(result.unique_words[:30])
+        if len(result.unique_words) > 30:
+            words_text += f"  ... (+{len(result.unique_words) - 30} more)"
+        console.print(Panel(words_text, title="Derived Words"))
+
+    # 3. Book distribution table
+    if result.book_distribution:
+        dist_table = Table(title="Book Distribution")
+        dist_table.add_column("#", style="dim")
+        dist_table.add_column("Book", style="green")
+        dist_table.add_column("Count", style="bold", justify="right")
+        for i, bd in enumerate(result.book_distribution[:20], 1):
+            dist_table.add_row(str(i), bd.book_name, str(bd.count))
+        if len(result.book_distribution) > 20:
+            dist_table.add_row(
+                "...", f"(+{len(result.book_distribution) - 20} more books)", ""
+            )
+        console.print(dist_table)
+
+    # 4. Verses table
+    if result.verses:
+        verse_table = Table(title=f"Verses (Page {result.page})")
+        verse_table.add_column("#", style="dim", width=4)
+        verse_table.add_column("Reference", style="cyan", width=15)
+        verse_table.add_column("Hebrew Text", min_width=30)
+        verse_table.add_column("English Text", min_width=30)
+        verse_table.add_column("Matched", style="yellow", width=15)
+        for i, v in enumerate(result.verses, 1):
+            hebrew = (v.text_original or "")[:80] + (
+                "..." if v.text_original and len(v.text_original) > 80 else ""
+            )
+            english = (v.text_english or "")[:80] + (
+                "..." if v.text_english and len(v.text_english) > 80 else ""
+            )
+            matched = ", ".join(v.matched_words[:3])
+            verse_table.add_row(str(i), v.reference, hebrew, english, matched)
+        console.print(verse_table)
+
+        # Pagination info
+        if result.per_page > 0:
+            total_pages = (result.total_verses + result.per_page - 1) // result.per_page
+            console.print(
+                f"\n[dim]Page {result.page}/{total_pages} ({result.total_verses} total verses)[/dim]"
+            )
 
     return 0
 
