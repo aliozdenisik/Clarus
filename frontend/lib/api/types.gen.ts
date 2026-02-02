@@ -18,6 +18,12 @@ export type CompareRequest = {
      * Use Multi Agent
      */
     use_multi_agent?: boolean;
+    /**
+     * Language
+     *
+     * Response language (auto-detect if omitted)
+     */
+    language?: string | null;
 };
 
 /**
@@ -49,6 +55,12 @@ export type CompareResponse = {
      */
     confidence: number;
     /**
+     * Confidence Breakdown
+     */
+    confidence_breakdown?: {
+        [key: string]: unknown;
+    } | null;
+    /**
      * Total Verses
      */
     total_verses: number;
@@ -66,6 +78,14 @@ export type CompareResponse = {
     verse_details?: {
         [key: string]: VerseDetail;
     } | null;
+    /**
+     * Detected Language
+     */
+    detected_language?: string | null;
+    /**
+     * Response Language
+     */
+    response_language?: string | null;
 };
 
 /**
@@ -92,6 +112,99 @@ export type HttpValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
+};
+
+/**
+ * KeywordSearchRequest
+ */
+export type KeywordSearchRequest = {
+    /**
+     * Query
+     *
+     * Arabic word or Buckwalter root
+     */
+    query: string;
+    /**
+     * Page
+     *
+     * Page number
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * Results per page (max 200)
+     */
+    per_page?: number;
+};
+
+/**
+ * KeywordSearchResponse
+ */
+export type KeywordSearchResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Query
+     */
+    query: string;
+    /**
+     * Root
+     */
+    root?: string | null;
+    /**
+     * Root Source
+     */
+    root_source: string;
+    /**
+     * Total Occurrences
+     */
+    total_occurrences?: number;
+    /**
+     * Unique Words
+     */
+    unique_words?: Array<string>;
+    /**
+     * Surah Distribution
+     */
+    surah_distribution?: Array<SurahDistItem>;
+    /**
+     * Verses
+     */
+    verses?: Array<VerseMatchItem>;
+    pagination: PaginationInfo;
+};
+
+/**
+ * PaginationInfo
+ */
+export type PaginationInfo = {
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Per Page
+     */
+    per_page: number;
+    /**
+     * Total Verses
+     */
+    total_verses: number;
+    /**
+     * Total Pages
+     */
+    total_pages: number;
+    /**
+     * Has Next
+     */
+    has_next: boolean;
+    /**
+     * Has Prev
+     */
+    has_prev: boolean;
 };
 
 /**
@@ -181,6 +294,46 @@ export type RefreshTokenRequest = {
 };
 
 /**
+ * RootListItem
+ */
+export type RootListItem = {
+    /**
+     * Root
+     */
+    root: string;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * RootListResponse
+ */
+export type RootListResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Roots
+     */
+    roots: Array<RootListItem>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Per Page
+     */
+    per_page: number;
+};
+
+/**
  * SearchRequest
  */
 export type SearchRequest = {
@@ -196,6 +349,12 @@ export type SearchRequest = {
      * Top K
      */
     top_k?: number;
+    /**
+     * Language
+     *
+     * Response language (auto-detect if omitted)
+     */
+    language?: string | null;
 };
 
 /**
@@ -218,6 +377,34 @@ export type SearchResponse = {
      * Total
      */
     total: number;
+    /**
+     * Verse Details
+     */
+    verse_details?: {
+        [key: string]: VerseDetail;
+    } | null;
+    /**
+     * Detected Language
+     */
+    detected_language?: string | null;
+};
+
+/**
+ * SurahDistItem
+ */
+export type SurahDistItem = {
+    /**
+     * Surah Id
+     */
+    surah_id: number;
+    /**
+     * Surah Name
+     */
+    surah_name: string;
+    /**
+     * Count
+     */
+    count: number;
 };
 
 /**
@@ -351,6 +538,52 @@ export type VerseDetail = {
      * Translation
      */
     translation: string;
+    /**
+     * Book Nr
+     */
+    book_nr?: number | null;
+    /**
+     * Surah Id
+     */
+    surah_id?: number | null;
+    /**
+     * Surah Name
+     */
+    surah_name?: string | null;
+    /**
+     * Verse Id
+     */
+    verse_id?: number | null;
+};
+
+/**
+ * VerseMatchItem
+ */
+export type VerseMatchItem = {
+    /**
+     * Surah Id
+     */
+    surah_id: number;
+    /**
+     * Surah Name
+     */
+    surah_name: string;
+    /**
+     * Ayah Number
+     */
+    ayah_number: number;
+    /**
+     * Text Uthmani
+     */
+    text_uthmani: string;
+    /**
+     * Text Clean
+     */
+    text_clean: string;
+    /**
+     * Matched Words
+     */
+    matched_words: Array<string>;
 };
 
 /**
@@ -699,6 +932,12 @@ export type StreamSearchApiStreamSearchGetData = {
          * JWT access token (required for SSE - EventSource can't send headers)
          */
         token: string;
+        /**
+         * Language
+         *
+         * Detected user language (ISO 639-1)
+         */
+        language?: string | null;
     };
     url: '/api/stream/search';
 };
@@ -735,6 +974,12 @@ export type StreamCompareApiStreamCompareGetData = {
          * JWT access token (required for SSE - EventSource can't send headers)
          */
         token: string;
+        /**
+         * Language
+         *
+         * Detected user language (ISO 639-1)
+         */
+        language?: string | null;
     };
     url: '/api/stream/compare';
 };
@@ -1055,6 +1300,104 @@ export type UpdatePreferencesApiPreferencesPutResponses = {
 };
 
 export type UpdatePreferencesApiPreferencesPutResponse = UpdatePreferencesApiPreferencesPutResponses[keyof UpdatePreferencesApiPreferencesPutResponses];
+
+export type SearchKeywordApiSearchKeywordPostData = {
+    body: KeywordSearchRequest;
+    path?: never;
+    query?: never;
+    url: '/api/search/keyword/';
+};
+
+export type SearchKeywordApiSearchKeywordPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SearchKeywordApiSearchKeywordPostError = SearchKeywordApiSearchKeywordPostErrors[keyof SearchKeywordApiSearchKeywordPostErrors];
+
+export type SearchKeywordApiSearchKeywordPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: KeywordSearchResponse;
+};
+
+export type SearchKeywordApiSearchKeywordPostResponse = SearchKeywordApiSearchKeywordPostResponses[keyof SearchKeywordApiSearchKeywordPostResponses];
+
+export type ListRootsApiSearchKeywordRootsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Per Page
+         */
+        per_page?: number;
+    };
+    url: '/api/search/keyword/roots';
+};
+
+export type ListRootsApiSearchKeywordRootsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListRootsApiSearchKeywordRootsGetError = ListRootsApiSearchKeywordRootsGetErrors[keyof ListRootsApiSearchKeywordRootsGetErrors];
+
+export type ListRootsApiSearchKeywordRootsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: RootListResponse;
+};
+
+export type ListRootsApiSearchKeywordRootsGetResponse = ListRootsApiSearchKeywordRootsGetResponses[keyof ListRootsApiSearchKeywordRootsGetResponses];
+
+export type GetRootInfoApiSearchKeywordRootRootGetData = {
+    body?: never;
+    path: {
+        /**
+         * Root
+         */
+        root: string;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Per Page
+         */
+        per_page?: number;
+    };
+    url: '/api/search/keyword/root/{root}';
+};
+
+export type GetRootInfoApiSearchKeywordRootRootGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetRootInfoApiSearchKeywordRootRootGetError = GetRootInfoApiSearchKeywordRootRootGetErrors[keyof GetRootInfoApiSearchKeywordRootRootGetErrors];
+
+export type GetRootInfoApiSearchKeywordRootRootGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: KeywordSearchResponse;
+};
+
+export type GetRootInfoApiSearchKeywordRootRootGetResponse = GetRootInfoApiSearchKeywordRootRootGetResponses[keyof GetRootInfoApiSearchKeywordRootRootGetResponses];
 
 export type HealthCheckApiHealthGetData = {
     body?: never;
