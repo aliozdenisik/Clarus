@@ -537,8 +537,7 @@ class QuranMorphologySearch:
             )
             total_verses = total_verses_result.scalar()
 
-            # 5. Paginated verse results
-            offset = (page - 1) * per_page
+            # 5. Verse results (paginated or all when per_page=0)
             verses_sql = """
                     SELECT DISTINCT a.id, s.id as surah_id, s.name_arabic,
                            a.ayah_number, a.text_uthmani, a.text_clean
@@ -547,49 +546,48 @@ class QuranMorphologySearch:
                     JOIN qm_surahs s ON a.surah_id = s.id
                     WHERE w.root = :root
                     """
-            verses_params: dict[str, object] = {
-                "root": root,
-                "limit": per_page,
-                "offset": offset,
-            }
+            verses_params: dict[str, object] = {"root": root}
             if word_filter:
                 verses_sql += " AND w.token_clean = :word_filter"
                 verses_params["word_filter"] = word_filter
-            verses_sql += """
-                    ORDER BY s.id, a.ayah_number
-                    LIMIT :limit OFFSET :offset
-                    """
+            verses_sql += "\n                    ORDER BY s.id, a.ayah_number"
+            if per_page > 0:
+                offset = (page - 1) * per_page
+                verses_sql += "\n                    LIMIT :limit OFFSET :offset"
+                verses_params["limit"] = per_page
+                verses_params["offset"] = offset
             verses_result = await session.execute(sa_text(verses_sql), verses_params)
             verse_rows = verses_result.fetchall()
 
-            # 6. For each verse, get matched words
+            # 6. Batch-fetch matched words for all verses in one query
+            ayah_ids = [vr[0] for vr in verse_rows]
+            matched_words_map: dict[int, list[str]] = {aid: [] for aid in ayah_ids}
+            if ayah_ids:
+                # Fetch all matched words for all verses at once
+                placeholders = ",".join(str(aid) for aid in ayah_ids)
+                batch_words_result = await session.execute(
+                    sa_text(
+                        f"SELECT DISTINCT ayah_id, token_clean FROM qm_words "
+                        f"WHERE ayah_id IN ({placeholders}) AND root = :root "
+                        f"AND token_clean IS NOT NULL"
+                    ),
+                    {"root": root},
+                )
+                for row in batch_words_result.fetchall():
+                    aid, token = row[0], row[1]
+                    if token not in matched_words_map[aid]:
+                        matched_words_map[aid].append(token)
+
             verses: list[VerseMatch] = []
             for vr in verse_rows:
-                ayah_db_id = vr[0]
-                surah_id = vr[1]
-                surah_name = vr[2]
-                ayah_number = vr[3]
-                text_uthmani = vr[4]
-                text_clean = vr[5]
-
-                words_in_verse = await session.execute(
-                    sa_text(
-                        "SELECT DISTINCT token_clean FROM qm_words "
-                        "WHERE ayah_id = :aid AND root = :root "
-                        "AND token_clean IS NOT NULL"
-                    ),
-                    {"aid": ayah_db_id, "root": root},
-                )
-                matched = [w[0] for w in words_in_verse.fetchall()]
-
                 verses.append(
                     VerseMatch(
-                        surah_id=surah_id,
-                        surah_name=surah_name,
-                        ayah_number=ayah_number,
-                        text_uthmani=text_uthmani,
-                        text_clean=text_clean,
-                        matched_words=matched,
+                        surah_id=vr[1],
+                        surah_name=vr[2],
+                        ayah_number=vr[3],
+                        text_uthmani=vr[4],
+                        text_clean=vr[5],
+                        matched_words=matched_words_map.get(vr[0], []),
                     )
                 )
 

@@ -43,11 +43,11 @@ async def search_keyword(request: KeywordSearchRequest):
         word_filter=request.word_filter,
     )
 
-    total_pages = (
-        (result.total_verses + result.per_page - 1) // result.per_page
-        if result.per_page > 0
-        else 0
-    )
+    # per_page=0 means all verses returned at once (no server pagination)
+    if result.per_page > 0:
+        total_pages = (result.total_verses + result.per_page - 1) // result.per_page
+    else:
+        total_pages = 1
 
     return KeywordSearchResponse(
         query=result.query,
@@ -105,17 +105,16 @@ async def list_roots(
 async def get_root_info(
     root: str,
     page: int = Query(default=1, ge=1),
-    per_page: int = Query(default=50, ge=1, le=200),
+    per_page: int = Query(default=0, ge=0, le=10000),
 ):
     """Get information for a specific root."""
     search = get_morphology_search()
     result = await search.search_by_root(query=root, page=page, per_page=per_page)
 
-    total_pages = (
-        (result.total_verses + result.per_page - 1) // result.per_page
-        if result.per_page > 0
-        else 0
-    )
+    if result.per_page > 0:
+        total_pages = (result.total_verses + result.per_page - 1) // result.per_page
+    else:
+        total_pages = 1
 
     return KeywordSearchResponse(
         query=result.query,

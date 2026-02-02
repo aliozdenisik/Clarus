@@ -275,8 +275,24 @@ describe("KeywordSearchPage", () => {
     });
   });
 
-  it("pagination controls appear for multi-page results", async () => {
-    mockSearchKeyword.mockResolvedValue(mockSearchResponse);
+  it("pagination controls appear when verses exceed page size", async () => {
+    // Generate 60 verses (> VERSES_PER_PAGE=50) to trigger client-side pagination
+    const manyVerses = Array.from({ length: 60 }, (_, i) => ({
+      surah_id: 2,
+      surah_name: "البقرة",
+      ayah_number: i + 1,
+      text_uthmani: `آية ${i + 1}`,
+      text_clean: `اية ${i + 1}`,
+      matched_words: ["كتاب"],
+    }));
+    const paginatedResponse = {
+      data: {
+        ...mockSearchResponse.data,
+        verses: manyVerses,
+        pagination: { page: 1, per_page: 0, total_verses: 60, total_pages: 1, has_next: false, has_prev: false },
+      },
+    };
+    mockSearchKeyword.mockResolvedValue(paginatedResponse);
 
     render(<KeywordSearchPage />);
 
@@ -285,13 +301,30 @@ describe("KeywordSearchPage", () => {
     fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
 
     await waitFor(() => {
-      expect(screen.getByText(/Page 1 of 7/i)).toBeInTheDocument();
+      // Client-side pagination: 60 verses / 50 per page = 2 pages
+      expect(screen.getByText(/Page 1 of 2/i)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /Next/i })).toBeInTheDocument();
     });
   });
 
-  it("clicking Next page calls API with page 2", async () => {
-    mockSearchKeyword.mockResolvedValue(mockSearchResponse);
+  it("clicking Next page paginates client-side without API call", async () => {
+    // Generate 60 verses to trigger client-side pagination
+    const manyVerses = Array.from({ length: 60 }, (_, i) => ({
+      surah_id: 2,
+      surah_name: "البقرة",
+      ayah_number: i + 1,
+      text_uthmani: `آية ${i + 1}`,
+      text_clean: `اية ${i + 1}`,
+      matched_words: ["كتاب"],
+    }));
+    const paginatedResponse = {
+      data: {
+        ...mockSearchResponse.data,
+        verses: manyVerses,
+        pagination: { page: 1, per_page: 0, total_verses: 60, total_pages: 1, has_next: false, has_prev: false },
+      },
+    };
+    mockSearchKeyword.mockResolvedValue(paginatedResponse);
 
     render(<KeywordSearchPage />);
 
@@ -300,23 +333,21 @@ describe("KeywordSearchPage", () => {
     fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
 
     await waitFor(() => {
-      expect(screen.getByText(/Page 1 of 7/i)).toBeInTheDocument();
+      expect(screen.getByText(/Page 1 of 2/i)).toBeInTheDocument();
     });
 
-    // Reset mock to track next call
+    // Reset mock to verify NO additional API call is made
     mockSearchKeyword.mockClear();
-    mockSearchKeyword.mockResolvedValue(mockSearchResponse);
 
     const nextButton = screen.getByRole("button", { name: /Next/i });
     fireEvent.click(nextButton);
 
     await waitFor(() => {
-      expect(mockSearchKeyword).toHaveBeenCalledWith(
-        expect.objectContaining({
-          body: expect.objectContaining({ page: 2 }),
-        })
-      );
+      expect(screen.getByText(/Page 2 of 2/i)).toBeInTheDocument();
     });
+
+    // No API call should have been made — pagination is fully client-side
+    expect(mockSearchKeyword).not.toHaveBeenCalled();
   });
 
   it("derived word tag click filters verses", async () => {

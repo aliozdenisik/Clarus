@@ -23,6 +23,8 @@ import { cn } from "@/lib/utils";
 
 type TabType = "results" | "browser";
 
+const VERSES_PER_PAGE = 50;
+
 function KeywordSearchContent() {
   const [query, setQuery] = useState("");
   const [searchResult, setSearchResult] = useState<KeywordSearchResponse | null>(null);
@@ -31,8 +33,6 @@ function KeywordSearchContent() {
   const [activeTab, setActiveTab] = useState<TabType>("results");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
-  const [wordFilterActive, setWordFilterActive] = useState(false); // true when API-level word_filter was used
-  const [unfilteredResult, setUnfilteredResult] = useState<KeywordSearchResponse | null>(null); // original result before word_filter API call
   const [translations, setTranslations] = useState<Map<string, string>>(new Map());
   const [translationsLoading, setTranslationsLoading] = useState(false);
   const [surahTransliterations, setSurahTransliterations] = useState<Map<number, string>>(new Map());
@@ -66,7 +66,7 @@ function KeywordSearchContent() {
     }
   }, [user, authLoading, router]);
 
-  const handleSearch = useCallback(async (searchQuery: string, page: number = 1) => {
+  const handleSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setError("Please enter an Arabic word or Buckwalter root");
       return;
@@ -75,21 +75,19 @@ function KeywordSearchContent() {
     setIsLoading(true);
     setError(null);
     setSelectedWord(null);
-    setWordFilterActive(false);
-    setUnfilteredResult(null);
+    setCurrentPage(1);
 
     try {
       const response = await searchKeywordApiSearchKeywordPost({
         body: {
           query: searchQuery.trim(),
-          page,
-          per_page: 50,
+          page: 1,
+          per_page: 0, // 0 = return ALL verses in one call
         },
       });
 
       if (response.data) {
         setSearchResult(response.data as KeywordSearchResponse);
-        setCurrentPage(page);
       }
     } catch (err: unknown) {
       const error = err as { status?: number };
@@ -104,100 +102,22 @@ function KeywordSearchContent() {
     }
   }, []);
 
-  const handlePageChange = useCallback(async (newPage: number) => {
-    if (!query.trim()) return;
+  // All pagination is client-side — no API calls needed
+  const handlePageChange = useCallback((newPage: number) => {
+    setCurrentPage(newPage);
+    // Scroll to top of verse results
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
-    // If word_filter is active via API, paginate with word_filter
-    if (wordFilterActive && selectedWord) {
-      setIsLoading(true);
-      try {
-        const response = await searchKeywordApiSearchKeywordPost({
-          body: {
-            query: query.trim(),
-            page: newPage,
-            per_page: 50,
-            word_filter: selectedWord,
-          },
-        });
-        if (response.data) {
-          setSearchResult(response.data as KeywordSearchResponse);
-          setCurrentPage(newPage);
-        }
-      } catch {
-        toast.error("Failed to load page. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-      handleSearch(query, newPage);
-    }
-  }, [query, handleSearch, wordFilterActive, selectedWord]);
-
-  const handleWordFilter = useCallback(async (word: string | null) => {
-    // Deselecting: if we had an API-level filter, restore the original result
-    if (word === null) {
-      if (wordFilterActive && unfilteredResult) {
-        setSearchResult(unfilteredResult);
-        setCurrentPage(unfilteredResult.pagination?.page ?? 1);
-      }
-      setSelectedWord(null);
-      setWordFilterActive(false);
-      return;
-    }
-
+  // All word filtering is client-side — no API calls needed
+  const handleWordFilter = useCallback((word: string | null) => {
     setSelectedWord(word);
-
-    // Check if the selected word exists in any of the current page's verses
-    const normalizedWord = stripArabicDiacritics(word);
-    const existsInCurrentPage = searchResult?.verses?.some((v) =>
-      v.matched_words.some((w) => stripArabicDiacritics(w) === normalizedWord)
-    );
-
-    if (existsInCurrentPage) {
-      // Word found in current page → client-side filter is enough
-      // If we were previously in API-filter mode, restore original first
-      if (wordFilterActive && unfilteredResult) {
-        setSearchResult(unfilteredResult);
-        setCurrentPage(unfilteredResult.pagination?.page ?? 1);
-        setWordFilterActive(false);
-      }
-      return;
-    }
-
-    // Word NOT in current page → make API call with word_filter
-    if (!query.trim()) return;
-
-    setIsLoading(true);
-    try {
-      // Save current (unfiltered) result before overwriting
-      if (!wordFilterActive && searchResult) {
-        setUnfilteredResult(searchResult);
-      }
-
-      const response = await searchKeywordApiSearchKeywordPost({
-        body: {
-          query: query.trim(),
-          page: 1,
-          per_page: 50,
-          word_filter: word,
-        },
-      });
-
-      if (response.data) {
-        setSearchResult(response.data as KeywordSearchResponse);
-        setCurrentPage(1);
-        setWordFilterActive(true);
-      }
-    } catch {
-      toast.error("Failed to filter by word. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [searchResult, query, wordFilterActive, unfilteredResult]);
+    setCurrentPage(1); // Reset to page 1 when filtering
+  }, []);
 
   const handleRootSelect = useCallback((root: string) => {
     setQuery(root);
-    handleSearch(root, 1);
+    handleSearch(root);
     setActiveTab("results");
   }, [handleSearch]);
 
@@ -254,7 +174,7 @@ function KeywordSearchContent() {
     [translations]
   );
 
-  // Filter verses by selected word
+  // Filter verses by selected word (all data is in memory — instant)
   const filteredVerses = useMemo(() => {
     if (!searchResult?.verses) return [];
     if (!selectedWord) return searchResult.verses;
@@ -265,6 +185,17 @@ function KeywordSearchContent() {
       )
     );
   }, [searchResult?.verses, selectedWord]);
+
+  // Client-side pagination — show VERSES_PER_PAGE at a time
+  const totalFilteredPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredVerses.length / VERSES_PER_PAGE)),
+    [filteredVerses.length]
+  );
+
+  const paginatedVerses = useMemo(
+    () => filteredVerses.slice((currentPage - 1) * VERSES_PER_PAGE, currentPage * VERSES_PER_PAGE),
+    [filteredVerses, currentPage]
+  );
 
   // Compute chart data based on selected word (client-side)
   const chartData = useMemo(() => {
@@ -497,7 +428,7 @@ function KeywordSearchContent() {
                         <h3 className="text-lg font-medium text-[var(--color-text-primary)] text-center">
                           Verse Results
                         </h3>
-                        {filteredVerses.map((verse, i) => (
+                        {paginatedVerses.map((verse, i) => (
                           <VerseCard
                             key={`${verse.surah_id}-${verse.ayah_number}`}
                             surahId={verse.surah_id}
@@ -516,14 +447,14 @@ function KeywordSearchContent() {
                         ))}
                       </div>
 
-                      {/* Pagination */}
-                      {searchResult.pagination && (
+                      {/* Pagination (client-side) */}
+                      {filteredVerses.length > VERSES_PER_PAGE && (
                         <Pagination
-                          page={searchResult.pagination.page}
-                          totalPages={searchResult.pagination.total_pages}
-                          totalVerses={searchResult.pagination.total_verses}
-                          hasNext={searchResult.pagination.has_next}
-                          hasPrev={searchResult.pagination.has_prev}
+                          page={currentPage}
+                          totalPages={totalFilteredPages}
+                          totalVerses={filteredVerses.length}
+                          hasNext={currentPage < totalFilteredPages}
+                          hasPrev={currentPage > 1}
                           onPageChange={handlePageChange}
                         />
                       )}
@@ -540,12 +471,7 @@ function KeywordSearchContent() {
                     Search for any Arabic root or word to explore its Quranic
                     footprint
                   </p>
-                  <p
-                    className="font-arabic text-3xl text-[var(--color-text-muted)]"
-                    lang="ar"
-                  >
-                    بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ
-                  </p>
+
                 </div>
               )}
             </motion.div>

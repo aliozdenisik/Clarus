@@ -10,7 +10,10 @@ class KeywordSearchRequest(BaseModel):
     )
     page: int = Field(default=1, ge=1, description="Page number")
     per_page: int = Field(
-        default=50, ge=1, le=200, description="Results per page (max 200)"
+        default=0,
+        ge=0,
+        le=10000,
+        description="Results per page. 0 = return all verses (no pagination)",
     )
     word_filter: Optional[str] = Field(
         default=None,
