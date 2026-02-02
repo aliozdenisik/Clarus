@@ -12,6 +12,11 @@ class KeywordSearchRequest(BaseModel):
     per_page: int = Field(
         default=50, ge=1, le=200, description="Results per page (max 200)"
     )
+    word_filter: Optional[str] = Field(
+        default=None,
+        max_length=100,
+        description="Filter verses to only those containing this specific derived word (token_clean form)",
+    )
 
 
 class SurahDistItem(BaseModel):

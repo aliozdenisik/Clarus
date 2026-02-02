@@ -40,6 +40,7 @@ async def search_keyword(request: KeywordSearchRequest):
         query=request.query,
         page=request.page,
         per_page=request.per_page,
+        word_filter=request.word_filter,
     )
 
     total_pages = (

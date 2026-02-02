@@ -136,6 +136,12 @@ export type KeywordSearchRequest = {
      * Results per page (max 200)
      */
     per_page?: number;
+    /**
+     * Word Filter
+     *
+     * Filter verses to only those containing this specific derived word (token_clean form)
+     */
+    word_filter?: string | null;
 };
 
 /**

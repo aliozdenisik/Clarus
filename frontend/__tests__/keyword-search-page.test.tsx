@@ -111,14 +111,14 @@ const mockSearchResponse = {
         ayah_number: 2,
         text_uthmani: "ذَٰلِكَ ٱلۡكِتَٰبُ لَا رَيۡبَ فِيهِ",
         text_clean: "ذلك الكتاب لا ريب فيه",
-        matched_words: ["الكتاب"],
+        matched_words: ["كتاب"],
       },
       {
         surah_id: 2,
         surah_name: "البقرة",
         ayah_number: 282,
-        text_uthmani: "يَا أَيُّهَا الَّذِينَ آمَنُوا إِذَا تَدَايَنتُم",
-        text_clean: "يا ايها الذين امنوا اذا تداينتم",
+        text_uthmani: "يَا أَيُّهَا الَّذِينَ آمَنُوا إِذَا تَدَايَنتُم بِدَيۡنٍ فَٱكۡتُبُوهُ",
+        text_clean: "يا ايها الذين امنوا اذا تداينتم بدين فاكتبوه",
         matched_words: ["اكتبوه"],
       },
     ],
@@ -463,7 +463,7 @@ describe("KeywordSearchPage", () => {
     // Stats should revert to original values
     await waitFor(() => {
       expect(screen.getByText("319")).toBeInTheDocument();
-      expect(screen.getByText("3")).toBeInTheDocument(); // 3 unique words
+      expect(screen.getByText("2")).toBeInTheDocument(); // 2 visible words (كتاب + اكتبوه on this page)
     });
   });
 

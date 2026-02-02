@@ -147,7 +147,11 @@ class QuranMorphologySearch:
     # ------------------------------------------------------------------
 
     async def search_by_root(
-        self, query: str, page: int = 1, per_page: int = 50
+        self,
+        query: str,
+        page: int = 1,
+        per_page: int = 50,
+        word_filter: str | None = None,
     ) -> MorphologySearchResult:
         """Main entry point: detect language, find root, search database."""
         # Sanitize: strip null bytes and control chars that PostgreSQL rejects
@@ -174,7 +178,9 @@ class QuranMorphologySearch:
                 per_page=per_page,
             )
 
-        return await self._search_root_in_db(query, root, source, page, per_page)
+        return await self._search_root_in_db(
+            query, root, source, page, per_page, word_filter=word_filter
+        )
 
     async def list_roots(self, page: int = 1, per_page: int = 50) -> dict:
         """List all available roots with occurrence counts, paginated."""
@@ -464,6 +470,7 @@ class QuranMorphologySearch:
         source: str,
         page: int,
         per_page: int,
+        word_filter: str | None = None,
     ) -> MorphologySearchResult:
         """Query all data for a given root: count, unique words, surah distribution, paginated verses."""
         async with self._session_maker() as session:
@@ -515,35 +522,44 @@ class QuranMorphologySearch:
             ]
 
             # 4. Count total distinct verses containing this root
-            total_verses_result = await session.execute(
-                sa_text(
-                    """
+            # When word_filter is set, only count verses that contain the specific word form
+            count_sql = """
                     SELECT COUNT(DISTINCT a.id)
                     FROM qm_words w JOIN qm_ayahs a ON w.ayah_id = a.id
                     WHERE w.root = :root
                     """
-                ),
-                {"root": root},
+            count_params: dict[str, object] = {"root": root}
+            if word_filter:
+                count_sql += " AND w.token_clean = :word_filter"
+                count_params["word_filter"] = word_filter
+            total_verses_result = await session.execute(
+                sa_text(count_sql), count_params
             )
             total_verses = total_verses_result.scalar()
 
             # 5. Paginated verse results
             offset = (page - 1) * per_page
-            verses_result = await session.execute(
-                sa_text(
-                    """
+            verses_sql = """
                     SELECT DISTINCT a.id, s.id as surah_id, s.name_arabic,
                            a.ayah_number, a.text_uthmani, a.text_clean
                     FROM qm_words w
                     JOIN qm_ayahs a ON w.ayah_id = a.id
                     JOIN qm_surahs s ON a.surah_id = s.id
                     WHERE w.root = :root
+                    """
+            verses_params: dict[str, object] = {
+                "root": root,
+                "limit": per_page,
+                "offset": offset,
+            }
+            if word_filter:
+                verses_sql += " AND w.token_clean = :word_filter"
+                verses_params["word_filter"] = word_filter
+            verses_sql += """
                     ORDER BY s.id, a.ayah_number
                     LIMIT :limit OFFSET :offset
                     """
-                ),
-                {"root": root, "limit": per_page, "offset": offset},
-            )
+            verses_result = await session.execute(sa_text(verses_sql), verses_params)
             verse_rows = verses_result.fetchall()
 
             # 6. For each verse, get matched words

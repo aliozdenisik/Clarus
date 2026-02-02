@@ -31,6 +31,8 @@ function KeywordSearchContent() {
   const [activeTab, setActiveTab] = useState<TabType>("results");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [wordFilterActive, setWordFilterActive] = useState(false); // true when API-level word_filter was used
+  const [unfilteredResult, setUnfilteredResult] = useState<KeywordSearchResponse | null>(null); // original result before word_filter API call
   const [translations, setTranslations] = useState<Map<string, string>>(new Map());
   const [translationsLoading, setTranslationsLoading] = useState(false);
   const [surahTransliterations, setSurahTransliterations] = useState<Map<number, string>>(new Map());
@@ -73,6 +75,8 @@ function KeywordSearchContent() {
     setIsLoading(true);
     setError(null);
     setSelectedWord(null);
+    setWordFilterActive(false);
+    setUnfilteredResult(null);
 
     try {
       const response = await searchKeywordApiSearchKeywordPost({
@@ -100,15 +104,96 @@ function KeywordSearchContent() {
     }
   }, []);
 
-  const handlePageChange = useCallback((newPage: number) => {
-    if (query.trim()) {
+  const handlePageChange = useCallback(async (newPage: number) => {
+    if (!query.trim()) return;
+
+    // If word_filter is active via API, paginate with word_filter
+    if (wordFilterActive && selectedWord) {
+      setIsLoading(true);
+      try {
+        const response = await searchKeywordApiSearchKeywordPost({
+          body: {
+            query: query.trim(),
+            page: newPage,
+            per_page: 50,
+            word_filter: selectedWord,
+          },
+        });
+        if (response.data) {
+          setSearchResult(response.data as KeywordSearchResponse);
+          setCurrentPage(newPage);
+        }
+      } catch {
+        toast.error("Failed to load page. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
       handleSearch(query, newPage);
     }
-  }, [query, handleSearch]);
+  }, [query, handleSearch, wordFilterActive, selectedWord]);
 
-  const handleWordFilter = useCallback((word: string | null) => {
+  const handleWordFilter = useCallback(async (word: string | null) => {
+    // Deselecting: if we had an API-level filter, restore the original result
+    if (word === null) {
+      if (wordFilterActive && unfilteredResult) {
+        setSearchResult(unfilteredResult);
+        setCurrentPage(unfilteredResult.pagination?.page ?? 1);
+      }
+      setSelectedWord(null);
+      setWordFilterActive(false);
+      return;
+    }
+
     setSelectedWord(word);
-  }, []);
+
+    // Check if the selected word exists in any of the current page's verses
+    const normalizedWord = stripArabicDiacritics(word);
+    const existsInCurrentPage = searchResult?.verses?.some((v) =>
+      v.matched_words.some((w) => stripArabicDiacritics(w) === normalizedWord)
+    );
+
+    if (existsInCurrentPage) {
+      // Word found in current page → client-side filter is enough
+      // If we were previously in API-filter mode, restore original first
+      if (wordFilterActive && unfilteredResult) {
+        setSearchResult(unfilteredResult);
+        setCurrentPage(unfilteredResult.pagination?.page ?? 1);
+        setWordFilterActive(false);
+      }
+      return;
+    }
+
+    // Word NOT in current page → make API call with word_filter
+    if (!query.trim()) return;
+
+    setIsLoading(true);
+    try {
+      // Save current (unfiltered) result before overwriting
+      if (!wordFilterActive && searchResult) {
+        setUnfilteredResult(searchResult);
+      }
+
+      const response = await searchKeywordApiSearchKeywordPost({
+        body: {
+          query: query.trim(),
+          page: 1,
+          per_page: 50,
+          word_filter: word,
+        },
+      });
+
+      if (response.data) {
+        setSearchResult(response.data as KeywordSearchResponse);
+        setCurrentPage(1);
+        setWordFilterActive(true);
+      }
+    } catch {
+      toast.error("Failed to filter by word. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchResult, query, wordFilterActive, unfilteredResult]);
 
   const handleRootSelect = useCallback((root: string) => {
     setQuery(root);
