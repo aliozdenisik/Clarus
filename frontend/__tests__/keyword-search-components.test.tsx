@@ -215,7 +215,7 @@ describe("VerseCard", () => {
     render(<VerseCard {...defaultProps} />);
 
     const link = screen.getByRole("link", { name: /Go to surah/i });
-    expect(link).toHaveAttribute("href", "/quran/2");
+    expect(link).toHaveAttribute("href", "/quran/2?verse=2");
   });
 });
 

@@ -45,10 +45,8 @@ function CustomYAxisTick({ x, y, payload }: CustomYAxisTickProps) {
       y={y}
       dy={4}
       textAnchor="end"
-      className="font-arabic"
       style={{
-        fontFamily: "var(--font-arabic), 'Amiri', serif",
-        fontSize: 13,
+        fontSize: 12,
         fill: "#a1a1aa",
       }}
     >
@@ -62,7 +60,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   const data = payload[0].payload;
   return (
     <div className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 shadow-xl">
-      <p className="font-arabic text-sm text-zinc-100" lang="ar">
+      <p className="text-sm text-zinc-100">
         {data.surah_name}
       </p>
       <p className="text-xs text-zinc-400">{data.count} occurrences</p>

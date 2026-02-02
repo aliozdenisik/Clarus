@@ -85,11 +85,11 @@ export function VerseCard({
       <GlowCard className="border-l-2 border-l-indigo-500">
         {/* Header: Surah name + Ayah number */}
         <div className="flex items-center justify-between mb-3">
-          <span className="font-arabic text-sm text-[var(--color-text-muted)]" lang="ar" dir="rtl">
+          <span className="text-sm text-[var(--color-text-muted)]">
             {surahName} : {ayahNumber}
           </span>
           <a
-            href={`/quran/${surahId}`}
+            href={`/quran/${surahId}?verse=${ayahNumber}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-[var(--color-text-muted)] hover:text-[var(--color-accent-primary)] transition-colors"

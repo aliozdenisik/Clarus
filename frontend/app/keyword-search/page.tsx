@@ -15,7 +15,7 @@ import { VerseCard } from "@/components/keyword-search/verse-card";
 import { Pagination } from "@/components/keyword-search/pagination";
 import { RootBrowser } from "@/components/keyword-search/root-browser";
 import { Skeleton } from "@/components/ui/skeleton";
-import { searchKeywordApiSearchKeywordPost, getSurahDetailApiMetadataQuranSurahsSurahIdGet } from "@/lib/api/sdk.gen";
+import { searchKeywordApiSearchKeywordPost, getSurahDetailApiMetadataQuranSurahsSurahIdGet, getQuranSurahsApiMetadataQuranSurahsGet } from "@/lib/api/sdk.gen";
 import type { KeywordSearchResponse } from "@/lib/api/types.gen";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -32,9 +32,29 @@ function KeywordSearchContent() {
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [translations, setTranslations] = useState<Map<string, string>>(new Map());
   const [translationsLoading, setTranslationsLoading] = useState(false);
+  const [surahTransliterations, setSurahTransliterations] = useState<Map<number, string>>(new Map());
 
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
+
+  // Fetch surah Latin transliterations on mount
+  useEffect(() => {
+    const fetchSurahNames = async () => {
+      try {
+        const response = await getQuranSurahsApiMetadataQuranSurahsGet();
+        const data = response.data as { surahs?: Array<{ id: number; transliteration: string }> } | undefined;
+        const surahs = data?.surahs || [];
+        const map = new Map<number, string>();
+        surahs.forEach(s => map.set(s.id, s.transliteration));
+        setSurahTransliterations(map);
+      } catch { /* ignore */ }
+    };
+    fetchSurahNames();
+  }, []);
+
+  // Helper: get Latin surah name, fallback to Arabic
+  const getSurahName = useCallback((surahId: number, arabicFallback: string) =>
+    surahTransliterations.get(surahId) || arabicFallback, [surahTransliterations]);
 
   // Auth guard
   useEffect(() => {
@@ -317,7 +337,10 @@ function KeywordSearchContent() {
                         selectedWord={selectedWord}
                         onWordSelect={handleWordFilter}
                       />
-                      <SurahChart data={searchResult.surah_distribution || []} />
+                      <SurahChart data={(searchResult.surah_distribution || []).map(d => ({
+                        ...d,
+                        surah_name: getSurahName(d.surah_id, d.surah_name)
+                      }))} />
 
                       {/* Verse Cards */}
                       <div className="space-y-4">
@@ -331,7 +354,7 @@ function KeywordSearchContent() {
                           <VerseCard
                             key={`${verse.surah_id}-${verse.ayah_number}`}
                             surahId={verse.surah_id}
-                            surahName={verse.surah_name}
+                            surahName={getSurahName(verse.surah_id, verse.surah_name)}
                             ayahNumber={verse.ayah_number}
                             textUthmani={verse.text_uthmani}
                             textClean={verse.text_clean}
