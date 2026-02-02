@@ -5,6 +5,7 @@ import { springPresets } from "@/lib/design-system";
 import { GlowCard } from "@/components/ui/glow-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExternalLink } from "lucide-react";
+import { stripArabicDiacritics } from "@/lib/utils/arabic";
 
 interface VerseCardProps {
   surahId: number;
@@ -41,13 +42,13 @@ function highlightArabicText(
   const uthmaniWords = textUthmani.split(/\s+/);
   const cleanWords = textClean.split(/\s+/);
 
-  // Create a set of matched words for O(1) lookup
-  const matchSet = new Set(matchedWords.map(w => w.trim()));
+  // Create a set of matched words normalized for O(1) lookup
+  const matchSet = new Set(matchedWords.map(w => stripArabicDiacritics(w.trim())));
 
-  // Map clean words to uthmani words by index
+  // Map clean words to uthmani words by index, comparing normalized forms
   return uthmaniWords.map((uthmaniWord, i) => {
     const cleanWord = cleanWords[i] || '';
-    const isMatch = matchSet.has(cleanWord);
+    const isMatch = matchSet.has(stripArabicDiacritics(cleanWord));
 
     if (isMatch) {
       return (
