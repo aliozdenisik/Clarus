@@ -1,13 +1,21 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense, useMemo } from "react";
 import { motion } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { useAuth } from "@/lib/auth/auth-context";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { SearchInput } from "@/components/keyword-search/search-input";
-import { searchKeywordApiSearchKeywordPost } from "@/lib/api/sdk.gen";
+import { RootCard } from "@/components/keyword-search/root-card";
+import { StatsBar } from "@/components/keyword-search/stats-bar";
+import { DerivedWords } from "@/components/keyword-search/derived-words";
+import { SurahChart } from "@/components/keyword-search/surah-chart";
+import { VerseCard } from "@/components/keyword-search/verse-card";
+import { Pagination } from "@/components/keyword-search/pagination";
+import { RootBrowser } from "@/components/keyword-search/root-browser";
+import { Skeleton } from "@/components/ui/skeleton";
+import { searchKeywordApiSearchKeywordPost, getSurahDetailApiMetadataQuranSurahsSurahIdGet } from "@/lib/api/sdk.gen";
 import type { KeywordSearchResponse } from "@/lib/api/types.gen";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,6 +30,8 @@ function KeywordSearchContent() {
   const [activeTab, setActiveTab] = useState<TabType>("results");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [translations, setTranslations] = useState<Map<string, string>>(new Map());
+  const [translationsLoading, setTranslationsLoading] = useState(false);
 
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
@@ -33,42 +43,118 @@ function KeywordSearchContent() {
     }
   }, [user, authLoading, router]);
 
-  const handleSearch = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim()) return;
+  const handleSearch = useCallback(async (searchQuery: string, page: number = 1) => {
+    if (!searchQuery.trim()) {
+      setError("Please enter an Arabic word or Buckwalter root");
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
+    setSelectedWord(null);
 
     try {
       const response = await searchKeywordApiSearchKeywordPost({
         body: {
-          query: searchQuery,
-          page: currentPage,
+          query: searchQuery.trim(),
+          page,
           per_page: 50,
         },
       });
 
-      setSearchResult(response.data as KeywordSearchResponse);
-      toast.success(`Found ${response.data?.total_occurrences || 0} occurrences`);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Search failed";
-      setError(errorMessage);
-      toast.error(errorMessage);
+      if (response.data) {
+        setSearchResult(response.data as KeywordSearchResponse);
+        setCurrentPage(page);
+      }
+    } catch (err: unknown) {
+      const error = err as { status?: number };
+      if (error.status === 429) {
+        toast.error("Daily search limit reached. Please try again tomorrow.");
+      } else {
+        toast.error("Search failed. Please try again.");
+      }
+      setError("Search failed");
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage]);
+  }, []);
 
   const handlePageChange = useCallback((newPage: number) => {
-    setCurrentPage(newPage);
     if (query.trim()) {
-      handleSearch(query);
+      handleSearch(query, newPage);
     }
   }, [query, handleSearch]);
 
-  const handleWordFilter = useCallback((word: string) => {
+  const handleWordFilter = useCallback((word: string | null) => {
     setSelectedWord(word);
   }, []);
+
+  const handleRootSelect = useCallback((root: string) => {
+    setQuery(root);
+    handleSearch(root, 1);
+    setActiveTab("results");
+  }, [handleSearch]);
+
+  // Fetch Turkish translations after search results arrive
+  useEffect(() => {
+    if (!searchResult?.verses?.length) return;
+
+    const fetchTranslations = async () => {
+      setTranslationsLoading(true);
+      const translationMap = new Map<string, string>();
+
+      // Group verses by surah_id
+      const surahIds = [...new Set(searchResult.verses!.map((v) => v.surah_id))];
+
+      // Fetch each surah's data
+      await Promise.all(
+        surahIds.map(async (surahId) => {
+          try {
+            const response = await getSurahDetailApiMetadataQuranSurahsSurahIdGet({
+              path: { surah_id: surahId },
+            });
+            // Cast response.data to expected type
+            const data = response.data as { verses?: Array<{ text: string; translation: string }> } | undefined;
+            if (data?.verses) {
+              data.verses.forEach(
+                (
+                  verse: { text: string; translation: string },
+                  index: number
+                ) => {
+                  const key = `${surahId}:${index + 1}`;
+                  translationMap.set(key, verse.translation);
+                }
+              );
+            }
+          } catch {
+            // Silently fail for individual surahs
+          }
+        })
+      );
+
+      setTranslations(translationMap);
+      setTranslationsLoading(false);
+    };
+
+    fetchTranslations();
+  }, [searchResult?.verses]);
+
+  // Helper to get translation
+  const getTranslation = useCallback(
+    (surahId: number, ayahNumber: number): string | undefined => {
+      return translations.get(`${surahId}:${ayahNumber}`);
+    },
+    [translations]
+  );
+
+  // Filter verses by selected word
+  const filteredVerses = useMemo(() => {
+    if (!searchResult?.verses) return [];
+    if (!selectedWord) return searchResult.verses;
+    return searchResult.verses.filter((v) =>
+      v.matched_words.includes(selectedWord)
+    );
+  }, [searchResult?.verses, selectedWord]);
 
   if (authLoading) {
     return (
@@ -164,27 +250,132 @@ function KeywordSearchContent() {
               animate={{ opacity: 1, y: 0 }}
               transition={springPresets.snappy}
             >
-              {!searchResult && !isLoading && (
-                <div className="text-center py-16">
-                  <p className="text-[var(--color-text-muted)] text-sm">
-                    Search for a root to see results
-                  </p>
-                </div>
-              )}
-
-              {/* Placeholder for search results components (Tasks 2-5) */}
-              {searchResult && (
+              {/* Loading skeletons */}
+              {isLoading ? (
                 <div className="space-y-6">
-                  {/* Root card will go here (Task 2) */}
-                  {/* Stats bar will go here (Task 3) */}
-                  {/* Derived words will go here (Task 4) */}
-                  {/* Chart will go here (Task 4) */}
-                  {/* Verse cards will go here (Task 5) */}
-                  {/* Pagination will go here (Task 5) */}
-                  
-                  <div className="text-center py-8 text-[var(--color-text-muted)] text-sm">
-                    Results display components will be integrated in Tasks 2-5
+                  {/* Root card skeleton */}
+                  <div className="flex flex-col items-center gap-3 py-6">
+                    <Skeleton className="h-16 w-32" />
+                    <Skeleton className="h-6 w-24" />
                   </div>
+                  {/* Stats skeleton */}
+                  <div className="grid grid-cols-3 gap-4">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-20" />
+                    ))}
+                  </div>
+                  {/* Verse skeletons */}
+                  <div className="space-y-4">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Skeleton key={i} className="h-40" />
+                    ))}
+                  </div>
+                </div>
+              ) : error ? (
+                // Error state
+                <div className="text-center py-12">
+                  <p className="text-[var(--color-text-muted)]">{error}</p>
+                </div>
+              ) : searchResult ? (
+                // Full results
+                <div className="space-y-8">
+                  {/* Buckwalter feedback */}
+                  {searchResult.root_source?.includes("buckwalter") &&
+                    searchResult.root && (
+                      <div className="text-center text-sm text-[var(--color-text-secondary)]">
+                        Detected: Buckwalter Latin → Arabic:{" "}
+                        <span className="font-arabic" lang="ar">
+                          {searchResult.root}
+                        </span>
+                      </div>
+                    )}
+
+                  {/* Root not found */}
+                  {searchResult.root_source === "not_found" ? (
+                    <div className="text-center py-12">
+                      <p className="text-lg text-[var(--color-text-muted)]">
+                        No root found for &quot;{searchResult.query}&quot;
+                      </p>
+                      <p className="text-sm text-[var(--color-text-secondary)] mt-2">
+                        Try a different Arabic word or Buckwalter
+                        transliteration.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <RootCard
+                        root={searchResult.root || null}
+                        rootSource={searchResult.root_source || ""}
+                      />
+                      <StatsBar
+                        totalOccurrences={searchResult.total_occurrences || 0}
+                        uniqueWords={(searchResult.unique_words || []).length}
+                        surahCount={(searchResult.surah_distribution || []).length}
+                      />
+                      <DerivedWords
+                        words={searchResult.unique_words || []}
+                        selectedWord={selectedWord}
+                        onWordSelect={handleWordFilter}
+                      />
+                      <SurahChart data={searchResult.surah_distribution || []} />
+
+                      {/* Verse Cards */}
+                      <div className="space-y-4">
+                        <div className="text-center text-[var(--color-text-muted)] text-xs tracking-widest">
+                          ◆
+                        </div>
+                        <h3 className="text-lg font-medium text-[var(--color-text-primary)] text-center">
+                          Verse Results
+                        </h3>
+                        {filteredVerses.map((verse, i) => (
+                          <VerseCard
+                            key={`${verse.surah_id}-${verse.ayah_number}`}
+                            surahId={verse.surah_id}
+                            surahName={verse.surah_name}
+                            ayahNumber={verse.ayah_number}
+                            textUthmani={verse.text_uthmani}
+                            textClean={verse.text_clean}
+                            matchedWords={verse.matched_words}
+                            turkishTranslation={getTranslation(
+                              verse.surah_id,
+                              verse.ayah_number
+                            )}
+                            isTranslationLoading={translationsLoading}
+                            index={i}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Pagination */}
+                      {searchResult.pagination && (
+                        <Pagination
+                          page={searchResult.pagination.page}
+                          totalPages={searchResult.pagination.total_pages}
+                          totalVerses={searchResult.pagination.total_verses}
+                          hasNext={searchResult.pagination.has_next}
+                          hasPrev={searchResult.pagination.has_prev}
+                          onPageChange={handlePageChange}
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
+              ) : (
+                // Empty state (before any search)
+                <div className="text-center py-12 space-y-4">
+                  <div className="text-[var(--color-text-muted)] text-xs tracking-widest">
+                    ◆
+                  </div>
+                  <p className="text-lg text-[var(--color-text-secondary)]">
+                    Search for any Arabic root or word to explore its Quranic
+                    footprint
+                  </p>
+                  <p
+                    className="font-arabic text-3xl text-[var(--color-text-muted)]"
+                    lang="ar"
+                  >
+                    بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ
+                  </p>
                 </div>
               )}
             </motion.div>
@@ -196,11 +387,7 @@ function KeywordSearchContent() {
               animate={{ opacity: 1, y: 0 }}
               transition={springPresets.snappy}
             >
-              <div className="text-center py-16">
-                <p className="text-[var(--color-text-muted)] text-sm">
-                  Root browser will appear here (Task 6)
-                </p>
-              </div>
+              <RootBrowser onRootSelect={handleRootSelect} />
             </motion.div>
           )}
         </div>
