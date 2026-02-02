@@ -142,3 +142,88 @@ class QMWord(Base):
     features: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     ayah: Mapped["QMAyah"] = relationship(back_populates="words")
+
+
+# ---------------------------------------------------------------------------
+# Bible Morphology Tables (bm_*)
+# ---------------------------------------------------------------------------
+
+
+class BMBook(Base):
+    __tablename__ = "bm_books"
+
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=False
+    )  # book order number, NOT auto-increment
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    name_hebrew: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    name_english: Mapped[str] = mapped_column(String(100), nullable=False)
+    testament: Mapped[str] = mapped_column(String(20), nullable=False)
+    category: Mapped[str] = mapped_column(String(50), nullable=False)
+    total_chapters: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_verses: Mapped[int] = mapped_column(Integer, nullable=False)
+    book_order: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    verses: Mapped[list["BMVerse"]] = relationship(
+        back_populates="book", cascade="all, delete-orphan"
+    )
+
+
+class BMVerse(Base):
+    __tablename__ = "bm_verses"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    book_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("bm_books.id"), nullable=False
+    )
+    chapter: Mapped[int] = mapped_column(Integer, nullable=False)
+    verse: Mapped[int] = mapped_column(Integer, nullable=False)
+    text_original: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    text_english: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    text_turkish: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    reference: Mapped[str] = mapped_column(String(50), nullable=False)
+
+    book: Mapped["BMBook"] = relationship(back_populates="verses")
+    words: Mapped[list["BMWord"]] = relationship(
+        back_populates="verse", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        UniqueConstraint("book_id", "chapter", "verse", name="uq_bm_verse_book_ch_v"),
+    )
+
+
+class BMWord(Base):
+    __tablename__ = "bm_words"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    verse_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("bm_verses.id"), nullable=False
+    )
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    word: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    word_clean: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    lemma: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    root: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    strong_number: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    morph_tag: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    pos_tag: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    transliteration: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    language: Mapped[str] = mapped_column(String(20), nullable=False, default="hebrew")
+    original_lemma: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
+    verse: Mapped["BMVerse"] = relationship(back_populates="words")
+
+    __table_args__ = (
+        UniqueConstraint("verse_id", "position", name="uq_bm_word_verse_pos"),
+    )
+
+
+class BMStrongs(Base):
+    __tablename__ = "bm_strongs"
+
+    number: Mapped[str] = mapped_column(String(10), primary_key=True)
+    original_word: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    transliteration: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    definition: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    language: Mapped[str] = mapped_column(String(20), nullable=False)
