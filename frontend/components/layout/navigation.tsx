@@ -69,6 +69,10 @@ export default function Navigation() {
                 <DropdownMenuItem asChild>
                   <Link href="/search?source=apocrypha">Apocrypha Search</Link>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/keyword-search">Word Search</Link>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -216,6 +220,17 @@ export default function Navigation() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Apocrypha Search
+                </Link>
+                <Link
+                  href="/keyword-search"
+                  className={`block px-3 py-2 text-base rounded-md ${
+                    isActive('/keyword-search')
+                      ? 'bg-purple-500/20 text-purple-400'
+                      : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Word Search
                 </Link>
               </div>
 
