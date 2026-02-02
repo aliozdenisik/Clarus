@@ -40,10 +40,10 @@ function KeywordSearchContent() {
   // Fetch surah Latin transliterations on mount
   useEffect(() => {
     const fetchSurahNames = async () => {
-      try {
-        const response = await getQuranSurahsApiMetadataQuranSurahsGet();
-        const data = response.data as { surahs?: Array<{ id: number; transliteration: string }> } | undefined;
-        const surahs = data?.surahs || [];
+       try {
+         const response = await getQuranSurahsApiMetadataQuranSurahsGet();
+         const body = response.data as { data?: { surahs?: Array<{ id: number; transliteration: string }> } } | undefined;
+         const surahs = body?.data?.surahs || [];
         const map = new Map<number, string>();
         surahs.forEach(s => map.set(s.id, s.transliteration));
         setSurahTransliterations(map);
@@ -129,23 +129,24 @@ function KeywordSearchContent() {
       // Fetch each surah's data
       await Promise.all(
         surahIds.map(async (surahId) => {
-          try {
-            const response = await getSurahDetailApiMetadataQuranSurahsSurahIdGet({
-              path: { surah_id: surahId },
-            });
-            // Cast response.data to expected type
-            const data = response.data as { verses?: Array<{ text: string; translation: string }> } | undefined;
-            if (data?.verses) {
-              data.verses.forEach(
-                (
-                  verse: { text: string; translation: string },
-                  index: number
-                ) => {
-                  const key = `${surahId}:${index + 1}`;
-                  translationMap.set(key, verse.translation);
-                }
-              );
-            }
+           try {
+             const response = await getSurahDetailApiMetadataQuranSurahsSurahIdGet({
+               path: { surah_id: surahId },
+             });
+             // API returns { success, data: { surah: { verses: [...] } } }
+             const body = response.data as { data?: { surah?: { verses?: Array<{ text: string; translation: string }> } } } | undefined;
+             const verses = body?.data?.surah?.verses;
+             if (verses) {
+               verses.forEach(
+                 (
+                   verse: { text: string; translation: string },
+                   index: number
+                 ) => {
+                   const key = `${surahId}:${index + 1}`;
+                   translationMap.set(key, verse.translation);
+                 }
+               );
+             }
           } catch {
             // Silently fail for individual surahs
           }
