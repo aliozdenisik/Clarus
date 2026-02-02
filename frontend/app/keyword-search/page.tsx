@@ -402,7 +402,6 @@ function KeywordSearchContent() {
                           ...d,
                           surah_name: getSurahName(d.surah_id, d.surah_name)
                         }))}
-                        selectedWord={selectedWord}
                       />
 
                       {/* Verse Cards */}
