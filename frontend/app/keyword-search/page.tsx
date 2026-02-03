@@ -23,6 +23,7 @@ import type { KeywordSearchResponse } from "@/lib/api/types.gen";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LanguageTabs, type LanguageTab } from "@/components/keyword-search/language-tabs";
+import { BibleCategoryTabs, type BibleCategoryFilter } from "@/components/keyword-search/bible-category-tabs";
 
 type TabType = "results" | "browser";
 
@@ -63,6 +64,7 @@ interface BibleSearchResult {
 function KeywordSearchContent() {
   const [query, setQuery] = useState("");
   const [activeLanguage, setActiveLanguage] = useState<LanguageTab>("quran");
+  const [bibleCategoryFilter, setBibleCategoryFilter] = useState<BibleCategoryFilter>("all");
   const [searchResult, setSearchResult] = useState<KeywordSearchResponse | null>(null);
   const [bibleSearchResult, setBibleSearchResult] = useState<BibleSearchResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -137,15 +139,23 @@ function KeywordSearchContent() {
         const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         const languageFilter = activeLanguage === "hebrew_ot" ? "hebrew" : "greek";
         
+        // Build request body with optional category filter
+        const requestBody: Record<string, unknown> = { 
+          query: searchQuery.trim(), 
+          page: 1, 
+          per_page: 0,
+          language_filter: languageFilter
+        };
+        
+        // Add category filter if not "all"
+        if (bibleCategoryFilter !== "all") {
+          requestBody.category_filter = bibleCategoryFilter;
+        }
+        
         const res = await fetch(`${API_BASE}/api/keyword-search/bible/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            query: searchQuery.trim(), 
-            page: 1, 
-            per_page: 0,
-            language_filter: languageFilter
-          }),
+          body: JSON.stringify(requestBody),
         });
         
         if (!res.ok) {
@@ -173,7 +183,7 @@ function KeywordSearchContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeLanguage]);
+  }, [activeLanguage, bibleCategoryFilter]);
 
   // All pagination is client-side — no API calls needed
   const handlePageChange = useCallback((newPage: number) => {
@@ -196,12 +206,32 @@ function KeywordSearchContent() {
 
   const handleLanguageChange = useCallback((language: LanguageTab) => {
     setActiveLanguage(language);
+    setBibleCategoryFilter("all"); // Reset category filter when changing language
     setSearchResult(null);
     setBibleSearchResult(null);
     setSelectedWord(null);
     setCurrentPage(1);
     setError(null);
   }, []);
+
+  // Track if category change should trigger re-search
+  const [shouldResearch, setShouldResearch] = useState(false);
+
+  const handleCategoryChange = useCallback((category: BibleCategoryFilter) => {
+    setBibleCategoryFilter(category);
+    // Mark that we should re-search if we have results
+    if (bibleSearchResult && query.trim()) {
+      setShouldResearch(true);
+    }
+  }, [bibleSearchResult, query]);
+
+  // Effect to trigger re-search when category changes
+  useEffect(() => {
+    if (shouldResearch && query.trim() && (activeLanguage === "hebrew_ot" || activeLanguage === "greek_nt")) {
+      setShouldResearch(false);
+      handleSearch(query);
+    }
+  }, [shouldResearch, query, activeLanguage, handleSearch]);
 
   // Fetch Turkish translations after search results arrive
   useEffect(() => {
@@ -428,12 +458,23 @@ function KeywordSearchContent() {
             </p>
 
             {/* Language Tabs */}
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-4">
               <LanguageTabs 
                 activeTab={activeLanguage} 
                 onTabChange={handleLanguageChange} 
               />
             </div>
+
+            {/* Bible Category Filter (only for Bible modes) */}
+            {(activeLanguage === "hebrew_ot" || activeLanguage === "greek_nt") && (
+              <div className="flex justify-center mb-6">
+                <BibleCategoryTabs
+                  activeCategory={bibleCategoryFilter}
+                  onCategoryChange={handleCategoryChange}
+                  languageMode={activeLanguage}
+                />
+              </div>
+            )}
 
             {/* Search Input */}
             <SearchInput

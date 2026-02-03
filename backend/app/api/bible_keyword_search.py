@@ -43,6 +43,8 @@ async def search_bible_keyword(request: BibleKeywordSearchRequest):
         per_page=request.per_page,
         language_filter=request.language_filter,
         word_filter=request.word_filter,
+        testament_filter=request.testament_filter,
+        category_filter=request.category_filter,
     )
 
     # per_page=0 means all verses returned at once (no server pagination)

@@ -200,6 +200,8 @@ class BibleMorphologySearch:
         per_page: int = 50,
         language_filter: Optional[str] = None,
         word_filter: Optional[str] = None,
+        testament_filter: Optional[str] = None,
+        category_filter: Optional[str] = None,
     ) -> BibleMorphologySearchResult:
         """Main entry point: detect input type, find root/strong, search database.
 
@@ -209,6 +211,8 @@ class BibleMorphologySearch:
             per_page: Results per page (max 200)
             language_filter: Optional filter on bm_words.language ('hebrew', 'aramaic', or None)
             word_filter: Optional filter to search within specific word forms
+            testament_filter: Optional filter on bm_books.testament ('ot', 'nt', 'apocrypha', or None)
+            category_filter: Optional filter on bm_books.category ('ot', 'nt', 'apocrypha', 'pseudepigrapha', 'gnostic', 'apostolic_fathers', or None)
         """
         query = query.replace("\x00", "").strip()
         if not query:
@@ -241,6 +245,8 @@ class BibleMorphologySearch:
             per_page=per_page,
             language_filter=language_filter,
             word_filter=word_filter,
+            testament_filter=testament_filter,
+            category_filter=category_filter,
         )
 
     async def list_roots(self, page: int = 1, per_page: int = 50) -> dict:
@@ -574,6 +580,8 @@ class BibleMorphologySearch:
         per_page: int,
         language_filter: Optional[str] = None,
         word_filter: Optional[str] = None,
+        testament_filter: Optional[str] = None,
+        category_filter: Optional[str] = None,
     ) -> BibleMorphologySearchResult:
         """Query all data for a given Strong's number.
 
@@ -598,29 +606,84 @@ class BibleMorphologySearch:
             word_clause = " AND w.word_clean = :word_filter"
             word_params["word_filter"] = word_filter
 
+        # Build WHERE clause fragments for testament and category filters
+        testament_clause = ""
+        testament_params: dict[str, object] = {}
+        if testament_filter:
+            testament_clause = " AND b.testament = :testament"
+            testament_params["testament"] = testament_filter
+
+        category_clause = ""
+        category_params: dict[str, object] = {}
+        if category_filter:
+            category_clause = " AND b.category = :category"
+            category_params["category"] = category_filter
+
         async with self._session_maker() as session:
             base_params: dict[str, object] = {"sn": strong_number}
-            all_params = {**base_params, **lang_params, **word_params}
+            all_params = {
+                **base_params,
+                **lang_params,
+                **word_params,
+                **testament_params,
+                **category_params,
+            }
 
-            # 1. Total occurrences
-            total_result = await session.execute(
-                sa_text(
-                    f"SELECT COUNT(*) FROM bm_words w "
-                    f"WHERE w.strong_number = :sn{lang_clause}"
-                ),
-                {**base_params, **lang_params},
-            )
+            # Build book filter clause (for queries that already have bm_books joined as 'b')
+            book_filter_clause = f"{testament_clause}{category_clause}"
+
+            # 1. Total occurrences (needs JOIN to bm_books for testament/category filtering)
+            if testament_filter or category_filter:
+                total_result = await session.execute(
+                    sa_text(
+                        f"SELECT COUNT(*) FROM bm_words w "
+                        f"JOIN bm_verses v ON w.verse_id = v.id "
+                        f"JOIN bm_books b ON v.book_id = b.id "
+                        f"WHERE w.strong_number = :sn{lang_clause}{book_filter_clause}"
+                    ),
+                    {
+                        **base_params,
+                        **lang_params,
+                        **testament_params,
+                        **category_params,
+                    },
+                )
+            else:
+                total_result = await session.execute(
+                    sa_text(
+                        f"SELECT COUNT(*) FROM bm_words w "
+                        f"WHERE w.strong_number = :sn{lang_clause}"
+                    ),
+                    {**base_params, **lang_params},
+                )
             total_occurrences = total_result.scalar() or 0
 
             # 2. Unique derived words (word_clean, deduplicated)
-            words_result = await session.execute(
-                sa_text(
-                    f"SELECT DISTINCT w.word_clean FROM bm_words w "
-                    f"WHERE w.strong_number = :sn AND w.word_clean IS NOT NULL{lang_clause} "
-                    f"ORDER BY w.word_clean"
-                ),
-                {**base_params, **lang_params},
-            )
+            if testament_filter or category_filter:
+                words_result = await session.execute(
+                    sa_text(
+                        f"SELECT DISTINCT w.word_clean FROM bm_words w "
+                        f"JOIN bm_verses v ON w.verse_id = v.id "
+                        f"JOIN bm_books b ON v.book_id = b.id "
+                        f"WHERE w.strong_number = :sn AND w.word_clean IS NOT NULL{lang_clause}{book_filter_clause} "
+                        f"ORDER BY w.word_clean"
+                    ),
+                    {
+                        **base_params,
+                        **lang_params,
+                        **testament_params,
+                        **category_params,
+                    },
+                )
+            else:
+                words_result = await session.execute(
+                    sa_text(
+                        f"SELECT DISTINCT w.word_clean FROM bm_words w "
+                        f"WHERE w.strong_number = :sn AND w.word_clean IS NOT NULL{lang_clause} "
+                        f"ORDER BY w.word_clean"
+                    ),
+                    {**base_params, **lang_params},
+                )
             unique_words = [row[0] for row in words_result.fetchall()]
 
             # Compute transliterations for unique words
@@ -639,12 +702,12 @@ class BibleMorphologySearch:
                     FROM bm_words w
                     JOIN bm_verses v ON w.verse_id = v.id
                     JOIN bm_books b ON v.book_id = b.id
-                    WHERE w.strong_number = :sn{lang_clause}
+                    WHERE w.strong_number = :sn{lang_clause}{book_filter_clause}
                     GROUP BY b.id, b.name_english
                     ORDER BY cnt DESC
                     """
                 ),
-                {**base_params, **lang_params},
+                {**base_params, **lang_params, **testament_params, **category_params},
             )
             book_distribution = [
                 BookCount(book_id=r[0], book_name=r[1], count=r[2])
@@ -654,8 +717,10 @@ class BibleMorphologySearch:
             # 4. Count total distinct verses
             count_sql = (
                 f"SELECT COUNT(DISTINCT v.id) "
-                f"FROM bm_words w JOIN bm_verses v ON w.verse_id = v.id "
-                f"WHERE w.strong_number = :sn{lang_clause}{word_clause}"
+                f"FROM bm_words w "
+                f"JOIN bm_verses v ON w.verse_id = v.id "
+                f"JOIN bm_books b ON v.book_id = b.id "
+                f"WHERE w.strong_number = :sn{lang_clause}{word_clause}{book_filter_clause}"
             )
             total_verses_result = await session.execute(sa_text(count_sql), all_params)
             total_verses = total_verses_result.scalar() or 0
@@ -673,7 +738,8 @@ class BibleMorphologySearch:
                             SELECT DISTINCT v.id
                             FROM bm_words w
                             JOIN bm_verses v ON w.verse_id = v.id
-                            WHERE w.strong_number = :sn{lang_clause}{word_clause}
+                            JOIN bm_books b ON v.book_id = b.id
+                            WHERE w.strong_number = :sn{lang_clause}{word_clause}{book_filter_clause}
                             ORDER BY v.id
                             LIMIT :skip
                         ) sub
@@ -697,7 +763,7 @@ class BibleMorphologySearch:
                     FROM bm_words w
                     JOIN bm_verses v ON w.verse_id = v.id
                     JOIN bm_books b ON v.book_id = b.id
-                    WHERE w.strong_number = :sn AND v.id > :start_id{lang_clause}{word_clause}
+                    WHERE w.strong_number = :sn AND v.id > :start_id{lang_clause}{word_clause}{book_filter_clause}
                     ORDER BY v.id
                     LIMIT :limit
                     """

@@ -27,6 +27,14 @@ class BibleKeywordSearchRequest(BaseModel):
         max_length=100,
         description="Filter verses to only those containing this specific word form",
     )
+    testament_filter: Optional[str] = Field(
+        default=None,
+        description="Filter by testament: 'ot', 'nt', 'apocrypha', or None for all",
+    )
+    category_filter: Optional[str] = Field(
+        default=None,
+        description="Filter by category: 'ot', 'nt', 'apocrypha', 'pseudepigrapha', 'gnostic', 'apostolic_fathers', or None for all",
+    )
 
 
 class BookDistItem(BaseModel):
