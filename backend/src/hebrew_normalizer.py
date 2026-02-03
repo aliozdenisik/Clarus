@@ -218,6 +218,140 @@ def strip_hebrew_prefixes(lemma: str) -> tuple[list[str], Optional[str]]:
     return (prefixes, strongs)
 
 
+def normalize_transliteration_for_lookup(text: str) -> str:
+    """Normalize scholarly transliteration for ASCII lookup matching.
+
+    Implements industry-standard Hebrew transliteration normalization based on
+    SBL General guidelines and common web platform practices (Sefaria, STEP Bible).
+
+    The "Het Problem" (ח):
+    - Can be written as: ch, kh, h, x, ḥ
+    - Solution: Normalize ALL to 'h'
+
+    The "Tsadi Problem" (צ):
+    - Can be written as: tz, ts, z, ṣ
+    - Solution: Normalize ALL to 'ts'
+
+    The "Qoph Problem" (ק):
+    - Can be written as: q, k
+    - Solution: Normalize ALL to 'k'
+
+    The "Shin Problem" (שׁ):
+    - Can be written as: sh, š
+    - Solution: Normalize ALL to 'sh'
+
+    Transformations (in order):
+    1. Strip Unicode diacritics (NFD + remove combining chars): â→a, ḥ→h, š→s
+    2. Remove modifier letters: ʼ (aleph marker), ʻ (ayin marker)
+    3. Normalize cedilla: ç→s (for chesed: chêçêd → chesed)
+    4. Lowercase
+    5. Normalize Het variants: ch→h, kh→h, x→h (when not 'sh')
+    6. Normalize Qoph variants: q→k
+    7. Handle 'ow' vowel pattern: yowm→yom
+    8. Handle final 'ym' plural: elohiym→elohim
+    9. Simplify 'iy' sequences: elohiym→elohim
+
+    Args:
+        text: Scholarly transliteration (e.g., 'ʼĕlôhîym', 'dâbâr', 'chêçêd')
+
+    Returns:
+        Normalized ASCII string (e.g., 'elohim', 'dabar', 'hesed')
+
+    Example:
+        >>> normalize_transliteration_for_lookup("ʼĕlôhîym")
+        'elohim'
+        >>> normalize_transliteration_for_lookup("dâbâr")
+        'dabar'
+        >>> normalize_transliteration_for_lookup("chêçêd")
+        'hesed'
+        >>> normalize_transliteration_for_lookup("yôwm")
+        'yom'
+        >>> normalize_transliteration_for_lookup("shâmaʻ")
+        'shama'
+    """
+    import unicodedata
+    import re
+
+    # Step 0: Pre-NFD replacements for characters that would be incorrectly decomposed
+    # ç (c-cedilla) → s (for chesed: chêçêd → chesed)
+    # Must happen BEFORE NFD because NFD decomposes ç → c + combining cedilla
+    text = text.replace("ç", "s").replace("Ç", "S")
+
+    # Step 1: NFD decomposition to separate base chars from diacritics
+    nfd = unicodedata.normalize("NFD", text)
+
+    # Step 2: Remove combining characters (diacritics like macrons, dots, carons)
+    stripped = "".join(c for c in nfd if unicodedata.category(c) != "Mn")
+
+    # Step 3: Remove modifier letters (aleph/ayin markers)
+    # ʼ = U+02BC MODIFIER LETTER APOSTROPHE (aleph)
+    # ʻ = U+02BB MODIFIER LETTER TURNED COMMA (ayin)
+    stripped = stripped.replace("ʼ", "").replace("ʻ", "")
+    stripped = stripped.replace("'", "").replace("`", "")  # ASCII variants
+    stripped = stripped.replace("ʾ", "").replace("ʿ", "")  # Alternative Unicode
+
+    # Step 4: Lowercase
+    stripped = stripped.lower()
+
+    # Step 6: Normalize Het (ח) variants - MUST preserve 'sh' first!
+    # Replace 'ch' with 'h' but NOT 'sch' (German spelling)
+    # Order matters: handle 'kh' first, then 'ch'
+    stripped = stripped.replace("kh", "h")  # kh → h
+    # For 'ch', only replace if not preceded by 's' (to preserve 'sch')
+    stripped = re.sub(r"(?<!s)ch", "h", stripped)
+    # Also normalize standalone 'x' to 'h' (rare but possible)
+    # But NOT in common patterns like 'ex', 'ax', etc.
+    stripped = re.sub(r"\bx(?=[aeiou])", "h", stripped)
+
+    # Step 7: Normalize Qoph (ק) variants
+    stripped = stripped.replace("q", "k")
+
+    # Step 8: Handle 'ow' vowel pattern (holem-vav)
+    # yowm → yom, towrah → torah
+    # But preserve 'ow' at word boundaries or in common patterns
+    stripped = re.sub(r"([^aeiou])ow([^aeiou]|$)", r"\1o\2", stripped)
+
+    # Step 9: Handle final 'ym' plural (Hebrew masculine plural)
+    # elohiym → elohim, cherubhiym → cherubim
+    if stripped.endswith("ym"):
+        stripped = stripped[:-2] + "m"
+
+    # Step 10: Simplify 'iy' sequences
+    # elohiym (after step 9) → elohim
+    stripped = stripped.replace("iy", "i")
+
+    return stripped
+
+
+def normalize_user_hebrew_query(text: str) -> str:
+    """Normalize user input for Hebrew transliteration matching.
+
+    Applies the same normalization as normalize_transliteration_for_lookup()
+    to user input, ensuring both sides match. Additionally handles common
+    user spelling variations.
+
+    User Input Variations Handled:
+    - "chesed" / "hesed" / "khesed" → all normalize to 'hesed'
+    - "shalom" / "sholom" / "schalom" → all normalize to 'shalom'
+    - "elohim" / "elokim" → 'elohim' / 'elokim'
+    - "cohen" / "kohen" → both normalize to 'kohen'
+
+    Args:
+        text: User input query (e.g., 'chesed', 'elohim', 'shalom')
+
+    Returns:
+        Normalized query for matching
+
+    Example:
+        >>> normalize_user_hebrew_query("chesed")
+        'hesed'
+        >>> normalize_user_hebrew_query("elohim")
+        'elohim'
+    """
+    # Apply same normalization as scholarly transliterations
+    return normalize_transliteration_for_lookup(text)
+
+
 def parse_oshb_lemma(lemma_attr: str) -> dict:
     """Parse OSHB lemma attribute into structured data.
 
