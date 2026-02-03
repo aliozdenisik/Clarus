@@ -226,9 +226,9 @@ class BibleMorphologySearch:
         per_page = min(per_page, 200)
         page = max(page, 1)
 
-        strong_number, root_source = await self._find_root(query)
+        identifier, root_source = await self._find_root(query)
 
-        if strong_number is None:
+        if identifier is None:
             return BibleMorphologySearchResult(
                 query=query,
                 root=None,
@@ -237,9 +237,25 @@ class BibleMorphologySearch:
                 per_page=per_page,
             )
 
+        # Greek returns lemma instead of Strong's number
+        if root_source in ("lemma_exact", "word_clean_exact") or (
+            root_source == "fuzzy" and detect_script(query) == "greek"
+        ):
+            return await self._search_by_lemma(
+                query=query,
+                lemma=identifier,
+                root_source=root_source,
+                page=page,
+                per_page=per_page,
+                language_filter=language_filter or "greek",
+                word_filter=word_filter,
+                testament_filter=testament_filter,
+                category_filter=category_filter,
+            )
+
         return await self._search_by_strong(
             query=query,
-            strong_number=strong_number,
+            strong_number=identifier,
             root_source=root_source,
             page=page,
             per_page=per_page,
@@ -340,16 +356,17 @@ class BibleMorphologySearch:
     # ------------------------------------------------------------------
 
     async def _find_root(self, query: str) -> tuple[Optional[str], str]:
-        """Find the Strong's number for a query.
+        """Find the Strong's number or lemma for a query.
 
         Pipeline:
-        1. Script detection → route to Hebrew or Latin path
+        1. Script detection → route to Hebrew, Greek, or Latin path
         2. Hebrew: word_clean exact → Strong's reverse lookup → fuzzy
-        3. Latin: Strong's number check → transliteration → fuzzy
-        4. Not found
+        3. Greek: lemma exact → word_clean → fuzzy (returns lemma, not Strong's)
+        4. Latin: Strong's number check → transliteration → fuzzy
+        5. Not found
 
         Returns:
-            (strong_number, source) where source describes how it was found
+            (identifier, source) where identifier is Strong's number (Hebrew) or lemma (Greek)
         """
         script = detect_script(query)
 
@@ -359,6 +376,8 @@ class BibleMorphologySearch:
 
         if script == "hebrew":
             return await self._find_root_hebrew(query)
+        elif script == "greek":
+            return await self._find_root_greek(query)
         return await self._find_root_latin(query)
 
     async def _find_by_strongs_number(self, query: str) -> tuple[Optional[str], str]:
@@ -566,6 +585,318 @@ class BibleMorphologySearch:
                     return (row[0], "fuzzy")
 
         return (None, "not_found")
+
+    async def _find_root_greek(self, query: str) -> tuple[Optional[str], str]:
+        """Greek input path: normalize → lemma exact → word_clean → fuzzy.
+
+        Greek words in MorphGNT don't have Strong's numbers, so we search by lemma.
+        Returns (lemma, source) instead of (strong_number, source).
+        """
+        from src.greek_normalizer import normalize_greek
+
+        normalized = normalize_greek(query)
+
+        async with self._session_maker() as session:
+            # Step G1: Exact match on lemma
+            result = await session.execute(
+                sa_text(
+                    """
+                    SELECT lemma, COUNT(*) as cnt
+                    FROM bm_words
+                    WHERE lemma = :q AND language = 'greek'
+                    GROUP BY lemma
+                    ORDER BY cnt DESC
+                    LIMIT 1
+                    """
+                ),
+                {"q": query},  # Try original query first (with accents)
+            )
+            row = result.fetchone()
+            if row:
+                return (row[0], "lemma_exact")
+
+            # Step G2: Exact match on normalized lemma (without accents)
+            result = await session.execute(
+                sa_text(
+                    """
+                    SELECT lemma, COUNT(*) as cnt
+                    FROM bm_words
+                    WHERE word_clean = :q AND language = 'greek'
+                    GROUP BY lemma
+                    ORDER BY cnt DESC
+                    LIMIT 1
+                    """
+                ),
+                {"q": normalized},
+            )
+            row = result.fetchone()
+            if row:
+                return (row[0], "word_clean_exact")
+
+            # Step G3: Fuzzy match on word_clean via pg_trgm
+            result = await session.execute(
+                sa_text(
+                    """
+                    SELECT lemma, word_clean,
+                           similarity(word_clean, :q) AS sim
+                    FROM bm_words
+                    WHERE word_clean % :q AND language = 'greek'
+                    ORDER BY sim DESC
+                    LIMIT 1
+                    """
+                ),
+                {"q": normalized},
+            )
+            row = result.fetchone()
+            if row and row[0]:
+                return (row[0], "fuzzy")
+
+        return (None, "not_found")
+
+    async def _search_by_lemma(
+        self,
+        query: str,
+        lemma: str,
+        root_source: str,
+        page: int,
+        per_page: int,
+        language_filter: Optional[str] = None,
+        word_filter: Optional[str] = None,
+        testament_filter: Optional[str] = None,
+        category_filter: Optional[str] = None,
+    ) -> BibleMorphologySearchResult:
+        """Query all data for a given Greek lemma.
+
+        Greek words in MorphGNT don't have Strong's numbers, so we search by lemma.
+        Fetches: total occurrences, unique words, book distribution,
+        paginated verses with matched words.
+        """
+        # For Greek, set root directly from lemma (no Strong's cache lookup)
+        root_word = lemma
+        root_transliteration = None
+
+        # Build WHERE clause fragments for language and word filters
+        lang_clause = ""
+        lang_params: dict[str, object] = {}
+        if language_filter:
+            lang_clause = " AND w.language = :lang"
+            lang_params["lang"] = language_filter
+
+        word_clause = ""
+        word_params: dict[str, object] = {}
+        if word_filter:
+            word_clause = " AND w.word_clean = :word_filter"
+            word_params["word_filter"] = word_filter
+
+        # Build WHERE clause fragments for testament and category filters
+        testament_clause = ""
+        testament_params: dict[str, object] = {}
+        if testament_filter:
+            testament_clause = " AND b.testament = :testament"
+            testament_params["testament"] = testament_filter
+
+        category_clause = ""
+        category_params: dict[str, object] = {}
+        if category_filter:
+            category_clause = " AND b.category = :category"
+            category_params["category"] = category_filter
+
+        async with self._session_maker() as session:
+            base_params: dict[str, object] = {"lemma": lemma}
+            all_params = {
+                **base_params,
+                **lang_params,
+                **word_params,
+                **testament_params,
+                **category_params,
+            }
+
+            # Build book filter clause (for queries that already have bm_books joined as 'b')
+            book_filter_clause = f"{testament_clause}{category_clause}"
+
+            # 1. Total occurrences (needs JOIN to bm_books for testament/category filtering)
+            if testament_filter or category_filter:
+                total_result = await session.execute(
+                    sa_text(
+                        f"SELECT COUNT(*) FROM bm_words w "
+                        f"JOIN bm_verses v ON w.verse_id = v.id "
+                        f"JOIN bm_books b ON v.book_id = b.id "
+                        f"WHERE w.lemma = :lemma AND w.language = 'greek'{lang_clause}{book_filter_clause}"
+                    ),
+                    {
+                        **base_params,
+                        **lang_params,
+                        **testament_params,
+                        **category_params,
+                    },
+                )
+            else:
+                total_result = await session.execute(
+                    sa_text(
+                        f"SELECT COUNT(*) FROM bm_words w "
+                        f"WHERE w.lemma = :lemma AND w.language = 'greek'{lang_clause}"
+                    ),
+                    {**base_params, **lang_params},
+                )
+            total_occurrences = total_result.scalar() or 0
+
+            # 2. Unique derived words (word_clean, deduplicated)
+            if testament_filter or category_filter:
+                words_result = await session.execute(
+                    sa_text(
+                        f"SELECT DISTINCT w.word_clean FROM bm_words w "
+                        f"JOIN bm_verses v ON w.verse_id = v.id "
+                        f"JOIN bm_books b ON v.book_id = b.id "
+                        f"WHERE w.lemma = :lemma AND w.language = 'greek' AND w.word_clean IS NOT NULL{lang_clause}{book_filter_clause} "
+                        f"ORDER BY w.word_clean"
+                    ),
+                    {
+                        **base_params,
+                        **lang_params,
+                        **testament_params,
+                        **category_params,
+                    },
+                )
+            else:
+                words_result = await session.execute(
+                    sa_text(
+                        f"SELECT DISTINCT w.word_clean FROM bm_words w "
+                        f"WHERE w.lemma = :lemma AND w.language = 'greek' AND w.word_clean IS NOT NULL{lang_clause} "
+                        f"ORDER BY w.word_clean"
+                    ),
+                    {**base_params, **lang_params},
+                )
+            unique_words = [row[0] for row in words_result.fetchall()]
+
+            # For Greek, no transliterations needed (skip Hebrew transliteration logic)
+            word_transliterations: dict[str, str] = {}
+
+            # 3. Book distribution
+            dist_result = await session.execute(
+                sa_text(
+                    f"""
+                    SELECT b.id, b.name_english, COUNT(*) as cnt
+                    FROM bm_words w
+                    JOIN bm_verses v ON w.verse_id = v.id
+                    JOIN bm_books b ON v.book_id = b.id
+                    WHERE w.lemma = :lemma AND w.language = 'greek'{lang_clause}{book_filter_clause}
+                    GROUP BY b.id, b.name_english
+                    ORDER BY cnt DESC
+                    """
+                ),
+                {**base_params, **lang_params, **testament_params, **category_params},
+            )
+            book_distribution = [
+                BookCount(book_id=r[0], book_name=r[1], count=r[2])
+                for r in dist_result.fetchall()
+            ]
+
+            # 4. Count total distinct verses
+            count_sql = (
+                f"SELECT COUNT(DISTINCT v.id) "
+                f"FROM bm_words w "
+                f"JOIN bm_verses v ON w.verse_id = v.id "
+                f"JOIN bm_books b ON v.book_id = b.id "
+                f"WHERE w.lemma = :lemma AND w.language = 'greek'{lang_clause}{word_clause}{book_filter_clause}"
+            )
+            total_verses_result = await session.execute(sa_text(count_sql), all_params)
+            total_verses = total_verses_result.scalar() or 0
+
+            # 5. Paginated verses (keyset pagination)
+            # For page 1: start from v.id > 0
+            # For page N: find the starting ID by skipping (N-1)*per_page rows
+            start_id = 0
+            if page > 1:
+                skip_count = (page - 1) * per_page
+                start_id_result = await session.execute(
+                    sa_text(
+                        f"""
+                        SELECT v.id FROM (
+                            SELECT DISTINCT v.id
+                            FROM bm_words w
+                            JOIN bm_verses v ON w.verse_id = v.id
+                            JOIN bm_books b ON v.book_id = b.id
+                            WHERE w.lemma = :lemma AND w.language = 'greek'{lang_clause}{word_clause}{book_filter_clause}
+                            ORDER BY v.id
+                            LIMIT :skip
+                        ) sub
+                        JOIN bm_verses v ON v.id = sub.id
+                        ORDER BY v.id DESC
+                        LIMIT 1
+                        """
+                    ),
+                    {**all_params, "skip": skip_count},
+                )
+                row = start_id_result.fetchone()
+                if row:
+                    start_id = row[0]
+
+            verses_result = await session.execute(
+                sa_text(
+                    f"""
+                    SELECT DISTINCT v.id, v.book_id, b.name_english,
+                           v.chapter, v.verse, v.text_original, v.text_english,
+                           v.reference
+                    FROM bm_words w
+                    JOIN bm_verses v ON w.verse_id = v.id
+                    JOIN bm_books b ON v.book_id = b.id
+                    WHERE w.lemma = :lemma AND w.language = 'greek' AND v.id > :start_id{lang_clause}{word_clause}{book_filter_clause}
+                    ORDER BY v.id
+                    LIMIT :limit
+                    """
+                ),
+                {**all_params, "start_id": start_id, "limit": per_page},
+            )
+            verse_rows = verses_result.fetchall()
+
+            # 6. Batch-fetch matched words for all verses
+            verse_ids = [vr[0] for vr in verse_rows]
+            matched_words_map: dict[int, list[str]] = {vid: [] for vid in verse_ids}
+            if verse_ids:
+                placeholders = ",".join(str(vid) for vid in verse_ids)
+                batch_words_result = await session.execute(
+                    sa_text(
+                        f"SELECT DISTINCT verse_id, word_clean FROM bm_words "
+                        f"WHERE verse_id IN ({placeholders}) AND lemma = :lemma AND language = 'greek' "
+                        f"AND word_clean IS NOT NULL"
+                    ),
+                    {"lemma": lemma},
+                )
+                for row in batch_words_result.fetchall():
+                    vid, token = row[0], row[1]
+                    if token not in matched_words_map[vid]:
+                        matched_words_map[vid].append(token)
+
+            verses: list[BibleVerseMatch] = []
+            for vr in verse_rows:
+                verses.append(
+                    BibleVerseMatch(
+                        book_id=vr[1],
+                        book_name=vr[2],
+                        chapter=vr[3],
+                        verse=vr[4],
+                        text_original=vr[5],
+                        text_english=vr[6],
+                        matched_words=matched_words_map.get(vr[0], []),
+                        reference=vr[7] or "",
+                    )
+                )
+
+        return BibleMorphologySearchResult(
+            query=query,
+            root=root_word,
+            root_source=root_source,
+            strong_number=None,  # Greek has no Strong's number
+            total_occurrences=total_occurrences,
+            unique_words=unique_words,
+            book_distribution=book_distribution,
+            verses=verses,
+            page=page,
+            per_page=per_page,
+            total_verses=total_verses,
+            transliteration=root_transliteration,
+            word_transliterations=word_transliterations,
+        )
 
     # ------------------------------------------------------------------
     # Database Search (after Strong's number is found)
