@@ -7,10 +7,10 @@ interface SourceBadgeProps {
 }
 
 const LABELS: Record<SourceType, string> = {
-  quran: 'Kuran',
-  old_testament: 'Eski Ahit',
-  new_testament: 'Yeni Ahit',
-  apocrypha: 'Apokrifa'
+  quran: 'Quran',
+  old_testament: 'Old Testament',
+  new_testament: 'New Testament',
+  apocrypha: 'Apocrypha'
 };
 
 const COLORS: Record<SourceType, string> = {

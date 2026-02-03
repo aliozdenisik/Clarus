@@ -36,16 +36,44 @@ async def get_bible_search() -> BibleMorphologySearch:
 @router.post("/", response_model=BibleKeywordSearchResponse)
 async def search_bible_keyword(request: BibleKeywordSearchRequest):
     """Search Bible by morphological root (Hebrew/Aramaic)."""
-    search = await get_bible_search()
-    result = await search.search(
-        query=request.query,
-        page=request.page,
-        per_page=request.per_page,
-        language_filter=request.language_filter,
-        word_filter=request.word_filter,
-        testament_filter=request.testament_filter,
-        category_filter=request.category_filter,
+    logger.info(
+        "[BibleKeywordSearch] POST request: query=%r, page=%d, per_page=%d, "
+        "language_filter=%r, word_filter=%r, testament_filter=%r, category_filter=%r",
+        request.query,
+        request.page,
+        request.per_page,
+        request.language_filter,
+        request.word_filter,
+        request.testament_filter,
+        request.category_filter,
     )
+    try:
+        search = await get_bible_search()
+        logger.debug("[BibleKeywordSearch] Search instance acquired")
+        result = await search.search(
+            query=request.query,
+            page=request.page,
+            per_page=request.per_page,
+            language_filter=request.language_filter,
+            word_filter=request.word_filter,
+            testament_filter=request.testament_filter,
+            category_filter=request.category_filter,
+        )
+        logger.info(
+            "[BibleKeywordSearch] Search completed: root=%r, root_source=%r, "
+            "total_occurrences=%d, total_verses=%d",
+            result.root,
+            result.root_source,
+            result.total_occurrences,
+            result.total_verses,
+        )
+    except Exception as e:
+        logger.exception(
+            "[BibleKeywordSearch] CRASH during search: query=%r, error=%s",
+            request.query,
+            str(e),
+        )
+        raise
 
     # per_page=0 means all verses returned at once (no server pagination)
     if result.per_page > 0:

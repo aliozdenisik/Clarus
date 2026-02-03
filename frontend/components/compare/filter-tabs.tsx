@@ -9,11 +9,11 @@ interface FilterTabsProps {
 }
 
 const FILTER_LABELS: Record<FilterType, string> = {
-  all: 'Tumu',
-  quran: 'Kuran',
-  old_testament: 'Eski Ahit',
-  new_testament: 'Yeni Ahit',
-  apocrypha: 'Apokrifa'
+  all: 'All',
+  quran: 'Quran',
+  old_testament: 'Old Testament',
+  new_testament: 'New Testament',
+  apocrypha: 'Apocrypha'
 };
 
 const FILTERS: FilterType[] = ['all', 'quran', 'old_testament', 'new_testament', 'apocrypha'];

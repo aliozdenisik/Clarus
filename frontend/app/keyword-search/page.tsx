@@ -606,6 +606,7 @@ function KeywordSearchContent() {
                         totalOccurrences={filteredStats.totalOccurrences}
                         uniqueWords={filteredStats.uniqueWords}
                         surahCount={filteredStats.surahCount}
+                        language={activeLanguage}
                       />
                       <DerivedWords
                         words={activeLanguage === "quran" ? (searchResult?.unique_words || []) : (bibleSearchResult?.unique_words || [])}
@@ -621,6 +622,7 @@ function KeywordSearchContent() {
                               surah_name: getSurahName(d.surah_id, d.surah_name)
                             }))
                           : chartData}
+                        language={activeLanguage}
                       />
 
                       {/* Verse Cards */}

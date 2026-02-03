@@ -13,19 +13,19 @@ interface BibleCategoryTabsProps {
 
 // Categories available for Hebrew OT mode
 const hebrewCategories: { id: BibleCategoryFilter; label: string }[] = [
-  { id: "all", label: "Tumu" },
-  { id: "ot", label: "Eski Ahit" },
-  { id: "apocrypha", label: "Apokrifa" },
-  { id: "pseudepigrapha", label: "Pseudepigrafa" },
+  { id: "all", label: "All" },
+  { id: "ot", label: "Old Testament" },
+  { id: "apocrypha", label: "Apocrypha" },
+  { id: "pseudepigrapha", label: "Pseudepigrapha" },
 ];
 
 // Categories available for Greek NT mode
 const greekCategories: { id: BibleCategoryFilter; label: string }[] = [
-  { id: "all", label: "Tumu" },
-  { id: "nt", label: "Yeni Ahit" },
-  { id: "apocrypha", label: "Apokrifa" },
-  { id: "gnostic", label: "Gnostik" },
-  { id: "apostolic_fathers", label: "Apostolik Babalar" },
+  { id: "all", label: "All" },
+  { id: "nt", label: "New Testament" },
+  { id: "apocrypha", label: "Apocrypha" },
+  { id: "gnostic", label: "Gnostic" },
+  { id: "apostolic_fathers", label: "Apostolic Fathers" },
 ];
 
 export function BibleCategoryTabs({ activeCategory, onCategoryChange, languageMode }: BibleCategoryTabsProps) {

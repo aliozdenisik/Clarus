@@ -214,21 +214,50 @@ class BibleMorphologySearch:
             testament_filter: Optional filter on bm_books.testament ('ot', 'nt', 'apocrypha', or None)
             category_filter: Optional filter on bm_books.category ('ot', 'nt', 'apocrypha', 'pseudepigrapha', 'gnostic', 'apostolic_fathers', or None)
         """
-        query = query.replace("\x00", "").strip()
-        if not query:
-            return BibleMorphologySearchResult(
-                query=query,
-                root=None,
-                root_source="not_found",
-                page=max(page, 1),
-                per_page=min(per_page, 200),
-            )
-        per_page = min(per_page, 200)
-        page = max(page, 1)
+        logger.info(
+            "[BibleMorphology.search] START: query=%r, page=%d, per_page=%d, "
+            "language_filter=%r, word_filter=%r, testament_filter=%r, category_filter=%r",
+            query,
+            page,
+            per_page,
+            language_filter,
+            word_filter,
+            testament_filter,
+            category_filter,
+        )
+        try:
+            query = query.replace("\x00", "").strip()
+            if not query:
+                logger.warning("[BibleMorphology.search] Empty query after strip")
+                return BibleMorphologySearchResult(
+                    query=query,
+                    root=None,
+                    root_source="not_found",
+                    page=max(page, 1),
+                    per_page=min(per_page, 200),
+                )
+            per_page = min(per_page, 200)
+            page = max(page, 1)
 
-        identifier, root_source = await self._find_root(query)
+            logger.debug("[BibleMorphology.search] Finding root for query=%r", query)
+            identifier, root_source = await self._find_root(query)
+            logger.info(
+                "[BibleMorphology.search] Root found: identifier=%r, root_source=%r",
+                identifier,
+                root_source,
+            )
+        except Exception as e:
+            logger.exception(
+                "[BibleMorphology.search] CRASH in _find_root: query=%r, error=%s",
+                query,
+                str(e),
+            )
+            raise
 
         if identifier is None:
+            logger.info(
+                "[BibleMorphology.search] No identifier found, returning not_found"
+            )
             return BibleMorphologySearchResult(
                 query=query,
                 root=None,
@@ -238,32 +267,66 @@ class BibleMorphologySearch:
             )
 
         # Greek returns lemma instead of Strong's number
-        if root_source in ("lemma_exact", "word_clean_exact") or (
-            root_source == "fuzzy" and detect_script(query) == "greek"
-        ):
-            return await self._search_by_lemma(
+        # Also handle Latin→Greek transliteration results
+        if root_source in (
+            "lemma_exact",
+            "word_clean_exact",
+            "latin_transliteration",
+            "latin_transliteration_fuzzy",
+        ) or (root_source == "fuzzy" and detect_script(query) == "greek"):
+            logger.debug("[BibleMorphology.search] Routing to _search_by_lemma")
+            try:
+                result = await self._search_by_lemma(
+                    query=query,
+                    lemma=identifier,
+                    root_source=root_source,
+                    page=page,
+                    per_page=per_page,
+                    language_filter=language_filter or "greek",
+                    word_filter=word_filter,
+                    testament_filter=testament_filter,
+                    category_filter=category_filter,
+                )
+                logger.info(
+                    "[BibleMorphology.search] _search_by_lemma completed: total_occurrences=%d",
+                    result.total_occurrences,
+                )
+                return result
+            except Exception as e:
+                logger.exception(
+                    "[BibleMorphology.search] CRASH in _search_by_lemma: query=%r, lemma=%r, error=%s",
+                    query,
+                    identifier,
+                    str(e),
+                )
+                raise
+
+        logger.debug("[BibleMorphology.search] Routing to _search_by_strong")
+        try:
+            result = await self._search_by_strong(
                 query=query,
-                lemma=identifier,
+                strong_number=identifier,
                 root_source=root_source,
                 page=page,
                 per_page=per_page,
-                language_filter=language_filter or "greek",
+                language_filter=language_filter,
                 word_filter=word_filter,
                 testament_filter=testament_filter,
                 category_filter=category_filter,
             )
-
-        return await self._search_by_strong(
-            query=query,
-            strong_number=identifier,
-            root_source=root_source,
-            page=page,
-            per_page=per_page,
-            language_filter=language_filter,
-            word_filter=word_filter,
-            testament_filter=testament_filter,
-            category_filter=category_filter,
-        )
+            logger.info(
+                "[BibleMorphology.search] _search_by_strong completed: total_occurrences=%d",
+                result.total_occurrences,
+            )
+            return result
+        except Exception as e:
+            logger.exception(
+                "[BibleMorphology.search] CRASH in _search_by_strong: query=%r, strong_number=%r, error=%s",
+                query,
+                identifier,
+                str(e),
+            )
+            raise
 
     async def list_roots(self, page: int = 1, per_page: int = 50) -> dict:
         """List all available roots with occurrence counts, paginated."""
@@ -369,15 +432,24 @@ class BibleMorphologySearch:
             (identifier, source) where identifier is Strong's number (Hebrew) or lemma (Greek)
         """
         script = detect_script(query)
+        logger.debug(
+            "[BibleMorphology._find_root] query=%r, detected_script=%r", query, script
+        )
 
         # Check for Strong's number input first (works for any script)
         if STRONGS_PATTERN.match(query):
+            logger.debug(
+                "[BibleMorphology._find_root] Matched Strong's pattern, routing to _find_by_strongs_number"
+            )
             return await self._find_by_strongs_number(query)
 
         if script == "hebrew":
+            logger.debug("[BibleMorphology._find_root] Routing to _find_root_hebrew")
             return await self._find_root_hebrew(query)
         elif script == "greek":
+            logger.debug("[BibleMorphology._find_root] Routing to _find_root_greek")
             return await self._find_root_greek(query)
+        logger.debug("[BibleMorphology._find_root] Routing to _find_root_latin")
         return await self._find_root_latin(query)
 
     async def _find_by_strongs_number(self, query: str) -> tuple[Optional[str], str]:
@@ -424,7 +496,18 @@ class BibleMorphologySearch:
         2. Strong's reverse lookup (normalize query → match strongs.original_word)
         3. Fuzzy match on word_clean via pg_trgm
         """
-        normalized = normalize_hebrew(query)
+        logger.debug("[BibleMorphology._find_root_hebrew] START: query=%r", query)
+        try:
+            normalized = normalize_hebrew(query)
+            logger.debug(
+                "[BibleMorphology._find_root_hebrew] normalized=%r", normalized
+            )
+        except Exception as e:
+            logger.exception(
+                "[BibleMorphology._find_root_hebrew] CRASH in normalize_hebrew: query=%r",
+                query,
+            )
+            raise
 
         async with self._session_maker() as session:
             # Step 1: Exact match on word_clean → get most frequent strong_number
@@ -487,7 +570,9 @@ class BibleMorphologySearch:
         Handles SBL transliteration input (e.g., 'ktb', 'brʾšyt') and
         common romanizations.
         """
+        logger.debug("[BibleMorphology._find_root_latin] START: query=%r", query)
         normalized = query.lower().strip()
+        logger.debug("[BibleMorphology._find_root_latin] normalized=%r", normalized)
 
         async with self._session_maker() as session:
             # Step L1: Exact match on bm_words.transliteration
@@ -584,6 +669,53 @@ class BibleMorphologySearch:
                 if row:
                     return (row[0], "fuzzy")
 
+            # Step L5: Try Latin → Greek conversion for Greek word searches
+            # (e.g., "logos" → "λογος", "theos" → "θεος")
+            from src.greek_normalizer import reverse_transliterate_greek
+
+            greek_query = reverse_transliterate_greek(normalized)
+            logger.debug(
+                "[BibleMorphology._find_root_latin] Latin→Greek conversion: %r → %r",
+                normalized,
+                greek_query,
+            )
+
+            # Try exact match on the converted Greek word_clean
+            result = await session.execute(
+                sa_text(
+                    """
+                    SELECT lemma, COUNT(*) as cnt
+                    FROM bm_words
+                    WHERE word_clean = :q AND language = 'greek'
+                    GROUP BY lemma
+                    ORDER BY cnt DESC
+                    LIMIT 1
+                    """
+                ),
+                {"q": greek_query},
+            )
+            row = result.fetchone()
+            if row:
+                return (row[0], "latin_transliteration")
+
+            # Also try fuzzy match on converted Greek
+            result = await session.execute(
+                sa_text(
+                    """
+                    SELECT lemma, word_clean,
+                           similarity(word_clean, :q) AS sim
+                    FROM bm_words
+                    WHERE word_clean % :q AND language = 'greek'
+                    ORDER BY sim DESC
+                    LIMIT 1
+                    """
+                ),
+                {"q": greek_query},
+            )
+            row = result.fetchone()
+            if row and row[0]:
+                return (row[0], "latin_transliteration_fuzzy")
+
         return (None, "not_found")
 
     async def _find_root_greek(self, query: str) -> tuple[Optional[str], str]:
@@ -592,9 +724,18 @@ class BibleMorphologySearch:
         Greek words in MorphGNT don't have Strong's numbers, so we search by lemma.
         Returns (lemma, source) instead of (strong_number, source).
         """
-        from src.greek_normalizer import normalize_greek
+        logger.debug("[BibleMorphology._find_root_greek] START: query=%r", query)
+        try:
+            from src.greek_normalizer import normalize_greek
 
-        normalized = normalize_greek(query)
+            normalized = normalize_greek(query)
+            logger.debug("[BibleMorphology._find_root_greek] normalized=%r", normalized)
+        except Exception as e:
+            logger.exception(
+                "[BibleMorphology._find_root_greek] CRASH in normalize_greek: query=%r",
+                query,
+            )
+            raise
 
         async with self._session_maker() as session:
             # Step G1: Exact match on lemma

@@ -8,6 +8,7 @@ interface StatsBarProps {
   totalOccurrences: number;
   uniqueWords: number;
   surahCount: number;
+  language: "quran" | "hebrew_ot" | "greek_nt";
 }
 
 interface StatItem {
@@ -15,11 +16,11 @@ interface StatItem {
   value: number;
 }
 
-export function StatsBar({ totalOccurrences, uniqueWords, surahCount }: StatsBarProps) {
+export function StatsBar({ totalOccurrences, uniqueWords, surahCount, language }: StatsBarProps) {
   const stats: StatItem[] = [
     { label: "Total Occurrences", value: totalOccurrences },
     { label: "Unique Words", value: uniqueWords },
-    { label: "Surahs", value: surahCount },
+    { label: language === "quran" ? "Surahs" : "Books", value: surahCount },
   ];
 
   return (

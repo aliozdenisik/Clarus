@@ -20,7 +20,7 @@ interface SurahChartProps {
     surah_name: string;
     count: number;
   }>;
-
+  language: "quran" | "hebrew_ot" | "greek_nt";
 }
 
 interface CustomYAxisTickProps {
@@ -69,7 +69,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   );
 }
 
-export function SurahChart({ data }: SurahChartProps) {
+export function SurahChart({ data, language }: SurahChartProps) {
   const [showAll, setShowAll] = useState(false);
 
   // Empty state
@@ -82,7 +82,7 @@ export function SurahChart({ data }: SurahChartProps) {
       >
         <GlowCard>
           <p className="text-center text-sm text-[var(--color-text-muted)] py-8">
-            No surah distribution data
+            {language === "quran" ? "No surah distribution data" : "No book distribution data"}
           </p>
         </GlowCard>
       </motion.div>
@@ -110,7 +110,7 @@ export function SurahChart({ data }: SurahChartProps) {
             ◆
           </div>
           <h3 className="text-lg font-medium text-[var(--color-text-primary)] text-center">
-            Surah Distribution
+            {language === "quran" ? "Surah Distribution" : "Book Distribution"}
           </h3>
         </div>
 
@@ -160,7 +160,7 @@ export function SurahChart({ data }: SurahChartProps) {
             onClick={() => setShowAll(true)}
             className="mt-4 w-full text-center text-sm text-[var(--color-accent-primary)] hover:underline"
           >
-            Show all {sortedData.length} surahs
+            Show all {sortedData.length} {language === "quran" ? "surahs" : "books"}
           </button>
         )}
       </GlowCard>

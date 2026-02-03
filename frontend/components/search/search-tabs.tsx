@@ -13,10 +13,10 @@ interface SearchTabsProps {
 }
 
 const tabs: { id: SearchSource; label: string }[] = [
-  { id: "quran", label: "Kuran" },
-  { id: "ot", label: "Eski Ahit" },
-  { id: "nt", label: "Yeni Ahit" },
-  { id: "apocrypha", label: "Apokrifa" },
+  { id: "quran", label: "Quran" },
+  { id: "ot", label: "Old Testament" },
+  { id: "nt", label: "New Testament" },
+  { id: "apocrypha", label: "Apocrypha" },
 ];
 
 export function SearchTabs({ activeTab, onTabChange }: SearchTabsProps) {

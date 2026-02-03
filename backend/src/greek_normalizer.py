@@ -211,6 +211,102 @@ def detect_script(text: str) -> str:
     return "latin"
 
 
+def reverse_transliterate_greek(text: str) -> str:
+    """Convert Latin transliteration back to Greek.
+
+    Handles common scholarly transliterations (reverse of ALA-LC standard).
+    Multi-character sequences are processed first (th→θ, ph→φ, ch→χ, ps→ψ),
+    then single characters. Final sigma (ς) is used at word boundaries.
+
+    Mapping (reverse of ALA-LC):
+    - th→θ, ph→φ, ch→χ, ps→ψ
+    - a→α, b→β, g→γ, d→δ, e→ε, z→ζ, i→ι, k→κ
+    - l→λ, m→μ, n→ν, x→ξ, o→ο, p→π, r→ρ, s→σ/ς, t→τ, y→υ
+    - ē→η, ō→ω (macron vowels)
+
+    Args:
+        text: Latin transliteration to convert
+
+    Returns:
+        Greek text (lowercase, no accents, with proper final sigma)
+
+    Example:
+        >>> reverse_transliterate_greek("logos")
+        'λογος'
+        >>> reverse_transliterate_greek("theos")
+        'θεος'
+        >>> reverse_transliterate_greek("agape")
+        'αγαπε'
+    """
+    # Work with lowercase for consistent mapping
+    text = text.lower()
+
+    # Multi-character sequences first (order matters: longer sequences first)
+    multi_char_mapping = {
+        "th": "θ",
+        "ph": "φ",
+        "ch": "χ",
+        "ps": "ψ",
+    }
+
+    # Single character mapping (reverse of transliterate_greek)
+    # Note: 's' is handled specially for final sigma
+    single_char_mapping = {
+        # Vowels
+        "a": "α",
+        "e": "ε",
+        "ē": "η",  # eta with macron
+        "i": "ι",
+        "o": "ο",
+        "y": "υ",
+        "ō": "ω",  # omega with macron
+        "u": "υ",  # alternative for upsilon
+        # Consonants
+        "b": "β",
+        "g": "γ",
+        "d": "δ",
+        "z": "ζ",
+        "k": "κ",
+        "l": "λ",
+        "m": "μ",
+        "n": "ν",
+        "x": "ξ",
+        "p": "π",
+        "r": "ρ",
+        "t": "τ",
+        # Alternative mappings
+        "c": "κ",  # 'c' often used for kappa
+        "h": "η",  # standalone 'h' could be eta (context-dependent)
+    }
+
+    result = ""
+    i = 0
+    while i < len(text):
+        # Check for two-character sequences first
+        if i + 1 < len(text):
+            two_char = text[i : i + 2]
+            if two_char in multi_char_mapping:
+                result += multi_char_mapping[two_char]
+                i += 2
+                continue
+
+        # Single character mapping
+        char = text[i]
+        if char == "s":
+            # Use final sigma (ς) at word end, regular sigma (σ) otherwise
+            # Word end = last char OR next char is not a letter
+            is_word_end = (i == len(text) - 1) or not text[i + 1].isalpha()
+            result += "ς" if is_word_end else "σ"
+        elif char in single_char_mapping:
+            result += single_char_mapping[char]
+        else:
+            # Keep non-mapped characters as-is (spaces, punctuation, etc.)
+            result += char
+        i += 1
+
+    return result
+
+
 # ============================================================================
 # INLINE VERIFICATION TESTS
 # ============================================================================
@@ -253,6 +349,17 @@ if __name__ == "__main__":
                 ("בראשית", "hebrew"),
                 ("الله", "arabic"),
                 ("hello", "latin"),
+            ],
+        },
+        {
+            "name": "reverse_transliterate_greek",
+            "cases": [
+                ("logos", "λογος"),
+                ("theos", "θεος"),
+                ("agape", "αγαπε"),
+                ("christos", "χριστος"),
+                ("pistis", "πιστις"),
+                ("pneuma", "πνευμα"),
             ],
         },
     ]
