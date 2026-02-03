@@ -13,6 +13,8 @@ from app.schemas.bible_keyword import (
     BibleRootListItem,
     BibleRootListResponse,
     BibleStatsResponse,
+    CrossReferenceResponse,
+    CrossReferenceWord,
 )
 from src.bible_morphology import BibleMorphologySearch
 
@@ -172,4 +174,47 @@ async def get_bible_stats():
         unique_roots=stats["unique_roots"],
         total_books=stats["total_books"],
         total_verses=stats["total_verses"],
+    )
+
+
+@router.get("/cross-reference/{strongs_number}", response_model=CrossReferenceResponse)
+async def get_cross_reference(strongs_number: str):
+    """Get Hebrew↔Greek cross-reference for a Strong's number.
+
+    Returns words from both Hebrew and Greek that share the same Strong's number.
+    Includes word forms, transliterations, and occurrence counts.
+
+    Example: GET /api/keyword-search/bible/cross-reference/H430
+    Returns: Hebrew words for אלהים (elohim/God) and any Greek equivalents
+    """
+    search = await get_bible_search()
+    data = await search.get_cross_reference(strongs_number)
+
+    return CrossReferenceResponse(
+        success=True,
+        strongs_number=data["strongs_number"],
+        definition=data["definition"],
+        original_word=data["original_word"],
+        transliteration=data["transliteration"],
+        hebrew_words=[
+            CrossReferenceWord(
+                word=w["word"],
+                word_clean=w["word_clean"],
+                transliteration=w["transliteration"],
+                language=w["language"],
+                occurrence_count=w["occurrence_count"],
+            )
+            for w in data["hebrew_words"]
+        ],
+        greek_words=[
+            CrossReferenceWord(
+                word=w["word"],
+                word_clean=w["word_clean"],
+                transliteration=w["transliteration"],
+                language=w["language"],
+                occurrence_count=w["occurrence_count"],
+            )
+            for w in data["greek_words"]
+        ],
+        total_occurrences=data["total_occurrences"],
     )

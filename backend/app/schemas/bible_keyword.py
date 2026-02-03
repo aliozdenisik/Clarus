@@ -91,3 +91,22 @@ class BibleStatsResponse(BaseModel):
     unique_roots: int
     total_books: int
     total_verses: int
+
+
+class CrossReferenceWord(BaseModel):
+    word: str
+    word_clean: str
+    transliteration: str
+    language: str  # 'hebrew' | 'greek' | 'aramaic'
+    occurrence_count: int
+
+
+class CrossReferenceResponse(BaseModel):
+    success: bool = True
+    strongs_number: str
+    definition: Optional[str] = None
+    original_word: Optional[str] = None
+    transliteration: Optional[str] = None
+    hebrew_words: list[CrossReferenceWord] = Field(default_factory=list)
+    greek_words: list[CrossReferenceWord] = Field(default_factory=list)
+    total_occurrences: int = 0

@@ -755,6 +755,103 @@ class BibleMorphologySearch:
             word_transliterations=word_transliterations,
         )
 
+    async def get_cross_reference(self, strongs_number: str) -> dict:
+        """Get Hebrew↔Greek cross-reference for a Strong's number.
+
+        Returns words from both Hebrew and Greek that share the same Strong's number.
+        Includes word forms, transliterations, and occurrence counts.
+
+        Args:
+            strongs_number: Strong's number (H430, G26, etc.)
+
+        Returns:
+            dict with keys:
+            - strongs_number: Normalized Strong's number
+            - definition: Definition from bm_strongs
+            - original_word: Original word from bm_strongs
+            - transliteration: Transliteration from bm_strongs
+            - hebrew_words: List of dicts {word, word_clean, transliteration, language, occurrence_count}
+            - greek_words: List of dicts {word, word_clean, transliteration, language, occurrence_count}
+            - total_occurrences: Sum of all occurrences
+        """
+        strongs_number = strongs_number.replace("\x00", "").strip().upper()
+        if not strongs_number:
+            return {
+                "strongs_number": "",
+                "definition": None,
+                "original_word": None,
+                "transliteration": None,
+                "hebrew_words": [],
+                "greek_words": [],
+                "total_occurrences": 0,
+            }
+
+        # Normalize Strong's number format (H430 and H0430 are equivalent)
+        prefix = strongs_number[0] if strongs_number else ""
+        num_str = strongs_number[1:] if len(strongs_number) > 1 else ""
+        try:
+            normalized = f"{prefix}{int(num_str):04d}"
+        except ValueError:
+            normalized = strongs_number
+
+        # Look up Strong's definition
+        strongs_entry = self._strongs_cache.get(normalized) or self._strongs_cache.get(
+            strongs_number
+        )
+
+        async with self._session_maker() as session:
+            # Query bm_words for all words with this Strong's number
+            result = await session.execute(
+                sa_text(
+                    """
+                    SELECT word, word_clean, transliteration, language, COUNT(*) as occurrence_count
+                    FROM bm_words
+                    WHERE strong_number = :strong_number OR strong_number = :strong_number_padded
+                    GROUP BY word, word_clean, transliteration, language
+                    ORDER BY occurrence_count DESC
+                    """
+                ),
+                {
+                    "strong_number": strongs_number,
+                    "strong_number_padded": normalized,
+                },
+            )
+            rows = result.fetchall()
+
+        hebrew_words = []
+        greek_words = []
+        total_occurrences = 0
+
+        for row in rows:
+            word, word_clean, transliteration, language, occurrence_count = row
+            word_entry = {
+                "word": word or "",
+                "word_clean": word_clean or "",
+                "transliteration": transliteration or "",
+                "language": language or "unknown",
+                "occurrence_count": occurrence_count or 0,
+            }
+            total_occurrences += occurrence_count or 0
+
+            if language in ("hebrew", "aramaic"):
+                hebrew_words.append(word_entry)
+            elif language == "greek":
+                greek_words.append(word_entry)
+
+        return {
+            "strongs_number": normalized,
+            "definition": strongs_entry.get("definition") if strongs_entry else None,
+            "original_word": strongs_entry.get("original_word")
+            if strongs_entry
+            else None,
+            "transliteration": strongs_entry.get("transliteration")
+            if strongs_entry
+            else None,
+            "hebrew_words": hebrew_words,
+            "greek_words": greek_words,
+            "total_occurrences": total_occurrences,
+        }
+
 
 # ---------------------------------------------------------------------------
 # Utility Functions
