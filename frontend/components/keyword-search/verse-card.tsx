@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ExternalLink } from "lucide-react";
 import { stripArabicDiacritics } from "@/lib/utils/arabic";
 import { stripHebrewDiacritics } from "@/lib/utils/hebrew";
+import { stripGreekDiacritics } from "@/lib/utils/greek";
 
 interface VerseCardProps {
   surahId: number;
@@ -19,7 +20,7 @@ interface VerseCardProps {
   englishTranslation?: string | null;  // Optional — English translation (Bible only)
   isTranslationLoading?: boolean;
   index?: number;           // For stagger animation
-  language?: "arabic" | "hebrew";  // Language of the text
+  language?: "arabic" | "hebrew" | "greek";  // Language of the text
   chapter?: number;         // Chapter number (Bible only)
 }
 
@@ -37,13 +38,17 @@ function highlightText(
   textDisplay: string,
   textClean: string,
   matchedWords: string[],
-  language: "arabic" | "hebrew"
+  language: "arabic" | "hebrew" | "greek"
 ): React.ReactNode[] {
   if (!matchedWords || matchedWords.length === 0) {
     return [textDisplay];
   }
 
-  const stripFn = language === "arabic" ? stripArabicDiacritics : stripHebrewDiacritics;
+  const stripFn = language === "arabic" 
+    ? stripArabicDiacritics 
+    : language === "hebrew" 
+    ? stripHebrewDiacritics 
+    : stripGreekDiacritics;
 
   // Split both texts into words
   const displayWords = textDisplay.split(/\s+/);
@@ -87,6 +92,7 @@ export function VerseCard({
 }: VerseCardProps) {
   const highlightedText = highlightText(textUthmani, textClean, matchedWords, language);
   const isHebrew = language === "hebrew";
+  const isGreek = language === "greek";
 
   return (
     <motion.div
@@ -98,9 +104,9 @@ export function VerseCard({
         {/* Header: Book/Surah name + Chapter:Verse */}
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm text-[var(--color-text-muted)]">
-            {isHebrew && chapter ? `${surahName} ${chapter}:${ayahNumber}` : `${surahName} : ${ayahNumber}`}
+            {(isHebrew || isGreek) && chapter ? `${surahName} ${chapter}:${ayahNumber}` : `${surahName} : ${ayahNumber}`}
           </span>
-          {!isHebrew && (
+          {language === "arabic" && (
             <a
               href={`/quran/${surahId}?verse=${ayahNumber}`}
               target="_blank"
@@ -113,39 +119,62 @@ export function VerseCard({
           )}
         </div>
 
-        {/* Original text with highlighting */}
-        <div 
-          className={`${isHebrew ? 'font-hebrew' : 'font-arabic'} text-xl leading-loose text-right mb-4`}
-          lang={isHebrew ? "he" : "ar"} 
-          dir="rtl"
-        >
-          <bdi>{highlightedText}</bdi>
-        </div>
+        {/* Greek Interlinear View */}
+        {isGreek ? (
+          <div className="space-y-4">
+            {/* Greek text with highlighting */}
+            <div 
+              className="font-greek text-xl leading-loose mb-2"
+              lang="el" 
+              dir="ltr"
+            >
+              {highlightedText}
+            </div>
+            
+            {/* English translation below */}
+            <div className="text-base text-[var(--color-text-secondary)] leading-relaxed italic" dir="ltr">
+              {englishTranslation || (
+                <span className="text-[var(--color-text-muted)]">Translation not available</span>
+              )}
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Original text with highlighting (Arabic/Hebrew) */}
+            <div 
+              className={`${isHebrew ? 'font-hebrew' : 'font-arabic'} text-xl leading-loose text-right mb-4`}
+              lang={isHebrew ? "he" : "ar"} 
+              dir="rtl"
+            >
+              <bdi>{highlightedText}</bdi>
+            </div>
 
-        {/* Separator */}
-        <div className="border-t border-zinc-800 my-3" />
+            {/* Separator */}
+            <div className="border-t border-zinc-800 my-3" />
 
-        {/* Translation */}
-        <div className="text-base text-[var(--color-text-primary)] leading-relaxed" dir="ltr">
-          {isHebrew ? (
-            englishTranslation ? (
-              englishTranslation
-            ) : (
-              <span className="text-[var(--color-text-muted)] italic">Translation not available</span>
-            )
-          ) : (
-            isTranslationLoading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-              </div>
-            ) : turkishTranslation ? (
-              turkishTranslation
-            ) : (
-              <span className="text-[var(--color-text-muted)] italic">Çeviri yüklenemedi</span>
-            )
-          )}
-        </div>
+            {/* Translation */}
+            <div className="text-base text-[var(--color-text-primary)] leading-relaxed" dir="ltr">
+              {isHebrew ? (
+                englishTranslation ? (
+                  englishTranslation
+                ) : (
+                  <span className="text-[var(--color-text-muted)] italic">Translation not available</span>
+                )
+              ) : (
+                isTranslationLoading ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                ) : turkishTranslation ? (
+                  turkishTranslation
+                ) : (
+                  <span className="text-[var(--color-text-muted)] italic">Çeviri yüklenemedi</span>
+                )
+              )}
+            </div>
+          </>
+        )}
       </GlowCard>
     </motion.div>
   );

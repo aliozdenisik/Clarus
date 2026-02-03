@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-export type LanguageTab = "quran" | "hebrew_ot";
+export type LanguageTab = "quran" | "hebrew_ot" | "greek_nt";
 
 interface LanguageTabsProps {
   activeTab: LanguageTab;
@@ -13,6 +13,7 @@ interface LanguageTabsProps {
 const tabs = [
   { id: "quran" as const, label: "Kur'an Arapça", icon: "🕌" },
   { id: "hebrew_ot" as const, label: "İbranice Eski Ahit", icon: "📜" },
+  { id: "greek_nt" as const, label: "Yunanca Yeni Ahit", icon: "✝️" },
 ];
 
 export function LanguageTabs({ activeTab, onTabChange }: LanguageTabsProps) {

@@ -15,6 +15,7 @@ import { VerseCard } from "@/components/keyword-search/verse-card";
 import { Pagination } from "@/components/keyword-search/pagination";
 import { stripArabicDiacritics } from "@/lib/utils/arabic";
 import { stripHebrewDiacritics } from "@/lib/utils/hebrew";
+import { stripGreekDiacritics } from "@/lib/utils/greek";
 import { RootBrowser } from "@/components/keyword-search/root-browser";
 import { Skeleton } from "@/components/ui/skeleton";
 import { searchKeywordApiSearchKeywordPost, getSurahDetailApiMetadataQuranSurahsSurahIdGet, getQuranSurahsApiMetadataQuranSurahsGet } from "@/lib/api/sdk.gen";
@@ -106,7 +107,9 @@ function KeywordSearchContent() {
     if (!searchQuery.trim()) {
       setError(activeLanguage === "quran" 
         ? "Please enter an Arabic word or Buckwalter root"
-        : "Please enter a Hebrew word or Strong's number");
+        : activeLanguage === "hebrew_ot"
+        ? "Please enter a Hebrew word or Strong's number"
+        : "Please enter a Greek word or Strong's number");
       return;
     }
 
@@ -130,15 +133,18 @@ function KeywordSearchContent() {
           setBibleSearchResult(null);
         }
       } else {
-        // Bible search via raw fetch
+        // Bible search via raw fetch (Hebrew OT or Greek NT)
         const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const languageFilter = activeLanguage === "hebrew_ot" ? "hebrew" : "greek";
+        
         const res = await fetch(`${API_BASE}/api/keyword-search/bible/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
             query: searchQuery.trim(), 
             page: 1, 
-            per_page: 0 
+            per_page: 0,
+            language_filter: languageFilter
           }),
         });
         
@@ -264,10 +270,11 @@ function KeywordSearchContent() {
     } else {
       if (!bibleSearchResult?.verses) return [];
       if (!selectedWord) return bibleSearchResult.verses;
-      const normalizedSelected = stripHebrewDiacritics(selectedWord);
+      const stripFn = activeLanguage === "hebrew_ot" ? stripHebrewDiacritics : stripGreekDiacritics;
+      const normalizedSelected = stripFn(selectedWord);
       return bibleSearchResult.verses.filter((v) =>
         v.matched_words.some(
-          (w) => stripHebrewDiacritics(w) === normalizedSelected
+          (w) => stripFn(w) === normalizedSelected
         )
       );
     }
@@ -331,10 +338,11 @@ function KeywordSearchContent() {
       // If word selected, compute distribution from filtered verses
       if (!bibleSearchResult?.verses) return [];
 
-      const normalizedSelected = stripHebrewDiacritics(selectedWord);
+      const stripFn = activeLanguage === "hebrew_ot" ? stripHebrewDiacritics : stripGreekDiacritics;
+      const normalizedSelected = stripFn(selectedWord);
       const wordFilteredVerses = bibleSearchResult.verses.filter((v) =>
         v.matched_words.some(
-          (w) => stripHebrewDiacritics(w) === normalizedSelected
+          (w) => stripFn(w) === normalizedSelected
         )
       );
 
@@ -414,7 +422,9 @@ function KeywordSearchContent() {
             <p className="text-sm text-[var(--color-text-secondary)] text-center mb-6">
               {activeLanguage === "quran" 
                 ? "Explore Arabic roots and their Quranic footprint"
-                : "Explore Hebrew roots and their Biblical footprint"}
+                : activeLanguage === "hebrew_ot"
+                ? "Explore Hebrew roots and their Biblical footprint"
+                : "Explore Greek roots and their New Testament footprint"}
             </p>
 
             {/* Language Tabs */}
@@ -433,7 +443,9 @@ function KeywordSearchContent() {
               isLoading={isLoading}
               placeholder={activeLanguage === "quran"
                 ? "Search for Arabic roots (e.g., كتب or ktb)..."
-                : "Search for Hebrew roots (e.g., כתב or H3789)..."}
+                : activeLanguage === "hebrew_ot"
+                ? "Search for Hebrew roots (e.g., כתב or H3789)..."
+                : "Search for Greek roots (e.g., βιβλος or G976)..."}
             />
           </motion.div>
         </div>
@@ -525,9 +537,9 @@ function KeywordSearchContent() {
                       </div>
                     )}
 
-                  {/* Root not found */}
+                   {/* Root not found */}
                   {((activeLanguage === "quran" && searchResult?.root_source === "not_found") ||
-                    (activeLanguage === "hebrew_ot" && bibleSearchResult?.root_source === "not_found")) ? (
+                    (activeLanguage !== "quran" && bibleSearchResult?.root_source === "not_found")) ? (
                     <div className="text-center py-12">
                       <p className="text-lg text-[var(--color-text-muted)]">
                         No root found for &quot;{activeLanguage === "quran" ? searchResult?.query : bibleSearchResult?.query}&quot;
@@ -535,7 +547,9 @@ function KeywordSearchContent() {
                       <p className="text-sm text-[var(--color-text-secondary)] mt-2">
                         {activeLanguage === "quran"
                           ? "Try a different Arabic word or Buckwalter transliteration."
-                          : "Try a different Hebrew word or Strong's number."}
+                          : activeLanguage === "hebrew_ot"
+                          ? "Try a different Hebrew word or Strong's number."
+                          : "Try a different Greek word or Strong's number."}
                       </p>
                     </div>
                   ) : (
@@ -544,8 +558,8 @@ function KeywordSearchContent() {
                         root={activeLanguage === "quran" ? (searchResult?.root || null) : (bibleSearchResult?.root || null)}
                         rootSource={activeLanguage === "quran" ? (searchResult?.root_source || "") : (bibleSearchResult?.root_source || "")}
                         rootBuckwalter={activeLanguage === "quran" ? searchResult?.root_buckwalter : bibleSearchResult?.transliteration}
-                        strongNumber={activeLanguage === "hebrew_ot" ? bibleSearchResult?.strong_number : undefined}
-                        language={activeLanguage === "quran" ? "arabic" : "hebrew"}
+                        strongNumber={activeLanguage !== "quran" ? bibleSearchResult?.strong_number : undefined}
+                        language={activeLanguage === "quran" ? "arabic" : activeLanguage === "hebrew_ot" ? "hebrew" : "greek"}
                       />
                       <StatsBar
                         totalOccurrences={filteredStats.totalOccurrences}
@@ -557,7 +571,7 @@ function KeywordSearchContent() {
                         selectedWord={selectedWord}
                         onWordSelect={handleWordFilter}
                         transliterations={activeLanguage === "quran" ? (searchResult?.word_transliterations || {}) : (bibleSearchResult?.word_transliterations || {})}
-                        language={activeLanguage === "quran" ? "arabic" : "hebrew"}
+                        language={activeLanguage === "quran" ? "arabic" : activeLanguage === "hebrew_ot" ? "hebrew" : "greek"}
                       />
                       <SurahChart
                         data={activeLanguage === "quran" 
@@ -608,7 +622,7 @@ function KeywordSearchContent() {
                               englishTranslation={verse.text_english}
                               chapter={verse.chapter}
                               index={i}
-                              language="hebrew"
+                              language={activeLanguage === "hebrew_ot" ? "hebrew" : "greek"}
                             />
                           ))
                         )}
@@ -637,7 +651,9 @@ function KeywordSearchContent() {
                   <p className="text-lg text-[var(--color-text-secondary)]">
                     {activeLanguage === "quran"
                       ? "Search for any Arabic root or word to explore its Quranic footprint"
-                      : "Search for any Hebrew root or word to explore its Biblical footprint"}
+                      : activeLanguage === "hebrew_ot"
+                      ? "Search for any Hebrew root or word to explore its Biblical footprint"
+                      : "Search for any Greek root or word to explore its New Testament footprint"}
                   </p>
 
                 </div>

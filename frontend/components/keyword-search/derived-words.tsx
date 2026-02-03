@@ -9,11 +9,12 @@ interface DerivedWordsProps {
   selectedWord: string | null;
   onWordSelect: (word: string | null) => void;
   transliterations?: Record<string, string>;
-  language?: "arabic" | "hebrew";
+  language?: "arabic" | "hebrew" | "greek";
 }
 
 export function DerivedWords({ words, selectedWord, onWordSelect, transliterations, language = "arabic" }: DerivedWordsProps) {
   const isHebrew = language === "hebrew";
+  const isGreek = language === "greek";
   
   return (
     <div className="space-y-4">
@@ -59,11 +60,11 @@ export function DerivedWords({ words, selectedWord, onWordSelect, transliteratio
             )}
           >
             <span 
-              lang={isHebrew ? "he" : "ar"} 
-              className={isHebrew ? "font-hebrew" : "font-arabic"}
-              dir="rtl"
+              lang={isGreek ? "el" : isHebrew ? "he" : "ar"} 
+              className={isGreek ? "font-greek" : isHebrew ? "font-hebrew" : "font-arabic"}
+              dir={isGreek ? "ltr" : "rtl"}
             >
-              <bdi>{word}</bdi>
+              {isGreek ? word : <bdi>{word}</bdi>}
             </span>
             {transliterations?.[word] && (
               <span className="text-[10px] opacity-70 font-sans">{transliterations[word]}</span>

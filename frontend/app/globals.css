@@ -171,3 +171,17 @@
   direction: rtl;        /* Right-to-left text direction */
   text-align: right;     /* Align text to right edge */
 }
+
+/* Greek typography support - Noto Serif Greek font */
+.font-greek {
+  font-family: var(--font-greek), 'Noto Serif', serif;
+  /*
+   * Fallback chain:
+   * 1. var(--font-greek) - Next.js optimized font (primary, fastest)
+   * 2. 'Noto Serif' - Direct name (if loaded via CDN fallback)
+   * 3. serif - Browser default (last resort)
+   */
+  line-height: 1.8;      /* Extra space for diacritics (polytonic accents) */
+  direction: ltr;        /* Left-to-right text direction */
+  text-align: left;      /* Align text to left edge */
+}
