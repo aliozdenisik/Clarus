@@ -1,7 +1,7 @@
 {
   "metadata": {
     "test_type": "bible_keyword_benchmark",
-    "timestamp": "2026-02-03 08:18:25",
+    "timestamp": "2026-02-03 09:14:06",
     "total_benchmarks": 10,
     "total_regression_tests": 3
   },
@@ -10,29 +10,29 @@
     "passed": 10,
     "failed": 0,
     "errors": 0,
-    "avg_response_time_ms": 11.642861366271973,
+    "avg_response_time_ms": 17.109107971191406,
     "by_category": {
       "low": {
         "count": 2,
-        "avg_time_ms": 9.653925895690918,
+        "avg_time_ms": 11.52348518371582,
         "target_ms": 500,
         "passed": 2
       },
       "medium": {
         "count": 2,
-        "avg_time_ms": 9.709477424621582,
+        "avg_time_ms": 12.634754180908203,
         "target_ms": 1000,
         "passed": 2
       },
       "high": {
         "count": 4,
-        "avg_time_ms": 10.648012161254883,
+        "avg_time_ms": 16.585826873779297,
         "target_ms": 2000,
         "passed": 4
       },
       "very_high": {
         "count": 2,
-        "avg_time_ms": 17.554879188537598,
+        "avg_time_ms": 28.215646743774414,
         "target_ms": 5000,
         "passed": 2
       }
@@ -45,7 +45,7 @@
         "frequency_category": "low",
         "expected_occurrences": 225,
         "actual_occurrences": 225,
-        "response_time_ms": 13.847827911376953,
+        "response_time_ms": 16.344785690307617,
         "target_time_ms": 500,
         "passed": true,
         "error": null
@@ -57,7 +57,7 @@
         "frequency_category": "very_high",
         "expected_occurrences": 3800,
         "actual_occurrences": 3539,
-        "response_time_ms": 19.932985305786133,
+        "response_time_ms": 29.164791107177734,
         "target_time_ms": 5000,
         "passed": true,
         "error": null
@@ -69,7 +69,7 @@
         "frequency_category": "very_high",
         "expected_occurrences": 5300,
         "actual_occurrences": 5302,
-        "response_time_ms": 15.176773071289062,
+        "response_time_ms": 27.266502380371094,
         "target_time_ms": 5000,
         "passed": true,
         "error": null
@@ -81,7 +81,7 @@
         "frequency_category": "low",
         "expected_occurrences": 55,
         "actual_occurrences": 54,
-        "response_time_ms": 5.460023880004883,
+        "response_time_ms": 6.702184677124023,
         "target_time_ms": 500,
         "passed": true,
         "error": null
@@ -93,7 +93,7 @@
         "frequency_category": "high",
         "expected_occurrences": 2600,
         "actual_occurrences": 2596,
-        "response_time_ms": 13.113260269165039,
+        "response_time_ms": 24.81555938720703,
         "target_time_ms": 2000,
         "passed": true,
         "error": null
@@ -105,7 +105,7 @@
         "frequency_category": "medium",
         "expected_occurrences": 950,
         "actual_occurrences": 933,
-        "response_time_ms": 11.847972869873047,
+        "response_time_ms": 13.527870178222656,
         "target_time_ms": 1000,
         "passed": true,
         "error": null
@@ -117,7 +117,7 @@
         "frequency_category": "high",
         "expected_occurrences": 1160,
         "actual_occurrences": 1155,
-        "response_time_ms": 9.387731552124023,
+        "response_time_ms": 11.885881423950195,
         "target_time_ms": 2000,
         "passed": true,
         "error": null
@@ -129,7 +129,7 @@
         "frequency_category": "high",
         "expected_occurrences": 1145,
         "actual_occurrences": 1141,
-        "response_time_ms": 9.25302505493164,
+        "response_time_ms": 12.56418228149414,
         "target_time_ms": 2000,
         "passed": true,
         "error": null
@@ -141,7 +141,7 @@
         "frequency_category": "high",
         "expected_occurrences": 2500,
         "actual_occurrences": 2518,
-        "response_time_ms": 10.838031768798828,
+        "response_time_ms": 17.07768440246582,
         "target_time_ms": 2000,
         "passed": true,
         "error": null
@@ -153,7 +153,7 @@
         "frequency_category": "medium",
         "expected_occurrences": 850,
         "actual_occurrences": 847,
-        "response_time_ms": 7.570981979370117,
+        "response_time_ms": 11.74163818359375,
         "target_time_ms": 1000,
         "passed": true,
         "error": null
@@ -183,7 +183,7 @@
         "test_name": "Frontend Tests",
         "description": "Verify frontend tests pass",
         "passed": false,
-        "details": "✗ Tests failed with exit code 1\nStderr: \u001b[90mstderr\u001b[2m | __tests__/auth-context.test.tsx\u001b[2m > \u001b[22m\u001b[2mcheckAuth and backendStatus\u001b[2m > \u001b[22m\u001b[2mshould set backendStatus to offline on AbortError (timeout)\n\u001b[22m\u001b[39m{\"timestamp\":\"2026-02-03T05:18:24.198Z\",\"level\":\"WARN\",\"message\":\"Auth check timed out after 10s\",\"component\":\"AuthContext",
+        "details": "✗ Tests failed with exit code 1\nStderr: \u001b[90mstderr\u001b[2m | __tests__/auth-context.test.tsx\u001b[2m > \u001b[22m\u001b[2mcheckAuth and backendStatus\u001b[2m > \u001b[22m\u001b[2mshould set backendStatus to offline on AbortError (timeout)\n\u001b[22m\u001b[39m{\"timestamp\":\"2026-02-03T06:14:05.406Z\",\"level\":\"WARN\",\"message\":\"Auth check timed out after 10s\",\"component\":\"AuthContext",
         "error": null
       }
     ]
