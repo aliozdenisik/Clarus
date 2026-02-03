@@ -10,11 +10,11 @@ interface CitationHoverCardProps {
   reference: string;
   verseDetail: {
     text: string;
-    book_name: string;
-    chapter: number;
-    verse: number;
+    book_name?: string;
+    chapter?: number;
+    verse?: number;
     source: string;
-    translation: string;
+    translation?: string;
     book_nr?: number;
     surah_id?: number;
     surah_name?: string;
@@ -68,9 +68,11 @@ export function CitationHoverCard({ reference, verseDetail, onNavigate }: Citati
               </div>
 
               {/* Translation info */}
-              <p className="text-xs text-[var(--color-text-secondary)] mb-3">
-                {verseDetail.translation}
-              </p>
+              {verseDetail.translation && (
+                <p className="text-xs text-[var(--color-text-secondary)] mb-3">
+                  {verseDetail.translation}
+                </p>
+              )}
 
               {/* Verse text */}
               <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed line-clamp-4 mb-3">

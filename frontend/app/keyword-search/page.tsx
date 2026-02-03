@@ -14,20 +14,56 @@ import { SurahChart } from "@/components/keyword-search/surah-chart";
 import { VerseCard } from "@/components/keyword-search/verse-card";
 import { Pagination } from "@/components/keyword-search/pagination";
 import { stripArabicDiacritics } from "@/lib/utils/arabic";
+import { stripHebrewDiacritics } from "@/lib/utils/hebrew";
 import { RootBrowser } from "@/components/keyword-search/root-browser";
 import { Skeleton } from "@/components/ui/skeleton";
 import { searchKeywordApiSearchKeywordPost, getSurahDetailApiMetadataQuranSurahsSurahIdGet, getQuranSurahsApiMetadataQuranSurahsGet } from "@/lib/api/sdk.gen";
 import type { KeywordSearchResponse } from "@/lib/api/types.gen";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { LanguageTabs, type LanguageTab } from "@/components/keyword-search/language-tabs";
 
 type TabType = "results" | "browser";
 
 const VERSES_PER_PAGE = 50;
 
+// Bible search response type (not in generated types yet)
+interface BibleSearchResult {
+  success: boolean;
+  query: string;
+  root: string | null;
+  root_source: string;
+  strong_number: string | null;
+  total_occurrences: number;
+  unique_words: string[];
+  book_distribution: { book_id: number; book_name: string; count: number }[];
+  verses: {
+    book_id: number;
+    book_name: string;
+    chapter: number;
+    verse: number;
+    text_original: string | null;
+    text_english: string | null;
+    matched_words: string[];
+    reference: string;
+  }[];
+  pagination: {
+    page: number;
+    per_page: number;
+    total_verses: number;
+    total_pages: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
+  transliteration: string | null;
+  word_transliterations: Record<string, string>;
+}
+
 function KeywordSearchContent() {
   const [query, setQuery] = useState("");
+  const [activeLanguage, setActiveLanguage] = useState<LanguageTab>("quran");
   const [searchResult, setSearchResult] = useState<KeywordSearchResponse | null>(null);
+  const [bibleSearchResult, setBibleSearchResult] = useState<BibleSearchResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("results");
@@ -68,7 +104,9 @@ function KeywordSearchContent() {
 
   const handleSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
-      setError("Please enter an Arabic word or Buckwalter root");
+      setError(activeLanguage === "quran" 
+        ? "Please enter an Arabic word or Buckwalter root"
+        : "Please enter a Hebrew word or Strong's number");
       return;
     }
 
@@ -78,16 +116,45 @@ function KeywordSearchContent() {
     setCurrentPage(1);
 
     try {
-      const response = await searchKeywordApiSearchKeywordPost({
-        body: {
-          query: searchQuery.trim(),
-          page: 1,
-          per_page: 0, // 0 = return ALL verses in one call
-        },
-      });
+      if (activeLanguage === "quran") {
+        const response = await searchKeywordApiSearchKeywordPost({
+          body: {
+            query: searchQuery.trim(),
+            page: 1,
+            per_page: 0, // 0 = return ALL verses in one call
+          },
+        });
 
-      if (response.data) {
-        setSearchResult(response.data as KeywordSearchResponse);
+        if (response.data) {
+          setSearchResult(response.data as KeywordSearchResponse);
+          setBibleSearchResult(null);
+        }
+      } else {
+        // Bible search via raw fetch
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const res = await fetch(`${API_BASE}/api/keyword-search/bible/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            query: searchQuery.trim(), 
+            page: 1, 
+            per_page: 0 
+          }),
+        });
+        
+        if (!res.ok) {
+          if (res.status === 429) {
+            toast.error("Daily search limit reached. Please try again tomorrow.");
+          } else {
+            toast.error("Search failed. Please try again.");
+          }
+          setError("Search failed");
+          return;
+        }
+        
+        const data = await res.json() as BibleSearchResult;
+        setBibleSearchResult(data);
+        setSearchResult(null);
       }
     } catch (err: unknown) {
       const error = err as { status?: number };
@@ -100,7 +167,7 @@ function KeywordSearchContent() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [activeLanguage]);
 
   // All pagination is client-side — no API calls needed
   const handlePageChange = useCallback((newPage: number) => {
@@ -120,6 +187,15 @@ function KeywordSearchContent() {
     handleSearch(root);
     setActiveTab("results");
   }, [handleSearch]);
+
+  const handleLanguageChange = useCallback((language: LanguageTab) => {
+    setActiveLanguage(language);
+    setSearchResult(null);
+    setBibleSearchResult(null);
+    setSelectedWord(null);
+    setCurrentPage(1);
+    setError(null);
+  }, []);
 
   // Fetch Turkish translations after search results arrive
   useEffect(() => {
@@ -176,15 +252,26 @@ function KeywordSearchContent() {
 
   // Filter verses by selected word (all data is in memory — instant)
   const filteredVerses = useMemo(() => {
-    if (!searchResult?.verses) return [];
-    if (!selectedWord) return searchResult.verses;
-    const normalizedSelected = stripArabicDiacritics(selectedWord);
-    return searchResult.verses.filter((v) =>
-      v.matched_words.some(
-        (w) => stripArabicDiacritics(w) === normalizedSelected
-      )
-    );
-  }, [searchResult?.verses, selectedWord]);
+    if (activeLanguage === "quran") {
+      if (!searchResult?.verses) return [];
+      if (!selectedWord) return searchResult.verses;
+      const normalizedSelected = stripArabicDiacritics(selectedWord);
+      return searchResult.verses.filter((v) =>
+        v.matched_words.some(
+          (w) => stripArabicDiacritics(w) === normalizedSelected
+        )
+      );
+    } else {
+      if (!bibleSearchResult?.verses) return [];
+      if (!selectedWord) return bibleSearchResult.verses;
+      const normalizedSelected = stripHebrewDiacritics(selectedWord);
+      return bibleSearchResult.verses.filter((v) =>
+        v.matched_words.some(
+          (w) => stripHebrewDiacritics(w) === normalizedSelected
+        )
+      );
+    }
+  }, [activeLanguage, searchResult?.verses, bibleSearchResult?.verses, selectedWord]);
 
   // Client-side pagination — show VERSES_PER_PAGE at a time
   const totalFilteredPages = useMemo(
@@ -199,46 +286,88 @@ function KeywordSearchContent() {
 
   // Compute chart data based on selected word (client-side)
   const chartData = useMemo(() => {
-    // If no word selected, show full root distribution
-    if (!selectedWord || !searchResult?.surah_distribution) {
-      return searchResult?.surah_distribution || [];
-    }
-
-    // If word selected, compute distribution from filtered verses
-    if (!searchResult?.verses) return [];
-
-    const normalizedSelected = stripArabicDiacritics(selectedWord);
-    const wordFilteredVerses = searchResult.verses.filter((v) =>
-      v.matched_words.some(
-        (w) => stripArabicDiacritics(w) === normalizedSelected
-      )
-    );
-
-    // Aggregate by surah
-    const surahMap = new Map<number, { surah_id: number; surah_name: string; count: number }>();
-    for (const verse of wordFilteredVerses) {
-      const existing = surahMap.get(verse.surah_id);
-      if (existing) {
-        existing.count += 1;
-      } else {
-        surahMap.set(verse.surah_id, {
-          surah_id: verse.surah_id,
-          surah_name: verse.surah_name,
-          count: 1,
-        });
+    if (activeLanguage === "quran") {
+      // If no word selected, show full root distribution
+      if (!selectedWord || !searchResult?.surah_distribution) {
+        return searchResult?.surah_distribution || [];
       }
-    }
 
-    return Array.from(surahMap.values());
-  }, [selectedWord, searchResult]);
+      // If word selected, compute distribution from filtered verses
+      if (!searchResult?.verses) return [];
+
+      const normalizedSelected = stripArabicDiacritics(selectedWord);
+      const wordFilteredVerses = searchResult.verses.filter((v) =>
+        v.matched_words.some(
+          (w) => stripArabicDiacritics(w) === normalizedSelected
+        )
+      );
+
+      // Aggregate by surah
+      const surahMap = new Map<number, { surah_id: number; surah_name: string; count: number }>();
+      for (const verse of wordFilteredVerses) {
+        const existing = surahMap.get(verse.surah_id);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          surahMap.set(verse.surah_id, {
+            surah_id: verse.surah_id,
+            surah_name: verse.surah_name,
+            count: 1,
+          });
+        }
+      }
+
+      return Array.from(surahMap.values());
+    } else {
+      // Bible: book distribution
+      if (!selectedWord || !bibleSearchResult?.book_distribution) {
+        return bibleSearchResult?.book_distribution?.map(b => ({
+          surah_id: b.book_id,
+          surah_name: b.book_name,
+          count: b.count
+        })) || [];
+      }
+
+      // If word selected, compute distribution from filtered verses
+      if (!bibleSearchResult?.verses) return [];
+
+      const normalizedSelected = stripHebrewDiacritics(selectedWord);
+      const wordFilteredVerses = bibleSearchResult.verses.filter((v) =>
+        v.matched_words.some(
+          (w) => stripHebrewDiacritics(w) === normalizedSelected
+        )
+      );
+
+      // Aggregate by book
+      const bookMap = new Map<number, { surah_id: number; surah_name: string; count: number }>();
+      for (const verse of wordFilteredVerses) {
+        const existing = bookMap.get(verse.book_id);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          bookMap.set(verse.book_id, {
+            surah_id: verse.book_id,
+            surah_name: verse.book_name,
+            count: 1,
+          });
+        }
+      }
+
+      return Array.from(bookMap.values());
+    }
+  }, [activeLanguage, selectedWord, searchResult, bibleSearchResult]);
 
   // Compute filtered stats based on selected word
   const filteredStats = useMemo(() => {
-    if (!selectedWord || !searchResult) {
+    const currentResult = activeLanguage === "quran" ? searchResult : bibleSearchResult;
+    
+    if (!selectedWord || !currentResult) {
       return {
-        totalOccurrences: searchResult?.total_occurrences || 0,
-        uniqueWords: (searchResult?.unique_words || []).length,
-        surahCount: (searchResult?.surah_distribution || []).length,
+        totalOccurrences: currentResult?.total_occurrences || 0,
+        uniqueWords: (currentResult?.unique_words || []).length,
+        surahCount: activeLanguage === "quran" 
+          ? (searchResult?.surah_distribution || []).length
+          : (bibleSearchResult?.book_distribution || []).length,
       };
     }
 
@@ -248,7 +377,7 @@ function KeywordSearchContent() {
       uniqueWords: 1,
       surahCount: chartData.length,
     };
-  }, [selectedWord, searchResult, filteredVerses, chartData]);
+  }, [activeLanguage, selectedWord, searchResult, bibleSearchResult, filteredVerses, chartData]);
 
   if (authLoading) {
     return (
@@ -282,9 +411,19 @@ function KeywordSearchContent() {
             <h1 className="font-display text-4xl font-normal tracking-tight text-center text-[var(--color-text-primary)] mb-2">
               Word Search
             </h1>
-            <p className="text-sm text-[var(--color-text-secondary)] text-center mb-8">
-              Explore Arabic roots and their Quranic footprint
+            <p className="text-sm text-[var(--color-text-secondary)] text-center mb-6">
+              {activeLanguage === "quran" 
+                ? "Explore Arabic roots and their Quranic footprint"
+                : "Explore Hebrew roots and their Biblical footprint"}
             </p>
+
+            {/* Language Tabs */}
+            <div className="flex justify-center mb-6">
+              <LanguageTabs 
+                activeTab={activeLanguage} 
+                onTabChange={handleLanguageChange} 
+              />
+            </div>
 
             {/* Search Input */}
             <SearchInput
@@ -292,7 +431,9 @@ function KeywordSearchContent() {
               onChange={setQuery}
               onSearch={handleSearch}
               isLoading={isLoading}
-              placeholder="Search for Arabic roots (e.g., كتب or ktb)..."
+              placeholder={activeLanguage === "quran"
+                ? "Search for Arabic roots (e.g., كتب or ktb)..."
+                : "Search for Hebrew roots (e.g., כתב or H3789)..."}
             />
           </motion.div>
         </div>
@@ -305,7 +446,7 @@ function KeywordSearchContent() {
           <div className="flex flex-wrap gap-1 p-1 bg-[var(--color-bg-surface)] rounded-lg border border-[var(--color-border-subtle)] w-fit mb-6">
             {[
               { id: "results" as const, label: "Search Results" },
-              { id: "browser" as const, label: "Root Browser" },
+              ...(activeLanguage === "quran" ? [{ id: "browser" as const, label: "Root Browser" }] : []),
             ].map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -370,11 +511,11 @@ function KeywordSearchContent() {
                 <div className="text-center py-12">
                   <p className="text-[var(--color-text-muted)]">{error}</p>
                 </div>
-              ) : searchResult ? (
+              ) : (searchResult || bibleSearchResult) ? (
                 // Full results
                 <div className="space-y-8">
-                  {/* Buckwalter feedback */}
-                  {searchResult.root_source?.includes("buckwalter") &&
+                  {/* Buckwalter/Strong's feedback */}
+                  {activeLanguage === "quran" && searchResult?.root_source?.includes("buckwalter") &&
                     searchResult.root && (
                       <div className="text-center text-sm text-[var(--color-text-secondary)]">
                         Detected: Buckwalter Latin → Arabic:{" "}
@@ -385,22 +526,26 @@ function KeywordSearchContent() {
                     )}
 
                   {/* Root not found */}
-                  {searchResult.root_source === "not_found" ? (
+                  {((activeLanguage === "quran" && searchResult?.root_source === "not_found") ||
+                    (activeLanguage === "hebrew_ot" && bibleSearchResult?.root_source === "not_found")) ? (
                     <div className="text-center py-12">
                       <p className="text-lg text-[var(--color-text-muted)]">
-                        No root found for &quot;{searchResult.query}&quot;
+                        No root found for &quot;{activeLanguage === "quran" ? searchResult?.query : bibleSearchResult?.query}&quot;
                       </p>
                       <p className="text-sm text-[var(--color-text-secondary)] mt-2">
-                        Try a different Arabic word or Buckwalter
-                        transliteration.
+                        {activeLanguage === "quran"
+                          ? "Try a different Arabic word or Buckwalter transliteration."
+                          : "Try a different Hebrew word or Strong's number."}
                       </p>
                     </div>
                   ) : (
                     <>
                       <RootCard
-                        root={searchResult.root || null}
-                        rootSource={searchResult.root_source || ""}
-                        rootBuckwalter={searchResult.root_buckwalter}
+                        root={activeLanguage === "quran" ? (searchResult?.root || null) : (bibleSearchResult?.root || null)}
+                        rootSource={activeLanguage === "quran" ? (searchResult?.root_source || "") : (bibleSearchResult?.root_source || "")}
+                        rootBuckwalter={activeLanguage === "quran" ? searchResult?.root_buckwalter : bibleSearchResult?.transliteration}
+                        strongNumber={activeLanguage === "hebrew_ot" ? bibleSearchResult?.strong_number : undefined}
+                        language={activeLanguage === "quran" ? "arabic" : "hebrew"}
                       />
                       <StatsBar
                         totalOccurrences={filteredStats.totalOccurrences}
@@ -408,16 +553,19 @@ function KeywordSearchContent() {
                         surahCount={filteredStats.surahCount}
                       />
                       <DerivedWords
-                        words={searchResult.unique_words || []}
+                        words={activeLanguage === "quran" ? (searchResult?.unique_words || []) : (bibleSearchResult?.unique_words || [])}
                         selectedWord={selectedWord}
                         onWordSelect={handleWordFilter}
-                        transliterations={searchResult.word_transliterations || {}}
+                        transliterations={activeLanguage === "quran" ? (searchResult?.word_transliterations || {}) : (bibleSearchResult?.word_transliterations || {})}
+                        language={activeLanguage === "quran" ? "arabic" : "hebrew"}
                       />
                       <SurahChart
-                        data={chartData.map(d => ({
-                          ...d,
-                          surah_name: getSurahName(d.surah_id, d.surah_name)
-                        }))}
+                        data={activeLanguage === "quran" 
+                          ? chartData.map(d => ({
+                              ...d,
+                              surah_name: getSurahName(d.surah_id, d.surah_name)
+                            }))
+                          : chartData}
                       />
 
                       {/* Verse Cards */}
@@ -428,23 +576,42 @@ function KeywordSearchContent() {
                         <h3 className="text-lg font-medium text-[var(--color-text-primary)] text-center">
                           Verse Results
                         </h3>
-                        {paginatedVerses.map((verse, i) => (
-                          <VerseCard
-                            key={`${verse.surah_id}-${verse.ayah_number}`}
-                            surahId={verse.surah_id}
-                            surahName={getSurahName(verse.surah_id, verse.surah_name)}
-                            ayahNumber={verse.ayah_number}
-                            textUthmani={verse.text_uthmani}
-                            textClean={verse.text_clean}
-                            matchedWords={verse.matched_words}
-                            turkishTranslation={getTranslation(
-                              verse.surah_id,
-                              verse.ayah_number
-                            )}
-                            isTranslationLoading={translationsLoading}
-                            index={i}
-                          />
-                        ))}
+                        {activeLanguage === "quran" ? (
+                          paginatedVerses.map((verse: any, i) => (
+                            <VerseCard
+                              key={`${verse.surah_id}-${verse.ayah_number}`}
+                              surahId={verse.surah_id}
+                              surahName={getSurahName(verse.surah_id, verse.surah_name)}
+                              ayahNumber={verse.ayah_number}
+                              textUthmani={verse.text_uthmani}
+                              textClean={verse.text_clean}
+                              matchedWords={verse.matched_words}
+                              turkishTranslation={getTranslation(
+                                verse.surah_id,
+                                verse.ayah_number
+                              )}
+                              isTranslationLoading={translationsLoading}
+                              index={i}
+                              language="arabic"
+                            />
+                          ))
+                        ) : (
+                          paginatedVerses.map((verse: any, i) => (
+                            <VerseCard
+                              key={`${verse.book_id}-${verse.chapter}-${verse.verse}`}
+                              surahId={verse.book_id}
+                              surahName={verse.book_name}
+                              ayahNumber={verse.verse}
+                              textUthmani={verse.text_original || ""}
+                              textClean={verse.text_original || ""}
+                              matchedWords={verse.matched_words}
+                              englishTranslation={verse.text_english}
+                              chapter={verse.chapter}
+                              index={i}
+                              language="hebrew"
+                            />
+                          ))
+                        )}
                       </div>
 
                       {/* Pagination (client-side) */}
@@ -468,8 +635,9 @@ function KeywordSearchContent() {
                     ◆
                   </div>
                   <p className="text-lg text-[var(--color-text-secondary)]">
-                    Search for any Arabic root or word to explore its Quranic
-                    footprint
+                    {activeLanguage === "quran"
+                      ? "Search for any Arabic root or word to explore its Quranic footprint"
+                      : "Search for any Hebrew root or word to explore its Biblical footprint"}
                   </p>
 
                 </div>

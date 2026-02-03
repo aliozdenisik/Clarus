@@ -6,49 +6,56 @@ import { GlowCard } from "@/components/ui/glow-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExternalLink } from "lucide-react";
 import { stripArabicDiacritics } from "@/lib/utils/arabic";
+import { stripHebrewDiacritics } from "@/lib/utils/hebrew";
 
 interface VerseCardProps {
   surahId: number;
   surahName: string;
   ayahNumber: number;
-  textUthmani: string;      // Full Uthmani verse text (display)
+  textUthmani: string;      // Full Uthmani verse text (display) OR Hebrew text
   textClean: string;        // Normalized clean text (for matching)
   matchedWords: string[];   // Matched word forms (from API)
-  turkishTranslation?: string;  // Optional — may still be loading
+  turkishTranslation?: string;  // Optional — may still be loading (Quran only)
+  englishTranslation?: string | null;  // Optional — English translation (Bible only)
   isTranslationLoading?: boolean;
   index?: number;           // For stagger animation
+  language?: "arabic" | "hebrew";  // Language of the text
+  chapter?: number;         // Chapter number (Bible only)
 }
 
 /**
- * Highlights matched words in Arabic text using word-index-based matching.
- * CRITICAL: Do NOT use regex on Arabic text. Use word-index matching ONLY.
+ * Highlights matched words in text using word-index-based matching.
+ * CRITICAL: Do NOT use regex on RTL text. Use word-index matching ONLY.
  * 
  * Algorithm:
- * 1. Split both Uthmani (display) and clean (normalized) texts into words
+ * 1. Split both display and clean (normalized) texts into words
  * 2. Create a Set of matched words for O(1) lookup
- * 3. Map clean words to Uthmani words by index
- * 4. Highlight Uthmani word if corresponding clean word is in match set
+ * 3. Map clean words to display words by index
+ * 4. Highlight display word if corresponding clean word is in match set
  */
-function highlightArabicText(
-  textUthmani: string,
+function highlightText(
+  textDisplay: string,
   textClean: string,
-  matchedWords: string[]
+  matchedWords: string[],
+  language: "arabic" | "hebrew"
 ): React.ReactNode[] {
   if (!matchedWords || matchedWords.length === 0) {
-    return [textUthmani];
+    return [textDisplay];
   }
 
+  const stripFn = language === "arabic" ? stripArabicDiacritics : stripHebrewDiacritics;
+
   // Split both texts into words
-  const uthmaniWords = textUthmani.split(/\s+/);
+  const displayWords = textDisplay.split(/\s+/);
   const cleanWords = textClean.split(/\s+/);
 
   // Create a set of matched words normalized for O(1) lookup
-  const matchSet = new Set(matchedWords.map(w => stripArabicDiacritics(w.trim())));
+  const matchSet = new Set(matchedWords.map(w => stripFn(w.trim())));
 
-  // Map clean words to uthmani words by index, comparing normalized forms
-  return uthmaniWords.map((uthmaniWord, i) => {
+  // Map clean words to display words by index, comparing normalized forms
+  return displayWords.map((displayWord, i) => {
     const cleanWord = cleanWords[i] || '';
-    const isMatch = matchSet.has(stripArabicDiacritics(cleanWord));
+    const isMatch = matchSet.has(stripFn(cleanWord));
 
     if (isMatch) {
       return (
@@ -56,11 +63,11 @@ function highlightArabicText(
           key={i}
           className="bg-indigo-500/20 text-indigo-300 rounded px-0.5 mx-0.5"
         >
-          {uthmaniWord}
+          {displayWord}
         </mark>
       );
     }
-    return <span key={i}>{i > 0 ? ' ' : ''}{uthmaniWord}</span>;
+    return <span key={i}>{i > 0 ? ' ' : ''}{displayWord}</span>;
   });
 }
 
@@ -72,10 +79,14 @@ export function VerseCard({
   textClean,
   matchedWords,
   turkishTranslation,
+  englishTranslation,
   isTranslationLoading = false,
   index = 0,
+  language = "arabic",
+  chapter,
 }: VerseCardProps) {
-  const highlightedText = highlightArabicText(textUthmani, textClean, matchedWords);
+  const highlightedText = highlightText(textUthmani, textClean, matchedWords, language);
+  const isHebrew = language === "hebrew";
 
   return (
     <motion.div
@@ -84,41 +95,55 @@ export function VerseCard({
       transition={{ ...springPresets.snappy, delay: index * 0.05 }}
     >
       <GlowCard className="border-l-2 border-l-indigo-500">
-        {/* Header: Surah name + Ayah number */}
+        {/* Header: Book/Surah name + Chapter:Verse */}
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm text-[var(--color-text-muted)]">
-            {surahName} : {ayahNumber}
+            {isHebrew && chapter ? `${surahName} ${chapter}:${ayahNumber}` : `${surahName} : ${ayahNumber}`}
           </span>
-          <a
-            href={`/quran/${surahId}?verse=${ayahNumber}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[var(--color-text-muted)] hover:text-[var(--color-accent-primary)] transition-colors"
-            aria-label="Go to surah"
-          >
-            <ExternalLink className="w-4 h-4" />
-          </a>
+          {!isHebrew && (
+            <a
+              href={`/quran/${surahId}?verse=${ayahNumber}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[var(--color-text-muted)] hover:text-[var(--color-accent-primary)] transition-colors"
+              aria-label="Go to surah"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          )}
         </div>
 
-        {/* Arabic text with highlighting */}
-        <div className="font-arabic text-xl leading-loose text-right mb-4" lang="ar" dir="rtl">
-          {highlightedText}
+        {/* Original text with highlighting */}
+        <div 
+          className={`${isHebrew ? 'font-hebrew' : 'font-arabic'} text-xl leading-loose text-right mb-4`}
+          lang={isHebrew ? "he" : "ar"} 
+          dir="rtl"
+        >
+          <bdi>{highlightedText}</bdi>
         </div>
 
         {/* Separator */}
         <div className="border-t border-zinc-800 my-3" />
 
-        {/* Turkish translation */}
+        {/* Translation */}
         <div className="text-base text-[var(--color-text-primary)] leading-relaxed" dir="ltr">
-          {isTranslationLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-            </div>
-          ) : turkishTranslation ? (
-            turkishTranslation
+          {isHebrew ? (
+            englishTranslation ? (
+              englishTranslation
+            ) : (
+              <span className="text-[var(--color-text-muted)] italic">Translation not available</span>
+            )
           ) : (
-            <span className="text-[var(--color-text-muted)] italic">Çeviri yüklenemedi</span>
+            isTranslationLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            ) : turkishTranslation ? (
+              turkishTranslation
+            ) : (
+              <span className="text-[var(--color-text-muted)] italic">Çeviri yüklenemedi</span>
+            )
           )}
         </div>
       </GlowCard>

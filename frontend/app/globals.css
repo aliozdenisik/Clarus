@@ -157,3 +157,17 @@
   direction: rtl;        /* Right-to-left text direction */
   text-align: right;     /* Align text to right edge */
 }
+
+/* Hebrew typography support - Noto Sans Hebrew font */
+.font-hebrew {
+  font-family: var(--font-hebrew), 'Noto Sans Hebrew', serif;
+  /*
+   * Fallback chain:
+   * 1. var(--font-hebrew) - Next.js optimized font (primary, fastest)
+   * 2. 'Noto Sans Hebrew' - Direct name (if loaded via CDN fallback)
+   * 3. serif - Browser default (last resort)
+   */
+  line-height: 2;        /* Extra space for diacritics (nikud/cantillation) */
+  direction: rtl;        /* Right-to-left text direction */
+  text-align: right;     /* Align text to right edge */
+}

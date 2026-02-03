@@ -7,11 +7,11 @@ interface InlineCitationProps {
   reference: string;
   verseDetail?: {
     text: string;
-    book_name: string;
-    chapter: number;
-    verse: number;
+    book_name?: string;
+    chapter?: number;
+    verse?: number;
     source: string;
-    translation: string;
+    translation?: string;
     book_nr?: number;
     surah_id?: number;
     surah_name?: string;

@@ -7,9 +7,12 @@ interface RootCardProps {
   root: string | null;
   rootSource: string;
   rootBuckwalter?: string | null;
+  strongNumber?: string | null;
+  language?: "arabic" | "hebrew";
 }
 
-export function RootCard({ root, rootSource, rootBuckwalter }: RootCardProps) {
+export function RootCard({ root, rootSource, rootBuckwalter, strongNumber, language = "arabic" }: RootCardProps) {
+  const isHebrew = language === "hebrew";
 
   return (
     <motion.div
@@ -20,12 +23,20 @@ export function RootCard({ root, rootSource, rootBuckwalter }: RootCardProps) {
     >
       {root ? (
         <>
-          <p
-            lang="ar"
-            className="font-arabic text-5xl font-bold text-center text-[var(--color-text-primary)]"
-          >
-            {root}
-          </p>
+          <div className="flex items-center gap-3">
+            <p
+              lang={isHebrew ? "he" : "ar"}
+              className={`${isHebrew ? 'font-hebrew' : 'font-arabic'} text-5xl font-bold text-center text-[var(--color-text-primary)]`}
+              dir="rtl"
+            >
+              <bdi>{root}</bdi>
+            </p>
+            {isHebrew && strongNumber && (
+              <span className="px-2 py-1 text-xs font-mono bg-indigo-500/20 text-indigo-300 rounded border border-indigo-500/30">
+                {strongNumber}
+              </span>
+            )}
+          </div>
           {rootBuckwalter && (
             <p className="text-lg text-[var(--color-text-muted)] text-center tracking-wide">
               {rootBuckwalter}
