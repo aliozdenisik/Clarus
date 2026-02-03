@@ -11,9 +11,9 @@ interface LanguageTabsProps {
 }
 
 const tabs = [
-  { id: "quran" as const, label: "Kur'an Arapça", icon: "🕌" },
-  { id: "hebrew_ot" as const, label: "İbranice Eski Ahit", icon: "📜" },
-  { id: "greek_nt" as const, label: "Yunanca Yeni Ahit", icon: "✝️" },
+  { id: "quran" as const, label: "Quran Arabic" },
+  { id: "hebrew_ot" as const, label: "Hebrew Old Testament" },
+  { id: "greek_nt" as const, label: "Greek New Testament" },
 ];
 
 export function LanguageTabs({ activeTab, onTabChange }: LanguageTabsProps) {
@@ -37,7 +37,7 @@ export function LanguageTabs({ activeTab, onTabChange }: LanguageTabsProps) {
               transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
             />
           )}
-          <span className="relative z-10">{tab.icon} {tab.label}</span>
+          <span className="relative z-10">{tab.label}</span>
         </button>
       ))}
     </div>
