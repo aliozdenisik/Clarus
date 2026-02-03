@@ -227,3 +227,26 @@ class BMStrongs(Base):
     transliteration: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     definition: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     language: Mapped[str] = mapped_column(String(20), nullable=False)
+
+
+class BMVerseMapping(Base):
+    __tablename__ = "bm_verse_mappings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    mt_reference: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    lxx_reference: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    mt_book_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("bm_books.id"), nullable=True
+    )
+    lxx_book_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("bm_books.id"), nullable=True
+    )
+    mapping_type: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    mt_book: Mapped[Optional["BMBook"]] = relationship(
+        foreign_keys=[mt_book_id], viewonly=True
+    )
+    lxx_book: Mapped[Optional["BMBook"]] = relationship(
+        foreign_keys=[lxx_book_id], viewonly=True
+    )

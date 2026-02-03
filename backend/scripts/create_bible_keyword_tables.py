@@ -14,11 +14,12 @@ from sqlalchemy import create_engine, text, inspect
 
 # Import Base and models so metadata is populated
 from app.db import Base
-from app.models import BMBook, BMVerse, BMWord, BMStrongs  # noqa: F401 — registers tables on Base.metadata
+from app.models import BMBook, BMVerse, BMWord, BMStrongs, BMVerseMapping  # noqa: F401 — registers tables on Base.metadata
 
 DATABASE_URL = "postgresql://postgres:postgres@localhost:54322/postgres"
 
 BM_TABLES = [
+    "bm_verse_mappings",
     "bm_words",
     "bm_verses",
     "bm_books",
@@ -35,6 +36,8 @@ INDEXES_SQL = [
     "CREATE INDEX IF NOT EXISTS ix_bm_words_language ON bm_words(language);",
     "CREATE INDEX IF NOT EXISTS ix_bm_verses_book_id ON bm_verses(book_id);",
     "CREATE UNIQUE INDEX IF NOT EXISTS ix_bm_verses_reference ON bm_verses(reference);",
+    "CREATE INDEX IF NOT EXISTS ix_bm_verse_mappings_mt ON bm_verse_mappings(mt_reference);",
+    "CREATE INDEX IF NOT EXISTS ix_bm_verse_mappings_lxx ON bm_verse_mappings(lxx_reference);",
 ]
 
 
@@ -60,7 +63,9 @@ def main() -> bool:
             if table.name.startswith("bm_")
         ]
         Base.metadata.create_all(engine, tables=bm_table_objects)
-        print("✅ Created bm_books, bm_verses, bm_words, bm_strongs tables")
+        print(
+            "✅ Created bm_books, bm_verses, bm_words, bm_strongs, bm_verse_mappings tables"
+        )
 
         # 4. Create indexes explicitly
         with engine.begin() as conn:
@@ -80,8 +85,8 @@ def main() -> bool:
             tables = [row[0] for row in result]
             print(f"\n📋 Tables found: {tables}")
 
-            if len(tables) != 4:
-                print(f"❌ Expected 4 tables, found {len(tables)}")
+            if len(tables) != 5:
+                print(f"❌ Expected 5 tables, found {len(tables)}")
                 return False
 
             # Check indexes
@@ -94,8 +99,8 @@ def main() -> bool:
             indexes = [row[0] for row in result]
             print(f"📋 Indexes found ({len(indexes)}): {indexes}")
 
-            if len(indexes) < 9:
-                print(f"❌ Expected at least 9 indexes, found {len(indexes)}")
+            if len(indexes) < 11:
+                print(f"❌ Expected at least 11 indexes, found {len(indexes)}")
                 return False
 
             # Verify GIN trigram indexes specifically
@@ -111,7 +116,7 @@ def main() -> bool:
                 print(f"   - {name}")
 
         print(
-            "\n✅ Migration complete. All 4 bm_* tables and 9+ indexes created successfully."
+            "\n✅ Migration complete. All 5 bm_* tables and 11+ indexes created successfully."
         )
         return True
 
