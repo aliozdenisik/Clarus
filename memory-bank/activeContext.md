@@ -2,7 +2,87 @@
 
 ## Current Work Focus
 
-**Date**: 2026-02-02
+**Date**: 2026-02-03
+
+### Hebrew Latin Transliteration Fix (2026-02-03) - COMPLETE ✅
+
+Fixed 11 Hebrew Latin test failures in Word Search feature. Users can now search with ASCII queries like `elohim`, `chesed`, `ahab` and get correct Strong's Concordance matches.
+
+**Problem:**
+- Strong's transliterations use scholarly notation: `ʼĕlôhîym`, `chêçêd`, `shâmaʻ`
+- Users type simple ASCII: `elohim`, `chesed`, `shama`
+- No match → search fails → 0 results
+
+**Solution: Biblical Hebrew Normalization**
+- Implemented `normalize_transliteration_for_lookup()` in `hebrew_normalizer.py`
+- Transforms scholarly notation to ASCII using industry-standard rules:
+  - Unicode NFD + strip combining chars (like `unidecode`)
+  - Biblical Hebrew rules: `ch→h` (Het), `ç→s` (Samekh), `ym→m` (plural), `ow→o` (holem-vav)
+- Cache builds normalized keys at startup: `_transliteration_map["elohim"] = ["H0430"]`
+- Zero-padded Strong's numbers for `bm_words` compatibility
+
+**Test Results:**
+| Metric | Before | After |
+|--------|--------|-------|
+| Overall Pass Rate | 91.3% (137/150) | **98.7% (148/150)** |
+| Hebrew Latin Tests | 11 FAIL | **0 FAIL** |
+
+**Files Modified:**
+- `backend/src/hebrew_normalizer.py` — Fixed `ç→s` ordering (before NFD)
+- `backend/src/bible_morphology.py` — Added normalized ASCII keys + zero-padded format
+
+**Documentation:** `backend/docs/HEBREW_TRANSLITERATION.md`
+
+**Industry Standard Compliance:**
+- Matches Sefaria's approach (Unicode normalization + Biblical Hebrew rules)
+- Exceeds plain `unidecode` (handles `ym→m`, `ch→h`, `ow→o`)
+
+---
+
+### Security Audit (2026-02-03) - COMPLETE ✅
+
+Comprehensive security audit conducted identifying 30 vulnerabilities across 4 severity levels.
+
+**Summary:**
+| Severity | Count | Status |
+|----------|-------|--------|
+| CRITICAL | 7 | ⚠️ Immediate action required |
+| HIGH | 10 | 🔶 Fix within 1 week |
+| MEDIUM | 9 | 🔷 Fix within sprint |
+| LOW | 4 | ℹ️ Monitor and fix |
+
+**Critical Findings:**
+1. Exposed API keys in `.env` (OpenRouter, Google OAuth, JWT secret)
+2. Hardcoded default JWT secret in `config.py`
+3. JWT token exposed in query parameters (SSE endpoint)
+4. SQL injection anti-pattern in morphology search
+5. Unauthenticated API endpoints (keyword_search, metadata)
+6. Debug mode hardcoded to True
+7. CORS wildcard methods/headers
+
+**Documentation:**
+- Local: `/docs/security/SECURITY_AUDIT_2026-02-03.md`
+- GitHub Issues: #39-#49 (11 issues created)
+
+**Priority Actions:**
+1. **TODAY**: Rotate all exposed credentials, remove `.env` from git history
+2. **THIS WEEK**: Add auth to all endpoints, fix JWT in query params, add security headers
+3. **THIS SPRINT**: Migrate to HttpOnly cookies, add CSRF protection, password validation
+
+**GitHub Issues Created:**
+- #39: [SECURITY] CRITICAL: Exposed API Keys and Secrets
+- #40: [SECURITY] CRITICAL: Hardcoded Default JWT Secret
+- #41: [SECURITY] CRITICAL: JWT Token Exposed in Query Parameters
+- #42: [SECURITY] CRITICAL: SQL Injection via String Interpolation
+- #43: [SECURITY] CRITICAL: Unauthenticated API Endpoints
+- #44: [SECURITY] CRITICAL: Debug Mode and CORS Misconfiguration
+- #45: [SECURITY] HIGH: Authentication and Session Management
+- #46: [SECURITY] HIGH: Input Validation and Output Encoding
+- #47: [SECURITY] HIGH: Missing Security Headers
+- #48: [SECURITY] MEDIUM: Password Policy and Account Security
+- #49: [SECURITY] LOW: Minor Security Improvements
+
+---
 
 ### Keyword Search QA: SPECIAL_TERMS Fix (2026-02-02) - COMPLETE ✅
 
@@ -886,17 +966,48 @@ class CompareResponse:
 
 ## Next Steps
 
-1. **Post-Deployment Cleanup (GitHub Issues)**
+### 🔴 SECURITY FIXES (CRITICAL - BEFORE PRODUCTION)
+
+1. **Immediate (Today)**
+   - Rotate all exposed credentials (OpenRouter, Google OAuth, JWT secret)
+   - Remove `.env` from git history
+   - Disable debug mode in production
+
+2. **Urgent (This Week)**
+   - #39-#44: Fix all CRITICAL security issues
+   - Add authentication to keyword_search and metadata endpoints
+   - Remove JWT token from query parameters
+   - Add security headers middleware
+   - Fix CORS configuration
+
+3. **High Priority (This Sprint)**
+   - #45-#47: Fix all HIGH security issues
+   - Migrate tokens from localStorage to HttpOnly cookies
+   - Add CSRF protection
+   - Implement rate limiting on auth endpoints
+   - Fix SQL injection anti-pattern in morphology search
+   - Fix XSS sanitization
+
+4. **Medium Priority (Next Sprint)**
+   - #48-#49: Fix MEDIUM/LOW security issues
+   - Add password complexity validation
+   - Implement account lockout
+   - Hash refresh tokens
+   - Add comprehensive audit logging
+
+### Post-Security Cleanup (GitHub Issues)
+
+5. **Feature Issues**
    - #22 (RFC-005 Save/Share)
    - #24 (Markdown bug in Compare UI)
    - #12: Fix Playwright E2E test timing issues
    - #10: Refactor verse detail extraction (DRY)
    - #11: Refactor paragraph building (DRY)
 
-2. **Production Readiness**
+6. **Production Readiness**
    - Docker production build
    - HTTPS configuration
-   - Google OAuth credentials setup
+   - Google OAuth credentials setup (after rotating current ones)
 
 4. **Frontend Enhancements**
    - ~~Bible search page~~ ✅
