@@ -1,0 +1,191 @@
+{
+  "metadata": {
+    "test_type": "bible_keyword_benchmark",
+    "timestamp": "2026-02-03 08:18:25",
+    "total_benchmarks": 10,
+    "total_regression_tests": 3
+  },
+  "benchmarks": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0,
+    "errors": 0,
+    "avg_response_time_ms": 11.642861366271973,
+    "by_category": {
+      "low": {
+        "count": 2,
+        "avg_time_ms": 9.653925895690918,
+        "target_ms": 500,
+        "passed": 2
+      },
+      "medium": {
+        "count": 2,
+        "avg_time_ms": 9.709477424621582,
+        "target_ms": 1000,
+        "passed": 2
+      },
+      "high": {
+        "count": 4,
+        "avg_time_ms": 10.648012161254883,
+        "target_ms": 2000,
+        "passed": 4
+      },
+      "very_high": {
+        "count": 2,
+        "avg_time_ms": 17.554879188537598,
+        "target_ms": 5000,
+        "passed": 2
+      }
+    },
+    "details": [
+      {
+        "strong_number": "H3789",
+        "hebrew": "כתב",
+        "transliteration": "ktb",
+        "frequency_category": "low",
+        "expected_occurrences": 225,
+        "actual_occurrences": 225,
+        "response_time_ms": 13.847827911376953,
+        "target_time_ms": 500,
+        "passed": true,
+        "error": null
+      },
+      {
+        "strong_number": "H1961",
+        "hebrew": "היה",
+        "transliteration": "hyh",
+        "frequency_category": "very_high",
+        "expected_occurrences": 3800,
+        "actual_occurrences": 3539,
+        "response_time_ms": 19.932985305786133,
+        "target_time_ms": 5000,
+        "passed": true,
+        "error": null
+      },
+      {
+        "strong_number": "H559",
+        "hebrew": "אמר",
+        "transliteration": "amr",
+        "frequency_category": "very_high",
+        "expected_occurrences": 5300,
+        "actual_occurrences": 5302,
+        "response_time_ms": 15.176773071289062,
+        "target_time_ms": 5000,
+        "passed": true,
+        "error": null
+      },
+      {
+        "strong_number": "H1254",
+        "hebrew": "ברא",
+        "transliteration": "bra",
+        "frequency_category": "low",
+        "expected_occurrences": 55,
+        "actual_occurrences": 54,
+        "response_time_ms": 5.460023880004883,
+        "target_time_ms": 500,
+        "passed": true,
+        "error": null
+      },
+      {
+        "strong_number": "H430",
+        "hebrew": "אלהים",
+        "transliteration": "elohim",
+        "frequency_category": "high",
+        "expected_occurrences": 2600,
+        "actual_occurrences": 2596,
+        "response_time_ms": 13.113260269165039,
+        "target_time_ms": 2000,
+        "passed": true,
+        "error": null
+      },
+      {
+        "strong_number": "H3045",
+        "hebrew": "ידע",
+        "transliteration": "yda",
+        "frequency_category": "medium",
+        "expected_occurrences": 950,
+        "actual_occurrences": 933,
+        "response_time_ms": 11.847972869873047,
+        "target_time_ms": 1000,
+        "passed": true,
+        "error": null
+      },
+      {
+        "strong_number": "H8085",
+        "hebrew": "שמע",
+        "transliteration": "shma",
+        "frequency_category": "high",
+        "expected_occurrences": 1160,
+        "actual_occurrences": 1155,
+        "response_time_ms": 9.387731552124023,
+        "target_time_ms": 2000,
+        "passed": true,
+        "error": null
+      },
+      {
+        "strong_number": "H1696",
+        "hebrew": "דבר",
+        "transliteration": "dbr",
+        "frequency_category": "high",
+        "expected_occurrences": 1145,
+        "actual_occurrences": 1141,
+        "response_time_ms": 9.25302505493164,
+        "target_time_ms": 2000,
+        "passed": true,
+        "error": null
+      },
+      {
+        "strong_number": "H4428",
+        "hebrew": "מלך",
+        "transliteration": "mlk",
+        "frequency_category": "high",
+        "expected_occurrences": 2500,
+        "actual_occurrences": 2518,
+        "response_time_ms": 10.838031768798828,
+        "target_time_ms": 2000,
+        "passed": true,
+        "error": null
+      },
+      {
+        "strong_number": "H7971",
+        "hebrew": "שלח",
+        "transliteration": "shlch",
+        "frequency_category": "medium",
+        "expected_occurrences": 850,
+        "actual_occurrences": 847,
+        "response_time_ms": 7.570981979370117,
+        "target_time_ms": 1000,
+        "passed": true,
+        "error": null
+      }
+    ]
+  },
+  "regression": {
+    "total": 3,
+    "passed": 2,
+    "failed": 1,
+    "details": [
+      {
+        "test_name": "Index Usage",
+        "description": "Verify Index Scan on strong_number column",
+        "passed": true,
+        "details": "✓ Using Index Scan (ix_bm_words_strong)",
+        "error": null
+      },
+      {
+        "test_name": "Quran Keyword Search",
+        "description": "Verify Quran keyword search CLI still works",
+        "passed": true,
+        "details": "✓ CLI command executed successfully with expected output",
+        "error": null
+      },
+      {
+        "test_name": "Frontend Tests",
+        "description": "Verify frontend tests pass",
+        "passed": false,
+        "details": "✗ Tests failed with exit code 1\nStderr: \u001b[90mstderr\u001b[2m | __tests__/auth-context.test.tsx\u001b[2m > \u001b[22m\u001b[2mcheckAuth and backendStatus\u001b[2m > \u001b[22m\u001b[2mshould set backendStatus to offline on AbortError (timeout)\n\u001b[22m\u001b[39m{\"timestamp\":\"2026-02-03T05:18:24.198Z\",\"level\":\"WARN\",\"message\":\"Auth check timed out after 10s\",\"component\":\"AuthContext",
+        "error": null
+      }
+    ]
+  }
+}
