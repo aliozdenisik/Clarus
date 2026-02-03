@@ -29,6 +29,13 @@ from .hebrew_normalizer import (
     normalize_hebrew,
     transliterate_hebrew,
     detect_script,
+    normalize_transliteration_for_lookup,
+    normalize_user_hebrew_query,
+)
+from .greek_normalizer import (
+    normalize_greek,
+    normalize_greek_transliteration_for_lookup,
+    normalize_user_greek_query,
 )
 
 logger = logging.getLogger(__name__)
@@ -174,13 +181,44 @@ class BibleMorphologySearch:
                 if number not in self._reverse_strongs[normalized]:
                     self._reverse_strongs[normalized].append(number)
 
-            # Build transliteration map
+            # Build transliteration map (original scholarly form)
+            # Use zero-padded format (H0430) to match bm_words table format
             if translit:
+                # Compute zero-padded Strong's number for bm_words compatibility
+                padded_number = number
+                if number and len(number) > 1:
+                    prefix = number[0]
+                    num_str = number[1:]
+                    try:
+                        padded_number = f"{prefix}{int(num_str):04d}"
+                    except ValueError:
+                        pass
+
                 translit_lower = translit.lower().strip()
                 if translit_lower not in self._transliteration_map:
                     self._transliteration_map[translit_lower] = []
-                if number not in self._transliteration_map[translit_lower]:
-                    self._transliteration_map[translit_lower].append(number)
+                if padded_number not in self._transliteration_map[translit_lower]:
+                    self._transliteration_map[translit_lower].append(padded_number)
+
+                # Also add NORMALIZED ASCII key for user-friendly lookup
+                # Use language-specific normalizer:
+                # - Hebrew (H*): "ʼĕlôhîym" → "elohim", "chêçêd" → "hesed"
+                # - Greek (G*): "zōḗ" → "zoe", "agápē" → "agape"
+                is_greek = number.startswith("G") if number else False
+                if is_greek:
+                    normalized_ascii = normalize_greek_transliteration_for_lookup(
+                        translit
+                    )
+                else:
+                    normalized_ascii = normalize_transliteration_for_lookup(translit)
+
+                if normalized_ascii and normalized_ascii != translit_lower:
+                    if normalized_ascii not in self._transliteration_map:
+                        self._transliteration_map[normalized_ascii] = []
+                    if padded_number not in self._transliteration_map[normalized_ascii]:
+                        self._transliteration_map[normalized_ascii].append(
+                            padded_number
+                        )
 
         logger.info(
             "Loaded Strong's cache: %d entries, %d reverse mappings, %d transliterations",
@@ -239,8 +277,14 @@ class BibleMorphologySearch:
             per_page = min(per_page, 200)
             page = max(page, 1)
 
-            logger.debug("[BibleMorphology.search] Finding root for query=%r", query)
-            identifier, root_source = await self._find_root(query)
+            logger.debug(
+                "[BibleMorphology.search] Finding root for query=%r, language_filter=%r",
+                query,
+                language_filter,
+            )
+            identifier, root_source = await self._find_root(
+                query, language_filter=language_filter
+            )
             logger.info(
                 "[BibleMorphology.search] Root found: identifier=%r, root_source=%r",
                 identifier,
@@ -267,12 +311,15 @@ class BibleMorphologySearch:
             )
 
         # Greek returns lemma instead of Strong's number
-        # Also handle Latin→Greek transliteration results
+        # Also handle Latin→Greek transliteration results and Greek Strong's → lemma translation
         if root_source in (
             "lemma_exact",
             "word_clean_exact",
             "latin_transliteration",
             "latin_transliteration_fuzzy",
+            "strongs_to_lemma",
+            "strongs_to_lemma_fuzzy",
+            "greek_transliteration_normalized",  # Step L5a: zoe → G2222 → ζωή
         ) or (root_source == "fuzzy" and detect_script(query) == "greek"):
             logger.debug("[BibleMorphology.search] Routing to _search_by_lemma")
             try:
@@ -418,7 +465,9 @@ class BibleMorphologySearch:
     # Root / Strong's Finding (4-step cascade)
     # ------------------------------------------------------------------
 
-    async def _find_root(self, query: str) -> tuple[Optional[str], str]:
+    async def _find_root(
+        self, query: str, language_filter: Optional[str] = None
+    ) -> tuple[Optional[str], str]:
         """Find the Strong's number or lemma for a query.
 
         Pipeline:
@@ -428,12 +477,20 @@ class BibleMorphologySearch:
         4. Latin: Strong's number check → transliteration → fuzzy
         5. Not found
 
+        Args:
+            query: Search term
+            language_filter: Optional language constraint ('hebrew' or 'greek').
+                When set, prevents fallback to other language searches.
+
         Returns:
             (identifier, source) where identifier is Strong's number (Hebrew) or lemma (Greek)
         """
         script = detect_script(query)
         logger.debug(
-            "[BibleMorphology._find_root] query=%r, detected_script=%r", query, script
+            "[BibleMorphology._find_root] query=%r, detected_script=%r, language_filter=%r",
+            query,
+            script,
+            language_filter,
         )
 
         # Check for Strong's number input first (works for any script)
@@ -450,10 +507,14 @@ class BibleMorphologySearch:
             logger.debug("[BibleMorphology._find_root] Routing to _find_root_greek")
             return await self._find_root_greek(query)
         logger.debug("[BibleMorphology._find_root] Routing to _find_root_latin")
-        return await self._find_root_latin(query)
+        return await self._find_root_latin(query, language_filter=language_filter)
 
     async def _find_by_strongs_number(self, query: str) -> tuple[Optional[str], str]:
-        """Direct Strong's number lookup (e.g., H3789, G2316)."""
+        """Direct Strong's number lookup (e.g., H3789, G2316).
+
+        For Hebrew (H####): Returns Strong's number directly since bm_words has strong_number populated.
+        For Greek (G####): Translates to lemma search since MorphGNT data lacks Strong's numbers.
+        """
         # Normalize: uppercase prefix, zero-pad to 4 digits
         prefix = query[0].upper()
         num_part = query[1:]
@@ -462,27 +523,120 @@ class BibleMorphologySearch:
         except ValueError:
             formatted = f"{prefix}{num_part}"
 
+        # Also prepare unpadded variant
+        unpadded = f"{prefix}{num_part}"
+
         # Check cache first
         if formatted in self._strongs_cache:
-            return (formatted, "strongs_direct")
+            # For Hebrew: check if words exist in DB with this Strong's number
+            if prefix == "H":
+                async with self._session_maker() as session:
+                    result = await session.execute(
+                        sa_text(
+                            "SELECT strong_number FROM bm_words "
+                            "WHERE strong_number = :sn LIMIT 1"
+                        ),
+                        {"sn": formatted},
+                    )
+                    row = result.fetchone()
+                    if row:
+                        return (formatted, "strongs_direct")
+                    # Try unpadded
+                    result = await session.execute(
+                        sa_text(
+                            "SELECT strong_number FROM bm_words "
+                            "WHERE strong_number = :sn LIMIT 1"
+                        ),
+                        {"sn": unpadded},
+                    )
+                    row = result.fetchone()
+                    if row:
+                        return (unpadded, "strongs_direct")
 
-        # Also try without zero-padding
-        unpadded = f"{prefix}{num_part}"
+            # For Greek (G####): MorphGNT doesn't have Strong's numbers in bm_words.
+            # Instead, translate Strong's number → Greek word → search by lemma.
+            elif prefix == "G":
+                strongs_info = self._strongs_cache.get(
+                    formatted
+                ) or self._strongs_cache.get(unpadded)
+                if strongs_info:
+                    greek_word = strongs_info.get("original_word")
+                    if greek_word:
+                        logger.debug(
+                            "[BibleMorphology._find_by_strongs_number] Greek Strong's %s → word '%s', searching by lemma",
+                            formatted,
+                            greek_word,
+                        )
+                        # Try to find this Greek word as a lemma in bm_words
+                        async with self._session_maker() as session:
+                            # First try exact lemma match
+                            result = await session.execute(
+                                sa_text(
+                                    """
+                                    SELECT lemma, COUNT(*) as cnt
+                                    FROM bm_words
+                                    WHERE lemma = :q AND language = 'greek'
+                                    GROUP BY lemma
+                                    ORDER BY cnt DESC
+                                    LIMIT 1
+                                    """
+                                ),
+                                {"q": greek_word},
+                            )
+                            row = result.fetchone()
+                            if row:
+                                return (row[0], "strongs_to_lemma")
+
+                            # Try normalized (accent-stripped) match on word_clean
+                            from src.greek_normalizer import normalize_greek
+
+                            normalized_greek = normalize_greek(greek_word)
+                            result = await session.execute(
+                                sa_text(
+                                    """
+                                    SELECT lemma, COUNT(*) as cnt
+                                    FROM bm_words
+                                    WHERE word_clean = :q AND language = 'greek'
+                                    GROUP BY lemma
+                                    ORDER BY cnt DESC
+                                    LIMIT 1
+                                    """
+                                ),
+                                {"q": normalized_greek},
+                            )
+                            row = result.fetchone()
+                            if row:
+                                return (row[0], "strongs_to_lemma")
+
+                            # Try fuzzy match as last resort
+                            result = await session.execute(
+                                sa_text(
+                                    """
+                                    SELECT lemma, word_clean,
+                                           similarity(word_clean, :q) AS sim
+                                    FROM bm_words
+                                    WHERE word_clean % :q AND language = 'greek'
+                                    ORDER BY sim DESC
+                                    LIMIT 1
+                                    """
+                                ),
+                                {"q": normalized_greek},
+                            )
+                            row = result.fetchone()
+                            if row and row[0]:
+                                return (row[0], "strongs_to_lemma_fuzzy")
+
+                        logger.warning(
+                            "[BibleMorphology._find_by_strongs_number] Greek Strong's %s word '%s' not found in bm_words",
+                            formatted,
+                            greek_word,
+                        )
+                return (None, "not_found")
+
+        # Also try without zero-padding for cache check
         if unpadded in self._strongs_cache:
-            return (unpadded, "strongs_direct")
-
-        # Check if any words in DB have this strong_number
-        async with self._session_maker() as session:
-            result = await session.execute(
-                sa_text(
-                    "SELECT strong_number FROM bm_words "
-                    "WHERE strong_number = :sn LIMIT 1"
-                ),
-                {"sn": formatted},
-            )
-            row = result.fetchone()
-            if row:
-                return (formatted, "strongs_direct")
+            # Recursively handle with the found variant
+            return await self._find_by_strongs_number(unpadded)
 
         return (None, "not_found")
 
@@ -564,11 +718,18 @@ class BibleMorphologySearch:
 
         return (None, "not_found")
 
-    async def _find_root_latin(self, query: str) -> tuple[Optional[str], str]:
+    async def _find_root_latin(
+        self, query: str, language_filter: Optional[str] = None
+    ) -> tuple[Optional[str], str]:
         """Latin input path: transliteration exact → cache lookup → fuzzy.
 
         Handles SBL transliteration input (e.g., 'ktb', 'brʾšyt') and
         common romanizations.
+
+        Args:
+            query: Search term in Latin script
+            language_filter: Optional language constraint ('hebrew' or 'greek').
+                When 'hebrew', skips Greek fallback lookups (Step L5a/L5b).
         """
         logger.debug("[BibleMorphology._find_root_latin] START: query=%r", query)
         normalized = query.lower().strip()
@@ -608,6 +769,28 @@ class BibleMorphologySearch:
                     )
                     if result.fetchone():
                         return (sn, "transliteration")
+
+            # Step L2b: Try normalized ASCII lookup for user-friendly queries
+            # e.g., "elohim" → matches normalized "ʼĕlôhîym" → H430
+            normalized_ascii = normalize_user_hebrew_query(normalized)
+            if normalized_ascii != normalized:
+                logger.debug(
+                    "[BibleMorphology._find_root_latin] Trying normalized ASCII: %r → %r",
+                    normalized,
+                    normalized_ascii,
+                )
+                strongs_numbers = self._transliteration_map.get(normalized_ascii)
+                if strongs_numbers:
+                    for sn in strongs_numbers:
+                        result = await session.execute(
+                            sa_text(
+                                "SELECT strong_number FROM bm_words "
+                                "WHERE strong_number = :sn LIMIT 1"
+                            ),
+                            {"sn": sn},
+                        )
+                        if result.fetchone():
+                            return (sn, "transliteration_normalized")
 
             # Step L3: Try converting Latin to Hebrew via transliteration reverse
             # Build a simple reverse: strip diacritics from SBL transliteration
@@ -669,8 +852,61 @@ class BibleMorphologySearch:
                 if row:
                     return (row[0], "fuzzy")
 
-            # Step L5: Try Latin → Greek conversion for Greek word searches
+            # Step L5a: Try normalized Greek transliteration lookup (cache-based)
+            # e.g., "zoe" → G2222 → ζωή (lemma), "eirene" → G1515 → εἰρήνη
+            # This is more accurate than reverse_transliterate_greek() because
+            # ASCII "zoe" maps to G2222 (ζωή) via Strong's transliteration "zōḗ"
+            # NOTE: Greek bm_words doesn't have strong_number - it uses lemma only
+            # So we look up Strong's → get original_word (lemma) → return lemma
+            #
+            # SKIP if language_filter="hebrew" - don't fall back to Greek
+            if language_filter == "hebrew":
+                logger.debug(
+                    "[BibleMorphology._find_root_latin] Skipping Greek lookup (language_filter=hebrew)"
+                )
+                return (None, "not_found")
+
+            normalized_greek = normalize_user_greek_query(normalized)
+            if normalized_greek != normalized:
+                logger.debug(
+                    "[BibleMorphology._find_root_latin] Trying normalized Greek: %r → %r",
+                    normalized,
+                    normalized_greek,
+                )
+            # Also try the original normalized form (in case it's already ASCII)
+            for lookup_key in [normalized_greek, normalized]:
+                strongs_numbers = self._transliteration_map.get(lookup_key)
+                if strongs_numbers:
+                    for sn in strongs_numbers:
+                        if sn.startswith("G"):  # Only Greek entries
+                            # Greek words: get original_word (lemma) from bm_strongs
+                            # bm_words for Greek doesn't have strong_number
+                            entry = self._strongs_cache.get(sn)
+                            if entry and entry.get("original_word"):
+                                lemma = entry["original_word"]
+                                # Verify lemma exists in bm_words
+                                result = await session.execute(
+                                    sa_text(
+                                        "SELECT lemma FROM bm_words "
+                                        "WHERE lemma = :lemma AND language = 'greek' "
+                                        "LIMIT 1"
+                                    ),
+                                    {"lemma": lemma},
+                                )
+                                if result.fetchone():
+                                    logger.debug(
+                                        "[BibleMorphology._find_root_latin] Step L5a: "
+                                        "Found Greek via cache: %r → %r → %r",
+                                        lookup_key,
+                                        sn,
+                                        lemma,
+                                    )
+                                    return (lemma, "greek_transliteration_normalized")
+
+            # Step L5b: Try Latin → Greek conversion for Greek word searches
             # (e.g., "logos" → "λογος", "theos" → "θεος")
+            # Note: This is less accurate for words where ASCII can't distinguish
+            # ε/η or ο/ω (e.g., "zoe" → "ζοε" instead of "ζωη")
             from src.greek_normalizer import reverse_transliterate_greek
 
             greek_query = reverse_transliterate_greek(normalized)
@@ -943,11 +1179,12 @@ class BibleMorphologySearch:
             total_verses_result = await session.execute(sa_text(count_sql), all_params)
             total_verses = total_verses_result.scalar() or 0
 
-            # 5. Paginated verses (keyset pagination)
+            # 5. Paginated verses (keyset pagination) or all verses when per_page=0
             # For page 1: start from v.id > 0
             # For page N: find the starting ID by skipping (N-1)*per_page rows
+            # When per_page=0: return ALL verses (no pagination)
             start_id = 0
-            if page > 1:
+            if per_page > 0 and page > 1:
                 skip_count = (page - 1) * per_page
                 start_id_result = await session.execute(
                     sa_text(
@@ -972,22 +1209,23 @@ class BibleMorphologySearch:
                 if row:
                     start_id = row[0]
 
-            verses_result = await session.execute(
-                sa_text(
-                    f"""
-                    SELECT DISTINCT v.id, v.book_id, b.name_english,
-                           v.chapter, v.verse, v.text_original, v.text_english,
-                           v.reference
-                    FROM bm_words w
-                    JOIN bm_verses v ON w.verse_id = v.id
-                    JOIN bm_books b ON v.book_id = b.id
-                    WHERE w.lemma = :lemma AND w.language = 'greek' AND v.id > :start_id{lang_clause}{word_clause}{book_filter_clause}
-                    ORDER BY v.id
-                    LIMIT :limit
-                    """
-                ),
-                {**all_params, "start_id": start_id, "limit": per_page},
-            )
+            # Build verses query - conditionally add LIMIT clause
+            verses_sql = f"""
+                SELECT DISTINCT v.id, v.book_id, b.name_english,
+                       v.chapter, v.verse, v.text_original, v.text_english,
+                       v.reference
+                FROM bm_words w
+                JOIN bm_verses v ON w.verse_id = v.id
+                JOIN bm_books b ON v.book_id = b.id
+                WHERE w.lemma = :lemma AND w.language = 'greek' AND v.id > :start_id{lang_clause}{word_clause}{book_filter_clause}
+                ORDER BY v.id
+            """
+            verses_params = {**all_params, "start_id": start_id}
+            if per_page > 0:
+                verses_sql += "\n                LIMIT :limit"
+                verses_params["limit"] = per_page
+
+            verses_result = await session.execute(sa_text(verses_sql), verses_params)
             verse_rows = verses_result.fetchall()
 
             # 6. Batch-fetch matched words for all verses
@@ -1197,11 +1435,12 @@ class BibleMorphologySearch:
             total_verses_result = await session.execute(sa_text(count_sql), all_params)
             total_verses = total_verses_result.scalar() or 0
 
-            # 5. Paginated verses (keyset pagination)
+            # 5. Paginated verses (keyset pagination) or all verses when per_page=0
             # For page 1: start from v.id > 0
             # For page N: find the starting ID by skipping (N-1)*per_page rows
+            # When per_page=0: return ALL verses (no pagination)
             start_id = 0
-            if page > 1:
+            if per_page > 0 and page > 1:
                 skip_count = (page - 1) * per_page
                 start_id_result = await session.execute(
                     sa_text(
@@ -1226,22 +1465,23 @@ class BibleMorphologySearch:
                 if row:
                     start_id = row[0]
 
-            verses_result = await session.execute(
-                sa_text(
-                    f"""
-                    SELECT DISTINCT v.id, v.book_id, b.name_english,
-                           v.chapter, v.verse, v.text_original, v.text_english,
-                           v.reference
-                    FROM bm_words w
-                    JOIN bm_verses v ON w.verse_id = v.id
-                    JOIN bm_books b ON v.book_id = b.id
-                    WHERE w.strong_number = :sn AND v.id > :start_id{lang_clause}{word_clause}{book_filter_clause}
-                    ORDER BY v.id
-                    LIMIT :limit
-                    """
-                ),
-                {**all_params, "start_id": start_id, "limit": per_page},
-            )
+            # Build verses query - conditionally add LIMIT clause
+            verses_sql = f"""
+                SELECT DISTINCT v.id, v.book_id, b.name_english,
+                       v.chapter, v.verse, v.text_original, v.text_english,
+                       v.reference
+                FROM bm_words w
+                JOIN bm_verses v ON w.verse_id = v.id
+                JOIN bm_books b ON v.book_id = b.id
+                WHERE w.strong_number = :sn AND v.id > :start_id{lang_clause}{word_clause}{book_filter_clause}
+                ORDER BY v.id
+            """
+            verses_params = {**all_params, "start_id": start_id}
+            if per_page > 0:
+                verses_sql += "\n                LIMIT :limit"
+                verses_params["limit"] = per_page
+
+            verses_result = await session.execute(sa_text(verses_sql), verses_params)
             verse_rows = verses_result.fetchall()
 
             # 6. Batch-fetch matched words for all verses

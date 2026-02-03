@@ -307,6 +307,80 @@ def reverse_transliterate_greek(text: str) -> str:
     return result
 
 
+def normalize_greek_transliteration_for_lookup(translit: str) -> str:
+    """Normalize Greek transliteration for user-friendly ASCII lookup.
+
+    Converts scholarly Greek transliterations (with macrons and accents) to
+    plain ASCII for matching user input. This follows industry standards used
+    by Bible Hub, Strong's Concordance, and SBL transliteration.
+
+    Transformations:
+        1. NFD decomposition to separate base chars from diacritics
+        2. Remove combining characters (macrons ō→o, accents á→a, ḗ→e)
+        3. Lowercase
+
+    Standard mappings handled:
+        ō (omega) → o
+        ē (eta) → e
+        á é í ó ú ý → a e i o u y
+        ḗ (eta with acute) → e
+
+    Args:
+        translit: Greek transliteration with diacritics (e.g., "zōḗ", "agápē")
+
+    Returns:
+        Normalized ASCII string (e.g., "zoe", "agape")
+
+    Examples:
+        >>> normalize_greek_transliteration_for_lookup("zōḗ")
+        'zoe'
+        >>> normalize_greek_transliteration_for_lookup("eirḗnē")
+        'eirene'
+        >>> normalize_greek_transliteration_for_lookup("agápē")
+        'agape'
+        >>> normalize_greek_transliteration_for_lookup("lógos")
+        'logos'
+        >>> normalize_greek_transliteration_for_lookup("theós")
+        'theos'
+    """
+    # Step 1: NFD decomposition to separate base chars from diacritics
+    nfd = unicodedata.normalize("NFD", translit)
+
+    # Step 2: Remove combining characters (macrons, accents, etc.)
+    # Category 'Mn' = Mark, Nonspacing (combining diacriticals)
+    stripped = "".join(c for c in nfd if unicodedata.category(c) != "Mn")
+
+    # Step 3: Lowercase
+    stripped = stripped.lower()
+
+    return stripped
+
+
+def normalize_user_greek_query(query: str) -> str:
+    """Normalize user's Greek transliteration query for lookup.
+
+    This function handles common user input patterns and converts them
+    to a normalized form that can be matched against the transliteration cache.
+
+    Currently identical to normalize_greek_transliteration_for_lookup() but
+    separated for potential future user-input-specific processing (e.g.,
+    handling typos, alternative spellings).
+
+    Args:
+        query: User's Greek transliteration query (e.g., "zoe", "agape")
+
+    Returns:
+        Normalized query for cache lookup
+
+    Examples:
+        >>> normalize_user_greek_query("ZOE")
+        'zoe'
+        >>> normalize_user_greek_query("AGAPE")
+        'agape'
+    """
+    return normalize_greek_transliteration_for_lookup(query)
+
+
 # ============================================================================
 # INLINE VERIFICATION TESTS
 # ============================================================================
@@ -360,6 +434,19 @@ if __name__ == "__main__":
                 ("christos", "χριστος"),
                 ("pistis", "πιστις"),
                 ("pneuma", "πνευμα"),
+            ],
+        },
+        {
+            "name": "normalize_greek_transliteration_for_lookup",
+            "cases": [
+                ("zōḗ", "zoe"),  # G2222 ζωή (life)
+                ("eirḗnē", "eirene"),  # G1515 εἰρήνη (peace)
+                ("agápē", "agape"),  # G26 ἀγάπη (love)
+                ("lógos", "logos"),  # G3056 λόγος (word)
+                ("theós", "theos"),  # G2316 θεός (God)
+                ("christós", "christos"),  # G5547 Χριστός (Christ)
+                ("hadrótēs", "hadrotes"),  # G100 ἁδρότης (abundance)
+                ("bolḗ", "bole"),  # G1000 βολή (throw)
             ],
         },
     ]
