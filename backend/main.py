@@ -1291,7 +1291,7 @@ def cmd_bible_keyword_search(args):
 
     result = asyncio.run(run_search())
 
-    if result.root is None:
+    if result is None or result.total_occurrences == 0:
         console.print("[yellow]No results found.[/yellow]")
         return 0
 
