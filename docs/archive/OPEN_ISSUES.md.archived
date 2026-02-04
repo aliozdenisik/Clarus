@@ -1,0 +1,92 @@
+# Open Issues
+
+## [Bug] New Testament Citation Formatting in Compare Mode
+
+**Date:** 2026-01-29
+**Component:** Backend / Multi-Agent Answer Generator (NewTestamentAgent)
+
+**Description:**
+The New Testament (Yeni Ahit) section in the multi-agent comparison results ("Compare" page) is generating citations with incorrect formatting, specifically using double brackets (e.g., `[[Revelation 5:1]]`) or nested lists of citations.
+
+**Observed Behavior:**
+- Citations appear as `[[Reference]]` instead of `[Reference]`.
+- Multiple citations appear nested like `[[Ref 1], [Ref 2]]`.
+
+**Context:**
+This seems to be isolated to the New Testament agent's output. The other agents (Quran, Old Testament, Apocrypha) appear to be formatting citations correctly.
+
+**Historical Context & Analysis:**
+- **Codebase:** The system prompts in `backend/src/multi_agent_answer_generator.py` correctly request single brackets: `[Kitap Bölüm:Ayet]`. The issue is a model adherence failure, not a prompt error.
+- **Git History:** The frontend citation parser (`frontend/lib/utils/parse-citations.ts`) has required multiple updates (e.g., commits `c876560`, `4a76d8f`) to handle evolving citation formats like comma-separated lists and ranges. This indicates a long-standing instability in LLM citation output consistency.
+- **Model Bias:** The `google/gemini-3-flash-preview` model may have a bias towards "Wiki-style" or "Obsidian-style" double-bracket links for the New Testament corpus specifically.
+
+## [Bug] Comparative Analysis Stats Zeroed Out (Confidence, Latency, Verses)
+
+**Date:** 2026-01-29
+**Component:** Frontend / Compare Page (`frontend/app/compare/page.tsx`)
+
+**Description:**
+In the Comparative Analysis results, the stats bar displays "0 verses", "0.0s", and "0% confidence" even when the analysis is complete and citations are found (e.g., "30 citations").
+
+**Observed Behavior:**
+- `total_citations` is correct (calculated client-side from paragraphs).
+- `total_verses`, `latency_ms`, and `confidence` are 0.
+
+**Analysis:**
+These zeroed metrics depend on a `stats` event from the SSE stream. The `total_citations` is calculated derived from the received paragraphs. The discrepancy suggests the `stats` event is either:
+1. Not being sent by the backend.
+2. Being sent but missed/overwritten in the frontend state update logic in `useEffect`.
+3. Arriving with 0 values.
+
+## [UX] Inconsistent Search Navigation Options
+
+**Date:** 2026-01-29
+**Component:** Frontend / Header Navigation
+
+**Description:**
+The global header navigation under the "Search" dropdown only lists two options: "Quran Search" and "Bible Search". However, the actual Search page and application logic support four distinct collections/search modes: Quran (Kuran), Old Testament (Eski Ahit), New Testament (Yeni Ahit), and Apocrypha (Apokrifa).
+
+**Observed Behavior:**
+- Header "Search" dropdown -> [Quran Search, Bible Search]
+- Search Page Tabs -> [Kuran, Eski Ahit, Yeni Ahit, Apokrifa]
+
+**Expected Behavior:**
+The global navigation should reflect the available search scopes. The discrepancy between the 2-item dropdown and the 4-item tab interface creates a disjointed user experience.
+
+## [UI] Missing Book Count for Apocrypha in Navigation Menu
+
+**Date:** 2026-01-29
+**Component:** Frontend / Navigation
+
+**Description:**
+The "Apocrypha" item in the Browse/Compare dropdown menu is missing the book count (e.g., "(X Books)"), unlike the other items (Quran, Old Testament, New Testament) which display their counts.
+
+**Observed Behavior:**
+- Quran (114 Surahs)
+- Old Testament (39 Books)
+- New Testament (27 Books)
+- Apocrypha
+
+**Expected Behavior:**
+- Apocrypha (X Books)
+
+## [UI/UX] Align Compare Page UI with Search Page Standards
+
+**Date:** 2026-01-29
+**Component:** Frontend / Compare Page (`frontend/app/compare/page.tsx`)
+
+**Description:**
+The Search page UI has been updated to industry standards with improved typography, colors, and AI output presentation (Image 1). The Compare page (Image 2) needs to be updated to match this new design language to ensure consistency across the application.
+
+**Observed Behavior (Compare Page):**
+- Standard blue buttons.
+- Default font weights and sizes.
+- Missing "AI INTERPRETATION" stylistic header.
+- Standard link styling for citations.
+
+**Expected Behavior (Match Search Page):**
+- **Typography:** Adopt the font family, weights, and sizes used in the Search page.
+- **Color Palette:** Use the specific teal/cyan accent color from the Search page for buttons and active elements.
+- **AI Output Styling:** Implement the "AI INTERPRETATION" label style (small caps, tracking, vertical left border) for the agent outputs.
+- **Citation Styling:** Match the dotted underline style for inline citations.
+- **Spacing:** Ensure consistent padding and margins around result blocks.
