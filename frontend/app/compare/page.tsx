@@ -4,15 +4,13 @@ import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from "rea
 import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { useAuth } from "@/lib/auth/auth-context";
-import { Button } from "@/components/ui/button";
+
 import { GlowCard } from "@/components/ui/glow-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSSE } from "@/lib/hooks/use-sse";
 import {
-  LogOut,
-  User,
   Clock,
   Sparkles,
   ChevronDown,
@@ -23,13 +21,16 @@ import {
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { AnimatedFilterTabs, FilterType } from "@/components/ui/animated-tabs";
 import { TypingIndicator, AIResponse } from "@/components/ui/typewriter";
-import { DotPattern, RadialGradient } from "@/components/ui/dot-pattern";
-import { GlowingButton } from "@/components/ui/glowing-button";
+import { DotPattern } from "@/components/ui/dot-pattern";
+import { AuroraSectionBackground } from "@/components/ui/aurora-background";
+import { Input } from "@/components/ui/input";
+
 import { SourceReferenceCard } from "@/components/compare/source-reference-card";
 import { InlineCitation } from "@/components/compare/inline-citation";
 import { parseCitations, parseBareReferences, stripMarkdownHeaders } from "@/lib/utils/parse-citations";
 import { useLogger } from "@/lib/logger";
 import { LanguageSelector } from "@/components/search/language-selector";
+import { CollectionSelector, COLLECTION_OPTIONS } from "@/components/compare/collection-selector";
 
 interface ParagraphData {
   title: string;
@@ -76,6 +77,9 @@ function CompareContent() {
   const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [detectedLanguage, setDetectedLanguage] = useState<string | undefined>(undefined);
+  const [selectedCollections, setSelectedCollections] = useState<string[]>([
+    "quran_tr", "bible_ot", "bible_nt", "bible_apocrypha"
+  ]);
   const highlightTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasAutoExecuted = useRef(false);
   const log = useLogger("ComparePage");
@@ -220,6 +224,7 @@ function CompareContent() {
         body: JSON.stringify({ 
           topic: topicToCompare, 
           use_multi_agent: true,
+          collections: selectedCollections,
           ...(selectedLanguage && { language: selectedLanguage })
         }),
       });
@@ -264,6 +269,7 @@ function CompareContent() {
           }
           // Build SSE URL using q directly (NOT topic state, which may not be updated yet)
           let url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(q)}&token=${encodeURIComponent(token)}`;
+          url += `&collections=${encodeURIComponent(selectedCollections.join(','))}`;
           if (selectedLanguage) {
             url += `&language=${encodeURIComponent(selectedLanguage)}`;
           }
@@ -386,6 +392,25 @@ function CompareContent() {
     e.preventDefault();
     if (!topic.trim()) return;
 
+    // Validate minimum collections
+    if (selectedCollections.length < 2) {
+      toast.error("En az 2 kaynak seçilmelidir");
+      return;
+    }
+
+    // Single collection → redirect to Search page (if ever 1 is selected somehow)
+    if (selectedCollections.length === 1) {
+      const sourceMap: Record<string, string> = {
+        'quran_tr': 'quran',
+        'bible_ot': 'old_testament',
+        'bible_nt': 'new_testament',
+        'bible_apocrypha': 'apocrypha',
+      };
+      const source = sourceMap[selectedCollections[0]] || 'quran';
+      router.push(`/search?source=${source}&q=${encodeURIComponent(topic)}`);
+      return;
+    }
+
     setIsLoading(true);
     setResult(null);
     setExpandedParagraphs(new Set()); 
@@ -403,6 +428,7 @@ function CompareContent() {
         }
         // SSE/EventSource doesn't support custom headers, so pass token as query param
         let url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(topic)}&token=${encodeURIComponent(token)}`;
+        url += `&collections=${encodeURIComponent(selectedCollections.join(','))}`;
         if (selectedLanguage) {
           url += `&language=${encodeURIComponent(selectedLanguage)}`;
         }
@@ -426,106 +452,111 @@ function CompareContent() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[var(--color-bg-app)]">
-      {/* Premium ambient effects */}
-      <DotPattern width={32} height={32} cr={0.5} className="opacity-[0.02]" />
-      <RadialGradient 
-        className="inset-0" 
-        color="rgba(91, 168, 181, 0.08)" 
-        size="800px" 
-        position="50% -200px" 
-        opacity={0.5}
-      />
-      <RadialGradient 
-        className="inset-0" 
-        color="rgba(139, 92, 246, 0.05)" 
-        size="600px" 
-        position="80% 50%" 
-        opacity={0.3}
-      />
-      <div className="relative pt-12 pb-2 px-6">
-        <div className="mx-auto max-w-3xl">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={springPresets.snappy}
-          className="mb-6 flex items-center justify-between"
-        >
-          <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
-            <User className="h-4 w-4" />
-            <span className="text-sm">{user?.name || user?.email}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push("/search")}
-              className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-            >
-              <Search className="h-4 w-4" />
-              Search
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
-          </div>
-        </motion.div>
-
-        {/* Title */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={springPresets.fluid}
-        >
-          <h1 className="font-display text-4xl font-normal text-[var(--color-text-primary)] mb-1 tracking-tight">
-            Comparative Scripture Analysis
-          </h1>
-          <p className="text-sm text-[var(--color-text-muted)] mb-8">
-            Multi-agent analysis across Quran, Old Testament, New Testament, and
-            Apocrypha
-          </p>
-
-          {/* Search Form */}
-          <form onSubmit={handleCompare} className="relative mb-4">
-            <div className="flex gap-2 items-center">
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[var(--color-text-muted)]" />
-                <input
-                  type="text"
-                  data-testid="compare-topic-input"
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  placeholder="Enter a topic (e.g., patience, forgiveness, creation)..."
-                  className="w-full h-12 pl-12 pr-32 bg-[var(--color-bg-surface)] rounded-xl text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] border border-[var(--color-border-subtle)] focus:border-[var(--color-border-glow)] focus:outline-none transition-all duration-300 text-[15px]"
-                />
-                <GlowingButton
-                  type="submit"
-                  data-testid="compare-analyze-button"
-                  disabled={isLoading || !topic.trim()}
-                  glowColor="#6366f1"
-                  size="sm"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 !h-8 !rounded-lg disabled:opacity-40"
-                >
-                  {isLoading ? "Analyzing..." : "Analyze"}
-                </GlowingButton>
-              </div>
-              <LanguageSelector
-                value={selectedLanguage}
-                onChange={setSelectedLanguage}
-                detectedLanguage={detectedLanguage}
-              />
-            </div>
-          </form>
-        </motion.div>
-        </div>
+    <div className="relative min-h-screen bg-[var(--color-bg-app)] overflow-hidden">
+      {/* Subtle ambient texture */}
+      <div className="fixed inset-0 pointer-events-none">
+        <DotPattern width={40} height={40} cr={0.4} className="opacity-[0.015]" />
       </div>
+
+      {/* Compare Hero */}
+      <AuroraSectionBackground className="pt-20 pb-12 px-6">
+        <div className="mx-auto max-w-3xl">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...springPresets.fluid, duration: 0.6 }}
+            className="text-center mb-10"
+          >
+            {/* Decorative badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500" />
+              </span>
+              <span className="text-xs font-medium text-[var(--color-text-secondary)] tracking-wide">
+                5-Agent Multi-Scripture Analysis
+              </span>
+            </motion.div>
+
+            {/* Title */}
+            <h1 className="text-4xl md:text-5xl font-bold text-[var(--color-text-primary)] mb-4 tracking-tight">
+              <span className="bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">
+                Compare
+              </span>
+            </h1>
+            
+            {/* Subtitle */}
+            <p className="text-base md:text-lg text-[var(--color-text-muted)] max-w-md mx-auto leading-relaxed">
+              Comparative analysis across{" "}
+              <span className="text-[var(--color-text-secondary)] font-medium">43,055 verses</span>
+              {" "}from {selectedCollections.length} scripture sources
+            </p>
+          </motion.div>
+
+          {/* Collection Selector */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...springPresets.fluid, delay: 0.15, duration: 0.5 }}
+            className="w-full max-w-2xl mx-auto mb-6"
+          >
+            <CollectionSelector
+              selected={selectedCollections}
+              onChange={setSelectedCollections}
+              minSelection={2}
+              disabled={isLoading}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...springPresets.fluid, delay: 0.2, duration: 0.5 }}
+            className="flex flex-col items-center"
+          >
+            {/* Search form with glass effect */}
+            <form onSubmit={handleCompare} className="relative mb-6 w-full max-w-2xl">
+              <div className="relative flex gap-2 items-center justify-center">
+                <div className="relative flex-1 group">
+                  {/* Glow effect on focus */}
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500/20 via-indigo-500/20 to-violet-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity duration-300" />
+                  
+                  <Input 
+                    type="text"
+                    data-testid="compare-topic-input"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    placeholder="Enter a topic (e.g., patience, forgiveness, creation)..."
+                    className="relative peer pe-28 ps-12 h-12 bg-[var(--color-bg-surface)]/80 backdrop-blur-sm border-white/10 hover:border-white/20 focus:border-violet-500/50 transition-colors text-base"
+                  />
+                  <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-4 text-muted-foreground/60 peer-disabled:opacity-50">
+                    <Search size={20} strokeWidth={1.5} />
+                  </div>
+                  <button
+                    type="submit"
+                    data-testid="compare-analyze-button"
+                    disabled={isLoading || !topic.trim()}
+                    className="absolute inset-y-0 end-1.5 flex h-[calc(100%-12px)] my-auto items-center justify-center rounded-lg px-4 text-sm font-medium bg-gradient-to-r from-violet-500 to-indigo-500 text-white transition-all hover:from-violet-600 hover:to-indigo-600 focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 shadow-lg shadow-violet-500/25"
+                    aria-label="Submit analysis"
+                  >
+                    {isLoading ? "Analyzing..." : "Analyze"}
+                  </button>
+                </div>
+                <LanguageSelector
+                  value={selectedLanguage}
+                  onChange={setSelectedLanguage}
+                  detectedLanguage={detectedLanguage}
+                />
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      </AuroraSectionBackground>
 
       {/* Content */}
       <div className="relative px-6 pb-16">

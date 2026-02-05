@@ -1,6 +1,6 @@
 """Compare API routes for multi-scripture comparison."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Tuple
@@ -51,11 +51,28 @@ class CompareRequest(BaseModel):
 
     topic: str
     use_multi_agent: bool = True
+    collections: List[str] = Field(
+        default=["quran_tr", "bible_ot", "bible_nt", "bible_apocrypha"],
+        description="Collections to search and compare. Minimum 2 required.",
+    )
     language: Optional[str] = Field(
         None,
         pattern=r"^(en|tr|es|fr|it|pt|ar|de)$",
         description="Response language (auto-detect if omitted)",
     )
+
+    @classmethod
+    def validate_collections(cls, v: List[str]) -> List[str]:
+        """Validate collections list."""
+        valid_collections = {"quran_tr", "bible_ot", "bible_nt", "bible_apocrypha"}
+        if not v:
+            raise ValueError("At least 2 collections required")
+        if len(v) < 2:
+            raise ValueError("At least 2 collections required for comparison")
+        invalid = set(v) - valid_collections
+        if invalid:
+            raise ValueError(f"Invalid collections: {invalid}")
+        return list(set(v))  # Deduplicate
 
 
 class ParagraphData(BaseModel):
@@ -178,31 +195,48 @@ async def compare_scriptures(
     translator = QueryTranslator()
 
     if request.use_multi_agent:
-        # Step 1: Get search results directly (bypass compare_multi_agent)
-        search_result = rag.search_all(request.topic)
+        # Validate collections
+        valid_collections = {"quran_tr", "bible_ot", "bible_nt", "bible_apocrypha"}
+        collections = [c for c in request.collections if c in valid_collections]
+        if len(collections) < 2:
+            raise HTTPException(
+                status_code=400, detail="At least 2 collections required for comparison"
+            )
 
-        # Step 2: Build verse_details from search results
+        logger.info(
+            "Compare with filtered collections",
+            extra={"collections": collections, "count": len(collections)},
+        )
+
+        # Step 1: Get search results for selected collections only
+        search_result = rag.search_all(request.topic, collections=collections)
+
+        # Step 2: Build verse_details from search results (only for selected collections)
         verse_details: Dict[str, VerseDetail] = {}
 
-        for r in search_result.quran:
-            ref, detail = extract_quran_verse_detail(r)
-            if ref not in verse_details:  # Deduplicate
-                verse_details[ref] = detail
+        if "quran_tr" in collections:
+            for r in search_result.quran:
+                ref, detail = extract_quran_verse_detail(r)
+                if ref not in verse_details:  # Deduplicate
+                    verse_details[ref] = detail
 
-        for r in search_result.ot:
-            ref, detail = extract_bible_verse_detail(r, "bible_ot")
-            if ref not in verse_details:
-                verse_details[ref] = detail
+        if "bible_ot" in collections:
+            for r in search_result.ot:
+                ref, detail = extract_bible_verse_detail(r, "bible_ot")
+                if ref not in verse_details:
+                    verse_details[ref] = detail
 
-        for r in search_result.nt:
-            ref, detail = extract_bible_verse_detail(r, "bible_nt")
-            if ref not in verse_details:
-                verse_details[ref] = detail
+        if "bible_nt" in collections:
+            for r in search_result.nt:
+                ref, detail = extract_bible_verse_detail(r, "bible_nt")
+                if ref not in verse_details:
+                    verse_details[ref] = detail
 
-        for r in search_result.apocrypha:
-            ref, detail = extract_bible_verse_detail(r, "bible_apocrypha")
-            if ref not in verse_details:
-                verse_details[ref] = detail
+        if "bible_apocrypha" in collections:
+            for r in search_result.apocrypha:
+                ref, detail = extract_bible_verse_detail(r, "bible_apocrypha")
+                if ref not in verse_details:
+                    verse_details[ref] = detail
 
         # Step 3: Generate multi-agent answer using search results
         result = rag.multi_agent_generator.generate(
