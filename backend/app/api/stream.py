@@ -99,35 +99,34 @@ async def stream_search(
         logger.info("[SSE /search] Sent search status")
         await asyncio.sleep(0.1)
 
-        # Perform search
-        if source == "quran":
-            results = rag.search_quran(q, top_k=10)
-        elif source in ["ot", "nt", "apocrypha"]:
-            results = rag.search_bible(
-                q, translation="kjva", testament=source, top_k=10
-            )
-        else:
-            results = rag.search_bible(q, top_k=10)
-
-        # Send results count
-        yield f"data: {json.dumps({'status': 'found', 'count': len(results)})}\n\n"
-        await asyncio.sleep(0.1)
-
-        # Send "generating" status
-        yield f"data: {json.dumps({'status': 'generating', 'message': 'Yanıt oluşturuluyor...'})}\n\n"
-        yield ": heartbeat\n\n"  # Keep connection alive during LLM call
-        logger.info("[SSE /search] Sent generating status + heartbeat, calling LLM...")
-        await asyncio.sleep(0.1)
-
-        # Generate answer (simulated streaming - actual LLM may not stream)
+        # Perform ask (which includes search + answer generation)
+        # This eliminates the duplicate search call
         try:
-            logger.info("[SSE /search] Starting LLM call...")
+            logger.info(
+                "[SSE /search] Starting ask call (search + answer generation)..."
+            )
             if source == "quran":
-                answer = rag.ask_quran(q)
+                ask_result = rag.ask_quran(q, top_k=10)
             elif source in ["ot", "nt", "apocrypha"]:
-                answer = rag.ask_bible(q, translation="kjva", testament=source)
+                ask_result = rag.ask_bible(
+                    q, translation="kjva", testament=source, top_k=10
+                )
             else:
-                answer = rag.ask_bible(q)
+                ask_result = rag.ask_bible(q, top_k=10)
+
+            # Extract results and answer from ask_result
+            results = ask_result.search_results
+            answer = ask_result.answer
+
+            # Send results count
+            yield f"data: {json.dumps({'status': 'found', 'count': len(results)})}\n\n"
+            await asyncio.sleep(0.1)
+
+            # Send "generating" status (already done, but keep for UI consistency)
+            yield f"data: {json.dumps({'status': 'generating', 'message': 'Yanıt oluşturuluyor...'})}\n\n"
+            yield ": heartbeat\n\n"  # Keep connection alive
+            logger.info("[SSE /search] Ask call completed, streaming answer...")
+            await asyncio.sleep(0.1)
 
             # Stream the answer token by token
             # Handle both dict and AnswerResult dataclass responses
@@ -140,6 +139,13 @@ async def stream_search(
             else:
                 answer_text = str(answer)
 
+        except Exception as e:
+            logger.error(f"[SSE /search] Error during ask: {e}")
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            yield f"data: {json.dumps({'type': 'complete'})}\n\n"
+            return
+
+        try:
             # Detect language for response translation
             detected_language = language  # From query param
             if not detected_language:

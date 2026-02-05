@@ -1,26 +1,19 @@
 """
-Hybrid Search Module
+Semantic Search Module
 
-Provides semantic, keyword, and hybrid search capabilities for Quran data.
+Provides semantic search capabilities for Quran and Bible data.
+Uses dense vectors only (text-embedding-3-large).
 """
 
 import time
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 from dataclasses import dataclass
 
 from qdrant_client import QdrantClient
-from qdrant_client.models import (
-    Prefetch,
-    FusionQuery,
-    Fusion,
-    SparseVector,
-    RrfQuery,
-    Rrf,
-)
 
-from .embeddings import DenseEncoder, SparseEncoder
-from .turkish_utils import expand_turkish_query, normalize_turkish
+from .embeddings import DenseEncoder
 from .circuit_breaker import qdrant_with_breaker, CircuitBreakerError
+from .turkish_utils import expand_turkish_query
 from app.logging_config import get_logger, log_performance
 
 logger = get_logger(__name__)
@@ -51,11 +44,11 @@ class SearchResult:
 
 class QuranSearcher:
     """
-    Hybrid search engine for Quran Turkish translation.
-    Supports semantic, keyword (BM25), and hybrid search modes.
+    Semantic search engine for Quran Turkish translation.
+    Uses dense vectors only (text-embedding-3-large).
     """
 
-    COLLECTION_NAME = "quran_tr"  # Main collection
+    COLLECTION_NAME = "quran_tr"
 
     def __init__(
         self,
@@ -63,7 +56,6 @@ class QuranSearcher:
         in_memory: bool = False,
         client: Optional[QdrantClient] = None,
         dense_encoder: Optional[DenseEncoder] = None,
-        sparse_encoder: Optional[SparseEncoder] = None,
     ):
         if client:
             self.client = client
@@ -72,7 +64,6 @@ class QuranSearcher:
         else:
             self.client = QdrantClient(url=qdrant_url)
         self.dense_encoder = dense_encoder or DenseEncoder()
-        self.sparse_encoder = sparse_encoder or SparseEncoder()
 
     def _parse_results(self, results) -> List[SearchResult]:
         """Convert Qdrant results to SearchResult objects"""
@@ -131,301 +122,18 @@ class QuranSearcher:
         )
         return parsed
 
-    def keyword_search(
-        self, query: str, limit: int = 10, normalize: bool = True
-    ) -> List[SearchResult]:
-        """
-        Perform keyword search using sparse vectors (BM25).
-        Good for exact term matching.
-
-        Args:
-            query: Search query text
-            limit: Number of results to return
-            normalize: If True, expand query with Turkish character variants
-        """
-        start = time.perf_counter()
-        # Expand query with Turkish character variants
-        search_query = expand_turkish_query(query) if normalize else query
-        indices, values = self.sparse_encoder.query_embed(search_query)
-
-        results = qdrant_with_breaker(
-            lambda: self.client.query_points(
-                collection_name=self.COLLECTION_NAME,
-                query=SparseVector(indices=indices, values=values),
-                using="sparse",
-                limit=limit,
-                with_payload=True,
-            )
-        )
-
-        parsed = self._parse_results(results)
-        latency_ms = (time.perf_counter() - start) * 1000
-        log_performance(
-            logger,
-            "keyword_search",
-            latency_ms,
-            collection=self.COLLECTION_NAME,
-            mode="keyword",
-            results=len(parsed),
-        )
-        return parsed
-
-    def hybrid_search(
-        self,
-        query: str,
-        limit: int = 10,
-        prefetch_limit: int = 100,
-        fusion: str = "rrf",
-        rrf_k: int = 40,  # Optimized from 60 based on tuning research
-        normalize: bool = True,
-    ) -> List[SearchResult]:
-        """
-        Perform hybrid search combining semantic and keyword search.
-        Uses Reciprocal Rank Fusion (RRF) or DBSF to merge results.
-
-        Args:
-            query: Search query text
-            limit: Number of final results
-            prefetch_limit: Number of results to fetch from each search type
-            fusion: Fusion method - "rrf" or "dbsf"
-            rrf_k: RRF k parameter (higher = more consensus-based ranking)
-            normalize: If True, expand query with Turkish character variants for keyword search
-        """
-        import sentry_sdk
-
-        start = time.perf_counter()
-
-        with sentry_sdk.start_span(
-            op="db.query.qdrant", description="Qdrant hybrid search"
-        ) as span:
-            span.set_data("collection", self.COLLECTION_NAME)
-            span.set_data("limit", limit)
-            span.set_data("mode", "hybrid")
-
-            # Encode query for both dense and sparse
-            dense_query = self.dense_encoder.encode(query)
-            # Apply Turkish normalization for keyword search
-            keyword_query = expand_turkish_query(query) if normalize else query
-            sparse_indices, sparse_values = self.sparse_encoder.query_embed(
-                keyword_query
-            )
-
-            # Choose fusion method - use parameterized RRF or DBSF
-            if fusion.lower() == "rrf":
-                fusion_query = RrfQuery(rrf=Rrf(k=rrf_k))
-            else:
-                fusion_query = FusionQuery(fusion=Fusion.DBSF)
-
-            results = qdrant_with_breaker(
-                lambda: self.client.query_points(
-                    collection_name=self.COLLECTION_NAME,
-                    prefetch=[
-                        # Sparse (BM25) search
-                        Prefetch(
-                            query=SparseVector(
-                                indices=sparse_indices, values=sparse_values
-                            ),
-                            using="sparse",
-                            limit=prefetch_limit,
-                        ),
-                        # Dense (semantic) search
-                        Prefetch(
-                            query=dense_query, using="dense", limit=prefetch_limit
-                        ),
-                    ],
-                    query=fusion_query,
-                    limit=limit,
-                    with_payload=True,
-                )
-            )
-
-            parsed = self._parse_results(results)
-            latency_ms = (time.perf_counter() - start) * 1000
-            log_performance(
-                logger,
-                "hybrid_search",
-                latency_ms,
-                collection=self.COLLECTION_NAME,
-                mode="hybrid",
-                fusion=fusion,
-                rrf_k=rrf_k,
-                dense_prefetch=prefetch_limit,
-                sparse_prefetch=prefetch_limit,
-                results=len(parsed),
-            )
-            return parsed
-
-    def multi_query_search(
-        self,
-        query: str,
-        limit: int = 10,
-        prefetch_limit: int = 20,
-        n_queries: int = 3,
-        rrf_k: int = 60,
-    ) -> List[SearchResult]:
-        """
-        Multi-Query RAG search (RAG-Fusion).
-
-        Tek sorguyu birden fazla varyasyona dönüştürür, her biri için
-        ayrı arama yapar, sonuçları RRF ile birleştirir.
-
-        Args:
-            query: Original search query
-            limit: Number of final results
-            prefetch_limit: Results per query prefetch
-            n_queries: Number of query variations (3 optimal)
-            rrf_k: RRF k parameter
-        """
-        from src.multi_query import MultiQueryGenerator, create_multi_query_prefetches
-
-        # Generate query variations
-        generator = MultiQueryGenerator()
-        queries = generator.generate(query, n=n_queries)
-
-        # Create prefetches for all queries
-        prefetches = create_multi_query_prefetches(
-            queries=queries,
-            sparse_encoder=self.sparse_encoder,
-            dense_encoder=self.dense_encoder,
-            limit_per_query=prefetch_limit,
-        )
-
-        # RRF fusion
-        results = self.client.query_points(
-            collection_name=self.COLLECTION_NAME,
-            prefetch=prefetches,
-            query=RrfQuery(rrf=Rrf(k=rrf_k)),
-            limit=limit,
-            with_payload=True,
-        )
-
-        return self._parse_results(results)
-
-    def parallel_keyword_search(
-        self, query: str, limit: int = 10, prefetch_limit: int = 20, rrf_k: int = 60
-    ) -> List[SearchResult]:
-        """
-        Parallel keyword search - her kelime için ayrı BM25 araması.
-
-        "sabır ve namaz" -> "sabır" + "namaz" ayrı aranır, RRF ile birleştirilir.
-
-        Args:
-            query: Search query
-            limit: Number of final results
-            prefetch_limit: Results per keyword prefetch
-            rrf_k: RRF k parameter
-        """
-        from src.multi_query import (
-            ParallelKeywordParser,
-            create_parallel_keyword_prefetches,
-        )
-
-        # Parse keywords
-        parser = ParallelKeywordParser()
-        keywords = parser.parse(query)
-
-        # Create keyword prefetches
-        keyword_prefetches = create_parallel_keyword_prefetches(
-            keywords=keywords,
-            sparse_encoder=self.sparse_encoder,
-            limit_per_keyword=prefetch_limit,
-        )
-
-        # Also add semantic search prefetch for the full query
-        dense_query = self.dense_encoder.encode(query)
-        keyword_prefetches.append(
-            Prefetch(query=dense_query, using="dense", limit=prefetch_limit)
-        )
-
-        # RRF fusion
-        results = self.client.query_points(
-            collection_name=self.COLLECTION_NAME,
-            prefetch=keyword_prefetches,
-            query=RrfQuery(rrf=Rrf(k=rrf_k)),
-            limit=limit,
-            with_payload=True,
-        )
-
-        return self._parse_results(results)
-
-    def dual_vector_search(
-        self, query: str, limit: int = 10, prefetch_limit: int = 50, rrf_k: int = 60
-    ) -> List[SearchResult]:
-        """
-        Dual Vector Search - uses all 4 vector types for comprehensive search.
-
-        Searches:
-        - dense (original text embedding)
-        - dense_normalized (normalized text embedding)
-        - sparse (original text BM25)
-        - sparse_normalized (normalized text BM25)
-
-        Args:
-            query: Search query
-            limit: Number of final results
-            prefetch_limit: Results per vector type
-            rrf_k: RRF k parameter
-        """
-        # Normalize query
-        query_norm = normalize_turkish(query.lower(), remove_punctuation=True)
-
-        # Encode both versions
-        dense_orig = self.dense_encoder.encode(query)
-        dense_norm = self.dense_encoder.encode(query_norm)
-
-        sparse_orig_idx, sparse_orig_val = self.sparse_encoder.encode(query)
-        sparse_norm_idx, sparse_norm_val = self.sparse_encoder.encode(query_norm)
-
-        # 4 prefetches for comprehensive search
-        prefetches = [
-            Prefetch(query=dense_orig, using="dense", limit=prefetch_limit),
-            Prefetch(query=dense_norm, using="dense_normalized", limit=prefetch_limit),
-            Prefetch(
-                query=SparseVector(indices=sparse_orig_idx, values=sparse_orig_val),
-                using="sparse",
-                limit=prefetch_limit,
-            ),
-            Prefetch(
-                query=SparseVector(indices=sparse_norm_idx, values=sparse_norm_val),
-                using="sparse_normalized",
-                limit=prefetch_limit,
-            ),
-        ]
-
-        # RRF fusion
-        results = self.client.query_points(
-            collection_name=self.COLLECTION_NAME,
-            prefetch=prefetches,
-            query=RrfQuery(rrf=Rrf(k=rrf_k)),
-            limit=limit,
-            with_payload=True,
-        )
-
-        return self._parse_results(results)
-
     def search(
-        self, query: str, mode: str = "hybrid", limit: int = 10
+        self, query: str, mode: str = "semantic", limit: int = 10
     ) -> List[SearchResult]:
         """
-        Unified search interface.
+        Search interface. Only semantic search is supported.
 
         Args:
             query: Search query text
-            mode: Search mode - "hybrid" (default), "dual-vector", "semantic", "keyword", "multi-query", "parallel-keyword"
+            mode: Search mode (only "semantic" supported, kept for API compatibility)
             limit: Number of results
         """
-        if mode == "semantic":
-            return self.semantic_search(query, limit)
-        elif mode == "keyword":
-            return self.keyword_search(query, limit)
-        elif mode == "multi-query":
-            return self.multi_query_search(query, limit)
-        elif mode == "parallel-keyword":
-            return self.parallel_keyword_search(query, limit)
-        elif mode == "hybrid":
-            return self.hybrid_search(query, limit)
-        else:  # default: dual-vector
-            return self.dual_vector_search(query, limit)
+        return self.semantic_search(query, limit)
 
 
 @dataclass
@@ -459,8 +167,8 @@ class BibleSearchResult:
 
 class BibleSearcher:
     """
-    Hybrid search engine for Bible translations.
-    Supports semantic, keyword (BM25), and hybrid search modes.
+    Semantic search engine for Bible translations.
+    Uses dense vectors only (text-embedding-3-large).
 
     Can search specific testaments via the testament parameter:
     - "ot" -> bible_ot collection (Old Testament)
@@ -484,7 +192,6 @@ class BibleSearcher:
         in_memory: bool = False,
         client: Optional[QdrantClient] = None,
         dense_encoder: Optional[DenseEncoder] = None,
-        sparse_encoder: Optional[SparseEncoder] = None,
     ):
         self.translation = translation
         self.testament = testament.lower() if testament else None
@@ -507,7 +214,6 @@ class BibleSearcher:
         else:
             self.client = QdrantClient(url=qdrant_url)
         self.dense_encoder = dense_encoder or DenseEncoder()
-        self.sparse_encoder = sparse_encoder or SparseEncoder()
 
     def _parse_results(self, results) -> List[BibleSearchResult]:
         """Convert Qdrant results to BibleSearchResult objects"""
@@ -559,132 +265,18 @@ class BibleSearcher:
         )
         return parsed
 
-    def keyword_search(self, query: str, limit: int = 10) -> List[BibleSearchResult]:
-        """
-        Perform keyword search using sparse vectors (BM25).
-        Good for exact term matching.
-        """
-        start = time.perf_counter()
-        indices, values = self.sparse_encoder.query_embed(query)
-
-        results = qdrant_with_breaker(
-            lambda: self.client.query_points(
-                collection_name=self.collection_name,
-                query=SparseVector(indices=indices, values=values),
-                using="sparse",
-                limit=limit,
-                with_payload=True,
-            )
-        )
-
-        parsed = self._parse_results(results)
-        latency_ms = (time.perf_counter() - start) * 1000
-        log_performance(
-            logger,
-            "keyword_search",
-            latency_ms,
-            collection=self.collection_name,
-            mode="keyword",
-            results=len(parsed),
-        )
-        return parsed
-
-    def hybrid_search(
-        self,
-        query: str,
-        limit: int = 10,
-        prefetch_limit: int = 20,
-        fusion: str = "rrf",
-        rrf_k: int = 60,
-    ) -> List[BibleSearchResult]:
-        """
-        Perform hybrid search combining semantic and keyword search.
-        Uses Reciprocal Rank Fusion (RRF) or DBSF to merge results.
-
-        Args:
-            query: Search query text
-            limit: Number of final results
-            prefetch_limit: Number of results to fetch from each search type
-            fusion: Fusion method - "rrf" or "dbsf"
-            rrf_k: RRF k parameter (higher = more consensus-based ranking)
-        """
-        import sentry_sdk
-
-        start = time.perf_counter()
-
-        with sentry_sdk.start_span(
-            op="db.query.qdrant", description="Qdrant hybrid search"
-        ) as span:
-            span.set_data("collection", self.collection_name)
-            span.set_data("limit", limit)
-            span.set_data("mode", "hybrid")
-
-            # Encode query for both dense and sparse
-            dense_query = self.dense_encoder.encode(query)
-            sparse_indices, sparse_values = self.sparse_encoder.query_embed(query)
-
-            # Choose fusion method - use parameterized RRF or DBSF
-            if fusion.lower() == "rrf":
-                fusion_query = RrfQuery(rrf=Rrf(k=rrf_k))
-            else:
-                fusion_query = FusionQuery(fusion=Fusion.DBSF)
-
-            results = qdrant_with_breaker(
-                lambda: self.client.query_points(
-                    collection_name=self.collection_name,
-                    prefetch=[
-                        # Sparse (BM25) search
-                        Prefetch(
-                            query=SparseVector(
-                                indices=sparse_indices, values=sparse_values
-                            ),
-                            using="sparse",
-                            limit=prefetch_limit,
-                        ),
-                        # Dense (semantic) search
-                        Prefetch(
-                            query=dense_query, using="dense", limit=prefetch_limit
-                        ),
-                    ],
-                    query=fusion_query,
-                    limit=limit,
-                    with_payload=True,
-                )
-            )
-
-            parsed = self._parse_results(results)
-            latency_ms = (time.perf_counter() - start) * 1000
-            log_performance(
-                logger,
-                "hybrid_search",
-                latency_ms,
-                collection=self.collection_name,
-                mode="hybrid",
-                fusion=fusion,
-                rrf_k=rrf_k,
-                dense_prefetch=prefetch_limit,
-                sparse_prefetch=prefetch_limit,
-                results=len(parsed),
-            )
-            return parsed
-
     def search(
-        self, query: str, mode: str = "hybrid", limit: int = 10
+        self, query: str, mode: str = "semantic", limit: int = 10
     ) -> List[BibleSearchResult]:
         """
-        Unified search interface.
+        Search interface. Only semantic search is supported.
 
         Args:
             query: Search query text
-            mode: Search mode - "hybrid", "semantic", or "keyword"
+            mode: Search mode (only "semantic" supported, kept for API compatibility)
             limit: Number of results
         """
-        if mode == "semantic":
-            return self.semantic_search(query, limit)
-        elif mode == "keyword":
-            return self.keyword_search(query, limit)
-        else:
-            return self.hybrid_search(query, limit)
+        return self.semantic_search(query, limit)
 
 
 @dataclass
@@ -722,6 +314,7 @@ class SemanticChunkSearchResult:
 class SemanticChunkSearcher:
     """
     Search engine for semantic chunks (grouped verses).
+    Uses dense vectors only (text-embedding-3-large).
 
     Provides context-aware search by searching grouped verses instead of
     individual verses. Can be used alongside QuranSearcher for comprehensive results.
@@ -735,7 +328,6 @@ class SemanticChunkSearcher:
         in_memory: bool = False,
         client: Optional[QdrantClient] = None,
         dense_encoder: Optional[DenseEncoder] = None,
-        sparse_encoder: Optional[SparseEncoder] = None,
     ):
         if client:
             self.client = client
@@ -745,7 +337,6 @@ class SemanticChunkSearcher:
             self.client = QdrantClient(url=qdrant_url)
 
         self.dense_encoder = dense_encoder or DenseEncoder()
-        self.sparse_encoder = sparse_encoder or SparseEncoder()
 
     def _parse_results(self, results) -> List[SemanticChunkSearchResult]:
         """Convert Qdrant results to SemanticChunkSearchResult objects."""
@@ -809,140 +400,18 @@ class SemanticChunkSearcher:
         )
         return parsed
 
-    def keyword_search(
-        self, query: str, limit: int = 10, normalize: bool = True
-    ) -> List[SemanticChunkSearchResult]:
-        """
-        Perform keyword (BM25) search on chunk collection.
-
-        Args:
-            query: Search query text
-            limit: Number of results to return
-            normalize: If True, normalize Turkish characters
-        """
-        start = time.perf_counter()
-        if normalize:
-            query = normalize_turkish(query)
-
-        sparse_indices, sparse_values = self.sparse_encoder.query_embed(query)
-
-        results = qdrant_with_breaker(
-            lambda: self.client.query_points(
-                collection_name=self.COLLECTION_NAME,
-                query=SparseVector(indices=sparse_indices, values=sparse_values),
-                using="sparse",
-                limit=limit,
-            )
-        )
-
-        parsed = self._parse_results(results.points)
-        latency_ms = (time.perf_counter() - start) * 1000
-        log_performance(
-            logger,
-            "keyword_chunk_search",
-            latency_ms,
-            collection=self.COLLECTION_NAME,
-            mode="keyword",
-            results=len(parsed),
-        )
-        return parsed
-
-    def hybrid_search(
-        self,
-        query: str,
-        limit: int = 10,
-        prefetch_limit: int = 50,
-        rrf_k: int = 40,
-        normalize: bool = True,
-    ) -> List[SemanticChunkSearchResult]:
-        """
-        Perform hybrid search combining semantic and keyword search.
-        Uses Reciprocal Rank Fusion (RRF) to merge results.
-
-        Args:
-            query: Search query text
-            limit: Number of final results
-            prefetch_limit: Results per search type
-            rrf_k: RRF k parameter (higher = more weight to lower ranks)
-            normalize: If True, apply Turkish normalization
-        """
-        import sentry_sdk
-
-        start = time.perf_counter()
-
-        with sentry_sdk.start_span(
-            op="db.query.qdrant", description="Qdrant hybrid search"
-        ) as span:
-            span.set_data("collection", self.COLLECTION_NAME)
-            span.set_data("limit", limit)
-            span.set_data("mode", "hybrid")
-
-            # Prepare query vectors
-            if normalize:
-                expanded_query = expand_turkish_query(query)
-                normalized_query = normalize_turkish(query)
-            else:
-                expanded_query = query
-                normalized_query = query
-
-            dense_vector = self.dense_encoder.encode(expanded_query)
-            sparse_indices, sparse_values = self.sparse_encoder.query_embed(
-                normalized_query
-            )
-
-            # Hybrid search with RRF
-            results = qdrant_with_breaker(
-                lambda: self.client.query_points(
-                    collection_name=self.COLLECTION_NAME,
-                    prefetch=[
-                        Prefetch(
-                            query=dense_vector, using="dense", limit=prefetch_limit
-                        ),
-                        Prefetch(
-                            query=SparseVector(
-                                indices=sparse_indices, values=sparse_values
-                            ),
-                            using="sparse",
-                            limit=prefetch_limit,
-                        ),
-                    ],
-                    query=RrfQuery(rrf=Rrf(k=rrf_k)),
-                    limit=limit,
-                )
-            )
-
-            parsed = self._parse_results(results.points)
-            latency_ms = (time.perf_counter() - start) * 1000
-            log_performance(
-                logger,
-                "hybrid_chunk_search",
-                latency_ms,
-                collection=self.COLLECTION_NAME,
-                mode="hybrid",
-                rrf_k=rrf_k,
-                dense_prefetch=prefetch_limit,
-                sparse_prefetch=prefetch_limit,
-                results=len(parsed),
-            )
-            return parsed
-
     def search(
-        self, query: str, mode: str = "hybrid", limit: int = 10
+        self, query: str, mode: str = "semantic", limit: int = 10
     ) -> List[SemanticChunkSearchResult]:
         """
-        Unified search interface.
+        Unified search interface. Only semantic search is supported.
 
         Args:
             query: Search query text
-            mode: Search mode - "hybrid" (default), "semantic", or "keyword"
+            mode: Search mode (only "semantic" is supported)
             limit: Number of results
         """
-        if mode == "semantic":
-            return self.semantic_search(query, limit)
-        elif mode == "keyword":
-            return self.keyword_search(query, limit)
-        else:
-            return self.hybrid_search(query, limit)
+        return self.semantic_search(query, limit)
 
     def collection_exists(self) -> bool:
         """Check if the semantic chunks collection exists."""
@@ -993,7 +462,6 @@ class BibleSemanticChunkSearcher:
         in_memory: bool = False,
         client: Optional[QdrantClient] = None,
         dense_encoder: Optional[DenseEncoder] = None,
-        sparse_encoder: Optional[SparseEncoder] = None,
     ):
         self.translation = translation
         self.collection_name = f"bible_{translation}_semantic_chunks"
@@ -1006,7 +474,6 @@ class BibleSemanticChunkSearcher:
             self.client = QdrantClient(url=qdrant_url)
 
         self.dense_encoder = dense_encoder or DenseEncoder()
-        self.sparse_encoder = sparse_encoder or SparseEncoder()
 
     def _parse_results(self, results) -> List[BibleSemanticChunkSearchResult]:
         """Convert Qdrant results to BibleSemanticChunkSearchResult objects."""
@@ -1060,97 +527,11 @@ class BibleSemanticChunkSearcher:
         )
         return parsed
 
-    def keyword_search(
-        self, query: str, limit: int = 10
-    ) -> List[BibleSemanticChunkSearchResult]:
-        """Perform keyword (BM25) search on chunk collection."""
-        start = time.perf_counter()
-        sparse_indices, sparse_values = self.sparse_encoder.query_embed(query)
-
-        results = qdrant_with_breaker(
-            lambda: self.client.query_points(
-                collection_name=self.collection_name,
-                query=SparseVector(indices=sparse_indices, values=sparse_values),
-                using="sparse",
-                limit=limit,
-            )
-        )
-
-        parsed = self._parse_results(results.points)
-        latency_ms = (time.perf_counter() - start) * 1000
-        log_performance(
-            logger,
-            "bible_keyword_chunk_search",
-            latency_ms,
-            collection=self.collection_name,
-            mode="keyword",
-            results=len(parsed),
-        )
-        return parsed
-
-    def hybrid_search(
-        self, query: str, limit: int = 10, prefetch_limit: int = 50, rrf_k: int = 40
-    ) -> List[BibleSemanticChunkSearchResult]:
-        """Perform hybrid search combining semantic and keyword search."""
-        import sentry_sdk
-
-        start = time.perf_counter()
-
-        with sentry_sdk.start_span(
-            op="db.query.qdrant", description="Qdrant hybrid search"
-        ) as span:
-            span.set_data("collection", self.collection_name)
-            span.set_data("limit", limit)
-            span.set_data("mode", "hybrid")
-
-            dense_vector = self.dense_encoder.encode(query)
-            sparse_indices, sparse_values = self.sparse_encoder.query_embed(query)
-
-            results = qdrant_with_breaker(
-                lambda: self.client.query_points(
-                    collection_name=self.collection_name,
-                    prefetch=[
-                        Prefetch(
-                            query=dense_vector, using="dense", limit=prefetch_limit
-                        ),
-                        Prefetch(
-                            query=SparseVector(
-                                indices=sparse_indices, values=sparse_values
-                            ),
-                            using="sparse",
-                            limit=prefetch_limit,
-                        ),
-                    ],
-                    query=RrfQuery(rrf=Rrf(k=rrf_k)),
-                    limit=limit,
-                )
-            )
-
-            parsed = self._parse_results(results.points)
-            latency_ms = (time.perf_counter() - start) * 1000
-            log_performance(
-                logger,
-                "bible_hybrid_chunk_search",
-                latency_ms,
-                collection=self.collection_name,
-                mode="hybrid",
-                rrf_k=rrf_k,
-                dense_prefetch=prefetch_limit,
-                sparse_prefetch=prefetch_limit,
-                results=len(parsed),
-            )
-            return parsed
-
     def search(
-        self, query: str, mode: str = "hybrid", limit: int = 10
+        self, query: str, mode: str = "semantic", limit: int = 10
     ) -> List[BibleSemanticChunkSearchResult]:
-        """Unified search interface."""
-        if mode == "semantic":
-            return self.semantic_search(query, limit)
-        elif mode == "keyword":
-            return self.keyword_search(query, limit)
-        else:
-            return self.hybrid_search(query, limit)
+        """Unified search interface. Only semantic search is supported."""
+        return self.semantic_search(query, limit)
 
     def collection_exists(self) -> bool:
         """Check if the semantic chunks collection exists."""
@@ -1184,11 +565,3 @@ if __name__ == "__main__":
     print("\n--- Semantic Search ---")
     results = searcher.semantic_search(test_query, limit=3)
     print_results(results, "Semantic Results")
-
-    print("\n--- Keyword Search ---")
-    results = searcher.keyword_search(test_query, limit=3)
-    print_results(results, "Keyword Results")
-
-    print("\n--- Hybrid Search ---")
-    results = searcher.hybrid_search(test_query, limit=3)
-    print_results(results, "Hybrid Results")
