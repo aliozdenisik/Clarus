@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo, Suspense, memo } from "react";
-import { motion, AnimatePresence, useSpring, useTransform, MotionValue } from "framer-motion";
+import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { useAuth } from "@/lib/auth/auth-context";
 
@@ -73,18 +73,6 @@ const COLLECTION_VERSE_COUNTS: Record<string, number> = {
   'bible_nt': 7957,
   'bible_apocrypha': 5717,
 };
-
-// Animated number counter component
-function AnimatedNumber({ value }: { value: number }) {
-  const spring = useSpring(value, { stiffness: 100, damping: 30 });
-  const display = useTransform(spring, (v) => Math.round(v).toLocaleString());
-  
-  useEffect(() => {
-    spring.set(value);
-  }, [spring, value]);
-  
-  return <motion.span>{display}</motion.span>;
-}
 
 function CompareContent() {
   const [topic, setTopic] = useState("");
@@ -521,7 +509,7 @@ function CompareContent() {
             <p className="text-base md:text-lg text-[var(--color-text-muted)] max-w-md mx-auto leading-relaxed">
               Comparative analysis across{" "}
               <span className="text-[var(--color-text-secondary)] font-medium tabular-nums">
-                <AnimatedNumber value={selectedVerseCount} />
+                {selectedVerseCount.toLocaleString()}
               </span>
               {" "}verses from{" "}
               <span className="text-[var(--color-text-secondary)] font-medium">
