@@ -8,13 +8,14 @@ import { DotPattern } from "@/components/ui/dot-pattern";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search } from "lucide-react";
-import { SlidingTabs, SearchSource } from "@/components/ui/sliding-tabs";
-import { SearchResultCard } from "@/components/search/search-result-card";
-import { AIInterpretation } from "@/components/search/ai-interpretation";
+import { ExternalLink, Search } from "lucide-react";
+import { SearchTabs, SearchSource } from "@/components/search/search-tabs";
 import { useSSE } from "@/lib/hooks/use-sse";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
+import { parseCitations, CitationPart } from "@/lib/utils/parse-citations";
+import { InlineCitation } from "@/components/compare/inline-citation";
 import { VerseDetail } from "@/components/search/verse-tooltip";
+import { SourceBadge, SourceType } from "@/components/compare/source-badge";
 import { useLogger } from "@/lib/logger";
 import { LanguageSelector } from "@/components/search/language-selector";
 import { cn } from "@/lib/utils";
@@ -124,7 +125,23 @@ function SearchContent() {
     router.push(`/search?source=${tab}`);
   };
 
-
+  const mapSourceToType = useCallback((source: string): SourceType => {
+    switch (source) {
+      case "quran":
+        return "quran";
+      case "bible_ot":
+      case "ot":
+        return "old_testament";
+      case "bible_nt":
+      case "nt":
+        return "new_testament";
+      case "bible_apocrypha":
+      case "apocrypha":
+        return "apocrypha";
+      default:
+        return "quran";
+    }
+  }, []);
 
   const scrollToVerse = useCallback((reference: string) => {
     const element = document.querySelector(`[data-verse-id="${reference}"]`);
@@ -340,7 +357,7 @@ function SearchContent() {
               Explore sacred texts with semantic search
             </p>
 
-            <SlidingTabs activeTab={activeTab} onTabChange={handleTabChange} />
+            <SearchTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
             <form onSubmit={handleSearch} className="relative mb-6">
               <div className="relative flex gap-2 items-center">
@@ -390,11 +407,29 @@ function SearchContent() {
                 exit={{ opacity: 0, y: -8 }}
                 className="mb-12"
               >
-                <AIInterpretation
-                  text={streamedAnswer}
-                  verseDetails={verseDetails}
-                  onNavigate={navigateToVerse}
-                />
+                <div className="relative pl-5 border-l border-[var(--color-accent-primary)]/40 py-1">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-muted)] mb-3 block">
+                    AI Interpretation
+                  </span>
+                  <div className="text-[var(--color-text-secondary)] leading-[1.75] text-[15px]">
+                    {parseCitations(streamedAnswer).map((part, i) => {
+                      if (typeof part === "string") {
+                        return <span key={i}>{part}</span>;
+                      }
+
+                      const verse = verseDetails[part.reference];
+
+                      return (
+                        <InlineCitation
+                          key={i}
+                          reference={part.reference}
+                          verseDetail={verse}
+                          onNavigate={navigateToVerse}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -433,25 +468,46 @@ function SearchContent() {
                 <motion.div
                   key={`${result.reference}-${i}`}
                   data-verse-id={result.reference}
-                  initial={{ opacity: 0, y: 16, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 300,
-                    damping: 30,
-                    delay: Math.min(i, 7) * 0.04
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
                   }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ ...springPresets.snappy, delay: i * 0.03 }}
                   className="mb-3"
                 >
-                  <SearchResultCard
-                    source={result.source}
-                    reference={result.reference}
-                    text={extractVerseText(result.text)}
-                    score={result.score}
-                    onClick={() => navigateToVerse(result.reference)}
-                    className={highlightedVerse === result.reference ? "ring-2 ring-[var(--color-accent-primary)]/40" : ""}
-                  />
+                  <div
+                    className={cn(
+                      "p-4 rounded-lg bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] hover:border-[var(--color-border-glow)] transition-colors duration-200",
+                      highlightedVerse === result.reference && "border-[var(--color-accent-primary)]/40"
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-[var(--color-accent-primary)]">
+                          {result.reference || "Unknown Reference"}
+                        </span>
+                        <SourceBadge source={mapSourceToType(result.source)} />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[11px] text-[var(--color-text-muted)] tabular-nums font-mono">
+                          {(result.score * 100).toFixed(1)}%
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => navigateToVerse(result.reference)}
+                          aria-label="Go to verse"
+                          className="text-[var(--color-text-muted)] hover:text-[var(--color-accent-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]/50 rounded transition-colors duration-200"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-[var(--color-text-secondary)] leading-[1.7] text-[15px]">
+                      {extractVerseText(result.text)}
+                    </p>
+                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>
