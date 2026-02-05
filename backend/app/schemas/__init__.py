@@ -7,6 +7,12 @@ from app.schemas.common import (
     PaginationParams,
     SuccessResponse,
 )
+from app.schemas.verse_lookup import (
+    VerseLookupRequest,
+    VerseResult,
+    VerseLookupResponse,
+    VerseLookupError,
+)
 
 __all__ = [
     "ErrorResponse",
@@ -14,4 +20,8 @@ __all__ = [
     "PaginatedResponse",
     "PaginationParams",
     "SuccessResponse",
+    "VerseLookupRequest",
+    "VerseResult",
+    "VerseLookupResponse",
+    "VerseLookupError",
 ]
