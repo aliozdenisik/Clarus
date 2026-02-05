@@ -47,7 +47,7 @@
 }
 
 :root {
-  /* Linear Design System - Color Palette */
+  /* Utilitarian Luxury - Color Palette */
   --color-bg-app: #09090b;        /* Zinc-950 - Main background */
   --color-bg-surface: #18181b;    /* Zinc-900 - Cards, panels */
   --color-bg-elevated: #27272a;   /* Zinc-800 - Hover, active */
@@ -56,11 +56,12 @@
   --color-border-glow: #3f3f46;   /* Zinc-700 - Active, focus */
   
   --color-text-primary: #f4f4f5;  /* Zinc-100 - Headings */
-  --color-text-secondary: #a1a1aa; /* Zinc-400 - Metadata */
-  --color-text-muted: #71717a;    /* Zinc-500 - Placeholder */
+  --color-text-secondary: #a1a1aa; /* Zinc-400 - Body text */
+  --color-text-muted: #71717a;    /* Zinc-500 - Metadata */
   
-  --color-accent-primary: #6366f1; /* Indigo-500 - CTA, links */
-  --color-accent-glow: rgba(99, 102, 241, 0.15); /* Glow effect */
+  --color-accent-primary: #6366f1; /* Indigo-500 - CTA, accents */
+  --color-accent-glow: rgba(99, 102, 241, 0.15); /* Indigo glow effect */
+  --color-accent-secondary: #818cf8; /* Indigo-400 - Highlights */
 
   /* shadcn/ui variables */
   --radius: 0.625rem;
@@ -139,8 +140,22 @@
     @apply bg-background text-foreground;
     background-color: var(--color-bg-app);
     color: var(--color-text-primary);
-    font-family: 'Inter var', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-feature-settings: 'cv05', 'cv08', 'ss01';
+  }
+  
+  /* Grain texture overlay for tactile quality */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.03;
+    z-index: 9999;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
   }
 }
 
