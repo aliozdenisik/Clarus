@@ -20,6 +20,8 @@ vi.mock("lucide-react", () => ({
   ExternalLink: () => <div data-testid="external-link-icon" />,
   ChevronLeft: () => <div data-testid="chevron-left-icon" />,
   ChevronRight: () => <div data-testid="chevron-right-icon" />,
+  Info: () => <div data-testid="info-icon" />,
+  ChevronDown: () => <div data-testid="chevron-down-icon" />,
 }));
 
 // Mock GlowCard
@@ -58,6 +60,7 @@ import { DerivedWords } from "@/components/keyword-search/derived-words";
 import { SurahChart } from "@/components/keyword-search/surah-chart";
 import { VerseCard } from "@/components/keyword-search/verse-card";
 import { Pagination } from "@/components/keyword-search/pagination";
+import { AccuracyDisclaimer } from "@/components/keyword-search/accuracy-disclaimer";
 
 // ── RootCard Tests ──────────────────────────────────────────────────────────
 
@@ -270,5 +273,118 @@ describe("Pagination", () => {
 
     const nextButton = screen.getByRole("button", { name: /Next/i });
     expect(nextButton).toBeDisabled();
+  });
+});
+
+// ── AccuracyDisclaimer Tests ─────────────────────────────────────────────────
+
+describe("AccuracyDisclaimer", () => {
+  it("renders collapsed disclaimer message", () => {
+    render(<AccuracyDisclaimer />);
+
+    expect(screen.getByText(/Clarus can make mistakes/i)).toBeInTheDocument();
+    expect(screen.getByText(/Verify important information/i)).toBeInTheDocument();
+  });
+
+  it("expands to show verification table on click", async () => {
+    render(<AccuracyDisclaimer />);
+
+    // Initially, the table should not be visible
+    expect(screen.queryByText("Accuracy Verification")).not.toBeInTheDocument();
+
+    // Click to expand
+    fireEvent.click(screen.getByText(/Clarus can make mistakes/i));
+
+    // Now the table should be visible
+    await waitFor(() => {
+      expect(screen.getByText("Accuracy Verification")).toBeInTheDocument();
+    });
+  });
+
+  it("displays verification data with correct Strong's numbers", async () => {
+    render(<AccuracyDisclaimer />);
+
+    // Expand the disclaimer
+    fireEvent.click(screen.getByText(/Clarus can make mistakes/i));
+
+    await waitFor(() => {
+      // Check for Strong's numbers
+      expect(screen.getByText("H1697")).toBeInTheDocument();
+      expect(screen.getByText("H8451")).toBeInTheDocument();
+      expect(screen.getByText("H430")).toBeInTheDocument();
+      expect(screen.getByText("G2316")).toBeInTheDocument();
+    });
+  });
+
+  it("displays verification data with word names", async () => {
+    render(<AccuracyDisclaimer />);
+
+    // Expand the disclaimer
+    fireEvent.click(screen.getByText(/Clarus can make mistakes/i));
+
+    await waitFor(() => {
+      // Check for word names
+      expect(screen.getByText("dabar")).toBeInTheDocument();
+      expect(screen.getByText("torah")).toBeInTheDocument();
+      expect(screen.getByText("elohim")).toBeInTheDocument();
+      expect(screen.getByText("theos")).toBeInTheDocument();
+    });
+  });
+
+  it("shows Blue Letter Bible link", async () => {
+    render(<AccuracyDisclaimer />);
+
+    // Expand the disclaimer
+    fireEvent.click(screen.getByText(/Clarus can make mistakes/i));
+
+    await waitFor(() => {
+      const blbLink = screen.getByRole("link", { name: /Blue Letter Bible/i });
+      expect(blbLink).toHaveAttribute("href", "https://www.blueletterbible.org/");
+      expect(blbLink).toHaveAttribute("target", "_blank");
+    });
+  });
+
+  it("shows status badges for verification results", async () => {
+    render(<AccuracyDisclaimer />);
+
+    // Expand the disclaimer
+    fireEvent.click(screen.getByText(/Clarus can make mistakes/i));
+
+    await waitFor(() => {
+      // Should show EXACT for torah (0 delta) and PASS for others
+      expect(screen.getByText("EXACT")).toBeInTheDocument();
+      expect(screen.getAllByText("PASS").length).toBe(3); // dabar, elohim, theos
+    });
+  });
+
+  it("displays data source information", async () => {
+    render(<AccuracyDisclaimer />);
+
+    // Expand the disclaimer
+    fireEvent.click(screen.getByText(/Clarus can make mistakes/i));
+
+    await waitFor(() => {
+      // Use getAllByText since OSHB/MorphGNT appear in multiple places
+      expect(screen.getAllByText(/OSHB/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/MorphGNT/i).length).toBeGreaterThan(0);
+    });
+  });
+
+  it("collapses when clicked again", async () => {
+    render(<AccuracyDisclaimer />);
+
+    const toggleButton = screen.getByText(/Clarus can make mistakes/i);
+
+    // Expand
+    fireEvent.click(toggleButton);
+    await waitFor(() => {
+      expect(screen.getByText("Accuracy Verification")).toBeInTheDocument();
+    });
+
+    // Collapse
+    fireEvent.click(toggleButton);
+    await waitFor(() => {
+      expect(screen.queryByText("Accuracy Verification")).not.toBeInTheDocument();
+    });
   });
 });

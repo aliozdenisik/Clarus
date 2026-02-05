@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { LanguageTabs, type LanguageTab } from "@/components/keyword-search/language-tabs";
 import { BibleCategoryTabs, type BibleCategoryFilter } from "@/components/keyword-search/bible-category-tabs";
+import { AccuracyDisclaimer } from "@/components/keyword-search/accuracy-disclaimer";
 
 type TabType = "results" | "browser";
 
@@ -681,6 +682,13 @@ function KeywordSearchContent() {
                           hasPrev={currentPage > 1}
                           onPageChange={handlePageChange}
                         />
+                      )}
+
+                      {/* Accuracy Disclaimer (Bible modes only) */}
+                      {(activeLanguage === "hebrew_ot" || activeLanguage === "greek_nt") && (
+                        <div className="mt-8 pt-6 border-t border-[var(--color-border-subtle)]">
+                          <AccuracyDisclaimer />
+                        </div>
                       )}
                     </>
                   )}
