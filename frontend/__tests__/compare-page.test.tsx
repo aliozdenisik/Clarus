@@ -221,7 +221,7 @@ describe("ComparePage", () => {
     expect(within(referencesSection).getByText("bible:1:1:1")).toBeInTheDocument();
 
     // Click on Quran filter
-    const quranTab = screen.getByRole("tab", { name: /Kuran/ });
+    const quranTab = screen.getByRole("tab", { name: /Quran/ });
     fireEvent.click(quranTab);
 
     await waitFor(() => {

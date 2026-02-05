@@ -1,0 +1,171 @@
+"use client";
+
+import { Navbar1 } from "@/components/ui/navbar";
+import { Book, Sunset, Trees, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
+
+const demoData = {
+  logo: {
+    url: "/",
+    src: "https://www.shadcnblocks.com/images/block/block-1.svg",
+    alt: "Clarus",
+    title: "Clarus",
+  },
+  menu: [
+    {
+      title: "Home",
+      url: "/",
+    },
+    {
+      title: "Scripture",
+      url: "#",
+      items: [
+        {
+          title: "Quran",
+          description: "Turkish translation with semantic search",
+          icon: <Book className="size-5 shrink-0" />,
+          url: "/quran",
+        },
+        {
+          title: "Old Testament",
+          description: "KJVA English translation",
+          icon: <Trees className="size-5 shrink-0" />,
+          url: "/ot",
+        },
+        {
+          title: "New Testament",
+          description: "KJVA English translation",
+          icon: <Sunset className="size-5 shrink-0" />,
+          url: "/nt",
+        },
+        {
+          title: "Apocrypha",
+          description: "Deuterocanonical texts",
+          icon: <Zap className="size-5 shrink-0" />,
+          url: "/apocrypha",
+        },
+      ],
+    },
+    {
+      title: "Features",
+      url: "#",
+      items: [
+        {
+          title: "Search",
+          description: "Hybrid semantic + keyword search",
+          icon: <Zap className="size-5 shrink-0" />,
+          url: "/search",
+        },
+        {
+          title: "Compare",
+          description: "Multi-agent comparative analysis",
+          icon: <Sunset className="size-5 shrink-0" />,
+          url: "/compare",
+        },
+        {
+          title: "History",
+          description: "View your search history",
+          icon: <Trees className="size-5 shrink-0" />,
+          url: "/history",
+        },
+        {
+          title: "Settings",
+          description: "Customize your experience",
+          icon: <Book className="size-5 shrink-0" />,
+          url: "/settings",
+        },
+      ],
+    },
+    {
+      title: "Search",
+      url: "/search",
+    },
+    {
+      title: "Compare",
+      url: "/compare",
+    },
+  ],
+  mobileExtraLinks: [
+    { name: "About", url: "/about" },
+    { name: "Contact", url: "/contact" },
+    { name: "Privacy", url: "/privacy" },
+    { name: "Terms", url: "/terms" },
+  ],
+  auth: {
+    login: { text: "Sign In", url: "/login" },
+    signup: { text: "Register", url: "/register" },
+  },
+};
+
+export default function NavbarDemoPage() {
+  const [viewportWidth, setViewportWidth] = useState<string>("");
+
+  useEffect(() => {
+    const updateWidth = () => {
+      setViewportWidth(`${window.innerWidth}px`);
+    };
+
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar1 {...demoData} />
+      
+      <main className="container py-12">
+        <div className="max-w-3xl mx-auto space-y-8">
+          <div>
+            <h1 className="text-4xl font-bold mb-4">Navbar Component Demo</h1>
+            <p className="text-muted-foreground text-lg">
+              This page demonstrates the Navbar1 component with Clarus-specific configuration.
+            </p>
+          </div>
+
+          <div className="space-y-4 border rounded-lg p-6">
+            <h2 className="text-2xl font-semibold">Features Demonstrated</h2>
+            <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+              <li>Desktop navigation with dropdown menus</li>
+              <li>Mobile-responsive hamburger menu</li>
+              <li>Nested menu items with icons and descriptions</li>
+              <li>Authentication buttons (Sign In / Register)</li>
+              <li>Mobile-only extra links in slide-out sheet</li>
+            </ul>
+          </div>
+
+          <div className="space-y-4 border rounded-lg p-6">
+            <h2 className="text-2xl font-semibold">Testing Instructions</h2>
+            <div className="space-y-3 text-muted-foreground">
+              <p><strong>Desktop (≥1024px):</strong></p>
+              <ul className="list-disc list-inside ml-4 space-y-1">
+                <li>Hover over "Scripture" or "Features" to see dropdown menus</li>
+                <li>Click on menu items to navigate</li>
+                <li>Click "Sign In" or "Register" buttons</li>
+              </ul>
+              
+              <p className="pt-2"><strong>Mobile (&lt;1024px):</strong></p>
+              <ul className="list-disc list-inside ml-4 space-y-1">
+                <li>Click hamburger menu icon (three lines)</li>
+                <li>Expand "Scripture" or "Features" accordion sections</li>
+                <li>Scroll to see mobile extra links (About, Contact, etc.)</li>
+                <li>Click authentication buttons at bottom</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="space-y-4 border rounded-lg p-6 bg-muted/50">
+            <h2 className="text-2xl font-semibold">Responsive Breakpoint</h2>
+            <p className="text-muted-foreground">
+              The navbar switches between desktop and mobile views at <code className="bg-background px-2 py-1 rounded">1024px</code> width.
+              Resize your browser window to see the transition.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Current viewport width: <span className="font-mono">{viewportWidth || "Calculating..."}</span>
+            </p>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

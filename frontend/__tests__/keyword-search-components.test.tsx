@@ -72,7 +72,8 @@ describe("RootCard", () => {
 
     const rootText = screen.getByText("كتب");
     expect(rootText).toBeInTheDocument();
-    expect(rootText).toHaveAttribute("lang", "ar");
+    // The lang attribute is on the parent <p> element, not the text node
+    expect(rootText.closest('p')).toHaveAttribute("lang", "ar");
   });
 
   it("displays root text without badge", () => {
@@ -97,7 +98,7 @@ describe("RootCard", () => {
 describe("StatsBar", () => {
   it("renders 3 metrics with correct values", () => {
     render(
-      <StatsBar totalOccurrences={319} uniqueWords={5} surahCount={12} />
+      <StatsBar totalOccurrences={319} uniqueWords={5} surahCount={12} language="quran" />
     );
 
     expect(screen.getByText("319")).toBeInTheDocument();
@@ -148,6 +149,7 @@ describe("SurahChart", () => {
     render(
       <SurahChart
         data={[{ surah_id: 2, surah_name: "البقرة", count: 45 }]}
+        language="quran"
       />
     );
 
@@ -163,13 +165,13 @@ describe("SurahChart", () => {
       count: 100 - i,
     }));
 
-    render(<SurahChart data={data} />);
+    render(<SurahChart data={data} language="quran" />);
 
     expect(screen.getByText(/Show all 25 surahs/i)).toBeInTheDocument();
   });
 
   it("shows empty state when no data", () => {
-    render(<SurahChart data={[]} />);
+    render(<SurahChart data={[]} language="quran" />);
 
     expect(screen.getByText("No surah distribution data")).toBeInTheDocument();
   });

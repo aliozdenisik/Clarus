@@ -22,6 +22,7 @@ import { searchKeywordApiSearchKeywordPost, getSurahDetailApiMetadataQuranSurahs
 import type { KeywordSearchResponse } from "@/lib/api/types.gen";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Tabs as VercelTabs, Tab } from "@/components/ui/vercel-tabs";
 import { LanguageTabs, type LanguageTab } from "@/components/keyword-search/language-tabs";
 import { BibleCategoryTabs, type BibleCategoryFilter } from "@/components/keyword-search/bible-category-tabs";
 import { AccuracyDisclaimer } from "@/components/keyword-search/accuracy-disclaimer";
@@ -501,40 +502,15 @@ function KeywordSearchContent() {
       <div className="relative px-6 pb-16">
         <div className="mx-auto max-w-4xl">
           {/* Tab Navigation */}
-          <div className="flex flex-wrap gap-1 p-1 bg-[var(--color-bg-surface)] rounded-lg border border-[var(--color-border-subtle)] w-fit mb-6">
-            {[
-              { id: "results" as const, label: "Search Results" },
-              ...(activeLanguage === "quran" ? [{ id: "browser" as const, label: "Root Browser" }] : []),
-            ].map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <div key={tab.id} className="relative">
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeKeywordTab"
-                      className="absolute inset-0 bg-[var(--color-bg-elevated)] rounded-md border border-[var(--color-border-subtle)] shadow-sm"
-                      initial={false}
-                      transition={springPresets.snappy}
-                    />
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setActiveTab(tab.id)}
-                    className={cn(
-                      "relative z-10 hover:bg-transparent transition-colors duration-200",
-                      isActive
-                        ? "text-[var(--color-accent-primary)] font-medium"
-                        : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
-                    )}
-                    data-state={isActive ? "active" : "inactive"}
-                  >
-                    {tab.label}
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
+          <VercelTabs
+            tabs={[
+              { id: "results", label: "Search Results" },
+              ...(activeLanguage === "quran" ? [{ id: "browser", label: "Root Browser" }] : []),
+            ]}
+            activeTab={activeTab}
+            onTabChange={(tabId) => setActiveTab(tabId as TabType)}
+            className="mb-6"
+          />
 
           {/* Tab Content */}
           {activeTab === "results" && (

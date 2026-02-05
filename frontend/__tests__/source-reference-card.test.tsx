@@ -44,7 +44,7 @@ describe('SourceReferenceCard', () => {
 
     it('renders source badge with mapped value', () => {
       render(<SourceReferenceCard verse={mockVerse} reference="Genesis 1:1" />);
-      expect(screen.getByText('Eski Ahit')).toBeInTheDocument();
+      expect(screen.getByText('Old Testament')).toBeInTheDocument();
     });
 
     it('renders book name and verse reference', () => {
@@ -87,19 +87,19 @@ describe('SourceReferenceCard', () => {
     it('maps quran_tr source to quran badge', () => {
       const quranVerse = { ...mockVerse, source: 'quran_tr', book_name: 'Bakara' };
       render(<SourceReferenceCard verse={quranVerse} reference="Bakara:153" />);
-      expect(screen.getByText('Kuran')).toBeInTheDocument();
+      expect(screen.getByText('Quran')).toBeInTheDocument();
     });
 
     it('maps bible_nt source to new_testament badge', () => {
       const ntVerse = { ...mockVerse, source: 'bible_nt', book_name: 'John', book_nr: 43 };
       render(<SourceReferenceCard verse={ntVerse} reference="John 3:16" />);
-      expect(screen.getByText('Yeni Ahit')).toBeInTheDocument();
+      expect(screen.getByText('New Testament')).toBeInTheDocument();
     });
 
     it('maps bible_apocrypha source to apocrypha badge', () => {
       const apocryphaVerse = { ...mockVerse, source: 'bible_apocrypha', book_name: 'Wisdom', book_nr: 70 };
       render(<SourceReferenceCard verse={apocryphaVerse} reference="Wisdom 1:1" />);
-      expect(screen.getByText('Apokrifa')).toBeInTheDocument();
+      expect(screen.getByText('Apocrypha')).toBeInTheDocument();
     });
   });
 

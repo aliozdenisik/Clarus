@@ -1,9 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import * as React from "react";
+import * as TabsPrimitive from "@radix-ui/react-tabs";
 import { cn } from "@/lib/utils";
-import { springPresets } from "@/lib/design-system";
 
 export type SearchSource = "quran" | "ot" | "nt" | "apocrypha";
 
@@ -12,45 +11,32 @@ interface SearchTabsProps {
   onTabChange: (tab: SearchSource) => void;
 }
 
-const tabs: { id: SearchSource; label: string }[] = [
-  { id: "quran", label: "Quran" },
-  { id: "ot", label: "Old Testament" },
-  { id: "nt", label: "New Testament" },
-  { id: "apocrypha", label: "Apocrypha" },
+const tabs = [
+  { value: "quran" as const, label: "Quran" },
+  { value: "ot" as const, label: "Old Testament" },
+  { value: "nt" as const, label: "New Testament" },
+  { value: "apocrypha" as const, label: "Apocrypha" },
 ];
 
 export function SearchTabs({ activeTab, onTabChange }: SearchTabsProps) {
   return (
-    <div className="flex flex-wrap gap-1 p-1 bg-[var(--color-bg-surface)] rounded-lg border border-[var(--color-border-subtle)] w-fit mb-6">
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab.id;
-        return (
-          <div key={tab.id} className="relative">
-             {isActive && (
-              <motion.div
-                layoutId="activeTab"
-                className="absolute inset-0 bg-[var(--color-bg-elevated)] rounded-md border border-[var(--color-border-subtle)] shadow-sm"
-                initial={false}
-                transition={springPresets.snappy}
-              />
+    <TabsPrimitive.Root value={activeTab} onValueChange={onTabChange as any} className="mb-6">
+      <TabsPrimitive.List className="inline-flex h-auto gap-4 rounded-none border-b border-[var(--color-border-subtle)] bg-transparent px-0 py-1 text-foreground">
+        {tabs.map((tab) => (
+          <TabsPrimitive.Trigger
+            key={tab.value}
+            value={tab.value}
+            className={cn(
+              "relative px-3 py-1.5 text-sm font-medium transition-colors",
+              "text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-elevated)] rounded-md",
+              "after:absolute after:inset-x-0 after:bottom-0 after:-mb-1 after:h-0.5",
+              "data-[state=active]:bg-transparent data-[state=active]:text-[var(--color-text-primary)] data-[state=active]:shadow-none data-[state=active]:after:bg-[var(--color-accent-primary)]",
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onTabChange(tab.id)}
-              className={cn(
-                "relative z-10 hover:bg-transparent transition-colors duration-200",
-                isActive 
-                  ? "text-[var(--color-accent-primary)] font-medium" 
-                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
-              )}
-              data-state={isActive ? "active" : "inactive"}
-            >
-              {tab.label}
-            </Button>
-          </div>
-        );
-      })}
-    </div>
+          >
+            {tab.label}
+          </TabsPrimitive.Trigger>
+        ))}
+      </TabsPrimitive.List>
+    </TabsPrimitive.Root>
   );
 }

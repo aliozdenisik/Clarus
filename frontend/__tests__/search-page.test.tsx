@@ -195,9 +195,9 @@ describe("SearchPage", () => {
   it("switches search sources correctly", async () => {
     render(<SearchPage />);
     
-    // Labels are in Turkish: Kuran, Eski Ahit, Yeni Ahit, Apokrifa
-    const otTab = screen.getByRole("button", { name: /Eski Ahit/i });
-    fireEvent.click(otTab);
+    // Labels are in English: Quran, Old Testament, New Testament, Apocrypha
+    const otTab = screen.getByText('Old Testament');
+    await userEvent.click(otTab);
 
     expect(mockPush).toHaveBeenCalledWith("/search?source=ot");
     expect(screen.getByPlaceholderText("Search Old Testament...")).toBeInTheDocument();

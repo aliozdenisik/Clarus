@@ -42,6 +42,13 @@ vi.mock("lucide-react", () => ({
   ExternalLink: () => <div data-testid="external-link-icon" />,
   ChevronLeft: () => <div data-testid="chevron-left-icon" />,
   ChevronRight: () => <div data-testid="chevron-right-icon" />,
+  AlertTriangle: () => <div data-testid="alert-triangle-icon" />,
+  Info: () => <div data-testid="info-icon" />,
+  ChevronDown: () => <div data-testid="chevron-down-icon" />,
+  User: () => <div data-testid="user-icon" />,
+  LogOut: () => <div data-testid="logout-icon" />,
+  BookOpen: () => <div data-testid="book-open-icon" />,
+  Languages: () => <div data-testid="languages-icon" />,
 }));
 
 // Mock GlowCard
@@ -182,9 +189,9 @@ describe("KeywordSearchPage", () => {
     // Search input
     expect(screen.getByPlaceholderText(/Search for Arabic roots/i)).toBeInTheDocument();
 
-    // Tab buttons
-    expect(screen.getByRole("button", { name: /Search Results/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Root Browser/i })).toBeInTheDocument();
+    // Tab navigation - now uses role="tab" (Radix/Vercel tabs)
+    expect(screen.getByRole("tab", { name: /Search Results/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Root Browser/i })).toBeInTheDocument();
   });
 
   it("Arabic search triggers API and displays root card", async () => {
@@ -503,9 +510,9 @@ describe("KeywordSearchPage", () => {
 
     render(<KeywordSearchPage />);
 
-    // Click Root Browser tab
-    const browserTab = screen.getByRole("button", { name: /Root Browser/i });
-    fireEvent.click(browserTab);
+    // Click Root Browser tab - now uses role="tab" (Radix/Vercel tabs)
+    const browserTab = screen.getByRole("tab", { name: /Root Browser/i });
+    await userEvent.click(browserTab);
 
     await waitFor(() => {
       expect(mockListRoots).toHaveBeenCalled();

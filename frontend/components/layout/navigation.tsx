@@ -3,8 +3,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { Menu, X, ChevronDown, LogOut, Settings, User } from 'lucide-react';
+import { Menu, X, ChevronDown, LogOut, Settings, User, Book, BookOpen, ScrollText, FileText, Search as SearchIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from '@/components/ui/navigation-menu';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,9 +20,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/lib/auth/auth-context';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -48,93 +53,187 @@ export default function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex md:items-center md:space-x-1">
-            {/* Search Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-gray-300 hover:text-white">
-                  Search <ChevronDown className="ml-1 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem asChild>
-                  <Link href="/search">Quran Search</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/search?source=ot">Old Testament Search</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/search?source=nt">New Testament Search</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/search?source=apocrypha">Apocrypha Search</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/keyword-search">Word Search</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <NavigationMenu>
+              <NavigationMenuList>
+                {/* Search Dropdown */}
+                <NavigationMenuItem className="text-muted-foreground">
+                  <NavigationMenuTrigger className="text-gray-300 hover:text-white bg-transparent hover:bg-white/5 data-[state=open]:bg-white/5">
+                    Search
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="w-80 p-3">
+                      <NavigationMenuLink asChild>
+                        <Link
+                          href="/search"
+                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <Book className="size-5 shrink-0" />
+                          <div>
+                            <div className="text-sm font-semibold">Quran Search</div>
+                            <p className="text-sm leading-snug text-muted-foreground">
+                              Semantic search across Turkish Quran translation
+                            </p>
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          href="/search?source=ot"
+                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <BookOpen className="size-5 shrink-0" />
+                          <div>
+                            <div className="text-sm font-semibold">Old Testament Search</div>
+                            <p className="text-sm leading-snug text-muted-foreground">
+                              Search through 39 books of the Old Testament
+                            </p>
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          href="/search?source=nt"
+                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <ScrollText className="size-5 shrink-0" />
+                          <div>
+                            <div className="text-sm font-semibold">New Testament Search</div>
+                            <p className="text-sm leading-snug text-muted-foreground">
+                              Search the Gospels, Acts, and Epistles
+                            </p>
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          href="/search?source=apocrypha"
+                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <FileText className="size-5 shrink-0" />
+                          <div>
+                            <div className="text-sm font-semibold">Apocrypha Search</div>
+                            <p className="text-sm leading-snug text-muted-foreground">
+                              Explore deuterocanonical texts and writings
+                            </p>
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          href="/keyword-search"
+                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <SearchIcon className="size-5 shrink-0" />
+                          <div>
+                            <div className="text-sm font-semibold">Word Search</div>
+                            <p className="text-sm leading-snug text-muted-foreground">
+                              Morphological keyword search with roots
+                            </p>
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
 
-            {/* Browse Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-gray-300 hover:text-white">
-                  Browse <ChevronDown className="ml-1 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem asChild>
-                  <Link href="/quran">Quran (114 Surahs)</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/old-testament">Old Testament (39 Books)</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/new-testament">New Testament (27 Books)</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/apocrypha">Apocrypha (14 Books)</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                {/* Browse Dropdown */}
+                <NavigationMenuItem className="text-muted-foreground">
+                  <NavigationMenuTrigger className="text-gray-300 hover:text-white bg-transparent hover:bg-white/5 data-[state=open]:bg-white/5">
+                    Browse
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="w-80 p-3">
+                      <NavigationMenuLink asChild>
+                        <Link
+                          href="/quran"
+                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <Book className="size-5 shrink-0" />
+                          <div>
+                            <div className="text-sm font-semibold">Quran</div>
+                            <p className="text-sm leading-snug text-muted-foreground">
+                              Browse all 114 Surahs with translations
+                            </p>
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          href="/old-testament"
+                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <BookOpen className="size-5 shrink-0" />
+                          <div>
+                            <div className="text-sm font-semibold">Old Testament</div>
+                            <p className="text-sm leading-snug text-muted-foreground">
+                              39 books from Genesis to Malachi
+                            </p>
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          href="/new-testament"
+                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <ScrollText className="size-5 shrink-0" />
+                          <div>
+                            <div className="text-sm font-semibold">New Testament</div>
+                            <p className="text-sm leading-snug text-muted-foreground">
+                              27 books including Gospels and Epistles
+                            </p>
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          href="/apocrypha"
+                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                        >
+                          <FileText className="size-5 shrink-0" />
+                          <div>
+                            <div className="text-sm font-semibold">Apocrypha</div>
+                            <p className="text-sm leading-snug text-muted-foreground">
+                              14 deuterocanonical books and texts
+                            </p>
+                          </div>
+                        </Link>
+                      </NavigationMenuLink>
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
 
-            {/* Word Search Link */}
-            <Link href="/keyword-search">
-              <Button
-                variant="ghost"
-                className={`text-gray-300 hover:text-white ${
-                  isActive('/keyword-search') ? 'text-purple-400 border-b-2 border-purple-400 rounded-none' : ''
-                }`}
-              >
-                Word Search
-              </Button>
-            </Link>
+                {/* Word Search Link */}
+                <Link
+                  href="/keyword-search"
+                  className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
+                    isActive('/keyword-search') ? 'text-purple-400' : 'text-gray-300'
+                  }`}
+                >
+                  Word Search
+                </Link>
 
-            {/* Compare Link */}
-            <Link href="/compare">
-              <Button
-                variant="ghost"
-                className={`text-gray-300 hover:text-white ${
-                  isActive('/compare') ? 'text-purple-400 border-b-2 border-purple-400 rounded-none' : ''
-                }`}
-              >
-                Compare
-              </Button>
-            </Link>
+                {/* Compare Link */}
+                <Link
+                  href="/compare"
+                  className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
+                    isActive('/compare') ? 'text-purple-400' : 'text-gray-300'
+                  }`}
+                >
+                  Compare
+                </Link>
 
-            {/* History Link */}
-            <Link href="/history">
-              <Button
-                variant="ghost"
-                className={`text-gray-300 hover:text-white ${
-                  isActive('/history') ? 'text-purple-400 border-b-2 border-purple-400 rounded-none' : ''
-                }`}
-              >
-                History
-              </Button>
-            </Link>
+                {/* History Link */}
+                <Link
+                  href="/history"
+                  className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
+                    isActive('/history') ? 'text-purple-400' : 'text-gray-300'
+                  }`}
+                >
+                  History
+                </Link>
+              </NavigationMenuList>
+            </NavigationMenu>
           </div>
 
           {/* User Menu (Desktop) */}
