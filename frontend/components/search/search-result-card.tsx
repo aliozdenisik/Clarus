@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ExternalLink } from "lucide-react";
 import { SourceBadge, SourceType } from "@/components/compare/source-badge";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,7 @@ export function SearchResultCard({
   className,
 }: SearchResultCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
   
   // Map source to SourceBadge type
   const displaySource = sourceMap[source.toLowerCase()] || 'quran';
@@ -41,10 +42,22 @@ export function SearchResultCard({
   // Format score as percentage with one decimal place
   const scorePercentage = (score * 100).toFixed(1);
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
     <motion.div
+      role={onClick ? 'button' : undefined}
+      aria-label={onClick ? `Verse ${reference}` : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={handleKeyDown}
       className={cn(
-        "relative rounded-xl p-5 cursor-pointer",
+        "relative rounded-xl p-5",
+        onClick && "cursor-pointer",
         "bg-gradient-to-b from-zinc-900/80 to-zinc-950/90",
         "border transition-all duration-200",
         "before:absolute before:inset-0 before:rounded-xl",
@@ -53,6 +66,7 @@ export function SearchResultCard({
         isHovered 
           ? "border-zinc-600/80 shadow-lg shadow-black/30" 
           : "border-zinc-800/60 shadow-sm shadow-black/10",
+        onClick && "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
         className
       )}
       style={
@@ -65,8 +79,12 @@ export function SearchResultCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
-      whileHover={{ y: -2 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      whileHover={prefersReducedMotion ? {} : { y: -2 }}
+      transition={
+        prefersReducedMotion
+          ? { type: "tween", duration: 0.1 }
+          : { type: "spring", stiffness: 300, damping: 30 }
+      }
     >
       {/* Corner Squares - Editorial/Archival Aesthetic */}
       {[
@@ -80,7 +98,11 @@ export function SearchResultCard({
           className={`absolute ${pos} h-2 w-2 bg-white/90`}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={isHovered ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
-          transition={{ type: "spring", stiffness: 500, damping: 25, delay: i * 0.02 }}
+          transition={
+            prefersReducedMotion
+              ? { type: "tween", duration: 0.1 }
+              : { type: "spring", stiffness: 500, damping: 25, delay: i * 0.02 }
+          }
         />
       ))}
 

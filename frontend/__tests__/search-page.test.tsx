@@ -41,6 +41,7 @@ vi.mock("framer-motion", () => ({
     form: ({ children, layoutId, initial, animate, transition, ...props }: any) => <form {...props}>{children}</form>,
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
+  useReducedMotion: () => false,
 }));
 
 // Mock Lucide icons
