@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { GlowCard } from "@/components/ui/glow-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { VerseLookupInput } from "@/components/verse-lookup";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { BookOpen, Search, User, LogOut } from "lucide-react";
@@ -139,11 +140,32 @@ export default function QuranPage() {
           </div>
         </motion.div>
 
-        {/* Title & Filter */}
+        {/* Verse Lookup Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={springPresets.fluid}
+          className="mb-6"
+        >
+          <div className="mb-3">
+            <h2 className="text-sm font-medium text-[var(--color-text-secondary)] uppercase tracking-wide">
+              Ayet Ara
+            </h2>
+            <p className="text-xs text-[var(--color-text-muted)] mt-1">
+              Doğrudan bir ayete git (örn: Bakara 183 veya 2:183)
+            </p>
+          </div>
+          <VerseLookupInput placeholder="Bakara 183 veya 2:183" />
+        </motion.div>
+
+        {/* Divider */}
+        <div className="mb-8 border-t border-[var(--color-border)]" />
+
+        {/* Title & Filter */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...springPresets.fluid, delay: 0.1 }}
           className="mb-8"
         >
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
