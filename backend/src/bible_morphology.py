@@ -47,6 +47,53 @@ STRONGS_PATTERN = re.compile(r"^[HGhg]\d{1,5}$")
 
 
 # ---------------------------------------------------------------------------
+# Hebrew Bet/Vet (ב) Variant Generation
+# ---------------------------------------------------------------------------
+
+
+def _generate_bet_vet_variant(text: str) -> str:
+    """Generate the alternate b↔v variant for Hebrew transliteration.
+
+    Hebrew letter ב (Bet/Vet) is transliterated as:
+    - 'b' when it has dagesh (stop consonant) - ISO 259, SBL, ALA-LC
+    - 'v' when it lacks dagesh (fricative) - ISO 259, SBL, ALA-LC
+
+    Different databases and user inputs use different conventions:
+    - Strong's: "da.var" (fricative convention)
+    - User search: "dabar" (stop convention)
+
+    This function swaps all b↔v to generate the alternate form,
+    allowing dual-indexing for search compatibility.
+
+    Academic References:
+    - ISO 259:1984 Hebrew Romanization
+    - ALA-LC Romanization Tables (Library of Congress)
+    - SBL Handbook of Style, 2nd ed.
+
+    Args:
+        text: Normalized ASCII transliteration (e.g., "davar", "dabar")
+
+    Returns:
+        Alternate form with b↔v swapped (e.g., "dabar", "davar")
+
+    Example:
+        >>> _generate_bet_vet_variant("davar")
+        'dabar'
+        >>> _generate_bet_vet_variant("dabar")
+        'davar'
+        >>> _generate_bet_vet_variant("yehovah")
+        'yehobah'
+    """
+    if not text:
+        return text
+
+    # Build translation table: b↔v swap
+    # Using str.translate for efficiency
+    trans_table = str.maketrans("bv", "vb")
+    return text.translate(trans_table)
+
+
+# ---------------------------------------------------------------------------
 # Result Dataclasses
 # ---------------------------------------------------------------------------
 
@@ -220,11 +267,83 @@ class BibleMorphologySearch:
                             padded_number
                         )
 
+                # DUAL-INDEXING for Hebrew Bet/Vet (ב) variants
+                # Academic basis: Hebrew ב is pronounced 'b' with dagesh (stop),
+                # 'v' without dagesh (fricative). Different transliteration schemes
+                # use different conventions (ISO 259 vs SBL vs ALA-LC).
+                # Solution: Index BOTH b↔v variants pointing to the same Strong's.
+                # Reference: ALA-LC Romanization Tables, Sefaria search implementation
+                if not is_greek and normalized_ascii:
+                    bet_vet_variant = _generate_bet_vet_variant(normalized_ascii)
+                    if bet_vet_variant and bet_vet_variant != normalized_ascii:
+                        if bet_vet_variant not in self._transliteration_map:
+                            self._transliteration_map[bet_vet_variant] = []
+                        if (
+                            padded_number
+                            not in self._transliteration_map[bet_vet_variant]
+                        ):
+                            self._transliteration_map[bet_vet_variant].append(
+                                padded_number
+                            )
+
+        # OCCURRENCE-BASED PRIORITIZATION
+        # When multiple Strong's numbers map to the same transliteration key
+        # (e.g., "torah" → [H2960, H8451]), prioritize by occurrence count.
+        # This ensures the most common word (H8451 "law" with 219 occurrences)
+        # is returned before rare homographs (H2960 "burden" with 2 occurrences).
+        # Reference: Standard IR practice for disambiguation
+        await self._sort_maps_by_occurrence()
+
         logger.info(
             "Loaded Strong's cache: %d entries, %d reverse mappings, %d transliterations",
             len(self._strongs_cache),
             len(self._reverse_strongs),
             len(self._transliteration_map),
+        )
+
+    async def _sort_maps_by_occurrence(self) -> None:
+        """Sort transliteration and reverse Strong's maps by occurrence count.
+
+        When multiple Strong's numbers map to the same key (homographs),
+        this ensures the most common word is returned first during lookup.
+
+        Example: "torah" → [H2960, H8451]
+        - H2960 (burden): 2 occurrences
+        - H8451 (law): 219 occurrences
+        After sorting: [H8451, H2960] (most common first)
+
+        This is standard IR practice for disambiguation and improves
+        search result relevance.
+        """
+        # Query occurrence counts for all Strong's numbers
+        async with self._session_maker() as session:
+            result = await session.execute(
+                sa_text(
+                    """
+                    SELECT strong_number, COUNT(*) as cnt
+                    FROM bm_words
+                    WHERE strong_number IS NOT NULL
+                    GROUP BY strong_number
+                    """
+                )
+            )
+            occurrence_counts = {row[0]: row[1] for row in result.fetchall()}
+
+        # Sort transliteration_map lists by occurrence count (descending)
+        for key in self._transliteration_map:
+            self._transliteration_map[key].sort(
+                key=lambda sn: occurrence_counts.get(sn, 0), reverse=True
+            )
+
+        # Sort reverse_strongs lists by occurrence count (descending)
+        for key in self._reverse_strongs:
+            self._reverse_strongs[key].sort(
+                key=lambda sn: occurrence_counts.get(sn, 0), reverse=True
+            )
+
+        logger.debug(
+            "Sorted maps by occurrence count (%d Strong's numbers)",
+            len(occurrence_counts),
         )
 
     # ------------------------------------------------------------------
@@ -322,6 +441,20 @@ class BibleMorphologySearch:
             "greek_transliteration_normalized",  # Step L5a: zoe → G2222 → ζωή
         ) or (root_source == "fuzzy" and detect_script(query) == "greek"):
             logger.debug("[BibleMorphology.search] Routing to _search_by_lemma")
+
+            # Preserve Strong's number when user explicitly searched for one
+            # e.g., "G2316" → translated to lemma "θεός", but we want to return G2316
+            greek_strongs: Optional[str] = None
+            if root_source in ("strongs_to_lemma", "strongs_to_lemma_fuzzy"):
+                if STRONGS_PATTERN.match(query):
+                    # Normalize to standard format (uppercase, zero-padded)
+                    prefix = query[0].upper()
+                    num_part = query[1:]
+                    try:
+                        greek_strongs = f"{prefix}{int(num_part):04d}"
+                    except ValueError:
+                        greek_strongs = f"{prefix}{num_part}"
+
             try:
                 result = await self._search_by_lemma(
                     query=query,
@@ -333,6 +466,7 @@ class BibleMorphologySearch:
                     word_filter=word_filter,
                     testament_filter=testament_filter,
                     category_filter=category_filter,
+                    strong_number=greek_strongs,
                 )
                 logger.info(
                     "[BibleMorphology.search] _search_by_lemma completed: total_occurrences=%d",
@@ -1041,16 +1175,38 @@ class BibleMorphologySearch:
         word_filter: Optional[str] = None,
         testament_filter: Optional[str] = None,
         category_filter: Optional[str] = None,
+        strong_number: Optional[str] = None,
     ) -> BibleMorphologySearchResult:
         """Query all data for a given Greek lemma.
 
-        Greek words in MorphGNT don't have Strong's numbers, so we search by lemma.
+        Greek words in MorphGNT don't have Strong's numbers in bm_words,
+        so we search by lemma. However, when user explicitly searched for
+        a Strong's number (e.g., G2316), we preserve and return it.
+
+        Args:
+            query: Original user query
+            lemma: Greek lemma to search for
+            root_source: How the lemma was found
+            page: Page number
+            per_page: Results per page
+            language_filter: Optional language filter
+            word_filter: Optional word form filter
+            testament_filter: Optional testament filter
+            category_filter: Optional category filter
+            strong_number: Optional Strong's number to include in result
+                (preserved when user explicitly searched for G#### format)
+
         Fetches: total occurrences, unique words, book distribution,
         paginated verses with matched words.
         """
         # For Greek, set root directly from lemma (no Strong's cache lookup)
         root_word = lemma
         root_transliteration = None
+
+        # If Strong's number provided, get transliteration from cache
+        if strong_number:
+            strongs_info = self._strongs_cache.get(strong_number, {})
+            root_transliteration = strongs_info.get("transliteration")
 
         # Build WHERE clause fragments for language and word filters
         lang_clause = ""
@@ -1265,7 +1421,7 @@ class BibleMorphologySearch:
             query=query,
             root=root_word,
             root_source=root_source,
-            strong_number=None,  # Greek has no Strong's number
+            strong_number=strong_number,  # Preserved when user searched G#### format
             total_occurrences=total_occurrences,
             unique_words=unique_words,
             book_distribution=book_distribution,

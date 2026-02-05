@@ -293,6 +293,10 @@ def normalize_transliteration_for_lookup(text: str) -> str:
     # Step 4: Lowercase
     stripped = stripped.lower()
 
+    # Step 5: Remove syllable separators (dots used in some transliteration schemes)
+    # e.g., "e.lo.him" → "elohim", "sha.lom" → "shalom"
+    stripped = stripped.replace(".", "")
+
     # Step 6: Normalize Het (ח) variants - MUST preserve 'sh' first!
     # Replace 'ch' with 'h' but NOT 'sch' (German spelling)
     # Order matters: handle 'kh' first, then 'ch'
