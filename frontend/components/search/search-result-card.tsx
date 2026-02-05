@@ -38,8 +38,8 @@ export function SearchResultCard({
   // Map source to SourceBadge type
   const displaySource = sourceMap[source.toLowerCase()] || 'quran';
   
-  // Format score as percentage
-  const scorePercentage = Math.round(score * 100);
+  // Format score as percentage with one decimal place
+  const scorePercentage = (score * 100).toFixed(1);
 
   return (
     <motion.div
