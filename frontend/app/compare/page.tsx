@@ -66,6 +66,14 @@ const FILTER_TO_SOURCE: Record<string, string[]> = {
   'apocrypha': ['bible_apocrypha']
 };
 
+// Verse counts per collection (from Qdrant)
+const COLLECTION_VERSE_COUNTS: Record<string, number> = {
+  'quran_tr': 6236,
+  'bible_ot': 23145,
+  'bible_nt': 7957,
+  'bible_apocrypha': 5717,
+};
+
 function CompareContent() {
   const [topic, setTopic] = useState("");
   const [result, setResult] = useState<CompareResult | null>(null);
@@ -80,6 +88,15 @@ function CompareContent() {
   const [selectedCollections, setSelectedCollections] = useState<string[]>([
     "quran_tr", "bible_ot", "bible_nt", "bible_apocrypha"
   ]);
+  
+  // Dynamic verse count based on selected collections
+  const selectedVerseCount = useMemo(() => {
+    return selectedCollections.reduce(
+      (total, col) => total + (COLLECTION_VERSE_COUNTS[col] || 0),
+      0
+    );
+  }, [selectedCollections]);
+  
   const highlightTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasAutoExecuted = useRef(false);
   const log = useLogger("ComparePage");
@@ -488,11 +505,22 @@ function CompareContent() {
               </span>
             </h1>
             
-            {/* Subtitle */}
+            {/* Subtitle with dynamic verse count */}
             <p className="text-base md:text-lg text-[var(--color-text-muted)] max-w-md mx-auto leading-relaxed">
               Comparative analysis across{" "}
-              <span className="text-[var(--color-text-secondary)] font-medium">43,055 verses</span>
-              {" "}from {selectedCollections.length} scripture sources
+              <motion.span 
+                key={selectedVerseCount}
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-[var(--color-text-secondary)] font-medium tabular-nums"
+              >
+                {selectedVerseCount.toLocaleString()}
+              </motion.span>
+              {" "}verses from{" "}
+              <span className="text-[var(--color-text-secondary)] font-medium">
+                {selectedCollections.length}
+              </span>
+              {" "}sources
             </p>
           </motion.div>
 
