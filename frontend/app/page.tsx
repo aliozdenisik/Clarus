@@ -11,7 +11,6 @@ import {
   GitCompare,
   BookOpen,
   ArrowRight,
-  ArrowDown,
   Brain,
   Layers,
   ScrollText,
@@ -19,6 +18,7 @@ import {
   Library,
 } from "lucide-react";
 import Image from "next/image";
+import { BentoGrid, BentoCard } from "@/components/ui/bento-grid";
 
 const features = [
   {
@@ -120,40 +120,44 @@ const agents = [
 
 const agentColorMap = {
   emerald: {
-    glow: "bg-emerald-500/20",
-    border: "group-hover:border-emerald-500/30",
-    bg: "bg-emerald-500/10",
-    text: "text-emerald-500",
-    role: "text-emerald-400/70",
-    stat: "text-emerald-400",
-    line: "bg-emerald-500/40",
+    gradient: "bg-gradient-to-b from-emerald-500/5 to-transparent",
+    iconBg: "bg-emerald-500/10",
+    iconBorder: "border-emerald-500/20",
+    text: "text-emerald-400",
+    badge: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20",
+    stat: "text-emerald-400/80",
+    dot: "bg-emerald-400",
+    line: "bg-emerald-600/30",
   },
   amber: {
-    glow: "bg-amber-500/20",
-    border: "group-hover:border-amber-500/30",
-    bg: "bg-amber-500/10",
-    text: "text-amber-500",
-    role: "text-amber-400/70",
-    stat: "text-amber-400",
-    line: "bg-amber-500/40",
+    gradient: "bg-gradient-to-b from-amber-500/5 to-transparent",
+    iconBg: "bg-amber-500/10",
+    iconBorder: "border-amber-500/20",
+    text: "text-amber-400",
+    badge: "bg-amber-500/15 text-amber-400 border border-amber-500/20",
+    stat: "text-amber-400/80",
+    dot: "bg-amber-400",
+    line: "bg-amber-600/30",
   },
   sky: {
-    glow: "bg-sky-500/20",
-    border: "group-hover:border-sky-500/30",
-    bg: "bg-sky-500/10",
-    text: "text-sky-500",
-    role: "text-sky-400/70",
-    stat: "text-sky-400",
-    line: "bg-sky-500/40",
+    gradient: "bg-gradient-to-b from-sky-500/5 to-transparent",
+    iconBg: "bg-sky-500/10",
+    iconBorder: "border-sky-500/20",
+    text: "text-sky-400",
+    badge: "bg-sky-500/15 text-sky-400 border border-sky-500/20",
+    stat: "text-sky-400/80",
+    dot: "bg-sky-400",
+    line: "bg-sky-600/30",
   },
   purple: {
-    glow: "bg-purple-500/20",
-    border: "group-hover:border-purple-500/30",
-    bg: "bg-purple-500/10",
-    text: "text-purple-500",
-    role: "text-purple-400/70",
-    stat: "text-purple-400",
-    line: "bg-purple-500/40",
+    gradient: "bg-gradient-to-b from-purple-500/5 to-transparent",
+    iconBg: "bg-purple-500/10",
+    iconBorder: "border-purple-500/20",
+    text: "text-purple-400",
+    badge: "bg-purple-500/15 text-purple-400 border border-purple-500/20",
+    stat: "text-purple-400/80",
+    dot: "bg-purple-400",
+    line: "bg-purple-600/30",
   },
 } as const;
 
@@ -163,222 +167,198 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[var(--color-bg-app)] overflow-hidden">
-      {/* Background gradient effect */}
+      {/* Subtle ambient glow */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[var(--color-accent-primary)] opacity-[0.03] blur-[120px] rounded-full" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[var(--color-accent-primary)] opacity-[0.02] blur-[100px] rounded-full" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[800px] bg-[var(--color-accent-primary)] opacity-[0.02] blur-[150px] rounded-full" />
       </div>
 
-      {/* Hero Section */}
-      <section className="relative px-4 pt-20 pb-24 md:pt-32 md:pb-32">
-        <div className="mx-auto max-w-5xl text-center">
-          {/* Animated Logo */}
+      {/* Hero Section - Centered Layout */}
+      <section className="relative px-6 pt-32 pb-40 md:pt-48 md:pb-56">
+        <div className="mx-auto max-w-[1200px] flex flex-col items-center text-center">
+          {/* Logo - Centered */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ ...springPresets.fluid, duration: 0.8 }}
-            className="mb-8 flex justify-center"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...springPresets.gentle, duration: 1.2 }}
+            className="mb-16"
           >
             <div className="relative">
-              <div className="absolute inset-0 blur-2xl bg-[var(--color-accent-primary)] opacity-20 rounded-full scale-150" />
+              <div className="absolute inset-0 blur-3xl bg-[var(--color-accent-primary)] opacity-10 rounded-full scale-150" />
               <Image
                 src="/logo-dark-nobg.png"
                 alt="Clarus"
-                width={110}
-                height={110}
-                className="relative drop-shadow-2xl"
+                width={120}
+                height={120}
+                className="relative opacity-90"
                 priority
               />
             </div>
           </motion.div>
 
-          {/* Headline */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...springPresets.fluid, delay: 0.1 }}
-            className="text-4xl md:text-6xl font-bold tracking-tight"
-          >
-            <span className="text-[var(--color-text-primary)]">
-              Explore Sacred Texts
-            </span>
-            <br />
-            <span className="bg-gradient-to-r from-[var(--color-accent-primary)] to-purple-400 bg-clip-text text-transparent">
-              with AI
-            </span>
-          </motion.h1>
-
-          {/* Subheadline */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...springPresets.fluid, delay: 0.2 }}
-            className="mt-6 text-lg md:text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto leading-relaxed"
-          >
-            Search across Quran and Bible with AI. Discover connections,
-            compare perspectives, find answers.
-          </motion.p>
-
-          {/* CTA Buttons */}
+          {/* Headline - Large editorial typography */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ ...springPresets.fluid, delay: 0.3 }}
-            className="mt-10 flex flex-col sm:flex-row gap-4 justify-center"
+            transition={{ ...springPresets.gentle, delay: 0.2, duration: 1.2 }}
+            className="max-w-[900px] flex flex-col items-center"
           >
-            {user ? (
-              <>
-                <MagneticButton
-                  onClick={() => router.push("/search")}
-                  className="px-8 py-3 text-base font-medium"
-                >
-                  <span className="flex items-center gap-2">
-                    <Search className="w-4 h-4" />
-                    Go to Search
-                  </span>
-                </MagneticButton>
-                <MagneticButton
-                  onClick={() => router.push("/compare")}
-                  className="px-8 py-3 text-base font-medium bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] border border-[var(--color-border-subtle)]"
-                >
-                  <span className="flex items-center gap-2">
-                    <GitCompare className="w-4 h-4" />
-                    Compare
-                  </span>
-                </MagneticButton>
-              </>
-            ) : (
-              <>
-                <MagneticButton
-                  onClick={() => router.push("/register")}
-                  className="px-8 py-3 text-base font-medium"
-                >
-                  <span className="flex items-center gap-2">
-                    Get Started
-                    <ArrowRight className="w-4 h-4" />
-                  </span>
-                </MagneticButton>
-                <MagneticButton
-                  onClick={() => router.push("/login")}
-                  className="px-8 py-3 text-base font-medium bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] border border-[var(--color-border-subtle)]"
-                >
-                  Sign In
-                </MagneticButton>
-              </>
-            )}
+            <h1 className="font-[family-name:var(--font-serif)] text-6xl md:text-8xl font-normal tracking-tight leading-[1.1] mb-8">
+              <span className="text-[var(--color-text-primary)]">
+                Explore Sacred Texts
+              </span>
+              <br />
+              <span className="text-[var(--color-accent-primary)]">
+                with AI
+              </span>
+            </h1>
+
+            <p className="text-xl md:text-2xl text-[var(--color-text-secondary)] max-w-[600px] mx-auto leading-relaxed font-light tracking-wide mb-16">
+              Search across Quran and Bible with AI. Discover connections,
+              compare perspectives, find answers.
+            </p>
+
+            {/* CTA Buttons - Refined */}
+            <div className="flex flex-col sm:flex-row gap-5">
+              {user ? (
+                <>
+                  <motion.button
+                    onClick={() => router.push("/search")}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={springPresets.snappy}
+                    className="group relative px-10 py-5 bg-[var(--color-accent-primary)] text-[var(--color-bg-app)] font-medium text-base tracking-wide overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-[var(--color-accent-secondary)] translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                    <span className="relative flex items-center justify-center gap-3">
+                      <Search className="w-4 h-4" />
+                      Go to Search
+                    </span>
+                  </motion.button>
+                  <motion.button
+                    onClick={() => router.push("/compare")}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={springPresets.snappy}
+                    className="px-10 py-5 border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] font-medium text-base tracking-wide hover:border-[var(--color-border-glow)] transition-colors duration-300"
+                  >
+                    <span className="flex items-center justify-center gap-3">
+                      <GitCompare className="w-4 h-4" />
+                      Compare
+                    </span>
+                  </motion.button>
+                </>
+              ) : (
+                <>
+                  <motion.button
+                    onClick={() => router.push("/register")}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={springPresets.snappy}
+                    className="group relative px-10 py-5 bg-[var(--color-accent-primary)] text-[var(--color-bg-app)] font-medium text-base tracking-wide overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-[var(--color-accent-secondary)] translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                    <span className="relative flex items-center justify-center gap-3">
+                      Get Started
+                      <ArrowRight className="w-4 h-4" />
+                    </span>
+                  </motion.button>
+                  <motion.button
+                    onClick={() => router.push("/login")}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={springPresets.snappy}
+                    className="px-10 py-5 border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] font-medium text-base tracking-wide hover:border-[var(--color-border-glow)] transition-colors duration-300"
+                  >
+                    Sign In
+                  </motion.button>
+                </>
+              )}
+            </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="relative px-4 py-24 md:py-32">
-        <div className="mx-auto max-w-6xl">
-          {/* Section Header */}
+      {/* Features Section - Bento Grid */}
+      <section className="relative px-6 py-32 md:py-40">
+        <div className="mx-auto max-w-[1200px]">
+          {/* Section Header - Centered */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            transition={springPresets.fluid}
-            className="text-center mb-16"
+            transition={{ ...springPresets.gentle, duration: 1 }}
+            className="mb-24 text-center"
           >
-            <motion.span
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ ...springPresets.snappy, delay: 0.1 }}
-              className="inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-wider uppercase bg-[var(--color-accent-glow)] text-[var(--color-accent-primary)] border border-[var(--color-accent-primary)]/20 mb-6"
-            >
+            <span className="inline-block text-xs font-medium tracking-[0.2em] uppercase text-[var(--color-accent-primary)] mb-6">
               Why Clarus
-            </motion.span>
-            <h2 className="text-3xl md:text-4xl font-bold text-[var(--color-text-primary)] tracking-tight">
+            </span>
+            <h2 className="font-[family-name:var(--font-serif)] text-5xl md:text-6xl font-normal text-[var(--color-text-primary)] tracking-tight leading-tight max-w-[700px] mx-auto">
               Built for Depth, Not Just Speed
             </h2>
-            <p className="mt-4 text-[var(--color-text-secondary)] max-w-lg mx-auto leading-relaxed">
-              Every layer of the pipeline is designed to maximize retrieval
-              accuracy and scholarly rigor.
-            </p>
           </motion.div>
 
-          {/* Feature Cards */}
-          <div className="grid md:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ ...springPresets.fluid, delay: index * 0.12 }}
-                className="group relative"
-              >
-                <motion.div
-                  whileHover={{ y: -6 }}
-                  transition={springPresets.snappy}
-                  className="relative h-full"
-                >
-                  {/* Hover glow */}
-                  <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-[var(--color-accent-primary)]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
+          {/* Bento Grid */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ ...springPresets.gentle, duration: 1 }}
+          >
+            <BentoGrid className="md:grid-cols-3">
+              {features.map((feature, index) => (
+                <BentoCard
+                  key={feature.title}
+                  name={feature.title}
+                  className="md:col-span-1"
+                  background={
+                    <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-accent-primary)]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  }
+                  Icon={feature.icon}
+                  description={feature.description}
+                  href={user ? "/search" : "/register"}
+                  cta="Explore"
+                />
+              ))}
+            </BentoGrid>
+          </motion.div>
 
-                  {/* Card */}
-                  <div className="relative h-full p-8 rounded-2xl bg-[var(--color-bg-surface)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] group-hover:border-[var(--color-accent-primary)]/30 transition-colors duration-300 flex flex-col text-center">
-                    {/* Icon */}
-                    <div className="w-12 h-12 rounded-xl bg-[var(--color-accent-glow)] flex items-center justify-center mx-auto mb-5">
-                      <feature.icon className="w-6 h-6 text-[var(--color-accent-primary)]" />
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">
-                      {feature.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed flex-1">
-                      {feature.description}
-                    </p>
-
-                    {/* Tech Note */}
-                    <div className="mt-5 pt-4 border-t border-[var(--color-border-subtle)]">
-                      <span className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-widest">
-                        {feature.techNote}
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-              </motion.div>
+          {/* Tech Notes - Below Grid */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5, duration: 1 }}
+            className="mt-8 grid md:grid-cols-3 gap-8"
+          >
+            {features.map((feature) => (
+              <div key={feature.techNote} className="text-center">
+                <span className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-[0.15em] font-medium">
+                  {feature.techNote}
+                </span>
+              </div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Multi-Agent Deep Dive Section */}
-      <section className="relative px-4 py-24 md:py-32 overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-emerald-500 opacity-[0.02] blur-[120px] rounded-full" />
-          <div className="absolute bottom-1/3 right-1/4 w-[500px] h-[500px] bg-purple-500 opacity-[0.02] blur-[120px] rounded-full" />
-        </div>
-
-        <div className="mx-auto max-w-6xl relative">
+      {/* Multi-Agent Section - Sophisticated Color-Coding */}
+      <section className="relative px-6 py-32 md:py-40 overflow-hidden">
+        <div className="mx-auto max-w-[1200px]">
           {/* Section Header */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            transition={springPresets.fluid}
-            className="text-center mb-16"
+            transition={{ ...springPresets.gentle, duration: 1 }}
+            className="mb-24 text-center"
           >
-            <motion.span
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ ...springPresets.snappy, delay: 0.1 }}
-              className="inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-wider uppercase bg-[var(--color-accent-glow)] text-[var(--color-accent-primary)] border border-[var(--color-accent-primary)]/20 mb-6"
-            >
+            <span className="inline-block text-xs font-medium tracking-[0.2em] uppercase text-[var(--color-accent-primary)] mb-6">
               Core Feature
-            </motion.span>
-            <h2 className="text-3xl md:text-4xl font-bold text-[var(--color-text-primary)] tracking-tight">
+            </span>
+            <h2 className="font-[family-name:var(--font-serif)] text-5xl md:text-6xl font-normal text-[var(--color-text-primary)] tracking-tight leading-tight mb-8 max-w-[700px] mx-auto">
               Multi-Agent Analysis
             </h2>
-            <p className="mt-4 text-[var(--color-text-secondary)] max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg text-[var(--color-text-secondary)] max-w-[650px] leading-relaxed font-light mx-auto">
               Each question is analyzed by 5 specialized AI agents in parallel
               — 4 scripture experts and 1 comparative theologian — producing a
               comprehensive essay with full citations.
@@ -386,133 +366,122 @@ export default function HomePage() {
           </motion.div>
 
           {/* 4 Specialist Agent Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {agents.map((agent, index) => {
               const colors = agentColorMap[agent.color];
               return (
                 <motion.div
                   key={agent.name}
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{
-                    ...springPresets.fluid,
-                    delay: 0.15 + index * 0.1,
+                    ...springPresets.gentle,
+                    delay: 0.2 + index * 0.1,
+                    duration: 1,
                   }}
                 >
-                  <motion.div
-                    whileHover={{ y: -6, scale: 1.02 }}
-                    transition={springPresets.snappy}
-                    className="group relative h-full"
-                  >
-                    {/* Glow effect */}
-                    <div
-                      className={`absolute -inset-px rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl ${colors.glow}`}
-                    />
-
-                    <div
-                      className={`relative h-full p-5 rounded-xl bg-[var(--color-bg-surface)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] transition-colors duration-300 flex flex-col ${colors.border}`}
-                    >
+                  <div className={`group relative h-full p-6 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-transparent backdrop-blur-xl shadow-lg shadow-black/20 hover:border-white/[0.15] hover:from-white/[0.06] transition-all duration-500`}>
+                    {/* Subtle gradient overlay */}
+                    <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${colors.gradient}`} />
+                    
+                    {/* Content */}
+                    <div className="relative z-10">
                       {/* Icon */}
-                      <div
-                        className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 mx-auto ${colors.bg}`}
-                      >
+                      <div className={`w-12 h-12 mb-5 flex items-center justify-center rounded-xl ${colors.iconBg} border ${colors.iconBorder}`}>
                         <agent.icon className={`w-5 h-5 ${colors.text}`} />
                       </div>
 
-                      {/* Name & Role */}
-                      <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-0.5 text-center">
+                      {/* Name & Role Badge */}
+                      <h3 className="text-base font-semibold text-white mb-2">
                         {agent.name}
                       </h3>
-                      <p className={`text-xs font-medium mb-2 text-center ${colors.role}`}>
+                      <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-medium tracking-wide uppercase mb-4 ${colors.badge}`}>
                         {agent.role}
-                      </p>
+                      </span>
 
                       {/* Description */}
-                      <p className="text-xs text-[var(--color-text-muted)] leading-relaxed mb-3 text-center flex-1">
+                      <p className="text-sm text-zinc-400 leading-relaxed mb-5">
                         {agent.description}
                       </p>
 
                       {/* Stats */}
-                      <div className="pt-2 border-t border-[var(--color-border-subtle)] mt-auto">
-                        <p className={`text-xs font-semibold tabular-nums text-center ${colors.stat}`}>
-                          {agent.verseCount} verses
+                      <div className="flex items-center gap-2 pt-4 border-t border-white/[0.06]">
+                        <div className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} />
+                        <p className={`text-xs font-medium tabular-nums ${colors.stat}`}>
+                          {agent.verseCount} verses indexed
                         </p>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 </motion.div>
               );
             })}
           </div>
 
-          {/* Convergence Visual */}
+          {/* Convergence Visual - Minimal */}
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="flex justify-center py-4"
+            transition={{ duration: 1, delay: 0.6 }}
+            className="flex justify-center py-8"
           >
-            <div className="flex flex-col items-center gap-2">
-              {/* Animated color lines */}
-              <div className="flex gap-4">
-                {(["emerald", "amber", "sky", "purple"] as const).map(
-                  (color, i) => (
-                    <motion.div
-                      key={color}
-                      className={`w-0.5 h-8 rounded-full ${agentColorMap[color].line}`}
-                      animate={{ opacity: [0.2, 0.8, 0.2] }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        delay: i * 0.2,
-                      }}
-                    />
-                  )
-                )}
-              </div>
-              <ArrowDown className="w-4 h-4 text-[var(--color-accent-primary)] opacity-50" />
+            <div className="flex gap-6">
+              {(["emerald", "amber", "sky", "purple"] as const).map(
+                (color, i) => (
+                  <motion.div
+                    key={color}
+                    className={`w-px h-12 ${agentColorMap[color].line}`}
+                    animate={{ opacity: [0.3, 0.7, 0.3] }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      delay: i * 0.3,
+                    }}
+                  />
+                )
+              )}
             </div>
           </motion.div>
 
           {/* Summary Agent Card */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ ...springPresets.fluid, delay: 0.6 }}
-            className="max-w-2xl mx-auto"
+            transition={{ ...springPresets.gentle, delay: 0.7, duration: 1 }}
+            className="max-w-[800px] mx-auto"
           >
-            <motion.div
-              whileHover={{ y: -4 }}
-              transition={springPresets.snappy}
-              className="group relative"
-            >
-              {/* Gradient glow */}
-              <div className="absolute -inset-px rounded-xl bg-gradient-to-r from-[var(--color-accent-primary)]/20 via-purple-500/20 to-[var(--color-accent-primary)]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
+            <div className="group relative p-10 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-transparent backdrop-blur-xl shadow-lg shadow-black/20 hover:border-white/[0.15] hover:from-white/[0.06] transition-all duration-500">
+              {/* Subtle gradient overlay */}
+              <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-b from-indigo-500/5 to-transparent" />
+              
+              {/* Content */}
+              <div className="relative z-10">
+                {/* Icon */}
+                <div className="w-14 h-14 mb-6 flex items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/20">
+                  <Sparkles className="w-6 h-6 text-indigo-400" />
+                </div>
 
-              <div className="relative p-6 rounded-xl bg-[var(--color-bg-surface)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] group-hover:border-[var(--color-accent-primary)]/30 transition-colors duration-300 text-center">
-                  {/* Icon */}
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[var(--color-accent-glow)] to-purple-500/10 border border-[var(--color-accent-primary)]/20 flex items-center justify-center mx-auto mb-3">
-                    <Sparkles className="w-6 h-6 text-[var(--color-accent-primary)]" />
-                  </div>
+                {/* Name & Role Badge */}
+                <h3 className="text-xl font-semibold text-white mb-3">
+                  Synthesis Agent
+                </h3>
+                <span className="inline-block px-3 py-1.5 rounded-full text-[10px] font-medium tracking-wide uppercase mb-5 bg-indigo-500/15 text-indigo-400 border border-indigo-500/20">
+                  Comparative Theologian
+                </span>
 
-                  <h3 className="text-base font-semibold text-[var(--color-text-primary)] mb-0.5">
-                    Synthesis Agent
-                  </h3>
-                  <p className="text-xs text-[var(--color-accent-primary)]/70 font-medium mb-2">
-                    Comparative Theologian
-                  </p>
-                  <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed max-w-lg mx-auto">
-                    Synthesizes all 4 perspectives into a unified comparative
-                    essay — identifying common themes, key differences, and
-                    cross-scripture connections with full citation
-                    traceability.
-                  </p>
+                {/* Description */}
+                <p className="text-base text-zinc-400 leading-relaxed mb-8 max-w-2xl">
+                  Synthesizes all 4 perspectives into a unified comparative
+                  essay — identifying common themes, key differences, and
+                  cross-scripture connections with full citation
+                  traceability.
+                </p>
 
                 {/* Output Tags */}
-                <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)] flex flex-wrap justify-center gap-2">
+                <div className="pt-6 border-t border-white/[0.06] flex flex-wrap gap-2">
                   {[
                     "5-Paragraph Essay",
                     "Common Themes",
@@ -521,280 +490,150 @@ export default function HomePage() {
                   ].map((tag) => (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 text-[10px] font-medium rounded-md bg-[var(--color-bg-elevated)] text-[var(--color-text-muted)] border border-[var(--color-border-subtle)]"
+                      className="px-3 py-1.5 text-[10px] font-medium tracking-wide uppercase rounded-lg bg-white/[0.04] border border-white/[0.08] text-zinc-400 hover:bg-white/[0.08] hover:text-zinc-300 transition-colors"
                     >
                       {tag}
                     </span>
                   ))}
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* How It Works Section - Premium */}
-      <section className="relative px-4 py-24 md:py-32 overflow-hidden">
-        {/* Background Elements */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[var(--color-accent-primary)] opacity-[0.02] blur-[150px] rounded-full" />
-        </div>
-
-        <div className="mx-auto max-w-6xl relative">
-          {/* Section Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={springPresets.fluid}
-            className="text-center mb-20"
-          >
-            <motion.span
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ ...springPresets.snappy, delay: 0.1 }}
-              className="inline-block px-4 py-1.5 rounded-full text-xs font-medium tracking-wider uppercase bg-[var(--color-accent-glow)] text-[var(--color-accent-primary)] border border-[var(--color-accent-primary)]/20 mb-6"
-            >
-              Your Journey
-            </motion.span>
-            <h2 className="text-3xl md:text-4xl font-bold text-[var(--color-text-primary)] tracking-tight">
-              From Question to Insight
-            </h2>
-            <p className="mt-4 text-[var(--color-text-secondary)] max-w-lg mx-auto leading-relaxed">
-              Every question follows a thoughtful path — from your words to a
-              fully cited, multi-perspective analysis.
-            </p>
-          </motion.div>
-
-          {/* Steps Container */}
-          <div className="relative">
-            {/* Animated Connection Line - Desktop */}
-            <svg
-              className="hidden md:block absolute top-[60px] left-[12.5%] right-[12.5%] w-[75%] h-[4px] overflow-visible"
-              preserveAspectRatio="none"
-            >
-              <defs>
-                <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="var(--color-accent-primary)" stopOpacity="0" />
-                  <stop offset="20%" stopColor="var(--color-accent-primary)" stopOpacity="0.5" />
-                  <stop offset="50%" stopColor="var(--color-accent-primary)" stopOpacity="0.8" />
-                  <stop offset="80%" stopColor="var(--color-accent-primary)" stopOpacity="0.5" />
-                  <stop offset="100%" stopColor="var(--color-accent-primary)" stopOpacity="0" />
-                </linearGradient>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                  <feMerge>
-                    <feMergeNode in="coloredBlur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              </defs>
-              <motion.line
-                x1="0"
-                y1="2"
-                x2="100%"
-                y2="2"
-                stroke="url(#lineGradient)"
-                strokeWidth="2"
-                filter="url(#glow)"
-                initial={{ pathLength: 0, opacity: 0 }}
-                whileInView={{ pathLength: 1, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1.2, ease: "easeOut", delay: 0.3 }}
-              />
-              {/* Animated pulse dot */}
-              <motion.circle
-                r="4"
-                fill="var(--color-accent-primary)"
-                filter="url(#glow)"
-                initial={{ cx: "0%" }}
-                animate={{ cx: ["0%", "100%", "0%"] }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <animate attributeName="opacity" values="0;1;1;0" dur="4s" repeatCount="indefinite" />
-              </motion.circle>
-            </svg>
-
-            {/* Steps Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 md:gap-4">
-              {steps.map((step, index) => (
-                <motion.div
-                  key={step.label}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{
-                    ...springPresets.fluid,
-                    delay: 0.2 + index * 0.15,
-                  }}
-                  className="relative group"
-                >
-                  {/* Step Card */}
-                  <motion.div
-                    whileHover={{ y: -8, scale: 1.02 }}
-                    transition={springPresets.snappy}
-                    className="relative h-full"
-                  >
-                    {/* Glow effect on hover */}
-                    <div className="absolute -inset-px rounded-2xl bg-gradient-to-b from-[var(--color-accent-primary)]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl" />
-
-                    {/* Card Content */}
-                    <div className="relative h-full p-6 rounded-2xl bg-[var(--color-bg-surface)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] group-hover:border-[var(--color-accent-primary)]/30 transition-colors duration-300 flex flex-col text-center">
-                      {/* Step Number Badge */}
-                      <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-[var(--color-bg-app)] border-2 border-[var(--color-accent-primary)] flex items-center justify-center">
-                        <span className="text-xs font-bold text-[var(--color-accent-primary)]">
-                          {String(index + 1).padStart(2, "0")}
-                        </span>
-                      </div>
-
-                      {/* Icon Container */}
-                      <div className="relative mb-5 flex justify-center">
-                        <div className="absolute inset-0 bg-[var(--color-accent-primary)] opacity-0 group-hover:opacity-20 blur-2xl rounded-full transition-opacity duration-500" />
-                        <div className="relative w-14 h-14 rounded-xl bg-gradient-to-br from-[var(--color-bg-elevated)] to-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] flex items-center justify-center">
-                          <step.icon className="w-6 h-6 text-[var(--color-accent-primary)]" />
-                        </div>
-                      </div>
-
-                      {/* Text Content */}
-                      <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-1">
-                        {step.label}
-                      </h3>
-                      <p className="text-sm text-[var(--color-text-muted)] mb-3 flex-1">
-                        {step.desc}
-                      </p>
-
-                      {/* Detail */}
-                      <p className="text-xs text-[var(--color-text-secondary)] pt-3 mt-auto border-t border-[var(--color-border-subtle)]">
-                        {step.detail}
-                      </p>
-                    </div>
-                  </motion.div>
-
-                  {/* Mobile Arrow Connector */}
-                  {index < steps.length - 1 && (
-                    <div className="flex justify-center my-4 md:hidden">
-                      <motion.div
-                        initial={{ opacity: 0, y: -5 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.3 + index * 0.15 }}
-                      >
-                        <ArrowRight className="w-5 h-5 text-[var(--color-accent-primary)] rotate-90" />
-                      </motion.div>
-                    </div>
-                  )}
-                </motion.div>
-              ))}
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="relative px-4 py-24 md:py-32 overflow-hidden">
-        {/* Dramatic radial glow */}
-        <div className="absolute inset-0 pointer-events-none">
-          <motion.div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] rounded-full"
-            style={{
-              background: "radial-gradient(ellipse at center, var(--color-accent-primary) 0%, transparent 70%)",
-              opacity: 0.06,
-            }}
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-purple-500 opacity-[0.03] blur-[100px] rounded-full" />
-        </div>
-
-        <div className="mx-auto max-w-3xl relative text-center">
+      {/* How It Works Section - Clean Timeline */}
+      <section className="relative px-6 py-32 md:py-40 overflow-hidden">
+        <div className="mx-auto max-w-[1200px]">
+          {/* Section Header */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            transition={{ ...springPresets.fluid, duration: 0.8 }}
+            transition={{ ...springPresets.gentle, duration: 1 }}
+            className="mb-24 text-center"
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
-              <span className="text-[var(--color-text-primary)]">Start exploring </span>
-              <span className="bg-gradient-to-r from-[var(--color-accent-primary)] to-purple-400 bg-clip-text text-transparent">
-                sacred texts
-              </span>
+            <span className="inline-block text-xs font-medium tracking-[0.2em] uppercase text-[var(--color-accent-primary)] mb-6">
+              Your Journey
+            </span>
+            <h2 className="font-[family-name:var(--font-serif)] text-5xl md:text-6xl font-normal text-[var(--color-text-primary)] tracking-tight leading-tight max-w-[700px] mx-auto">
+              From Question to Insight
             </h2>
-            <p className="text-lg md:text-xl text-[var(--color-text-secondary)] mb-12 max-w-xl mx-auto leading-relaxed">
-              {user
-                ? "Your scriptures are waiting. Search, compare, discover."
-                : "Every verse, every perspective — powered by AI."}
-            </p>
-
-            {/* CTA Button with glow */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <motion.div
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-                transition={springPresets.snappy}
-                className="relative group"
-              >
-                {/* Button glow */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-[var(--color-accent-primary)] to-purple-500 rounded-xl opacity-40 group-hover:opacity-60 blur-lg transition-opacity duration-500" />
-                <button
-                  onClick={() => router.push(user ? "/search" : "/register")}
-                  className="relative px-10 py-4 rounded-xl bg-[var(--color-accent-primary)] text-white font-semibold text-base tracking-wide flex items-center gap-2.5 transition-all duration-200"
-                >
-                  {user ? (
-                    <>
-                      <Search className="w-4.5 h-4.5" />
-                      Go to Search
-                    </>
-                  ) : (
-                    <>
-                      Get Started
-                      <ArrowRight className="w-4.5 h-4.5" />
-                    </>
-                  )}
-                </button>
-              </motion.div>
-
-              {!user && (
-                <button
-                  onClick={() => router.push("/login")}
-                  className="px-8 py-4 text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors duration-200"
-                >
-                  Already have an account?
-                </button>
-              )}
-              {user && (
-                <button
-                  onClick={() => router.push("/compare")}
-                  className="px-8 py-4 text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors duration-200 flex items-center gap-2"
-                >
-                  <GitCompare className="w-4 h-4" />
-                  Compare Scriptures
-                </button>
-              )}
-            </div>
           </motion.div>
+
+          {/* Steps Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+            {steps.map((step, index) => (
+              <motion.div
+                key={step.label}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{
+                  ...springPresets.gentle,
+                  delay: 0.2 + index * 0.15,
+                  duration: 1,
+                }}
+                className="relative"
+              >
+                {/* Step Number */}
+                <div className="mb-8">
+                  <span className="text-6xl font-[family-name:var(--font-serif)] text-[var(--color-accent-primary)]/20">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                </div>
+
+                {/* Icon */}
+                <div className="w-12 h-12 mb-6 flex items-center justify-center border border-[var(--color-border-subtle)]">
+                  <step.icon className="w-5 h-5 text-[var(--color-accent-primary)]" />
+                </div>
+
+                {/* Text Content */}
+                <h3 className="text-xl font-medium text-[var(--color-text-primary)] mb-3 tracking-wide">
+                  {step.label}
+                </h3>
+                <p className="text-sm text-[var(--color-text-muted)] mb-4 font-light">
+                  {step.desc}
+                </p>
+                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed font-light">
+                  {step.detail}
+                </p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
+      {/* CTA Section - 21st.dev Pattern */}
+      <section className="relative bg-[var(--color-bg-app)] py-40 px-6 overflow-hidden">
+        <div className="max-w-5xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ ...springPresets.gentle, duration: 1.2 }}
+          >
+            <h2 className="font-[family-name:var(--font-serif)] text-6xl md:text-7xl leading-tight mb-8 text-[var(--color-text-primary)]">
+              {user ? "Your Scriptures Await" : "Transform Your Search Into"}{' '}
+              <span className="text-[var(--color-accent-primary)]">
+                {user ? "Discovery" : "Insight"}
+              </span>
+            </h2>
+            <p className="text-lg md:text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto mb-12 leading-relaxed">
+              {user
+                ? "Search across 43,055 verses. Compare perspectives. Discover connections you never knew existed."
+                : "Join thousands exploring sacred texts with AI-powered search. Every verse, every perspective, every answer — at your fingertips."}
+            </p>
+            <div className="inline-block">
+              <button
+                onClick={() => router.push(user ? "/search" : "/register")}
+                className="relative px-12 py-6 bg-[var(--color-accent-primary)] text-[var(--color-bg-app)] rounded-md overflow-hidden group transition-all duration-300 hover:shadow-lg font-medium text-lg inline-flex items-center gap-3"
+              >
+                <span className="relative z-10 transition-transform duration-300 group-hover:-translate-y-1">
+                  {user ? "Go to Search" : "Begin Your Journey"}
+                </span>
+                <ArrowRight className="relative z-10 w-5 h-5 transition-all duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />
+                <div className="absolute inset-0 bg-[var(--color-accent-secondary)] transform translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0" />
+              </button>
+            </div>
+            <div className="mt-16 flex items-center justify-center gap-8 text-sm text-[var(--color-text-muted)]">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-[var(--color-accent-primary)]" />
+                <span>No credit card required</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-[var(--color-accent-primary)]" />
+                <span>43,055 verses indexed</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-[var(--color-accent-primary)]" />
+                <span>5-agent AI analysis</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+        {/* Background blurs */}
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-5">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[var(--color-accent-primary)] rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[var(--color-accent-primary)] rounded-full blur-3xl" />
+        </div>
+      </section>
+
+      {/* Footer - Refined Minimal */}
       <footer className="border-t border-[var(--color-border-subtle)]">
-        <div className="mx-auto max-w-6xl px-4 py-12">
+        <div className="mx-auto max-w-[1200px] px-6 py-16">
           {/* Top: Brand + Nav */}
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-10 mb-10">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-12 mb-12">
             {/* Brand */}
-            <div className="flex items-center gap-3">
-              <Image src="/logo-dark-nobg.png" alt="Clarus" width={32} height={32} />
-              <span className="text-base font-semibold text-[var(--color-text-primary)]">
+            <div className="flex items-center gap-4">
+              <Image src="/logo-dark-nobg.png" alt="Clarus" width={28} height={28} className="opacity-80" />
+              <span className="text-base font-medium text-[var(--color-text-primary)] tracking-wide">
                 Clarus
               </span>
             </div>
 
             {/* Nav Links */}
-            <nav className="flex flex-wrap gap-x-8 gap-y-3">
+            <nav className="flex flex-wrap gap-x-10 gap-y-4">
               {[
                 { label: "Search", href: "/search" },
                 { label: "Compare", href: "/compare" },
@@ -804,7 +643,7 @@ export default function HomePage() {
                 <button
                   key={link.label}
                   onClick={() => router.push(link.href)}
-                  className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+                  className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors duration-300 font-light tracking-wide"
                 >
                   {link.label}
                 </button>
@@ -813,10 +652,10 @@ export default function HomePage() {
           </div>
 
           {/* Divider */}
-          <div className="h-px bg-[var(--color-border-subtle)] mb-6" />
+          <div className="h-px bg-[var(--color-border-subtle)] mb-8" />
 
           {/* Bottom: Copyright */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-[var(--color-text-muted)]">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[var(--color-text-muted)] font-light tracking-wide">
             <span>&copy; {new Date().getFullYear()} Clarus</span>
             <span>AI-powered sacred text search</span>
           </div>
