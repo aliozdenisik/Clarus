@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { LanguageTabs, type LanguageTab } from "@/components/keyword-search/language-tabs";
 import { BibleCategoryTabs, type BibleCategoryFilter } from "@/components/keyword-search/bible-category-tabs";
 import { AccuracyDisclaimer } from "@/components/keyword-search/accuracy-disclaimer";
+import { ExperimentalDisclaimer } from "@/components/keyword-search/experimental-disclaimer";
 
 type TabType = "results" | "browser";
 
@@ -489,6 +490,9 @@ function KeywordSearchContent() {
                 ? "Search for Hebrew roots (e.g., כתב or H3789)..."
                 : "Search for Greek roots (e.g., βιβλος or G976)..."}
             />
+
+            {/* Experimental Disclaimer */}
+            <ExperimentalDisclaimer className="mt-4" />
           </motion.div>
         </div>
       </div>

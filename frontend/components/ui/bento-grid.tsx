@@ -1,16 +1,28 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, type LucideIcon } from "lucide-react";
 
 interface BentoGridProps {
   children: ReactNode;
   className?: string;
 }
 
+/**
+ * BentoGrid - Responsive grid container for BentoCard components
+ * 
+ * Default: 1 column mobile, 3 columns on md+
+ * Add `auto-rows-[22rem]` to className for fixed row heights
+ * Add `lg:grid-rows-3` for explicit row control
+ */
 export const BentoGrid = ({ children, className }: BentoGridProps) => {
   return (
-    <div className={cn("grid w-full grid-cols-1 md:grid-cols-3 gap-4", className)}>
+    <div
+      className={cn(
+        "grid w-full auto-rows-[22rem] grid-cols-1 md:grid-cols-3 gap-4",
+        className
+      )}
+    >
       {children}
     </div>
   );
@@ -18,14 +30,23 @@ export const BentoGrid = ({ children, className }: BentoGridProps) => {
 
 interface BentoCardProps {
   name: string;
-  className: string;
+  className?: string;
   background: ReactNode;
-  Icon: any;
+  Icon: LucideIcon;
   description: string;
   href: string;
   cta: string;
 }
 
+/**
+ * BentoCard - Feature card with hover animations
+ * 
+ * Hover effects:
+ * - Content shifts up (-translate-y-10)
+ * - Icon scales down (scale-75)
+ * - CTA button reveals from bottom
+ * - Subtle overlay appears
+ */
 export const BentoCard = ({
   name,
   className,
@@ -36,23 +57,46 @@ export const BentoCard = ({
   cta,
 }: BentoCardProps) => (
   <div
-    key={name}
     className={cn(
-      "group relative col-span-1 flex flex-col overflow-hidden rounded-none",
+      "group relative col-span-3 md:col-span-1 flex flex-col justify-between overflow-hidden rounded-xl",
+      // Project theme styling
       "bg-[var(--color-bg-surface)]/40 backdrop-blur-sm border border-[var(--color-border-subtle)]",
+      // Hover state with glow border
       "transform-gpu hover:border-[var(--color-border-glow)] transition-all duration-500",
-      className,
+      className
     )}
   >
-    {background}
-    <div className="z-10 flex flex-col items-center text-center p-8 transition-all duration-300">
-      <Icon className="h-10 w-10 mb-6 text-[var(--color-accent-primary)] transition-all duration-300 ease-in-out group-hover:scale-110" />
-      <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-3">{name}</h3>
-      <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">{description}</p>
+    {/* Background element (images, patterns, etc.) */}
+    <div>{background}</div>
+
+    {/* Content section - shifts up on hover */}
+    <div
+      className={cn(
+        "pointer-events-none z-10 flex transform-gpu flex-col gap-1 p-6",
+        "transition-all duration-300 group-hover:-translate-y-10"
+      )}
+    >
+      <Icon
+        className={cn(
+          "h-12 w-12 origin-left transform-gpu text-[var(--color-accent-primary)]",
+          "transition-all duration-300 ease-in-out group-hover:scale-75"
+        )}
+      />
+      <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">
+        {name}
+      </h3>
+      <p className="max-w-lg text-[var(--color-text-secondary)]">
+        {description}
+      </p>
     </div>
-    <div className={cn(
-      "absolute bottom-0 left-0 right-0 flex justify-center p-4 opacity-0 translate-y-4 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100",
-    )}>
+
+    {/* CTA button - reveals on hover */}
+    <div
+      className={cn(
+        "pointer-events-none absolute bottom-0 flex w-full translate-y-10 transform-gpu flex-row items-center p-4",
+        "opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100"
+      )}
+    >
       <Button variant="ghost" asChild size="sm" className="pointer-events-auto">
         <a href={href}>
           {cta}
@@ -60,6 +104,13 @@ export const BentoCard = ({
         </a>
       </Button>
     </div>
-    <div className="pointer-events-none absolute inset-0 transform-gpu transition-all duration-300 group-hover:bg-[var(--color-accent-primary)]/[.03]" />
+
+    {/* Hover overlay */}
+    <div
+      className={cn(
+        "pointer-events-none absolute inset-0 transform-gpu transition-all duration-300",
+        "group-hover:bg-[var(--color-accent-primary)]/[.03]"
+      )}
+    />
   </div>
 );

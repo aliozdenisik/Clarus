@@ -419,32 +419,6 @@ export default function HomePage() {
             })}
           </div>
 
-          {/* Convergence Visual - Minimal */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1, delay: 0.6 }}
-            className="flex justify-center py-8"
-          >
-            <div className="flex gap-6">
-              {(["emerald", "amber", "sky", "purple"] as const).map(
-                (color, i) => (
-                  <motion.div
-                    key={color}
-                    className={`w-px h-12 ${agentColorMap[color].line}`}
-                    animate={{ opacity: [0.3, 0.7, 0.3] }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      delay: i * 0.3,
-                    }}
-                  />
-                )
-              )}
-            </div>
-          </motion.div>
-
           {/* Summary Agent Card */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
