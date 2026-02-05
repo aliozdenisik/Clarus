@@ -27,6 +27,7 @@ vi.mock('framer-motion', () => ({
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
   },
+  useReducedMotion: () => false,
 }));
 
 describe('SlidingTabs Component', () => {
@@ -187,7 +188,7 @@ describe('SearchResultCard Component', () => {
   it('shows score as percentage', () => {
     render(<SearchResultCard {...mockSearchResult} onClick={mockOnClick} />);
     
-    expect(screen.getByText('95%')).toBeInTheDocument();
+    expect(screen.getByText('95.0%')).toBeInTheDocument();
   });
 
   it('displays verse text', () => {
@@ -216,7 +217,7 @@ describe('SearchResultCard Component', () => {
     render(<SearchResultCard {...mockSearchResult} onClick={mockOnClick} />);
     
     // ExternalLink icon is rendered (check by class or test-id if added)
-    const icon = screen.getByText('95%').parentElement?.querySelector('svg');
+    const icon = screen.getByText('95.0%').parentElement?.querySelector('svg');
     expect(icon).toBeInTheDocument();
   });
 
@@ -232,7 +233,7 @@ describe('SearchResultCard Component', () => {
     );
     
     expect(screen.getByText('Genesis 1:1')).toBeInTheDocument();
-    expect(screen.getByText('88%')).toBeInTheDocument();
+    expect(screen.getByText('88.0%')).toBeInTheDocument();
     const badge = screen.getByTestId('source-badge');
     expect(badge).toHaveTextContent('old_testament');
   });
@@ -249,7 +250,7 @@ describe('SearchResultCard Component', () => {
     );
     
     expect(screen.getByText('John 3:16')).toBeInTheDocument();
-    expect(screen.getByText('92%')).toBeInTheDocument();
+    expect(screen.getByText('92.0%')).toBeInTheDocument();
     const badge = screen.getByTestId('source-badge');
     expect(badge).toHaveTextContent('new_testament');
   });
@@ -266,7 +267,7 @@ describe('SearchResultCard Component', () => {
     );
     
     expect(screen.getByText('Wisdom 1:1')).toBeInTheDocument();
-    expect(screen.getByText('85%')).toBeInTheDocument();
+    expect(screen.getByText('85.0%')).toBeInTheDocument();
     const badge = screen.getByTestId('source-badge');
     expect(badge).toHaveTextContent('apocrypha');
   });
@@ -280,7 +281,7 @@ describe('SearchResultCard Component', () => {
       />
     );
     
-    expect(screen.getByText('88%')).toBeInTheDocument();
+    expect(screen.getByText('87.6%')).toBeInTheDocument();
   });
 
   it('handles score of 1.0 correctly', () => {
@@ -292,7 +293,7 @@ describe('SearchResultCard Component', () => {
       />
     );
     
-    expect(screen.getByText('100%')).toBeInTheDocument();
+    expect(screen.getByText('100.0%')).toBeInTheDocument();
   });
 
   it('applies custom className when provided', () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { InlineCitation } from "@/components/compare/inline-citation";
 import { parseCitations } from "@/lib/utils/parse-citations";
@@ -33,11 +33,19 @@ export function AIInterpretation({
   onNavigate,
   className,
 }: AIInterpretationProps) {
+  const prefersReducedMotion = useReducedMotion();
+
   return (
     <motion.div
-      initial={{ opacity: 0, x: -12 }}
+      role="region"
+      aria-label="AI generated interpretation"
+      initial={{ opacity: 0, x: prefersReducedMotion ? 0 : -12 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={springPresets.fluid}
+      transition={
+        prefersReducedMotion
+          ? { type: "tween", duration: 0.2 }
+          : springPresets.fluid
+      }
       className={cn(
         "relative my-8 pl-6 pr-4 py-4 rounded-r-lg",
         "bg-gradient-to-br from-zinc-900/40 via-transparent to-zinc-900/20",

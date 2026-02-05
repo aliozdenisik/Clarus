@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export type SearchSource = "quran" | "ot" | "nt" | "apocrypha";
@@ -23,6 +23,7 @@ export function SlidingTabs({ activeTab, onTabChange, className }: SlidingTabsPr
   const [hoveredTab, setHoveredTab] = React.useState<SearchSource | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [indicatorStyle, setIndicatorStyle] = React.useState({ left: 0, width: 0 });
+  const prefersReducedMotion = useReducedMotion();
 
   // Calculate indicator position based on active tab
   React.useEffect(() => {
@@ -72,6 +73,7 @@ export function SlidingTabs({ activeTab, onTabChange, className }: SlidingTabsPr
     <div
       ref={containerRef}
       role="tablist"
+      aria-label="Search source selection"
       className={cn(
         "relative inline-flex items-center gap-1 p-1",
         "bg-zinc-900/80 backdrop-blur-sm",
@@ -96,11 +98,11 @@ export function SlidingTabs({ activeTab, onTabChange, className }: SlidingTabsPr
           left: indicatorStyle.left,
           width: indicatorStyle.width,
         }}
-        transition={{
-          type: "spring",
-          stiffness: 400,
-          damping: 35,
-        }}
+        transition={
+          prefersReducedMotion
+            ? { type: "tween", duration: 0.1 }
+            : { type: "spring", stiffness: 400, damping: 35 }
+        }
         data-slot="sliding-indicator"
       >
         <div

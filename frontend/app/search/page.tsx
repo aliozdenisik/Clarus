@@ -433,13 +433,15 @@ function SearchContent() {
                 <motion.div
                   key={`${result.reference}-${i}`}
                   data-verse-id={result.reference}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{
-                    opacity: 1,
-                    y: 0,
-                  }}
+                  initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ ...springPresets.snappy, delay: i * 0.03 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 30,
+                    delay: Math.min(i, 7) * 0.04
+                  }}
                   className="mb-3"
                 >
                   <SearchResultCard
