@@ -105,7 +105,10 @@ KURALLAR:
 4. Sadece Türkçe ve İslami terminoloji kullan (örn: 'Judgment' -> 'Kıyamet', 'Hesap Günü').
 
 Adım 1: Dili algıla. İngilizce ise Türkçeye çevir.
-Adım 2: Sadece TÜRKÇE eşanlamlılar üret.
+Adım 2: TÜRKÇE eşanlamlılar ve çeviri varyantları üret.
+- Eşanlamlılar: Aynı anlama gelen farklı Türkçe kelimeler (sabır → sebat, tahammül)
+- Çeviri varyantları: Arapça kökenli İslami terimlerin bu Kuran çevirisinde kullanılan Türkçe karşılıkları (tabut → sandık, salat → namaz)
+NOT: Sadece kullanıcı sorgusunda bulunan terimleri genişlet. Yeni kavramlar ekleme.
 Adım 3: JSON formatında ver.
 
 {
@@ -149,6 +152,21 @@ Adım 3: JSON formatında ver.
                         "mağfiret",
                     ],
                     "final_search_query": "Allah'ın merhameti rahmet rahman rahim mağfiret",
+                }
+            ),
+        },
+        {
+            "role": "user",
+            "content": "Bu sorguyu Kuran araması için hazırla. Sorgu: 'tabut'",
+        },
+        {
+            "role": "assistant",
+            "content": json.dumps(
+                {
+                    "original_language": "tr",
+                    "translated_query": "tabut",
+                    "expanded_terms": ["sandık", "ahit sandığı", "kutsal sandık"],
+                    "final_search_query": "tabut sandık ahit sandığı",
                 }
             ),
         },
