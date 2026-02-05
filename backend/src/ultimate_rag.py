@@ -44,6 +44,14 @@ class UltimateSearchResult:
     matched_queries: List[str] = field(default_factory=list)
 
 
+@dataclass
+class AskResult:
+    """Result from ask() containing both search results and generated answer"""
+
+    answer: Any  # AnswerResult from answer_generator
+    search_results: List  # List of search results used to generate the answer
+
+
 class UltimateRAG:
     """
     Ultimate RAG Pipeline - Maximum Accuracy
@@ -872,7 +880,7 @@ class UltimateRAG:
             top_k: Number of search results to use as context
 
         Returns:
-            AnswerResult with text, citations, and confidence
+            AskResult with answer (AnswerResult) and search_results
         """
         from src.answer_generator import AnswerResult
 
@@ -923,7 +931,7 @@ class UltimateRAG:
             confidence=answer.confidence,
         )
 
-        return answer
+        return AskResult(answer=answer, search_results=search_results)
 
     def ask_quran(
         self, query: str, top_k: int = None, detected_language: Optional[str] = None
