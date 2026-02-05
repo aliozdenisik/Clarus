@@ -1,0 +1,591 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "total_tests": 56,
+    "created_at": "2026-02-05",
+    "description": "Comprehensive verse lookup test cases for parser validation. Covers single verses, ranges, multiple verses, invalid formats, and out-of-bounds errors for both Quran and Bible."
+  },
+  "test_cases": [
+    {
+      "id": "Q-SINGLE-01",
+      "category": "quran_single",
+      "input": "Bakara 183",
+      "expected": {
+        "source": "quran",
+        "surah_id": 2,
+        "verses": [183]
+      },
+      "description": "Turkish name single verse"
+    },
+    {
+      "id": "Q-SINGLE-02",
+      "category": "quran_single",
+      "input": "2:183",
+      "expected": {
+        "source": "quran",
+        "surah_id": 2,
+        "verses": [183]
+      },
+      "description": "Numeric format single verse"
+    },
+    {
+      "id": "Q-SINGLE-03",
+      "category": "quran_single",
+      "input": "Fatiha 1",
+      "expected": {
+        "source": "quran",
+        "surah_id": 1,
+        "verses": [1]
+      },
+      "description": "First surah single verse"
+    },
+    {
+      "id": "Q-SINGLE-04",
+      "category": "quran_single",
+      "input": "1:7",
+      "expected": {
+        "source": "quran",
+        "surah_id": 1,
+        "verses": [7]
+      },
+      "description": "Last verse of Fatiha"
+    },
+    {
+      "id": "Q-SINGLE-05",
+      "category": "quran_single",
+      "input": "Nas 1",
+      "expected": {
+        "source": "quran",
+        "surah_id": 114,
+        "verses": [1]
+      },
+      "description": "Last surah single verse"
+    },
+    {
+      "id": "Q-SINGLE-06",
+      "category": "quran_single",
+      "input": "114:6",
+      "expected": {
+        "source": "quran",
+        "surah_id": 114,
+        "verses": [6]
+      },
+      "description": "Last verse of last surah"
+    },
+    {
+      "id": "Q-RANGE-01",
+      "category": "quran_range",
+      "input": "2:183-185",
+      "expected": {
+        "source": "quran",
+        "surah_id": 2,
+        "verses": [183, 184, 185]
+      },
+      "description": "Numeric range format"
+    },
+    {
+      "id": "Q-RANGE-02",
+      "category": "quran_range",
+      "input": "Bakara 1-7",
+      "expected": {
+        "source": "quran",
+        "surah_id": 2,
+        "verses": [1, 2, 3, 4, 5, 6, 7]
+      },
+      "description": "Turkish name range format"
+    },
+    {
+      "id": "Q-RANGE-03",
+      "category": "quran_range",
+      "input": "1:1-7",
+      "expected": {
+        "source": "quran",
+        "surah_id": 1,
+        "verses": [1, 2, 3, 4, 5, 6, 7]
+      },
+      "description": "Full surah range"
+    },
+    {
+      "id": "Q-RANGE-04",
+      "category": "quran_range",
+      "input": "114:1-6",
+      "expected": {
+        "source": "quran",
+        "surah_id": 114,
+        "verses": [1, 2, 3, 4, 5, 6]
+      },
+      "description": "Last surah full range"
+    },
+    {
+      "id": "Q-MULTI-01",
+      "category": "quran_multiple",
+      "input": "2:183,185,190",
+      "expected": {
+        "source": "quran",
+        "surah_id": 2,
+        "verses": [183, 185, 190]
+      },
+      "description": "Multiple non-consecutive verses"
+    },
+    {
+      "id": "Q-MULTI-02",
+      "category": "quran_multiple",
+      "input": "Bakara 1,3,5",
+      "expected": {
+        "source": "quran",
+        "surah_id": 2,
+        "verses": [1, 3, 5]
+      },
+      "description": "Turkish name multiple verses"
+    },
+    {
+      "id": "Q-MULTI-03",
+      "category": "quran_multiple",
+      "input": "1:1,3,5,7",
+      "expected": {
+        "source": "quran",
+        "surah_id": 1,
+        "verses": [1, 3, 5, 7]
+      },
+      "description": "Multiple verses from first surah"
+    },
+    {
+      "id": "Q-ERROR-01",
+      "category": "quran_error",
+      "input": "Bakara 300",
+      "expected": {
+        "error": "VERSE_OUT_OF_BOUNDS",
+        "surah_id": 2,
+        "max_verse": 286
+      },
+      "description": "Verse exceeds surah bounds"
+    },
+    {
+      "id": "Q-ERROR-02",
+      "category": "quran_error",
+      "input": "2:287",
+      "expected": {
+        "error": "VERSE_OUT_OF_BOUNDS",
+        "surah_id": 2,
+        "max_verse": 286
+      },
+      "description": "Numeric format out of bounds"
+    },
+    {
+      "id": "Q-ERROR-03",
+      "category": "quran_error",
+      "input": "Fatiha 8",
+      "expected": {
+        "error": "VERSE_OUT_OF_BOUNDS",
+        "surah_id": 1,
+        "max_verse": 7
+      },
+      "description": "Exceeds first surah bounds"
+    },
+    {
+      "id": "Q-ERROR-04",
+      "category": "quran_error",
+      "input": "Nas 7",
+      "expected": {
+        "error": "VERSE_OUT_OF_BOUNDS",
+        "surah_id": 114,
+        "max_verse": 6
+      },
+      "description": "Exceeds last surah bounds"
+    },
+    {
+      "id": "Q-ERROR-05",
+      "category": "quran_error",
+      "input": "InvalidSurah 1",
+      "expected": {
+        "error": "SURAH_NOT_FOUND"
+      },
+      "description": "Unknown surah name"
+    },
+    {
+      "id": "Q-ERROR-06",
+      "category": "quran_error",
+      "input": "115:1",
+      "expected": {
+        "error": "SURAH_NOT_FOUND"
+      },
+      "description": "Surah number exceeds 114"
+    },
+    {
+      "id": "Q-ERROR-07",
+      "category": "quran_error",
+      "input": "0:1",
+      "expected": {
+        "error": "SURAH_NOT_FOUND"
+      },
+      "description": "Surah number below 1"
+    },
+    {
+      "id": "Q-ERROR-08",
+      "category": "quran_error",
+      "input": "2:1-20",
+      "expected": {
+        "error": "RANGE_TOO_LARGE"
+      },
+      "description": "Range exceeds 10 verses"
+    },
+    {
+      "id": "Q-ERROR-09",
+      "category": "quran_error",
+      "input": "invalid format",
+      "expected": {
+        "error": "INVALID_FORMAT"
+      },
+      "description": "Cannot parse input"
+    },
+    {
+      "id": "Q-ERROR-10",
+      "category": "quran_error",
+      "input": "2:1,2,3,4,5,6",
+      "expected": {
+        "error": "TOO_MANY_REFS"
+      },
+      "description": "More than 5 references in one query"
+    },
+    {
+      "id": "B-SINGLE-01",
+      "category": "bible_single",
+      "input": "Genesis 1:1",
+      "expected": {
+        "source": "bible",
+        "book_id": 1,
+        "chapter": 1,
+        "verses": [1]
+      },
+      "description": "First verse of Bible"
+    },
+    {
+      "id": "B-SINGLE-02",
+      "category": "bible_single",
+      "input": "Genesis 1:31",
+      "expected": {
+        "source": "bible",
+        "book_id": 1,
+        "chapter": 1,
+        "verses": [31]
+      },
+      "description": "Last verse of Genesis 1"
+    },
+    {
+      "id": "B-SINGLE-03",
+      "category": "bible_single",
+      "input": "John 3:16",
+      "expected": {
+        "source": "bible",
+        "book_id": 43,
+        "chapter": 3,
+        "verses": [16]
+      },
+      "description": "Famous John verse"
+    },
+    {
+      "id": "B-SINGLE-04",
+      "category": "bible_single",
+      "input": "Psalms 119:1",
+      "expected": {
+        "source": "bible",
+        "book_id": 19,
+        "chapter": 119,
+        "verses": [1]
+      },
+      "description": "Longest chapter in Bible"
+    },
+    {
+      "id": "B-SINGLE-05",
+      "category": "bible_single",
+      "input": "Revelation 22:21",
+      "expected": {
+        "source": "bible",
+        "book_id": 66,
+        "chapter": 22,
+        "verses": [21]
+      },
+      "description": "Last verse of Bible"
+    },
+    {
+      "id": "B-RANGE-01",
+      "category": "bible_range",
+      "input": "Genesis 1:1-3",
+      "expected": {
+        "source": "bible",
+        "book_id": 1,
+        "chapter": 1,
+        "verses": [1, 2, 3]
+      },
+      "description": "First three verses of Genesis"
+    },
+    {
+      "id": "B-RANGE-02",
+      "category": "bible_range",
+      "input": "John 3:16-18",
+      "expected": {
+        "source": "bible",
+        "book_id": 43,
+        "chapter": 3,
+        "verses": [16, 17, 18]
+      },
+      "description": "Range in John"
+    },
+    {
+      "id": "B-RANGE-03",
+      "category": "bible_range",
+      "input": "Matthew 5:3-10",
+      "expected": {
+        "source": "bible",
+        "book_id": 40,
+        "chapter": 5,
+        "verses": [3, 4, 5, 6, 7, 8, 9, 10]
+      },
+      "description": "Beatitudes range"
+    },
+    {
+      "id": "B-ERROR-01",
+      "category": "bible_error",
+      "input": "Genesis 100:1",
+      "expected": {
+        "error": "CHAPTER_OUT_OF_BOUNDS",
+        "book_id": 1,
+        "max_chapter": 50
+      },
+      "description": "Chapter exceeds Genesis bounds"
+    },
+    {
+      "id": "B-ERROR-02",
+      "category": "bible_error",
+      "input": "Genesis 1:32",
+      "expected": {
+        "error": "VERSE_OUT_OF_BOUNDS",
+        "book_id": 1,
+        "chapter": 1,
+        "max_verse": 31
+      },
+      "description": "Verse exceeds Genesis 1 bounds"
+    },
+    {
+      "id": "B-ERROR-03",
+      "category": "bible_error",
+      "input": "John 22:1",
+      "expected": {
+        "error": "CHAPTER_OUT_OF_BOUNDS",
+        "book_id": 43,
+        "max_chapter": 21
+      },
+      "description": "John has only 21 chapters"
+    },
+    {
+      "id": "B-ERROR-04",
+      "category": "bible_error",
+      "input": "FakeBook 1:1",
+      "expected": {
+        "error": "BOOK_NOT_FOUND"
+      },
+      "description": "Unknown Bible book"
+    },
+    {
+      "id": "B-ERROR-05",
+      "category": "bible_error",
+      "input": "Genesis 1:1-15",
+      "expected": {
+        "error": "RANGE_TOO_LARGE"
+      },
+      "description": "Range exceeds 10 verses"
+    },
+    {
+      "id": "B-ERROR-06",
+      "category": "bible_error",
+      "input": "Genesis 1 1",
+      "expected": {
+        "error": "INVALID_FORMAT"
+      },
+      "description": "Invalid separator format"
+    },
+    {
+      "id": "EDGE-01",
+      "category": "edge_case",
+      "input": "  Bakara  183  ",
+      "expected": {
+        "source": "quran",
+        "surah_id": 2,
+        "verses": [183]
+      },
+      "description": "Whitespace handling in Quran"
+    },
+    {
+      "id": "EDGE-02",
+      "category": "edge_case",
+      "input": "  Genesis  1:1  ",
+      "expected": {
+        "source": "bible",
+        "book_id": 1,
+        "chapter": 1,
+        "verses": [1]
+      },
+      "description": "Whitespace handling in Bible"
+    },
+    {
+      "id": "EDGE-03",
+      "category": "edge_case",
+      "input": "BAKARA 183",
+      "expected": {
+        "source": "quran",
+        "surah_id": 2,
+        "verses": [183]
+      },
+      "description": "Uppercase Quran surah name"
+    },
+    {
+      "id": "EDGE-04",
+      "category": "edge_case",
+      "input": "bakara 183",
+      "expected": {
+        "source": "quran",
+        "surah_id": 2,
+        "verses": [183]
+      },
+      "description": "Lowercase Quran surah name"
+    },
+    {
+      "id": "EDGE-05",
+      "category": "edge_case",
+      "input": "GENESIS 1:1",
+      "expected": {
+        "source": "bible",
+        "book_id": 1,
+        "chapter": 1,
+        "verses": [1]
+      },
+      "description": "Uppercase Bible book name"
+    },
+    {
+      "id": "EDGE-06",
+      "category": "edge_case",
+      "input": "genesis 1:1",
+      "expected": {
+        "source": "bible",
+        "book_id": 1,
+        "chapter": 1,
+        "verses": [1]
+      },
+      "description": "Lowercase Bible book name"
+    },
+    {
+      "id": "EDGE-07",
+      "category": "edge_case",
+      "input": "Fatiha 7",
+      "expected": {
+        "source": "quran",
+        "surah_id": 1,
+        "verses": [7]
+      },
+      "description": "Last verse of first surah"
+    },
+    {
+      "id": "EDGE-08",
+      "category": "edge_case",
+      "input": "1:1",
+      "expected": {
+        "source": "quran",
+        "surah_id": 1,
+        "verses": [1]
+      },
+      "description": "First verse of Quran numeric"
+    },
+    {
+      "id": "EDGE-09",
+      "category": "edge_case",
+      "input": "114:6",
+      "expected": {
+        "source": "quran",
+        "surah_id": 114,
+        "verses": [6]
+      },
+      "description": "Last verse of Quran numeric"
+    },
+    {
+      "id": "EDGE-10",
+      "category": "edge_case",
+      "input": "Revelation 22:21",
+      "expected": {
+        "source": "bible",
+        "book_id": 66,
+        "chapter": 22,
+        "verses": [21]
+      },
+      "description": "Last verse of Bible"
+    },
+    {
+      "id": "Q-SINGLE-07",
+      "category": "quran_single",
+      "input": "Imran 1",
+      "expected": {
+        "source": "quran",
+        "surah_id": 3,
+        "verses": [1]
+      },
+      "description": "Third surah single verse"
+    },
+    {
+      "id": "Q-RANGE-05",
+      "category": "quran_range",
+      "input": "3:1-5",
+      "expected": {
+        "source": "quran",
+        "surah_id": 3,
+        "verses": [1, 2, 3, 4, 5]
+      },
+      "description": "Range in third surah"
+    },
+    {
+      "id": "B-SINGLE-06",
+      "category": "bible_single",
+      "input": "Matthew 1:1",
+      "expected": {
+        "source": "bible",
+        "book_id": 40,
+        "chapter": 1,
+        "verses": [1]
+      },
+      "description": "First verse of Matthew"
+    },
+    {
+      "id": "B-SINGLE-07",
+      "category": "bible_single",
+      "input": "Luke 1:1",
+      "expected": {
+        "source": "bible",
+        "book_id": 42,
+        "chapter": 1,
+        "verses": [1]
+      },
+      "description": "First verse of Luke"
+    },
+    {
+      "id": "EDGE-11",
+      "category": "edge_case",
+      "input": "2:183-186",
+      "expected": {
+        "source": "quran",
+        "surah_id": 2,
+        "verses": [183, 184, 185, 186]
+      },
+      "description": "Four-verse range in Quran"
+    },
+    {
+      "id": "EDGE-12",
+      "category": "edge_case",
+      "input": "Genesis 1:27-31",
+      "expected": {
+        "source": "bible",
+        "book_id": 1,
+        "chapter": 1,
+        "verses": [27, 28, 29, 30, 31]
+      },
+      "description": "Five-verse range in Bible"
+    }
+  ]
+}
