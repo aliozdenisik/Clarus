@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { ClearHistoryApiSearchHistoryDeleteData, ClearHistoryApiSearchHistoryDeleteResponses, CompareScripturesApiComparePostData, CompareScripturesApiComparePostErrors, CompareScripturesApiComparePostResponses, DeleteHistoryItemApiSearchHistoryHistoryIdDeleteData, DeleteHistoryItemApiSearchHistoryHistoryIdDeleteErrors, DeleteHistoryItemApiSearchHistoryHistoryIdDeleteResponses, DeleteUserApiAdminUsersUserIdDeleteData, DeleteUserApiAdminUsersUserIdDeleteErrors, DeleteUserApiAdminUsersUserIdDeleteResponses, GetBibleBooksApiMetadataBibleBooksGetData, GetBibleBooksApiMetadataBibleBooksGetErrors, GetBibleBooksApiMetadataBibleBooksGetResponses, GetBookDetailApiMetadataBibleBooksBookNrGetData, GetBookDetailApiMetadataBibleBooksBookNrGetErrors, GetBookDetailApiMetadataBibleBooksBookNrGetResponses, GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetData, GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetErrors, GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetResponses, GetCollectionsApiMetadataCollectionsGetData, GetCollectionsApiMetadataCollectionsGetResponses, GetMeApiAuthMeGetData, GetMeApiAuthMeGetResponses, GetPreferencesApiPreferencesGetData, GetPreferencesApiPreferencesGetResponses, GetPublicConfigApiConfigGetData, GetPublicConfigApiConfigGetResponses, GetQuranSurahsApiMetadataQuranSurahsGetData, GetQuranSurahsApiMetadataQuranSurahsGetResponses, GetRateLimitStatusApiAuthRateLimitGetData, GetRateLimitStatusApiAuthRateLimitGetResponses, GetRootInfoApiSearchKeywordRootRootGetData, GetRootInfoApiSearchKeywordRootRootGetErrors, GetRootInfoApiSearchKeywordRootRootGetResponses, GetSearchHistoryApiSearchHistoryGetData, GetSearchHistoryApiSearchHistoryGetErrors, GetSearchHistoryApiSearchHistoryGetResponses, GetStatsApiAdminStatsGetData, GetStatsApiAdminStatsGetResponses, GetSurahDetailApiMetadataQuranSurahsSurahIdGetData, GetSurahDetailApiMetadataQuranSurahsSurahIdGetErrors, GetSurahDetailApiMetadataQuranSurahsSurahIdGetResponses, GetSystemInfoApiAdminSystemGetData, GetSystemInfoApiAdminSystemGetResponses, GetTestamentsApiMetadataTestamentsGetData, GetTestamentsApiMetadataTestamentsGetResponses, GetUsersApiAdminUsersGetData, GetUsersApiAdminUsersGetErrors, GetUsersApiAdminUsersGetResponses, GoogleAuthApiAuthGooglePostData, GoogleAuthApiAuthGooglePostErrors, GoogleAuthApiAuthGooglePostResponses, HealthCheckApiHealthGetData, HealthCheckApiHealthGetResponses, ListRootsApiSearchKeywordRootsGetData, ListRootsApiSearchKeywordRootsGetErrors, ListRootsApiSearchKeywordRootsGetResponses, LoginApiAuthLoginPostData, LoginApiAuthLoginPostErrors, LoginApiAuthLoginPostResponses, LogoutApiAuthLogoutPostData, LogoutApiAuthLogoutPostResponses, RefreshTokenApiAuthRefreshPostData, RefreshTokenApiAuthRefreshPostErrors, RefreshTokenApiAuthRefreshPostResponses, RegisterApiAuthRegisterPostData, RegisterApiAuthRegisterPostErrors, RegisterApiAuthRegisterPostResponses, ResetPreferencesApiPreferencesDeleteData, ResetPreferencesApiPreferencesDeleteResponses, SearchBibleApiSearchBiblePostData, SearchBibleApiSearchBiblePostErrors, SearchBibleApiSearchBiblePostResponses, SearchKeywordApiSearchKeywordPostData, SearchKeywordApiSearchKeywordPostErrors, SearchKeywordApiSearchKeywordPostResponses, SearchQuranApiSearchQuranPostData, SearchQuranApiSearchQuranPostErrors, SearchQuranApiSearchQuranPostResponses, StreamCompareApiStreamCompareGetData, StreamCompareApiStreamCompareGetErrors, StreamCompareApiStreamCompareGetResponses, StreamSearchApiStreamSearchGetData, StreamSearchApiStreamSearchGetErrors, StreamSearchApiStreamSearchGetResponses, UpdatePreferencesApiPreferencesPutData, UpdatePreferencesApiPreferencesPutErrors, UpdatePreferencesApiPreferencesPutResponses } from './types.gen';
+import type { ClearHistoryApiSearchHistoryDeleteData, ClearHistoryApiSearchHistoryDeleteResponses, CompareScripturesApiComparePostData, CompareScripturesApiComparePostErrors, CompareScripturesApiComparePostResponses, DeleteHistoryItemApiSearchHistoryHistoryIdDeleteData, DeleteHistoryItemApiSearchHistoryHistoryIdDeleteErrors, DeleteHistoryItemApiSearchHistoryHistoryIdDeleteResponses, DeleteUserApiAdminUsersUserIdDeleteData, DeleteUserApiAdminUsersUserIdDeleteErrors, DeleteUserApiAdminUsersUserIdDeleteResponses, GetBibleBooksApiMetadataBibleBooksGetData, GetBibleBooksApiMetadataBibleBooksGetErrors, GetBibleBooksApiMetadataBibleBooksGetResponses, GetBibleRootInfoApiKeywordSearchBibleRootRootGetData, GetBibleRootInfoApiKeywordSearchBibleRootRootGetErrors, GetBibleRootInfoApiKeywordSearchBibleRootRootGetResponses, GetBibleStatsApiKeywordSearchBibleStatsGetData, GetBibleStatsApiKeywordSearchBibleStatsGetResponses, GetBookDetailApiMetadataBibleBooksBookNrGetData, GetBookDetailApiMetadataBibleBooksBookNrGetErrors, GetBookDetailApiMetadataBibleBooksBookNrGetResponses, GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetData, GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetErrors, GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetResponses, GetCollectionsApiMetadataCollectionsGetData, GetCollectionsApiMetadataCollectionsGetResponses, GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetData, GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetErrors, GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetResponses, GetMeApiAuthMeGetData, GetMeApiAuthMeGetResponses, GetPreferencesApiPreferencesGetData, GetPreferencesApiPreferencesGetResponses, GetPublicConfigApiConfigGetData, GetPublicConfigApiConfigGetResponses, GetQuranSurahsApiMetadataQuranSurahsGetData, GetQuranSurahsApiMetadataQuranSurahsGetResponses, GetRateLimitStatusApiAuthRateLimitGetData, GetRateLimitStatusApiAuthRateLimitGetResponses, GetRootInfoApiSearchKeywordRootRootGetData, GetRootInfoApiSearchKeywordRootRootGetErrors, GetRootInfoApiSearchKeywordRootRootGetResponses, GetSearchHistoryApiSearchHistoryGetData, GetSearchHistoryApiSearchHistoryGetErrors, GetSearchHistoryApiSearchHistoryGetResponses, GetStatsApiAdminStatsGetData, GetStatsApiAdminStatsGetResponses, GetSurahDetailApiMetadataQuranSurahsSurahIdGetData, GetSurahDetailApiMetadataQuranSurahsSurahIdGetErrors, GetSurahDetailApiMetadataQuranSurahsSurahIdGetResponses, GetSystemInfoApiAdminSystemGetData, GetSystemInfoApiAdminSystemGetResponses, GetTestamentsApiMetadataTestamentsGetData, GetTestamentsApiMetadataTestamentsGetResponses, GetUsersApiAdminUsersGetData, GetUsersApiAdminUsersGetErrors, GetUsersApiAdminUsersGetResponses, GoogleAuthApiAuthGooglePostData, GoogleAuthApiAuthGooglePostErrors, GoogleAuthApiAuthGooglePostResponses, HealthCheckApiHealthGetData, HealthCheckApiHealthGetResponses, ListBibleRootsApiKeywordSearchBibleRootsGetData, ListBibleRootsApiKeywordSearchBibleRootsGetErrors, ListBibleRootsApiKeywordSearchBibleRootsGetResponses, ListRootsApiSearchKeywordRootsGetData, ListRootsApiSearchKeywordRootsGetErrors, ListRootsApiSearchKeywordRootsGetResponses, LoginApiAuthLoginPostData, LoginApiAuthLoginPostErrors, LoginApiAuthLoginPostResponses, LogoutApiAuthLogoutPostData, LogoutApiAuthLogoutPostResponses, LookupVerseApiVerseLookupGetData, LookupVerseApiVerseLookupGetErrors, LookupVerseApiVerseLookupGetResponses, RefreshTokenApiAuthRefreshPostData, RefreshTokenApiAuthRefreshPostErrors, RefreshTokenApiAuthRefreshPostResponses, RegisterApiAuthRegisterPostData, RegisterApiAuthRegisterPostErrors, RegisterApiAuthRegisterPostResponses, ResetPreferencesApiPreferencesDeleteData, ResetPreferencesApiPreferencesDeleteResponses, SearchBibleApiSearchBiblePostData, SearchBibleApiSearchBiblePostErrors, SearchBibleApiSearchBiblePostResponses, SearchBibleKeywordApiKeywordSearchBiblePostData, SearchBibleKeywordApiKeywordSearchBiblePostErrors, SearchBibleKeywordApiKeywordSearchBiblePostResponses, SearchKeywordApiSearchKeywordPostData, SearchKeywordApiSearchKeywordPostErrors, SearchKeywordApiSearchKeywordPostResponses, SearchQuranApiSearchQuranPostData, SearchQuranApiSearchQuranPostErrors, SearchQuranApiSearchQuranPostResponses, StreamCompareApiStreamCompareGetData, StreamCompareApiStreamCompareGetErrors, StreamCompareApiStreamCompareGetResponses, StreamSearchApiStreamSearchGetData, StreamSearchApiStreamSearchGetErrors, StreamSearchApiStreamSearchGetResponses, UpdatePreferencesApiPreferencesPutData, UpdatePreferencesApiPreferencesPutErrors, UpdatePreferencesApiPreferencesPutResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -183,6 +183,10 @@ export const streamSearchApiStreamSearchGet = <ThrowOnError extends boolean = fa
  * Stream comparative analysis with multi-agent output.
  *
  * Note: SSE/EventSource API doesn't support custom headers, so token must be passed as query param.
+ *
+ * Args:
+ * collections: Comma-separated collection names (e.g., 'quran_tr,bible_ot').
+ * Valid values: quran_tr, bible_ot, bible_nt, bible_apocrypha
  */
 export const streamCompareApiStreamCompareGet = <ThrowOnError extends boolean = false>(options: Options<StreamCompareApiStreamCompareGetData, ThrowOnError>) => (options.client ?? client).get<StreamCompareApiStreamCompareGetResponses, StreamCompareApiStreamCompareGetErrors, ThrowOnError>({ url: '/api/stream/compare', ...options });
 
@@ -315,6 +319,72 @@ export const listRootsApiSearchKeywordRootsGet = <ThrowOnError extends boolean =
  * Get information for a specific root.
  */
 export const getRootInfoApiSearchKeywordRootRootGet = <ThrowOnError extends boolean = false>(options: Options<GetRootInfoApiSearchKeywordRootRootGetData, ThrowOnError>) => (options.client ?? client).get<GetRootInfoApiSearchKeywordRootRootGetResponses, GetRootInfoApiSearchKeywordRootRootGetErrors, ThrowOnError>({ url: '/api/search/keyword/root/{root}', ...options });
+
+/**
+ * Search Bible Keyword
+ *
+ * Search Bible by morphological root (Hebrew/Aramaic).
+ */
+export const searchBibleKeywordApiKeywordSearchBiblePost = <ThrowOnError extends boolean = false>(options: Options<SearchBibleKeywordApiKeywordSearchBiblePostData, ThrowOnError>) => (options.client ?? client).post<SearchBibleKeywordApiKeywordSearchBiblePostResponses, SearchBibleKeywordApiKeywordSearchBiblePostErrors, ThrowOnError>({
+    url: '/api/keyword-search/bible/',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List Bible Roots
+ *
+ * List all available Hebrew/Aramaic roots with occurrence counts.
+ */
+export const listBibleRootsApiKeywordSearchBibleRootsGet = <ThrowOnError extends boolean = false>(options?: Options<ListBibleRootsApiKeywordSearchBibleRootsGetData, ThrowOnError>) => (options?.client ?? client).get<ListBibleRootsApiKeywordSearchBibleRootsGetResponses, ListBibleRootsApiKeywordSearchBibleRootsGetErrors, ThrowOnError>({ url: '/api/keyword-search/bible/roots', ...options });
+
+/**
+ * Get Bible Root Info
+ *
+ * Get information for a specific root.
+ */
+export const getBibleRootInfoApiKeywordSearchBibleRootRootGet = <ThrowOnError extends boolean = false>(options: Options<GetBibleRootInfoApiKeywordSearchBibleRootRootGetData, ThrowOnError>) => (options.client ?? client).get<GetBibleRootInfoApiKeywordSearchBibleRootRootGetResponses, GetBibleRootInfoApiKeywordSearchBibleRootRootGetErrors, ThrowOnError>({ url: '/api/keyword-search/bible/root/{root}', ...options });
+
+/**
+ * Get Bible Stats
+ *
+ * Get Bible keyword search statistics.
+ */
+export const getBibleStatsApiKeywordSearchBibleStatsGet = <ThrowOnError extends boolean = false>(options?: Options<GetBibleStatsApiKeywordSearchBibleStatsGetData, ThrowOnError>) => (options?.client ?? client).get<GetBibleStatsApiKeywordSearchBibleStatsGetResponses, unknown, ThrowOnError>({ url: '/api/keyword-search/bible/stats', ...options });
+
+/**
+ * Get Cross Reference
+ *
+ * Get Hebrew↔Greek cross-reference for a Strong's number.
+ *
+ * Returns words from both Hebrew and Greek that share the same Strong's number.
+ * Includes word forms, transliterations, and occurrence counts.
+ *
+ * Example: GET /api/keyword-search/bible/cross-reference/H430
+ * Returns: Hebrew words for אלהים (elohim/God) and any Greek equivalents
+ */
+export const getCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGet = <ThrowOnError extends boolean = false>(options: Options<GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetData, ThrowOnError>) => (options.client ?? client).get<GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetResponses, GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetErrors, ThrowOnError>({ url: '/api/keyword-search/bible/cross-reference/{strongs_number}', ...options });
+
+/**
+ * Lookup Verse
+ *
+ * Lookup verses by reference.
+ *
+ * Supported formats:
+ * - Quran numeric: "2:183", "2:183-185"
+ * - Quran Turkish: "Bakara 183", "Bakara 183-185"
+ * - Bible: "Genesis 1:1", "Genesis 1:1-3", "John 3:16"
+ *
+ * Returns:
+ * VerseLookupResponse with matching verses and metadata
+ *
+ * Raises:
+ * HTTPException 400: Invalid reference format or out-of-bounds verse
+ */
+export const lookupVerseApiVerseLookupGet = <ThrowOnError extends boolean = false>(options: Options<LookupVerseApiVerseLookupGetData, ThrowOnError>) => (options.client ?? client).get<LookupVerseApiVerseLookupGetResponses, LookupVerseApiVerseLookupGetErrors, ThrowOnError>({ url: '/api/verse/lookup', ...options });
 
 /**
  * Health Check

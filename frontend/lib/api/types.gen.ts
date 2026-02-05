@@ -5,6 +5,237 @@ export type ClientOptions = {
 };
 
 /**
+ * BibleKeywordSearchRequest
+ */
+export type BibleKeywordSearchRequest = {
+    /**
+     * Query
+     *
+     * Hebrew/Aramaic word, Strong's number, or Latin transliteration
+     */
+    query: string;
+    /**
+     * Page
+     *
+     * Page number
+     */
+    page?: number;
+    /**
+     * Per Page
+     *
+     * Results per page. 0 = return all verses (no pagination)
+     */
+    per_page?: number;
+    /**
+     * Language Filter
+     *
+     * Filter by language: 'hebrew', 'aramaic', or None for all
+     */
+    language_filter?: string | null;
+    /**
+     * Word Filter
+     *
+     * Filter verses to only those containing this specific word form
+     */
+    word_filter?: string | null;
+    /**
+     * Testament Filter
+     *
+     * Filter by testament: 'ot', 'nt', 'apocrypha', or None for all
+     */
+    testament_filter?: string | null;
+    /**
+     * Category Filter
+     *
+     * Filter by category: 'ot', 'nt', 'apocrypha', 'pseudepigrapha', 'gnostic', 'apostolic_fathers', or None for all
+     */
+    category_filter?: string | null;
+};
+
+/**
+ * BibleKeywordSearchResponse
+ */
+export type BibleKeywordSearchResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Query
+     */
+    query: string;
+    /**
+     * Root
+     */
+    root?: string | null;
+    /**
+     * Root Source
+     */
+    root_source: string;
+    /**
+     * Strong Number
+     */
+    strong_number?: string | null;
+    /**
+     * Total Occurrences
+     */
+    total_occurrences?: number;
+    /**
+     * Unique Words
+     */
+    unique_words?: Array<string>;
+    /**
+     * Book Distribution
+     */
+    book_distribution?: Array<BookDistItem>;
+    /**
+     * Verses
+     */
+    verses?: Array<BibleVerseMatchItem>;
+    pagination: PaginationInfo;
+    /**
+     * Transliteration
+     */
+    transliteration?: string | null;
+    /**
+     * Word Transliterations
+     */
+    word_transliterations?: {
+        [key: string]: string;
+    };
+};
+
+/**
+ * BibleRootListItem
+ */
+export type BibleRootListItem = {
+    /**
+     * Strong Number
+     */
+    strong_number: string | null;
+    /**
+     * Original Word
+     */
+    original_word: string | null;
+    /**
+     * Transliteration
+     */
+    transliteration: string | null;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * BibleRootListResponse
+ */
+export type BibleRootListResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Roots
+     */
+    roots: Array<BibleRootListItem>;
+    /**
+     * Total
+     */
+    total: number;
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Per Page
+     */
+    per_page: number;
+};
+
+/**
+ * BibleStatsResponse
+ */
+export type BibleStatsResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Total Words
+     */
+    total_words: number;
+    /**
+     * Unique Roots
+     */
+    unique_roots: number;
+    /**
+     * Total Books
+     */
+    total_books: number;
+    /**
+     * Total Verses
+     */
+    total_verses: number;
+};
+
+/**
+ * BibleVerseMatchItem
+ */
+export type BibleVerseMatchItem = {
+    /**
+     * Book Id
+     */
+    book_id: number;
+    /**
+     * Book Name
+     */
+    book_name: string;
+    /**
+     * Chapter
+     */
+    chapter: number;
+    /**
+     * Verse
+     */
+    verse: number;
+    /**
+     * Text Original
+     */
+    text_original: string | null;
+    /**
+     * Text English
+     */
+    text_english: string | null;
+    /**
+     * Matched Words
+     */
+    matched_words: Array<string>;
+    /**
+     * Reference
+     */
+    reference: string;
+};
+
+/**
+ * BookDistItem
+ */
+export type BookDistItem = {
+    /**
+     * Book Id
+     */
+    book_id: number;
+    /**
+     * Book Name
+     */
+    book_name: string;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * CompareRequest
  *
  * Compare request schema.
@@ -18,6 +249,12 @@ export type CompareRequest = {
      * Use Multi Agent
      */
     use_multi_agent?: boolean;
+    /**
+     * Collections
+     *
+     * Collections to search and compare. Minimum 2 required.
+     */
+    collections?: Array<string>;
     /**
      * Language
      *
@@ -89,6 +326,70 @@ export type CompareResponse = {
 };
 
 /**
+ * CrossReferenceResponse
+ */
+export type CrossReferenceResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Strongs Number
+     */
+    strongs_number: string;
+    /**
+     * Definition
+     */
+    definition?: string | null;
+    /**
+     * Original Word
+     */
+    original_word?: string | null;
+    /**
+     * Transliteration
+     */
+    transliteration?: string | null;
+    /**
+     * Hebrew Words
+     */
+    hebrew_words?: Array<CrossReferenceWord>;
+    /**
+     * Greek Words
+     */
+    greek_words?: Array<CrossReferenceWord>;
+    /**
+     * Total Occurrences
+     */
+    total_occurrences?: number;
+};
+
+/**
+ * CrossReferenceWord
+ */
+export type CrossReferenceWord = {
+    /**
+     * Word
+     */
+    word: string;
+    /**
+     * Word Clean
+     */
+    word_clean: string;
+    /**
+     * Transliteration
+     */
+    transliteration: string;
+    /**
+     * Language
+     */
+    language: string;
+    /**
+     * Occurrence Count
+     */
+    occurrence_count: number;
+};
+
+/**
  * GoogleAuthRequest
  *
  * Google OAuth code exchange request.
@@ -133,7 +434,7 @@ export type KeywordSearchRequest = {
     /**
      * Per Page
      *
-     * Results per page (max 200)
+     * Results per page. 0 = return all verses (no pagination)
      */
     per_page?: number;
     /**
@@ -188,7 +489,9 @@ export type KeywordSearchResponse = {
     /**
      * Word Transliterations
      */
-    word_transliterations?: Record<string, string>;
+    word_transliterations?: {
+        [key: string]: string;
+    };
 };
 
 /**
@@ -386,7 +689,7 @@ export type SearchResponse = {
     /**
      * Results
      */
-    results: Array<VerseResult>;
+    results: Array<AppApiSearchVerseResult>;
     /**
      * Total
      */
@@ -571,6 +874,56 @@ export type VerseDetail = {
 };
 
 /**
+ * VerseLookupResponse
+ *
+ * Successful verse lookup response.
+ *
+ * Example:
+ * {
+ * "success": true,
+ * "verses": [
+ * {
+ * "reference": "2:183",
+ * "text": "Ey iman edenler, sizden önce gelenler üzerine farz kılındığı gibi...",
+ * "source": "quran",
+ * "surah_id": 2,
+ * "surah_name": "Bakara",
+ * "verse_id": 183,
+ * "arabic_text": "يا أيها الذين آمنوا كتب عليكم الصيام..."
+ * }
+ * ],
+ * "query": "2:183",
+ * "count": 1
+ * }
+ */
+export type VerseLookupResponse = {
+    /**
+     * Success
+     *
+     * Always true for success
+     */
+    success?: true;
+    /**
+     * Verses
+     *
+     * List of matching verses (empty if none found)
+     */
+    verses: Array<VerseResult>;
+    /**
+     * Query
+     *
+     * Original input query
+     */
+    query: string;
+    /**
+     * Count
+     *
+     * Number of verses returned
+     */
+    count: number;
+};
+
+/**
  * VerseMatchItem
  */
 export type VerseMatchItem = {
@@ -602,8 +955,85 @@ export type VerseMatchItem = {
 
 /**
  * VerseResult
+ *
+ * Single verse result with full metadata.
+ *
+ * Contains both Quran and Bible-specific fields. Fields are null
+ * when not applicable to the source (e.g., surah_id is null for Bible verses).
  */
 export type VerseResult = {
+    /**
+     * Reference
+     *
+     * Canonical reference: '2:183' or 'Genesis 1:1'
+     */
+    reference: string;
+    /**
+     * Text
+     *
+     * Verse text in original language or translation
+     */
+    text: string;
+    /**
+     * Source
+     *
+     * Source collection identifier
+     */
+    source: 'quran' | 'bible_ot' | 'bible_nt' | 'bible_apocrypha';
+    /**
+     * Surah Id
+     *
+     * Surah number 1-114
+     */
+    surah_id?: number | null;
+    /**
+     * Surah Name
+     *
+     * Turkish surah name
+     */
+    surah_name?: string | null;
+    /**
+     * Verse Id
+     *
+     * Verse number within surah
+     */
+    verse_id?: number | null;
+    /**
+     * Arabic Text
+     *
+     * Original Arabic text
+     */
+    arabic_text?: string | null;
+    /**
+     * Book Id
+     *
+     * Book number 1-81
+     */
+    book_id?: number | null;
+    /**
+     * Book Name
+     *
+     * English book name
+     */
+    book_name?: string | null;
+    /**
+     * Chapter
+     *
+     * Chapter number
+     */
+    chapter?: number | null;
+    /**
+     * Verse
+     *
+     * Verse number within chapter
+     */
+    verse?: number | null;
+};
+
+/**
+ * VerseResult
+ */
+export type AppApiSearchVerseResult = {
     /**
      * Source
      */
@@ -988,6 +1418,12 @@ export type StreamCompareApiStreamCompareGetData = {
          * JWT access token (required for SSE - EventSource can't send headers)
          */
         token: string;
+        /**
+         * Collections
+         *
+         * Comma-separated list of collections to search (minimum 2)
+         */
+        collections?: string;
         /**
          * Language
          *
@@ -1412,6 +1848,182 @@ export type GetRootInfoApiSearchKeywordRootRootGetResponses = {
 };
 
 export type GetRootInfoApiSearchKeywordRootRootGetResponse = GetRootInfoApiSearchKeywordRootRootGetResponses[keyof GetRootInfoApiSearchKeywordRootRootGetResponses];
+
+export type SearchBibleKeywordApiKeywordSearchBiblePostData = {
+    body: BibleKeywordSearchRequest;
+    path?: never;
+    query?: never;
+    url: '/api/keyword-search/bible/';
+};
+
+export type SearchBibleKeywordApiKeywordSearchBiblePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SearchBibleKeywordApiKeywordSearchBiblePostError = SearchBibleKeywordApiKeywordSearchBiblePostErrors[keyof SearchBibleKeywordApiKeywordSearchBiblePostErrors];
+
+export type SearchBibleKeywordApiKeywordSearchBiblePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: BibleKeywordSearchResponse;
+};
+
+export type SearchBibleKeywordApiKeywordSearchBiblePostResponse = SearchBibleKeywordApiKeywordSearchBiblePostResponses[keyof SearchBibleKeywordApiKeywordSearchBiblePostResponses];
+
+export type ListBibleRootsApiKeywordSearchBibleRootsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Per Page
+         */
+        per_page?: number;
+    };
+    url: '/api/keyword-search/bible/roots';
+};
+
+export type ListBibleRootsApiKeywordSearchBibleRootsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListBibleRootsApiKeywordSearchBibleRootsGetError = ListBibleRootsApiKeywordSearchBibleRootsGetErrors[keyof ListBibleRootsApiKeywordSearchBibleRootsGetErrors];
+
+export type ListBibleRootsApiKeywordSearchBibleRootsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: BibleRootListResponse;
+};
+
+export type ListBibleRootsApiKeywordSearchBibleRootsGetResponse = ListBibleRootsApiKeywordSearchBibleRootsGetResponses[keyof ListBibleRootsApiKeywordSearchBibleRootsGetResponses];
+
+export type GetBibleRootInfoApiKeywordSearchBibleRootRootGetData = {
+    body?: never;
+    path: {
+        /**
+         * Root
+         */
+        root: string;
+    };
+    query?: {
+        /**
+         * Page
+         */
+        page?: number;
+        /**
+         * Per Page
+         */
+        per_page?: number;
+    };
+    url: '/api/keyword-search/bible/root/{root}';
+};
+
+export type GetBibleRootInfoApiKeywordSearchBibleRootRootGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetBibleRootInfoApiKeywordSearchBibleRootRootGetError = GetBibleRootInfoApiKeywordSearchBibleRootRootGetErrors[keyof GetBibleRootInfoApiKeywordSearchBibleRootRootGetErrors];
+
+export type GetBibleRootInfoApiKeywordSearchBibleRootRootGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: BibleKeywordSearchResponse;
+};
+
+export type GetBibleRootInfoApiKeywordSearchBibleRootRootGetResponse = GetBibleRootInfoApiKeywordSearchBibleRootRootGetResponses[keyof GetBibleRootInfoApiKeywordSearchBibleRootRootGetResponses];
+
+export type GetBibleStatsApiKeywordSearchBibleStatsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/keyword-search/bible/stats';
+};
+
+export type GetBibleStatsApiKeywordSearchBibleStatsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: BibleStatsResponse;
+};
+
+export type GetBibleStatsApiKeywordSearchBibleStatsGetResponse = GetBibleStatsApiKeywordSearchBibleStatsGetResponses[keyof GetBibleStatsApiKeywordSearchBibleStatsGetResponses];
+
+export type GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetData = {
+    body?: never;
+    path: {
+        /**
+         * Strongs Number
+         */
+        strongs_number: string;
+    };
+    query?: never;
+    url: '/api/keyword-search/bible/cross-reference/{strongs_number}';
+};
+
+export type GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetError = GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetErrors[keyof GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetErrors];
+
+export type GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: CrossReferenceResponse;
+};
+
+export type GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetResponse = GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetResponses[keyof GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetResponses];
+
+export type LookupVerseApiVerseLookupGetData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Ref
+         *
+         * Verse reference: '2:183', 'Bakara 183', 'Genesis 1:1', etc.
+         */
+        ref: string;
+    };
+    url: '/api/verse/lookup';
+};
+
+export type LookupVerseApiVerseLookupGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type LookupVerseApiVerseLookupGetError = LookupVerseApiVerseLookupGetErrors[keyof LookupVerseApiVerseLookupGetErrors];
+
+export type LookupVerseApiVerseLookupGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: VerseLookupResponse;
+};
+
+export type LookupVerseApiVerseLookupGetResponse = LookupVerseApiVerseLookupGetResponses[keyof LookupVerseApiVerseLookupGetResponses];
 
 export type HealthCheckApiHealthGetData = {
     body?: never;
