@@ -2,7 +2,16 @@
 
 This module provides a comprehensive mapping of Turkish surah names to their IDs
 and verse counts, along with helper functions for case-insensitive lookups.
+
+Also includes a pure function verse reference parser that supports:
+- Quran numeric: 2:183, 2:183-185, 2:183,185
+- Quran Turkish: Bakara 183, Bakara 183-185
+- Bible: Genesis 1:1, Genesis 1:1-3, John 3:16
 """
+
+import re
+from dataclasses import dataclass, field
+from typing import Literal
 
 
 def normalize_turkish(text: str) -> str:
@@ -350,3 +359,464 @@ def get_book_by_name(name: str) -> dict[str, int | str] | None:
             return book_data
 
     return None
+
+
+# ============================================================================
+# VERSE REFERENCE PARSER
+# ============================================================================
+
+
+@dataclass
+class ParsedReference:
+    """Parsed verse reference result.
+
+    Attributes:
+        source: "quran" or "bible"
+        surah_id: Quran surah ID (1-114), None for Bible
+        surah_name: Original Turkish surah name, None for Bible
+        book_id: Bible book ID (1-81), None for Quran
+        book_name: Bible book name, None for Quran
+        testament: "OT", "NT", or "Apocrypha", None for Quran
+        chapter: Bible chapter number, None for Quran
+        verses: List of verse numbers
+    """
+
+    source: Literal["quran", "bible"]
+    surah_id: int | None = None
+    surah_name: str | None = None
+    book_id: int | None = None
+    book_name: str | None = None
+    testament: str | None = None
+    chapter: int | None = None
+    verses: list[int] = field(default_factory=list)
+
+
+@dataclass
+class ParseError:
+    """Parse error result.
+
+    Attributes:
+        code: Error code (INVALID_FORMAT, SURAH_NOT_FOUND, etc.)
+        message: Human-readable error message
+        input: Original input string
+    """
+
+    code: str
+    message: str
+    input: str
+
+
+# Regex patterns for verse reference parsing
+QURAN_NUMERIC_PATTERN = re.compile(r"^(\d{1,3}):(\d{1,3})(?:-(\d{1,3}))?$")
+QURAN_NUMERIC_MULTI_PATTERN = re.compile(r"^(\d{1,3}):([\d,]+)$")
+QURAN_TURKISH_PATTERN = re.compile(r"^([A-Za-zÀ-ÿ\'\-\s]+)\s+([\d,\-]+)$")
+BIBLE_PATTERN = re.compile(r"^([\w\s]+?)\s+(\d{1,3}):(\d{1,3})(?:-(\d{1,3}))?$")
+
+
+def parse_verse_reference(input_str: str) -> ParsedReference | ParseError:
+    """Parse verse reference from user input.
+
+    Supports:
+    - Quran numeric: 2:183, 2:183-185, 2:183,185,190
+    - Quran Turkish: Bakara 183, Bakara 183-185
+    - Bible: Genesis 1:1, Genesis 1:1-3, John 3:16
+
+    Args:
+        input_str: User input string
+
+    Returns:
+        ParsedReference on success, ParseError on failure
+
+    Examples:
+        >>> parse_verse_reference("2:183")
+        ParsedReference(source='quran', surah_id=2, verses=[183])
+
+        >>> parse_verse_reference("Bakara 183")
+        ParsedReference(source='quran', surah_id=2, surah_name='Bakara', verses=[183])
+
+        >>> parse_verse_reference("Genesis 1:1")
+        ParsedReference(source='bible', book_id=1, book_name='Genesis', chapter=1, verses=[1])
+
+        >>> parse_verse_reference("invalid")
+        ParseError(code='INVALID_FORMAT', message='...', input='invalid')
+    """
+    # Normalize input: trim whitespace
+    normalized = input_str.strip()
+
+    # Try Quran numeric format first (2:183 or 2:183-185)
+    match = QURAN_NUMERIC_PATTERN.match(normalized)
+    if match:
+        return _parse_quran_numeric(normalized, match)
+
+    # Try Quran numeric multiple format (2:183,185,190)
+    match = QURAN_NUMERIC_MULTI_PATTERN.match(normalized)
+    if match:
+        return _parse_quran_numeric_multi(normalized, match)
+
+    # Try Quran Turkish format (Bakara 183 or Bakara 183-185)
+    match = QURAN_TURKISH_PATTERN.match(normalized)
+    if match:
+        return _parse_quran_turkish(normalized, match)
+
+    # Try Bible format (Genesis 1:1 or Genesis 1:1-3)
+    match = BIBLE_PATTERN.match(normalized)
+    if match:
+        return _parse_bible(normalized, match)
+
+    # No pattern matched
+    return ParseError(
+        code="INVALID_FORMAT",
+        message=f"Cannot parse input: '{input_str}'. Expected formats: '2:183', 'Bakara 183', or 'Genesis 1:1'",
+        input=input_str,
+    )
+
+
+def _parse_quran_numeric(
+    input_str: str, match: re.Match
+) -> ParsedReference | ParseError:
+    """Parse Quran numeric format: 2:183 or 2:183-185."""
+    surah_num = int(match.group(1))
+    verse_start = int(match.group(2))
+    verse_end = match.group(3)
+
+    # Validate surah number
+    if surah_num < 1 or surah_num > 114:
+        return ParseError(
+            code="SURAH_NOT_FOUND",
+            message=f"Surah number {surah_num} is out of range (1-114)",
+            input=input_str,
+        )
+
+    # Get surah info by ID
+    surah_info = None
+    for name, info in SURAH_NAME_MAP.items():
+        if info["id"] == surah_num:
+            surah_info = info
+            break
+
+    if not surah_info:
+        return ParseError(
+            code="SURAH_NOT_FOUND",
+            message=f"Surah {surah_num} not found",
+            input=input_str,
+        )
+
+    max_verse = surah_info["verses"]
+
+    # Parse verses
+    if verse_end:
+        # Range format
+        verse_end_num = int(verse_end)
+        verses = list(range(verse_start, verse_end_num + 1))
+
+        # Validate range size
+        if len(verses) > 10:
+            return ParseError(
+                code="RANGE_TOO_LARGE",
+                message=f"Range {verse_start}-{verse_end_num} exceeds maximum of 10 verses",
+                input=input_str,
+            )
+
+        # Validate verse bounds
+        if verse_end_num > max_verse:
+            return ParseError(
+                code="VERSE_OUT_OF_BOUNDS",
+                message=f"Verse {verse_end_num} exceeds maximum {max_verse} for surah {surah_num}",
+                input=input_str,
+            )
+    else:
+        # Single verse
+        verses = [verse_start]
+
+    # Validate verse bounds
+    if verse_start > max_verse:
+        return ParseError(
+            code="VERSE_OUT_OF_BOUNDS",
+            message=f"Verse {verse_start} exceeds maximum {max_verse} for surah {surah_num}",
+            input=input_str,
+        )
+
+    return ParsedReference(
+        source="quran",
+        surah_id=surah_num,
+        verses=verses,
+    )
+
+
+def _parse_quran_numeric_multi(
+    input_str: str, match: re.Match
+) -> ParsedReference | ParseError:
+    """Parse Quran numeric multiple format: 2:183,185,190."""
+    surah_num = int(match.group(1))
+    verse_list_str = match.group(2)
+
+    # Validate surah number
+    if surah_num < 1 or surah_num > 114:
+        return ParseError(
+            code="SURAH_NOT_FOUND",
+            message=f"Surah number {surah_num} is out of range (1-114)",
+            input=input_str,
+        )
+
+    # Get surah info by ID
+    surah_info = None
+    for name, info in SURAH_NAME_MAP.items():
+        if info["id"] == surah_num:
+            surah_info = info
+            break
+
+    if not surah_info:
+        return ParseError(
+            code="SURAH_NOT_FOUND",
+            message=f"Surah {surah_num} not found",
+            input=input_str,
+        )
+
+    max_verse = surah_info["verses"]
+
+    # Parse verse list
+    verse_parts = verse_list_str.split(",")
+    verses = []
+    for part in verse_parts:
+        try:
+            verse_num = int(part.strip())
+            verses.append(verse_num)
+        except ValueError:
+            return ParseError(
+                code="INVALID_FORMAT",
+                message=f"Invalid verse number: '{part}'",
+                input=input_str,
+            )
+
+    # Validate count
+    if len(verses) > 5:
+        return ParseError(
+            code="TOO_MANY_REFS",
+            message=f"Too many verse references ({len(verses)}). Maximum is 5.",
+            input=input_str,
+        )
+
+    # Validate verse bounds
+    for verse_num in verses:
+        if verse_num > max_verse:
+            return ParseError(
+                code="VERSE_OUT_OF_BOUNDS",
+                message=f"Verse {verse_num} exceeds maximum {max_verse} for surah {surah_num}",
+                input=input_str,
+            )
+
+    return ParsedReference(
+        source="quran",
+        surah_id=surah_num,
+        verses=verses,
+    )
+
+
+def _parse_quran_turkish(
+    input_str: str, match: re.Match
+) -> ParsedReference | ParseError:
+    """Parse Quran Turkish format: Bakara 183, Bakara 183-185, or Bakara 1,3,5."""
+    surah_name = match.group(1).strip()
+    verse_spec = match.group(2).strip()
+
+    # Lookup surah by name (case-insensitive, Turkish-normalized)
+    surah_info = get_surah_by_name(surah_name)
+    if not surah_info:
+        # Try partial matching for common abbreviations
+        surah_info = _find_surah_by_partial_name(surah_name)
+        if not surah_info:
+            return ParseError(
+                code="SURAH_NOT_FOUND",
+                message=f"Surah '{surah_name}' not found",
+                input=input_str,
+            )
+
+    surah_id = surah_info["id"]
+    max_verse = surah_info["verses"]
+
+    # Parse verse specification (single, range, or multiple)
+    if "," in verse_spec:
+        # Multiple verses: "1,3,5"
+        verse_parts = verse_spec.split(",")
+        verses = []
+        for part in verse_parts:
+            try:
+                verse_num = int(part.strip())
+                verses.append(verse_num)
+            except ValueError:
+                return ParseError(
+                    code="INVALID_FORMAT",
+                    message=f"Invalid verse number: '{part}'",
+                    input=input_str,
+                )
+
+        # Validate count
+        if len(verses) > 5:
+            return ParseError(
+                code="TOO_MANY_REFS",
+                message=f"Too many verse references ({len(verses)}). Maximum is 5.",
+                input=input_str,
+            )
+
+        # Validate verse bounds
+        for verse_num in verses:
+            if verse_num > max_verse:
+                return ParseError(
+                    code="VERSE_OUT_OF_BOUNDS",
+                    message=f"Verse {verse_num} exceeds maximum {max_verse} for surah '{surah_name}'",
+                    input=input_str,
+                )
+    elif "-" in verse_spec:
+        # Range format: "183-185"
+        parts = verse_spec.split("-")
+        verse_start = int(parts[0])
+        verse_end = int(parts[1])
+        verses = list(range(verse_start, verse_end + 1))
+
+        # Validate range size
+        if len(verses) > 10:
+            return ParseError(
+                code="RANGE_TOO_LARGE",
+                message=f"Range {verse_start}-{verse_end} exceeds maximum of 10 verses",
+                input=input_str,
+            )
+
+        # Validate verse bounds
+        if verse_end > max_verse:
+            return ParseError(
+                code="VERSE_OUT_OF_BOUNDS",
+                message=f"Verse {verse_end} exceeds maximum {max_verse} for surah '{surah_name}'",
+                input=input_str,
+            )
+        if verse_start > max_verse:
+            return ParseError(
+                code="VERSE_OUT_OF_BOUNDS",
+                message=f"Verse {verse_start} exceeds maximum {max_verse} for surah '{surah_name}'",
+                input=input_str,
+            )
+    else:
+        # Single verse: "183"
+        verse_start = int(verse_spec)
+        verses = [verse_start]
+
+        # Validate verse bounds
+        if verse_start > max_verse:
+            return ParseError(
+                code="VERSE_OUT_OF_BOUNDS",
+                message=f"Verse {verse_start} exceeds maximum {max_verse} for surah '{surah_name}'",
+                input=input_str,
+            )
+
+    return ParsedReference(
+        source="quran",
+        surah_id=surah_id,
+        surah_name=surah_name,
+        verses=verses,
+    )
+
+
+def _find_surah_by_partial_name(partial_name: str) -> dict[str, int] | None:
+    """Find surah by partial name match (for common abbreviations).
+
+    Examples:
+        "Imran" -> matches "Âl-i İmrân"
+        "Fatiha" -> matches "Fâtiha"
+    """
+    normalized_partial = normalize_turkish(partial_name)
+
+    for original_name, surah_data in SURAH_NAME_MAP.items():
+        normalized_full = normalize_turkish(original_name)
+        # Check if partial name is contained in full name
+        if normalized_partial in normalized_full:
+            return surah_data
+
+    return None
+
+
+def _parse_bible(input_str: str, match: re.Match) -> ParsedReference | ParseError:
+    """Parse Bible format: Genesis 1:1 or Genesis 1:1-3."""
+    book_name = match.group(1).strip()
+    chapter = int(match.group(2))
+    verse_start = int(match.group(3))
+    verse_end = match.group(4)
+
+    # Lookup book by name (case-insensitive)
+    book_info = get_book_by_name(book_name)
+    if not book_info:
+        # Try partial matching for common abbreviations
+        book_info = _find_book_by_partial_name(book_name)
+        if not book_info:
+            return ParseError(
+                code="BOOK_NOT_FOUND",
+                message=f"Bible book '{book_name}' not found",
+                input=input_str,
+            )
+
+    book_id = int(book_info["id"])
+    testament = str(book_info["testament"])
+    max_chapter = int(book_info["chapters"])
+    # Get the actual book name from the map (for "Revelation" -> "Revelation of John")
+    actual_book_name = _get_book_name_by_id(book_id)
+
+    # Validate chapter
+    if chapter > max_chapter:
+        return ParseError(
+            code="CHAPTER_OUT_OF_BOUNDS",
+            message=f"Chapter {chapter} exceeds maximum {max_chapter} for book '{book_name}'",
+            input=input_str,
+        )
+
+    # Parse verses
+    if verse_end:
+        # Range format
+        verse_end_num = int(verse_end)
+        verses = list(range(verse_start, verse_end_num + 1))
+
+        # Validate range size
+        if len(verses) > 10:
+            return ParseError(
+                code="RANGE_TOO_LARGE",
+                message=f"Range {verse_start}-{verse_end_num} exceeds maximum of 10 verses",
+                input=input_str,
+            )
+    else:
+        # Single verse
+        verses = [verse_start]
+
+    # Note: We don't validate verse bounds for Bible because we don't have
+    # verse count per chapter in BIBLE_BOOK_MAP. This is acceptable for now.
+
+    return ParsedReference(
+        source="bible",
+        book_id=book_id,
+        book_name=actual_book_name,
+        testament=testament,
+        chapter=chapter,
+        verses=verses,
+    )
+
+
+def _find_book_by_partial_name(partial_name: str) -> dict[str, int | str] | None:
+    """Find Bible book by partial name match (for common abbreviations).
+
+    Examples:
+        "Revelation" -> matches "Revelation of John"
+        "Song" -> matches "Song of Solomon"
+    """
+    partial_lower = partial_name.lower()
+
+    for book_name, book_data in BIBLE_BOOK_MAP.items():
+        book_lower = book_name.lower()
+        # Check if partial name is at the start of the full name
+        if book_lower.startswith(partial_lower):
+            return book_data
+
+    return None
+
+
+def _get_book_name_by_id(book_id: int) -> str:
+    """Get Bible book name by ID."""
+    for book_name, book_data in BIBLE_BOOK_MAP.items():
+        if book_data["id"] == book_id:
+            return book_name
+    return ""
