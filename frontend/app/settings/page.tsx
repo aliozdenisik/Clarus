@@ -8,6 +8,8 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { GlowCard } from "@/components/ui/glow-card";
 import { Button } from "@/components/ui/button";
+import { GlowingButton } from "@/components/ui/glowing-button";
+import { DotPattern, RadialGradient } from "@/components/ui/dot-pattern";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Settings, Save, RotateCcw } from "lucide-react";
@@ -104,8 +106,27 @@ export default function SettingsPage() {
   const labelClassName = "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-[var(--color-text-primary)] mb-2 block";
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-app)] p-4 md:p-8">
-      <div className="mx-auto max-w-2xl">
+    <div className="relative min-h-screen bg-[var(--color-bg-app)] p-4 md:p-8 overflow-hidden">
+      {/* Premium ambient effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        <DotPattern width={40} height={40} cr={0.4} className="opacity-[0.025]" />
+        <RadialGradient 
+          className="inset-0" 
+          color="var(--color-accent-primary)" 
+          size="800px" 
+          position="20% 20%" 
+          opacity={0.04}
+        />
+        <RadialGradient 
+          className="inset-0" 
+          color="var(--color-accent-secondary)" 
+          size="600px" 
+          position="80% 70%" 
+          opacity={0.03}
+        />
+      </div>
+      
+      <div className="relative mx-auto max-w-2xl z-10">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -126,7 +147,7 @@ export default function SettingsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={springPresets.fluid}
         >
-          <GlowCard className="space-y-8 p-6">
+          <GlowCard className="space-y-8 p-6 backdrop-blur-xl bg-[var(--color-bg-surface)]/80">
             {/* General Settings */}
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">

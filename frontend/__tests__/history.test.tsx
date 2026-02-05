@@ -217,7 +217,7 @@ describe("HistoryPage", () => {
      render(<HistoryPage />);
 
      await waitFor(() => {
-       expect(screen.getByText("No search history found")).toBeInTheDocument();
+       expect(screen.getByText("No search history yet")).toBeInTheDocument();
      });
    });
 

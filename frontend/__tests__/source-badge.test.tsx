@@ -3,44 +3,44 @@ import { describe, it, expect } from 'vitest';
 import { SourceBadge } from '@/components/compare/source-badge';
 
 describe('SourceBadge', () => {
-  it('renders Kuran label for quran source', () => {
+  it('renders Quran label for quran source', () => {
     render(<SourceBadge source="quran" />);
-    expect(screen.getByText('Kuran')).toBeInTheDocument();
+    expect(screen.getByText('Quran')).toBeInTheDocument();
   });
 
-  it('renders Eski Ahit label for old_testament source', () => {
+  it('renders Old Testament label for old_testament source', () => {
     render(<SourceBadge source="old_testament" />);
-    expect(screen.getByText('Eski Ahit')).toBeInTheDocument();
+    expect(screen.getByText('Old Testament')).toBeInTheDocument();
   });
 
-  it('renders Yeni Ahit label for new_testament source', () => {
+  it('renders New Testament label for new_testament source', () => {
     render(<SourceBadge source="new_testament" />);
-    expect(screen.getByText('Yeni Ahit')).toBeInTheDocument();
+    expect(screen.getByText('New Testament')).toBeInTheDocument();
   });
 
-  it('renders Apokrifa label for apocrypha source', () => {
+  it('renders Apocrypha label for apocrypha source', () => {
     render(<SourceBadge source="apocrypha" />);
-    expect(screen.getByText('Apokrifa')).toBeInTheDocument();
+    expect(screen.getByText('Apocrypha')).toBeInTheDocument();
   });
 
   it('applies emerald background for quran source', () => {
     render(<SourceBadge source="quran" />);
-    expect(screen.getByText('Kuran')).toHaveClass('bg-emerald-500');
+    expect(screen.getByText('Quran')).toHaveClass('bg-emerald-500');
   });
 
   it('applies blue background for old_testament source', () => {
     render(<SourceBadge source="old_testament" />);
-    expect(screen.getByText('Eski Ahit')).toHaveClass('bg-blue-500');
+    expect(screen.getByText('Old Testament')).toHaveClass('bg-blue-500');
   });
 
   it('applies amber background for new_testament source', () => {
     render(<SourceBadge source="new_testament" />);
-    expect(screen.getByText('Yeni Ahit')).toHaveClass('bg-amber-500');
+    expect(screen.getByText('New Testament')).toHaveClass('bg-amber-500');
   });
 
   it('applies purple background for apocrypha source', () => {
     render(<SourceBadge source="apocrypha" />);
-    expect(screen.getByText('Apokrifa')).toHaveClass('bg-purple-500');
+    expect(screen.getByText('Apocrypha')).toHaveClass('bg-purple-500');
   });
 
   it('has accessible role', () => {

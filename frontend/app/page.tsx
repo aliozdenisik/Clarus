@@ -3,6 +3,9 @@
 import { motion } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { MagneticButton } from "@/components/ui/magnetic-button";
+import { TextRotate, LuxuryQuote } from "@/components/ui/text-rotate";
+
+import { DotPattern, RadialGradient, GridPattern } from "@/components/ui/dot-pattern";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import {
@@ -167,13 +170,27 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[var(--color-bg-app)] overflow-hidden">
-      {/* Subtle ambient glow */}
+      {/* Premium ambient effects */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[800px] bg-[var(--color-accent-primary)] opacity-[0.02] blur-[150px] rounded-full" />
+        <DotPattern width={40} height={40} cr={0.4} className="opacity-[0.04]" />
+        <RadialGradient 
+          className="inset-0" 
+          color="var(--color-accent-primary)" 
+          size="1200px" 
+          position="50% -20%" 
+          opacity={0.06}
+        />
+        <RadialGradient 
+          className="inset-0" 
+          color="var(--color-accent-secondary)" 
+          size="800px" 
+          position="80% 60%" 
+          opacity={0.04}
+        />
       </div>
 
       {/* Hero Section - Centered Layout */}
-      <section className="relative px-6 pt-32 pb-40 md:pt-48 md:pb-56">
+      <section className="relative px-6 pt-32 pb-32 md:pt-48 md:pb-40">
         <div className="mx-auto max-w-[1200px] flex flex-col items-center text-center">
           {/* Logo - Centered */}
           <motion.div
@@ -217,57 +234,45 @@ export default function HomePage() {
               compare perspectives, find answers.
             </p>
 
-            {/* CTA Buttons - Refined */}
+            {/* CTA Buttons - Luxury */}
             <div className="flex flex-col sm:flex-row gap-5">
               {user ? (
                 <>
                   <motion.button
                     onClick={() => router.push("/search")}
+                    className="px-10 py-4 rounded-xl bg-indigo-600 border border-indigo-500/50 text-white font-medium hover:bg-indigo-500 transition-colors duration-200 flex items-center justify-center gap-3"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    transition={springPresets.snappy}
-                    className="group relative px-10 py-5 bg-[var(--color-accent-primary)] text-[var(--color-bg-app)] font-medium text-base tracking-wide overflow-hidden"
                   >
-                    <div className="absolute inset-0 bg-[var(--color-accent-secondary)] translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                    <span className="relative flex items-center justify-center gap-3">
-                      <Search className="w-4 h-4" />
-                      Go to Search
-                    </span>
+                    <Search className="w-4 h-4" />
+                    Go to Search
                   </motion.button>
                   <motion.button
                     onClick={() => router.push("/compare")}
+                    className="px-10 py-4 rounded-xl bg-transparent border border-white/20 text-white font-medium hover:bg-white/5 hover:border-white/30 transition-colors duration-200 flex items-center justify-center gap-3"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    transition={springPresets.snappy}
-                    className="px-10 py-5 border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] font-medium text-base tracking-wide hover:border-[var(--color-border-glow)] transition-colors duration-300"
                   >
-                    <span className="flex items-center justify-center gap-3">
-                      <GitCompare className="w-4 h-4" />
-                      Compare
-                    </span>
+                    <GitCompare className="w-4 h-4" />
+                    Compare
                   </motion.button>
                 </>
               ) : (
                 <>
                   <motion.button
                     onClick={() => router.push("/register")}
+                    className="px-10 py-4 rounded-xl bg-indigo-600 border border-indigo-500/50 text-white font-medium hover:bg-indigo-500 transition-colors duration-200 flex items-center justify-center gap-3"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    transition={springPresets.snappy}
-                    className="group relative px-10 py-5 bg-[var(--color-accent-primary)] text-[var(--color-bg-app)] font-medium text-base tracking-wide overflow-hidden"
                   >
-                    <div className="absolute inset-0 bg-[var(--color-accent-secondary)] translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                    <span className="relative flex items-center justify-center gap-3">
-                      Get Started
-                      <ArrowRight className="w-4 h-4" />
-                    </span>
+                    Get Started
+                    <ArrowRight className="w-4 h-4" />
                   </motion.button>
                   <motion.button
                     onClick={() => router.push("/login")}
+                    className="px-10 py-4 rounded-xl bg-transparent border border-white/20 text-white font-medium hover:bg-white/5 hover:border-white/30 transition-colors duration-200 flex items-center justify-center gap-3"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    transition={springPresets.snappy}
-                    className="px-10 py-5 border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] font-medium text-base tracking-wide hover:border-[var(--color-border-glow)] transition-colors duration-300"
                   >
                     Sign In
                   </motion.button>
@@ -278,8 +283,43 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Inspiring Quote Section */}
+      <section className="relative px-6 py-16 md:py-20">
+        <div className="mx-auto max-w-[900px]">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 1.5 }}
+          >
+            <LuxuryQuote
+              quotes={[
+                { 
+                  text: "The beginning of wisdom is the fear of the Lord, and knowledge of the Holy One is understanding.",
+                  source: "Proverbs 9:10"
+                },
+                { 
+                  text: "Indeed, with hardship comes ease. Indeed, with hardship comes ease.",
+                  source: "Quran 94:5-6"
+                },
+                { 
+                  text: "Love is patient, love is kind. It does not envy, it does not boast, it is not proud.",
+                  source: "1 Corinthians 13:4"
+                },
+                { 
+                  text: "And We have certainly made the Quran easy for remembrance, so is there any who will remember?",
+                  source: "Quran 54:17"
+                },
+              ]}
+              rotationInterval={6000}
+              className="py-8"
+            />
+          </motion.div>
+        </div>
+      </section>
+
       {/* Features Section - Bento Grid */}
-      <section className="relative px-6 py-32 md:py-40">
+      <section className="relative px-6 py-28 md:py-36">
         <div className="mx-auto max-w-[1200px]">
           {/* Section Header - Centered */}
           <motion.div
@@ -287,7 +327,7 @@ export default function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ ...springPresets.gentle, duration: 1 }}
-            className="mb-24 text-center"
+            className="mb-20 text-center"
           >
             <span className="inline-block text-xs font-medium tracking-[0.2em] uppercase text-[var(--color-accent-primary)] mb-6">
               Why Clarus
@@ -342,7 +382,7 @@ export default function HomePage() {
       </section>
 
       {/* Multi-Agent Section - Sophisticated Color-Coding */}
-      <section className="relative px-6 py-32 md:py-40 overflow-hidden">
+      <section className="relative px-6 py-28 md:py-36 overflow-hidden">
         <div className="mx-auto max-w-[1200px]">
           {/* Section Header */}
           <motion.div
@@ -350,7 +390,7 @@ export default function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ ...springPresets.gentle, duration: 1 }}
-            className="mb-24 text-center"
+            className="mb-20 text-center"
           >
             <span className="inline-block text-xs font-medium tracking-[0.2em] uppercase text-[var(--color-accent-primary)] mb-6">
               Core Feature
@@ -477,7 +517,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works Section - Clean Timeline */}
-      <section className="relative px-6 py-32 md:py-40 overflow-hidden">
+      <section className="relative px-6 py-28 md:py-36 overflow-hidden">
         <div className="mx-auto max-w-[1200px]">
           {/* Section Header */}
           <motion.div
@@ -485,7 +525,7 @@ export default function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ ...springPresets.gentle, duration: 1 }}
-            className="mb-24 text-center"
+            className="mb-20 text-center"
           >
             <span className="inline-block text-xs font-medium tracking-[0.2em] uppercase text-[var(--color-accent-primary)] mb-6">
               Your Journey
@@ -539,7 +579,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section - 21st.dev Pattern */}
-      <section className="relative bg-[var(--color-bg-app)] py-40 px-6 overflow-hidden">
+      <section className="relative bg-[var(--color-bg-app)] py-36 px-6 overflow-hidden">
         <div className="max-w-5xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
@@ -559,16 +599,15 @@ export default function HomePage() {
                 : "Join thousands exploring sacred texts with AI-powered search. Every verse, every perspective, every answer — at your fingertips."}
             </p>
             <div className="inline-block">
-              <button
+              <motion.button
                 onClick={() => router.push(user ? "/search" : "/register")}
-                className="relative px-12 py-6 bg-[var(--color-accent-primary)] text-[var(--color-bg-app)] rounded-md overflow-hidden group transition-all duration-300 hover:shadow-lg font-medium text-lg inline-flex items-center gap-3"
+                className="px-12 py-5 rounded-xl bg-indigo-600 border border-indigo-500/50 text-white text-lg font-medium hover:bg-indigo-500 transition-colors duration-200 flex items-center gap-3"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <span className="relative z-10 transition-transform duration-300 group-hover:-translate-y-1">
-                  {user ? "Go to Search" : "Begin Your Journey"}
-                </span>
-                <ArrowRight className="relative z-10 w-5 h-5 transition-all duration-300 group-hover:translate-x-1 group-hover:-translate-y-1" />
-                <div className="absolute inset-0 bg-[var(--color-accent-secondary)] transform translate-y-full transition-transform duration-300 ease-out group-hover:translate-y-0" />
-              </button>
+                {user ? "Go to Search" : "Begin Your Journey"}
+                <ArrowRight className="w-5 h-5" />
+              </motion.button>
             </div>
             <div className="mt-16 flex items-center justify-center gap-8 text-sm text-[var(--color-text-muted)]">
               <div className="flex items-center gap-2">
@@ -593,48 +632,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer - Refined Minimal */}
-      <footer className="border-t border-[var(--color-border-subtle)]">
-        <div className="mx-auto max-w-[1200px] px-6 py-16">
-          {/* Top: Brand + Nav */}
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-12 mb-12">
-            {/* Brand */}
-            <div className="flex items-center gap-4">
-              <Image src="/logo-dark-nobg.png" alt="Clarus" width={28} height={28} className="opacity-80" />
-              <span className="text-base font-medium text-[var(--color-text-primary)] tracking-wide">
-                Clarus
-              </span>
-            </div>
 
-            {/* Nav Links */}
-            <nav className="flex flex-wrap gap-x-10 gap-y-4">
-              {[
-                { label: "Search", href: "/search" },
-                { label: "Compare", href: "/compare" },
-                { label: "History", href: "/history" },
-                { label: "Settings", href: "/settings" },
-              ].map((link) => (
-                <button
-                  key={link.label}
-                  onClick={() => router.push(link.href)}
-                  className="text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors duration-300 font-light tracking-wide"
-                >
-                  {link.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-[var(--color-border-subtle)] mb-8" />
-
-          {/* Bottom: Copyright */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[var(--color-text-muted)] font-light tracking-wide">
-            <span>&copy; {new Date().getFullYear()} Clarus</span>
-            <span>AI-powered sacred text search</span>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }

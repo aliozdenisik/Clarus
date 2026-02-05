@@ -47,12 +47,12 @@ export function LanguageSelector({
         const detected = SUPPORTED_LANGUAGES.find(
           (lang) => lang.code === detectedLanguage
         );
-        return `🌐 Auto (${detected?.code.toUpperCase() ?? detectedLanguage.toUpperCase()})`;
+        return `Language: Auto (${detected?.code.toUpperCase() ?? detectedLanguage.toUpperCase()})`;
       }
-      return "🌐 Auto";
+      return "Language: Auto";
     }
     // Manual selection
-    return `🌐 ${value.toUpperCase()}`;
+    return `Language: ${value.toUpperCase()}`;
   };
 
   return (
@@ -60,10 +60,11 @@ export function LanguageSelector({
       <DropdownMenuTrigger asChild>
         <button
           className={cn(
-            "shrink-0 px-2.5 py-1.5 rounded-lg text-xs font-medium",
-            "bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]",
-            "hover:bg-[var(--color-bg-elevated)] transition-colors",
-            "focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+            "shrink-0 h-11 px-3 rounded-lg text-sm font-medium",
+            "bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)]",
+            "border border-[var(--color-border-subtle)]",
+            "hover:border-[var(--color-border-glow)] transition-colors duration-200",
+            "focus:outline-none focus:ring-1 focus:ring-[var(--color-accent-primary)]/20 focus:border-[var(--color-accent-primary)]"
           )}
         >
           {getBadgeText()}

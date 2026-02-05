@@ -4,8 +4,7 @@ import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { useAuth } from "@/lib/auth/auth-context";
-import { Button } from "@/components/ui/button";
-import { GlowCard } from "@/components/ui/glow-card";
+import { DotPattern } from "@/components/ui/dot-pattern";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -19,6 +18,8 @@ import { VerseDetail } from "@/components/search/verse-tooltip";
 import { SourceBadge, SourceType } from "@/components/compare/source-badge";
 import { useLogger } from "@/lib/logger";
 import { LanguageSelector } from "@/components/search/language-selector";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 interface SearchResult {
   source: string;
@@ -335,24 +336,21 @@ function SearchContent() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[var(--color-bg-app)]">
-      {/* Ambient warm gradient */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[500px]"
-        style={{
-          background: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(91, 168, 181, 0.04), transparent 70%)",
-        }}
-      />
+    <div className="relative min-h-screen bg-[var(--color-bg-app)] overflow-hidden">
+      {/* Subtle ambient texture */}
+      <div className="fixed inset-0 pointer-events-none">
+        <DotPattern width={40} height={40} cr={0.4} className="opacity-[0.015]" />
+      </div>
 
       {/* Search Hero */}
-      <div className="relative pt-12 pb-2 px-6">
+      <div className="relative pt-16 pb-8 px-6">
         <div className="mx-auto max-w-3xl">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={springPresets.fluid}
           >
-            <h1 className="font-display text-4xl font-normal text-[var(--color-text-primary)] mb-1 tracking-tight">
+            <h1 className="text-2xl font-medium text-[var(--color-text-primary)] mb-2 tracking-tight">
               Search
             </h1>
             <p className="text-sm text-[var(--color-text-muted)] mb-8">
@@ -361,26 +359,30 @@ function SearchContent() {
 
             <SearchTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
-            <form onSubmit={handleSearch} className="relative mb-4">
-              <div className="flex gap-2 items-center">
+            <form onSubmit={handleSearch} className="relative mb-6">
+              <div className="relative flex gap-2 items-center">
                 <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[var(--color-text-muted)]" />
-                  <input
-                    type="text"
+                  <Input 
+                    id="search-input"
+                    type="search"
                     data-testid="search-input"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder={getPlaceholder()}
-                    className="w-full h-12 pl-12 pr-32 bg-[var(--color-bg-surface)] rounded-xl text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] border border-[var(--color-border-subtle)] focus:border-[var(--color-border-glow)] focus:outline-none transition-all duration-300 text-[15px]"
+                    className="peer pe-20 ps-10 h-11"
                   />
-                  <Button
+                  <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
+                    <Search size={18} strokeWidth={2} />
+                  </div>
+                  <button
                     type="submit"
                     data-testid="search-submit-button"
                     disabled={(isSearching && !isStreaming) || !query.trim()}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-[var(--color-accent-primary)] text-[#09090b] hover:bg-[var(--color-accent-hover)] font-medium rounded-lg px-5 h-8 text-sm tracking-wide disabled:opacity-40"
+                    className="absolute inset-y-0 end-1 flex h-[calc(100%-8px)] my-auto items-center justify-center rounded-lg px-3 text-sm font-medium bg-[var(--color-accent-primary)] text-white transition-colors hover:bg-[var(--color-accent-primary)]/90 focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label="Submit search"
                   >
                     {isSearching || isStreaming ? "Searching..." : "Search"}
-                  </Button>
+                  </button>
                 </div>
                 <LanguageSelector
                   value={selectedLanguage}
@@ -400,16 +402,16 @@ function SearchContent() {
           <AnimatePresence>
             {streamedAnswer && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="mb-10"
+                exit={{ opacity: 0, y: -8 }}
+                className="mb-12"
               >
-                <div className="relative pl-6 border-l-2 border-[var(--color-accent-primary)] py-1">
-                  <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-[var(--color-accent-primary)] mb-3 block opacity-70">
+                <div className="relative pl-5 border-l border-[var(--color-accent-primary)]/40 py-1">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-muted)] mb-3 block">
                     AI Interpretation
                   </span>
-                  <div className="text-[var(--color-text-primary)] leading-[1.85] text-[15px]">
+                  <div className="text-[var(--color-text-secondary)] leading-[1.75] text-[15px]">
                     {parseCitations(streamedAnswer).map((part, i) => {
                       if (typeof part === "string") {
                         return <span key={i}>{part}</span>;
@@ -436,7 +438,7 @@ function SearchContent() {
           {isSearching && !results.length && !streamedAnswer && (
             <div className="space-y-3">
               {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-28 w-full rounded-xl" />
+                <Skeleton key={i} className="h-24 w-full rounded-lg" />
               ))}
             </div>
           )}
@@ -444,28 +446,19 @@ function SearchContent() {
           {/* Loading skeletons - answer streaming, waiting for sources */}
           {isSearching && !results.length && streamedAnswer && (
             <div className="space-y-3">
-              {/* Ornamental divider */}
-              <div className="flex items-center gap-4 mb-6">
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--color-border-subtle)] to-transparent" />
-                <div className="w-1 h-1 rotate-45 bg-[var(--color-accent-primary)] opacity-30" />
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--color-border-subtle)] to-transparent" />
-              </div>
+              <div className="h-px bg-[var(--color-border-subtle)] mb-6" />
               <p className="text-xs text-[var(--color-text-muted)] tracking-wide uppercase mb-4">
                 Retrieving sources...
               </p>
               {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-28 w-full rounded-xl" />
+                <Skeleton key={i} className="h-24 w-full rounded-lg" />
               ))}
             </div>
           )}
 
-          {/* Ornamental divider between AI answer and results */}
+          {/* Divider between AI answer and results */}
           {results.length > 0 && streamedAnswer && (
-            <div className="flex items-center gap-4 mb-8">
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--color-border-subtle)] to-transparent" />
-              <div className="w-1 h-1 rotate-45 bg-[var(--color-accent-primary)] opacity-30" />
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--color-border-subtle)] to-transparent" />
-            </div>
+            <div className="h-px bg-[var(--color-border-subtle)] mb-8" />
           )}
 
           {/* Results */}
@@ -475,26 +468,24 @@ function SearchContent() {
                 <motion.div
                   key={`${result.reference}-${i}`}
                   data-verse-id={result.reference}
-                  initial={{ opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{
                     opacity: 1,
                     y: 0,
-                    scale: highlightedVerse === result.reference ? 1.01 : 1,
                   }}
-                  exit={{ opacity: 0, scale: 0.97 }}
-                  transition={{ ...springPresets.snappy, delay: i * 0.04 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ ...springPresets.snappy, delay: i * 0.03 }}
                   className="mb-3"
                 >
-                  <GlowCard
-                    className={
-                      highlightedVerse === result.reference
-                        ? "ring-1 ring-[var(--color-accent-primary)]/40 transition-all duration-500"
-                        : ""
-                    }
+                  <div
+                    className={cn(
+                      "p-4 rounded-lg bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] hover:border-[var(--color-border-glow)] transition-colors duration-200",
+                      highlightedVerse === result.reference && "border-[var(--color-accent-primary)]/40"
+                    )}
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <span className="font-display text-base text-[var(--color-accent-primary)]">
+                        <span className="text-sm font-medium text-[var(--color-accent-primary)]">
                           {result.reference || "Unknown Reference"}
                         </span>
                         <SourceBadge source={mapSourceToType(result.source)} />
@@ -507,16 +498,16 @@ function SearchContent() {
                           type="button"
                           onClick={() => navigateToVerse(result.reference)}
                           aria-label="Go to verse"
-                          className="text-[var(--color-text-muted)] hover:text-[var(--color-accent-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)] rounded transition-colors duration-200"
+                          className="text-[var(--color-text-muted)] hover:text-[var(--color-accent-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]/50 rounded transition-colors duration-200"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
-                    <p className="text-[var(--color-text-secondary)] leading-[1.75] text-[15px]">
+                    <p className="text-[var(--color-text-secondary)] leading-[1.7] text-[15px]">
                       {extractVerseText(result.text)}
                     </p>
-                  </GlowCard>
+                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>

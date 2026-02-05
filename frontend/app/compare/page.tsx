@@ -21,7 +21,10 @@ import {
   Search,
 } from "lucide-react";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
-import { FilterTabs, FilterType } from "@/components/compare/filter-tabs";
+import { AnimatedFilterTabs, FilterType } from "@/components/ui/animated-tabs";
+import { TypingIndicator, AIResponse } from "@/components/ui/typewriter";
+import { DotPattern, RadialGradient } from "@/components/ui/dot-pattern";
+import { GlowingButton } from "@/components/ui/glowing-button";
 import { SourceReferenceCard } from "@/components/compare/source-reference-card";
 import { InlineCitation } from "@/components/compare/inline-citation";
 import { parseCitations, parseBareReferences, stripMarkdownHeaders } from "@/lib/utils/parse-citations";
@@ -424,12 +427,21 @@ function CompareContent() {
 
   return (
     <div className="relative min-h-screen bg-[var(--color-bg-app)]">
-      {/* Ambient warm gradient */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[500px]"
-        style={{
-          background: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(91, 168, 181, 0.04), transparent 70%)",
-        }}
+      {/* Premium ambient effects */}
+      <DotPattern width={32} height={32} cr={0.5} className="opacity-[0.02]" />
+      <RadialGradient 
+        className="inset-0" 
+        color="rgba(91, 168, 181, 0.08)" 
+        size="800px" 
+        position="50% -200px" 
+        opacity={0.5}
+      />
+      <RadialGradient 
+        className="inset-0" 
+        color="rgba(139, 92, 246, 0.05)" 
+        size="600px" 
+        position="80% 50%" 
+        opacity={0.3}
       />
       <div className="relative pt-12 pb-2 px-6">
         <div className="mx-auto max-w-3xl">
@@ -493,14 +505,16 @@ function CompareContent() {
                   placeholder="Enter a topic (e.g., patience, forgiveness, creation)..."
                   className="w-full h-12 pl-12 pr-32 bg-[var(--color-bg-surface)] rounded-xl text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] border border-[var(--color-border-subtle)] focus:border-[var(--color-border-glow)] focus:outline-none transition-all duration-300 text-[15px]"
                 />
-                <Button
+                <GlowingButton
                   type="submit"
                   data-testid="compare-analyze-button"
                   disabled={isLoading || !topic.trim()}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-[var(--color-accent-primary)] text-[#09090b] hover:bg-[var(--color-accent-hover)] font-medium rounded-lg px-5 h-8 text-sm tracking-wide disabled:opacity-40"
+                  glowColor="#6366f1"
+                  size="sm"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 !h-8 !rounded-lg disabled:opacity-40"
                 >
                   {isLoading ? "Analyzing..." : "Analyze"}
-                </Button>
+                </GlowingButton>
               </div>
               <LanguageSelector
                 value={selectedLanguage}
@@ -523,9 +537,9 @@ function CompareContent() {
             animate={{ opacity: 1 }}
             className="space-y-4 mb-8"
           >
-            <div className="flex items-center gap-2 text-[var(--color-text-muted)] mb-4">
-              <Sparkles className="h-4 w-4 animate-pulse" />
-              <span>
+            <div className="flex items-center gap-3 text-[var(--color-text-muted)] mb-4">
+              <TypingIndicator />
+              <span className="text-sm">
                 {result?.paragraphs?.length 
                   ? `Analyzing... (${result.paragraphs.length}/5 agents completed)`
                   : "Initializing multi-agent analysis..."}
@@ -702,7 +716,7 @@ function CompareContent() {
                       Kaynak Referanslari
                     </h3>
                     
-                    <FilterTabs
+                    <AnimatedFilterTabs
                       activeFilter={activeFilter}
                       onFilterChange={setActiveFilter}
                       counts={counts}

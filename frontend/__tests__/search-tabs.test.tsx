@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import SearchPage from '../app/search/page';
 import { SearchTabs } from '../components/search/search-tabs';
@@ -45,17 +46,17 @@ vi.mock('sonner', () => ({
 describe('SearchTabs Component', () => {
   it('renders all 4 tabs', () => {
     render(<SearchTabs activeTab="quran" onTabChange={() => {}} />);
-    expect(screen.getByText('Kuran')).toBeInTheDocument();
-    expect(screen.getByText('Eski Ahit')).toBeInTheDocument();
-    expect(screen.getByText('Yeni Ahit')).toBeInTheDocument();
-    expect(screen.getByText('Apokrifa')).toBeInTheDocument();
+    expect(screen.getByText('Quran')).toBeInTheDocument();
+    expect(screen.getByText('Old Testament')).toBeInTheDocument();
+    expect(screen.getByText('New Testament')).toBeInTheDocument();
+    expect(screen.getByText('Apocrypha')).toBeInTheDocument();
   });
 
-  it('calls onTabChange when a tab is clicked', () => {
+  it('calls onTabChange when a tab is clicked', async () => {
     const handleTabChange = vi.fn();
     render(<SearchTabs activeTab="quran" onTabChange={handleTabChange} />);
     
-    fireEvent.click(screen.getByText('Eski Ahit'));
+    await userEvent.click(screen.getByText('Old Testament'));
     expect(handleTabChange).toHaveBeenCalledWith('ot');
   });
 });
@@ -69,10 +70,10 @@ describe('SearchPage Integration', () => {
 
   it('renders search tabs', () => {
     render(<SearchPage />);
-    expect(screen.getByText('Kuran')).toBeInTheDocument();
-    expect(screen.getByText('Eski Ahit')).toBeInTheDocument();
-    expect(screen.getByText('Yeni Ahit')).toBeInTheDocument();
-    expect(screen.getByText('Apokrifa')).toBeInTheDocument();
+    expect(screen.getByText('Quran')).toBeInTheDocument();
+    expect(screen.getByText('Old Testament')).toBeInTheDocument();
+    expect(screen.getByText('New Testament')).toBeInTheDocument();
+    expect(screen.getByText('Apocrypha')).toBeInTheDocument();
   });
 
   it('initializes tab from URL', () => {
@@ -87,17 +88,17 @@ describe('SearchPage Integration', () => {
     // But we need to implement the page first for this to work
   });
 
-  it('changes tab and updates URL when clicked', () => {
+  it('changes tab and updates URL when clicked', async () => {
     render(<SearchPage />);
     
-    const otTab = screen.getByText('Eski Ahit');
-    fireEvent.click(otTab);
+    const otTab = screen.getByText('Old Testament');
+    await userEvent.click(otTab);
     
     expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('?source=ot'));
   });
 
-  it('performs search with correct API endpoint for Kuran', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+  it('performs search with correct API endpoint for Quran', async () => {
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ results: [] }),
     });
@@ -107,7 +108,7 @@ describe('SearchPage Integration', () => {
     const input = screen.getByPlaceholderText(/search/i);
     fireEvent.change(input, { target: { value: 'test query' } });
     
-    const button = screen.getByRole('button', { name: 'Search' });
+    const button = screen.getByRole('button', { name: /submit search/i });
     fireEvent.click(button);
 
     await waitFor(() => {
@@ -122,7 +123,7 @@ describe('SearchPage Integration', () => {
   });
 
   it('performs search with correct API endpoint for Bible (OT)', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ results: [] }),
     });
@@ -130,13 +131,13 @@ describe('SearchPage Integration', () => {
     // We simulate user clicking OT tab
     render(<SearchPage />);
     
-    const otTab = screen.getByText('Eski Ahit');
-    fireEvent.click(otTab);
+    const otTab = screen.getByText('Old Testament');
+    await userEvent.click(otTab);
 
     const input = screen.getByPlaceholderText(/search/i);
     fireEvent.change(input, { target: { value: 'test query' } });
     
-    const button = screen.getByRole('button', { name: 'Search' });
+    const button = screen.getByRole('button', { name: /submit search/i });
     fireEvent.click(button);
 
     await waitFor(() => {

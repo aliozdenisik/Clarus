@@ -6,6 +6,8 @@ import { springPresets } from "@/lib/design-system";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
 import { GlowCard } from "@/components/ui/glow-card";
+import { GlowingButton } from "@/components/ui/glowing-button";
+import { DotPattern, RadialGradient } from "@/components/ui/dot-pattern";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -18,6 +20,7 @@ import {
   ChevronRight,
   Search,
   History as HistoryIcon,
+  BookOpen,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -220,8 +223,27 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-app)] p-8">
-      <div className="mx-auto max-w-4xl">
+    <div className="relative min-h-screen bg-[var(--color-bg-app)] p-8 overflow-hidden">
+      {/* Premium ambient effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        <DotPattern width={40} height={40} cr={0.4} className="opacity-[0.025]" />
+        <RadialGradient 
+          className="inset-0" 
+          color="var(--color-accent-primary)" 
+          size="900px" 
+          position="30% 10%" 
+          opacity={0.04}
+        />
+        <RadialGradient 
+          className="inset-0" 
+          color="var(--color-accent-secondary)" 
+          size="600px" 
+          position="70% 60%" 
+          opacity={0.03}
+        />
+      </div>
+      
+      <div className="relative mx-auto max-w-4xl z-10">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -295,20 +317,34 @@ export default function HistoryPage() {
           </div>
         ) : !items || items.length === 0 ? (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-20 text-[var(--color-text-muted)]"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={springPresets.gentle}
+            className="flex flex-col items-center justify-center py-24"
           >
-            <HistoryIcon className="mb-4 h-16 w-16 opacity-20" />
-            <p className="text-lg font-medium">No search history found</p>
-            <p className="text-sm">Your search history will appear here</p>
-            <Button
-              variant="outline"
-              className="mt-6"
+            {/* Illustrated empty state */}
+            <div className="relative mb-8">
+              <div className="absolute inset-0 blur-2xl bg-[var(--color-accent-primary)] opacity-10 rounded-full scale-150" />
+              <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-br from-[var(--color-bg-surface)] to-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)] flex items-center justify-center">
+                <BookOpen className="w-10 h-10 text-[var(--color-accent-primary)] opacity-60" />
+              </div>
+            </div>
+            <h3 className="text-xl font-medium text-[var(--color-text-primary)] mb-2">
+              No search history yet
+            </h3>
+            <p className="text-sm text-[var(--color-text-muted)] mb-8 text-center max-w-sm">
+              Your searches will appear here. Start exploring sacred texts to build your history.
+            </p>
+            <GlowingButton
               onClick={() => router.push("/search")}
+              glowColor="#6366f1"
+              className="px-8"
             >
-              Start Searching
-            </Button>
+              <span className="flex items-center gap-2">
+                <Search className="w-4 h-4" />
+                Start Searching
+              </span>
+            </GlowingButton>
           </motion.div>
         ) : (
           <div className="space-y-4">

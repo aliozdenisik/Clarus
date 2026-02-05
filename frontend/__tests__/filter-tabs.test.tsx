@@ -6,16 +6,16 @@ import { FilterTabs } from '@/components/compare/filter-tabs';
 describe('FilterTabs', () => {
   it('renders all 5 filter options', () => {
     render(<FilterTabs activeFilter="all" onFilterChange={vi.fn()} counts={{}} />);
-    expect(screen.getByText('Tumu')).toBeInTheDocument();
-    expect(screen.getByText('Kuran')).toBeInTheDocument();
-    expect(screen.getByText('Eski Ahit')).toBeInTheDocument();
-    expect(screen.getByText('Yeni Ahit')).toBeInTheDocument();
-    expect(screen.getByText('Apokrifa')).toBeInTheDocument();
+    expect(screen.getByText('All')).toBeInTheDocument();
+    expect(screen.getByText('Quran')).toBeInTheDocument();
+    expect(screen.getByText('Old Testament')).toBeInTheDocument();
+    expect(screen.getByText('New Testament')).toBeInTheDocument();
+    expect(screen.getByText('Apocrypha')).toBeInTheDocument();
   });
 
   it('highlights active tab with aria-selected', () => {
     render(<FilterTabs activeFilter="quran" onFilterChange={vi.fn()} counts={{}} />);
-    expect(screen.getByRole('tab', { name: /Kuran/ })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: /Quran/ })).toHaveAttribute('aria-selected', 'true');
   });
 
   it('has tablist role on container', () => {
@@ -31,9 +31,10 @@ describe('FilterTabs', () => {
         counts={{ all: 15, quran: 5, old_testament: 10, new_testament: 0, apocrypha: 0 }} 
       />
     );
-    expect(screen.getByText('(15)')).toBeInTheDocument();
-    expect(screen.getByText('(5)')).toBeInTheDocument();
-    expect(screen.getByText('(10)')).toBeInTheDocument();
+    // Vercel tabs display counts without parentheses
+    expect(screen.getByText('15')).toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument();
+    expect(screen.getByText('10')).toBeInTheDocument();
   });
 
   it('does not show badge when count is 0', () => {
@@ -44,13 +45,15 @@ describe('FilterTabs', () => {
         counts={{ all: 15, quran: 5, old_testament: 10, new_testament: 0, apocrypha: 0 }} 
       />
     );
-    expect(screen.queryByText('(0)')).not.toBeInTheDocument();
+    // Verify no "0" count badge is shown
+    const allBadges = screen.getAllByText(/^\d+$/);
+    expect(allBadges.every(badge => badge.textContent !== '0')).toBe(true);
   });
 
   it('calls onFilterChange when tab clicked', async () => {
     const handleChange = vi.fn();
     render(<FilterTabs activeFilter="all" onFilterChange={handleChange} counts={{}} />);
-    await userEvent.click(screen.getByText('Kuran'));
+    await userEvent.click(screen.getByText('Quran'));
     expect(handleChange).toHaveBeenCalledWith('quran');
   });
 });
