@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { Toaster } from "sonner";
 import Navigation from "@/components/layout/navigation";
+import { Footer } from "@/components/ui/large-name-footer";
 import { configureApiClient } from "@/lib/api/config";
 
 configureApiClient();
@@ -57,7 +58,8 @@ export default function RootLayout({
       <body className={`${dmSans.variable} ${dmSerif.variable} ${amiri.variable} ${notoSansHebrew.variable} ${notoSerifGreek.variable} antialiased`}>
         <Providers>
           <Navigation />
-          {children}
+          <main className="min-h-screen">{children}</main>
+          <Footer />
           <Toaster position="bottom-right" />
         </Providers>
       </body>

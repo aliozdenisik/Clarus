@@ -22,6 +22,7 @@ vi.mock("lucide-react", () => ({
   ChevronRight: () => <div data-testid="chevron-right-icon" />,
   Info: () => <div data-testid="info-icon" />,
   ChevronDown: () => <div data-testid="chevron-down-icon" />,
+  AlertTriangle: () => <div data-testid="alert-triangle-icon" />,
 }));
 
 // Mock GlowCard
@@ -61,6 +62,7 @@ import { SurahChart } from "@/components/keyword-search/surah-chart";
 import { VerseCard } from "@/components/keyword-search/verse-card";
 import { Pagination } from "@/components/keyword-search/pagination";
 import { AccuracyDisclaimer } from "@/components/keyword-search/accuracy-disclaimer";
+import { ExperimentalDisclaimer } from "@/components/keyword-search/experimental-disclaimer";
 
 // ── RootCard Tests ──────────────────────────────────────────────────────────
 
@@ -386,5 +388,41 @@ describe("AccuracyDisclaimer", () => {
     await waitFor(() => {
       expect(screen.queryByText("Accuracy Verification")).not.toBeInTheDocument();
     });
+  });
+});
+
+// ── ExperimentalDisclaimer Tests ──────────────────────────────────────────────
+
+describe("ExperimentalDisclaimer", () => {
+  it("renders experimental warning message", () => {
+    render(<ExperimentalDisclaimer />);
+
+    expect(screen.getByText(/Experimental Feature/i)).toBeInTheDocument();
+    expect(screen.getByText(/under active development/i)).toBeInTheDocument();
+  });
+
+  it("shows warning about academic research", () => {
+    render(<ExperimentalDisclaimer />);
+
+    expect(screen.getByText(/should not be used as the sole basis for academic or theological research/i)).toBeInTheDocument();
+  });
+
+  it("advises to verify with authoritative sources", () => {
+    render(<ExperimentalDisclaimer />);
+
+    expect(screen.getByText(/Always verify with authoritative sources/i)).toBeInTheDocument();
+  });
+
+  it("renders alert triangle icon", () => {
+    render(<ExperimentalDisclaimer />);
+
+    expect(screen.getByTestId("alert-triangle-icon")).toBeInTheDocument();
+  });
+
+  it("accepts className prop", () => {
+    const { container } = render(<ExperimentalDisclaimer className="custom-class" />);
+
+    const disclaimer = container.firstChild;
+    expect(disclaimer).toHaveClass("custom-class");
   });
 });
