@@ -287,25 +287,53 @@ class ComparativeRAG:
         return []
 
     def _search_all_multi_query(
-        self, quran_queries: List[str], bible_queries: List[str], pool_size: int = 20
+        self,
+        quran_queries: List[str],
+        bible_queries: List[str],
+        pool_size: int = 20,
+        collections: Optional[List[str]] = None,
     ) -> Tuple[List, List, List, List]:
         """
-        Step 2 (Multi-Query Version): Execute 4 testament searches with multi-query + RRF.
+        Step 2 (Multi-Query Version): Execute testament searches with multi-query + RRF.
 
-        Searches: Quran, Old Testament, New Testament, Apocrypha
+        Searches only the specified collections (default: all 4).
         Each returns up to pool_size results.
+
+        Args:
+            quran_queries: Query variations for Quran search
+            bible_queries: Query variations for Bible search
+            pool_size: Max results per collection
+            collections: List of collections to search. If None, searches all 4.
+                        Valid values: 'quran_tr', 'bible_ot', 'bible_nt', 'bible_apocrypha'
         """
         import sentry_sdk
 
+        # Default to all collections if not specified
+        if collections is None:
+            collections = ["quran_tr", "bible_ot", "bible_nt", "bible_apocrypha"]
+
+        # Map collection names to internal keys
+        collection_to_key = {
+            "quran_tr": "quran",
+            "bible_ot": "ot",
+            "bible_nt": "nt",
+            "bible_apocrypha": "apocrypha",
+        }
+        active_keys = [
+            collection_to_key[c] for c in collections if c in collection_to_key
+        ]
+
         with sentry_sdk.start_span(
-            op="rag.parallel_search", description="4-collection parallel search"
+            op="rag.parallel_search",
+            description=f"{len(active_keys)}-collection parallel search",
         ) as span:
-            span.set_data("collections", 4)
+            span.set_data("collections", len(active_keys))
+            span.set_data("active_collections", active_keys)
             span.set_data("quran_query_count", len(quran_queries))
             span.set_data("bible_query_count", len(bible_queries))
 
             self._log(
-                f"🔍 Step 2: Multi-Query Search ({len(quran_queries)}q×4 collections)..."
+                f"🔍 Step 2: Multi-Query Search ({len(quran_queries)}q×{len(active_keys)} collections)..."
             )
             start = time.time()
 
@@ -347,14 +375,17 @@ class ComparativeRAG:
                     )[:pool_size],
                 )
 
-            # All 4 collections in parallel
-            with ThreadPoolExecutor(max_workers=4) as executor:
-                futures = [
-                    executor.submit(search_quran),
-                    executor.submit(search_ot),
-                    executor.submit(search_nt),
-                    executor.submit(search_apocrypha),
-                ]
+            # Map keys to search functions
+            search_funcs = {
+                "quran": search_quran,
+                "ot": search_ot,
+                "nt": search_nt,
+                "apocrypha": search_apocrypha,
+            }
+
+            # Only search active collections in parallel
+            with ThreadPoolExecutor(max_workers=len(active_keys)) as executor:
+                futures = [executor.submit(search_funcs[key]) for key in active_keys]
 
                 for future in as_completed(futures):
                     key, result = future.result()
@@ -364,9 +395,8 @@ class ComparativeRAG:
 
             counts = {k: len(v) for k, v in results.items()}
             span.set_data("result_counts", counts)
-            self._log(
-                f"   Quran: {counts['quran']}, OT: {counts['ot']}, NT: {counts['nt']}, Apoc: {counts['apocrypha']}"
-            )
+            active_counts = ", ".join(f"{k.upper()}: {counts[k]}" for k in active_keys)
+            self._log(f"   {active_counts}")
             self._log(f"   Multi-Query searches completed in {duration:.0f}ms")
 
             return (
@@ -620,11 +650,20 @@ class ComparativeRAG:
             bible_chunks_top,
         )
 
-    def search_all(self, query: str) -> ComparativeScriptureResult:
+    def search_all(
+        self,
+        query: str,
+        collections: Optional[List[str]] = None,
+    ) -> ComparativeScriptureResult:
         """
         Execute full search pipeline without answer generation.
 
-        Returns 80 verses (20 per testament × 4 collections: Quran, OT, NT, Apocrypha).
+        Returns up to 80 verses (20 per collection) from specified collections.
+
+        Args:
+            query: The search query
+            collections: List of collections to search. If None, searches all 4.
+                        Valid values: 'quran_tr', 'bible_ot', 'bible_nt', 'bible_apocrypha'
 
         If enable_multi_query=True: Uses 5 queries + RRF fusion for better accuracy.
         If enable_multi_query=False: Uses single enhanced query (faster).
@@ -634,6 +673,9 @@ class ComparativeRAG:
         The detected source language is stored in ``search_stats`` for downstream
         response translation.
         """
+        # Default to all collections if not specified
+        if collections is None:
+            collections = ["quran_tr", "bible_ot", "bible_nt", "bible_apocrypha"]
         total_start = time.time()
 
         mode_label = "Multi-Query" if self.enable_multi_query else "Single-Query"
@@ -679,7 +721,9 @@ class ComparativeRAG:
 
             # Step 2: Multi-query search with RRF fusion - now returns (quran, ot, nt, apocrypha)
             quran_results, ot_results, nt_results, apocrypha_results = (
-                self._search_all_multi_query(quran_queries, bible_queries, pool_size=20)
+                self._search_all_multi_query(
+                    quran_queries, bible_queries, pool_size=20, collections=collections
+                )
             )
 
             # Compute per-collection statistics for confidence scoring
@@ -721,8 +765,21 @@ class ComparativeRAG:
                 quran_translated, bible_translated
             )
 
-            # Step 2: 4 parallel testament searches (fallback for single query mode)
-            self._log("🔍 Step 2: Parallel Testament Searches...")
+            # Map collection names to internal keys
+            collection_to_key = {
+                "quran_tr": "quran",
+                "bible_ot": "ot",
+                "bible_nt": "nt",
+                "bible_apocrypha": "apocrypha",
+            }
+            active_keys = [
+                collection_to_key[c] for c in collections if c in collection_to_key
+            ]
+
+            # Step 2: Parallel testament searches (only active collections)
+            self._log(
+                f"🔍 Step 2: Parallel Testament Searches ({len(active_keys)} collections)..."
+            )
             start = time.time()
 
             def search_quran():
@@ -745,14 +802,20 @@ class ComparativeRAG:
                     bible_query, mode="semantic", limit=20
                 )
 
-            with ThreadPoolExecutor(max_workers=4) as executor:
+            # Map keys to search functions
+            search_funcs = {
+                "quran": search_quran,
+                "ot": search_ot,
+                "nt": search_nt,
+                "apocrypha": search_apocrypha,
+            }
+
+            # Only search active collections
+            with ThreadPoolExecutor(max_workers=len(active_keys)) as executor:
                 futures = {
-                    executor.submit(search_quran): "quran",
-                    executor.submit(search_ot): "ot",
-                    executor.submit(search_nt): "nt",
-                    executor.submit(search_apocrypha): "apocrypha",
+                    executor.submit(search_funcs[key]): key for key in active_keys
                 }
-                results = {}
+                results = {"quran": [], "ot": [], "nt": [], "apocrypha": []}
                 for future in as_completed(futures):
                     key = futures[future]
                     results[key] = future.result()

@@ -1,6 +1,6 @@
 """SSE Streaming API routes for real-time LLM responses."""
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import AsyncGenerator
@@ -276,6 +276,10 @@ async def stream_compare(
         ...,
         description="JWT access token (required for SSE - EventSource can't send headers)",
     ),
+    collections: str = Query(
+        "quran_tr,bible_ot,bible_nt,bible_apocrypha",
+        description="Comma-separated list of collections to search (minimum 2)",
+    ),
     language: Optional[str] = Query(
         None, description="Detected user language (ISO 639-1)"
     ),
@@ -284,7 +288,21 @@ async def stream_compare(
     """Stream comparative analysis with multi-agent output.
 
     Note: SSE/EventSource API doesn't support custom headers, so token must be passed as query param.
+
+    Args:
+        collections: Comma-separated collection names (e.g., 'quran_tr,bible_ot').
+                    Valid values: quran_tr, bible_ot, bible_nt, bible_apocrypha
     """
+    # Parse and validate collections
+    valid_collections = {"quran_tr", "bible_ot", "bible_nt", "bible_apocrypha"}
+    collection_list = [
+        c.strip() for c in collections.split(",") if c.strip() in valid_collections
+    ]
+    if len(collection_list) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="At least 2 valid collections required for comparison",
+        )
     current_user = await get_current_user_from_token(token, db)
     await check_rate_limit(current_user, db)
 
@@ -322,8 +340,10 @@ async def stream_compare(
 
         try:
             # Step 1: Get search results first (same pattern as non-streaming endpoint)
-            logger.info("[COMPARE] Starting search_all...")
-            search_result = rag.search_all(topic)
+            logger.info(
+                f"[COMPARE] Starting search_all with collections: {collection_list}"
+            )
+            search_result = rag.search_all(topic, collections=collection_list)
             logger.info(
                 f"[COMPARE] search_all completed, found {len(search_result.quran)} Quran, "
                 f"{len(search_result.ot)} OT, {len(search_result.nt)} NT, {len(search_result.apocrypha)} Apocrypha"
