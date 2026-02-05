@@ -117,7 +117,7 @@ export type FilterType = "all" | "quran" | "old_testament" | "new_testament" | "
 interface AnimatedFilterTabsProps {
   activeFilter: FilterType;
   onFilterChange: (filter: FilterType) => void;
-  counts: Partial<Record<FilterType, number>>;
+  counts?: Partial<Record<FilterType, number>>;
 }
 
 const FILTER_LABELS: Record<FilterType, string> = {
@@ -133,13 +133,11 @@ const FILTERS: FilterType[] = ["all", "quran", "old_testament", "new_testament",
 export function AnimatedFilterTabs({
   activeFilter,
   onFilterChange,
-  counts,
 }: AnimatedFilterTabsProps) {
-  // Build tabs with counts
+  // Build tabs without counts (new Vercel tabs doesn't support counts)
   const tabs: Tab[] = FILTERS.map((filter) => ({
     id: filter,
     label: FILTER_LABELS[filter],
-    count: counts[filter],
   }));
 
   return (

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { useAuth } from "@/lib/auth/auth-context";
 import { DotPattern } from "@/components/ui/dot-pattern";
+import { AuroraSectionBackground } from "@/components/ui/aurora-background";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -343,25 +344,70 @@ function SearchContent() {
       </div>
 
       {/* Search Hero */}
-      <div className="relative pt-16 pb-8 px-6">
+      <AuroraSectionBackground className="pt-20 pb-12 px-6">
         <div className="mx-auto max-w-3xl">
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={springPresets.fluid}
+            transition={{ ...springPresets.fluid, duration: 0.6 }}
+            className="text-center mb-10"
           >
-            <h1 className="text-2xl font-medium text-[var(--color-text-primary)] mb-2 tracking-tight">
-              Search
-            </h1>
-            <p className="text-sm text-[var(--color-text-muted)] mb-8">
-              Explore sacred texts with semantic search
-            </p>
+            {/* Decorative badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
+              </span>
+              <span className="text-xs font-medium text-[var(--color-text-secondary)] tracking-wide">
+                AI-Powered Semantic Search
+              </span>
+            </motion.div>
 
+            {/* Title */}
+            <h1 className="text-4xl md:text-5xl font-bold text-[var(--color-text-primary)] mb-4 tracking-tight">
+              <span className="bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">
+                Search
+              </span>
+            </h1>
+            
+            {/* Subtitle with dynamic verse count */}
+            <p className="text-base md:text-lg text-[var(--color-text-muted)] max-w-md mx-auto leading-relaxed">
+              Explore sacred texts with semantic search across{" "}
+              <motion.span 
+                key={activeTab}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="text-[var(--color-text-secondary)] font-medium inline-block"
+              >
+                {activeTab === "quran" && "6,236 verses"}
+                {activeTab === "ot" && "23,145 verses"}
+                {activeTab === "nt" && "7,957 verses"}
+                {activeTab === "apocrypha" && "5,717 verses"}
+              </motion.span>
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...springPresets.fluid, delay: 0.2, duration: 0.5 }}
+            className="flex flex-col items-center"
+          >
             <SearchTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
-            <form onSubmit={handleSearch} className="relative mb-6">
-              <div className="relative flex gap-2 items-center">
-                <div className="relative flex-1">
+            {/* Search form with glass effect */}
+            <form onSubmit={handleSearch} className="relative mb-6 w-full max-w-2xl">
+              <div className="relative flex gap-2 items-center justify-center">
+                <div className="relative flex-1 group">
+                  {/* Glow effect on focus */}
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500/20 via-violet-500/20 to-indigo-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity duration-300" />
+                  
                   <Input 
                     id="search-input"
                     type="search"
@@ -369,16 +415,16 @@ function SearchContent() {
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder={getPlaceholder()}
-                    className="peer pe-20 ps-10 h-11"
+                    className="relative peer pe-24 ps-12 h-12 bg-[var(--color-bg-surface)]/80 backdrop-blur-sm border-white/10 hover:border-white/20 focus:border-indigo-500/50 transition-colors text-base"
                   />
-                  <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
-                    <Search size={18} strokeWidth={2} />
+                  <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-4 text-muted-foreground/60 peer-disabled:opacity-50">
+                    <Search size={20} strokeWidth={1.5} />
                   </div>
                   <button
                     type="submit"
                     data-testid="search-submit-button"
                     disabled={(isSearching && !isStreaming) || !query.trim()}
-                    className="absolute inset-y-0 end-1 flex h-[calc(100%-8px)] my-auto items-center justify-center rounded-lg px-3 text-sm font-medium bg-[var(--color-accent-primary)] text-white transition-colors hover:bg-[var(--color-accent-primary)]/90 focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+                    className="absolute inset-y-0 end-1.5 flex h-[calc(100%-12px)] my-auto items-center justify-center rounded-lg px-4 text-sm font-medium bg-gradient-to-r from-indigo-500 to-violet-500 text-white transition-all hover:from-indigo-600 hover:to-violet-600 focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 shadow-lg shadow-indigo-500/25"
                     aria-label="Submit search"
                   >
                     {isSearching || isStreaming ? "Searching..." : "Search"}
@@ -393,7 +439,7 @@ function SearchContent() {
             </form>
           </motion.div>
         </div>
-      </div>
+      </AuroraSectionBackground>
 
       {/* Content */}
       <div className="relative px-6 pb-16">

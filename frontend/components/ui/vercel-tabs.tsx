@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils"
 interface Tab {
   id: string
   label: string
-  count?: number
 }
 
 interface TabsProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -86,7 +85,7 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
         <div className="relative">
           {/* Hover Highlight */}
           <div
-            className="absolute h-[32px] transition-all duration-200 ease-out bg-[var(--color-bg-elevated)] rounded-md flex items-center"
+            className="absolute h-[30px] transition-all duration-300 ease-out bg-[#0e0f1114] dark:bg-[#ffffff1a] rounded-[6px] flex items-center"
             style={{
               ...hoverStyle,
               opacity: hoveredIndex !== null ? 1 : 0,
@@ -95,24 +94,21 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
 
           {/* Active Indicator */}
           <div
-            className="absolute bottom-[-8px] h-[1px] bg-[var(--color-accent-primary)] transition-all duration-200 ease-out"
+            className="absolute bottom-[-6px] h-[2px] bg-[#0e0f11] dark:bg-white transition-all duration-300 ease-out"
             style={activeStyle}
           />
 
           {/* Tabs */}
-          <div className="relative flex space-x-1 items-center" role="tablist">
+          <div className="relative flex space-x-[6px] items-center">
             {tabs.map((tab, index) => (
               <div
                 key={tab.id}
                 ref={(el) => { tabRefs.current[index] = el }}
-                role="tab"
-                aria-selected={index === activeIndex}
-                tabIndex={index === activeIndex ? 0 : -1}
                 className={cn(
-                  "px-3 py-2 cursor-pointer transition-colors duration-200 h-[32px] rounded-md",
+                  "px-3 py-2 cursor-pointer transition-colors duration-300 h-[30px]",
                   index === activeIndex 
-                    ? "text-[var(--color-text-primary)]" 
-                    : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+                    ? "text-[#0e0e10] dark:text-white" 
+                    : "text-[#0e0f1199] dark:text-[#ffffff99]"
                 )}
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
@@ -121,20 +117,8 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
                   onTabChange?.(tab.id)
                 }}
               >
-                <div className="text-sm font-medium leading-5 whitespace-nowrap flex items-center justify-center h-full gap-2">
+                <div className="text-sm font-medium leading-5 whitespace-nowrap flex items-center justify-center h-full">
                   {tab.label}
-                  {tab.count !== undefined && tab.count > 0 && (
-                    <span
-                      className={cn(
-                        "text-xs px-1.5 py-0.5 rounded-full transition-colors",
-                        index === activeIndex
-                          ? "bg-[var(--color-accent-primary)]/20 text-[var(--color-accent-primary)]"
-                          : "bg-[var(--color-bg-elevated)] text-[var(--color-text-muted)]"
-                      )}
-                    >
-                      {tab.count}
-                    </span>
-                  )}
                 </div>
               </div>
             ))}
