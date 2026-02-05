@@ -195,3 +195,5 @@ test_citation_fix.py
 # Local Documentation Drafts
 # ----------------
 docs/
+!docs/roadmap/
+!docs/roadmap/**
