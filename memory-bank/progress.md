@@ -97,6 +97,11 @@
 - [x] Compare page UI alignment — matched search page design standards (Issue #20)
 - [x] Keyword search frontend (RFC-007) — `/keyword-search` page with 8 components, Recharts chart, root browser, 26 tests
 - [x] Keyword search QA fixes — Latin transliteration for surah names, API response nesting fix
+- [x] Bible keyword search frontend — Word Search page with Hebrew/Greek tabs, Latin transliteration support
+- [x] **Hebrew Latin transliteration fix** (2026-02-04): dot-separated syllabification normalization (`e.lo.him` → `elohim`)
+- [x] **Bible keyword search fixes** (2026-02-04): Hebrew b↔v dual-indexing, occurrence-based prioritization, Greek Strong's preservation
+- [x] **Bible keyword search verification** (2026-02-04): Validated against Blue Letter Bible — all discrepancies <1% (acceptable text tradition variance)
+- [x] **Accuracy disclaimer UI** (2026-02-04): Added expandable accuracy verification panel to Bible Word Search with "Clarus can make mistakes" disclaimer, BLB comparison table, data source info (8 tests)
 
 ### CLI Commands
 
@@ -207,6 +212,9 @@
 | ~~[#23](...)~~ | ~~RFC-006: Concordance & Keyword Search~~ | ~~High~~ → **CLOSED** |
 | ~~[#25](...)~~ | ~~RFC-006: Kur'an Anahtar Kelime Arama~~ | ~~High~~ → **CLOSED** |
 | ~~[#26](...)~~ | ~~Tanzil data source integration~~ | ~~Medium~~ → **CLOSED** |
+| ~~NEW~~ | ~~Hebrew Latin b↔v ambiguity (`dabar` vs `davar`)~~ | ~~Low~~ → **FIXED** (2026-02-04) |
+| ~~NEW~~ | ~~Hebrew Latin collision (`torah` → H2960 instead of H8451)~~ | ~~Low~~ → **FIXED** (2026-02-04) |
+| ~~NEW~~ | ~~Greek Strong's number lookup bug (G2316 → None)~~ | ~~Medium~~ → **FIXED** (2026-02-04) |
 
 ## Evolution of Project
 

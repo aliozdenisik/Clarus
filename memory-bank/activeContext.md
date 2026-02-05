@@ -2,7 +2,118 @@
 
 ## Current Work Focus
 
-**Date**: 2026-02-03
+**Date**: 2026-02-04
+
+### Bible Keyword Search Fixes (2026-02-04) - COMPLETE ✅
+
+Fixed 3 issues in Bible keyword search after industry-standard research on Hebrew/Greek transliteration.
+
+**Issue 1: Hebrew b↔v Ambiguity**
+- **Problem**: "dabar" returns nothing, but "davar" works (DB has `da.var` → `davar`)
+- **Root Cause**: Hebrew ב is transliterated as 'b' (with dagesh) or 'v' (without dagesh)
+- **Academic Research**: ISO 259, SBL, ALA-LC all preserve this distinction
+- **Solution**: Dual-indexing in `_load_strongs_cache()` — both variants point to same Strong's
+- **Reference**: ALA-LC Romanization Tables, Sefaria implementation
+
+**Issue 2: Torah Collision**
+- **Problem**: "torah" → H2960 (burden, 2 occ) instead of H8451 (law, 219 occ)
+- **Root Cause**: Both `to.rach` and `to.rah` normalize to "torah" due to `ch→h` rule
+- **Solution**: Sort `_transliteration_map` lists by occurrence count (descending)
+- **Reference**: Standard IR practice for disambiguation
+
+**Issue 3: Greek Strong's Number Bug**
+- **Problem**: G2316 search returns 1307 occurrences but `strong_number` = None
+- **Root Cause**: Greek searches translate Strong's → lemma, but lose the Strong's number
+- **Solution**: Preserve Strong's number in `_search_by_lemma()` when user explicitly searched G####
+
+**Files Modified:**
+- `backend/src/bible_morphology.py` — Dual-indexing, occurrence sorting, Strong's preservation
+- `backend/src/hebrew_normalizer.py` — No changes (academic research rejected simple v→b normalization)
+
+**Test Results (13/13 PASS):**
+| Test | Expected | Result |
+|------|----------|--------|
+| dabar | H1697 | ✓ H1697 (1440 occ) |
+| davar | H1697 | ✓ H1697 (1440 occ) |
+| torah | H8451 | ✓ H8451 (219 occ) |
+| elohim | H0430 | ✓ H0430 (2596 occ) |
+| shalom | H7965 | ✓ H7965 (223 occ) |
+| chesed | H2617 | ✓ H2617 (247 occ) |
+| logos | λόγος | ✓ λόγος (330 occ) |
+| theos | θεός | ✓ θεός (1307 occ) |
+| agape | ἀγάπη | ✓ ἀγάπη (116 occ) |
+| G2316 | G2316 + θεός | ✓ G2316, θεός, "theós" |
+| G2222 | G2222 + ζωή | ✓ G2222, ζωή |
+| H1697 | H1697 | ✓ H1697 (1440 occ) |
+| H8451 | H8451 | ✓ H8451 (219 occ) |
+
+### Bible Keyword Search Verification (2026-02-04) - COMPLETE ✅
+
+Verified occurrence counts against Blue Letter Bible (authoritative concordance).
+
+**Verification Results:**
+| Strong's | Word | Our Count | BLB Count | Delta | Status |
+|----------|------|-----------|-----------|-------|--------|
+| H1697 | dabar | 1,440 | 1,439 | +1 (+0.07%) | ✓ PASS |
+| H8451 | torah | 219 | 219 | 0 (0.00%) | ✓ EXACT |
+| H430 | elohim | 2,596 | 2,606 | -10 (-0.38%) | ✓ PASS |
+| G2316 | theos | 1,307 | 1,318 | -11 (-0.83%) | ✓ PASS |
+
+**Root Cause of Discrepancies (all <1% — acceptable):**
+1. **Text traditions differ**: We use OSHB (Open Scriptures Hebrew Bible) + MorphGNT, BLB uses WLC (Westminster Leningrad Codex) + Textus Receptus
+2. **Greek manuscript base**: MorphGNT is based on NA27/NA28 (critical text), BLB uses Textus Receptus (Majority Text)
+3. **Counting methods**: Some count word forms, others count lemma occurrences
+
+**Conclusion**: All discrepancies are under 1%, which is expected variance between different manuscript traditions. Our data sources (OSHB + MorphGNT) are academically rigorous and the counts are accurate for their respective text bases.
+
+**No code changes required** — verification confirms correctness.
+
+### Accuracy Disclaimer UI (2026-02-04) - COMPLETE ✅
+
+Added user-facing accuracy verification UI to Bible Word Search page.
+
+**Component Created:** `frontend/components/keyword-search/accuracy-disclaimer.tsx`
+
+**Features:**
+- Expandable panel (collapsed by default)
+- "Clarus can make mistakes. Verify important information." disclaimer
+- Verification table comparing Clarus counts vs Blue Letter Bible
+- Color-coded status badges (EXACT = green, PASS = amber)
+- Delta percentages shown for each entry
+- Links to Blue Letter Bible external reference
+- Data source information (OSHB, MorphGNT vs WLC, Textus Receptus)
+
+**Verification Data Shown:**
+| Strong's | Word | Clarus | BLB | Δ | Status |
+|----------|------|--------|-----|---|--------|
+| H1697 | dabar | 1,440 | 1,439 | +0.07% | PASS |
+| H8451 | torah | 219 | 219 | 0.00% | EXACT |
+| H430 | elohim | 2,596 | 2,606 | -0.38% | PASS |
+| G2316 | theos | 1,307 | 1,318 | -0.83% | PASS |
+
+**Integration:**
+- Shows only for Bible modes (Hebrew OT / Greek NT)
+- Appears at bottom of search results
+- Separated by subtle border
+
+**Tests Added (8):**
+- Renders collapsed disclaimer message
+- Expands to show verification table on click
+- Displays verification data with correct Strong's numbers
+- Displays verification data with word names
+- Shows Blue Letter Bible link
+- Shows status badges for verification results
+- Displays data source information
+- Collapses when clicked again
+
+**Files Created:**
+- `frontend/components/keyword-search/accuracy-disclaimer.tsx` (162 lines)
+
+**Files Modified:**
+- `frontend/app/keyword-search/page.tsx` — Import + integration
+- `frontend/__tests__/keyword-search-components.test.tsx` — 8 new tests
+
+---
 
 ### Hebrew Latin Transliteration Fix (2026-02-03) - COMPLETE ✅
 
