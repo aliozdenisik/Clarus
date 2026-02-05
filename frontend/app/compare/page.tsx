@@ -30,7 +30,7 @@ import { InlineCitation } from "@/components/compare/inline-citation";
 import { parseCitations, parseBareReferences, stripMarkdownHeaders } from "@/lib/utils/parse-citations";
 import { useLogger } from "@/lib/logger";
 import { LanguageSelector } from "@/components/search/language-selector";
-import { CollectionSelector, COLLECTION_OPTIONS } from "@/components/compare/collection-selector";
+import { CollectionSelector } from "@/components/compare/collection-selector";
 
 interface ParagraphData {
   title: string;
@@ -392,22 +392,20 @@ function CompareContent() {
     e.preventDefault();
     if (!topic.trim()) return;
 
-    // Validate minimum collections
+    // Less than 2 collections → redirect to Search page
     if (selectedCollections.length < 2) {
-      toast.error("En az 2 kaynak seçilmelidir");
-      return;
-    }
-
-    // Single collection → redirect to Search page (if ever 1 is selected somehow)
-    if (selectedCollections.length === 1) {
       const sourceMap: Record<string, string> = {
         'quran_tr': 'quran',
         'bible_ot': 'old_testament',
         'bible_nt': 'new_testament',
         'bible_apocrypha': 'apocrypha',
       };
-      const source = sourceMap[selectedCollections[0]] || 'quran';
+      // Default to quran if nothing selected, otherwise use the single selected source
+      const source = selectedCollections.length === 1 
+        ? (sourceMap[selectedCollections[0]] || 'quran')
+        : 'quran';
       router.push(`/search?source=${source}&q=${encodeURIComponent(topic)}`);
+      toast.info("Karşılaştırma için en az 2 kaynak gerekli. Arama sayfasına yönlendiriliyorsunuz.");
       return;
     }
 
@@ -498,21 +496,6 @@ function CompareContent() {
             </p>
           </motion.div>
 
-          {/* Collection Selector */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...springPresets.fluid, delay: 0.15, duration: 0.5 }}
-            className="w-full max-w-2xl mx-auto mb-6"
-          >
-            <CollectionSelector
-              selected={selectedCollections}
-              onChange={setSelectedCollections}
-              minSelection={2}
-              disabled={isLoading}
-            />
-          </motion.div>
-
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -551,6 +534,16 @@ function CompareContent() {
                   value={selectedLanguage}
                   onChange={setSelectedLanguage}
                   detectedLanguage={detectedLanguage}
+                />
+              </div>
+              
+              {/* Collection Selector - compact inline */}
+              <div className="w-full mt-3 flex items-center justify-center gap-2">
+                <span className="text-xs text-[var(--color-text-muted)]">Kaynaklar:</span>
+                <CollectionSelector
+                  selected={selectedCollections}
+                  onChange={setSelectedCollections}
+                  disabled={isLoading}
                 />
               </div>
             </form>
