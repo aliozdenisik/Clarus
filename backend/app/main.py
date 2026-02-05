@@ -15,6 +15,7 @@ from app.api import (
     preferences,
     keyword_search,
     bible_keyword_search,
+    verse_lookup,
 )
 from app.db import init_db
 from app.middleware.error_handler import ErrorHandlerMiddleware
@@ -211,6 +212,7 @@ app.include_router(
     prefix="/api/keyword-search/bible",
     tags=["bible-keyword"],
 )
+app.include_router(verse_lookup.router, prefix="/api/verse", tags=["verse"])
 
 
 @app.get("/api/health")
