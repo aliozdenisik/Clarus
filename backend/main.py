@@ -1076,6 +1076,15 @@ def main():
         help="Filter by language (default: all)",
     )
 
+    # Verse lookup command
+    verse_lookup_parser = subparsers.add_parser(
+        "verse-lookup", help="Look up verse by reference"
+    )
+    verse_lookup_parser.add_argument(
+        "reference",
+        help="Verse reference (e.g., 'Bakara 183', '2:183', 'Genesis 1:1')",
+    )
+
     args = parser.parse_args()
 
     if args.command == "index":
@@ -1117,6 +1126,8 @@ def main():
         return cmd_keyword_search(args)
     elif args.command == "bible-keyword-search":
         return cmd_bible_keyword_search(args)
+    elif args.command == "verse-lookup":
+        return cmd_verse_lookup(args)
     else:
         parser.print_help()
         return 0
@@ -1666,6 +1677,179 @@ def cmd_analyze_chunks(args):
 
     except Exception as e:
         console.print(f"[red][ERROR] {e}[/red]")
+        return 1
+
+
+def cmd_verse_lookup(args):
+    """Look up a specific verse by reference."""
+    import asyncio
+    from src.verse_parser import parse_verse_reference, ParsedReference, ParseError
+    from qdrant_client import AsyncQdrantClient
+    from qdrant_client.http.models import Filter, FieldCondition, MatchValue
+
+    reference = args.reference
+    console.print(f"\n[bold blue]Verse Lookup[/bold blue]: {reference}\n")
+
+    # Parse reference
+    result = parse_verse_reference(reference)
+    if isinstance(result, ParseError):
+        console.print(f"[red]Error: {result.message}[/red]")
+        return 1
+
+    # Query Qdrant
+    async def fetch_verses():
+        client = AsyncQdrantClient(host="localhost", port=6333)
+        verses = []
+
+        try:
+            if result.source == "quran":
+                # Get surah name from SURAH_NAME_MAP
+                from src.verse_parser import SURAH_NAME_MAP
+
+                surah_name = None
+                for name, info in SURAH_NAME_MAP.items():
+                    if info["id"] == result.surah_id:
+                        surah_name = name
+                        break
+
+                # Fetch each verse
+                for verse_id in result.verses:
+                    filter_condition = Filter(
+                        must=[
+                            FieldCondition(
+                                key="surah_id", match=MatchValue(value=result.surah_id)
+                            ),
+                            FieldCondition(
+                                key="verse_id", match=MatchValue(value=verse_id)
+                            ),
+                        ]
+                    )
+
+                    points = await client.scroll(
+                        collection_name="quran_tr",
+                        scroll_filter=filter_condition,
+                        limit=1,
+                        with_payload=True,
+                        with_vectors=False,
+                    )
+
+                    if points[0]:
+                        for point in points[0]:
+                            payload = point.payload
+                            if payload is not None:
+                                verses.append(
+                                    {
+                                        "reference": f"{result.surah_id}:{verse_id}",
+                                        "surah_name": surah_name,
+                                        "verse_id": verse_id,
+                                        "arabic_text": payload.get("arabic_text", ""),
+                                        "translation": payload.get("translation", ""),
+                                        "source": "quran",
+                                    }
+                                )
+
+            else:  # Bible
+                from src.verse_parser import BIBLE_BOOK_MAP
+
+                # Determine collection from testament
+                testament_to_collection = {
+                    "OT": "bible_ot",
+                    "NT": "bible_nt",
+                    "Apocrypha": "bible_apocrypha",
+                }
+                collection_name = testament_to_collection[result.testament]
+
+                # Fetch each verse
+                for verse_num in result.verses:
+                    filter_condition = Filter(
+                        must=[
+                            FieldCondition(
+                                key="book_id", match=MatchValue(value=result.book_id)
+                            ),
+                            FieldCondition(
+                                key="chapter", match=MatchValue(value=result.chapter)
+                            ),
+                            FieldCondition(
+                                key="verse", match=MatchValue(value=verse_num)
+                            ),
+                        ]
+                    )
+
+                    points = await client.scroll(
+                        collection_name=collection_name,
+                        scroll_filter=filter_condition,
+                        limit=1,
+                        with_payload=True,
+                        with_vectors=False,
+                    )
+
+                    if points[0]:
+                        for point in points[0]:
+                            payload = point.payload
+                            if payload is not None:
+                                verses.append(
+                                    {
+                                        "reference": f"{result.book_name} {result.chapter}:{verse_num}",
+                                        "book_name": result.book_name,
+                                        "chapter": result.chapter,
+                                        "verse": verse_num,
+                                        "text": payload.get("text", ""),
+                                        "source": result.testament,
+                                    }
+                                )
+
+        finally:
+            await client.close()
+
+        return verses
+
+    try:
+        verses = asyncio.run(fetch_verses())
+
+        if not verses:
+            console.print("[yellow]No verses found.[/yellow]")
+            return 1
+
+        # Display verses
+        for verse in verses:
+            if verse["source"] == "quran":
+                # Quran format: Arabic + Turkish
+                console.print(
+                    Panel(
+                        f"[bold cyan]{verse['surah_name']} ({verse['surah_name']}) {verse['reference']}[/bold cyan]\n\n"
+                        f"[dim]Arabic:[/dim]\n{verse['arabic_text']}\n\n"
+                        f"[dim]Turkish:[/dim]\n{verse['translation']}",
+                        title="[green]Quran[/green]",
+                        expand=False,
+                    )
+                )
+            else:
+                # Bible format: English text
+                testament_names = {
+                    "OT": "Old Testament",
+                    "NT": "New Testament",
+                    "Apocrypha": "Apocrypha",
+                }
+                testament_display = testament_names.get(
+                    verse["source"], verse["source"]
+                )
+                console.print(
+                    Panel(
+                        f"[bold cyan]{verse['reference']}[/bold cyan]\n"
+                        f"[dim]{testament_display}[/dim]\n\n"
+                        f"{verse['text']}",
+                        title="[green]Bible[/green]",
+                        expand=False,
+                    )
+                )
+
+        return 0
+
+    except Exception as e:
+        console.print(f"[red][ERROR] Failed to fetch verses: {e}[/red]")
+        import traceback
+
+        traceback.print_exc()
         return 1
 
 
