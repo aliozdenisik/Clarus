@@ -60,6 +60,14 @@ class CompareRequest(BaseModel):
         pattern=r"^(en|tr|es|fr|it|pt|ar|de)$",
         description="Response language (auto-detect if omitted)",
     )
+    quran_keywords: Optional[List[str]] = Field(
+        None,
+        description="Optional Turkish keywords for Quran per-keyword search",
+    )
+    bible_keywords: Optional[List[str]] = Field(
+        None,
+        description="Optional English keywords for Bible per-keyword search",
+    )
 
     @classmethod
     def validate_collections(cls, v: List[str]) -> List[str]:
@@ -209,7 +217,12 @@ async def compare_scriptures(
         )
 
         # Step 1: Get search results for selected collections only
-        search_result = rag.search_all(request.topic, collections=collections)
+        search_result = rag.search_all(
+            request.topic,
+            collections=collections,
+            quran_keywords=request.quran_keywords,
+            bible_keywords=request.bible_keywords,
+        )
 
         # Step 2: Build verse_details from search results (only for selected collections)
         verse_details: Dict[str, VerseDetail] = {}
