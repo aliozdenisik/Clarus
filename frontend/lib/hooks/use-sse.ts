@@ -8,12 +8,13 @@ import * as Sentry from '@sentry/nextjs';
  * SSE Message format from backend
  */
 interface SSEMessage {
-  type?: 'token' | 'complete' | 'error' | 'section' | 'paragraph' | 'stats' | 'no_results';
+  type?: 'token' | 'complete' | 'error' | 'section' | 'paragraph' | 'stats' | 'no_results' | 'progress';
   content?: string;
   result?: unknown;
   error?: string;
   status?: string;
   message?: string;
+  step?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   verse_details?: any;
   token?: string;

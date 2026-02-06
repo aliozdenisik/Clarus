@@ -5,9 +5,7 @@ processing. Handles accent removal, transliteration, and script detection
 for Bible keyword search (New Testament Greek).
 """
 
-import re
 import unicodedata
-from typing import Optional
 
 
 def remove_greek_accents(text: str) -> str:

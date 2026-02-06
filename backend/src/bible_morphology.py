@@ -790,7 +790,7 @@ class BibleMorphologySearch:
             logger.debug(
                 "[BibleMorphology._find_root_hebrew] normalized=%r", normalized
             )
-        except Exception as e:
+        except Exception:
             logger.exception(
                 "[BibleMorphology._find_root_hebrew] CRASH in normalize_hebrew: query=%r",
                 query,
@@ -1100,7 +1100,7 @@ class BibleMorphologySearch:
 
             normalized = normalize_greek(query)
             logger.debug("[BibleMorphology._find_root_greek] normalized=%r", normalized)
-        except Exception as e:
+        except Exception:
             logger.exception(
                 "[BibleMorphology._find_root_greek] CRASH in normalize_greek: query=%r",
                 query,

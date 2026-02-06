@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from qdrant_client import QdrantClient
 
 from .embeddings import DenseEncoder
-from .circuit_breaker import qdrant_with_breaker, CircuitBreakerError
+from .circuit_breaker import qdrant_with_breaker
 from .turkish_utils import expand_turkish_query
 from app.logging_config import get_logger, log_performance
 

@@ -12,7 +12,7 @@ import warnings
 import requests
 import time
 import sentry_sdk
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -21,7 +21,7 @@ from tenacity import (
 )
 
 from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
-from app.logging_config import get_logger, log_performance
+from app.logging_config import get_logger
 
 logger = get_logger(__name__)
 

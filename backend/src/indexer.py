@@ -19,7 +19,6 @@ from qdrant_client.models import (
     SparseIndexParams,
     Distance,
     PointStruct,
-    SparseVector,
     HnswConfigDiff,
     ScalarQuantization,
     ScalarQuantizationConfig,

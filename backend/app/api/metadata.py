@@ -71,7 +71,6 @@ def _load_bible_data() -> dict:
 def _get_testament(book_nr: int) -> str:
     OT_BOOKS = list(range(1, 40))
     NT_BOOKS = list(range(40, 67))
-    APOCRYPHA_BOOKS = list(range(67, 100))
 
     if book_nr in OT_BOOKS:
         return "old_testament"

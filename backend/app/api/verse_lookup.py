@@ -14,7 +14,6 @@ sys.path.insert(
 
 from app.schemas.verse_lookup import (
     VerseLookupResponse,
-    VerseLookupError,
     VerseResult,
 )
 from src.verse_parser import (
@@ -22,7 +21,6 @@ from src.verse_parser import (
     ParsedReference,
     ParseError,
     SURAH_NAME_MAP,
-    BIBLE_BOOK_MAP,
 )
 from app.logging_config import get_logger
 

@@ -13,14 +13,13 @@ Features:
 """
 
 import os
-import re
 import json
 import logging
 import requests
 import time
 import sentry_sdk
-from typing import List, Optional, Dict, Any, Tuple
-from dataclasses import dataclass, field
+from typing import List, Optional
+from dataclasses import dataclass
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -442,7 +441,6 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
                 reverse=True,
             )
             num_queries = 1
-            total_verses_context = total_verses
             collections_with_results = sum(
                 1
                 for lst in [quran_semantic, quran_chunks, bible_semantic, bible_chunks]

@@ -17,31 +17,17 @@ Usage:
     results = rag.search("Kur'an'da şefaat kavramı nasıl açıklanır?")
 """
 
-import os
 import time
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Any
 from dataclasses import dataclass, field
 from concurrent.futures import ThreadPoolExecutor
 
 from src.circuit_breaker import CircuitBreakerError
-from src.query_translator import QueryTranslator, TranslationResult, TranslationError
+from src.query_translator import QueryTranslator, TranslationError
 from src.query_translator import CORPUS_LANGUAGES
-from app.logging_config import get_logger, log_performance, set_extra_context
+from app.logging_config import get_logger, log_performance
 
 logger = get_logger(__name__)
-
-
-@dataclass
-class UltimateSearchResult:
-    """Enhanced search result with full metadata"""
-
-    id: str
-    score: float
-    text: str
-    reference: str  # Surah:Verse or Book Chapter:Verse
-    source: str  # quran_tr, bible_kjva, etc.
-    original_score: float = 0.0
-    matched_queries: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -482,12 +468,10 @@ class UltimateRAG:
                                     logger.warning(
                                         "Qdrant unavailable for Quran semantic chunks, skipping"
                                     )
-                                except Exception as e:
+                                except Exception:
                                     pass
-                    except Exception as e:
-                        self._log(
-                            f"   Warning: Quran semantic chunks error: {e}", "yellow"
-                        )
+                    except Exception:
+                        self._log(f"   Warning: Quran semantic chunks error", "yellow")
 
                 # Handle Bible Semantic Chunks
                 elif source.startswith("bible_"):
@@ -536,12 +520,10 @@ class UltimateRAG:
                                     logger.warning(
                                         "Qdrant unavailable for Bible semantic chunks, skipping"
                                     )
-                                except Exception as e:
+                                except Exception:
                                     pass
-                    except Exception as e:
-                        self._log(
-                            f"   Warning: Bible semantic chunks error: {e}", "yellow"
-                        )
+                    except Exception:
+                        self._log(f"   Warning: Bible semantic chunks error", "yellow")
 
             # Sort by RRF score and return top results
             sorted_results = sorted(
@@ -642,8 +624,6 @@ class UltimateRAG:
         search_results = self._search_all_queries(all_queries, source)
 
         # Step 4: Rerank for final precision
-        # Use rerank_query if provided (e.g., translated query), otherwise use original
-        final_query = rerank_query or query
         final_results = self._get_top_results(search_results, top_k=top_k)
 
         total_latency_ms = (time.perf_counter() - total_start) * 1000

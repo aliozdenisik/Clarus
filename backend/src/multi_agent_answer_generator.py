@@ -30,7 +30,7 @@ import json
 import requests
 import time
 import sentry_sdk
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Callable
 from dataclasses import dataclass, field
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tenacity import (
@@ -544,6 +544,7 @@ class MultiAgentOrchestrator:
         nt_verses: List,
         apocrypha_verses: List,
         collection_stats: dict = None,
+        progress_callback: Optional[Callable[[str, str], None]] = None,
     ) -> MultiAgentAnswer:
         """
         Generate 5-paragraph answer using multi-agent architecture.
@@ -554,10 +555,19 @@ class MultiAgentOrchestrator:
             ot_verses: Old Testament search results
             nt_verses: New Testament search results
             apocrypha_verses: Apocrypha search results
+            progress_callback: Optional callback(step_id, message) for streaming progress.
 
         Returns:
             MultiAgentAnswer with 5 paragraphs
         """
+
+        def _emit(step_id: str, message: str):
+            if progress_callback:
+                try:
+                    progress_callback(step_id, message)
+                except Exception:
+                    pass
+
         logger.info(
             "Multi-agent generation started",
             extra={
@@ -570,7 +580,30 @@ class MultiAgentOrchestrator:
         )
         start_time = time.perf_counter()
 
-        # Step 1: Run 4 specialist agents in parallel
+        # Determine which agents have verses to analyze
+        agent_labels = {
+            "ot": "Old Testament",
+            "nt": "New Testament",
+            "apocrypha": "Apocrypha",
+            "quran": "Quran",
+        }
+        active_agents = []
+        if ot_verses:
+            active_agents.append("ot")
+        if nt_verses:
+            active_agents.append("nt")
+        if apocrypha_verses:
+            active_agents.append("apocrypha")
+        if quran_verses:
+            active_agents.append("quran")
+        agent_count = len(active_agents)
+        active_names = ", ".join(agent_labels[a] for a in active_agents)
+
+        # Step 1: Run specialist agents in parallel
+        _emit(
+            "agents_starting",
+            f"Running {agent_count} specialist agents in parallel ({active_names})...",
+        )
         results = {}
 
         def run_ot():
@@ -612,7 +645,7 @@ class MultiAgentOrchestrator:
                 span.set_data("verse_count", len(quran_verses))
                 return ("quran", self.quran_agent.generate(query, quran_verses))
 
-        logger.info("Running 4 specialist agents in parallel")
+        logger.info(f"Running {agent_count} specialist agents in parallel")
         parallel_start = time.perf_counter()
         with ThreadPoolExecutor(max_workers=4) as executor:
             futures = [
@@ -622,9 +655,15 @@ class MultiAgentOrchestrator:
                 executor.submit(run_quran),
             ]
 
+            completed_count = 0
             for future in as_completed(futures):
                 key, result = future.result()
                 results[key] = result
+                completed_count += 1
+                _emit(
+                    "agent_completed",
+                    f"{agent_labels.get(key, key)} agent completed ({completed_count}/{agent_count})",
+                )
 
         # Extract commentaries
         ot_result = results.get("ot", {})
@@ -649,6 +688,10 @@ class MultiAgentOrchestrator:
         )
 
         # Step 2: Run summary agent
+        _emit(
+            "summary_starting",
+            "Synthesizing all perspectives into comparative essay...",
+        )
         logger.info("Running summary agent")
         summary_start = time.perf_counter()
         summary_result = self.summary_agent.generate(
@@ -660,11 +703,13 @@ class MultiAgentOrchestrator:
         )
 
         synthesis = summary_result.get("synthesis", "")
+        _emit("summary_completed", "Comparative synthesis complete")
         summary_latency_ms = (time.perf_counter() - summary_start) * 1000
         log_performance(
             logger, "summary_agent", summary_latency_ms, synthesis_len=len(synthesis)
         )
 
+        _emit("scoring_confidence", "Calculating confidence score...")
         # === OBJECTIVE CONFIDENCE SCORING (two-phase sigmoid-calibrated) ===
         # Defensive fallback for collection_stats
         if collection_stats and collection_stats.get("all_rrf_scores"):

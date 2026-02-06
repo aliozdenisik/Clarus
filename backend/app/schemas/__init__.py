@@ -11,7 +11,6 @@ from app.schemas.verse_lookup import (
     VerseLookupRequest,
     VerseResult,
     VerseLookupResponse,
-    VerseLookupError,
 )
 
 __all__ = [
@@ -23,5 +22,4 @@ __all__ = [
     "VerseLookupRequest",
     "VerseResult",
     "VerseLookupResponse",
-    "VerseLookupError",
 ]

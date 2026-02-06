@@ -1,7 +1,7 @@
 """Common schemas for standardized API responses."""
 
 from pydantic import BaseModel, Field, ConfigDict
-from typing import TypeVar, Generic, Optional, Any
+from typing import TypeVar, Generic, Optional
 from datetime import datetime
 
 T = TypeVar("T")
@@ -143,22 +143,6 @@ class PaginatedResponse(BaseModel, Generic[T]):
             ),
             request_id=request_id,
         )
-
-
-class RateLimitInfo(BaseModel):
-    """Rate limit information returned in headers and optionally in body."""
-
-    limit: int = Field(..., description="Maximum requests allowed per day")
-    remaining: int = Field(..., description="Remaining requests for today")
-    reset_at: datetime = Field(..., description="When the rate limit resets (UTC)")
-
-    def to_headers(self) -> dict[str, str]:
-        """Convert to HTTP headers."""
-        return {
-            "X-RateLimit-Limit": str(self.limit),
-            "X-RateLimit-Remaining": str(self.remaining),
-            "X-RateLimit-Reset": self.reset_at.isoformat(),
-        }
 
 
 class QueryValidation(BaseModel):

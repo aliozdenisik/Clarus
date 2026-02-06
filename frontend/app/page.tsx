@@ -295,23 +295,35 @@ export default function HomePage() {
             <LuxuryQuote
               quotes={[
                 { 
-                  text: "The beginning of wisdom is the fear of the Lord, and knowledge of the Holy One is understanding.",
-                  source: "Proverbs 9:10"
+                  text: "Yaratan Rabbinin adıyla oku!",
+                  source: "Al-Alaq 96:1"
                 },
                 { 
-                  text: "Indeed, with hardship comes ease. Indeed, with hardship comes ease.",
-                  source: "Quran 94:5-6"
+                  text: "The heart of the prudent getteth knowledge...",
+                  source: "Proverbs 18:15"
                 },
                 { 
-                  text: "Love is patient, love is kind. It does not envy, it does not boast, it is not proud.",
+                  text: "Bilenlerle bilmeyenler bir olur mu?",
+                  source: "Az-Zumar 39:9"
+                },
+                { 
+                  text: "Charity suffereth long, and is kind...",
                   source: "1 Corinthians 13:4"
                 },
                 { 
-                  text: "And We have certainly made the Quran easy for remembrance, so is there any who will remember?",
-                  source: "Quran 54:17"
+                  text: "Rabbim! ilmimi artır",
+                  source: "Taha 20:114"
+                },
+                { 
+                  text: "Wisdom is the principal thing; therefore get wisdom...",
+                  source: "Proverbs 4:7"
+                },
+                { 
+                  text: "Wisdom is glorious, and never fadeth away...",
+                  source: "Wisdom 6:12"
                 },
               ]}
-              rotationInterval={6000}
+              rotationInterval={8000}
               className="py-8"
             />
           </motion.div>

@@ -76,35 +76,3 @@ class VerseLookupResponse(BaseModel):
     )
     query: str = Field(..., description="Original input query")
     count: int = Field(..., ge=0, description="Number of verses returned")
-
-
-class VerseLookupError(BaseModel):
-    """Error response for invalid verse lookups.
-
-    Error codes:
-    - INVALID_FORMAT: Cannot parse the reference format
-    - SURAH_NOT_FOUND: Surah name/number not recognized
-    - BOOK_NOT_FOUND: Bible book name not recognized
-    - VERSE_OUT_OF_BOUNDS: Verse number exceeds surah/chapter max
-    - CHAPTER_OUT_OF_BOUNDS: Chapter number exceeds book max
-    - RANGE_TOO_LARGE: Range exceeds 10 verses
-    - TOO_MANY_REFS: More than 5 references in query
-
-    Example:
-    {
-        "success": false,
-        "error": "SURAH_NOT_FOUND",
-        "message": "Surah 'Bakara' not found. Did you mean 'Bakara' (Surah 2)?",
-        "input": "Bakara 999"
-    }
-    """
-
-    success: Literal[False] = Field(
-        default=False, description="Always false for errors"
-    )
-    error: str = Field(
-        ...,
-        description="Error code: INVALID_FORMAT, SURAH_NOT_FOUND, BOOK_NOT_FOUND, etc.",
-    )
-    message: str = Field(..., description="Human-readable error message")
-    input: str = Field(..., description="Original input that caused error")

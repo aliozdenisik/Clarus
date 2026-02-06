@@ -412,7 +412,7 @@ class QuranMorphologySearch:
             if arabic_text:
                 arabic_normalized = normalize_arabic(arabic_text)
                 if arabic_normalized and is_arabic(arabic_normalized):
-                    root, source = await self._find_root_arabic(arabic_normalized)
+                    root, _ = await self._find_root_arabic(arabic_normalized)
                     if root:
                         return (root, "buckwalter_converted")
         except Exception as exc:

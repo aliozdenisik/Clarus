@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict
 import sys
 import os
 import time
@@ -25,7 +25,7 @@ from app.db import get_db
 from app.models import User, SearchHistory
 from app.api.auth import get_current_user, check_rate_limit
 from app.config import settings
-from app.schemas.common import PaginatedResponse, PaginationMeta, QueryValidation
+from app.schemas.common import QueryValidation
 from src.ultimate_rag import UltimateRAG
 from app.api.compare import (
     VerseDetail,

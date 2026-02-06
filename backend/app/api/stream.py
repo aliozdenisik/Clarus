@@ -7,6 +7,7 @@ from typing import AsyncGenerator
 import asyncio
 import json
 import logging
+import queue
 import sys
 import os
 import time
@@ -29,7 +30,7 @@ from typing import Optional
 
 from app.db import get_db
 from app.models import User, SearchHistory
-from app.api.auth import get_current_user, get_current_user_from_token, check_rate_limit
+from app.api.auth import get_current_user_from_token, check_rate_limit
 from app.api.compare_helpers import (
     build_verse_details,
     build_paragraphs,
@@ -43,20 +44,6 @@ from src.query_translator import QueryTranslator, TranslationError
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-
-
-async def generate_sse_events(data_generator) -> AsyncGenerator[str, None]:
-    """Convert data generator to SSE format."""
-    try:
-        for chunk in data_generator:
-            if chunk:
-                # SSE format: data: {json}\n\n
-                yield f"data: {json.dumps({'token': chunk})}\n\n"
-                await asyncio.sleep(0.01)  # Small delay for smooth streaming
-
-        yield f"data: {json.dumps({'type': 'complete'})}\n\n"
-    except Exception as e:
-        yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
 
 @router.get("/search")
@@ -156,7 +143,6 @@ async def stream_search(
                     detected_language = None
 
             # Translate answer if user's language differs from corpus language
-            corpus_lang = "tr" if source == "quran" else "en"
             if detected_language and detected_language not in ("tr", "en"):
                 try:
                     yield f"data: {json.dumps({'status': 'translating', 'message': 'Yanıt çevriliyor...'})}\n\n"
@@ -321,6 +307,50 @@ async def stream_compare(
 
         start_time = time.time()
 
+        # Thread-safe queue for progress events from sync callbacks
+        progress_queue: queue.Queue = queue.Queue()
+
+        def on_progress(step_id: str, message: str):
+            """Callback invoked from sync code; pushes events to queue."""
+            progress_queue.put((step_id, message))
+
+        # Container for passing results out of the async generator helper
+        _thread_result: dict = {}
+
+        async def _run_with_progress(func, *args):
+            """Run a blocking function in a thread while polling for progress events.
+
+            Yields SSE-formatted progress events in real-time as the blocking
+            function emits them via on_progress callback. Stores the function
+            return value in _thread_result["value"].
+            """
+            loop = asyncio.get_event_loop()
+            future = loop.run_in_executor(None, func, *args)
+
+            # Poll queue every 300ms while the blocking call runs
+            while not future.done():
+                await asyncio.sleep(0.3)
+                while not progress_queue.empty():
+                    try:
+                        step_id, message = progress_queue.get_nowait()
+                        yield f"data: {json.dumps({'type': 'progress', 'step': step_id, 'message': message})}\n\n"
+                    except queue.Empty:
+                        break
+                yield ": heartbeat\n\n"
+
+            # Get the result (may raise)
+            result = future.result()
+
+            # Drain any remaining events
+            while not progress_queue.empty():
+                try:
+                    step_id, message = progress_queue.get_nowait()
+                    yield f"data: {json.dumps({'type': 'progress', 'step': step_id, 'message': message})}\n\n"
+                except queue.Empty:
+                    break
+
+            _thread_result["value"] = result
+
         try:
             logger.info("[COMPARE] Creating ComparativeRAG instance...")
             rag = ComparativeRAG(verbose=True)
@@ -333,24 +363,28 @@ async def stream_compare(
             yield f"data: {json.dumps({'type': 'complete'})}\n\n"
             return
 
-        # Status updates
-        yield f"data: {json.dumps({'status': 'analyzing', 'message': 'Metinler analiz ediliyor...'})}\n\n"
+        # Initial status
+        yield f"data: {json.dumps({'type': 'progress', 'step': 'pipeline_started', 'message': 'Starting comparative analysis pipeline...'})}\n\n"
         yield ": heartbeat\n\n"
         await asyncio.sleep(0.1)
 
         try:
-            # Step 1: Get search results first (same pattern as non-streaming endpoint)
+            # Step 1: Get search results (blocking call with real-time progress)
             logger.info(
                 f"[COMPARE] Starting search_all with collections: {collection_list}"
             )
-            search_result = rag.search_all(topic, collections=collection_list)
+            async for event in _run_with_progress(
+                rag.search_all, topic, collection_list, on_progress
+            ):
+                yield event
+            search_result = _thread_result["value"]
             logger.info(
                 f"[COMPARE] search_all completed, found {len(search_result.quran)} Quran, "
                 f"{len(search_result.ot)} OT, {len(search_result.nt)} NT, {len(search_result.apocrypha)} Apocrypha"
             )
-            yield ": heartbeat\n\n"
 
             # Step 2: Build verse_details from search results (using shared helper)
+            yield f"data: {json.dumps({'type': 'progress', 'step': 'building_verse_details', 'message': 'Extracting verse metadata...'})}\n\n"
             verse_details = build_verse_details(
                 quran_results=search_result.quran,
                 ot_results=search_result.ot,
@@ -363,15 +397,20 @@ async def stream_compare(
             yield f"data: {json.dumps({'verse_details': verse_details})}\n\n"
             yield ": heartbeat\n\n"
 
-            # Step 3: Generate multi-agent answer using search results
+            # Step 3: Generate multi-agent answer (blocking call with real-time progress)
             logger.info("[COMPARE] Starting multi_agent_generator.generate...")
-            result = rag.multi_agent_generator.generate(
-                query=topic,
-                quran_verses=search_result.quran,
-                ot_verses=search_result.ot,
-                nt_verses=search_result.nt,
-                apocrypha_verses=search_result.apocrypha,
-            )
+            async for event in _run_with_progress(
+                rag.multi_agent_generator.generate,
+                topic,
+                search_result.quran,
+                search_result.ot,
+                search_result.nt,
+                search_result.apocrypha,
+                None,  # collection_stats (uses internal)
+                on_progress,
+            ):
+                yield event
+            result = _thread_result["value"]
             logger.info(
                 f"[COMPARE] multi_agent_generator completed, result type: {type(result)}"
             )
@@ -395,7 +434,7 @@ async def stream_compare(
 
             # Notify frontend if translation is happening
             if detected_language and detected_language not in ("tr", "en"):
-                yield f"data: {json.dumps({'status': 'translating', 'message': 'Yanıt çevriliyor...'})}\n\n"
+                yield f"data: {json.dumps({'type': 'progress', 'step': 'translating_response', 'message': 'Translating response...'})}\n\n"
 
             # Stream paragraphs one by one (with per-paragraph translation)
             for idx, para in enumerate(paragraphs, 1):
