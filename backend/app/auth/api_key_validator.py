@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
 from app.models import BetterAuthSession, BetterAuthUser, UserStats
-from app.auth.jwks_validator import get_current_user_from_jwt
 
 logger = logging.getLogger(__name__)
 
@@ -149,13 +148,12 @@ async def get_current_user_flexible(
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
-    Flexible authentication: tries cookie, then JWT header, then API key.
+    Flexible authentication: tries cookie, then API key.
 
     FastAPI dependency that:
     1. Tries Better Auth session cookie (preferred for browser clients)
-    2. Tries JWT Bearer token from Authorization header
-    3. Tries API key from X-API-Key header
-    4. If none succeed, raises HTTPException(401)
+    2. Tries API key from X-API-Key header
+    3. If none succeed, raises HTTPException(401)
 
     This is the dependency that all protected endpoints should use.
 
@@ -216,45 +214,7 @@ async def get_current_user_flexible(
                 "Cookie DB lookup failed: %s",
                 exc,
             )
-    if cookie_token:
-        try:
-            from app.auth.jwks_validator import get_validator
-
-            validator = get_validator()
-            payload = validator.validate_token(cookie_token)
-            user_id = payload.get("sub")
-            if user_id:
-                logger.debug(
-                    "Authenticated via session cookie",
-                    extra={
-                        "user_id": user_id,
-                        "operation": "get_current_user_flexible",
-                    },
-                )
-                return await _resolve_user_by_id(
-                    user_id, db, "get_current_user_flexible"
-                )
-        except (ValueError, HTTPException):
-            # Cookie auth failed, fall through to try other methods
-            logger.debug(
-                "Cookie auth failed, trying other methods",
-                extra={"operation": "get_current_user_flexible"},
-            )
-
-    # 2. Try JWT Bearer token from Authorization header
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.lower().startswith("bearer "):
-        try:
-            jwt_payload = await get_current_user_from_jwt(request)
-            user_id = jwt_payload.get("sub")
-            if not user_id:
-                raise HTTPException(status_code=401, detail="Token missing 'sub' claim")
-            return await _resolve_user_by_id(user_id, db, "get_current_user_flexible")
-        except HTTPException:
-            # JWT auth failed, fall through to try API key
-            pass
-
-    # 3. Try API key
+    # 2. Try API key
     api_key = request.headers.get("X-API-Key")
     if api_key:
         return await get_current_user_from_api_key(request, db)
@@ -262,6 +222,6 @@ async def get_current_user_flexible(
     # No valid authentication method provided
     raise HTTPException(
         status_code=401,
-        detail="Missing authentication. Provide either Authorization: Bearer <token>, X-API-Key: <key>, or session cookie.",
-        headers={"WWW-Authenticate": "Bearer, ApiKey"},
+        detail="Missing authentication. Provide either a session cookie or X-API-Key header.",
+        headers={"WWW-Authenticate": "ApiKey"},
     )

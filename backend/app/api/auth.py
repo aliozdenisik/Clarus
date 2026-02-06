@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime
@@ -7,9 +7,8 @@ import secrets
 import hashlib
 
 from app.db import get_db
-from app.models import BetterAuthUser, UserStats
+from app.models import UserStats
 from app.config import settings
-from app.auth.jwks_validator import get_current_user_from_jwt
 from app.auth.api_key_validator import get_current_user_flexible
 from app.middleware.rate_limit import get_user_rate_limit_info
 
@@ -75,7 +74,7 @@ async def check_rate_limit(user: dict, db: AsyncSession) -> None:
 
 @router.get("/me")
 async def get_me(current_user: dict = Depends(get_current_user_flexible)):
-    """Get current user info (from Better Auth JWT or API key)."""
+    """Get current user info (from session cookie or API key)."""
     return {
         "id": current_user["id"],
         "email": current_user["email"],
@@ -109,49 +108,30 @@ async def get_rate_limit_status(
 
 @router.post("/api-key", response_model=ApiKeyResponse)
 async def generate_api_key(
-    request: Request,
+    current_user: dict = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Generate a new API key for CLI access.
 
-    Requires JWT authentication. Generates a 64-character URL-safe random token,
-    stores its SHA256 hash in the database, and returns the raw key.
+    Requires authentication (session cookie or existing API key).
+    Generates a 64-character URL-safe random token, stores its SHA256
+    hash in the database, and returns the raw key.
     The key is shown only once - users must store it securely.
 
     Maximum 1 active API key per user (overwrites previous key).
 
     Args:
-        request: FastAPI request (for JWT extraction)
+        current_user: Authenticated user dict (from cookie or API key)
         db: Database session
 
     Returns:
         ApiKeyResponse with the raw API key and creation timestamp
 
     Raises:
-        HTTPException 401: Missing or invalid JWT token
+        HTTPException 401: Not authenticated
     """
-    # Authenticate with JWT (from jwks_validator)
-    jwt_payload = await get_current_user_from_jwt(request)
-    user_id = jwt_payload.get("sub")
-
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token missing 'sub' claim",
-        )
-
-    # Verify user exists
-    result = await db.execute(
-        select(BetterAuthUser).where(BetterAuthUser.id == user_id)
-    )
-    user = result.scalar_one_or_none()
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-        )
+    user_id = current_user["id"]
 
     # Generate 64-character API key (secrets.token_urlsafe(48) produces ~64 chars)
     raw_api_key = secrets.token_urlsafe(48)

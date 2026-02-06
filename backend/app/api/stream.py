@@ -30,7 +30,6 @@ from typing import Optional
 
 from app.db import get_db
 from app.models import SearchHistory
-from app.auth.api_key_validator import get_current_user_flexible
 from app.api.auth import check_rate_limit
 from app.api.compare_helpers import (
     build_verse_details,
@@ -47,143 +46,52 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-async def get_current_user_from_sse_token(
-    token: Optional[str], db: AsyncSession, request: Optional[Request] = None
-):
+async def get_current_user_from_sse(db: AsyncSession, request: Request):
     """
-    Validate auth for SSE endpoints.
+    Validate auth for SSE endpoints via Better Auth session cookie.
 
-    Priority:
-    1. Cookie-based auth (Better Auth session cookie via DB lookup) - PREFERRED
-    2. Query param token validated via JWKS - DEPRECATED
+    Reads the session cookie, validates it via DB lookup, and returns
+    user dict. SSE endpoints use GET requests so cookies are the only
+    viable auth mechanism (no Authorization header in EventSource).
 
     Args:
-        token: JWT token from query parameter (deprecated)
         db: Database session
         request: Request object for cookie access
+
+    Returns:
+        User dict with id, email, name, and other profile fields
+
+    Raises:
+        HTTPException 401: No valid session cookie or session expired
     """
     from fastapi import HTTPException
-    from app.models import BetterAuthSession, BetterAuthUser, UserStats
+    from app.models import BetterAuthSession
     from sqlalchemy import select
     from datetime import datetime, timezone
+    from app.auth.api_key_validator import _resolve_user_by_id
 
-    # 1. Try cookie first (preferred — session token is opaque, validated via DB)
-    if request:
-        cookie_token = (
-            request.cookies.get("better_auth.session_token")
-            or request.cookies.get("better-auth.session_token")
-            or request.cookies.get("__Secure-better-auth.session_token")
-        )
-        if cookie_token:
-            session_result = await db.execute(
-                select(BetterAuthSession).where(BetterAuthSession.token == cookie_token)
-            )
-            session = session_result.scalar_one_or_none()
+    cookie_token = (
+        request.cookies.get("better_auth.session_token")
+        or request.cookies.get("better-auth.session_token")
+        or request.cookies.get("__Secure-better-auth.session_token")
+    )
 
-            if session and session.expires_at.replace(
-                tzinfo=timezone.utc
-            ) > datetime.now(timezone.utc):
-                logger.debug("SSE auth: Authenticated via session cookie")
-                user_id = session.user_id
-            elif session:
-                raise HTTPException(status_code=401, detail="Session expired")
-            else:
-                # Cookie present but not found in DB — fall through
-                logger.debug("SSE auth: Cookie not found in DB, trying other methods")
-                cookie_token = None
+    if not cookie_token:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
-            if cookie_token:
-                # Resolve user from session
-                result = await db.execute(
-                    select(BetterAuthUser).where(BetterAuthUser.id == user_id)
-                )
-                user = result.scalar_one_or_none()
-                if not user:
-                    raise HTTPException(status_code=401, detail="User not found")
+    session_result = await db.execute(
+        select(BetterAuthSession).where(BetterAuthSession.token == cookie_token)
+    )
+    session = session_result.scalar_one_or_none()
 
-                # Ensure user_stats exists
-                stats_result = await db.execute(
-                    select(UserStats).where(UserStats.user_id == user_id)
-                )
-                stats = stats_result.scalar_one_or_none()
-                if not stats:
-                    stats = UserStats(
-                        id=f"stats_{user_id}",
-                        user_id=user_id,
-                        query_count_today=0,
-                        last_query_date=None,
-                        created_at=datetime.utcnow(),
-                        updated_at=datetime.utcnow(),
-                    )
-                    db.add(stats)
-                    await db.commit()
+    if not session:
+        raise HTTPException(status_code=401, detail="Invalid session")
 
-                return {
-                    "id": user.id,
-                    "email": user.email,
-                    "name": user.name,
-                    "email_verified": user.email_verified,
-                    "image": user.image,
-                    "created_at": user.created_at,
-                }
+    if session.expires_at.replace(tzinfo=timezone.utc) <= datetime.now(timezone.utc):
+        raise HTTPException(status_code=401, detail="Session expired")
 
-    # 2. Fall back to query param JWT (deprecated)
-    if token:
-        logger.warning(
-            "DEPRECATED: SSE auth via query parameter. Migrate to cookie-based auth.",
-            extra={"endpoint": request.url.path if request else "unknown"},
-        )
-        try:
-            from app.auth.jwks_validator import get_validator
-
-            validator = get_validator()
-            payload = validator.validate_token(token)
-            user_id = payload.get("sub")
-            if not user_id:
-                raise HTTPException(status_code=401, detail="Token missing 'sub' claim")
-
-            result = await db.execute(
-                select(BetterAuthUser).where(BetterAuthUser.id == user_id)
-            )
-            user = result.scalar_one_or_none()
-            if not user:
-                raise HTTPException(status_code=401, detail="User not found")
-
-            # Ensure user_stats exists
-            stats_result = await db.execute(
-                select(UserStats).where(UserStats.user_id == user_id)
-            )
-            stats = stats_result.scalar_one_or_none()
-            if not stats:
-                stats = UserStats(
-                    id=f"stats_{user_id}",
-                    user_id=user_id,
-                    query_count_today=0,
-                    last_query_date=None,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow(),
-                )
-                db.add(stats)
-                await db.commit()
-
-            return {
-                "id": user.id,
-                "email": user.email,
-                "name": user.name,
-                "email_verified": user.email_verified,
-                "image": user.image,
-                "created_at": user.created_at,
-            }
-        except HTTPException:
-            raise
-        except Exception:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid or expired token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-
-    raise HTTPException(status_code=401, detail="Authentication required")
+    logger.debug("SSE auth: Authenticated via session cookie")
+    return await _resolve_user_by_id(session.user_id, db, "get_current_user_from_sse")
 
 
 @router.get("/search")
@@ -193,10 +101,6 @@ async def stream_search(
     source: Literal["quran", "ot", "nt", "apocrypha"] = Query(
         default="quran", description="Source collection: quran, ot, nt, or apocrypha"
     ),
-    token: Optional[str] = Query(
-        None,
-        description="DEPRECATED: JWT access token. Use cookie-based auth instead.",
-    ),
     language: Optional[str] = Query(
         None, description="Detected user language (ISO 639-1)"
     ),
@@ -204,9 +108,9 @@ async def stream_search(
 ):
     """Stream search results with AI answer generation.
 
-    Authentication: Uses session cookie (preferred) or query param token (deprecated).
+    Authentication: Uses session cookie.
     """
-    current_user = await get_current_user_from_sse_token(token, db, request)
+    current_user = await get_current_user_from_sse(db, request)
     await check_rate_limit(current_user, db)
 
     # Save to history
@@ -402,10 +306,6 @@ async def stream_search(
 async def stream_compare(
     request: Request,
     topic: str = Query(..., description="Karşılaştırma konusu"),
-    token: Optional[str] = Query(
-        None,
-        description="DEPRECATED: JWT access token. Use cookie-based auth instead.",
-    ),
     collections: str = Query(
         "quran_tr,bible_ot,bible_nt,bible_apocrypha",
         description="Comma-separated list of collections to search (minimum 2)",
@@ -417,7 +317,7 @@ async def stream_compare(
 ):
     """Stream comparative analysis with multi-agent output.
 
-    Authentication: Uses session cookie (preferred) or query param token (deprecated).
+    Authentication: Uses session cookie.
 
     Args:
         collections: Comma-separated collection names (e.g., 'quran_tr,bible_ot').
@@ -433,7 +333,7 @@ async def stream_compare(
             status_code=400,
             detail="At least 2 valid collections required for comparison",
         )
-    current_user = await get_current_user_from_sse_token(token, db, request)
+    current_user = await get_current_user_from_sse(db, request)
     await check_rate_limit(current_user, db)
 
     # Save to history

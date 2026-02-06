@@ -121,7 +121,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                     "status_code": e.status_code,
                     "path": request.url.path,
                     "method": request.method,
-                }
+                },
             )
             # Don't capture rate limit errors in Sentry (expected behavior)
             if SENTRY_AVAILABLE and not isinstance(e, RateLimitError):
@@ -143,12 +143,10 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                     "path": request.url.path,
                     "method": request.method,
                 },
-                exc_info=True
+                exc_info=True,
             )
             # Capture unhandled exceptions in Sentry with user context
             if SENTRY_AVAILABLE:
-                # User ID is set by add_user_id_to_state middleware in main.py
-                # It extracts user_id from JWT payload["sub"] and stores as integer
                 if hasattr(request.state, "user_id") and request.state.user_id:
                     sentry_sdk.set_user({"id": str(request.state.user_id)})
                 sentry_sdk.capture_exception(e)
