@@ -1,23 +1,18 @@
 /**
- * Better Auth React Client (STUB)
+ * Better Auth React Client
  * 
- * This file is a placeholder for Task 4.
- * It will be replaced with the actual Better Auth React client configuration
- * using createAuthClient() from "better-auth/react".
+ * Configured with JWT plugin for token-based authentication.
+ * Uses environment variable for baseURL to support different environments.
  * 
  * @see https://better-auth.com/docs/integrations/react
  */
 
-// TODO (Task 4): Implement Better Auth React client
-// import { createAuthClient } from "better-auth/react";
-// import { jwtClient } from "better-auth/client/plugins";
-//
-// export const authClient = createAuthClient({
-//   baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000",
-//   plugins: [jwtClient()],
-// });
+import { createAuthClient } from "better-auth/react";
+import { jwtClient } from "better-auth/client/plugins";
 
-export const authClient = {
-  // Stub for type compatibility
-  // Will be implemented in Task 4
-};
+export const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000",
+  plugins: [jwtClient()],
+});
+
+export const { signIn, signUp, signOut, useSession, getSession } = authClient;
