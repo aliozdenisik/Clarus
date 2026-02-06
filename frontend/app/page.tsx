@@ -261,7 +261,7 @@ export default function HomePage() {
               ) : (
                 <>
                   <motion.button
-                    onClick={() => router.push("/register")}
+                    onClick={() => router.push("/sign-up")}
                     className="px-10 py-4 rounded-xl bg-indigo-600 border border-indigo-500/50 text-white font-medium hover:bg-indigo-500 transition-colors duration-200 flex items-center justify-center gap-3"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -368,7 +368,7 @@ export default function HomePage() {
                   }
                   Icon={feature.icon}
                   description={feature.description}
-                  href={user ? "/search" : "/register"}
+                  href={user ? "/search" : "/sign-up"}
                   cta="Explore"
                 />
               ))}
@@ -613,7 +613,7 @@ export default function HomePage() {
             </p>
             <div className="inline-block">
               <motion.button
-                onClick={() => router.push(user ? "/search" : "/register")}
+                onClick={() => router.push(user ? "/search" : "/sign-up")}
                 className="px-12 py-5 rounded-xl bg-indigo-600 border border-indigo-500/50 text-white text-lg font-medium hover:bg-indigo-500 transition-colors duration-200 flex items-center gap-3"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
