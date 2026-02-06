@@ -241,6 +241,9 @@ async def health_check():
     status = "healthy"
     qdrant_status = "connected"
     event_loop_status = "ok"
+    redis_status = "disconnected"
+    redis_memory = None
+    redis_clients = None
 
     # Test event loop responsiveness (detects blocking)
     try:
@@ -260,13 +263,42 @@ async def health_check():
             status = "degraded"
         qdrant_status = "disconnected"
 
+    # Test Redis connectivity with 2s timeout
+    try:
+        from app.redis_client import redis_manager
+
+        is_healthy = await asyncio.wait_for(redis_manager.health_check(), timeout=2.0)
+        if is_healthy and redis_manager.client:
+            redis_status = "connected"
+            # Get Redis memory and client info
+            try:
+                info = await redis_manager.client.info(section="memory")
+                redis_memory = info.get("used_memory_human", "unknown")
+                if isinstance(redis_memory, bytes):
+                    redis_memory = redis_memory.decode()
+                clients_info = await redis_manager.client.info(section="clients")
+                redis_clients = clients_info.get("connected_clients", 0)
+            except Exception:
+                pass  # Memory info is optional
+        else:
+            if status == "healthy":
+                status = "degraded"
+    except Exception:
+        if status == "healthy":
+            status = "degraded"
+
     return JSONResponse(
-        status_code=200 if status == "healthy" else 503,
+        status_code=200 if status != "unhealthy" else 503,
         content={
             "status": status,
             "version": "2.0.0",
             "event_loop": event_loop_status,
             "qdrant": qdrant_status,
+            "redis": {
+                "status": redis_status,
+                "used_memory": redis_memory,
+                "connected_clients": redis_clients,
+            },
         },
     )
 
