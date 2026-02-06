@@ -1,6 +1,6 @@
 """SSE Streaming API routes for real-time LLM responses."""
 
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import AsyncGenerator, Literal
@@ -47,19 +47,52 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-async def get_current_user_from_sse_token(token: str, db: AsyncSession):
+async def get_current_user_from_sse_token(
+    token: Optional[str], db: AsyncSession, request: Optional[Request] = None
+):
     """
-    Validate JWT token from query parameter (for SSE endpoints).
+    Validate auth for SSE endpoints.
 
-    SSE/EventSource cannot send custom headers, so token is passed as query param.
-    This helper validates Better Auth JWT and returns user dict.
+    Priority:
+    1. Cookie-based auth (Better Auth session cookie) - PREFERRED
+    2. Query param token - DEPRECATED (logs warning)
+
+    Args:
+        token: JWT token from query parameter (deprecated)
+        db: Database session
+        request: Request object for cookie access
     """
     from app.auth.jwks_validator import get_validator
     from fastapi import HTTPException
 
+    actual_token = None
+
+    # Try cookie first (preferred method)
+    if request:
+        # Better Auth session cookie names (try common variants)
+        cookie_token = (
+            request.cookies.get("better_auth.session_token")
+            or request.cookies.get("better-auth.session_token")
+            or request.cookies.get("__Secure-better-auth.session_token")
+        )
+        if cookie_token:
+            actual_token = cookie_token
+            logger.debug("SSE auth: Using cookie-based authentication")
+
+    # Fall back to query param (deprecated)
+    if not actual_token and token:
+        logger.warning(
+            "DEPRECATED: SSE auth via query parameter. Migrate to cookie-based auth.",
+            extra={"endpoint": request.url.path if request else "unknown"},
+        )
+        actual_token = token
+
+    if not actual_token:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
     try:
         validator = get_validator()
-        payload = validator.validate_token(token)
+        payload = validator.validate_token(actual_token)
         user_id = payload.get("sub")
         if not user_id:
             raise HTTPException(status_code=401, detail="Token missing 'sub' claim")
@@ -113,13 +146,14 @@ async def get_current_user_from_sse_token(token: str, db: AsyncSession):
 
 @router.get("/search")
 async def stream_search(
+    request: Request,
     q: str = Query(..., description="Arama sorgusu"),
     source: Literal["quran", "ot", "nt", "apocrypha"] = Query(
         default="quran", description="Source collection: quran, ot, nt, or apocrypha"
     ),
-    token: str = Query(
-        ...,
-        description="JWT access token (required for SSE - EventSource can't send headers)",
+    token: Optional[str] = Query(
+        None,
+        description="DEPRECATED: JWT access token. Use cookie-based auth instead.",
     ),
     language: Optional[str] = Query(
         None, description="Detected user language (ISO 639-1)"
@@ -128,9 +162,9 @@ async def stream_search(
 ):
     """Stream search results with AI answer generation.
 
-    Note: SSE/EventSource API doesn't support custom headers, so token must be passed as query param.
+    Authentication: Uses session cookie (preferred) or query param token (deprecated).
     """
-    current_user = await get_current_user_from_sse_token(token, db)
+    current_user = await get_current_user_from_sse_token(token, db, request)
     await check_rate_limit(current_user, db)
 
     # Save to history
@@ -324,10 +358,11 @@ async def stream_search(
 
 @router.get("/compare")
 async def stream_compare(
+    request: Request,
     topic: str = Query(..., description="Karşılaştırma konusu"),
-    token: str = Query(
-        ...,
-        description="JWT access token (required for SSE - EventSource can't send headers)",
+    token: Optional[str] = Query(
+        None,
+        description="DEPRECATED: JWT access token. Use cookie-based auth instead.",
     ),
     collections: str = Query(
         "quran_tr,bible_ot,bible_nt,bible_apocrypha",
@@ -340,7 +375,7 @@ async def stream_compare(
 ):
     """Stream comparative analysis with multi-agent output.
 
-    Note: SSE/EventSource API doesn't support custom headers, so token must be passed as query param.
+    Authentication: Uses session cookie (preferred) or query param token (deprecated).
 
     Args:
         collections: Comma-separated collection names (e.g., 'quran_tr,bible_ot').
@@ -356,7 +391,7 @@ async def stream_compare(
             status_code=400,
             detail="At least 2 valid collections required for comparison",
         )
-    current_user = await get_current_user_from_sse_token(token, db)
+    current_user = await get_current_user_from_sse_token(token, db, request)
     await check_rate_limit(current_user, db)
 
     # Save to history
