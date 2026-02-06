@@ -1,0 +1,116 @@
+"""REST API endpoint for query enhancement and keyword extraction."""
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+from typing import Optional
+import os
+import sys
+import time
+from dotenv import load_dotenv
+
+from app.logging_config import get_logger, log_performance
+
+logger = get_logger(__name__)
+
+# Add backend to path (same pattern as search.py)
+env_path = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"
+)
+load_dotenv(env_path)
+
+sys.path.insert(
+    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
+
+from app.api.auth import get_current_user, check_rate_limit
+from app.db import get_db
+from src.query_enhancer import QueryEnhancer, KeywordSuggestion, EnhanceResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+
+router = APIRouter()
+
+_enhancer_instance: Optional[QueryEnhancer] = None
+
+
+def get_enhancer() -> QueryEnhancer:
+    global _enhancer_instance
+    if _enhancer_instance is None:
+        _enhancer_instance = QueryEnhancer()
+    return _enhancer_instance
+
+
+class EnhanceRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=500)
+    corpus: str = Field(default="quran", pattern="^(quran|bible)$")
+
+
+@router.post("/enhance", response_model=EnhanceResponse)
+async def enhance_query(
+    request: EnhanceRequest,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Extract structured keywords from a search query.
+
+    This endpoint uses the QueryEnhancer to extract keywords from a user's search query.
+    Keywords are extracted using a hybrid approach:
+    - Rule-based: Splits on conjunctions (Turkish: ve, veya, ile; English: and, or, with)
+    - LLM-based: Uses language model for semantic keyword extraction
+    - Fallback: Simple word splitting if LLM fails
+
+    Args:
+        request: EnhanceRequest with query and corpus
+        current_user: Authenticated user (from JWT token)
+        db: Database session for rate limiting
+
+    Returns:
+        EnhanceResponse with original_query, keywords list, and corpus
+
+    Raises:
+        HTTPException: 401 if not authenticated, 429 if rate limited
+    """
+    start_time = time.time()
+    try:
+        await check_rate_limit(current_user, db)
+
+        logger.info(
+            "Enhance query request received",
+            extra={
+                "query": request.query[:50],
+                "corpus": request.corpus,
+                "user_id": current_user.id,
+            },
+        )
+
+        enhancer = get_enhancer()
+        keywords = enhancer.extract_keywords(request.query, corpus=request.corpus)
+
+        latency_ms = (time.time() - start_time) * 1000
+        log_performance(
+            logger,
+            "enhance_query",
+            latency_ms,
+            corpus=request.corpus,
+            keyword_count=len(keywords),
+        )
+
+        return EnhanceResponse(
+            original_query=request.query,
+            keywords=keywords,
+            corpus=request.corpus,
+        )
+    except HTTPException:
+        # Re-raise HTTP exceptions (auth, rate limit)
+        raise
+    except Exception as e:
+        logger.error(
+            f"Enhance query failed: {e}",
+            extra={"query": request.query[:50], "corpus": request.corpus},
+            exc_info=True,
+        )
+        # Fallback: return original query as single keyword
+        return EnhanceResponse(
+            original_query=request.query,
+            keywords=[KeywordSuggestion(text=request.query, source="fallback")],
+            corpus=request.corpus,
+        )
