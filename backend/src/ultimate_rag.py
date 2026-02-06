@@ -114,9 +114,8 @@ class UltimateRAG:
             logger.debug("Loaded QueryTranslator")
         return self._translator
 
-    @property
-    def llm_cache(self):
-        """Lazy load Semantic LLM Cache"""
+    async def _get_llm_cache(self):
+        """Lazy load and initialize Semantic LLM Cache (async)"""
         if self._llm_cache is None and self.enable_llm_cache:
             from src.llm_cache import SemanticLLMCache
 
@@ -124,6 +123,8 @@ class UltimateRAG:
                 similarity_threshold=self.llm_cache_threshold,
                 ttl_seconds=self.llm_cache_ttl,
             )
+            # Initialize Redis connection
+            await self._llm_cache.init()
             logger.debug(
                 "Loaded Semantic LLM Cache",
                 extra={
@@ -193,7 +194,7 @@ class UltimateRAG:
         if self.verbose:
             logger.info(message, extra=extra)
 
-    def _enhance_query(
+    async def _enhance_query(
         self,
         query: str,
         source: str = "bible_kjva",
@@ -222,10 +223,12 @@ class UltimateRAG:
             cache_key = f"{corpus}:expand"
 
             # Check LLM cache first
-            if self.enable_llm_cache and self.llm_cache:
-                cached = self.llm_cache.get(query, cache_key)
-                if cached:
-                    latency_ms = (time.perf_counter() - start) * 1000
+            if self.enable_llm_cache:
+                cache = await self._get_llm_cache()
+                if cache:
+                    cached = await cache.get(query, cache_key)
+                    if cached:
+                        latency_ms = (time.perf_counter() - start) * 1000
                     span.set_data("cache_hit", True)
                     sentry_sdk.set_measurement(
                         "rag.query.enhance_latency_ms", latency_ms, "millisecond"
@@ -249,10 +252,12 @@ class UltimateRAG:
             enhanced = self.enhancer.expand_query(query, corpus=corpus)
 
             # Cache the result
-            if self.enable_llm_cache and self.llm_cache:
-                self.llm_cache.set(
-                    query, cache_key, enhanced, source_language=detected_language
-                )
+            if self.enable_llm_cache:
+                cache = await self._get_llm_cache()
+                if cache:
+                    await cache.set(
+                        query, cache_key, enhanced, source_language=detected_language
+                    )
 
             latency_ms = (time.perf_counter() - start) * 1000
             sentry_sdk.set_measurement(
@@ -268,7 +273,7 @@ class UltimateRAG:
             )
             return enhanced
 
-    def _generate_multi_queries(
+    async def _generate_multi_queries(
         self,
         query: str,
         enhanced_query: str,
@@ -307,15 +312,17 @@ class UltimateRAG:
             # Check LLM cache for multi-queries
             multi = None
             cache_hit = False
-            if self.enable_llm_cache and self.llm_cache:
-                cached = self.llm_cache.get(enhanced_query, cache_key)
-                if cached:
-                    multi = cached
-                    cache_hit = True
-                    span.set_data("cache_hit", True)
-                    logger.info(
-                        "Cache hit", extra={"cache": "llm", "stage": "multi_query"}
-                    )
+            if self.enable_llm_cache:
+                cache = await self._get_llm_cache()
+                if cache:
+                    cached = await cache.get(enhanced_query, cache_key)
+                    if cached:
+                        multi = cached
+                        cache_hit = True
+                        span.set_data("cache_hit", True)
+                        logger.info(
+                            "Cache hit", extra={"cache": "llm", "stage": "multi_query"}
+                        )
 
             # Generate if not cached
             if multi is None:
@@ -325,13 +332,15 @@ class UltimateRAG:
                         enhanced_query, n=n, corpus=corpus
                     )
                     # Cache the result
-                    if self.enable_llm_cache and self.llm_cache:
-                        self.llm_cache.set(
-                            enhanced_query,
-                            cache_key,
-                            multi,
-                            source_language=detected_language,
-                        )
+                    if self.enable_llm_cache:
+                        cache = await self._get_llm_cache()
+                        if cache:
+                            await cache.set(
+                                enhanced_query,
+                                cache_key,
+                                multi,
+                                source_language=detected_language,
+                            )
                 except Exception as e:
                     logger.warning(
                         "Multi-query generation failed", extra={"error": str(e)}
@@ -363,7 +372,7 @@ class UltimateRAG:
             )
             return unique
 
-    def _parallel_query_preparation(
+    async def _parallel_query_preparation(
         self,
         query: str,
         source: str = "quran_tr",
@@ -373,13 +382,14 @@ class UltimateRAG:
         Run query enhancement and multi-query generation in PARALLEL.
 
         Previously these were sequential (enhance → multi-query), adding 2-6s latency.
-        Now both LLM calls run concurrently via ThreadPoolExecutor.
+        Now both LLM calls run concurrently via asyncio.gather.
         Multi-query uses the original query; enhanced query is merged into the final list.
 
         Returns:
             Deduplicated list of all query variants
         """
         import sentry_sdk
+        import asyncio
 
         with sentry_sdk.start_span(
             op="rag.parallel_query_prep",
@@ -387,25 +397,17 @@ class UltimateRAG:
         ) as span:
             start = time.perf_counter()
 
-            # Run both LLM calls in parallel using ThreadPoolExecutor
-            with ThreadPoolExecutor(max_workers=2) as executor:
-                enhance_future = executor.submit(
-                    self._enhance_query,
-                    query,
-                    source,
-                    detected_language,
-                )
-                multi_query_future = executor.submit(
-                    self._generate_multi_queries,
+            # Run both LLM calls in parallel using asyncio.gather
+            enhanced_query, multi_queries = await asyncio.gather(
+                self._enhance_query(query, source, detected_language),
+                self._generate_multi_queries(
                     query,
                     query,  # Use original query instead of waiting for enhanced
                     source,
                     3,
                     detected_language,
-                )
-
-                enhanced_query = enhance_future.result()
-                multi_queries = multi_query_future.result()
+                ),
+            )
 
             # Merge: enhanced query + multi-queries, deduplicate
             all_queries = [query, enhanced_query] + multi_queries
@@ -948,7 +950,7 @@ class UltimateRAG:
         self._log(f"🏆 Step 4: Returning top {min(len(results), top_k)} results")
         return results[:top_k]
 
-    def search(
+    async def search(
         self,
         query: str,
         source: str = "quran_tr",
@@ -988,7 +990,7 @@ class UltimateRAG:
         # Step 1+2: Enhance query AND generate multi-queries in PARALLEL
         # Both are independent LLM calls - no need to wait sequentially.
         # Multi-query uses original query; enhanced query is added to the final list.
-        all_queries = self._parallel_query_preparation(
+        all_queries = await self._parallel_query_preparation(
             query, source=source, detected_language=detected_language
         )
 
@@ -1026,7 +1028,7 @@ class UltimateRAG:
 
         return final_results
 
-    def search_quran(
+    async def search_quran(
         self, query: str, top_k: int = None, detected_language: Optional[str] = None
     ) -> List:
         """Shortcut for Quran search"""
@@ -1060,7 +1062,7 @@ class UltimateRAG:
                     )
                     raise
 
-            return self.search(
+            return await self.search(
                 query,
                 source="quran_tr",
                 top_k=top_k,
@@ -1167,7 +1169,7 @@ class UltimateRAG:
         sorted_results = sorted(rrf_scores.values(), key=lambda x: x[1], reverse=True)
         return [item[0] for item in sorted_results]
 
-    def search_bible(
+    async def search_bible(
         self,
         query: str,
         translation: str = "kjva",
@@ -1215,7 +1217,7 @@ class UltimateRAG:
         # If testament is specified, search only that collection
         if testament:
             source = f"bible_{testament}"
-            return self.search(
+            return await self.search(
                 query,
                 source=source,
                 top_k=top_k,
@@ -1224,7 +1226,7 @@ class UltimateRAG:
             )
 
         # Otherwise, search all 3 Bible collections and merge with RRF
-        return self._search_all_bible_collections(
+        return await self._search_all_bible_collections(
             query,
             top_k=top_k,
             rerank_query=translated_query,
@@ -1233,7 +1235,7 @@ class UltimateRAG:
 
     # ============= ANSWER GENERATION (RAG) =============
 
-    def ask(self, query: str, source: str = "quran_tr", top_k: int = None):
+    async def ask(self, query: str, source: str = "quran_tr", top_k: int = None):
         """
         Full RAG Pipeline: Search + Generate Answer with Citations
 
@@ -1264,7 +1266,7 @@ class UltimateRAG:
         )
 
         # Step 1-4: Search pipeline (enhance, multi-query, search, rerank)
-        search_results = self.search(query, source=source, top_k=top_k)
+        search_results = await self.search(query, source=source, top_k=top_k)
 
         # Step 5: Generate answer with citations
         logger.info("Pipeline stage started", extra={"stage": "answer_generation"})
@@ -1299,7 +1301,7 @@ class UltimateRAG:
 
         return AskResult(answer=answer, search_results=search_results)
 
-    def ask_quran(
+    async def ask_quran(
         self, query: str, top_k: int = None, detected_language: Optional[str] = None
     ):
         """Shortcut for Quran Q&A - Turkish in, Turkish out"""
@@ -1326,9 +1328,9 @@ class UltimateRAG:
                 )
                 raise
 
-        return self.ask(query, source="quran_tr", top_k=top_k)
+        return await self.ask(query, source="quran_tr", top_k=top_k)
 
-    def ask_bible(
+    async def ask_bible(
         self,
         query: str,
         translation: str = "kjva",
@@ -1365,7 +1367,7 @@ class UltimateRAG:
                 raise
 
         source = f"bible_{testament}" if testament else f"bible_{translation}"
-        return self.ask(query, source=source, top_k=top_k)
+        return await self.ask(query, source=source, top_k=top_k)
 
 
 # Convenience function
