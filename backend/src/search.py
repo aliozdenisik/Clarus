@@ -122,6 +122,37 @@ class QuranSearcher:
         )
         return parsed
 
+    def search_with_vector(
+        self, query_vector: List[float], limit: int = 10
+    ) -> List[SearchResult]:
+        """
+        Search using a pre-computed dense vector.
+        Skips embedding computation — use when vectors are batch-encoded upfront.
+        """
+        start = time.perf_counter()
+
+        results = qdrant_with_breaker(
+            lambda: self.client.query_points(
+                collection_name=self.COLLECTION_NAME,
+                query=query_vector,
+                using="dense",
+                limit=limit,
+                with_payload=True,
+            )
+        )
+
+        parsed = self._parse_results(results)
+        latency_ms = (time.perf_counter() - start) * 1000
+        log_performance(
+            logger,
+            "semantic_search",
+            latency_ms,
+            collection=self.COLLECTION_NAME,
+            mode="semantic_precomputed",
+            results=len(parsed),
+        )
+        return parsed
+
     def search(
         self, query: str, mode: str = "semantic", limit: int = 10
     ) -> List[SearchResult]:
@@ -265,6 +296,37 @@ class BibleSearcher:
         )
         return parsed
 
+    def search_with_vector(
+        self, query_vector: List[float], limit: int = 10
+    ) -> List[BibleSearchResult]:
+        """
+        Search using a pre-computed dense vector.
+        Skips embedding computation — use when vectors are batch-encoded upfront.
+        """
+        start = time.perf_counter()
+
+        results = qdrant_with_breaker(
+            lambda: self.client.query_points(
+                collection_name=self.collection_name,
+                query=query_vector,
+                using="dense",
+                limit=limit,
+                with_payload=True,
+            )
+        )
+
+        parsed = self._parse_results(results)
+        latency_ms = (time.perf_counter() - start) * 1000
+        log_performance(
+            logger,
+            "semantic_search",
+            latency_ms,
+            collection=self.collection_name,
+            mode="semantic_precomputed",
+            results=len(parsed),
+        )
+        return parsed
+
     def search(
         self, query: str, mode: str = "semantic", limit: int = 10
     ) -> List[BibleSearchResult]:
@@ -400,6 +462,36 @@ class SemanticChunkSearcher:
         )
         return parsed
 
+    def search_with_vector(
+        self, query_vector: List[float], limit: int = 10
+    ) -> List[SemanticChunkSearchResult]:
+        """
+        Search using a pre-computed dense vector.
+        Skips embedding computation — use when vectors are batch-encoded upfront.
+        """
+        start = time.perf_counter()
+
+        results = qdrant_with_breaker(
+            lambda: self.client.query_points(
+                collection_name=self.COLLECTION_NAME,
+                query=query_vector,
+                using="dense",
+                limit=limit,
+            )
+        )
+
+        parsed = self._parse_results(results.points)
+        latency_ms = (time.perf_counter() - start) * 1000
+        log_performance(
+            logger,
+            "semantic_chunk_search",
+            latency_ms,
+            collection=self.COLLECTION_NAME,
+            mode="semantic_precomputed",
+            results=len(parsed),
+        )
+        return parsed
+
     def search(
         self, query: str, mode: str = "semantic", limit: int = 10
     ) -> List[SemanticChunkSearchResult]:
@@ -523,6 +615,36 @@ class BibleSemanticChunkSearcher:
             latency_ms,
             collection=self.collection_name,
             mode="semantic",
+            results=len(parsed),
+        )
+        return parsed
+
+    def search_with_vector(
+        self, query_vector: List[float], limit: int = 10
+    ) -> List[BibleSemanticChunkSearchResult]:
+        """
+        Search using a pre-computed dense vector.
+        Skips embedding computation — use when vectors are batch-encoded upfront.
+        """
+        start = time.perf_counter()
+
+        results = qdrant_with_breaker(
+            lambda: self.client.query_points(
+                collection_name=self.collection_name,
+                query=query_vector,
+                using="dense",
+                limit=limit,
+            )
+        )
+
+        parsed = self._parse_results(results.points)
+        latency_ms = (time.perf_counter() - start) * 1000
+        log_performance(
+            logger,
+            "bible_semantic_chunk_search",
+            latency_ms,
+            collection=self.collection_name,
+            mode="semantic_precomputed",
             results=len(parsed),
         )
         return parsed

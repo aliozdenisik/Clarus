@@ -659,11 +659,13 @@ class MultiAgentOrchestrator:
             for future in as_completed(futures):
                 key, result = future.result()
                 results[key] = result
-                completed_count += 1
-                _emit(
-                    "agent_completed",
-                    f"{agent_labels.get(key, key)} agent completed ({completed_count}/{agent_count})",
-                )
+                # Only count and emit for agents that had verses to analyze
+                if key in active_agents:
+                    completed_count += 1
+                    _emit(
+                        "agent_completed",
+                        f"{agent_labels.get(key, key)} agent completed ({completed_count}/{agent_count})",
+                    )
 
         # Extract commentaries
         ot_result = results.get("ot", {})

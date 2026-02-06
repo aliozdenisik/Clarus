@@ -47,7 +47,10 @@ class QueryEnhancer:
     """
 
     OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-    DEFAULT_MODEL = "x-ai/grok-4.1-fast"
+    # Switched from x-ai/grok-4.1-fast (reasoning model, 13s latency due to
+    # internal thinking tokens) to Gemini 2.5 Flash (~1s for same task).
+    # Query expansion is a simple JSON extraction — no reasoning needed.
+    DEFAULT_MODEL = "google/gemini-2.5-flash"
 
     # --- BIBLE PROMPTS (English / KJV) ---
     SYSTEM_PROMPT_BIBLE = """You are an expert Biblical Scholar and Linguist specializing in the King James Version (KJV).

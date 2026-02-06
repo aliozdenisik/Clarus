@@ -363,10 +363,128 @@ class UltimateRAG:
             )
             return unique
 
+    def _parallel_query_preparation(
+        self,
+        query: str,
+        source: str = "quran_tr",
+        detected_language: Optional[str] = None,
+    ) -> List[str]:
+        """
+        Run query enhancement and multi-query generation in PARALLEL.
+
+        Previously these were sequential (enhance → multi-query), adding 2-6s latency.
+        Now both LLM calls run concurrently via ThreadPoolExecutor.
+        Multi-query uses the original query; enhanced query is merged into the final list.
+
+        Returns:
+            Deduplicated list of all query variants
+        """
+        import sentry_sdk
+
+        with sentry_sdk.start_span(
+            op="rag.parallel_query_prep",
+            description="Parallel query enhancement + multi-query",
+        ) as span:
+            start = time.perf_counter()
+
+            # Run both LLM calls in parallel using ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                enhance_future = executor.submit(
+                    self._enhance_query,
+                    query,
+                    source,
+                    detected_language,
+                )
+                multi_query_future = executor.submit(
+                    self._generate_multi_queries,
+                    query,
+                    query,  # Use original query instead of waiting for enhanced
+                    source,
+                    3,
+                    detected_language,
+                )
+
+                enhanced_query = enhance_future.result()
+                multi_queries = multi_query_future.result()
+
+            # Merge: enhanced query + multi-queries, deduplicate
+            all_queries = [query, enhanced_query] + multi_queries
+            seen = set()
+            unique = []
+            for q in all_queries:
+                q_lower = q.lower().strip()
+                if q_lower not in seen:
+                    seen.add(q_lower)
+                    unique.append(q)
+
+            latency_ms = (time.perf_counter() - start) * 1000
+            span.set_data("total_queries", len(unique))
+            span.set_data("parallel", True)
+            log_performance(
+                logger,
+                "parallel_query_prep",
+                latency_ms,
+                total_queries=len(unique),
+                source=source,
+            )
+
+            logger.info(
+                "Parallel query preparation complete",
+                extra={
+                    "total_queries": len(unique),
+                    "latency_ms": round(latency_ms, 1),
+                    "source": source,
+                },
+            )
+
+            return unique
+
+    def _batch_encode_queries(self, queries: List[str]) -> List[List[float]]:
+        """
+        Batch encode all queries in a single API call.
+
+        Previously each query was encoded individually inside searcher.search(),
+        causing N sequential API calls with rate limiting (3s each).
+        Now all queries are encoded in one batch call.
+        """
+        import sentry_sdk
+
+        with sentry_sdk.start_span(
+            op="rag.batch_encode", description=f"Batch encode {len(queries)} queries"
+        ) as span:
+            start = time.perf_counter()
+            span.set_data("query_count", len(queries))
+
+            # Lazy-init shared encoder (all searchers use the same DenseEncoder model)
+            if not hasattr(self, "_dense_encoder") or self._dense_encoder is None:
+                from src.embeddings import DenseEncoder
+
+                self._dense_encoder = DenseEncoder()
+
+            # Use encode_batch for single API call instead of N individual calls
+            vectors = self._dense_encoder.encode_batch(
+                queries, batch_size=len(queries), show_progress=False
+            )
+
+            latency_ms = (time.perf_counter() - start) * 1000
+            span.set_data("latency_ms", latency_ms)
+            log_performance(
+                logger,
+                "batch_encode",
+                latency_ms,
+                query_count=len(queries),
+            )
+
+            return vectors
+
     def _search_all_queries(
         self, queries: List[str], source: str, limit: int = 30
     ) -> List:
-        """Step 3: Search with all queries and merge results (RRF)"""
+        """Step 3: Search with all queries and merge results (RRF)
+
+        Optimized: All query embeddings are computed in a single batch API call,
+        then Qdrant searches use pre-computed vectors (no per-query embedding overhead).
+        """
         import sentry_sdk
 
         with sentry_sdk.start_span(
@@ -389,14 +507,17 @@ class UltimateRAG:
 
             searcher = self._get_searcher(source)
 
+            # Batch encode ALL queries in a single API call (was: N individual calls)
+            query_vectors = self._batch_encode_queries(queries)
+
             # Collect all results with their ranks
             all_results = {}  # id -> (result, rrf_score)
             k = 60  # RRF constant
 
-            # Search single-verse collection
-            for i, query in enumerate(queries):
+            # Search single-verse collection with pre-computed vectors
+            for i, (query, vector) in enumerate(zip(queries, query_vectors)):
                 try:
-                    results = searcher.search(query, mode=self.search_mode, limit=limit)
+                    results = searcher.search_with_vector(vector, limit=limit)
 
                     for rank, result in enumerate(results, 1):
                         result_id = (
@@ -426,7 +547,7 @@ class UltimateRAG:
                 except Exception as e:
                     self._log(f"   Warning: Search failed for query: {e}", "yellow")
 
-            # Parallel search: Semantic chunks (if enabled)
+            # Parallel search: Semantic chunks (if enabled) — reuse pre-computed vectors
             if self.enable_semantic_chunks:
                 # Handle Quran Semantic Chunks
                 if source == "quran_tr":
@@ -437,10 +558,12 @@ class UltimateRAG:
                                 "   📦 Including semantic chunks in search (Quran)..."
                             )
 
-                            for i, query in enumerate(queries):
+                            for i, (query, vector) in enumerate(
+                                zip(queries, query_vectors)
+                            ):
                                 try:
-                                    chunk_results = chunk_searcher.search(
-                                        query, mode=self.search_mode, limit=limit // 2
+                                    chunk_results = chunk_searcher.search_with_vector(
+                                        vector, limit=limit // 2
                                     )
 
                                     for rank, chunk_result in enumerate(
@@ -489,10 +612,14 @@ class UltimateRAG:
                                 f"   📦 Including semantic chunks in search (Bible {translation})..."
                             )
 
-                            for i, query in enumerate(queries):
+                            for i, (query, vector) in enumerate(
+                                zip(queries, query_vectors)
+                            ):
                                 try:
-                                    chunk_results = bible_chunk_searcher.search(
-                                        query, mode=self.search_mode, limit=limit // 2
+                                    chunk_results = (
+                                        bible_chunk_searcher.search_with_vector(
+                                            vector, limit=limit // 2
+                                        )
                                     )
 
                                     for rank, chunk_result in enumerate(
@@ -610,14 +737,11 @@ class UltimateRAG:
             },
         )
 
-        # Step 1: Enhance query
-        enhanced_query = self._enhance_query(
+        # Step 1+2: Enhance query AND generate multi-queries in PARALLEL
+        # Both are independent LLM calls - no need to wait sequentially.
+        # Multi-query uses original query; enhanced query is added to the final list.
+        all_queries = self._parallel_query_preparation(
             query, source=source, detected_language=detected_language
-        )
-
-        # Step 2: Generate multi-queries
-        all_queries = self._generate_multi_queries(
-            query, enhanced_query, source=source, detected_language=detected_language
         )
 
         # Step 3: Search with all queries (RRF merge)

@@ -1,34 +1,52 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
-import { springPresets } from "@/lib/design-system";
+import { motion } from "framer-motion";
 import { Check, Loader2 } from "lucide-react";
 
 /**
- * Pipeline step definition — maps backend step IDs to display labels.
- * Order matters: steps are displayed in this sequence.
+ * Pipeline phases — backend step IDs mapped to user-facing phases.
+ * Multiple backend steps collapse into a single visible phase.
  */
-interface PipelineStep {
+interface Phase {
   id: string;
   label: string;
+  /** Backend step IDs that belong to this phase */
+  steps: string[];
 }
 
-const PIPELINE_STEPS: PipelineStep[] = [
-  { id: "pipeline_started", label: "Initializing pipeline" },
-  { id: "translating_query", label: "Translating query (TR / EN)" },
-  { id: "query_translated", label: "Query translated" },
-  { id: "generating_queries", label: "Generating multi-query variants" },
-  { id: "queries_generated", label: "Query variants ready" },
-  { id: "searching_vectors", label: "Searching across collections" },
-  { id: "vectors_found", label: "Verses retrieved" },
-  { id: "building_verse_details", label: "Extracting verse metadata" },
-  { id: "agents_starting", label: "Running specialist agents..." },
-  { id: "agent_completed", label: "Specialist agents working..." },
-  { id: "summary_starting", label: "Synthesizing comparative essay" },
-  { id: "summary_completed", label: "Synthesis complete" },
-  { id: "scoring_confidence", label: "Calculating confidence score" },
-  { id: "translating_response", label: "Translating response" },
+const PHASES: Phase[] = [
+  {
+    id: "query",
+    label: "Preparing query",
+    steps: [
+      "pipeline_started",
+      "translating_query",
+      "query_translated",
+      "generating_queries",
+      "queries_generated",
+    ],
+  },
+  {
+    id: "search",
+    label: "Searching scriptures",
+    steps: ["searching_vectors", "vectors_found", "building_verse_details"],
+  },
+  {
+    id: "agents",
+    label: "Running specialist agents",
+    steps: ["agents_starting", "agent_completed"],
+  },
+  {
+    id: "synthesis",
+    label: "Synthesizing essay",
+    steps: ["summary_starting", "summary_completed"],
+  },
+  {
+    id: "finalize",
+    label: "Finalizing",
+    steps: ["scoring_confidence", "translating_response"],
+  },
 ];
 
 interface ProgressEvent {
@@ -37,27 +55,24 @@ interface ProgressEvent {
 }
 
 interface AnalysisProgressProps {
-  /** Progress events received from SSE stream */
   progressEvents: ProgressEvent[];
-  /** Whether paragraphs have started arriving (analysis nearly done) */
   hasParagraphs: boolean;
   className?: string;
 }
 
-/**
- * Determines step status based on which steps have been seen.
- */
-function getStepStatus(
-  stepId: string,
+function getPhaseStatus(
+  phase: Phase,
   seenSteps: Set<string>,
-  latestStep: string | null
+  latestPhaseId: string | null
 ): "pending" | "active" | "completed" {
-  if (seenSteps.has(stepId)) {
-    // If this step was seen and it's not the latest, it's completed
-    if (latestStep !== stepId) return "completed";
-    return "active";
-  }
-  return "pending";
+  const hasAny = phase.steps.some((s) => seenSteps.has(s));
+  const hasAll = phase.steps.every((s) => seenSteps.has(s));
+
+  if (!hasAny) return "pending";
+  if (hasAll && latestPhaseId !== phase.id) return "completed";
+  if (latestPhaseId === phase.id) return "active";
+  // Phase has some steps seen but is not the latest — completed
+  return "completed";
 }
 
 export function AnalysisProgress({
@@ -65,142 +80,130 @@ export function AnalysisProgress({
   hasParagraphs,
   className,
 }: AnalysisProgressProps) {
-  // Build set of seen step IDs and track the latest
   const seenSteps = new Set<string>();
-  let latestStep: string | null = null;
-  let latestMessage: string | null = null;
-
-  // Track agent completion count and total from messages
   let agentCompletedCount = 0;
   let agentTotalCount = 0;
 
   for (const event of progressEvents) {
     seenSteps.add(event.step);
-    latestStep = event.step;
-    latestMessage = event.message;
 
     if (event.step === "agent_completed") {
       agentCompletedCount++;
-      // Parse total from backend message: "... (2/3)"
       const match = event.message.match(/\((\d+)\/(\d+)\)/);
-      if (match) {
-        agentTotalCount = parseInt(match[2], 10);
-      }
+      if (match) agentTotalCount = parseInt(match[2], 10);
     }
-
-    // Parse agent count from agents_starting message: "Running 3 specialist agents..."
     if (event.step === "agents_starting") {
       const match = event.message.match(/Running (\d+)/);
-      if (match) {
-        agentTotalCount = parseInt(match[1], 10);
-      }
+      if (match) agentTotalCount = parseInt(match[1], 10);
     }
   }
 
-  // If paragraphs are arriving, mark everything as completed
+  // Determine which phase is currently active (last phase with any seen step)
+  let latestPhaseId: string | null = null;
+  for (const phase of PHASES) {
+    if (phase.steps.some((s) => seenSteps.has(s))) {
+      latestPhaseId = phase.id;
+    }
+  }
+
   if (hasParagraphs) {
-    latestStep = null; // No step is "active" anymore
-    for (const step of PIPELINE_STEPS) {
-      seenSteps.add(step.id);
-    }
+    latestPhaseId = null;
   }
 
-  // Filter out steps that are purely transitional (show condensed view)
-  // Group related steps: show the latest in each phase
-  const displaySteps = PIPELINE_STEPS.filter((step) => {
-    // Always show if it's been reached or is the next pending step
-    const status = getStepStatus(step.id, seenSteps, latestStep);
+  // Only show phases that are active/completed, plus the next pending one
+  const visiblePhases = PHASES.filter((phase, idx) => {
+    const status = getPhaseStatus(phase, seenSteps, latestPhaseId);
     if (status === "completed" || status === "active") return true;
-
-    // Show next pending step only if a previous step was completed
-    if (status === "pending") {
-      const idx = PIPELINE_STEPS.findIndex((s) => s.id === step.id);
-      if (idx === 0) return true;
-      const prevStep = PIPELINE_STEPS[idx - 1];
-      return seenSteps.has(prevStep.id);
+    // Show next pending if previous is done
+    if (idx > 0) {
+      const prev = PHASES[idx - 1];
+      const prevStatus = getPhaseStatus(prev, seenSteps, latestPhaseId);
+      return prevStatus === "completed" || prevStatus === "active";
     }
-    return false;
+    return idx === 0;
   });
 
   return (
-    <div className={cn("space-y-1", className)}>
-      {/* Current status headline */}
-      {latestMessage && !hasParagraphs && (
-        <motion.div
-          key={latestMessage}
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-          className="flex items-center gap-2 mb-3 px-1"
-        >
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--color-accent-primary)]" />
-          <span className="text-sm text-[var(--color-text-secondary)]">
-            {latestMessage}
-          </span>
-        </motion.div>
-      )}
+    <div className={cn("pl-1", className)}>
+      {visiblePhases.map((phase, idx) => {
+        const status = hasParagraphs
+          ? "completed"
+          : getPhaseStatus(phase, seenSteps, latestPhaseId);
+        const isLast = idx === visiblePhases.length - 1;
 
-      {/* Step list */}
-      <div className="space-y-0.5">
-        <AnimatePresence mode="popLayout">
-          {displaySteps.map((step) => {
-            const status = getStepStatus(step.id, seenSteps, latestStep);
-            let label: string = step.label;
+        // Dynamic label for agents phase
+        let label = phase.label;
+        if (phase.id === "agents" && agentTotalCount > 0) {
+          if (status === "active" && agentCompletedCount > 0) {
+            label = `Running agents (${agentCompletedCount}/${agentTotalCount})`;
+          } else if (status === "active") {
+            label = `Running ${agentTotalCount} agents`;
+          } else if (status === "completed") {
+            label = `${agentTotalCount} agents completed`;
+          }
+        }
 
-            // Dynamic labels for agent progress steps
-            if (step.id === "agents_starting" && agentTotalCount > 0) {
-              label = `Running ${agentTotalCount} specialist agents in parallel`;
-            }
-            if (step.id === "agent_completed" && agentCompletedCount > 0) {
-              const total = agentTotalCount || agentCompletedCount;
-              label = `Specialist agents (${agentCompletedCount}/${total} completed)`;
-            }
+        return (
+          <motion.div
+            key={phase.id}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, delay: idx * 0.04 }}
+            className="flex gap-3"
+          >
+            {/* Indicator column: icon + connector line */}
+            <div className="flex flex-col items-center">
+              {/* Icon */}
+              <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+                {status === "completed" ? (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                    className="w-5 h-5 rounded-full bg-emerald-500/15 flex items-center justify-center"
+                  >
+                    <Check className="h-3 w-3 text-emerald-400" strokeWidth={3} />
+                  </motion.div>
+                ) : status === "active" ? (
+                  <div className="w-5 h-5 rounded-full bg-[var(--color-accent-primary)]/15 flex items-center justify-center">
+                    <Loader2 className="h-3 w-3 text-[var(--color-accent-primary)] animate-spin" />
+                  </div>
+                ) : (
+                  <div className="w-5 h-5 rounded-full border border-[var(--color-border-subtle)] flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] opacity-30" />
+                  </div>
+                )}
+              </div>
 
-            return (
-              <motion.div
-                key={step.id}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 8 }}
-                transition={springPresets.snappy}
-                className="flex items-center gap-2.5 py-1 px-1"
-              >
-                {/* Status indicator */}
-                <div className="flex-shrink-0 w-4 h-4 flex items-center justify-center">
-                  {status === "completed" ? (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={springPresets.snappy}
-                    >
-                      <Check className="h-3.5 w-3.5 text-emerald-400" />
-                    </motion.div>
-                  ) : status === "active" ? (
-                    <div className="relative">
-                      <div className="w-2 h-2 rounded-full bg-[var(--color-accent-primary)]" />
-                      <div className="absolute inset-0 w-2 h-2 rounded-full bg-[var(--color-accent-primary)] animate-ping opacity-50" />
-                    </div>
-                  ) : (
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] opacity-40" />
-                  )}
-                </div>
-
-                {/* Label */}
-                <span
+              {/* Connector line */}
+              {!isLast && (
+                <div
                   className={cn(
-                    "text-xs transition-colors duration-200",
-                    status === "completed" && "text-[var(--color-text-muted)]",
-                    status === "active" && "text-[var(--color-text-secondary)] font-medium",
-                    status === "pending" && "text-[var(--color-text-muted)] opacity-50"
+                    "w-px flex-1 min-h-[16px] my-0.5 transition-colors duration-300",
+                    status === "completed"
+                      ? "bg-emerald-500/30"
+                      : "bg-[var(--color-border-subtle)]"
                   )}
-                >
-                  {label}
-                </span>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-      </div>
+                />
+              )}
+            </div>
+
+            {/* Label */}
+            <div className={cn("pb-4", isLast && "pb-0")}>
+              <span
+                className={cn(
+                  "text-[13px] leading-5 transition-colors duration-200",
+                  status === "completed" && "text-[var(--color-text-muted)]",
+                  status === "active" && "text-[var(--color-text-primary)] font-medium",
+                  status === "pending" && "text-[var(--color-text-muted)] opacity-40"
+                )}
+              >
+                {label}
+              </span>
+            </div>
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
