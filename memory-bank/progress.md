@@ -26,9 +26,9 @@
 - [x] CLI with Rich formatting
 - [x] Python API for programmatic access
 - [x] FastAPI backend with async SQLAlchemy
-- [x] JWT + Google OAuth authentication
+- [x] Better Auth (JWT plugin + JWKS bridge) — replaced custom JWT + Google OAuth
 - [x] SSE streaming endpoints
-- [x] Docker Compose (PostgreSQL + Qdrant)
+- [x] Docker Compose (PostgreSQL + Qdrant + Redis)
 - [x] Next.js 15 Frontend (Web App)
 
 ### Backend API
@@ -58,6 +58,7 @@
 - [x] Quran morphological keyword search — hamza normalization fix (137 roots, 10K+ words)
 - [x] Null byte input sanitization (HTTP 500 → graceful 200)
 - [x] 48-vector security test suite passed (SQL injection, XSS, command injection, DoS, Unicode)
+- [x] Better Auth integration — JWKS validator, API key auth, user migration script
 
 ### Frontend (Next.js 15)
 
@@ -102,6 +103,7 @@
 - [x] **Bible keyword search fixes** (2026-02-04): Hebrew b↔v dual-indexing, occurrence-based prioritization, Greek Strong's preservation
 - [x] **Bible keyword search verification** (2026-02-04): Validated against Blue Letter Bible — all discrepancies <1% (acceptable text tradition variance)
 - [x] **Accuracy disclaimer UI** (2026-02-04): Added expandable accuracy verification panel to Bible Word Search with "Clarus can make mistakes" disclaimer, BLB comparison table, data source info (8 tests)
+- [x] Better Auth UI — sign-in/sign-up pages, session management via useSession()
 
 ### CLI Commands
 
@@ -205,6 +207,7 @@
 | [#11](https://github.com/aliozdenisik/Clarus/issues/11) | DRY: Paragraph building (~35 lines duplicated) | Medium |
 | [#12](https://github.com/aliozdenisik/Clarus/issues/12) | Playwright E2E test timing issues | Medium |
 | [#13](https://github.com/aliozdenisik/Clarus/issues/13) | Parent Epic: Post-Deployment Cleanup | - |
+| ~~[#75](https://github.com/aliozdenisik/Clarus/issues/75)~~ | ~~Better Auth Framework Fizibilite Analizi~~ | ~~High~~ → **CLOSED** |
 | ~~[#57](https://github.com/aliozdenisik/Clarus/issues/57)~~ | ~~Redis Caching Infrastructure~~ | ~~High~~ → **CLOSED** |
 | ~~[#17](https://github.com/aliozdenisik/Clarus/issues/17)~~ | ~~SSE stats message format mismatch~~ | ~~High~~ → **CLOSED** |
 | ~~[#18](https://github.com/aliozdenisik/Clarus/issues/18)~~ | ~~Inconsistent search navigation options~~ | ~~Medium~~ → **CLOSED** |
