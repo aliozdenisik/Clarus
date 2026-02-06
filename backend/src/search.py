@@ -6,7 +6,9 @@ Uses dense vectors only (text-embedding-3-large).
 """
 
 import time
-from typing import List, Optional
+import json
+import hashlib
+from typing import List, Optional, Any
 from dataclasses import dataclass
 
 from qdrant_client import QdrantClient
@@ -17,6 +19,98 @@ from .turkish_utils import expand_turkish_query
 from app.logging_config import get_logger, log_performance
 
 logger = get_logger(__name__)
+
+
+async def get_cached_search_results(
+    collection: str, query: str, limit: int
+) -> Optional[List[Any]]:
+    """
+    Retrieve cached search results from Redis.
+
+    Args:
+        collection: Collection name (e.g., 'quran_tr')
+        query: Search query string
+        limit: Result limit
+
+    Returns:
+        Deserialized list of results or None if cache miss/unavailable
+    """
+    try:
+        from app.redis_client import redis_manager
+
+        if redis_manager.client is None:
+            return None
+
+        # Generate cache key: search:{collection}:{md5(query + str(limit))}
+        cache_key = f"search:{collection}:{hashlib.md5((query + str(limit)).encode()).hexdigest()}"
+
+        # Try to get from cache
+        cached_value = await redis_manager.client.get(cache_key)
+        if cached_value:
+            return json.loads(cached_value)
+
+        return None
+    except Exception as e:
+        logger.warning(
+            "Cache retrieval failed, proceeding without cache",
+            extra={"error": str(e), "collection": collection},
+        )
+        return None
+
+
+async def cache_search_results(
+    collection: str, query: str, limit: int, results: List[Any]
+) -> None:
+    """
+    Cache search results in Redis with 1-hour TTL.
+
+    Args:
+        collection: Collection name (e.g., 'quran_tr')
+        query: Search query string
+        limit: Result limit
+        results: List of results to cache
+    """
+    try:
+        from app.redis_client import redis_manager
+
+        if redis_manager.client is None:
+            return
+
+        # Generate cache key
+        cache_key = f"search:{collection}:{hashlib.md5((query + str(limit)).encode()).hexdigest()}"
+
+        # Serialize results to JSON
+        cached_value = json.dumps(
+            [
+                {
+                    "id": r.id,
+                    "score": r.score,
+                    "surah_id": getattr(r, "surah_id", None),
+                    "surah_name": getattr(r, "surah_name", None),
+                    "surah_transliteration": getattr(r, "surah_transliteration", None),
+                    "verse_id": getattr(r, "verse_id", None),
+                    "arabic_text": getattr(r, "arabic_text", None),
+                    "translation": getattr(r, "translation", None),
+                    "surah_type": getattr(r, "surah_type", None),
+                    "original_score": getattr(r, "original_score", r.score),
+                    "book_id": getattr(r, "book_id", None),
+                    "book_name": getattr(r, "book_name", None),
+                    "chapter": getattr(r, "chapter", None),
+                    "verse": getattr(r, "verse", None),
+                    "text": getattr(r, "text", None),
+                    "testament": getattr(r, "testament", None),
+                }
+                for r in results
+            ]
+        )
+
+        # Cache with 1-hour TTL (3600 seconds)
+        await redis_manager.client.setex(cache_key, 3600, cached_value)
+    except Exception as e:
+        logger.warning(
+            "Cache storage failed, continuing without cache",
+            extra={"error": str(e), "collection": collection},
+        )
 
 
 @dataclass
@@ -165,6 +259,55 @@ class QuranSearcher:
             limit: Number of results
         """
         return self.semantic_search(query, limit)
+
+    async def semantic_search_cached(
+        self, query: str, limit: int = 10, normalize: bool = True
+    ) -> List[SearchResult]:
+        """
+        Perform semantic search with Redis caching.
+        Falls back to direct Qdrant query if cache unavailable.
+
+        Args:
+            query: Search query text
+            limit: Number of results to return
+            normalize: If True, expand query with Turkish character variants
+
+        Returns:
+            List of SearchResult objects
+        """
+        # Try to get from cache
+        cached = await get_cached_search_results(self.COLLECTION_NAME, query, limit)
+        if cached:
+            # Reconstruct SearchResult objects from cached data
+            return [
+                SearchResult(
+                    id=r["id"],
+                    score=r["score"],
+                    surah_id=r["surah_id"],
+                    surah_name=r["surah_name"],
+                    surah_transliteration=r["surah_transliteration"],
+                    verse_id=r["verse_id"],
+                    arabic_text=r["arabic_text"],
+                    translation=r["translation"],
+                    surah_type=r["surah_type"],
+                    original_score=r["original_score"],
+                )
+                for r in cached
+            ]
+
+        # Cache miss: perform actual search
+        results = self.semantic_search(query, limit, normalize)
+
+        # Store in cache asynchronously (don't wait for it)
+        try:
+            await cache_search_results(self.COLLECTION_NAME, query, limit, results)
+        except Exception as e:
+            logger.warning(
+                "Failed to cache search results",
+                extra={"error": str(e), "collection": self.COLLECTION_NAME},
+            )
+
+        return results
 
 
 @dataclass
@@ -339,6 +482,54 @@ class BibleSearcher:
             limit: Number of results
         """
         return self.semantic_search(query, limit)
+
+    async def semantic_search_cached(
+        self, query: str, limit: int = 10
+    ) -> List[BibleSearchResult]:
+        """
+        Perform semantic search with Redis caching.
+        Falls back to direct Qdrant query if cache unavailable.
+
+        Args:
+            query: Search query text
+            limit: Number of results to return
+
+        Returns:
+            List of BibleSearchResult objects
+        """
+        # Try to get from cache
+        cached = await get_cached_search_results(self.collection_name, query, limit)
+        if cached:
+            # Reconstruct BibleSearchResult objects from cached data
+            return [
+                BibleSearchResult(
+                    id=r["id"],
+                    score=r["score"],
+                    translation=r["translation"],
+                    book_id=r["book_id"],
+                    book_name=r["book_name"],
+                    chapter=r["chapter"],
+                    verse=r["verse"],
+                    text=r["text"],
+                    testament=r["testament"],
+                    original_score=r["original_score"],
+                )
+                for r in cached
+            ]
+
+        # Cache miss: perform actual search
+        results = self.semantic_search(query, limit)
+
+        # Store in cache asynchronously (don't wait for it)
+        try:
+            await cache_search_results(self.collection_name, query, limit, results)
+        except Exception as e:
+            logger.warning(
+                "Failed to cache search results",
+                extra={"error": str(e), "collection": self.collection_name},
+            )
+
+        return results
 
 
 @dataclass

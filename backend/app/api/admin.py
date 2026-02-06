@@ -169,3 +169,41 @@ async def delete_user(
     await db.commit()
 
     return {"success": True, "message": "Kullanici silindi"}
+
+
+@router.post("/cache/flush")
+async def flush_search_cache(current_user: User = Depends(get_current_user)):
+    """
+    Flush all search result cache entries from Redis.
+    Requires admin access.
+
+    Returns:
+        Dictionary with success status and number of deleted keys
+    """
+    check_admin(current_user)
+
+    from app.redis_client import redis_manager
+
+    if redis_manager.client is None:
+        raise HTTPException(status_code=503, detail="Redis unavailable")
+
+    try:
+        # Delete all search:* keys using SCAN to avoid blocking
+        deleted = 0
+        cursor = 0
+        while True:
+            cursor, keys = await redis_manager.client.scan(
+                cursor=cursor, match="search:*", count=100
+            )
+            if keys:
+                deleted += len(keys)
+                await redis_manager.client.delete(*keys)
+            if cursor == 0:
+                break
+
+        return {"success": True, "deleted_keys": deleted}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to flush cache: {str(e)}",
+        )
