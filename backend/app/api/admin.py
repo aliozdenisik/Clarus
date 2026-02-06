@@ -9,14 +9,13 @@ import httpx
 from app.db import get_db
 from app.models import User, SearchHistory
 from app.auth.api_key_validator import get_current_user_flexible
+from app.config import settings
 
 router = APIRouter()
 
-ADMIN_EMAILS = ["admin@hollysearch.com", "test@example.com"]
-
 
 def check_admin(user: Dict[str, Any]):
-    if user["email"] not in ADMIN_EMAILS:
+    if user["email"] not in settings.admin_emails_list:
         raise HTTPException(status_code=403, detail="Admin access required")
     return True
 

@@ -249,6 +249,46 @@ async def add_user_id_to_state(request: Request, call_next):
     return response
 
 
+@app.middleware("http")
+async def csrf_protection(request: Request, call_next):
+    """
+    Basic CSRF protection: verify Origin header for state-changing requests.
+
+    Validates Origin against allowed CORS origins for POST/PUT/DELETE/PATCH requests.
+    Better Auth handles its own CSRF for /api/auth/* routes.
+    """
+    if request.method in ("POST", "PUT", "DELETE", "PATCH"):
+        origin = request.headers.get("origin")
+        # Only validate if Origin header is present (browser requests)
+        if origin:
+            # Normalize origin (remove trailing slash)
+            origin = origin.rstrip("/")
+            allowed_origins = [o.rstrip("/") for o in settings.cors_origins_list]
+
+            # Allow wildcard or check against whitelist
+            if "*" not in allowed_origins and origin not in allowed_origins:
+                logger.warning(
+                    "CSRF validation failed",
+                    extra={
+                        "origin": origin,
+                        "allowed_origins": allowed_origins,
+                        "path": request.url.path,
+                    },
+                )
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "success": False,
+                        "error": {
+                            "code": "CSRF_VALIDATION_FAILED",
+                            "message": "Origin not allowed",
+                            "details": [],
+                        },
+                    },
+                )
+    return await call_next(request)
+
+
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(enhance.router, prefix="/api/search", tags=["search"])

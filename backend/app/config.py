@@ -59,6 +59,16 @@ class Settings(BaseSettings):
     log_format: str = "console"  # "console" or "json"
     log_file: Optional[str] = None
 
+    # Admin Authorization
+    admin_emails: str = ""  # Comma-separated admin email addresses
+
+    @property
+    def admin_emails_list(self) -> list[str]:
+        """Parse comma-separated admin emails into list."""
+        if not self.admin_emails:
+            return []
+        return [e.strip() for e in self.admin_emails.split(",") if e.strip()]
+
     @property
     def cors_origins_list(self) -> list[str]:
         if self.cors_origins == "*":
