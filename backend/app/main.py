@@ -21,6 +21,7 @@ from app.api import (
 from app.db import init_db
 from app.middleware.error_handler import ErrorHandlerMiddleware
 from app.middleware.correlation import CorrelationIDMiddleware
+from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.logging_config import setup_logging, LoggingConfig, get_logger
 
 logger = get_logger(__name__)
@@ -183,7 +184,8 @@ app = FastAPI(
 )
 
 # Middleware order: Last added = first executed
-# Execution order: CorrelationIDMiddleware -> ErrorHandlerMiddleware -> CORSMiddleware -> route
+# Execution order: CorrelationIDMiddleware -> ErrorHandlerMiddleware -> SecurityHeadersMiddleware -> CORSMiddleware -> route
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(ErrorHandlerMiddleware)
 app.add_middleware(CorrelationIDMiddleware)
 
