@@ -2,27 +2,29 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from datetime import datetime, timedelta
+from typing import Dict, Any
 import platform
 import httpx
 
 from app.db import get_db
 from app.models import User, SearchHistory
-from app.api.auth import get_current_user
+from app.auth.api_key_validator import get_current_user_flexible
 
 router = APIRouter()
 
 ADMIN_EMAILS = ["admin@hollysearch.com", "test@example.com"]
 
 
-def check_admin(user: User):
-    if user.email not in ADMIN_EMAILS:
+def check_admin(user: Dict[str, Any]):
+    if user["email"] not in ADMIN_EMAILS:
         raise HTTPException(status_code=403, detail="Admin access required")
     return True
 
 
 @router.get("/stats")
 async def get_stats(
-    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
+    db: AsyncSession = Depends(get_db),
 ):
     check_admin(current_user)
 
@@ -64,7 +66,7 @@ async def get_stats(
 async def get_users(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
-    current_user: User = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
     check_admin(current_user)
@@ -114,7 +116,9 @@ async def get_users(
 
 
 @router.get("/system")
-async def get_system_info(current_user: User = Depends(get_current_user)):
+async def get_system_info(
+    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
+):
     check_admin(current_user)
 
     collections_count = 0
@@ -151,12 +155,12 @@ async def get_system_info(current_user: User = Depends(get_current_user)):
 @router.delete("/users/{user_id}")
 async def delete_user(
     user_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
     check_admin(current_user)
 
-    if user_id == current_user.id:
+    if user_id == current_user["id"]:
         raise HTTPException(status_code=400, detail="Kendi hesabinizi silemezsiniz")
 
     result = await db.execute(select(User).where(User.id == user_id))
@@ -172,7 +176,9 @@ async def delete_user(
 
 
 @router.post("/cache/flush")
-async def flush_search_cache(current_user: User = Depends(get_current_user)):
+async def flush_search_cache(
+    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
+):
     """
     Flush all search result cache entries from Redis.
     Requires admin access.

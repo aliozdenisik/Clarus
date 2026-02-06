@@ -29,8 +29,9 @@ sys.path.insert(
 from typing import Optional
 
 from app.db import get_db
-from app.models import User, SearchHistory
-from app.api.auth import get_current_user_from_token, check_rate_limit
+from app.models import SearchHistory
+from app.auth.api_key_validator import get_current_user_flexible
+from app.api.auth import check_rate_limit
 from app.api.compare_helpers import (
     build_verse_details,
     build_paragraphs,
@@ -44,6 +45,70 @@ from src.query_translator import QueryTranslator, TranslationError
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+
+async def get_current_user_from_sse_token(token: str, db: AsyncSession):
+    """
+    Validate JWT token from query parameter (for SSE endpoints).
+
+    SSE/EventSource cannot send custom headers, so token is passed as query param.
+    This helper validates Better Auth JWT and returns user dict.
+    """
+    from app.auth.jwks_validator import get_validator
+    from fastapi import HTTPException
+
+    try:
+        validator = get_validator()
+        payload = validator.validate_token(token)
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Token missing 'sub' claim")
+
+        # Fetch user from database
+        from app.models import BetterAuthUser, UserStats
+        from sqlalchemy import select
+        from datetime import datetime
+
+        result = await db.execute(
+            select(BetterAuthUser).where(BetterAuthUser.id == user_id)
+        )
+        user = result.scalar_one_or_none()
+
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+
+        # Ensure user_stats exists
+        stats_result = await db.execute(
+            select(UserStats).where(UserStats.user_id == user_id)
+        )
+        stats = stats_result.scalar_one_or_none()
+
+        if not stats:
+            stats = UserStats(
+                id=f"stats_{user_id}",
+                user_id=user_id,
+                query_count_today=0,
+                last_query_date=None,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+            db.add(stats)
+            await db.commit()
+
+        return {
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+            "email_verified": user.email_verified,
+            "image": user.image,
+            "created_at": user.created_at,
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=401,
+            detail=f"Invalid token: {str(e)}",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
 @router.get("/search")
@@ -63,12 +128,12 @@ async def stream_search(
 
     Note: SSE/EventSource API doesn't support custom headers, so token must be passed as query param.
     """
-    current_user = await get_current_user_from_token(token, db)
+    current_user = await get_current_user_from_sse_token(token, db)
     await check_rate_limit(current_user, db)
 
     # Save to history
     history = SearchHistory(
-        user_id=current_user.id,
+        user_id=current_user["id"],
         query=q,
         search_type=f"stream_search_{source}",
         result_count=None,
@@ -289,12 +354,12 @@ async def stream_compare(
             status_code=400,
             detail="At least 2 valid collections required for comparison",
         )
-    current_user = await get_current_user_from_token(token, db)
+    current_user = await get_current_user_from_sse_token(token, db)
     await check_rate_limit(current_user, db)
 
     # Save to history
     history = SearchHistory(
-        user_id=current_user.id,
+        user_id=current_user["id"],
         query=topic,
         search_type="stream_compare",
         result_count=None,

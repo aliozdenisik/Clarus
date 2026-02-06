@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict, Tuple, Any
 import sys
 import os
 import time as time_module
@@ -24,8 +24,9 @@ sys.path.insert(
 )
 
 from app.db import get_db
-from app.models import User, SearchHistory
-from app.api.auth import get_current_user, check_rate_limit
+from app.models import SearchHistory
+from app.auth.api_key_validator import get_current_user_flexible
+from app.api.auth import check_rate_limit
 from src.comparative_rag import ComparativeRAG
 from src.search import SearchResult, BibleSearchResult
 from src.citation_sanitizer import sanitize_citations
@@ -174,7 +175,7 @@ def extract_bible_verse_detail(
 @router.post("/", response_model=CompareResponse)
 async def compare_scriptures(
     request: CompareRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -193,7 +194,7 @@ async def compare_scriptures(
         extra={
             "topic": request.topic[:50],
             "use_multi_agent": request.use_multi_agent,
-            "user_id": current_user.id,
+            "user_id": current_user["id"],
         },
     )
 
@@ -344,7 +345,7 @@ async def compare_scriptures(
 
         # Save to history
         history = SearchHistory(
-            user_id=current_user.id,
+            user_id=current_user["id"],
             query=request.topic,
             search_type="compare_multi_agent",
             result_count=total_verses if total_verses else 0,
@@ -442,7 +443,7 @@ async def compare_scriptures(
 
         # Save to history
         history = SearchHistory(
-            user_id=current_user.id,
+            user_id=current_user["id"],
             query=request.topic,
             search_type="compare",
             result_count=total_citations_count,

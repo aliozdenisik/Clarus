@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from pydantic import BaseModel, Field
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 import sys
 import os
 import time
@@ -22,8 +22,9 @@ sys.path.insert(
 )
 
 from app.db import get_db
-from app.models import User, SearchHistory
-from app.api.auth import get_current_user, check_rate_limit
+from app.models import SearchHistory
+from app.auth.api_key_validator import get_current_user_flexible
+from app.api.auth import check_rate_limit
 from app.config import settings
 from app.schemas.common import QueryValidation
 from src.ultimate_rag import UltimateRAG
@@ -108,7 +109,7 @@ def _validate_query(query: str) -> str:
 @router.post("/quran", response_model=SearchResponse)
 async def search_quran(
     request: SearchRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
     start = time.perf_counter()
@@ -118,7 +119,7 @@ async def search_quran(
             "query": request.query[:50],
             "collection": "quran_tr",
             "top_k": request.top_k,
-            "user_id": current_user.id,
+            "user_id": current_user["id"],
         },
     )
 
@@ -137,7 +138,7 @@ async def search_quran(
             verse_details[ref] = detail
 
     history = SearchHistory(
-        user_id=current_user.id,
+        user_id=current_user["id"],
         query=validated_query,
         search_type="search_quran",
         result_count=len(results) if results else 0,
@@ -174,7 +175,7 @@ async def search_quran(
 async def search_bible(
     request: SearchRequest,
     testament: Optional[str] = Query(None, pattern="^(ot|nt|apocrypha)$"),
-    current_user: User = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
     start = time.perf_counter()
@@ -185,7 +186,7 @@ async def search_bible(
             "query": request.query[:50],
             "collection": collection,
             "top_k": request.top_k,
-            "user_id": current_user.id,
+            "user_id": current_user["id"],
         },
     )
 
@@ -223,7 +224,7 @@ async def search_bible(
             verse_details[ref] = detail
 
     history = SearchHistory(
-        user_id=current_user.id,
+        user_id=current_user["id"],
         query=validated_query,
         search_type=f"search_bible_{testament or 'all'}",
         result_count=len(results) if results else 0,
@@ -261,17 +262,19 @@ async def get_search_history(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
     search_type: Optional[str] = Query(None),
-    current_user: User = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
-    base_query = select(SearchHistory).where(SearchHistory.user_id == current_user.id)
+    base_query = select(SearchHistory).where(
+        SearchHistory.user_id == current_user["id"]
+    )
 
     if search_type:
         base_query = base_query.where(SearchHistory.search_type.contains(search_type))
 
     total_result = await db.execute(
         select(func.count(SearchHistory.id)).where(
-            SearchHistory.user_id == current_user.id
+            SearchHistory.user_id == current_user["id"]
         )
     )
     total_items = total_result.scalar() or 0
@@ -312,13 +315,13 @@ async def get_search_history(
 @router.delete("/history/{history_id}")
 async def delete_history_item(
     history_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
         select(SearchHistory)
         .where(SearchHistory.id == history_id)
-        .where(SearchHistory.user_id == current_user.id)
+        .where(SearchHistory.user_id == current_user["id"])
     )
     history_item = result.scalar_one_or_none()
 
@@ -333,12 +336,13 @@ async def delete_history_item(
 
 @router.delete("/history")
 async def clear_history(
-    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
+    db: AsyncSession = Depends(get_db),
 ):
     from sqlalchemy import delete
 
     await db.execute(
-        delete(SearchHistory).where(SearchHistory.user_id == current_user.id)
+        delete(SearchHistory).where(SearchHistory.user_id == current_user["id"])
     )
     await db.commit()
 

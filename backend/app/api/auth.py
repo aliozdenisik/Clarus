@@ -23,7 +23,8 @@ from app.auth.schemas import (
     UserResponse,
     GoogleAuthRequest,
 )
-from app.auth.jwks_validator import get_current_user_from_jwt
+from app.auth.jwks_validator import get_current_user_from_jwt, get_validator
+from app.auth.api_key_validator import get_current_user_flexible
 from app.middleware.rate_limit import get_user_rate_limit_info
 
 
@@ -114,24 +115,53 @@ async def get_current_user_from_token(token: str, db: AsyncSession) -> User:
     return user
 
 
-async def check_rate_limit(user: User, db: AsyncSession) -> None:
+async def check_rate_limit(user: dict, db: AsyncSession) -> None:
+    """
+    Check rate limit for user (works with dict from get_current_user_flexible).
+    Queries UserStats table for Better Auth users.
+    """
     if not settings.rate_limit_enabled:
         return
 
+    user_id = user["id"]  # Extract user ID from dict
     now = datetime.utcnow()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    if user.last_query_date is None or user.last_query_date < today_start:
-        user.query_count_today = 0
-        user.last_query_date = now
+    # Query UserStats for this user
+    from app.models import UserStats
 
-    if user.query_count_today >= settings.rate_limit_per_day:
+    result = await db.execute(select(UserStats).where(UserStats.user_id == user_id))
+    stats = result.scalar_one_or_none()
+
+    if not stats:
+        # Create UserStats if it doesn't exist (should have been created by get_current_user_flexible)
+        stats = UserStats(
+            id=f"stats_{user_id}",
+            user_id=user_id,
+            query_count_today=0,
+            last_query_date=None,
+            created_at=now,
+            updated_at=now,
+        )
+        db.add(stats)
+        await db.commit()
+        await db.refresh(stats)
+
+    # Reset count if new day
+    if stats.last_query_date is None or stats.last_query_date < today_start:
+        stats.query_count_today = 0
+        stats.last_query_date = now
+
+    # Check limit
+    if stats.query_count_today >= settings.rate_limit_per_day:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=f"Gunluk sorgu limitine ulastiniz ({settings.rate_limit_per_day}/gun)",
         )
 
-    user.query_count_today += 1
+    # Increment count
+    stats.query_count_today += 1
+    stats.updated_at = now
     await db.commit()
 
 
@@ -272,9 +302,17 @@ async def google_auth(auth_data: GoogleAuthRequest, db: AsyncSession = Depends(g
     )
 
 
-@router.get("/me", response_model=UserResponse)
-async def get_me(current_user: User = Depends(get_current_user)):
-    return UserResponse.model_validate(current_user)
+@router.get("/me")
+async def get_me(current_user: dict = Depends(get_current_user_flexible)):
+    """Get current user info (from Better Auth JWT or API key)."""
+    return {
+        "id": current_user["id"],
+        "email": current_user["email"],
+        "name": current_user.get("name"),
+        "email_verified": current_user.get("email_verified", False),
+        "image": current_user.get("image"),
+        "created_at": current_user.get("created_at"),
+    }
 
 
 @router.post("/refresh", response_model=TokenResponse)
@@ -309,30 +347,40 @@ async def refresh_token(
 @router.post("/logout")
 async def logout(
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
+    """
+    Logout (revoke JWT token).
+    Note: Better Auth sessions are managed by the auth server, not here.
+    We only revoke the JWT token in our blacklist.
+    """
     # Revoke the JWT token
     auth_header = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
         token = auth_header[7:]
-        payload = decode_access_token(token)
-        if payload and "exp" in payload:
-            from datetime import datetime
-            from app.auth.token_blacklist import revoke_token
+        # Validate Better Auth JWT and extract exp
+        try:
+            validator = get_validator()
+            payload = validator.validate_token(token)
+            if payload and "exp" in payload:
+                from datetime import datetime
+                from app.auth.token_blacklist import revoke_token
 
-            expires_at = datetime.utcfromtimestamp(payload["exp"])
-            await revoke_token(token, expires_at)
+                expires_at = datetime.utcfromtimestamp(payload["exp"])
+                await revoke_token(token, expires_at)
+        except Exception:
+            pass  # Token already invalid or expired
 
-    # Clear refresh token
-    current_user.refresh_token = None
-    await db.commit()
     return {"success": True, "message": "Cikis yapildi"}
 
 
 @router.get("/rate-limit")
-async def get_rate_limit_status(current_user: User = Depends(get_current_user)):
-    rate_info = await get_user_rate_limit_info(current_user.id)
+async def get_rate_limit_status(
+    current_user: dict = Depends(get_current_user_flexible),
+):
+    """Get current user's rate limit status."""
+    rate_info = await get_user_rate_limit_info(current_user["id"])
     return {"success": True, "data": rate_info}
 
 
