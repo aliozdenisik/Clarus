@@ -22,6 +22,7 @@ export function AuthUIProvider({ children }: { children: React.ReactNode }) {
   return (
     <BetterAuthUIProvider
       authClient={authClient}
+      basePath="/"
       navigate={router.push}
       replace={router.replace}
       onSessionChange={() => {
