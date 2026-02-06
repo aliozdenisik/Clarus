@@ -14,12 +14,12 @@ vi.mock("next/navigation", () => ({
   useSearchParams: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/auth-context", () => ({
-  useAuth: () => ({
-    user: { name: "Test User", email: "test@example.com" },
-    isLoading: false,
-    logout: vi.fn(),
-  }),
+vi.mock("@/lib/auth-client", () => ({
+  useSession: () => ({ data: { user: { id: '1', name: 'Test User', email: 'test@example.com' } }, isPending: false }),
+  signIn: { email: vi.fn(), social: vi.fn() },
+  signUp: { email: vi.fn() },
+  signOut: vi.fn(),
+  authClient: { token: vi.fn() },
 }));
 
 const mockStartStream = vi.fn();

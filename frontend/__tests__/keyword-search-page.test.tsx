@@ -9,13 +9,16 @@ vi.mock("next/navigation", () => ({
   useSearchParams: vi.fn(() => new URLSearchParams()),
 }));
 
-// Mock auth
-vi.mock("@/lib/auth/auth-context", () => ({
-  useAuth: vi.fn(() => ({
-    user: { name: "Test User", email: "test@example.com" },
-    isLoading: false,
-    logout: vi.fn(),
+// Mock Better Auth
+vi.mock("@/lib/auth-client", () => ({
+  useSession: vi.fn(() => ({
+    data: { user: { id: '1', name: "Test User", email: "test@example.com" } },
+    isPending: false,
   })),
+  signIn: { email: vi.fn(), social: vi.fn() },
+  signUp: { email: vi.fn() },
+  signOut: vi.fn(),
+  authClient: { token: vi.fn() },
 }));
 
 // Mock sonner toast
@@ -93,7 +96,6 @@ vi.mock("@/lib/api/sdk.gen", () => ({
 }));
 
 import KeywordSearchPage from "@/app/keyword-search/page";
-import { useAuth } from "@/lib/auth/auth-context";
 import { toast } from "sonner";
 
 // ── Test Data Fixtures ──────────────────────────────────────────────────────

@@ -2,15 +2,18 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import SearchPage from "../app/search/page";
-import { useAuth } from "@/lib/auth/auth-context";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSSE } from "@/lib/hooks/use-sse";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { toast } from "sonner";
 
-// Mock hooks
-vi.mock("@/lib/auth/auth-context", () => ({
-  useAuth: vi.fn(),
+// Mock Better Auth
+vi.mock("@/lib/auth-client", () => ({
+  useSession: vi.fn(),
+  signIn: { email: vi.fn(), social: vi.fn() },
+  signUp: { email: vi.fn() },
+  signOut: vi.fn(),
+  authClient: { token: vi.fn() },
 }));
 
 vi.mock("next/navigation", () => ({
@@ -55,19 +58,19 @@ vi.mock("lucide-react", () => ({
 // Mock fetch
 global.fetch = vi.fn();
 
+import { useSession } from "@/lib/auth-client";
+
 describe("SearchPage", () => {
   const mockPush = vi.fn();
-  const mockLogout = vi.fn();
   const mockStartStream = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     
-    // Default auth state
-    vi.mocked(useAuth).mockReturnValue({
-      user: { name: "Test User", email: "test@example.com" },
-      isLoading: false,
-      logout: mockLogout,
+    // Default auth state (Better Auth)
+    vi.mocked(useSession).mockReturnValue({
+      data: { user: { id: "1", name: "Test User", email: "test@example.com" } },
+      isPending: false,
     } as any);
 
     // Default router state
@@ -203,17 +206,16 @@ describe("SearchPage", () => {
     expect(screen.getByPlaceholderText("Search Old Testament...")).toBeInTheDocument();
   });
 
-  it("redirects to login if not authenticated", () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: null,
-      isLoading: false,
-      logout: mockLogout,
+  it("redirects to sign-in if not authenticated", () => {
+    vi.mocked(useSession).mockReturnValue({
+      data: null,
+      isPending: false,
     } as any);
 
     render(<SearchPage />);
     
     // The redirect is in a useEffect, so we might need to wait for it
-    expect(mockPush).toHaveBeenCalledWith("/login");
+    expect(mockPush).toHaveBeenCalledWith("/sign-in");
   });
 
    
