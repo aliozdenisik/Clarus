@@ -1,0 +1,2330 @@
+{
+  "api_tests": {
+    "summary": {
+      "total": 53,
+      "passed": 52,
+      "failed": 1,
+      "success_rate": 0.9811320754716981,
+      "avg_time_ms": 13.0041500307479
+    },
+    "by_category": {
+      "quran_single": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0
+      },
+      "quran_range": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0
+      },
+      "quran_multiple": {
+        "total": 3,
+        "passed": 3,
+        "failed": 0
+      },
+      "quran_error": {
+        "total": 10,
+        "passed": 10,
+        "failed": 0
+      },
+      "bible_single": {
+        "total": 7,
+        "passed": 7,
+        "failed": 0
+      },
+      "bible_range": {
+        "total": 3,
+        "passed": 3,
+        "failed": 0
+      },
+      "bible_error": {
+        "total": 6,
+        "passed": 5,
+        "failed": 1
+      },
+      "edge_case": {
+        "total": 12,
+        "passed": 12,
+        "failed": 0
+      }
+    },
+    "details": [
+      {
+        "id": "Q-SINGLE-01",
+        "category": "quran_single",
+        "input": "Bakara 183",
+        "expected": {
+          "source": "quran",
+          "surah_id": 2,
+          "verses": [
+            183
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "2:183",
+              "text": "Ey İnananlar! Oruç, sizden öncekilere farz kılındığı gibi, Allah'a karşı gelmekten sakınasınız diye, size sayılı günlerde farz kılındı. İçinizden hasta olan veya yolculukta bulunan, tutamadığı günlerin sayısınca diğer günlerde tutar. Oruca dayanamıyanlar, bir düşkünü doyuracak kadar fidye verir. Kim gönülden iyilik yaparsa o iyilik kendisinedir. Oruç tutmanız eğer bilirseniz sizin için hayırlıdır",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 183,
+              "arabic_text": "يَـٰٓأَيُّهَا ٱلَّذِينَ ءَامَنُواْ كُتِبَ عَلَيۡكُمُ ٱلصِّيَامُ كَمَا كُتِبَ عَلَى ٱلَّذِينَ مِن قَبۡلِكُمۡ لَعَلَّكُمۡ تَتَّقُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "Bakara 183",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 12.470722198486328
+      },
+      {
+        "id": "Q-SINGLE-02",
+        "category": "quran_single",
+        "input": "2:183",
+        "expected": {
+          "source": "quran",
+          "surah_id": 2,
+          "verses": [
+            183
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "2:183",
+              "text": "Ey İnananlar! Oruç, sizden öncekilere farz kılındığı gibi, Allah'a karşı gelmekten sakınasınız diye, size sayılı günlerde farz kılındı. İçinizden hasta olan veya yolculukta bulunan, tutamadığı günlerin sayısınca diğer günlerde tutar. Oruca dayanamıyanlar, bir düşkünü doyuracak kadar fidye verir. Kim gönülden iyilik yaparsa o iyilik kendisinedir. Oruç tutmanız eğer bilirseniz sizin için hayırlıdır",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 183,
+              "arabic_text": "يَـٰٓأَيُّهَا ٱلَّذِينَ ءَامَنُواْ كُتِبَ عَلَيۡكُمُ ٱلصِّيَامُ كَمَا كُتِبَ عَلَى ٱلَّذِينَ مِن قَبۡلِكُمۡ لَعَلَّكُمۡ تَتَّقُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "2:183",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 6.960153579711914
+      },
+      {
+        "id": "Q-SINGLE-03",
+        "category": "quran_single",
+        "input": "Fatiha 1",
+        "expected": {
+          "source": "quran",
+          "surah_id": 1,
+          "verses": [
+            1
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "1:1",
+              "text": "Rahman ve Rahim olan Allah'ın adıyla",
+              "source": "quran",
+              "surah_id": 1,
+              "surah_name": "Fâtiha",
+              "verse_id": 1,
+              "arabic_text": "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "Fatiha 1",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 6.648540496826172
+      },
+      {
+        "id": "Q-SINGLE-04",
+        "category": "quran_single",
+        "input": "1:7",
+        "expected": {
+          "source": "quran",
+          "surah_id": 1,
+          "verses": [
+            7
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "1:7",
+              "text": "Nimete erdirdiğin kimselerin yoluna; gazaba uğrayanların, ya da sapıtanların yoluna değil",
+              "source": "quran",
+              "surah_id": 1,
+              "surah_name": "Fâtiha",
+              "verse_id": 7,
+              "arabic_text": "صِرَٰطَ ٱلَّذِينَ أَنۡعَمۡتَ عَلَيۡهِمۡ غَيۡرِ ٱلۡمَغۡضُوبِ عَلَيۡهِمۡ وَلَا ٱلضَّآلِّينَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "1:7",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 7.2841644287109375
+      },
+      {
+        "id": "Q-SINGLE-05",
+        "category": "quran_single",
+        "input": "Nas 1",
+        "expected": {
+          "source": "quran",
+          "surah_id": 114,
+          "verses": [
+            1
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "114:1",
+              "text": "De ki: \"İnsanlardan ve cinlerden ve insanların gönüllerine vesvese veren o sinsi vesvesecinin şerrinden, insanların Tanrısı, insanların Hükümranı ve insanların Rabbi olan Allah'a sığınırım",
+              "source": "quran",
+              "surah_id": 114,
+              "surah_name": "Nâs",
+              "verse_id": 1,
+              "arabic_text": "قُلۡ أَعُوذُ بِرَبِّ ٱلنَّاسِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "Nas 1",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 7.434368133544922
+      },
+      {
+        "id": "Q-SINGLE-06",
+        "category": "quran_single",
+        "input": "114:6",
+        "expected": {
+          "source": "quran",
+          "surah_id": 114,
+          "verses": [
+            6
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "114:6",
+              "text": "De ki: \"İnsanlardan ve cinlerden ve insanların gönüllerine vesvese veren o sinsi vesvesecinin şerrinden, insanların Tanrısı, insanların Hükümranı ve insanların Rabbi olan Allah'a sığınırım",
+              "source": "quran",
+              "surah_id": 114,
+              "surah_name": "Nâs",
+              "verse_id": 6,
+              "arabic_text": "مِنَ ٱلۡجِنَّةِ وَٱلنَّاسِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "114:6",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 7.3604583740234375
+      },
+      {
+        "id": "Q-RANGE-01",
+        "category": "quran_range",
+        "input": "2:183-185",
+        "expected": {
+          "source": "quran",
+          "surah_id": 2,
+          "verses": [
+            183,
+            184,
+            185
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "2:183",
+              "text": "Ey İnananlar! Oruç, sizden öncekilere farz kılındığı gibi, Allah'a karşı gelmekten sakınasınız diye, size sayılı günlerde farz kılındı. İçinizden hasta olan veya yolculukta bulunan, tutamadığı günlerin sayısınca diğer günlerde tutar. Oruca dayanamıyanlar, bir düşkünü doyuracak kadar fidye verir. Kim gönülden iyilik yaparsa o iyilik kendisinedir. Oruç tutmanız eğer bilirseniz sizin için hayırlıdır",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 183,
+              "arabic_text": "يَـٰٓأَيُّهَا ٱلَّذِينَ ءَامَنُواْ كُتِبَ عَلَيۡكُمُ ٱلصِّيَامُ كَمَا كُتِبَ عَلَى ٱلَّذِينَ مِن قَبۡلِكُمۡ لَعَلَّكُمۡ تَتَّقُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "2:184",
+              "text": "Ey İnananlar! Oruç, sizden öncekilere farz kılındığı gibi, Allah'a karşı gelmekten sakınasınız diye, size sayılı günlerde farz kılındı. İçinizden hasta olan veya yolculukta bulunan, tutamadığı günlerin sayısınca diğer günlerde tutar. Oruca dayanamıyanlar, bir düşkünü doyuracak kadar fidye verir. Kim gönülden iyilik yaparsa o iyilik kendisinedir. Oruç tutmanız eğer bilirseniz sizin için hayırlıdır",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 184,
+              "arabic_text": "أَيَّامٗا مَّعۡدُودَٰتٖۚ فَمَن كَانَ مِنكُم مَّرِيضًا أَوۡ عَلَىٰ سَفَرٖ فَعِدَّةٞ مِّنۡ أَيَّامٍ أُخَرَۚ وَعَلَى ٱلَّذِينَ يُطِيقُونَهُۥ فِدۡيَةٞ طَعَامُ مِسۡكِينٖۖ فَمَن تَطَوَّعَ خَيۡرٗا فَهُوَ خَيۡرٞ لَّهُۥۚ وَأَن تَصُومُواْ خَيۡرٞ لَّكُمۡ إِن كُنتُمۡ تَعۡلَمُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "2:185",
+              "text": "Ramazan ayı, ki onda Kuran, insanlara yol gösterici ve doğruyu yanlıştan ayırıcı belgeler olarak indirildi. Sizden bu ayı idrak eden, onda oruç tutsun; hasta veya yolculukta olan, tutamadığı günlerin sayısınca diğer günlerde tutsun. Allah size kolaylık ister, zorluk istemez. Bu kolaylıkları, sayıyı tamamlamanız ve size yol gösterdiğine karşılık O'nu ululamanız için meşru kılmıştır; ola ki şükredersiniz",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 185,
+              "arabic_text": "شَهۡرُ رَمَضَانَ ٱلَّذِيٓ أُنزِلَ فِيهِ ٱلۡقُرۡءَانُ هُدٗى لِّلنَّاسِ وَبَيِّنَٰتٖ مِّنَ ٱلۡهُدَىٰ وَٱلۡفُرۡقَانِۚ فَمَن شَهِدَ مِنكُمُ ٱلشَّهۡرَ فَلۡيَصُمۡهُۖ وَمَن كَانَ مَرِيضًا أَوۡ عَلَىٰ سَفَرٖ فَعِدَّةٞ مِّنۡ أَيَّامٍ أُخَرَۗ يُرِيدُ ٱللَّهُ بِكُمُ ٱلۡيُسۡرَ وَلَا يُرِيدُ بِكُمُ ٱلۡعُسۡرَ وَلِتُكۡمِلُواْ ٱلۡعِدَّةَ وَلِتُكَبِّرُواْ ٱللَّهَ عَلَىٰ مَا هَدَىٰكُمۡ وَلَعَلَّكُمۡ تَشۡكُرُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "2:183-185",
+          "count": 3
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 13.877391815185547
+      },
+      {
+        "id": "Q-RANGE-02",
+        "category": "quran_range",
+        "input": "Bakara 1-7",
+        "expected": {
+          "source": "quran",
+          "surah_id": 2,
+          "verses": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "2:1",
+              "text": "Elif, Lam, Mim",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 1,
+              "arabic_text": "الٓمٓ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "2:2",
+              "text": "Bu, doğruluğu şüphe götürmeyen ve Allah'a karşı gelmekten sakınanlara yol gösteren Kitap'dır",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 2,
+              "arabic_text": "ذَٰلِكَ ٱلۡكِتَٰبُ لَا رَيۡبَۛ فِيهِۛ هُدٗى لِّلۡمُتَّقِينَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "2:3",
+              "text": "Onlar, gaybe inanırlar, namazı kılarlar, kendilerine verdiğimiz rızıktan yerli yerince sarfederler",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 3,
+              "arabic_text": "ٱلَّذِينَ يُؤۡمِنُونَ بِٱلۡغَيۡبِ وَيُقِيمُونَ ٱلصَّلَوٰةَ وَمِمَّا رَزَقۡنَٰهُمۡ يُنفِقُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "2:4",
+              "text": "Onlar, sana indirilen Kitap'a da, senden önce indirilenlere de inanırlar; ahirete de yalnız onlar kesinlikle inanırlar",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 4,
+              "arabic_text": "وَٱلَّذِينَ يُؤۡمِنُونَ بِمَآ أُنزِلَ إِلَيۡكَ وَمَآ أُنزِلَ مِن قَبۡلِكَ وَبِٱلۡأٓخِرَةِ هُمۡ يُوقِنُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "2:5",
+              "text": "İşte Rab'lerinin yolunda olanlar ve saadete erişenler bunlardır",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 5,
+              "arabic_text": "أُوْلَـٰٓئِكَ عَلَىٰ هُدٗى مِّن رَّبِّهِمۡۖ وَأُوْلَـٰٓئِكَ هُمُ ٱلۡمُفۡلِحُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "2:6",
+              "text": "Şüphe yok ki, inkar edenleri, başlarına gelecekle uyarsan da uyarmasan da birdir, inanmazlar",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 6,
+              "arabic_text": "إِنَّ ٱلَّذِينَ كَفَرُواْ سَوَآءٌ عَلَيۡهِمۡ ءَأَنذَرۡتَهُمۡ أَمۡ لَمۡ تُنذِرۡهُمۡ لَا يُؤۡمِنُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "2:7",
+              "text": "Allah onların kalblerini ve kulaklarını mühürlemiştir, gözlerinde de perde vardır ve büyük azab onlar içindir",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 7,
+              "arabic_text": "خَتَمَ ٱللَّهُ عَلَىٰ قُلُوبِهِمۡ وَعَلَىٰ سَمۡعِهِمۡۖ وَعَلَىٰٓ أَبۡصَٰرِهِمۡ غِشَٰوَةٞۖ وَلَهُمۡ عَذَابٌ عَظِيمٞ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "Bakara 1-7",
+          "count": 7
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 26.68285369873047
+      },
+      {
+        "id": "Q-RANGE-03",
+        "category": "quran_range",
+        "input": "1:1-7",
+        "expected": {
+          "source": "quran",
+          "surah_id": 1,
+          "verses": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "1:1",
+              "text": "Rahman ve Rahim olan Allah'ın adıyla",
+              "source": "quran",
+              "surah_id": 1,
+              "surah_name": "Fâtiha",
+              "verse_id": 1,
+              "arabic_text": "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "1:2",
+              "text": "Hamd, Alemlerin Rabbi Allah'a mahsustur",
+              "source": "quran",
+              "surah_id": 1,
+              "surah_name": "Fâtiha",
+              "verse_id": 2,
+              "arabic_text": "ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَٰلَمِينَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "1:3",
+              "text": "O Rahman ve Rahim'dir",
+              "source": "quran",
+              "surah_id": 1,
+              "surah_name": "Fâtiha",
+              "verse_id": 3,
+              "arabic_text": "ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "1:4",
+              "text": "Din Gününün sahibidir",
+              "source": "quran",
+              "surah_id": 1,
+              "surah_name": "Fâtiha",
+              "verse_id": 4,
+              "arabic_text": "مَٰلِكِ يَوۡمِ ٱلدِّينِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "1:5",
+              "text": "Ancak Sana kulluk eder ve yalnız Senden yardım dileriz",
+              "source": "quran",
+              "surah_id": 1,
+              "surah_name": "Fâtiha",
+              "verse_id": 5,
+              "arabic_text": "إِيَّاكَ نَعۡبُدُ وَإِيَّاكَ نَسۡتَعِينُ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "1:6",
+              "text": "Bizi doğru yola eriştir",
+              "source": "quran",
+              "surah_id": 1,
+              "surah_name": "Fâtiha",
+              "verse_id": 6,
+              "arabic_text": "ٱهۡدِنَا ٱلصِّرَٰطَ ٱلۡمُسۡتَقِيمَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "1:7",
+              "text": "Nimete erdirdiğin kimselerin yoluna; gazaba uğrayanların, ya da sapıtanların yoluna değil",
+              "source": "quran",
+              "surah_id": 1,
+              "surah_name": "Fâtiha",
+              "verse_id": 7,
+              "arabic_text": "صِرَٰطَ ٱلَّذِينَ أَنۡعَمۡتَ عَلَيۡهِمۡ غَيۡرِ ٱلۡمَغۡضُوبِ عَلَيۡهِمۡ وَلَا ٱلضَّآلِّينَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "1:1-7",
+          "count": 7
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 30.225038528442383
+      },
+      {
+        "id": "Q-RANGE-04",
+        "category": "quran_range",
+        "input": "114:1-6",
+        "expected": {
+          "source": "quran",
+          "surah_id": 114,
+          "verses": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "114:1",
+              "text": "De ki: \"İnsanlardan ve cinlerden ve insanların gönüllerine vesvese veren o sinsi vesvesecinin şerrinden, insanların Tanrısı, insanların Hükümranı ve insanların Rabbi olan Allah'a sığınırım",
+              "source": "quran",
+              "surah_id": 114,
+              "surah_name": "Nâs",
+              "verse_id": 1,
+              "arabic_text": "قُلۡ أَعُوذُ بِرَبِّ ٱلنَّاسِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "114:2",
+              "text": "De ki: \"İnsanlardan ve cinlerden ve insanların gönüllerine vesvese veren o sinsi vesvesecinin şerrinden, insanların Tanrısı, insanların Hükümranı ve insanların Rabbi olan Allah'a sığınırım",
+              "source": "quran",
+              "surah_id": 114,
+              "surah_name": "Nâs",
+              "verse_id": 2,
+              "arabic_text": "مَلِكِ ٱلنَّاسِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "114:3",
+              "text": "De ki: \"İnsanlardan ve cinlerden ve insanların gönüllerine vesvese veren o sinsi vesvesecinin şerrinden, insanların Tanrısı, insanların Hükümranı ve insanların Rabbi olan Allah'a sığınırım",
+              "source": "quran",
+              "surah_id": 114,
+              "surah_name": "Nâs",
+              "verse_id": 3,
+              "arabic_text": "إِلَٰهِ ٱلنَّاسِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "114:4",
+              "text": "De ki: \"İnsanlardan ve cinlerden ve insanların gönüllerine vesvese veren o sinsi vesvesecinin şerrinden, insanların Tanrısı, insanların Hükümranı ve insanların Rabbi olan Allah'a sığınırım",
+              "source": "quran",
+              "surah_id": 114,
+              "surah_name": "Nâs",
+              "verse_id": 4,
+              "arabic_text": "مِن شَرِّ ٱلۡوَسۡوَاسِ ٱلۡخَنَّاسِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "114:5",
+              "text": "De ki: \"İnsanlardan ve cinlerden ve insanların gönüllerine vesvese veren o sinsi vesvesecinin şerrinden, insanların Tanrısı, insanların Hükümranı ve insanların Rabbi olan Allah'a sığınırım",
+              "source": "quran",
+              "surah_id": 114,
+              "surah_name": "Nâs",
+              "verse_id": 5,
+              "arabic_text": "ٱلَّذِي يُوَسۡوِسُ فِي صُدُورِ ٱلنَّاسِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "114:6",
+              "text": "De ki: \"İnsanlardan ve cinlerden ve insanların gönüllerine vesvese veren o sinsi vesvesecinin şerrinden, insanların Tanrısı, insanların Hükümranı ve insanların Rabbi olan Allah'a sığınırım",
+              "source": "quran",
+              "surah_id": 114,
+              "surah_name": "Nâs",
+              "verse_id": 6,
+              "arabic_text": "مِنَ ٱلۡجِنَّةِ وَٱلنَّاسِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "114:1-6",
+          "count": 6
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 23.164987564086914
+      },
+      {
+        "id": "Q-MULTI-01",
+        "category": "quran_multiple",
+        "input": "2:183,185,190",
+        "expected": {
+          "source": "quran",
+          "surah_id": 2,
+          "verses": [
+            183,
+            185,
+            190
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "2:183",
+              "text": "Ey İnananlar! Oruç, sizden öncekilere farz kılındığı gibi, Allah'a karşı gelmekten sakınasınız diye, size sayılı günlerde farz kılındı. İçinizden hasta olan veya yolculukta bulunan, tutamadığı günlerin sayısınca diğer günlerde tutar. Oruca dayanamıyanlar, bir düşkünü doyuracak kadar fidye verir. Kim gönülden iyilik yaparsa o iyilik kendisinedir. Oruç tutmanız eğer bilirseniz sizin için hayırlıdır",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 183,
+              "arabic_text": "يَـٰٓأَيُّهَا ٱلَّذِينَ ءَامَنُواْ كُتِبَ عَلَيۡكُمُ ٱلصِّيَامُ كَمَا كُتِبَ عَلَى ٱلَّذِينَ مِن قَبۡلِكُمۡ لَعَلَّكُمۡ تَتَّقُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "2:185",
+              "text": "Ramazan ayı, ki onda Kuran, insanlara yol gösterici ve doğruyu yanlıştan ayırıcı belgeler olarak indirildi. Sizden bu ayı idrak eden, onda oruç tutsun; hasta veya yolculukta olan, tutamadığı günlerin sayısınca diğer günlerde tutsun. Allah size kolaylık ister, zorluk istemez. Bu kolaylıkları, sayıyı tamamlamanız ve size yol gösterdiğine karşılık O'nu ululamanız için meşru kılmıştır; ola ki şükredersiniz",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 185,
+              "arabic_text": "شَهۡرُ رَمَضَانَ ٱلَّذِيٓ أُنزِلَ فِيهِ ٱلۡقُرۡءَانُ هُدٗى لِّلنَّاسِ وَبَيِّنَٰتٖ مِّنَ ٱلۡهُدَىٰ وَٱلۡفُرۡقَانِۚ فَمَن شَهِدَ مِنكُمُ ٱلشَّهۡرَ فَلۡيَصُمۡهُۖ وَمَن كَانَ مَرِيضًا أَوۡ عَلَىٰ سَفَرٖ فَعِدَّةٞ مِّنۡ أَيَّامٍ أُخَرَۗ يُرِيدُ ٱللَّهُ بِكُمُ ٱلۡيُسۡرَ وَلَا يُرِيدُ بِكُمُ ٱلۡعُسۡرَ وَلِتُكۡمِلُواْ ٱلۡعِدَّةَ وَلِتُكَبِّرُواْ ٱللَّهَ عَلَىٰ مَا هَدَىٰكُمۡ وَلَعَلَّكُمۡ تَشۡكُرُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "2:190",
+              "text": "Sizinle savaşanlarla Allah yolunda savaşın, aşırı gitmeyin; doğrusu Allah aşırı gidenleri sevmez",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 190,
+              "arabic_text": "وَقَٰتِلُواْ فِي سَبِيلِ ٱللَّهِ ٱلَّذِينَ يُقَٰتِلُونَكُمۡ وَلَا تَعۡتَدُوٓاْۚ إِنَّ ٱللَّهَ لَا يُحِبُّ ٱلۡمُعۡتَدِينَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "2:183,185,190",
+          "count": 3
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 15.207767486572266
+      },
+      {
+        "id": "Q-MULTI-02",
+        "category": "quran_multiple",
+        "input": "Bakara 1,3,5",
+        "expected": {
+          "source": "quran",
+          "surah_id": 2,
+          "verses": [
+            1,
+            3,
+            5
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "2:1",
+              "text": "Elif, Lam, Mim",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 1,
+              "arabic_text": "الٓمٓ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "2:3",
+              "text": "Onlar, gaybe inanırlar, namazı kılarlar, kendilerine verdiğimiz rızıktan yerli yerince sarfederler",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 3,
+              "arabic_text": "ٱلَّذِينَ يُؤۡمِنُونَ بِٱلۡغَيۡبِ وَيُقِيمُونَ ٱلصَّلَوٰةَ وَمِمَّا رَزَقۡنَٰهُمۡ يُنفِقُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "2:5",
+              "text": "İşte Rab'lerinin yolunda olanlar ve saadete erişenler bunlardır",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 5,
+              "arabic_text": "أُوْلَـٰٓئِكَ عَلَىٰ هُدٗى مِّن رَّبِّهِمۡۖ وَأُوْلَـٰٓئِكَ هُمُ ٱلۡمُفۡلِحُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "Bakara 1,3,5",
+          "count": 3
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 12.997865676879883
+      },
+      {
+        "id": "Q-MULTI-03",
+        "category": "quran_multiple",
+        "input": "1:1,3,5,7",
+        "expected": {
+          "source": "quran",
+          "surah_id": 1,
+          "verses": [
+            1,
+            3,
+            5,
+            7
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "1:1",
+              "text": "Rahman ve Rahim olan Allah'ın adıyla",
+              "source": "quran",
+              "surah_id": 1,
+              "surah_name": "Fâtiha",
+              "verse_id": 1,
+              "arabic_text": "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "1:3",
+              "text": "O Rahman ve Rahim'dir",
+              "source": "quran",
+              "surah_id": 1,
+              "surah_name": "Fâtiha",
+              "verse_id": 3,
+              "arabic_text": "ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "1:5",
+              "text": "Ancak Sana kulluk eder ve yalnız Senden yardım dileriz",
+              "source": "quran",
+              "surah_id": 1,
+              "surah_name": "Fâtiha",
+              "verse_id": 5,
+              "arabic_text": "إِيَّاكَ نَعۡبُدُ وَإِيَّاكَ نَسۡتَعِينُ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "1:7",
+              "text": "Nimete erdirdiğin kimselerin yoluna; gazaba uğrayanların, ya da sapıtanların yoluna değil",
+              "source": "quran",
+              "surah_id": 1,
+              "surah_name": "Fâtiha",
+              "verse_id": 7,
+              "arabic_text": "صِرَٰطَ ٱلَّذِينَ أَنۡعَمۡتَ عَلَيۡهِمۡ غَيۡرِ ٱلۡمَغۡضُوبِ عَلَيۡهِمۡ وَلَا ٱلضَّآلِّينَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "1:1,3,5,7",
+          "count": 4
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 16.19267463684082
+      },
+      {
+        "id": "Q-ERROR-01",
+        "category": "quran_error",
+        "input": "Bakara 300",
+        "expected": {
+          "error": "VERSE_OUT_OF_BOUNDS",
+          "surah_id": 2,
+          "max_verse": 286
+        },
+        "actual": {
+          "success": false,
+          "error": "VERSE_OUT_OF_BOUNDS",
+          "message": "Verse 300 exceeds maximum 286 for surah 'Bakara'",
+          "input": "Bakara 300"
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 2.1724700927734375
+      },
+      {
+        "id": "Q-ERROR-02",
+        "category": "quran_error",
+        "input": "2:287",
+        "expected": {
+          "error": "VERSE_OUT_OF_BOUNDS",
+          "surah_id": 2,
+          "max_verse": 286
+        },
+        "actual": {
+          "success": false,
+          "error": "VERSE_OUT_OF_BOUNDS",
+          "message": "Verse 287 exceeds maximum 286 for surah 2",
+          "input": "2:287"
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 1.8162727355957031
+      },
+      {
+        "id": "Q-ERROR-03",
+        "category": "quran_error",
+        "input": "Fatiha 8",
+        "expected": {
+          "error": "VERSE_OUT_OF_BOUNDS",
+          "surah_id": 1,
+          "max_verse": 7
+        },
+        "actual": {
+          "success": false,
+          "error": "VERSE_OUT_OF_BOUNDS",
+          "message": "Verse 8 exceeds maximum 7 for surah 'Fatiha'",
+          "input": "Fatiha 8"
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 2.1317005157470703
+      },
+      {
+        "id": "Q-ERROR-04",
+        "category": "quran_error",
+        "input": "Nas 7",
+        "expected": {
+          "error": "VERSE_OUT_OF_BOUNDS",
+          "surah_id": 114,
+          "max_verse": 6
+        },
+        "actual": {
+          "success": false,
+          "error": "VERSE_OUT_OF_BOUNDS",
+          "message": "Verse 7 exceeds maximum 6 for surah 'Nas'",
+          "input": "Nas 7"
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 2.2695064544677734
+      },
+      {
+        "id": "Q-ERROR-05",
+        "category": "quran_error",
+        "input": "InvalidSurah 1",
+        "expected": {
+          "error": "SURAH_NOT_FOUND"
+        },
+        "actual": {
+          "success": false,
+          "error": "SURAH_NOT_FOUND",
+          "message": "Surah 'InvalidSurah' not found",
+          "input": "InvalidSurah 1"
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 2.3779869079589844
+      },
+      {
+        "id": "Q-ERROR-06",
+        "category": "quran_error",
+        "input": "115:1",
+        "expected": {
+          "error": "SURAH_NOT_FOUND"
+        },
+        "actual": {
+          "success": false,
+          "error": "SURAH_NOT_FOUND",
+          "message": "Surah number 115 is out of range (1-114)",
+          "input": "115:1"
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 2.198934555053711
+      },
+      {
+        "id": "Q-ERROR-07",
+        "category": "quran_error",
+        "input": "0:1",
+        "expected": {
+          "error": "SURAH_NOT_FOUND"
+        },
+        "actual": {
+          "success": false,
+          "error": "SURAH_NOT_FOUND",
+          "message": "Surah number 0 is out of range (1-114)",
+          "input": "0:1"
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 1.935720443725586
+      },
+      {
+        "id": "Q-ERROR-08",
+        "category": "quran_error",
+        "input": "2:1-20",
+        "expected": {
+          "error": "RANGE_TOO_LARGE"
+        },
+        "actual": {
+          "success": false,
+          "error": "RANGE_TOO_LARGE",
+          "message": "Range 1-20 exceeds maximum of 10 verses",
+          "input": "2:1-20"
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 2.569913864135742
+      },
+      {
+        "id": "Q-ERROR-09",
+        "category": "quran_error",
+        "input": "invalid format",
+        "expected": {
+          "error": "INVALID_FORMAT"
+        },
+        "actual": {
+          "success": false,
+          "error": "INVALID_FORMAT",
+          "message": "Cannot parse input: 'invalid format'. Expected formats: '2:183', 'Bakara 183', or 'Genesis 1:1'",
+          "input": "invalid format"
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 2.868175506591797
+      },
+      {
+        "id": "Q-ERROR-10",
+        "category": "quran_error",
+        "input": "2:1,2,3,4,5,6",
+        "expected": {
+          "error": "TOO_MANY_REFS"
+        },
+        "actual": {
+          "success": false,
+          "error": "TOO_MANY_REFS",
+          "message": "Too many verse references (6). Maximum is 5.",
+          "input": "2:1,2,3,4,5,6"
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 2.4869441986083984
+      },
+      {
+        "id": "B-SINGLE-01",
+        "category": "bible_single",
+        "input": "Genesis 1:1",
+        "expected": {
+          "source": "bible",
+          "book_id": 1,
+          "chapter": 1,
+          "verses": [
+            1
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "Genesis 1:1",
+              "text": "In the beginning God created the heaven and the earth.",
+              "source": "bible_ot",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 1,
+              "book_name": "Genesis",
+              "chapter": 1,
+              "verse": 1
+            }
+          ],
+          "query": "Genesis 1:1",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 12.454748153686523
+      },
+      {
+        "id": "B-SINGLE-02",
+        "category": "bible_single",
+        "input": "Genesis 1:31",
+        "expected": {
+          "source": "bible",
+          "book_id": 1,
+          "chapter": 1,
+          "verses": [
+            31
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "Genesis 1:31",
+              "text": "And God saw every thing that he had made, and, behold, it was very good. And the evening and the morning were the sixth day. ",
+              "source": "bible_ot",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 1,
+              "book_name": "Genesis",
+              "chapter": 1,
+              "verse": 31
+            }
+          ],
+          "query": "Genesis 1:31",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 11.42573356628418
+      },
+      {
+        "id": "B-SINGLE-03",
+        "category": "bible_single",
+        "input": "John 3:16",
+        "expected": {
+          "source": "bible",
+          "book_id": 43,
+          "chapter": 3,
+          "verses": [
+            16
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "John 3:16",
+              "text": "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 43,
+              "book_name": "John",
+              "chapter": 3,
+              "verse": 16
+            }
+          ],
+          "query": "John 3:16",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 8.767843246459961
+      },
+      {
+        "id": "B-SINGLE-04",
+        "category": "bible_single",
+        "input": "Psalms 119:1",
+        "expected": {
+          "source": "bible",
+          "book_id": 19,
+          "chapter": 119,
+          "verses": [
+            1
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "Psalms 119:1",
+              "text": " Blessed are the undefiled in the way, who walk in the law of the Lord.",
+              "source": "bible_ot",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 19,
+              "book_name": "Psalms",
+              "chapter": 119,
+              "verse": 1
+            }
+          ],
+          "query": "Psalms 119:1",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 11.140823364257812
+      },
+      {
+        "id": "B-SINGLE-05",
+        "category": "bible_single",
+        "input": "Revelation 22:21",
+        "expected": {
+          "source": "bible",
+          "book_id": 66,
+          "chapter": 22,
+          "verses": [
+            21
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "Revelation of John 22:21",
+              "text": "The grace of our Lord Jesus Christ be with you all. Amen.   ",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 66,
+              "book_name": "Revelation of John",
+              "chapter": 22,
+              "verse": 21
+            }
+          ],
+          "query": "Revelation 22:21",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 8.015871047973633
+      },
+      {
+        "id": "B-RANGE-01",
+        "category": "bible_range",
+        "input": "Genesis 1:1-3",
+        "expected": {
+          "source": "bible",
+          "book_id": 1,
+          "chapter": 1,
+          "verses": [
+            1,
+            2,
+            3
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "Genesis 1:1",
+              "text": "In the beginning God created the heaven and the earth.",
+              "source": "bible_ot",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 1,
+              "book_name": "Genesis",
+              "chapter": 1,
+              "verse": 1
+            },
+            {
+              "reference": "Genesis 1:2",
+              "text": "And the earth was without form and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters.",
+              "source": "bible_ot",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 1,
+              "book_name": "Genesis",
+              "chapter": 1,
+              "verse": 2
+            },
+            {
+              "reference": "Genesis 1:3",
+              "text": "And God said, Let there be light: and there was light.",
+              "source": "bible_ot",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 1,
+              "book_name": "Genesis",
+              "chapter": 1,
+              "verse": 3
+            }
+          ],
+          "query": "Genesis 1:1-3",
+          "count": 3
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 32.811641693115234
+      },
+      {
+        "id": "B-RANGE-02",
+        "category": "bible_range",
+        "input": "John 3:16-18",
+        "expected": {
+          "source": "bible",
+          "book_id": 43,
+          "chapter": 3,
+          "verses": [
+            16,
+            17,
+            18
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "John 3:16",
+              "text": "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 43,
+              "book_name": "John",
+              "chapter": 3,
+              "verse": 16
+            },
+            {
+              "reference": "John 3:17",
+              "text": "For God sent not his Son into the world to condemn the world; but that the world through him might be saved.",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 43,
+              "book_name": "John",
+              "chapter": 3,
+              "verse": 17
+            },
+            {
+              "reference": "John 3:18",
+              "text": "He that believeth on him is not condemned: but he that believeth not is condemned already, because he hath not believed in the name of the only begotten Son of God.",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 43,
+              "book_name": "John",
+              "chapter": 3,
+              "verse": 18
+            }
+          ],
+          "query": "John 3:16-18",
+          "count": 3
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 24.205446243286133
+      },
+      {
+        "id": "B-RANGE-03",
+        "category": "bible_range",
+        "input": "Matthew 5:3-10",
+        "expected": {
+          "source": "bible",
+          "book_id": 40,
+          "chapter": 5,
+          "verses": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "Matthew 5:3",
+              "text": "Blessed are the poor in spirit: for theirs is the kingdom of heaven.",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 40,
+              "book_name": "Matthew",
+              "chapter": 5,
+              "verse": 3
+            },
+            {
+              "reference": "Matthew 5:4",
+              "text": "Blessed are they that mourn: for they shall be comforted.",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 40,
+              "book_name": "Matthew",
+              "chapter": 5,
+              "verse": 4
+            },
+            {
+              "reference": "Matthew 5:5",
+              "text": "Blessed are the meek: for they shall inherit the earth.",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 40,
+              "book_name": "Matthew",
+              "chapter": 5,
+              "verse": 5
+            },
+            {
+              "reference": "Matthew 5:6",
+              "text": "Blessed are they which do hunger and thirst after righteousness: for they shall be filled.",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 40,
+              "book_name": "Matthew",
+              "chapter": 5,
+              "verse": 6
+            },
+            {
+              "reference": "Matthew 5:7",
+              "text": "Blessed are the merciful: for they shall obtain mercy.",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 40,
+              "book_name": "Matthew",
+              "chapter": 5,
+              "verse": 7
+            },
+            {
+              "reference": "Matthew 5:8",
+              "text": "Blessed are the pure in heart: for they shall see God.",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 40,
+              "book_name": "Matthew",
+              "chapter": 5,
+              "verse": 8
+            },
+            {
+              "reference": "Matthew 5:9",
+              "text": "Blessed are the peacemakers: for they shall be called the children of God.",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 40,
+              "book_name": "Matthew",
+              "chapter": 5,
+              "verse": 9
+            },
+            {
+              "reference": "Matthew 5:10",
+              "text": "Blessed are they which are persecuted for righteousness’ sake: for theirs is the kingdom of heaven.",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 40,
+              "book_name": "Matthew",
+              "chapter": 5,
+              "verse": 10
+            }
+          ],
+          "query": "Matthew 5:3-10",
+          "count": 8
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 58.330535888671875
+      },
+      {
+        "id": "B-ERROR-01",
+        "category": "bible_error",
+        "input": "Genesis 100:1",
+        "expected": {
+          "error": "CHAPTER_OUT_OF_BOUNDS",
+          "book_id": 1,
+          "max_chapter": 50
+        },
+        "actual": {
+          "success": false,
+          "error": "CHAPTER_OUT_OF_BOUNDS",
+          "message": "Chapter 100 exceeds maximum 50 for book 'Genesis'",
+          "input": "Genesis 100:1"
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 3.198385238647461
+      },
+      {
+        "id": "B-ERROR-02",
+        "category": "bible_error",
+        "input": "Genesis 1:32",
+        "expected": {
+          "error": "VERSE_OUT_OF_BOUNDS",
+          "book_id": 1,
+          "chapter": 1,
+          "max_verse": 31
+        },
+        "actual": {
+          "status_code": 200
+        },
+        "passed": false,
+        "error": "Expected 400 error, got 200",
+        "elapsed_ms": 13.942956924438477
+      },
+      {
+        "id": "B-ERROR-03",
+        "category": "bible_error",
+        "input": "John 22:1",
+        "expected": {
+          "error": "CHAPTER_OUT_OF_BOUNDS",
+          "book_id": 43,
+          "max_chapter": 21
+        },
+        "actual": {
+          "success": false,
+          "error": "CHAPTER_OUT_OF_BOUNDS",
+          "message": "Chapter 22 exceeds maximum 21 for book 'John'",
+          "input": "John 22:1"
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 2.62451171875
+      },
+      {
+        "id": "B-ERROR-04",
+        "category": "bible_error",
+        "input": "FakeBook 1:1",
+        "expected": {
+          "error": "BOOK_NOT_FOUND"
+        },
+        "actual": {
+          "success": false,
+          "error": "BOOK_NOT_FOUND",
+          "message": "Bible book 'FakeBook' not found",
+          "input": "FakeBook 1:1"
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 2.3229122161865234
+      },
+      {
+        "id": "B-ERROR-05",
+        "category": "bible_error",
+        "input": "Genesis 1:1-15",
+        "expected": {
+          "error": "RANGE_TOO_LARGE"
+        },
+        "actual": {
+          "success": false,
+          "error": "RANGE_TOO_LARGE",
+          "message": "Range 1-15 exceeds maximum of 10 verses",
+          "input": "Genesis 1:1-15"
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 3.743410110473633
+      },
+      {
+        "id": "B-ERROR-06",
+        "category": "bible_error",
+        "input": "Genesis 1 1",
+        "expected": {
+          "error": "INVALID_FORMAT"
+        },
+        "actual": {
+          "success": false,
+          "error": "INVALID_FORMAT",
+          "message": "Cannot parse input: 'Genesis 1 1'. Expected formats: '2:183', 'Bakara 183', or 'Genesis 1:1'",
+          "input": "Genesis 1 1"
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 2.9213428497314453
+      },
+      {
+        "id": "EDGE-01",
+        "category": "edge_case",
+        "input": "  Bakara  183  ",
+        "expected": {
+          "source": "quran",
+          "surah_id": 2,
+          "verses": [
+            183
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "2:183",
+              "text": "Ey İnananlar! Oruç, sizden öncekilere farz kılındığı gibi, Allah'a karşı gelmekten sakınasınız diye, size sayılı günlerde farz kılındı. İçinizden hasta olan veya yolculukta bulunan, tutamadığı günlerin sayısınca diğer günlerde tutar. Oruca dayanamıyanlar, bir düşkünü doyuracak kadar fidye verir. Kim gönülden iyilik yaparsa o iyilik kendisinedir. Oruç tutmanız eğer bilirseniz sizin için hayırlıdır",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 183,
+              "arabic_text": "يَـٰٓأَيُّهَا ٱلَّذِينَ ءَامَنُواْ كُتِبَ عَلَيۡكُمُ ٱلصِّيَامُ كَمَا كُتِبَ عَلَى ٱلَّذِينَ مِن قَبۡلِكُمۡ لَعَلَّكُمۡ تَتَّقُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "  Bakara  183  ",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 7.166147232055664
+      },
+      {
+        "id": "EDGE-02",
+        "category": "edge_case",
+        "input": "  Genesis  1:1  ",
+        "expected": {
+          "source": "bible",
+          "book_id": 1,
+          "chapter": 1,
+          "verses": [
+            1
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "Genesis 1:1",
+              "text": "In the beginning God created the heaven and the earth.",
+              "source": "bible_ot",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 1,
+              "book_name": "Genesis",
+              "chapter": 1,
+              "verse": 1
+            }
+          ],
+          "query": "  Genesis  1:1  ",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 13.508319854736328
+      },
+      {
+        "id": "EDGE-03",
+        "category": "edge_case",
+        "input": "BAKARA 183",
+        "expected": {
+          "source": "quran",
+          "surah_id": 2,
+          "verses": [
+            183
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "2:183",
+              "text": "Ey İnananlar! Oruç, sizden öncekilere farz kılındığı gibi, Allah'a karşı gelmekten sakınasınız diye, size sayılı günlerde farz kılındı. İçinizden hasta olan veya yolculukta bulunan, tutamadığı günlerin sayısınca diğer günlerde tutar. Oruca dayanamıyanlar, bir düşkünü doyuracak kadar fidye verir. Kim gönülden iyilik yaparsa o iyilik kendisinedir. Oruç tutmanız eğer bilirseniz sizin için hayırlıdır",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 183,
+              "arabic_text": "يَـٰٓأَيُّهَا ٱلَّذِينَ ءَامَنُواْ كُتِبَ عَلَيۡكُمُ ٱلصِّيَامُ كَمَا كُتِبَ عَلَى ٱلَّذِينَ مِن قَبۡلِكُمۡ لَعَلَّكُمۡ تَتَّقُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "BAKARA 183",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 7.001399993896484
+      },
+      {
+        "id": "EDGE-04",
+        "category": "edge_case",
+        "input": "bakara 183",
+        "expected": {
+          "source": "quran",
+          "surah_id": 2,
+          "verses": [
+            183
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "2:183",
+              "text": "Ey İnananlar! Oruç, sizden öncekilere farz kılındığı gibi, Allah'a karşı gelmekten sakınasınız diye, size sayılı günlerde farz kılındı. İçinizden hasta olan veya yolculukta bulunan, tutamadığı günlerin sayısınca diğer günlerde tutar. Oruca dayanamıyanlar, bir düşkünü doyuracak kadar fidye verir. Kim gönülden iyilik yaparsa o iyilik kendisinedir. Oruç tutmanız eğer bilirseniz sizin için hayırlıdır",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 183,
+              "arabic_text": "يَـٰٓأَيُّهَا ٱلَّذِينَ ءَامَنُواْ كُتِبَ عَلَيۡكُمُ ٱلصِّيَامُ كَمَا كُتِبَ عَلَى ٱلَّذِينَ مِن قَبۡلِكُمۡ لَعَلَّكُمۡ تَتَّقُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "bakara 183",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 7.378816604614258
+      },
+      {
+        "id": "EDGE-05",
+        "category": "edge_case",
+        "input": "GENESIS 1:1",
+        "expected": {
+          "source": "bible",
+          "book_id": 1,
+          "chapter": 1,
+          "verses": [
+            1
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "Genesis 1:1",
+              "text": "In the beginning God created the heaven and the earth.",
+              "source": "bible_ot",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 1,
+              "book_name": "Genesis",
+              "chapter": 1,
+              "verse": 1
+            }
+          ],
+          "query": "GENESIS 1:1",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 11.590003967285156
+      },
+      {
+        "id": "EDGE-06",
+        "category": "edge_case",
+        "input": "genesis 1:1",
+        "expected": {
+          "source": "bible",
+          "book_id": 1,
+          "chapter": 1,
+          "verses": [
+            1
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "Genesis 1:1",
+              "text": "In the beginning God created the heaven and the earth.",
+              "source": "bible_ot",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 1,
+              "book_name": "Genesis",
+              "chapter": 1,
+              "verse": 1
+            }
+          ],
+          "query": "genesis 1:1",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 14.24098014831543
+      },
+      {
+        "id": "EDGE-07",
+        "category": "edge_case",
+        "input": "Fatiha 7",
+        "expected": {
+          "source": "quran",
+          "surah_id": 1,
+          "verses": [
+            7
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "1:7",
+              "text": "Nimete erdirdiğin kimselerin yoluna; gazaba uğrayanların, ya da sapıtanların yoluna değil",
+              "source": "quran",
+              "surah_id": 1,
+              "surah_name": "Fâtiha",
+              "verse_id": 7,
+              "arabic_text": "صِرَٰطَ ٱلَّذِينَ أَنۡعَمۡتَ عَلَيۡهِمۡ غَيۡرِ ٱلۡمَغۡضُوبِ عَلَيۡهِمۡ وَلَا ٱلضَّآلِّينَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "Fatiha 7",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 8.028030395507812
+      },
+      {
+        "id": "EDGE-08",
+        "category": "edge_case",
+        "input": "1:1",
+        "expected": {
+          "source": "quran",
+          "surah_id": 1,
+          "verses": [
+            1
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "1:1",
+              "text": "Rahman ve Rahim olan Allah'ın adıyla",
+              "source": "quran",
+              "surah_id": 1,
+              "surah_name": "Fâtiha",
+              "verse_id": 1,
+              "arabic_text": "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "1:1",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 7.761478424072266
+      },
+      {
+        "id": "EDGE-09",
+        "category": "edge_case",
+        "input": "114:6",
+        "expected": {
+          "source": "quran",
+          "surah_id": 114,
+          "verses": [
+            6
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "114:6",
+              "text": "De ki: \"İnsanlardan ve cinlerden ve insanların gönüllerine vesvese veren o sinsi vesvesecinin şerrinden, insanların Tanrısı, insanların Hükümranı ve insanların Rabbi olan Allah'a sığınırım",
+              "source": "quran",
+              "surah_id": 114,
+              "surah_name": "Nâs",
+              "verse_id": 6,
+              "arabic_text": "مِنَ ٱلۡجِنَّةِ وَٱلنَّاسِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "114:6",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 7.743358612060547
+      },
+      {
+        "id": "EDGE-10",
+        "category": "edge_case",
+        "input": "Revelation 22:21",
+        "expected": {
+          "source": "bible",
+          "book_id": 66,
+          "chapter": 22,
+          "verses": [
+            21
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "Revelation of John 22:21",
+              "text": "The grace of our Lord Jesus Christ be with you all. Amen.   ",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 66,
+              "book_name": "Revelation of John",
+              "chapter": 22,
+              "verse": 21
+            }
+          ],
+          "query": "Revelation 22:21",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 10.520219802856445
+      },
+      {
+        "id": "Q-SINGLE-07",
+        "category": "quran_single",
+        "input": "Imran 1",
+        "expected": {
+          "source": "quran",
+          "surah_id": 3,
+          "verses": [
+            1
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "3:1",
+              "text": "Elif, Lam, Mim",
+              "source": "quran",
+              "surah_id": 3,
+              "surah_name": "Âl-i İmrân",
+              "verse_id": 1,
+              "arabic_text": "الٓمٓ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "Imran 1",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 7.050991058349609
+      },
+      {
+        "id": "Q-RANGE-05",
+        "category": "quran_range",
+        "input": "3:1-5",
+        "expected": {
+          "source": "quran",
+          "surah_id": 3,
+          "verses": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "3:1",
+              "text": "Elif, Lam, Mim",
+              "source": "quran",
+              "surah_id": 3,
+              "surah_name": "Âl-i İmrân",
+              "verse_id": 1,
+              "arabic_text": "الٓمٓ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "3:2",
+              "text": "Allah, Ondan başka tanrı olmayan, diri, her an yaratıklarını gözetip durandır",
+              "source": "quran",
+              "surah_id": 3,
+              "surah_name": "Âl-i İmrân",
+              "verse_id": 2,
+              "arabic_text": "ٱللَّهُ لَآ إِلَٰهَ إِلَّا هُوَ ٱلۡحَيُّ ٱلۡقَيُّومُ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "3:3",
+              "text": "Kendisinden önceki Kitapları tasdik eden Hak Kitap'ı sana indirdi. Önceden insanlara yol gösterici olarak Tevrat ve İncil'i de indirmişti. O, doğruyu yanlıştan ayıran Kitap'ı indirdi. Doğrusu Allah'ın ayetlerini inkar edenler için şiddetli azab vardır. Allah güçlüdür, mazlumların öcünü alır",
+              "source": "quran",
+              "surah_id": 3,
+              "surah_name": "Âl-i İmrân",
+              "verse_id": 3,
+              "arabic_text": "نَزَّلَ عَلَيۡكَ ٱلۡكِتَٰبَ بِٱلۡحَقِّ مُصَدِّقٗا لِّمَا بَيۡنَ يَدَيۡهِ وَأَنزَلَ ٱلتَّوۡرَىٰةَ وَٱلۡإِنجِيلَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "3:4",
+              "text": "Kendisinden önceki Kitapları tasdik eden Hak Kitap'ı sana indirdi. Önceden insanlara yol gösterici olarak Tevrat ve İncil'i de indirmişti. O, doğruyu yanlıştan ayıran Kitap'ı indirdi. Doğrusu Allah'ın ayetlerini inkar edenler için şiddetli azab vardır. Allah güçlüdür, mazlumların öcünü alır",
+              "source": "quran",
+              "surah_id": 3,
+              "surah_name": "Âl-i İmrân",
+              "verse_id": 4,
+              "arabic_text": "مِن قَبۡلُ هُدٗى لِّلنَّاسِ وَأَنزَلَ ٱلۡفُرۡقَانَۗ إِنَّ ٱلَّذِينَ كَفَرُواْ بِـَٔايَٰتِ ٱللَّهِ لَهُمۡ عَذَابٞ شَدِيدٞۗ وَٱللَّهُ عَزِيزٞ ذُو ٱنتِقَامٍ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "3:5",
+              "text": "Şüphesiz gökte ve yerde hiçbir şey Allah'tan gizli kalmaz",
+              "source": "quran",
+              "surah_id": 3,
+              "surah_name": "Âl-i İmrân",
+              "verse_id": 5,
+              "arabic_text": "إِنَّ ٱللَّهَ لَا يَخۡفَىٰ عَلَيۡهِ شَيۡءٞ فِي ٱلۡأَرۡضِ وَلَا فِي ٱلسَّمَآءِ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "3:1-5",
+          "count": 5
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 26.355743408203125
+      },
+      {
+        "id": "B-SINGLE-06",
+        "category": "bible_single",
+        "input": "Matthew 1:1",
+        "expected": {
+          "source": "bible",
+          "book_id": 40,
+          "chapter": 1,
+          "verses": [
+            1
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "Matthew 1:1",
+              "text": "The book of the generation of Jesus Christ, the son of David, the son of Abraham.",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 40,
+              "book_name": "Matthew",
+              "chapter": 1,
+              "verse": 1
+            }
+          ],
+          "query": "Matthew 1:1",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 12.496232986450195
+      },
+      {
+        "id": "B-SINGLE-07",
+        "category": "bible_single",
+        "input": "Luke 1:1",
+        "expected": {
+          "source": "bible",
+          "book_id": 42,
+          "chapter": 1,
+          "verses": [
+            1
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "Luke 1:1",
+              "text": "Forasmuch as many have taken in hand to set forth in order a declaration of those things which are most surely believed among us,",
+              "source": "bible_nt",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 42,
+              "book_name": "Luke",
+              "chapter": 1,
+              "verse": 1
+            }
+          ],
+          "query": "Luke 1:1",
+          "count": 1
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 9.50002670288086
+      },
+      {
+        "id": "EDGE-11",
+        "category": "edge_case",
+        "input": "2:183-186",
+        "expected": {
+          "source": "quran",
+          "surah_id": 2,
+          "verses": [
+            183,
+            184,
+            185,
+            186
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "2:183",
+              "text": "Ey İnananlar! Oruç, sizden öncekilere farz kılındığı gibi, Allah'a karşı gelmekten sakınasınız diye, size sayılı günlerde farz kılındı. İçinizden hasta olan veya yolculukta bulunan, tutamadığı günlerin sayısınca diğer günlerde tutar. Oruca dayanamıyanlar, bir düşkünü doyuracak kadar fidye verir. Kim gönülden iyilik yaparsa o iyilik kendisinedir. Oruç tutmanız eğer bilirseniz sizin için hayırlıdır",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 183,
+              "arabic_text": "يَـٰٓأَيُّهَا ٱلَّذِينَ ءَامَنُواْ كُتِبَ عَلَيۡكُمُ ٱلصِّيَامُ كَمَا كُتِبَ عَلَى ٱلَّذِينَ مِن قَبۡلِكُمۡ لَعَلَّكُمۡ تَتَّقُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "2:184",
+              "text": "Ey İnananlar! Oruç, sizden öncekilere farz kılındığı gibi, Allah'a karşı gelmekten sakınasınız diye, size sayılı günlerde farz kılındı. İçinizden hasta olan veya yolculukta bulunan, tutamadığı günlerin sayısınca diğer günlerde tutar. Oruca dayanamıyanlar, bir düşkünü doyuracak kadar fidye verir. Kim gönülden iyilik yaparsa o iyilik kendisinedir. Oruç tutmanız eğer bilirseniz sizin için hayırlıdır",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 184,
+              "arabic_text": "أَيَّامٗا مَّعۡدُودَٰتٖۚ فَمَن كَانَ مِنكُم مَّرِيضًا أَوۡ عَلَىٰ سَفَرٖ فَعِدَّةٞ مِّنۡ أَيَّامٍ أُخَرَۚ وَعَلَى ٱلَّذِينَ يُطِيقُونَهُۥ فِدۡيَةٞ طَعَامُ مِسۡكِينٖۖ فَمَن تَطَوَّعَ خَيۡرٗا فَهُوَ خَيۡرٞ لَّهُۥۚ وَأَن تَصُومُواْ خَيۡرٞ لَّكُمۡ إِن كُنتُمۡ تَعۡلَمُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "2:185",
+              "text": "Ramazan ayı, ki onda Kuran, insanlara yol gösterici ve doğruyu yanlıştan ayırıcı belgeler olarak indirildi. Sizden bu ayı idrak eden, onda oruç tutsun; hasta veya yolculukta olan, tutamadığı günlerin sayısınca diğer günlerde tutsun. Allah size kolaylık ister, zorluk istemez. Bu kolaylıkları, sayıyı tamamlamanız ve size yol gösterdiğine karşılık O'nu ululamanız için meşru kılmıştır; ola ki şükredersiniz",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 185,
+              "arabic_text": "شَهۡرُ رَمَضَانَ ٱلَّذِيٓ أُنزِلَ فِيهِ ٱلۡقُرۡءَانُ هُدٗى لِّلنَّاسِ وَبَيِّنَٰتٖ مِّنَ ٱلۡهُدَىٰ وَٱلۡفُرۡقَانِۚ فَمَن شَهِدَ مِنكُمُ ٱلشَّهۡرَ فَلۡيَصُمۡهُۖ وَمَن كَانَ مَرِيضًا أَوۡ عَلَىٰ سَفَرٖ فَعِدَّةٞ مِّنۡ أَيَّامٍ أُخَرَۗ يُرِيدُ ٱللَّهُ بِكُمُ ٱلۡيُسۡرَ وَلَا يُرِيدُ بِكُمُ ٱلۡعُسۡرَ وَلِتُكۡمِلُواْ ٱلۡعِدَّةَ وَلِتُكَبِّرُواْ ٱللَّهَ عَلَىٰ مَا هَدَىٰكُمۡ وَلَعَلَّكُمۡ تَشۡكُرُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            },
+            {
+              "reference": "2:186",
+              "text": "Kullarım sana Beni sorarlarsa, bilsinler ki Ben, şüphesiz onlara yakınım. Benden isteyenin, dua ettiğinde duasını kabul ederim. Artık onlar da davetimi kabul edip Bana inansınlar ki doğru yolda yürüyenlerden olsunlar",
+              "source": "quran",
+              "surah_id": 2,
+              "surah_name": "Bakara",
+              "verse_id": 186,
+              "arabic_text": "وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌۖ أُجِيبُ دَعۡوَةَ ٱلدَّاعِ إِذَا دَعَانِۖ فَلۡيَسۡتَجِيبُواْ لِي وَلۡيُؤۡمِنُواْ بِي لَعَلَّهُمۡ يَرۡشُدُونَ",
+              "book_id": null,
+              "book_name": null,
+              "chapter": null,
+              "verse": null
+            }
+          ],
+          "query": "2:183-186",
+          "count": 4
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 81.57777786254883
+      },
+      {
+        "id": "EDGE-12",
+        "category": "edge_case",
+        "input": "Genesis 1:27-31",
+        "expected": {
+          "source": "bible",
+          "book_id": 1,
+          "chapter": 1,
+          "verses": [
+            27,
+            28,
+            29,
+            30,
+            31
+          ]
+        },
+        "actual": {
+          "success": true,
+          "verses": [
+            {
+              "reference": "Genesis 1:27",
+              "text": "So God created man in his own image, in the image of God created he him; male and female created he them.",
+              "source": "bible_ot",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 1,
+              "book_name": "Genesis",
+              "chapter": 1,
+              "verse": 27
+            },
+            {
+              "reference": "Genesis 1:28",
+              "text": "And God blessed them, and God said unto them, Be fruitful, and multiply, and replenish the earth, and subdue it: and have dominion over the fish of the sea, and over the fowl of the air, and over every living thing that moveth upon the earth.",
+              "source": "bible_ot",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 1,
+              "book_name": "Genesis",
+              "chapter": 1,
+              "verse": 28
+            },
+            {
+              "reference": "Genesis 1:29",
+              "text": "And God said, Behold, I have given you every herb bearing seed, which is upon the face of all the earth, and every tree, in the which is the fruit of a tree yielding seed; to you it shall be for meat.",
+              "source": "bible_ot",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 1,
+              "book_name": "Genesis",
+              "chapter": 1,
+              "verse": 29
+            },
+            {
+              "reference": "Genesis 1:30",
+              "text": "And to every beast of the earth, and to every fowl of the air, and to every thing that creepeth upon the earth, wherein there is life, I have given every green herb for meat: and it was so.",
+              "source": "bible_ot",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 1,
+              "book_name": "Genesis",
+              "chapter": 1,
+              "verse": 30
+            },
+            {
+              "reference": "Genesis 1:31",
+              "text": "And God saw every thing that he had made, and, behold, it was very good. And the evening and the morning were the sixth day. ",
+              "source": "bible_ot",
+              "surah_id": null,
+              "surah_name": null,
+              "verse_id": null,
+              "arabic_text": null,
+              "book_id": 1,
+              "book_name": "Genesis",
+              "chapter": 1,
+              "verse": 31
+            }
+          ],
+          "query": "Genesis 1:27-31",
+          "count": 5
+        },
+        "passed": true,
+        "error": null,
+        "elapsed_ms": 52.05965042114258
+      }
+    ]
+  },
+  "cli_tests": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0,
+    "success_rate": 1.0
+  },
+  "regression_test": {
+    "semantic_search": true
+  }
+}

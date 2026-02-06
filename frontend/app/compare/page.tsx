@@ -23,7 +23,6 @@ import { AnimatedFilterTabs, FilterType } from "@/components/ui/animated-tabs";
 import { TypingIndicator, AIResponse } from "@/components/ui/typewriter";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { AuroraSectionBackground } from "@/components/ui/aurora-background";
-import { Input } from "@/components/ui/input";
 
 import { SourceReferenceCard } from "@/components/compare/source-reference-card";
 import { InlineCitation } from "@/components/compare/inline-citation";
@@ -31,6 +30,7 @@ import { parseCitations, parseBareReferences, stripMarkdownHeaders } from "@/lib
 import { useLogger } from "@/lib/logger";
 import { LanguageSelector } from "@/components/search/language-selector";
 import { CollectionSelector } from "@/components/compare/collection-selector";
+import { AnalysisProgress } from "@/components/compare/analysis-progress";
 
 interface ParagraphData {
   title: string;
@@ -99,6 +99,7 @@ function CompareContent() {
   
   const highlightTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasAutoExecuted = useRef(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const log = useLogger("ComparePage");
   const { user, isLoading: authLoading, logout } = useAuth();
   const router = useRouter();
@@ -532,22 +533,38 @@ function CompareContent() {
                   {/* Glow effect on focus */}
                   <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-500/20 via-indigo-500/20 to-violet-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity duration-300" />
                   
-                  <Input 
-                    type="text"
+                  <textarea
+                    ref={textareaRef}
                     data-testid="compare-topic-input"
                     value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    placeholder="Enter a topic (e.g., patience, forgiveness, creation)..."
-                    className="relative peer pe-28 ps-12 h-12 bg-[var(--color-bg-surface)]/80 backdrop-blur-sm border-white/10 hover:border-white/20 focus:border-violet-500/50 transition-colors text-base"
+                    onChange={(e) => {
+                      setTopic(e.target.value);
+                      // Auto-resize: reset to auto then set to scrollHeight
+                      const ta = e.target;
+                      ta.style.height = 'auto';
+                      ta.style.height = `${ta.scrollHeight}px`;
+                    }}
+                    onKeyDown={(e) => {
+                      // Submit on Enter (without Shift)
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        if (topic.trim() && !isLoading) {
+                          handleCompare(e as unknown as React.FormEvent);
+                        }
+                      }
+                    }}
+                    placeholder="Enter a topic to compare..."
+                    rows={1}
+                    className="relative peer pe-28 ps-12 min-h-12 py-3 bg-[var(--color-bg-surface)]/80 backdrop-blur-sm border-white/10 hover:border-white/20 focus:border-violet-500/50 transition-colors text-base w-full rounded-lg border border-input shadow-sm shadow-black/5 placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50 resize-none overflow-hidden"
                   />
-                  <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-4 text-muted-foreground/60 peer-disabled:opacity-50">
+                  <div className="pointer-events-none absolute top-0 start-0 flex h-12 items-center justify-center ps-4 text-muted-foreground/60 peer-disabled:opacity-50">
                     <Search size={20} strokeWidth={1.5} />
                   </div>
                   <button
                     type="submit"
                     data-testid="compare-analyze-button"
                     disabled={isLoading || !topic.trim()}
-                    className="absolute inset-y-0 end-1.5 flex h-[calc(100%-12px)] my-auto items-center justify-center rounded-lg px-4 text-sm font-medium bg-gradient-to-r from-violet-500 to-indigo-500 text-white transition-all hover:from-violet-600 hover:to-indigo-600 focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 shadow-lg shadow-violet-500/25"
+                    className="absolute top-1.5 end-1.5 flex h-9 items-center justify-center rounded-lg px-4 text-sm font-medium bg-gradient-to-r from-violet-500 to-indigo-500 text-white transition-all hover:from-violet-600 hover:to-indigo-600 focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 shadow-lg shadow-violet-500/25"
                     aria-label="Submit analysis"
                   >
                     {isLoading ? "Analyzing..." : "Analyze"}
@@ -584,14 +601,34 @@ function CompareContent() {
             animate={{ opacity: 1 }}
             className="space-y-4 mb-8"
           >
-            <div className="flex items-center gap-3 text-[var(--color-text-muted)] mb-4">
-              <TypingIndicator />
-              <span className="text-sm">
-                {result?.paragraphs?.length 
-                  ? `Analyzing... (${result.paragraphs.length}/5 agents completed)`
-                  : "Initializing multi-agent analysis..."}
-              </span>
-            </div>
+            {/* Granular pipeline progress (streaming mode) */}
+            {(() => {
+              const progressEvents = sseData
+                .filter((m) => m.type === "progress" && m.step && m.message)
+                .map((m) => ({ step: m.step as string, message: m.message as string }));
+              
+              if (progressEvents.length > 0) {
+                return (
+                  <AnalysisProgress
+                    progressEvents={progressEvents}
+                    hasParagraphs={(result?.paragraphs?.length ?? 0) > 0}
+                    className="mb-4"
+                  />
+                );
+              }
+
+              // Fallback for batch mode (no SSE progress events)
+              return (
+                <div className="flex items-center gap-3 text-[var(--color-text-muted)] mb-4">
+                  <TypingIndicator />
+                  <span className="text-sm">
+                    {result?.paragraphs?.length 
+                      ? `Analyzing... (${result.paragraphs.length}/5 agents completed)`
+                      : "Initializing multi-agent analysis..."}
+                  </span>
+                </div>
+              );
+            })()}
             
             {/* Show remaining skeletons */}
             {[...Array(Math.max(0, 5 - (result?.paragraphs?.length || 0)))].map((_, i) => (

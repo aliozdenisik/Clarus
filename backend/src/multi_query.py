@@ -21,12 +21,3 @@ class MultiQueryGenerator:
             "MultiQueryGenerator is not yet implemented. "
             "Use UltimateRAG multi-query pipeline instead."
         )
-
-
-def create_multi_query_prefetches(
-    queries: List[str],
-    dense_encoder: Any,
-    limit_per_query: int = 20,
-) -> List[Prefetch]:
-    """Create Qdrant prefetch objects for multi-query search."""
-    raise NotImplementedError

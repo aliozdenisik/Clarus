@@ -89,7 +89,7 @@ describe('LoginPage', () => {
     it('should render email and password inputs', () => {
       render(<LoginPage />);
       expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
     });
 
     it('should render sign in button', () => {

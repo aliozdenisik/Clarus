@@ -21,8 +21,7 @@ Usage:
 import json
 import sys
 from pathlib import Path
-from unittest.mock import patch, Mock, MagicMock
-from typing import Dict, Any
+from unittest.mock import patch, Mock
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))

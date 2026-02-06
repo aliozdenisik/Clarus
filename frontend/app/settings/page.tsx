@@ -8,11 +8,18 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { GlowCard } from "@/components/ui/glow-card";
 import { Button } from "@/components/ui/button";
-import { GlowingButton } from "@/components/ui/glowing-button";
 import { DotPattern, RadialGradient } from "@/components/ui/dot-pattern";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Settings, Save, RotateCcw } from "lucide-react";
+import { Settings, Save, RotateCcw, Palette, Search, Zap } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 
 export default function SettingsPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -101,10 +108,6 @@ export default function SettingsPage() {
     );
   }
 
-  const selectClassName = "flex h-10 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm ring-offset-[var(--color-bg-app)] file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-[var(--color-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-[var(--color-text-primary)]";
-
-  const labelClassName = "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-[var(--color-text-primary)] mb-2 block";
-
   return (
     <div className="relative min-h-screen bg-[var(--color-bg-app)] p-4 md:p-8 overflow-hidden">
       {/* Premium ambient effects */}
@@ -127,6 +130,7 @@ export default function SettingsPage() {
       </div>
       
       <div className="relative mx-auto max-w-2xl z-10">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -142,177 +146,185 @@ export default function SettingsPage() {
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={springPresets.fluid}
-        >
-          <GlowCard className="space-y-8 p-6 backdrop-blur-xl bg-[var(--color-bg-surface)]/80">
-            {/* General Settings */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">
-                General
-              </h2>
+        <div className="space-y-6">
+          {/* General Settings Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...springPresets.fluid, delay: 0.1 }}
+          >
+            <GlowCard className="p-6 backdrop-blur-xl bg-[var(--color-bg-surface)]/80">
+              <div className="flex items-center gap-2 mb-6">
+                <Palette className="h-5 w-5 text-[var(--color-accent-primary)]" />
+                <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  General
+                </h2>
+              </div>
               
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label htmlFor="theme" className={labelClassName}>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--color-text-primary)]">
                     Theme
                   </label>
-                  <select
-                    id="theme"
-                    value={theme}
-                    onChange={(e) => setTheme(e.target.value as any)}
-                    className={selectClassName}
-                  >
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                    <option value="system">System</option>
-                  </select>
+                  <Select value={theme} onValueChange={(value) => setTheme(value as "light" | "dark" | "system")}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select theme" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="light">Light</SelectItem>
+                      <SelectItem value="dark">Dark</SelectItem>
+                      <SelectItem value="system">System</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div>
-                  <label htmlFor="language" className={labelClassName}>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-[var(--color-text-primary)]">
                     Language
                   </label>
-                  <select
-                    id="language"
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value as any)}
-                    className={selectClassName}
-                  >
-                    <option value="tr">Türkçe</option>
-                    <option value="en">English</option>
-                    <option value="ar">Arabic</option>
-                  </select>
+                  <Select value={language} onValueChange={(value) => setLanguage(value as "tr" | "en" | "ar")}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select language" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tr">Türkçe</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="ar">العربية</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-            </div>
+            </GlowCard>
+          </motion.div>
 
-            {/* Search Defaults */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">
-                Search Defaults
-              </h2>
+          {/* Search Defaults Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...springPresets.fluid, delay: 0.2 }}
+          >
+            <GlowCard className="p-6 backdrop-blur-xl bg-[var(--color-bg-surface)]/80">
+              <div className="flex items-center gap-2 mb-6">
+                <Search className="h-5 w-5 text-[var(--color-accent-primary)]" />
+                <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  Search Defaults
+                </h2>
+              </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label htmlFor="search-source" className={labelClassName}>
-                    Default Source
-                  </label>
-                  <select
-                    id="search-source"
-                    value={default_search_source}
-                    onChange={(e) => setDefaultSearchSource(e.target.value as any)}
-                    className={selectClassName}
-                  >
-                    <option value="quran">Quran</option>
-                    <option value="bible">Bible</option>
-                    <option value="all">All</option>
-                  </select>
+              <div className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[var(--color-text-primary)]">
+                      Default Source
+                    </label>
+                    <Select value={default_search_source} onValueChange={(value) => setDefaultSearchSource(value as "quran" | "bible" | "all")}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select source" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="quran">Quran</SelectItem>
+                        <SelectItem value="bible">Bible</SelectItem>
+                        <SelectItem value="all">All</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-[var(--color-text-primary)]">
+                      Default Bible Testament
+                    </label>
+                    <Select value={default_bible_testament} onValueChange={(value) => setDefaultBibleTestament(value as "all" | "ot" | "nt" | "apocrypha")}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select testament" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="ot">Old Testament</SelectItem>
+                        <SelectItem value="nt">New Testament</SelectItem>
+                        <SelectItem value="apocrypha">Apocrypha</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                <div>
-                  <label htmlFor="bible-testament" className={labelClassName}>
-                    Default Bible Testament
-                  </label>
-                  <select
-                    id="bible-testament"
-                    value={default_bible_testament}
-                    onChange={(e) => setDefaultBibleTestament(e.target.value as any)}
-                    className={selectClassName}
-                  >
-                    <option value="all">All</option>
-                    <option value="ot">Old Testament</option>
-                    <option value="nt">New Testament</option>
-                    <option value="apocrypha">Apocrypha</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="results-per-page" className={labelClassName}>
-                    Results Per Page (5-50)
-                  </label>
-                  <Input
-                    id="results-per-page"
-                    type="number"
+                <div className="pt-2">
+                  <Slider
+                    label="Results Per Page"
+                    showValue
                     min={5}
                     max={50}
-                    value={results_per_page}
-                    onChange={(e) => setResultsPerPage(parseInt(e.target.value))}
+                    step={5}
+                    value={[results_per_page]}
+                    onValueChange={(value) => setResultsPerPage(value[0])}
                   />
                 </div>
               </div>
-            </div>
+            </GlowCard>
+          </motion.div>
 
-            {/* Advanced Settings */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">
-                Advanced
-              </h2>
+          {/* Advanced Settings Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...springPresets.fluid, delay: 0.3 }}
+          >
+            <GlowCard className="p-6 backdrop-blur-xl bg-[var(--color-bg-surface)]/80">
+              <div className="flex items-center gap-2 mb-6">
+                <Zap className="h-5 w-5 text-[var(--color-accent-primary)]" />
+                <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  Advanced
+                </h2>
+              </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between rounded-lg border border-[var(--color-border)] p-4">
-                  <div className="space-y-0.5">
-                    <label htmlFor="streaming" className="text-sm font-medium text-[var(--color-text-primary)]">
-                      Enable Streaming
-                    </label>
-                    <p className="text-xs text-[var(--color-text-secondary)]">
-                      Stream search results and answers in real-time
-                    </p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    id="streaming"
+              <div className="space-y-6">
+                <div className="rounded-lg border border-[var(--color-border)] p-4 transition-colors hover:border-[var(--color-accent-primary)]/30">
+                  <Switch
+                    label="Enable Streaming"
+                    description="Stream search results and answers in real-time"
                     checked={enable_streaming}
-                    onChange={(e) => setEnableStreaming(e.target.checked)}
-                    className="h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-bg-surface)] text-[var(--color-accent-primary)] focus:ring-[var(--color-accent-primary)]"
+                    onCheckedChange={setEnableStreaming}
                   />
                 </div>
 
-                <div className="flex items-center justify-between rounded-lg border border-[var(--color-border)] p-4">
-                  <div className="space-y-0.5">
-                    <label htmlFor="multi-agent" className="text-sm font-medium text-[var(--color-text-primary)]">
-                      Enable Multi-Agent
-                    </label>
-                    <p className="text-xs text-[var(--color-text-secondary)]">
-                      Use multiple AI agents for comprehensive answers (slower)
-                    </p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    id="multi-agent"
+                <div className="rounded-lg border border-[var(--color-border)] p-4 transition-colors hover:border-[var(--color-accent-primary)]/30">
+                  <Switch
+                    label="Enable Multi-Agent"
+                    description="Use multiple AI agents for comprehensive answers (slower)"
                     checked={enable_multi_agent}
-                    onChange={(e) => setEnableMultiAgent(e.target.checked)}
-                    className="h-4 w-4 rounded border-[var(--color-border)] bg-[var(--color-bg-surface)] text-[var(--color-accent-primary)] focus:ring-[var(--color-accent-primary)]"
+                    onCheckedChange={setEnableMultiAgent}
                   />
                 </div>
               </div>
-            </div>
+            </GlowCard>
+          </motion.div>
 
-            {/* Actions */}
-            <div className="flex items-center justify-between pt-4 border-t border-[var(--color-border)]">
-              <Button
-                variant="destructive" // Using destructive style for reset
-                onClick={handleReset}
-                disabled={isResetting || storeLoading}
-                className="flex items-center gap-2"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Reset to Defaults
-              </Button>
+          {/* Actions */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...springPresets.fluid, delay: 0.4 }}
+            className="flex items-center justify-between pt-2"
+          >
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              disabled={isResetting || storeLoading}
+              className="flex items-center gap-2 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Reset to Defaults
+            </Button>
 
-              <Button
-                onClick={handleSave}
-                disabled={isSaving || storeLoading}
-                className="bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-primary)]/90 flex items-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                Save Changes
-              </Button>
-            </div>
-          </GlowCard>
-        </motion.div>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || storeLoading}
+              className="bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-primary)]/90 flex items-center gap-2 shadow-lg shadow-[var(--color-accent-primary)]/20"
+            >
+              <Save className="h-4 w-4" />
+              Save Changes
+            </Button>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

@@ -133,17 +133,23 @@ const FILTERS: FilterType[] = ["all", "quran", "old_testament", "new_testament",
 export function AnimatedFilterTabs({
   activeFilter,
   onFilterChange,
+  counts,
 }: AnimatedFilterTabsProps) {
-  // Build tabs without counts (new Vercel tabs doesn't support counts)
-  const tabs: Tab[] = FILTERS.map((filter) => ({
-    id: filter,
-    label: FILTER_LABELS[filter],
-  }));
+  // Only show tabs for sources that have results (count > 0), plus "all"
+  const tabs: Tab[] = FILTERS
+    .filter((filter) => filter === "all" || (counts && (counts[filter] ?? 0) > 0))
+    .map((filter) => ({
+      id: filter,
+      label: FILTER_LABELS[filter],
+    }));
+
+  // If active filter was removed (no results for that source), reset to "all"
+  const effectiveFilter = tabs.some((t) => t.id === activeFilter) ? activeFilter : "all";
 
   return (
     <Tabs
       tabs={tabs}
-      activeTab={activeFilter}
+      activeTab={effectiveFilter}
       onTabChange={(tabId) => onFilterChange(tabId as FilterType)}
     />
   );

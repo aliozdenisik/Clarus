@@ -11,8 +11,7 @@ Optimizations:
 - Circuit breaker for API failures
 """
 
-from typing import List, Tuple, Optional, Any
-import numpy as np
+from typing import List, Tuple
 import os
 import requests
 import hashlib
@@ -34,18 +33,6 @@ except ImportError:
     print(
         "Warning: diskcache not installed. Embedding cache disabled. Install with: pip install diskcache"
     )
-
-try:
-    from tenacity import (
-        retry,
-        stop_after_attempt,
-        wait_exponential,
-        retry_if_exception_type,
-    )
-
-    TENACITY_AVAILABLE = True
-except ImportError:
-    TENACITY_AVAILABLE = False
 
 
 class DenseEncoder:
@@ -383,10 +370,10 @@ class AsyncDenseEncoder:
                         await asyncio.sleep(wait_time)
                     else:
                         raise
-                except Exception as e:
+                except Exception:
                     if attempt < retry_count - 1:
                         wait_time = 2**attempt * 5
-                        print(f"\nAsync error: {e}, retrying in {wait_time}s...")
+                        print(f"\nAsync error, retrying in {wait_time}s...")
                         await asyncio.sleep(wait_time)
                     else:
                         raise

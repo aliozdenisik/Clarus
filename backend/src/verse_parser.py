@@ -209,36 +209,6 @@ def get_surah_by_name(name: str) -> dict[str, int] | None:
     return None
 
 
-def get_surah_id_by_name(name: str) -> int | None:
-    """Lookup surah ID by Turkish name.
-
-    Convenience function that returns just the surah ID.
-
-    Args:
-        name: Turkish surah name (case-insensitive)
-
-    Returns:
-        Surah ID (1-114), or None if not found
-    """
-    surah = get_surah_by_name(name)
-    return surah["id"] if surah else None
-
-
-def get_surah_verses_by_name(name: str) -> int | None:
-    """Lookup verse count by Turkish surah name.
-
-    Convenience function that returns just the verse count.
-
-    Args:
-        name: Turkish surah name (case-insensitive)
-
-    Returns:
-        Total verse count, or None if not found
-    """
-    surah = get_surah_by_name(name)
-    return surah["verses"] if surah else None
-
-
 # Bible book name mapping (80 books: 39 OT + 27 NT + 14 Apocrypha)
 # Maps English book name → {id, testament, chapters}
 # Extracted from backend/data/bible_kjva.json

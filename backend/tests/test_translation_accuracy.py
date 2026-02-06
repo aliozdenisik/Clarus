@@ -36,7 +36,7 @@ from rich.table import Table
 console = Console()
 
 # Import after path setup
-from src.query_translator import QueryTranslator, TranslationResult
+from src.query_translator import QueryTranslator
 
 
 # ============================================================================

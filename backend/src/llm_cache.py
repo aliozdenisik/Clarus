@@ -13,10 +13,7 @@ Features:
 Cost Impact: 60-80% reduction in LLM API calls for typical workloads.
 """
 
-import os
 import hashlib
-import json
-import time
 import logging
 from typing import Optional, Dict, Any, List, Tuple
 from dataclasses import dataclass
@@ -32,18 +29,6 @@ except ImportError:
 
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class CacheEntry:
-    """Represents a cached LLM response with its embedding."""
-
-    query: str
-    operation: str  # 'expand' or 'multi_query'
-    response: Any
-    embedding: List[float]
-    created_at: float
-    hit_count: int = 0
 
 
 class SemanticLLMCache:
@@ -244,7 +229,7 @@ class SemanticLLMCache:
             similar_result = self._find_similar_key(query_embedding, operation)
 
             if similar_result:
-                similar_key, similarity = similar_result
+                similar_key, _ = similar_result
                 cached = self._cache.get(similar_key)
 
                 if cached is not None:
@@ -364,20 +349,6 @@ class SemanticLLMCache:
 _global_cache: Optional[SemanticLLMCache] = None
 
 
-def get_llm_cache(
-    similarity_threshold: float = 0.95, ttl_seconds: int = 86400 * 7
-) -> SemanticLLMCache:
-    """Get or create global LLM cache instance."""
-    global _global_cache
-
-    if _global_cache is None:
-        _global_cache = SemanticLLMCache(
-            similarity_threshold=similarity_threshold, ttl_seconds=ttl_seconds
-        )
-
-    return _global_cache
-
-
 if __name__ == "__main__":
     print("Testing Semantic LLM Cache...")
 
@@ -393,7 +364,5 @@ if __name__ == "__main__":
     print(f"Exact match 'sabır nedir': {result}")
 
     # Test semantic match (requires embeddings)
-    # result = cache.get("sabirlenmek ne demek", "expand")
-    # print(f"Semantic match 'sabirlenmek ne demek': {result}")
 
     print(f"\nCache stats: {cache.get_stats()}")

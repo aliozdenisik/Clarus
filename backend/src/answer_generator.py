@@ -18,8 +18,8 @@ import json
 import requests
 import time
 import sentry_sdk
-from typing import List, Optional, Dict, Any
-from dataclasses import dataclass, field
+from typing import List, Optional
+from dataclasses import dataclass
 from tenacity import (
     retry,
     stop_after_attempt,

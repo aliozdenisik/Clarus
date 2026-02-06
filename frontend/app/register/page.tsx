@@ -7,13 +7,14 @@ import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/auth/auth-context";
 import { toast } from "sonner";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Eye, EyeOff } from "lucide-react";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { register } = useAuth();
   const router = useRouter();
 
@@ -124,19 +125,30 @@ export default function RegisterPage() {
             >
               Password
             </label>
-            <input
-              id="password-input"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••••••"
-              required
-              minLength={6}
-              className="w-full rounded-md border border-[var(--color-border-subtle)]
-              bg-[var(--color-bg-surface)] px-3 py-2 text-[var(--color-text-primary)]
-              placeholder-[var(--color-text-muted)]
-              ring-1 ring-transparent transition-shadow focus:outline-0 focus:ring-[var(--color-accent-primary)] focus:border-[var(--color-border-glow)]"
-            />
+            <div className="relative">
+              <input
+                id="password-input"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••••••"
+                required
+                minLength={6}
+                className="w-full rounded-md border border-[var(--color-border-subtle)]
+                bg-[var(--color-bg-surface)] px-3 py-2 pr-10 text-[var(--color-text-primary)]
+                placeholder-[var(--color-text-muted)]
+                ring-1 ring-transparent transition-shadow focus:outline-0 focus:ring-[var(--color-accent-primary)] focus:border-[var(--color-border-glow)]"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+                tabIndex={-1}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
           <button
             type="submit"

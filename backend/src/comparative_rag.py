@@ -28,10 +28,9 @@ Usage:
     print(result.essay)
 """
 
-import os
 import time
 import logging
-from typing import List, Optional, Dict, Any, Tuple
+from typing import List, Optional, Dict, Tuple, Callable
 from dataclasses import dataclass, field
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from rich.console import Console
@@ -654,6 +653,7 @@ class ComparativeRAG:
         self,
         query: str,
         collections: Optional[List[str]] = None,
+        progress_callback: Optional[Callable[[str, str], None]] = None,
     ) -> ComparativeScriptureResult:
         """
         Execute full search pipeline without answer generation.
@@ -664,6 +664,8 @@ class ComparativeRAG:
             query: The search query
             collections: List of collections to search. If None, searches all 4.
                         Valid values: 'quran_tr', 'bible_ot', 'bible_nt', 'bible_apocrypha'
+            progress_callback: Optional callback(step_id, message) for streaming progress.
+                              Called at each pipeline stage to report progress.
 
         If enable_multi_query=True: Uses 5 queries + RRF fusion for better accuracy.
         If enable_multi_query=False: Uses single enhanced query (faster).
@@ -678,6 +680,13 @@ class ComparativeRAG:
             collections = ["quran_tr", "bible_ot", "bible_nt", "bible_apocrypha"]
         total_start = time.time()
 
+        def _emit(step_id: str, message: str):
+            if progress_callback:
+                try:
+                    progress_callback(step_id, message)
+                except Exception:
+                    pass  # Never let callback errors break the pipeline
+
         mode_label = "Multi-Query" if self.enable_multi_query else "Single-Query"
 
         if self.verbose:
@@ -687,12 +696,20 @@ class ComparativeRAG:
             console.print(f'[dim]Query: "{query}"[/dim]\n')
 
         # ===== Step 0: Translate query for both corpora =====
+        _emit("translating_query", "Translating query for Quran (TR) and Bible (EN)...")
         quran_translated, bible_translated, detected_language = (
             self._translate_query_parallel(query)
+        )
+        _emit(
+            "query_translated",
+            f'Query translated — Quran: "{quran_translated[:60]}" / Bible: "{bible_translated[:60]}"',
         )
 
         if self.enable_multi_query:
             # ===== MULTI-QUERY PATH (5 queries + RRF) =====
+            _emit(
+                "generating_queries", "Enhancing & generating multi-query variants..."
+            )
             self._log("⚡ Step 1: Generating Multi-Queries...")
             start = time.time()
 
@@ -718,8 +735,17 @@ class ComparativeRAG:
                 f"   Quran: {len(quran_queries)} queries, Bible: {len(bible_queries)} queries"
             )
             self._log(f"   Generated in {duration:.0f}ms")
+            _emit(
+                "queries_generated",
+                f"{len(quran_queries)} Quran + {len(bible_queries)} Bible query variants generated",
+            )
 
             # Step 2: Multi-query search with RRF fusion - now returns (quran, ot, nt, apocrypha)
+            total_queries = len(quran_queries) + len(bible_queries)
+            _emit(
+                "searching_vectors",
+                f"Searching {len(collections)} collections ({total_queries} queries)...",
+            )
             quran_results, ot_results, nt_results, apocrypha_results = (
                 self._search_all_multi_query(
                     quran_queries, bible_queries, pool_size=20, collections=collections
@@ -754,6 +780,10 @@ class ComparativeRAG:
                 "all_rrf_scores": all_rrf_scores,
                 "num_queries": len(quran_queries),
             }
+            _emit(
+                "vectors_found",
+                f"Found {total_verses} verses — Quran: {collection_results['quran']}, OT: {collection_results['ot']}, NT: {collection_results['nt']}, Apoc: {collection_results['apocrypha']}",
+            )
 
             quran_query = quran_translated
             bible_query = bible_translated
@@ -761,9 +791,11 @@ class ComparativeRAG:
         else:
             # ===== SINGLE-QUERY PATH =====
             # Step 1: Parallel query enhancement (using translated queries)
+            _emit("generating_queries", "Enhancing query for search...")
             quran_query, bible_query = self._enhance_query_parallel(
                 quran_translated, bible_translated
             )
+            _emit("queries_generated", "Query enhanced for Quran and Bible corpora")
 
             # Map collection names to internal keys
             collection_to_key = {
@@ -777,6 +809,10 @@ class ComparativeRAG:
             ]
 
             # Step 2: Parallel testament searches (only active collections)
+            _emit(
+                "searching_vectors",
+                f"Searching {len(active_keys)} collections...",
+            )
             self._log(
                 f"🔍 Step 2: Parallel Testament Searches ({len(active_keys)} collections)..."
             )
@@ -853,6 +889,10 @@ class ComparativeRAG:
                 "all_rrf_scores": all_rrf_scores,
                 "num_queries": 1,
             }
+            _emit(
+                "vectors_found",
+                f"Found {total_verses} verses — Quran: {collection_results['quran']}, OT: {collection_results['ot']}, NT: {collection_results['nt']}, Apoc: {collection_results['apocrypha']}",
+            )
 
             duration = (time.time() - start) * 1000
             self._log(
@@ -1080,29 +1120,6 @@ class ComparativeRAG:
                 )
 
             return answer
-
-
-# Convenience function
-def comparative_search(query: str) -> ComparativeScriptureResult:
-    """One-liner for comparative scripture search"""
-    rag = ComparativeRAG(verbose=True)
-    return rag.search_all(query)
-
-
-def comparative_analysis(query: str):
-    """One-liner for full comparative analysis (single essay)"""
-    rag = ComparativeRAG(verbose=True)
-    return rag.compare(query)
-
-
-def multi_agent_analysis(query: str):
-    """
-    One-liner for multi-agent comparative analysis.
-
-    Returns 5 paragraphs: OT, NT, Apocrypha, Quran, Synthesis
-    """
-    rag = ComparativeRAG(verbose=True)
-    return rag.compare_multi_agent(query)
 
 
 if __name__ == "__main__":

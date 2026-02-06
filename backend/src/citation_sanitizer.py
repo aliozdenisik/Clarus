@@ -8,7 +8,7 @@ All transformations are idempotent (applying twice yields same result).
 """
 
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 
 def sanitize_citations(text: str) -> str:
