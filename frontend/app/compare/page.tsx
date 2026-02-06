@@ -31,6 +31,7 @@ import { useLogger } from "@/lib/logger";
 import { LanguageSelector } from "@/components/search/language-selector";
 import { CollectionSelector } from "@/components/compare/collection-selector";
 import { AnalysisProgress } from "@/components/compare/analysis-progress";
+import type { KeywordSuggestion } from "@/lib/stores/keyword-store";
 
 interface ParagraphData {
   title: string;
@@ -88,6 +89,12 @@ function CompareContent() {
   const [selectedCollections, setSelectedCollections] = useState<string[]>([
     "quran_tr", "bible_ot", "bible_nt", "bible_apocrypha"
   ]);
+  
+  // Keyword state
+  const [advancedMode, setAdvancedMode] = useState(false);
+  const [quranKeywords, setQuranKeywords] = useState<KeywordSuggestion[]>([]);
+  const [bibleKeywords, setBibleKeywords] = useState<KeywordSuggestion[]>([]);
+  const [isExtractingKeywords, setIsExtractingKeywords] = useState(false);
   
   // Dynamic verse count based on selected collections
   const selectedVerseCount = useMemo(() => {
@@ -229,22 +236,62 @@ function CompareContent() {
     };
   }, [result?.verse_details]);
 
+  const extractKeywords = async (query: string, corpus: "quran" | "bible") => {
+    const token = localStorage.getItem("access_token");
+    const response = await fetch("http://localhost:8000/api/search/enhance", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ query, corpus }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Keyword extraction failed for ${corpus}`);
+    }
+
+    const data = await response.json();
+    return data.keywords || [];
+  };
+
   const performBatchCompare = async (topicToCompare: string) => {
     setIsLoading(true);
     try {
       const token = localStorage.getItem("access_token");
+      
+      // Build request body with keywords if advanced mode is ON
+      const requestBody: any = {
+        topic: topicToCompare,
+        use_multi_agent: true,
+        collections: selectedCollections,
+        ...(selectedLanguage && { language: selectedLanguage }),
+      };
+      
+      // Add keywords if advanced mode is ON and keywords are selected
+      if (advancedMode) {
+        const selectedQuranKeywords = quranKeywords
+          .filter((k) => k.selected)
+          .map((k) => k.text);
+        const selectedBibleKeywords = bibleKeywords
+          .filter((k) => k.selected)
+          .map((k) => k.text);
+        
+        if (selectedQuranKeywords.length > 0) {
+          requestBody.quran_keywords = selectedQuranKeywords;
+        }
+        if (selectedBibleKeywords.length > 0) {
+          requestBody.bible_keywords = selectedBibleKeywords;
+        }
+      }
+      
       const response = await fetch("http://localhost:8000/api/compare/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ 
-          topic: topicToCompare, 
-          use_multi_agent: true,
-          collections: selectedCollections,
-          ...(selectedLanguage && { language: selectedLanguage })
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -429,7 +476,38 @@ function CompareContent() {
 
     setIsLoading(true);
     setResult(null);
-    setExpandedParagraphs(new Set()); 
+    setExpandedParagraphs(new Set());
+
+    // If advanced mode is ON, extract keywords first
+    if (advancedMode) {
+      setIsExtractingKeywords(true);
+      try {
+        // Extract keywords in parallel for both corpora
+        const [quranKw, bibleKw] = await Promise.all([
+          selectedCollections.includes("quran_tr")
+            ? extractKeywords(topic, "quran")
+            : Promise.resolve([]),
+          selectedCollections.some((c) =>
+              ["bible_ot", "bible_nt", "bible_apocrypha"].includes(c)
+            )
+            ? extractKeywords(topic, "bible")
+            : Promise.resolve([]),
+        ]);
+
+        setQuranKeywords(quranKw);
+        setBibleKeywords(bibleKw);
+        setIsExtractingKeywords(false);
+
+        // Wait for user to select keywords before proceeding
+        // User will click "Analyze" again after selecting keywords
+        setIsLoading(false);
+        return;
+      } catch (error) {
+        toast.error("Keyword extraction failed. Proceeding with normal search.");
+        setIsExtractingKeywords(false);
+        // Fall through to normal compare
+      }
+    }
 
     // Check streaming preference
     if (enable_streaming) {
@@ -585,6 +663,106 @@ function CompareContent() {
                   onChange={setSelectedCollections}
                   disabled={isLoading}
                 />
+              </div>
+              
+              {/* Keyword Selector - Advanced Mode Toggle */}
+              <div className="w-full mt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="advanced-mode"
+                      checked={advancedMode}
+                      onChange={(e) => setAdvancedMode(e.target.checked)}
+                      disabled={isLoading || isExtractingKeywords}
+                      className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-indigo-500 focus:ring-2 focus:ring-indigo-500/40"
+                    />
+                    <label
+                      htmlFor="advanced-mode"
+                      className="text-sm font-medium text-[var(--color-text-secondary)] cursor-pointer"
+                    >
+                      Gelişmiş Arama
+                    </label>
+                  </div>
+                  <span className="text-xs text-[var(--color-text-muted)]">
+                    Anahtar kelime bazlı arama
+                  </span>
+                </div>
+                
+                {/* Show keywords after extraction */}
+                {advancedMode && (quranKeywords.length > 0 || bibleKeywords.length > 0) && (
+                  <div className="space-y-3 p-4 rounded-lg bg-[var(--color-bg-surface)]/50 border border-[var(--color-border-subtle)]">
+                    {/* Quran Keywords */}
+                    {quranKeywords.length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">
+                          Kuran Anahtar Kelimeleri:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {quranKeywords.map((kw) => (
+                            <button
+                              key={kw.text}
+                              type="button"
+                              onClick={() => {
+                                setQuranKeywords((prev) =>
+                                  prev.map((k) =>
+                                    k.text === kw.text ? { ...k, selected: !k.selected } : k
+                                  )
+                                );
+                              }}
+                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                                kw.selected
+                                  ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
+                                  : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-800"
+                              }`}
+                            >
+                              {kw.text}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Bible Keywords */}
+                    {bibleKeywords.length > 0 && (
+                      <div>
+                        <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">
+                          İncil Anahtar Kelimeleri:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {bibleKeywords.map((kw) => (
+                            <button
+                              key={kw.text}
+                              type="button"
+                              onClick={() => {
+                                setBibleKeywords((prev) =>
+                                  prev.map((k) =>
+                                    k.text === kw.text ? { ...k, selected: !k.selected } : k
+                                  )
+                                );
+                              }}
+                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                                kw.selected
+                                  ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
+                                  : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/40 hover:bg-zinc-800"
+                              }`}
+                            >
+                              {kw.text}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Loading state for keyword extraction */}
+                {isExtractingKeywords && (
+                  <div className="flex items-center gap-2 text-[var(--color-text-muted)] text-sm">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-indigo-500 border-t-transparent" />
+                    <span>Anahtar kelimeler çıkarılıyor...</span>
+                  </div>
+                )}
               </div>
             </form>
           </motion.div>
