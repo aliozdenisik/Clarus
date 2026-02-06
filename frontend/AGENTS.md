@@ -2,37 +2,89 @@
 
 ## OVERVIEW
 
-Next.js 15 App Router with Framer Motion animations, Zustand state, and TanStack Query. Generated TypeScript API client from OpenAPI spec. Linear-style dark theme.
+Next.js 15 App Router with Framer Motion animations, Zustand state, and TanStack Query. Generated TypeScript API client from OpenAPI spec. Linear-style dark theme. 17 pages, 60+ components, 21 test files.
 
 ## STRUCTURE
 
 ```
 frontend/
-├── app/                        # App Router pages
+├── app/                        # App Router pages (17 files)
 │   ├── layout.tsx              # Root layout + providers
 │   ├── page.tsx                # Landing page
+│   ├── global-error.tsx        # Global error boundary
 │   ├── login/                  # Auth pages
 │   ├── register/
 │   ├── search/                 # Quran search
-│   ├── compare/                # Multi-agent comparison (462 lines)
+│   ├── compare/                # Multi-agent comparison (1070 lines)
+│   ├── keyword-search/         # Morphological keyword search
 │   ├── history/                # Search history
 │   ├── settings/               # User preferences
-│   └── [scripture]/            # OT, NT, Apocrypha, Quran browse
+│   ├── quran/                  # Quran browse (index + [surahId])
+│   ├── bible/[bookNr]/         # Bible book browse
+│   ├── old-testament/          # OT browse
+│   ├── new-testament/          # NT browse
+│   ├── apocrypha/              # Apocrypha browse
+│   └── demo-navbar/            # Navbar demo page
 ├── components/
-│   ├── ui/                     # Radix primitives (11 files)
-│   ├── layout/                 # Navigation, headers
-│   ├── search/                 # Domain components
-│   └── providers.tsx           # Root provider composition
+│   ├── ui/                     # Radix + custom primitives (33 files)
+│   ├── compare/                # Compare domain (7 files)
+│   ├── keyword-search/         # Keyword search domain (12 files)
+│   ├── verse-lookup/           # Verse lookup (2 files)
+│   ├── search/                 # Search domain (4 files)
+│   ├── layout/                 # Navigation, offline banner
+│   ├── motion/                 # Framer Motion wrappers
+│   ├── providers.tsx           # Root provider composition
+│   └── error-boundary.tsx      # Error boundary component
 ├── lib/
-│   ├── api/                    # Generated client (1003+ lines)
+│   ├── api/                    # Generated client (2054+ lines types)
 │   │   ├── config.ts           # SDK client global auth configuration
 │   │   ├── types.gen.ts        # TypeScript types from OpenAPI
 │   │   ├── sdk.gen.ts          # API methods
-│   │   └── @tanstack/          # React Query hooks
-│   ├── stores/                 # Zustand stores
-│   ├── hooks/                  # Custom hooks (SSE, etc.)
-│   └── auth/                   # Auth context
-├── __tests__/                  # Vitest + RTL (9 files)
+│   │   ├── client.gen.ts       # Client configuration
+│   │   ├── core/               # SDK core (auth, params, SSE, serializers)
+│   │   ├── client/             # Client module (types, utils)
+│   │   └── index.ts            # Barrel exports
+│   ├── stores/                 # Zustand stores (2 stores)
+│   │   ├── preferences-store.ts  # User preferences (164 lines)
+│   │   └── keyword-store.ts    # Keyword search state (82 lines)
+│   ├── hooks/                  # Custom hooks
+│   │   └── use-sse.ts          # SSE streaming hook (188 lines)
+│   ├── auth/                   # Auth context
+│   │   └── auth-context.tsx    # Auth provider (196 lines)
+│   ├── utils/                  # Utility modules
+│   │   ├── parse-citations.ts  # Citation parsing (253 lines)
+│   │   ├── verse-url.ts        # Verse URL utilities (131 lines)
+│   │   ├── arabic.ts           # Arabic text utilities
+│   │   ├── hebrew.ts           # Hebrew text utilities
+│   │   └── greek.ts            # Greek text utilities
+│   ├── logger.ts               # Structured logger (431 lines)
+│   ├── correlation.ts          # Correlation ID management (119 lines)
+│   ├── design-system.ts        # Theme tokens
+│   ├── utils.ts                # cn() + general utils
+│   ├── api-client-setup.ts     # API client initialization
+│   └── api-provider.tsx        # API provider component
+├── __tests__/                  # Vitest + RTL (21 files)
+│   ├── compare-page.test.tsx
+│   ├── keyword-search-page.test.tsx
+│   ├── keyword-search-components.test.tsx
+│   ├── search-page.test.tsx
+│   ├── auth-context.test.tsx
+│   ├── login.test.tsx
+│   ├── history.test.tsx
+│   ├── settings.test.tsx
+│   ├── quran.test.tsx
+│   ├── old-testament.test.tsx
+│   ├── new-testament.test.tsx
+│   ├── apocrypha.test.tsx
+│   ├── filter-tabs.test.tsx
+│   ├── inline-citation.test.tsx
+│   ├── parse-citations.test.tsx
+│   ├── source-badge.test.tsx
+│   ├── source-reference-card.test.tsx
+│   ├── search-tabs.test.tsx
+│   ├── offline-banner.test.tsx
+│   ├── use-sse.test.tsx
+│   └── example.test.tsx
 └── messages/                   # i18n (en.json, tr.json)
 ```
 
@@ -41,13 +93,19 @@ frontend/
 | Task | Location | Notes |
 |------|----------|-------|
 | Add page | `app/[route]/page.tsx` | App Router convention |
-| Add UI component | `components/ui/` | Radix + Tailwind |
-| Add domain component | `components/[domain]/` | Feature-specific |
+| Add UI primitive | `components/ui/` | Radix + Tailwind (33 files) |
+| Add compare component | `components/compare/` | 7 domain components |
+| Add keyword search component | `components/keyword-search/` | 12 domain components |
+| Add verse lookup component | `components/verse-lookup/` | 2 files |
+| Add search component | `components/search/` | 4 search-related components |
 | Modify API client | `lib/api/` | Regenerate, don't edit manually |
 | Add state | `lib/stores/` | Zustand pattern |
 | Add hook | `lib/hooks/` | Custom React hooks |
-| Add test | `__tests__/` | Vitest + RTL |
+| Add test | `__tests__/` | Vitest + RTL (21 test files) |
 | i18n strings | `messages/` | en.json, tr.json |
+| Add utility | `lib/utils/` | Domain-specific utils |
+| Modify logging | `lib/logger.ts` | Structured logger |
+| Modify auth | `lib/auth/auth-context.tsx` | Auth context provider |
 
 ## CONVENTIONS
 
@@ -56,6 +114,7 @@ frontend/
 | Type | Tool | Location |
 |------|------|----------|
 | User preferences | Zustand + persist | `lib/stores/preferences-store.ts` |
+| Keyword search state | Zustand | `lib/stores/keyword-store.ts` |
 | Server data | TanStack Query | `lib/api/@tanstack/` |
 | Auth session | React Context | `lib/auth/auth-context.tsx` |
 | URL state | nuqs | Page components |
@@ -94,6 +153,25 @@ const { data, error, isConnected } = useSSE('/api/stream/search?q=...');
 - **Props interface** - Explicit types, no `any`
 - **cn() utility** - Tailwind class merging from `lib/utils.ts`
 - **Framer Motion** - Spring animations for transitions
+- **Error boundaries** - `error-boundary.tsx` + `global-error.tsx`
+
+### Logging
+
+```typescript
+// DO: Use structured logger
+import { logger } from '@/lib/logger';
+logger.info('Search completed', { query, resultCount });
+
+// DON'T: Use console.log
+console.log('Search completed');  // Forbidden
+```
+
+### Correlation IDs
+
+```typescript
+// Correlation IDs managed in lib/correlation.ts
+// Auto-injected into API requests for request tracing
+```
 
 ## ANTI-PATTERNS
 
@@ -101,7 +179,36 @@ const { data, error, isConnected } = useSSE('/api/stream/search?q=...');
 - **No manual API edits** - Regenerate via `npx @hey-api/openapi-ts`
 - **No Context for server data** - Use TanStack Query
 - **No inline styles** - Use Tailwind classes
-- **No console.log** - Use proper error boundaries
+- **No console.log** - Use structured logger from `lib/logger.ts`
+
+## KEY COMPONENTS
+
+### Compare Domain (`components/compare/`)
+| Component | Lines | Role |
+|-----------|-------|------|
+| `analysis-progress.tsx` | 209 | Multi-agent analysis progress indicator |
+| `collection-selector.tsx` | 109 | Collection selection for comparison |
+| `source-reference-card.tsx` | 105 | Verse card with source badge |
+| `citation-hover-card.tsx` | 98 | Citation tooltip on hover |
+| `inline-citation.tsx` | 53 | Clickable inline citation |
+| `filter-tabs.tsx` | 38 | Source filtering tabs |
+| `source-badge.tsx` | 35 | Colored source badge |
+
+### Keyword Search Domain (`components/keyword-search/`)
+| Component | Lines | Role |
+|-----------|-------|------|
+| `root-browser.tsx` | 234 | Root morphology browser |
+| `verse-card.tsx` | 181 | Verse display card |
+| `surah-chart.tsx` | 169 | Surah/book distribution chart |
+| `accuracy-disclaimer.tsx` | 164 | Accuracy disclaimer modal |
+| `search-input.tsx` | 91 | Search input with transliteration |
+| `derived-words.tsx` | 77 | Derived words display |
+| `root-card.tsx` | 54 | Root information card |
+| `pagination.tsx` | 54 | Pagination controls |
+| `stats-bar.tsx` | 47 | Search statistics bar |
+| `bible-category-tabs.tsx` | 40 | Bible category tabs (OT/NT) |
+| `experimental-disclaimer.tsx` | 28 | Experimental feature disclaimer |
+| `language-tabs.tsx` | 26 | Language selection tabs |
 
 ## TESTING
 
@@ -121,6 +228,8 @@ render(<SearchPage />);
 await userEvent.type(screen.getByRole('textbox'), 'sabir');
 expect(screen.getByText('Results')).toBeInTheDocument();
 ```
+
+**Coverage**: 21 test files covering pages, components, hooks, and utilities.
 
 ## COMMANDS
 
@@ -182,7 +291,8 @@ Available Google Fonts for Arabic:
 
 ## NOTES
 
-- **Zombie status**: Documentation claims "frontend removed" but code exists. Verify intent before major changes.
 - **API client**: Generated from `http://localhost:8000/openapi.json`
 - **Design system**: `lib/design-system.ts` defines theme tokens
 - **GlowCard**: Custom animated card component used throughout
+- **Script utilities**: Arabic, Hebrew, Greek text utils in `lib/utils/`
+- **Correlation IDs**: Request tracing via `lib/correlation.ts`
