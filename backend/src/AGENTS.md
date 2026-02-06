@@ -2,28 +2,41 @@
 
 ## OVERVIEW
 
-Core RAG (Retrieval-Augmented Generation) pipeline for sacred text search. 17 Python modules handling embeddings, search, chunking, and multi-agent answer generation.
+Core RAG (Retrieval-Augmented Generation) pipeline for sacred text search. 29 Python modules handling embeddings, search, chunking, morphological analysis, and multi-agent answer generation. Includes Bible morphology (Hebrew/Greek), circuit breaker, and Redis-backed caching.
 
 ## STRUCTURE
 
 ```
 src/
-├── ultimate_rag.py             # Main orchestrator (593 lines)
-├── comparative_rag.py          # Cross-scripture analysis (776 lines)
-├── multi_agent_answer_generator.py  # 5-agent essay system (530 lines)
-├── search.py                   # Qdrant hybrid search (974 lines)
-├── embeddings.py               # Dense + sparse encoders (653 lines)
-├── indexer.py                  # Collection management (722 lines)
-├── query_enhancer.py           # LLM query expansion
-├── llm_cache.py                # Semantic response caching
-├── answer_generator.py         # Single-source LLM answers
-├── comparative_answer_generator.py  # Essay generation
-├── semantic_chunker.py         # Quran verse grouping
-├── bible_semantic_chunker.py   # Bible verse grouping
-├── data_loader.py              # Quran JSON loader
-├── bible_loader.py             # Bible KJVA loader
-├── lemmatizer.py               # Turkish text normalization
-├── turkish_utils.py            # Turkish-specific utilities
+├── ultimate_rag.py             # Main orchestrator (1447 lines)
+├── comparative_rag.py          # Cross-scripture analysis (1414 lines)
+├── bible_morphology.py         # Bible morphological search - Hebrew/Greek (1900 lines)
+├── multi_agent_answer_generator.py  # 5-agent essay system (805 lines)
+├── search.py                   # Qdrant hybrid search (880 lines)
+├── verse_parser.py             # Verse reference parsing (792 lines)
+├── query_enhancer.py           # LLM query expansion (729 lines)
+├── indexer.py                  # Collection management (644 lines)
+├── semantic_chunker.py         # Quran verse grouping (638 lines)
+├── query_translator.py         # Cross-language translation (613 lines)
+├── quran_morphology.py         # Arabic root-based search (607 lines)
+├── embeddings.py               # Dense + sparse encoders (570 lines)
+├── greek_normalizer.py         # Greek text normalization (509 lines)
+├── answer_generator.py         # Single-source LLM answers (500 lines)
+├── bible_semantic_chunker.py   # Bible verse grouping (499 lines)
+├── comparative_answer_generator.py  # Essay generation (488 lines)
+├── hebrew_normalizer.py        # Hebrew text normalization (428 lines)
+├── llm_cache.py                # LLM response caching (395 lines)
+├── confidence_scorer.py        # Two-phase sigmoid scoring (376 lines)
+├── bible_loader.py             # Bible KJVA loader (282 lines)
+├── lemmatizer.py               # Turkish text normalization (194 lines)
+├── turkish_utils.py            # Turkish-specific utilities (191 lines)
+├── data_loader.py              # Quran JSON loader (188 lines)
+├── circuit_breaker.py          # External service resilience (142 lines)
+├── citation_sanitizer.py       # Citation format validation (126 lines)
+├── arabic_normalizer.py        # Arabic normalization + Buckwalter (87 lines)
+├── semantic_cache.py           # Semantic cache wrapper (38 lines)
+├── graph_rag.py                # Graph RAG placeholder (41 lines)
+├── multi_query.py              # Multi-query wrapper (23 lines)
 └── __init__.py                 # Package exports
 ```
 
@@ -56,6 +69,28 @@ src/
                     AnswerGenerator / MultiAgentAnswerGenerator
 ```
 
+## KEYWORD SEARCH DATA FLOW
+
+```
+                    Morphological Keyword Search
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        │                                           │
+   Quran (Arabic)                           Bible (Hebrew/Greek)
+   quran_morphology.py                      bible_morphology.py
+        │                                           │
+   Arabic Input (كتب)                        Hebrew/Greek Input
+   or Buckwalter (ktb)                       or Strongs Number
+        │                                           │
+   Root Extraction                           Root/Lemma Lookup
+        │                                           │
+   Derived Words                             Cross-reference
+        │                                           │
+   Verse Lookup                              Verse Lookup
+        │                                           │
+   Surah Distribution                        Book Distribution
+```
+
 ## WHERE TO LOOK
 
 | Task | File | Key Method |
@@ -67,6 +102,15 @@ src/
 | Modify chunking | `semantic_chunker.py` | `SemanticVerseChunker.chunk()` |
 | Add collection | `indexer.py` | `QuranIndexer.create_collection()` |
 | Cache tuning | `llm_cache.py` | `SemanticCache` (theta=0.95) |
+| Parse verse refs | `verse_parser.py` | `VerseParser.parse()` |
+| Arabic morphology | `quran_morphology.py` | `QuranMorphologyService` |
+| Bible morphology | `bible_morphology.py` | `BibleMorphologyService` |
+| Hebrew normalization | `hebrew_normalizer.py` | `HebrewNormalizer` |
+| Greek normalization | `greek_normalizer.py` | `GreekNormalizer` |
+| Cross-language query | `query_translator.py` | `QueryTranslator.translate()` |
+| Circuit breaker | `circuit_breaker.py` | `CircuitBreaker` decorator |
+| Citation validation | `citation_sanitizer.py` | `CitationSanitizer.sanitize()` |
+| Confidence scoring | `confidence_scorer.py` | `ConfidenceScorer.score()` |
 
 ## KEY CLASSES
 
@@ -79,14 +123,23 @@ src/
 | `DenseEncoder` | OpenAI embeddings | `encode()` → 3072-dim vector |
 | `SparseEncoder` | BM25 via FastEmbed | `encode()` → sparse vector |
 | `QueryEnhancer` | LLM query expansion | `enhance()` → expanded query string |
+| `BibleMorphologyService` | Bible keyword search | Hebrew/Greek root + Strongs mapping |
+| `QuranMorphologyService` | Quran keyword search | Arabic root extraction + derived words |
+| `VerseParser` | Verse reference parsing | `parse()` → normalized reference |
+| `QueryTranslator` | Cross-language translation | `translate()` → translated query |
+| `ConfidenceScorer` | Two-phase scoring | `score()` → calibrated confidence |
+| `CircuitBreaker` | Service resilience | Decorator for external calls |
+| `HebrewNormalizer` | Hebrew text processing | Normalization + transliteration |
+| `GreekNormalizer` | Greek text processing | Normalization + transliteration |
 
 ## CONVENTIONS (THIS MODULE)
 
-- **All I/O is async** - Use `async/await` for Qdrant and LLM calls
+- **All I/O is async** - Use `async/await` for Qdrant, LLM, and Redis calls
 - **Type hints required** - Every function signature must have types
 - **Logging**: Use `logging.getLogger(__name__)` not print
 - **Error handling**: Catch specific exceptions, never bare `except:`
 - **Collections**: Access via constants `QURAN_COLLECTION`, `BIBLE_OT_COLLECTION`, etc.
+- **Redis**: Fail-open pattern — Redis failures logged but never crash the app
 
 ## ANTI-PATTERNS
 
@@ -94,6 +147,7 @@ src/
 - **Never hardcode collection names** - Use constants from `indexer.py`
 - **Never skip cache check** - Always check `LLMCache` before LLM call
 - **Never return raw Qdrant response** - Wrap in domain objects
+- **Never bypass circuit breaker** - Use decorator for external service calls
 
 ## 5-AGENT SYSTEM DETAILS
 
@@ -138,6 +192,8 @@ Ground truth: `tests/test_data.json`
 - **RRF k-parameter**: 60 (tuned for this corpus)
 - **Cache threshold**: 0.95 cosine similarity
 - **Rate limits**: Built into QueryEnhancer for OpenRouter
+- **Bible morphology DB**: Strongs numbers for Hebrew (OT) and Greek (NT) cross-referencing
+- **Circuit breaker**: 5 failures → open state → 60s timeout → half-open retry
 
 ## CONFIDENCE SCORING
 
