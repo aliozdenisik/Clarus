@@ -20,6 +20,10 @@ diskcache>=5.6.0
 tenacity>=8.2.0
 pybreaker>=1.0.0
 
+# Redis caching
+redis[hiredis]>=5.0.0
+redisvl>=0.7.0
+
 # Turkish lemmatization (for BM25)
 zeyrek>=0.1.0
 
