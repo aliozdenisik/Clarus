@@ -477,6 +477,251 @@ class UltimateRAG:
 
             return vectors
 
+    def _search_per_keyword(
+        self, keywords: List[str], source: str, limit_per_keyword: int = 10
+    ) -> List:
+        """
+        Search with individual keywords in parallel, accumulate with RRF fusion.
+
+        For each keyword:
+        1. Encode to vector
+        2. Search single-verse collection
+        3. Search semantic chunks (if enabled)
+        4. Accumulate RRF scores
+
+        Apply keyword coverage boost for results matching 2+ keywords.
+
+        Args:
+            keywords: List of keyword strings to search
+            source: Data source - "quran_tr", "bible_ot", etc.
+            limit_per_keyword: Results per keyword (default: 10)
+
+        Returns:
+            List of results sorted by final score (RRF + coverage boost)
+        """
+        import sentry_sdk
+
+        with sentry_sdk.start_span(
+            op="rag.search_per_keyword", description=f"Search {source} per keyword"
+        ) as span:
+            span.set_data("source", source)
+            span.set_data("keyword_count", len(keywords))
+            span.set_data("limit_per_keyword", limit_per_keyword)
+
+            logger.info(
+                "Per-keyword search started",
+                extra={
+                    "stage": "search_per_keyword",
+                    "source": source,
+                    "keyword_count": len(keywords),
+                    "limit_per_keyword": limit_per_keyword,
+                },
+            )
+            start = time.perf_counter()
+
+            searcher = self._get_searcher(source)
+
+            # Batch encode ALL keywords in a single API call
+            keyword_vectors = self._batch_encode_queries(keywords)
+
+            # Collect all results with their ranks
+            all_results = {}  # id -> (result, rrf_score, matched_keywords)
+            k = 60  # RRF constant
+
+            # Search single-verse collection with pre-computed vectors
+            for i, (keyword, vector) in enumerate(zip(keywords, keyword_vectors)):
+                try:
+                    results = searcher.search_with_vector(
+                        vector, limit=limit_per_keyword
+                    )
+
+                    for rank, result in enumerate(results, 1):
+                        result_id = (
+                            result.id if hasattr(result, "id") else f"{i}_{rank}"
+                        )
+                        rrf_contribution = 1 / (k + rank)
+
+                        if result_id in all_results:
+                            # Accumulate RRF score and track matched keywords
+                            existing_result, existing_score, matched = all_results[
+                                result_id
+                            ]
+                            all_results[result_id] = (
+                                existing_result,
+                                existing_score + rrf_contribution,
+                                matched + [keyword],
+                            )
+                        else:
+                            all_results[result_id] = (
+                                result,
+                                rrf_contribution,
+                                [keyword],
+                            )
+
+                except CircuitBreakerError:
+                    logger.warning(
+                        "Qdrant unavailable (circuit breaker open), returning empty results for keyword: %s",
+                        keyword,
+                    )
+                    # Continue with other keywords - don't fail entire search
+                except Exception as e:
+                    self._log(f"   Warning: Search failed for keyword: {e}", "yellow")
+
+            # Parallel search: Semantic chunks (if enabled) — reuse pre-computed vectors
+            if self.enable_semantic_chunks:
+                # Handle Quran Semantic Chunks
+                if source == "quran_tr":
+                    try:
+                        chunk_searcher = self._get_semantic_chunk_searcher()
+                        if chunk_searcher.collection_exists():
+                            self._log(
+                                "   📦 Including semantic chunks in per-keyword search (Quran)..."
+                            )
+
+                            for i, (keyword, vector) in enumerate(
+                                zip(keywords, keyword_vectors)
+                            ):
+                                try:
+                                    chunk_results = chunk_searcher.search_with_vector(
+                                        vector, limit=limit_per_keyword // 2
+                                    )
+
+                                    for rank, chunk_result in enumerate(
+                                        chunk_results, 1
+                                    ):
+                                        chunk_id = chunk_result.chunk_id
+                                        rrf_contribution = 1 / (k + rank)
+
+                                        if chunk_id in all_results:
+                                            existing_result, existing_score, matched = (
+                                                all_results[chunk_id]
+                                            )
+                                            all_results[chunk_id] = (
+                                                existing_result,
+                                                existing_score + rrf_contribution,
+                                                matched + [keyword],
+                                            )
+                                        else:
+                                            all_results[chunk_id] = (
+                                                chunk_result,
+                                                rrf_contribution,
+                                                [keyword],
+                                            )
+                                except CircuitBreakerError:
+                                    logger.warning(
+                                        "Qdrant unavailable for Quran semantic chunks, skipping"
+                                    )
+                                except Exception:
+                                    pass
+                    except Exception:
+                        self._log(f"   Warning: Quran semantic chunks error", "yellow")
+
+                # Handle Bible Semantic Chunks
+                elif source.startswith("bible_"):
+                    try:
+                        translation = source.replace("bible_", "")
+                        # Initialize on demand
+                        from src.search import BibleSemanticChunkSearcher
+
+                        bible_chunk_searcher = BibleSemanticChunkSearcher(
+                            translation=translation, qdrant_url=self.qdrant_url
+                        )
+
+                        if bible_chunk_searcher.collection_exists():
+                            self._log(
+                                f"   📦 Including semantic chunks in per-keyword search (Bible {translation})..."
+                            )
+
+                            for i, (keyword, vector) in enumerate(
+                                zip(keywords, keyword_vectors)
+                            ):
+                                try:
+                                    chunk_results = (
+                                        bible_chunk_searcher.search_with_vector(
+                                            vector, limit=limit_per_keyword // 2
+                                        )
+                                    )
+
+                                    for rank, chunk_result in enumerate(
+                                        chunk_results, 1
+                                    ):
+                                        chunk_id = chunk_result.chunk_id
+                                        rrf_contribution = 1 / (k + rank)
+
+                                        if chunk_id in all_results:
+                                            existing_result, existing_score, matched = (
+                                                all_results[chunk_id]
+                                            )
+                                            all_results[chunk_id] = (
+                                                existing_result,
+                                                existing_score + rrf_contribution,
+                                                matched + [keyword],
+                                            )
+                                        else:
+                                            all_results[chunk_id] = (
+                                                chunk_result,
+                                                rrf_contribution,
+                                                [keyword],
+                                            )
+                                except CircuitBreakerError:
+                                    logger.warning(
+                                        "Qdrant unavailable for Bible semantic chunks, skipping"
+                                    )
+                                except Exception:
+                                    pass
+                    except Exception:
+                        self._log(f"   Warning: Bible semantic chunks error", "yellow")
+
+            # Apply keyword coverage boost: results matching 2+ keywords get boosted
+            boosted_results = []
+            for result_id, (result, rrf_score, matched_keywords) in all_results.items():
+                match_count = len(matched_keywords)
+                # Boost formula: score * (1 + match_count * 0.15)
+                # 1 match: no boost
+                # 2 matches: +15%
+                # 3 matches: +30%
+                if match_count >= 2:
+                    boosted_score = rrf_score * (1 + match_count * 0.15)
+                else:
+                    boosted_score = rrf_score
+                boosted_results.append((result, boosted_score, matched_keywords))
+
+            # Sort by final score descending
+            sorted_results = sorted(boosted_results, key=lambda x: x[1], reverse=True)
+
+            # Attach final scores to results
+            merged_results = []
+            for result, final_score, matched_keywords in sorted_results:
+                result.score = final_score
+                merged_results.append(result)
+
+            latency_ms = (time.perf_counter() - start) * 1000
+            sentry_sdk.set_measurement(
+                "rag.query.search_per_keyword_latency_ms", latency_ms, "millisecond"
+            )
+            span.set_data("result_count", len(merged_results))
+            log_performance(
+                logger,
+                "search_per_keyword",
+                latency_ms,
+                source=source,
+                keyword_count=len(keywords),
+                result_count=len(merged_results),
+            )
+
+            logger.info(
+                "Per-keyword search complete",
+                extra={
+                    "stage": "search_per_keyword",
+                    "source": source,
+                    "keyword_count": len(keywords),
+                    "result_count": len(merged_results),
+                    "latency_ms": round(latency_ms, 1),
+                },
+            )
+
+            return merged_results
+
     def _search_all_queries(
         self, queries: List[str], source: str, limit: int = 30
     ) -> List:
@@ -710,6 +955,7 @@ class UltimateRAG:
         top_k: int = None,
         rerank_query: str = None,  # Optional: use different query for reranking
         detected_language: Optional[str] = None,
+        keywords: Optional[List[str]] = None,  # Optional: per-keyword parallel search
     ) -> List:
         """
         Execute Ultimate RAG Pipeline
@@ -720,6 +966,7 @@ class UltimateRAG:
             top_k: Number of final results (default: self.final_top_k)
             rerank_query: Optional query to use for reranking (useful for translated queries)
             detected_language: Detected language of the query (for cache metadata)
+            keywords: Optional list of keywords for per-keyword parallel search
 
         Returns:
             List of reranked search results
@@ -734,6 +981,7 @@ class UltimateRAG:
                 "source": source,
                 "top_k": top_k,
                 "query": query[:50],
+                "keywords": keywords,
             },
         )
 
@@ -746,6 +994,19 @@ class UltimateRAG:
 
         # Step 3: Search with all queries (RRF merge)
         search_results = self._search_all_queries(all_queries, source)
+
+        # If keywords provided, run per-keyword search and merge results
+        if keywords:
+            logger.info(
+                "Performing per-keyword search",
+                extra={"keyword_count": len(keywords), "source": source},
+            )
+            keyword_results = self._search_per_keyword(
+                keywords, source, limit_per_keyword=10
+            )
+
+            # Merge keyword results with query results using RRF fusion
+            search_results = self._rrf_fusion([search_results, keyword_results], k=60)
 
         # Step 4: Rerank for final precision
         final_results = self._get_top_results(search_results, top_k=top_k)
@@ -760,6 +1021,7 @@ class UltimateRAG:
             query_count=len(all_queries),
             candidates=len(search_results),
             final_results=len(final_results),
+            with_keywords=keywords is not None,
         )
 
         return final_results
