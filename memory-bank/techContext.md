@@ -14,6 +14,7 @@
 | **LLM** | Gemini 2.5 Flash | Query enhancement + answers |
 | **Backend** | FastAPI | Python 3.12, async |
 | **Auth** | JWT + Google OAuth | python-jose, passlib |
+| **Caching** | Redis Stack 7.2 | Centralized caching, rate limiting, JWT blacklist |
 | **CLI** | argparse + Rich | Primary Interface |
 | **OS** | Ubuntu Linux | Docker native |
 
@@ -190,6 +191,10 @@ rich>=13.0.0
 pybreaker>=1.0.0
 tenacity>=8.2.0
 
+# Redis caching
+redis[hiredis]>=5.0.0
+redisvl>=0.7.0
+
 # REST API
 fastapi>=0.110.0
 uvicorn[standard]>=0.27.0
@@ -201,6 +206,13 @@ python-jose[cryptography]>=3.3.0
 passlib[bcrypt]>=1.7.4
 httpx>=0.26.0
 ```
+
+### Redis Stack 7.2
+- **Purpose**: Centralized caching, rate limiting, JWT blacklist
+- **Modules**: redis[hiredis]>=5.0.0, redisvl>=0.7.0
+- **Docker**: redis/redis-stack:7.2.0-v13 on port 6379
+- **Features**: LLM semantic cache, embedding cache, search result cache, rate limiting, JWT token blacklist
+- **Resilience**: Fail-open — all Redis operations gracefully degrade when Redis is unavailable
 
 ## Directory Structure
 

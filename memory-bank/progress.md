@@ -8,7 +8,7 @@
 - [x] Bible indexing and search (KJVA English)
 - [x] Hybrid search (Dense + Sparse)
 - [x] Query enhancement with LLM
-- [x] Embedding caching (DiskCache)
+- [x] Embedding caching (Redis Stack 7.2)
 - [x] LLM Response Caching (Semantic cache)
 
 ### Advanced Features
@@ -205,6 +205,7 @@
 | [#11](https://github.com/aliozdenisik/Clarus/issues/11) | DRY: Paragraph building (~35 lines duplicated) | Medium |
 | [#12](https://github.com/aliozdenisik/Clarus/issues/12) | Playwright E2E test timing issues | Medium |
 | [#13](https://github.com/aliozdenisik/Clarus/issues/13) | Parent Epic: Post-Deployment Cleanup | - |
+| ~~[#57](https://github.com/aliozdenisik/Clarus/issues/57)~~ | ~~Redis Caching Infrastructure~~ | ~~High~~ → **CLOSED** |
 | ~~[#17](https://github.com/aliozdenisik/Clarus/issues/17)~~ | ~~SSE stats message format mismatch~~ | ~~High~~ → **CLOSED** |
 | ~~[#18](https://github.com/aliozdenisik/Clarus/issues/18)~~ | ~~Inconsistent search navigation options~~ | ~~Medium~~ → **CLOSED** |
 | ~~[#19](https://github.com/aliozdenisik/Clarus/issues/19)~~ | ~~Missing Apocrypha book count~~ | ~~Low~~ → **CLOSED** |
