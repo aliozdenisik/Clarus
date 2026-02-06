@@ -13,7 +13,7 @@
 | **Sparse Embeddings** | Qdrant BM25 | FastEmbed |
 | **LLM** | Gemini 2.5 Flash | Query enhancement + answers |
 | **Backend** | FastAPI | Python 3.12, async |
-| **Auth** | JWT + Google OAuth | python-jose, passlib |
+| **Auth** | Better Auth | JWT plugin + JWKS bridge to FastAPI |
 | **Caching** | Redis Stack 7.2 | Centralized caching, rate limiting, JWT blacklist |
 | **CLI** | argparse + Rich | Primary Interface |
 | **OS** | Ubuntu Linux | Docker native |
@@ -202,9 +202,11 @@ sse-starlette>=2.0.0
 pydantic-settings>=2.1.0
 sqlalchemy[asyncio]>=2.0.0
 asyncpg>=0.29.0
-python-jose[cryptography]>=3.3.0
-passlib[bcrypt]>=1.7.4
 httpx>=0.26.0
+
+# Better Auth integration
+PyJWT[crypto]>=2.8.0
+cachetools>=5.3.0
 ```
 
 ### Redis Stack 7.2
@@ -242,12 +244,9 @@ qdrant/
 ### Authentication
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/auth/register` | POST | User registration (returns access + refresh token) |
-| `/api/auth/login` | POST | JWT login (returns access + refresh token) |
-| `/api/auth/google` | POST | Google OAuth |
-| `/api/auth/refresh` | POST | Refresh access token |
-| `/api/auth/logout` | POST | Invalidate refresh token |
+| `/api/auth/api-key` | POST | Generate API key for CLI access |
 | `/api/auth/me` | GET | Get current user |
+| `/api/auth/logout` | POST | Logout (Better Auth session) |
 | `/api/auth/rate-limit` | GET | Get rate limit status |
 
 ### Search
@@ -427,9 +426,12 @@ import { client } from './client.gen';
 
 export function configureApiClient() {
   client.setConfig({
-    auth: () => {
+    auth: async () => {
       if (typeof window === 'undefined') return undefined;
-      return localStorage.getItem('access_token') || undefined;
+      // Better Auth provides JWT token via authClient.token()
+      const { authClient } = await import('@/lib/auth-client');
+      const token = await authClient.token();
+      return token?.value || undefined;
     },
   });
 }
@@ -444,9 +446,9 @@ configureApiClient();
 **How it works:**
 1. SDK functions define `security: [{scheme: 'bearer', type: 'http'}]`
 2. Client calls the auth function before each request
-3. Function reads `access_token` from localStorage (browser-only)
+3. Function reads JWT token from Better Auth client (not localStorage)
 4. SDK prepends `Bearer ` automatically → `Authorization: Bearer <token>`
-5. SSR-safe: Returns `undefined` on server (no localStorage)
+5. SSR-safe: Returns `undefined` on server (no window object)
 
 **Usage:** SDK functions auto-inject auth — no manual headers needed:
 ```typescript
@@ -514,6 +516,215 @@ User Query (any language) → QueryTranslator → Translated Query (corpus langu
 - German `ö`/`ü` are in `TURKISH_CHARS` set → German queries with those chars + quran corpus trigger Turkish heuristic (false positive)
 - Pure ASCII foreign text (e.g., "amor en la Biblia") + bible corpus triggers English heuristic (false positive)
 - These are acceptable tradeoffs — search still works, just not translated
+
+## Better Auth Integration
+
+### Architecture
+
+```
+Frontend (Next.js)                    Backend (FastAPI)
+      │                                     │
+      │  1. User logs in                    │
+      ├────────────────────────────────────▶│
+      │  POST /api/auth/sign-in             │
+      │                                     │
+      │  2. Better Auth creates session     │
+      │     + generates JWT token           │
+      │◀────────────────────────────────────┤
+      │  200 OK + Set-Cookie                │
+      │                                     │
+      │  3. Frontend makes API request      │
+      │     with JWT in Authorization       │
+      ├────────────────────────────────────▶│
+      │  GET /api/search?auth=Bearer JWT    │
+      │                                     │
+      │     4. Backend validates JWT        │
+      │        via JWKS endpoint            │
+      │        ┌─────────────────────────┐  │
+      │        │ GET /api/auth/jwks      │  │
+      │        │ Returns: public keys    │  │
+      │        └─────────────────────────┘  │
+      │                                     │
+      │  5. Returns search results          │
+      │◀────────────────────────────────────┤
+```
+
+### Key Components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| **Better Auth Server** | `frontend/lib/auth.ts` | Main auth configuration, JWT plugin, Google OAuth |
+| **Auth API Handler** | `frontend/app/api/auth/[...all]/route.ts` | Catch-all Next.js route for Better Auth endpoints |
+| **React Client** | `frontend/lib/auth-client.ts` | Frontend auth client with hooks (useSession, signIn, signOut) |
+| **Auth UI** | `frontend/app/(auth)/sign-in/page.tsx` | Sign-in/sign-up pages using `@daveyplate/better-auth-ui` |
+| **JWKS Validator** | `backend/app/auth/jwks_validator.py` | Validates JWT tokens using Better Auth's JWKS endpoint |
+| **API Key Auth** | `backend/app/api/auth.py` | Alternative auth for CLI (non-browser workflows) |
+| **User Migration** | `backend/scripts/migrate_users.py` | Migrates users from legacy auth to Better Auth |
+
+### Database Schema
+
+| Table | Purpose | Owner |
+|-------|---------|-------|
+| `user` | User accounts | Better Auth |
+| `session` | Active sessions | Better Auth |
+| `account` | OAuth accounts | Better Auth |
+| `verification` | Email verification | Better Auth |
+| `jwks` | JWT signing keys | Better Auth |
+| `user_stats` | Query count, API keys | Clarus |
+| `users_legacy` | Old user table (deprecated) | Clarus |
+
+### Better Auth Configuration
+
+**Server Config (`frontend/lib/auth.ts`):**
+```typescript
+export const auth = betterAuth({
+  database: postgresAdapter(pool, { schema: "public" }),
+  emailAndPassword: { enabled: true },
+  session: {
+    expiresIn: 60 * 60 * 24 * 7,        // 7 days
+    updateAge: 60 * 60 * 24,             // 24 hours
+  },
+  socialProviders: { google: { ... } },
+  trustedOrigins: [
+    "http://localhost:3000",  // Frontend
+    "http://localhost:8000",  // Backend
+  ],
+  plugins: [
+    jwtPlugin({ algorithm: "RS256" }),  // MUST be before nextCookies
+    nextCookies(),
+  ],
+});
+```
+
+**Client Config (`frontend/lib/auth-client.ts`):**
+```typescript
+export const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL,
+  plugins: [jwtClient()],
+});
+
+export const { useSession, signIn, signUp, signOut } = authClient;
+```
+
+### JWKS Validator (Backend)
+
+**How it works:**
+1. Backend receives JWT in `Authorization: Bearer <token>` header
+2. `JWKSValidator` fetches public keys from `http://localhost:3000/api/auth/jwks`
+3. PyJWT's built-in `PyJWKClient` validates signature and claims
+4. `get_current_user_from_jwt()` FastAPI dependency extracts user from token
+5. `get_current_user()` fetches user from `BetterAuthUser` table
+
+**Key Features:**
+- Two-tier caching (PyJWT cache + cachetools TTLCache for failover)
+- Fail-open behavior (uses cached keys if JWKS endpoint unreachable)
+- Auto-creates `UserStats` record on first API call
+
+**Environment Variables:**
+```env
+# Backend (.env)
+BETTER_AUTH_JWKS_URL=http://localhost:3000/api/auth/jwks
+BETTER_AUTH_ISSUER=http://localhost:3000
+JWT_JWKS_CACHE_TTL=3600  # 1 hour
+
+# Frontend (.env.local)
+BETTER_AUTH_DATABASE_URL=postgresql://postgres:postgres@localhost:54322/postgres
+BETTER_AUTH_SECRET=<random-secret>
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+GOOGLE_CLIENT_ID=<google-oauth-client-id>
+GOOGLE_CLIENT_SECRET=<google-oauth-secret>
+```
+
+### API Key Authentication (CLI Access)
+
+For non-browser workflows (CLI, scripts), users can generate API keys:
+
+```bash
+# Generate API key (requires initial web login)
+curl -X POST http://localhost:8000/api/auth/api-key \
+  -H "Authorization: Bearer <jwt-from-web-login>"
+
+# Use API key for CLI
+export API_KEY="clarus_abc123..."
+python main.py search "patience" --api-key $API_KEY
+```
+
+**Implementation:**
+- API keys stored in `user_stats.api_key` (VARCHAR(64), SHA-256 hash)
+- `get_current_user_flexible()` dependency accepts either JWT or API key
+- All protected endpoints support both auth methods
+
+### Migration from Legacy Auth
+
+**Script:** `backend/scripts/migrate_users.py`
+
+**What it does:**
+1. Reads users from `users_legacy` table
+2. For each user:
+   - Creates Better Auth `user` record (new UUID)
+   - Creates `account` record with bcrypt password (same hash)
+   - Creates `user_stats` record
+3. Preserves bcrypt hashes (cost=12 compatible with Better Auth)
+
+**Usage:**
+```bash
+cd backend
+python scripts/migrate_users.py --batch-size 100
+```
+
+**Rollback plan:**
+- `users_legacy` kept for 30 days
+- Can recreate legacy `users` table from backup if needed
+
+### Frontend Auth Patterns
+
+**Protected Routes:**
+```typescript
+// Check session
+const { data: session } = useSession();
+if (!session) {
+  redirect('/sign-in');
+}
+```
+
+**API Calls:**
+```typescript
+// SDK client auto-injects JWT
+const response = await getSearchHistoryApiSearchHistoryGet({ ... });
+```
+
+**Manual Token Access:**
+```typescript
+const token = await authClient.token();
+console.log(token?.value); // JWT string
+```
+
+### Benefits Over Legacy Auth
+
+| Aspect | Legacy | Better Auth |
+|--------|--------|-------------|
+| **Maintenance** | Custom JWT logic | Industry-standard framework |
+| **Security** | Manual token management | Built-in session handling |
+| **Social Auth** | Custom Google OAuth | First-class support |
+| **Token Refresh** | Manual refresh endpoint | Automatic session refresh |
+| **API Key Support** | None | Built-in via user_stats |
+| **Type Safety** | Manual types | Generated types |
+| **Code Size** | +1,661 lines | Abstracted away |
+
+### Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `POST /api/auth/sign-in/email` | POST | Email/password login |
+| `POST /api/auth/sign-up/email` | POST | User registration |
+| `GET /api/auth/callback/google` | GET | Google OAuth callback |
+| `POST /api/auth/sign-out` | POST | Logout (invalidate session) |
+| `GET /api/auth/session` | GET | Get current session |
+| `GET /api/auth/jwks` | GET | JWT public keys (for backend) |
+| `GET /api/auth/ok` | GET | Health check |
+| `POST /api/auth/api-key` | POST | Generate API key (Clarus custom) |
+| `GET /api/auth/me` | GET | Get current user (Clarus custom) |
+| `GET /api/auth/rate-limit` | GET | Rate limit status (Clarus custom) |
 
 ## SearchHistory Model
 

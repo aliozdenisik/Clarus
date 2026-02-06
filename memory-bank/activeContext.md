@@ -4,6 +4,80 @@
 
 **Date**: 2026-02-06
 
+## Better Auth Framework Integration (Issue #75) - COMPLETED ✅
+
+**Date**: 2026-02-06
+
+Completed full integration of Better Auth framework (not just feasibility study). Replaced custom JWT authentication with industry-standard auth framework.
+
+**Implementation Summary (12 tasks, 4 waves):**
+
+**Wave 1: Better Auth Server & Schema**
+1. Better Auth server configured with JWT plugin and Next.js handler
+2. Database schema migration (users → users_legacy, new user_stats table)
+3. Feasibility report created at `docs/better-auth-feasibility.md` (GO recommendation)
+
+**Wave 2: Frontend Auth UI & Backend Integration**
+4. Better Auth React client + sign-in/sign-up pages with Better Auth UI
+5. JWKS-based JWT validator for FastAPI backend
+6. API key authentication for CLI access
+
+**Wave 3: Migration Scripts & State Management**
+7. User migration script from legacy auth to Better Auth
+8. Rate limiting migrated to Better Auth user IDs
+9. Frontend auth state migrated to Better Auth hooks
+
+**Wave 4: Endpoint Wiring & Cleanup**
+10. All protected endpoints wired to Better Auth JWT validation
+11. Legacy JWT, token blacklist, and old login page removed (7 files, 1,661 lines)
+12. Documentation updated (this file)
+
+**Architecture:**
+- **Frontend**: Better Auth on Next.js (port 3000) with JWT plugin
+- **Backend**: JWKS validator validates JWT tokens from Better Auth
+- **Bridge**: Backend fetches public keys from `http://localhost:3000/api/auth/jwks`
+- **CLI Access**: API key authentication for non-browser workflows
+
+**Key Files:**
+- `frontend/lib/auth.ts` — Better Auth server config
+- `frontend/app/api/auth/[...all]/route.ts` — Auth API handler
+- `frontend/app/(auth)/sign-in/page.tsx` — Sign-in page
+- `frontend/app/(auth)/sign-up/page.tsx` — Sign-up page
+- `backend/app/auth/jwks_validator.py` — JWT validator
+- `backend/app/api/auth.py` — API key auth + /me endpoint
+- `backend/scripts/migrate_users.py` — User migration script
+
+**Database Changes:**
+- Tables added: `user`, `session`, `account`, `verification`, `jwks` (Better Auth)
+- Tables modified: `users` → `users_legacy` (kept for 30 days)
+- Tables created: `user_stats` (Clarus-specific: query count, API key)
+
+**Legacy Code Removed:**
+- `backend/app/auth/token_blacklist.py`
+- `backend/app/auth/schemas.py`
+- `frontend/lib/auth/auth-context.tsx`
+- `frontend/app/login/page.tsx`
+- `frontend/app/register/page.tsx`
+- Frontend auth tests (auth-context.test.tsx, login.test.tsx)
+- Net reduction: -1,661 lines
+
+**11 Commits:**
+- `b7113c6` feat(auth): configure Better Auth server with JWT plugin
+- `06ff046` feat(db): create user_stats table, rename legacy users
+- `6b02046` docs: add Better Auth feasibility report
+- `3cfb0e4` feat(frontend): add Better Auth client and sign-in/sign-up pages
+- `b7421a9` feat(backend): add JWKS-based JWT validator
+- `68eff87` feat(backend): add API key authentication for CLI
+- `199e063` feat(migration): add user migration script
+- `94064fe` feat(backend): migrate rate limiting to Better Auth user IDs
+- `482f4e6` refactor(frontend): migrate auth state to Better Auth hooks
+- `296eab3` feat(auth): wire Better Auth JWT validation into all endpoints
+- `7c4c609` refactor(auth): remove legacy JWT and token blacklist
+
+**Feasibility Report:** `docs/better-auth-feasibility.md` (GO recommendation)
+
+---
+
 ## Redis Caching Infrastructure (Issue #57) - COMPLETED ✅
 
 - Replaced DiskCache with Redis Stack 7.2
