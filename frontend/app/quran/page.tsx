@@ -51,11 +51,8 @@ export default function QuranPage() {
   useEffect(() => {
     const fetchSurahs = async () => {
       try {
-        const token = localStorage.getItem("access_token");
         const response = await fetch("http://localhost:8000/api/metadata/quran/surahs", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: "include",
         });
 
         if (!response.ok) {

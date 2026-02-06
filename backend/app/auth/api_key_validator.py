@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
-from app.models import BetterAuthUser, UserStats
+from app.models import BetterAuthSession, BetterAuthUser, UserStats
 from app.auth.jwks_validator import get_current_user_from_jwt
 
 logger = logging.getLogger(__name__)
@@ -79,17 +79,83 @@ async def get_current_user_from_api_key(
     }
 
 
+async def _resolve_user_by_id(
+    user_id: str, db: AsyncSession, operation: str
+) -> Dict[str, Any]:
+    """
+    Fetch user from database and ensure user_stats exists.
+
+    Shared helper for all auth methods (cookie, JWT, API key).
+
+    Args:
+        user_id: Better Auth user ID (from JWT sub claim or session lookup)
+        db: Database session
+        operation: Calling operation name for logging
+
+    Returns:
+        User dict with id, email, name, and other profile fields
+
+    Raises:
+        HTTPException 401: User not found in database
+    """
+    from datetime import datetime
+
+    result = await db.execute(
+        select(BetterAuthUser).where(BetterAuthUser.id == user_id)
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        logger.warning(
+            "User not found in database",
+            extra={"user_id": user_id, "operation": operation},
+        )
+        raise HTTPException(status_code=401, detail="User not found")
+
+    # Ensure user_stats exists
+    stats_result = await db.execute(
+        select(UserStats).where(UserStats.user_id == user_id)
+    )
+    stats = stats_result.scalar_one_or_none()
+
+    if not stats:
+        stats = UserStats(
+            id=f"stats_{user_id}",
+            user_id=user_id,
+            query_count_today=0,
+            last_query_date=None,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        db.add(stats)
+        await db.commit()
+        logger.info(
+            "Created user_stats record",
+            extra={"user_id": user_id, "operation": operation},
+        )
+
+    return {
+        "id": user.id,
+        "email": user.email,
+        "name": user.name,
+        "email_verified": user.email_verified,
+        "image": user.image,
+        "created_at": user.created_at,
+    }
+
+
 async def get_current_user_flexible(
     request: Request,
     db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
     """
-    Flexible authentication: tries JWT first, then API key.
+    Flexible authentication: tries cookie, then JWT header, then API key.
 
     FastAPI dependency that:
-    1. Tries JWT Bearer token from Authorization header (via get_current_user_from_jwt)
-    2. If no Bearer token, tries API key from X-API-Key header
-    3. If neither present, raises HTTPException(401)
+    1. Tries Better Auth session cookie (preferred for browser clients)
+    2. Tries JWT Bearer token from Authorization header
+    3. Tries API key from X-API-Key header
+    4. If none succeed, raises HTTPException(401)
 
     This is the dependency that all protected endpoints should use.
 
@@ -101,81 +167,101 @@ async def get_current_user_flexible(
         User dict with id, email, name, and other profile fields
 
     Raises:
-        HTTPException 401: Neither JWT nor API key provided or both invalid
+        HTTPException 401: No valid authentication method provided
     """
-    # Try JWT first
+    # 1. Try Better Auth session cookie (preferred for browser clients)
+    #    Session token is opaque (not a JWT) — validate via DB lookup.
+    cookie_token = (
+        request.cookies.get("better_auth.session_token")
+        or request.cookies.get("better-auth.session_token")
+        or request.cookies.get("__Secure-better-auth.session_token")
+    )
+    logger.debug(
+        "Cookie auth check",
+        extra={
+            "cookie_token_present": bool(cookie_token),
+            "operation": "get_current_user_flexible",
+        },
+    )
+    if cookie_token:
+        try:
+            from datetime import datetime, timezone
+
+            session_result = await db.execute(
+                select(BetterAuthSession).where(BetterAuthSession.token == cookie_token)
+            )
+            session = session_result.scalar_one_or_none()
+
+            if session and session.expires_at.replace(
+                tzinfo=timezone.utc
+            ) > datetime.now(timezone.utc):
+                logger.debug(
+                    "Authenticated via session cookie",
+                    extra={
+                        "user_id": session.user_id,
+                        "operation": "get_current_user_flexible",
+                    },
+                )
+                return await _resolve_user_by_id(
+                    session.user_id, db, "get_current_user_flexible"
+                )
+            elif session:
+                logger.warning(
+                    "Session cookie expired",
+                    extra={"operation": "get_current_user_flexible"},
+                )
+        except Exception as exc:
+            # Cookie auth failed, fall through to try other methods
+            logger.debug(
+                "Cookie DB lookup failed: %s",
+                exc,
+            )
+    if cookie_token:
+        try:
+            from app.auth.jwks_validator import get_validator
+
+            validator = get_validator()
+            payload = validator.validate_token(cookie_token)
+            user_id = payload.get("sub")
+            if user_id:
+                logger.debug(
+                    "Authenticated via session cookie",
+                    extra={
+                        "user_id": user_id,
+                        "operation": "get_current_user_flexible",
+                    },
+                )
+                return await _resolve_user_by_id(
+                    user_id, db, "get_current_user_flexible"
+                )
+        except (ValueError, HTTPException):
+            # Cookie auth failed, fall through to try other methods
+            logger.debug(
+                "Cookie auth failed, trying other methods",
+                extra={"operation": "get_current_user_flexible"},
+            )
+
+    # 2. Try JWT Bearer token from Authorization header
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.lower().startswith("bearer "):
         try:
             jwt_payload = await get_current_user_from_jwt(request)
-
-            # Fetch user from database (same logic as jwks_validator.get_current_user)
             user_id = jwt_payload.get("sub")
             if not user_id:
                 raise HTTPException(status_code=401, detail="Token missing 'sub' claim")
-
-            result = await db.execute(
-                select(BetterAuthUser).where(BetterAuthUser.id == user_id)
-            )
-            user = result.scalar_one_or_none()
-
-            if not user:
-                logger.warning(
-                    "User not found in database",
-                    extra={
-                        "user_id": user_id,
-                        "operation": "get_current_user_flexible",
-                    },
-                )
-                raise HTTPException(status_code=401, detail="User not found")
-
-            # Ensure user_stats exists
-            from datetime import datetime
-
-            stats_result = await db.execute(
-                select(UserStats).where(UserStats.user_id == user_id)
-            )
-            stats = stats_result.scalar_one_or_none()
-
-            if not stats:
-                stats = UserStats(
-                    id=f"stats_{user_id}",
-                    user_id=user_id,
-                    query_count_today=0,
-                    last_query_date=None,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow(),
-                )
-                db.add(stats)
-                await db.commit()
-                logger.info(
-                    "Created user_stats record",
-                    extra={
-                        "user_id": user_id,
-                        "operation": "get_current_user_flexible",
-                    },
-                )
-
-            return {
-                "id": user.id,
-                "email": user.email,
-                "name": user.name,
-                "email_verified": user.email_verified,
-                "image": user.image,
-                "created_at": user.created_at,
-            }
+            return await _resolve_user_by_id(user_id, db, "get_current_user_flexible")
         except HTTPException:
             # JWT auth failed, fall through to try API key
             pass
 
-    # Try API key
+    # 3. Try API key
     api_key = request.headers.get("X-API-Key")
     if api_key:
         return await get_current_user_from_api_key(request, db)
 
-    # Neither JWT nor API key provided
+    # No valid authentication method provided
     raise HTTPException(
         status_code=401,
-        detail="Missing authentication. Provide either Authorization: Bearer <token> or X-API-Key: <key>",
+        detail="Missing authentication. Provide either Authorization: Bearer <token>, X-API-Key: <key>, or session cookie.",
         headers={"WWW-Authenticate": "Bearer, ApiKey"},
     )

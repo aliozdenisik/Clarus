@@ -238,13 +238,12 @@ function CompareContent() {
   }, [result?.verse_details]);
 
   const extractKeywords = async (query: string, corpus: "quran" | "bible") => {
-    const token = localStorage.getItem("access_token");
     const response = await fetch("http://localhost:8000/api/search/enhance", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: "include",
       body: JSON.stringify({ query, corpus }),
     });
 
@@ -259,10 +258,8 @@ function CompareContent() {
   const performBatchCompare = async (topicToCompare: string) => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem("access_token");
-      
       // Build request body with keywords if advanced mode is ON
-      const requestBody: any = {
+      const requestBody: Record<string, unknown> = {
         topic: topicToCompare,
         use_multi_agent: true,
         collections: selectedCollections,
@@ -290,8 +287,8 @@ function CompareContent() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(requestBody),
       });
 
@@ -327,14 +324,8 @@ function CompareContent() {
       if (enable_streaming) {
         try {
           const baseUrl = "http://localhost:8000";
-          const token = localStorage.getItem("access_token");
-          if (!token) {
-            toast.error("Authentication required");
-            performBatchCompare(q);  // Fallback to batch
-            return;
-          }
           // Build SSE URL using q directly (NOT topic state, which may not be updated yet)
-          let url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(q)}&token=${encodeURIComponent(token)}`;
+          let url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(q)}`;
           url += `&collections=${encodeURIComponent(selectedCollections.join(','))}`;
           if (selectedLanguage) {
             url += `&language=${encodeURIComponent(selectedLanguage)}`;
@@ -512,17 +503,10 @@ function CompareContent() {
 
     // Check streaming preference
     if (enable_streaming) {
-      // Start SSE Stream
+      // Start SSE Stream — uses cookie auth via withCredentials
       try {
         const baseUrl = "http://localhost:8000";
-        const token = localStorage.getItem("access_token");
-        if (!token) {
-          toast.error("Authentication required");
-          performBatchCompare(topic);
-          return;
-        }
-        // SSE/EventSource doesn't support custom headers, so pass token as query param
-        let url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(topic)}&token=${encodeURIComponent(token)}`;
+        let url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(topic)}`;
         url += `&collections=${encodeURIComponent(selectedCollections.join(','))}`;
         if (selectedLanguage) {
           url += `&language=${encodeURIComponent(selectedLanguage)}`;

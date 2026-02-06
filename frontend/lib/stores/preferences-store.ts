@@ -80,16 +80,8 @@ export const usePreferencesStore = create<PreferencesState>()(
       fetchPreferences: async () => {
         set({ isLoading: true, error: null });
         try {
-          const token = localStorage.getItem('access_token');
-          if (!token) {
-            set({ isLoading: false });
-            return;
-          }
-
           const response = await fetch('http://localhost:8000/api/preferences', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            credentials: 'include',
           });
 
           if (!response.ok) {
@@ -107,11 +99,6 @@ export const usePreferencesStore = create<PreferencesState>()(
       savePreferences: async () => {
         set({ isLoading: true, error: null });
         try {
-          const token = localStorage.getItem('access_token');
-          if (!token) {
-            throw new Error('Not authenticated');
-          }
-
           const state = get();
           const preferences: UserPreferences = {
             theme: state.theme,
@@ -127,8 +114,8 @@ export const usePreferencesStore = create<PreferencesState>()(
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
             },
+            credentials: 'include',
             body: JSON.stringify(preferences),
           });
 
