@@ -46,3 +46,21 @@ def decode_access_token(token: str) -> Optional[dict]:
         return payload
     except InvalidTokenError:
         return None
+
+
+async def is_token_blacklisted(token: str) -> bool:
+    """
+    Check if token has been revoked.
+
+    Args:
+        token: The JWT token to check
+
+    Returns:
+        True if token is blacklisted, False otherwise (fail-open if Redis unavailable)
+    """
+    try:
+        from app.auth.token_blacklist import is_revoked
+
+        return await is_revoked(token)
+    except Exception:
+        return False  # Fail-open
