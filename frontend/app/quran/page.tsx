@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
-import { useAuth } from "@/lib/auth/auth-context";
+import { useSession, signOut } from "@/lib/auth-client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { GlowCard } from "@/components/ui/glow-card";
@@ -38,7 +38,8 @@ export default function QuranPage() {
   const [surahs, setSurahs] = useState<Surah[]>([]);
   const [filter, setFilter] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const { user, isLoading: authLoading, logout } = useAuth();
+  const { data: session, isPending: authLoading } = useSession();
+  const user = session?.user;
   const router = useRouter();
 
   useEffect(() => {
@@ -86,7 +87,7 @@ export default function QuranPage() {
   }, [user]);
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     router.push("/login");
     toast.success("Logged out successfully");
   };

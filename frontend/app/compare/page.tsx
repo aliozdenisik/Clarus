@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
-import { useAuth } from "@/lib/auth/auth-context";
+import { useSession, signOut } from "@/lib/auth-client";
 
 import { GlowCard } from "@/components/ui/glow-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -108,7 +108,8 @@ function CompareContent() {
   const hasAutoExecuted = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const log = useLogger("ComparePage");
-  const { user, isLoading: authLoading, logout } = useAuth();
+  const { data: session, isPending: authLoading } = useSession();
+  const user = session?.user;
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -122,7 +123,7 @@ function CompareContent() {
   }, [user, authLoading, router]);
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     router.push("/login");
     toast.success("Logged out successfully");
   };

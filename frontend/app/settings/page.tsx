@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
-import { useAuth } from "@/lib/auth/auth-context";
+import { useSession } from "@/lib/auth-client";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { GlowCard } from "@/components/ui/glow-card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,8 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 
 export default function SettingsPage() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { data: session, isPending: authLoading } = useSession();
+  const user = session?.user;
   const router = useRouter();
   const {
     theme,

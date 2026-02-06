@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
-import { useAuth } from "@/lib/auth/auth-context";
+import { useSession, signOut } from "@/lib/auth-client";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { AuroraSectionBackground } from "@/components/ui/aurora-background";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,7 +50,9 @@ function SearchContent() {
   const keywordStore = useKeywordStore();
 
   const log = useLogger("SearchPage");
-  const { user, isLoading, logout } = useAuth();
+  const { data: session, isPending } = useSession();
+  const user = session?.user;
+  const isLoading = isPending;
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -121,7 +123,7 @@ function SearchContent() {
   }, [sseData]);
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     router.push("/login");
     toast.success("Logged out successfully");
   };

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense, useMemo } from "react";
 import { motion } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
-import { useAuth } from "@/lib/auth/auth-context";
+import { useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { SearchInput } from "@/components/keyword-search/search-input";
@@ -79,7 +79,8 @@ function KeywordSearchContent() {
   const [translationsLoading, setTranslationsLoading] = useState(false);
   const [surahTransliterations, setSurahTransliterations] = useState<Map<number, string>>(new Map());
 
-  const { user, isLoading: authLoading } = useAuth();
+  const { data: session, isPending: authLoading } = useSession();
+  const user = session?.user;
   const router = useRouter();
 
   // Fetch surah Latin transliterations on mount
