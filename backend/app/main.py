@@ -36,6 +36,9 @@ async def lifespan(app: FastAPI):
         extra={"log_level": settings.log_level, "log_format": settings.log_format},
     )
 
+    # Validate production settings
+    settings.validate_production_settings()
+
     logger.info("Initializing database...")
     await init_db()
     logger.info("Database initialized")
@@ -188,8 +191,14 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
     allow_credentials=settings.cors_allow_credentials,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "X-API-Key",
+        "X-Request-ID",
+        "X-Correlation-ID",
+    ],
     expose_headers=[
         "X-Request-ID",
         "X-Correlation-ID",

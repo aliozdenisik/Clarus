@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     query_min_length: int = 1
 
     app_env: str = "development"
-    debug: bool = True
+    debug: bool = False
 
     # Sentry Configuration
     sentry_enabled: bool = False
@@ -76,6 +76,13 @@ class Settings(BaseSettings):
         if self.redis_password:
             return f"redis://:{self.redis_password}@{self.redis_host}:{self.redis_port}/{self.redis_db}"
         return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
+
+    def validate_production_settings(self) -> None:
+        """Raise RuntimeError if dangerous settings are used in production."""
+        if self.debug and self.app_env == "production":
+            raise RuntimeError(
+                "Debug mode must be disabled in production (set DEBUG=false)"
+            )
 
 
 @lru_cache
