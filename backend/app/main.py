@@ -212,44 +212,6 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def add_user_id_to_state(request: Request, call_next):
-    """
-    Extract user_id from JWT and store in request.state.
-
-    Uses JWKS validation (Better Auth) to extract user ID.
-    """
-    auth_header = request.headers.get("Authorization", "")
-    if auth_header.startswith("Bearer "):
-        token = auth_header[7:]
-        user_id = None
-
-        # Try JWKS validation (Better Auth)
-        try:
-            from app.auth.jwks_validator import get_validator
-
-            validator = get_validator()
-            payload = validator.validate_token(token)
-            user_id = payload.get("sub")
-            logger.debug(
-                "User ID extracted from JWKS-validated JWT", extra={"user_id": user_id}
-            )
-        except Exception as e:
-            logger.debug("JWKS validation failed", extra={"error": str(e)})
-
-        # Store user_id in request state (handle both int and string UUIDs)
-        if user_id:
-            try:
-                # Try to convert to int for old tokens
-                request.state.user_id = int(user_id)
-            except (ValueError, TypeError):
-                # Keep as string for new UUID tokens
-                request.state.user_id = user_id
-
-    response = await call_next(request)
-    return response
-
-
-@app.middleware("http")
 async def csrf_protection(request: Request, call_next):
     """
     Basic CSRF protection: verify Origin header for state-changing requests.
