@@ -30,6 +30,24 @@ services:
     environment:
       QDRANT__SERVICE__GRPC_PORT: 6334
 
+  # Redis Stack for Caching
+  redis:
+    image: redis/redis-stack:7.2.0-v13
+    container_name: holly-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+    volumes:
+      - ./redis_data:/data
+      - ./redis.conf:/redis-stack.conf:ro
+    command: redis-server /redis-stack.conf
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # FastAPI Backend (for production)
   # backend:
   #   build: .
@@ -41,7 +59,11 @@ services:
   #     DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/postgres
   #     QDRANT_HOST: qdrant
   #   depends_on:
-  #     - postgres
-  #     - qdrant
+  #     postgres:
+  #       condition: service_healthy
+  #     qdrant:
+  #       condition: service_started
+  #     redis:
+  #       condition: service_healthy
 
 # Volumes use local bind mounts (./postgres_data, ./qdrant_data)
