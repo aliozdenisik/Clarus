@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
 
+    # Better Auth JWKS Configuration
+    better_auth_jwks_url: str = "http://localhost:3000/api/auth/jwks"
+    better_auth_issuer: str = "http://localhost:3000"
+    jwt_jwks_cache_ttl: int = 3600  # 1 hour
+
     rate_limit_per_day: int = 50
     rate_limit_enabled: bool = True
 
