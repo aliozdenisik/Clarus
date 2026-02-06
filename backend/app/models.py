@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy import (
     String,
     Integer,
+    Date,
     DateTime,
     ForeignKey,
     Text,
@@ -258,6 +259,8 @@ class BMVerseMapping(Base):
 
 
 class BetterAuthUser(Base):
+    """Better Auth user table — camelCase columns mapped to snake_case attributes."""
+
     __tablename__ = "user"
 
     id: Mapped[str] = mapped_column(String(255), primary_key=True)
@@ -265,25 +268,33 @@ class BetterAuthUser(Base):
     email: Mapped[str] = mapped_column(
         String(255), nullable=False, unique=True, index=True
     )
-    email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    email_verified: Mapped[bool] = mapped_column(
+        "emailVerified", Boolean, default=False
+    )
     image: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    created_at: Mapped[datetime] = mapped_column("createdAt", DateTime, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column("updatedAt", DateTime, nullable=False)
 
 
 class BetterAuthSession(Base):
+    """Better Auth session table — camelCase columns mapped to snake_case attributes."""
+
     __tablename__ = "session"
 
     id: Mapped[str] = mapped_column(String(255), primary_key=True)
     token: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     user_id: Mapped[str] = mapped_column(
-        String(255), ForeignKey("user.id"), nullable=False, index=True
+        "userId", String(255), ForeignKey("user.id"), nullable=False, index=True
     )
-    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
-    user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column("expiresAt", DateTime, nullable=False)
+    ip_address: Mapped[Optional[str]] = mapped_column(
+        "ipAddress", String(45), nullable=True
+    )
+    user_agent: Mapped[Optional[str]] = mapped_column(
+        "userAgent", String(500), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column("createdAt", DateTime, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column("updatedAt", DateTime, nullable=False)
 
 
 class UserStats(Base):
@@ -294,7 +305,7 @@ class UserStats(Base):
         String(255), ForeignKey("user.id"), nullable=False, unique=True, index=True
     )
     query_count_today: Mapped[int] = mapped_column(Integer, default=0)
-    last_query_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    last_query_date: Mapped[Optional[datetime]] = mapped_column(Date, nullable=True)
     api_key: Mapped[Optional[str]] = mapped_column(
         String(64), nullable=True, unique=True, index=True
     )

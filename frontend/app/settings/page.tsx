@@ -80,12 +80,9 @@ export default function SettingsPage() {
 
     try {
       setIsResetting(true);
-      const token = localStorage.getItem("access_token");
       const response = await fetch("/api/preferences", {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
 
       if (!response.ok) {

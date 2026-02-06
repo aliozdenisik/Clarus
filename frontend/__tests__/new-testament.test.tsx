@@ -56,14 +56,12 @@ describe('New Testament Browse Page', () => {
 
     render(<NewTestamentPage />);
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/metadata/bible/books?testament=new_testament'),
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: expect.stringContaining('Bearer'),
-        }),
-      })
-    );
+     expect(global.fetch).toHaveBeenCalledWith(
+       expect.stringContaining('/api/metadata/bible/books?testament=new_testament'),
+       expect.objectContaining({
+         credentials: 'include',
+       })
+     );
 
     await waitFor(() => {
       expect(screen.getByText('Matthew')).toBeInTheDocument();

@@ -56,14 +56,12 @@ describe('Apocrypha Browse Page', () => {
 
     render(<ApocryphaPage />);
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/metadata/bible/books?testament=apocrypha'),
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: expect.stringContaining('Bearer'),
-        }),
-      })
-    );
+     expect(global.fetch).toHaveBeenCalledWith(
+       expect.stringContaining('/api/metadata/bible/books?testament=apocrypha'),
+       expect.objectContaining({
+         credentials: 'include',
+       })
+     );
 
     await waitFor(() => {
       expect(screen.getByText('Tobit')).toBeInTheDocument();

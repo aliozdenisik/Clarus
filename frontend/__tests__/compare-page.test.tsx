@@ -95,30 +95,28 @@ const mockCompareResult = {
 
 describe("ComparePage", () => {
    beforeEach(() => {
-     vi.clearAllMocks();
-     (global.fetch as any).mockResolvedValue({
-       ok: true,
-       json: async () => mockCompareResult,
-     });
-     // Reset localStorage for token
-     localStorage.setItem("access_token", "test-token");
+      vi.clearAllMocks();
+      (global.fetch as any).mockResolvedValue({
+        ok: true,
+        json: async () => mockCompareResult,
+      });
 
-     // Default mock implementations
-     vi.mocked(useSSE).mockReturnValue({
-       data: [],
-       isStreaming: false,
-       error: null,
-       startStream: mockStartStream,
-       stopStream: mockStopStream,
-     });
+      // Default mock implementations
+      vi.mocked(useSSE).mockReturnValue({
+        data: [],
+        isStreaming: false,
+        error: null,
+        startStream: mockStartStream,
+        stopStream: mockStopStream,
+      });
 
-     vi.mocked(usePreferencesStore).mockReturnValue({
-       enable_streaming: true,
-     });
+      vi.mocked(usePreferencesStore).mockReturnValue({
+        enable_streaming: true,
+      });
 
-     // Default useSearchParams mock (no params)
-     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams() as any);
-   });
+      // Default useSearchParams mock (no params)
+      vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams() as any);
+    });
 
   it("renders the page title and description", () => {
     render(<ComparePage />);
@@ -132,19 +130,19 @@ describe("ComparePage", () => {
     expect(screen.getByRole("button", { name: "Analyze" })).toBeInTheDocument();
   });
 
-  it("starts streaming when form is submitted and streaming is enabled", async () => {
-    render(<ComparePage />);
-    const input = screen.getByPlaceholderText(/Enter a topic/);
-    const button = screen.getByRole("button", { name: "Analyze" });
+   it("starts streaming when form is submitted and streaming is enabled", async () => {
+     render(<ComparePage />);
+     const input = screen.getByPlaceholderText(/Enter a topic/);
+     const button = screen.getByRole("button", { name: "Analyze" });
 
-    fireEvent.change(input, { target: { value: "patience" } });
-    fireEvent.click(button);
+     fireEvent.change(input, { target: { value: "patience" } });
+     fireEvent.click(button);
 
-    expect(mockStartStream).toHaveBeenCalled();
-    const callUrl = mockStartStream.mock.calls[0][0];
-    expect(callUrl).toContain("topic=patience");
-    expect(callUrl).toContain("token=test-token");
-  });
+     expect(mockStartStream).toHaveBeenCalled();
+     const callUrl = mockStartStream.mock.calls[0][0];
+     expect(callUrl).toContain("topic=patience");
+     expect(callUrl).not.toContain("token=");
+   });
 
   it("shows loading state when isStreaming is true", () => {
     vi.mocked(useSSE).mockReturnValue({

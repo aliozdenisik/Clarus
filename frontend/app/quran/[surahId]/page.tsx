@@ -74,13 +74,10 @@ export default function SurahDetailPage() {
   useEffect(() => {
     const fetchSurah = async () => {
       try {
-        const token = localStorage.getItem("access_token");
         const response = await fetch(
           `http://localhost:8000/api/metadata/quran/surahs/${surahId}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            credentials: "include",
           }
         );
 

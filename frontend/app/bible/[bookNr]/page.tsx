@@ -78,13 +78,10 @@ export default function BookDetailPage() {
   useEffect(() => {
     const fetchBook = async () => {
       try {
-        const token = localStorage.getItem("access_token");
         const response = await fetch(
           `http://localhost:8000/api/metadata/bible/books/${bookNr}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            credentials: "include",
           }
         );
 
@@ -117,13 +114,10 @@ export default function BookDetailPage() {
       
       setIsLoadingChapter(true);
       try {
-        const token = localStorage.getItem("access_token");
         const response = await fetch(
           `http://localhost:8000/api/metadata/bible/books/${bookNr}/chapters/${selectedChapter}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            credentials: "include",
           }
         );
 

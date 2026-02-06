@@ -54,94 +54,136 @@ async def get_current_user_from_sse_token(
     Validate auth for SSE endpoints.
 
     Priority:
-    1. Cookie-based auth (Better Auth session cookie) - PREFERRED
-    2. Query param token - DEPRECATED (logs warning)
+    1. Cookie-based auth (Better Auth session cookie via DB lookup) - PREFERRED
+    2. Query param token validated via JWKS - DEPRECATED
 
     Args:
         token: JWT token from query parameter (deprecated)
         db: Database session
         request: Request object for cookie access
     """
-    from app.auth.jwks_validator import get_validator
     from fastapi import HTTPException
+    from app.models import BetterAuthSession, BetterAuthUser, UserStats
+    from sqlalchemy import select
+    from datetime import datetime, timezone
 
-    actual_token = None
-
-    # Try cookie first (preferred method)
+    # 1. Try cookie first (preferred — session token is opaque, validated via DB)
     if request:
-        # Better Auth session cookie names (try common variants)
         cookie_token = (
             request.cookies.get("better_auth.session_token")
             or request.cookies.get("better-auth.session_token")
             or request.cookies.get("__Secure-better-auth.session_token")
         )
         if cookie_token:
-            actual_token = cookie_token
-            logger.debug("SSE auth: Using cookie-based authentication")
+            session_result = await db.execute(
+                select(BetterAuthSession).where(BetterAuthSession.token == cookie_token)
+            )
+            session = session_result.scalar_one_or_none()
 
-    # Fall back to query param (deprecated)
-    if not actual_token and token:
+            if session and session.expires_at.replace(
+                tzinfo=timezone.utc
+            ) > datetime.now(timezone.utc):
+                logger.debug("SSE auth: Authenticated via session cookie")
+                user_id = session.user_id
+            elif session:
+                raise HTTPException(status_code=401, detail="Session expired")
+            else:
+                # Cookie present but not found in DB — fall through
+                logger.debug("SSE auth: Cookie not found in DB, trying other methods")
+                cookie_token = None
+
+            if cookie_token:
+                # Resolve user from session
+                result = await db.execute(
+                    select(BetterAuthUser).where(BetterAuthUser.id == user_id)
+                )
+                user = result.scalar_one_or_none()
+                if not user:
+                    raise HTTPException(status_code=401, detail="User not found")
+
+                # Ensure user_stats exists
+                stats_result = await db.execute(
+                    select(UserStats).where(UserStats.user_id == user_id)
+                )
+                stats = stats_result.scalar_one_or_none()
+                if not stats:
+                    stats = UserStats(
+                        id=f"stats_{user_id}",
+                        user_id=user_id,
+                        query_count_today=0,
+                        last_query_date=None,
+                        created_at=datetime.utcnow(),
+                        updated_at=datetime.utcnow(),
+                    )
+                    db.add(stats)
+                    await db.commit()
+
+                return {
+                    "id": user.id,
+                    "email": user.email,
+                    "name": user.name,
+                    "email_verified": user.email_verified,
+                    "image": user.image,
+                    "created_at": user.created_at,
+                }
+
+    # 2. Fall back to query param JWT (deprecated)
+    if token:
         logger.warning(
             "DEPRECATED: SSE auth via query parameter. Migrate to cookie-based auth.",
             extra={"endpoint": request.url.path if request else "unknown"},
         )
-        actual_token = token
+        try:
+            from app.auth.jwks_validator import get_validator
 
-    if not actual_token:
-        raise HTTPException(status_code=401, detail="Authentication required")
+            validator = get_validator()
+            payload = validator.validate_token(token)
+            user_id = payload.get("sub")
+            if not user_id:
+                raise HTTPException(status_code=401, detail="Token missing 'sub' claim")
 
-    try:
-        validator = get_validator()
-        payload = validator.validate_token(actual_token)
-        user_id = payload.get("sub")
-        if not user_id:
-            raise HTTPException(status_code=401, detail="Token missing 'sub' claim")
-
-        # Fetch user from database
-        from app.models import BetterAuthUser, UserStats
-        from sqlalchemy import select
-        from datetime import datetime
-
-        result = await db.execute(
-            select(BetterAuthUser).where(BetterAuthUser.id == user_id)
-        )
-        user = result.scalar_one_or_none()
-
-        if not user:
-            raise HTTPException(status_code=401, detail="User not found")
-
-        # Ensure user_stats exists
-        stats_result = await db.execute(
-            select(UserStats).where(UserStats.user_id == user_id)
-        )
-        stats = stats_result.scalar_one_or_none()
-
-        if not stats:
-            stats = UserStats(
-                id=f"stats_{user_id}",
-                user_id=user_id,
-                query_count_today=0,
-                last_query_date=None,
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
+            result = await db.execute(
+                select(BetterAuthUser).where(BetterAuthUser.id == user_id)
             )
-            db.add(stats)
-            await db.commit()
+            user = result.scalar_one_or_none()
+            if not user:
+                raise HTTPException(status_code=401, detail="User not found")
 
-        return {
-            "id": user.id,
-            "email": user.email,
-            "name": user.name,
-            "email_verified": user.email_verified,
-            "image": user.image,
-            "created_at": user.created_at,
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+            # Ensure user_stats exists
+            stats_result = await db.execute(
+                select(UserStats).where(UserStats.user_id == user_id)
+            )
+            stats = stats_result.scalar_one_or_none()
+            if not stats:
+                stats = UserStats(
+                    id=f"stats_{user_id}",
+                    user_id=user_id,
+                    query_count_today=0,
+                    last_query_date=None,
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow(),
+                )
+                db.add(stats)
+                await db.commit()
+
+            return {
+                "id": user.id,
+                "email": user.email,
+                "name": user.name,
+                "email_verified": user.email_verified,
+                "image": user.image,
+                "created_at": user.created_at,
+            }
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid or expired token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+    raise HTTPException(status_code=401, detail="Authentication required")
 
 
 @router.get("/search")

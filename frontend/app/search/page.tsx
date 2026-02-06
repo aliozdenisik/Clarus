@@ -226,15 +226,14 @@ function SearchContent() {
   const enhanceQuery = async (searchQuery: string) => {
     setIsEnhancing(true);
     try {
-      const token = localStorage.getItem("access_token");
       const corpus = activeTab === "quran" ? "quran" : "bible";
 
       const response = await fetch("http://localhost:8000/api/search/enhance", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({ query: searchQuery, corpus }),
       });
 
@@ -273,13 +272,7 @@ function SearchContent() {
     if (enable_streaming) {
       setIsSearching(true);
       const baseUrl = "http://localhost:8000";
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        toast.error("Authentication required");
-        performBatchSearch();
-        return;
-      }
-      let url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}&token=${encodeURIComponent(token)}`;
+      let url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`;
       if (selectedLanguage) {
         url += `&language=${encodeURIComponent(selectedLanguage)}`;
       }
@@ -311,11 +304,9 @@ function SearchContent() {
      setIsSearching(true);
      setResults([]);
 
-     try {
-       const token = localStorage.getItem("access_token");
-
+      try {
        let url = "http://localhost:8000/api/search/quran";
-       let body: any = { query: searchQuery, mode: "semantic", top_k: 10 };
+       let body: Record<string, unknown> = { query: searchQuery, mode: "semantic", top_k: 10 };
        if (selectedLanguage) {
          body.language = selectedLanguage;
        }
@@ -334,8 +325,8 @@ function SearchContent() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(body),
       });
 
@@ -386,16 +377,11 @@ function SearchContent() {
        if (enable_streaming) {
          setIsSearching(true);
          const baseUrl = "http://localhost:8000";
-         const token = localStorage.getItem("access_token");
-         if (token) {
-           let url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(q)}&source=${activeTab}&token=${encodeURIComponent(token)}`;
-           if (selectedLanguage) {
-             url += `&language=${encodeURIComponent(selectedLanguage)}`;
-           }
-           startStream(url);
-         } else {
-           performBatchSearch(q);
+         let url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(q)}&source=${activeTab}`;
+         if (selectedLanguage) {
+           url += `&language=${encodeURIComponent(selectedLanguage)}`;
          }
+         startStream(url);
        } else {
          performBatchSearch(q);    // Pass q directly — state may not be updated yet
        }
@@ -431,13 +417,7 @@ function SearchContent() {
     if (enable_streaming) {
       setIsSearching(true);
       const baseUrl = "http://localhost:8000";
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        toast.error("Authentication required");
-        performBatchSearch();
-        return;
-      }
-      let url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}&token=${encodeURIComponent(token)}`;
+      let url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`;
       if (selectedLanguage) {
         url += `&language=${encodeURIComponent(selectedLanguage)}`;
       }

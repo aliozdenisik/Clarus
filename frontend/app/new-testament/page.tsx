@@ -66,11 +66,8 @@ export default function NewTestamentPage() {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const token = localStorage.getItem("access_token");
         const response = await fetch("http://localhost:8000/api/metadata/bible/books?testament=new_testament", {
-           headers: {
-             Authorization: `Bearer ${token}`,
-           },
+           credentials: "include",
         });
         if (!response.ok) throw new Error("Failed to fetch books");
         const data = await response.json();
