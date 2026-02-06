@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Literal
 import asyncio
 import json
 import logging
@@ -106,7 +106,7 @@ async def get_current_user_from_sse_token(token: str, db: AsyncSession):
     except Exception as e:
         raise HTTPException(
             status_code=401,
-            detail=f"Invalid token: {str(e)}",
+            detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -114,7 +114,9 @@ async def get_current_user_from_sse_token(token: str, db: AsyncSession):
 @router.get("/search")
 async def stream_search(
     q: str = Query(..., description="Arama sorgusu"),
-    source: str = Query(default="quran", description="quran veya bible"),
+    source: Literal["quran", "ot", "nt", "apocrypha"] = Query(
+        default="quran", description="Source collection: quran, ot, nt, or apocrypha"
+    ),
     token: str = Query(
         ...,
         description="JWT access token (required for SSE - EventSource can't send headers)",
@@ -193,7 +195,7 @@ async def stream_search(
 
         except Exception as e:
             logger.error(f"[SSE /search] Error during ask: {e}")
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            yield f"data: {json.dumps({'error': 'An internal error occurred'})}\n\n"
             yield f"data: {json.dumps({'type': 'complete'})}\n\n"
             return
 
@@ -306,7 +308,7 @@ async def stream_search(
 
         except Exception as e:
             logger.error(f"[SSE /search] Error during generation: {e}")
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            yield f"data: {json.dumps({'error': 'An internal error occurred'})}\n\n"
             yield f"data: {json.dumps({'type': 'complete'})}\n\n"
 
     return StreamingResponse(
@@ -424,7 +426,7 @@ async def stream_compare(
         except Exception as e:
             logger.error(f"[COMPARE] Failed to create RAG: {e}")
             logger.error(traceback.format_exc())
-            yield f"data: {json.dumps({'error': f'RAG creation failed: {str(e)}'})}\n\n"
+            yield f"data: {json.dumps({'error': 'An internal error occurred'})}\n\n"
             yield f"data: {json.dumps({'type': 'complete'})}\n\n"
             return
 
@@ -551,7 +553,7 @@ async def stream_compare(
         except Exception as e:
             logger.error(f"[COMPARE] Error during compare: {e}")
             logger.error(traceback.format_exc())
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            yield f"data: {json.dumps({'error': 'An internal error occurred'})}\n\n"
 
         yield f"data: {json.dumps({'type': 'complete'})}\n\n"
 

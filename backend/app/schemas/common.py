@@ -1,5 +1,6 @@
 """Common schemas for standardized API responses."""
 
+import html
 from pydantic import BaseModel, Field, ConfigDict
 from typing import TypeVar, Generic, Optional
 from datetime import datetime
@@ -156,8 +157,4 @@ class QueryValidation(BaseModel):
     def sanitize(cls, query: str) -> str:
         if not query:
             return query
-        xss_patterns = ["<script", "</script", "javascript:", "onerror=", "onclick="]
-        sanitized = query
-        for pattern in xss_patterns:
-            sanitized = sanitized.replace(pattern, "")
-        return sanitized.strip()
+        return html.escape(query).strip()
