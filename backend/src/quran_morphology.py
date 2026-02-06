@@ -564,14 +564,13 @@ class QuranMorphologySearch:
             matched_words_map: dict[int, list[str]] = {aid: [] for aid in ayah_ids}
             if ayah_ids:
                 # Fetch all matched words for all verses at once
-                placeholders = ",".join(str(aid) for aid in ayah_ids)
                 batch_words_result = await session.execute(
                     sa_text(
-                        f"SELECT DISTINCT ayah_id, token_clean FROM qm_words "
-                        f"WHERE ayah_id IN ({placeholders}) AND root = :root "
-                        f"AND token_clean IS NOT NULL"
+                        "SELECT DISTINCT ayah_id, token_clean FROM qm_words "
+                        "WHERE ayah_id = ANY(:ayah_ids) AND root = :root "
+                        "AND token_clean IS NOT NULL"
                     ),
-                    {"root": root},
+                    {"ayah_ids": ayah_ids, "root": root},
                 )
                 for row in batch_words_result.fetchall():
                     aid, token = row[0], row[1]

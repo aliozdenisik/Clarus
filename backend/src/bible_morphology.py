@@ -1388,14 +1388,13 @@ class BibleMorphologySearch:
             verse_ids = [vr[0] for vr in verse_rows]
             matched_words_map: dict[int, list[str]] = {vid: [] for vid in verse_ids}
             if verse_ids:
-                placeholders = ",".join(str(vid) for vid in verse_ids)
                 batch_words_result = await session.execute(
                     sa_text(
-                        f"SELECT DISTINCT verse_id, word_clean FROM bm_words "
-                        f"WHERE verse_id IN ({placeholders}) AND lemma = :lemma AND language = 'greek' "
-                        f"AND word_clean IS NOT NULL"
+                        "SELECT DISTINCT verse_id, word_clean FROM bm_words "
+                        "WHERE verse_id = ANY(:verse_ids) AND lemma = :lemma AND language = 'greek' "
+                        "AND word_clean IS NOT NULL"
                     ),
-                    {"lemma": lemma},
+                    {"verse_ids": verse_ids, "lemma": lemma},
                 )
                 for row in batch_words_result.fetchall():
                     vid, token = row[0], row[1]
@@ -1644,14 +1643,13 @@ class BibleMorphologySearch:
             verse_ids = [vr[0] for vr in verse_rows]
             matched_words_map: dict[int, list[str]] = {vid: [] for vid in verse_ids}
             if verse_ids:
-                placeholders = ",".join(str(vid) for vid in verse_ids)
                 batch_words_result = await session.execute(
                     sa_text(
-                        f"SELECT DISTINCT verse_id, word_clean FROM bm_words "
-                        f"WHERE verse_id IN ({placeholders}) AND strong_number = :sn "
-                        f"AND word_clean IS NOT NULL"
+                        "SELECT DISTINCT verse_id, word_clean FROM bm_words "
+                        "WHERE verse_id = ANY(:verse_ids) AND strong_number = :sn "
+                        "AND word_clean IS NOT NULL"
                     ),
-                    {"sn": strong_number},
+                    {"verse_ids": verse_ids, "sn": strong_number},
                 )
                 for row in batch_words_result.fetchall():
                     vid, token = row[0], row[1]
