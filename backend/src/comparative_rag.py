@@ -223,17 +223,28 @@ class ComparativeRAG:
         """
         Generate multiple query variations for a corpus.
 
+        OPTIMIZED: enhance + multi-query run in PARALLEL (was sequential).
+        Multi-query uses original query instead of waiting for enhanced.
+        Enhanced query is merged into the final list.
+
         Returns: [original, enhanced, multi_1, multi_2, multi_3] (deduplicated)
         """
         queries = [query]
 
         try:
-            # Enhanced query
-            enhanced = self.enhancer.expand_query(query, corpus=corpus)
-            queries.append(enhanced)
+            # Run enhance + multi-query in PARALLEL
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                enhance_future = executor.submit(
+                    self.enhancer.expand_query, query, corpus
+                )
+                multi_future = executor.submit(
+                    self.enhancer.generate_multi_query, query, n, corpus
+                )
 
-            # Multi-query perspectives
-            multi = self.enhancer.generate_multi_query(enhanced, n=n, corpus=corpus)
+                enhanced = enhance_future.result()
+                multi = multi_future.result()
+
+            queries.append(enhanced)
             queries.extend(multi)
         except Exception as e:
             self._log(f"   Warning: Multi-query generation failed: {e}", "yellow")
@@ -255,26 +266,35 @@ class ComparativeRAG:
         """
         Execute multiple queries on a single searcher and merge with RRF.
 
-        This is the core Multi-Query search logic for one quadrant.
-        All queries run in parallel, then results are fused.
+        OPTIMIZED: All queries are batch-encoded in a single API call,
+        then Qdrant searches use pre-computed vectors (no per-query embedding).
         """
         all_results = []
 
-        def search_single_query(q):
+        # Batch encode ALL queries in one API call (was: N individual encode calls)
+        if not hasattr(self, "_dense_encoder") or self._dense_encoder is None:
+            from src.embeddings import DenseEncoder
+
+            self._dense_encoder = DenseEncoder()
+
+        vectors = self._dense_encoder.encode_batch(
+            queries, batch_size=len(queries), show_progress=False
+        )
+
+        def search_with_vector(vector):
             try:
-                return searcher.search(q, mode="semantic", limit=limit_per_query)
+                return searcher.search_with_vector(vector, limit=limit_per_query)
             except CircuitBreakerError:
                 logger.warning(
-                    "Qdrant unavailable (circuit breaker open), returning empty results for query: %s",
-                    q,
+                    "Qdrant unavailable (circuit breaker open), returning empty results",
                 )
                 return []
             except Exception:
                 return []
 
-        # Parallel execution of all queries
+        # Parallel Qdrant searches with pre-computed vectors
         with ThreadPoolExecutor(max_workers=len(queries)) as executor:
-            futures = [executor.submit(search_single_query, q) for q in queries]
+            futures = [executor.submit(search_with_vector, v) for v in vectors]
             for future in as_completed(futures):
                 result = future.result()
                 if result:
