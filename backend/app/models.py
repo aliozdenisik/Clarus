@@ -16,7 +16,7 @@ from app.db import Base
 
 
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "users_legacy"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(
@@ -45,7 +45,7 @@ class SearchHistory(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id"), nullable=False
+        Integer, ForeignKey("users_legacy.id"), nullable=False
     )
     query: Mapped[str] = mapped_column(Text, nullable=False)
     search_type: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -60,7 +60,7 @@ class UserPreferences(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id"), unique=True, nullable=False
+        Integer, ForeignKey("users_legacy.id"), unique=True, nullable=False
     )
 
     theme: Mapped[str] = mapped_column(String(20), default="system")
@@ -249,4 +249,59 @@ class BMVerseMapping(Base):
     )
     lxx_book: Mapped[Optional["BMBook"]] = relationship(
         foreign_keys=[lxx_book_id], viewonly=True
+    )
+
+
+# ---------------------------------------------------------------------------
+# Better Auth Integration Tables (READ-ONLY)
+# ---------------------------------------------------------------------------
+
+
+class BetterAuthUser(Base):
+    __tablename__ = "user"
+
+    id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    email: Mapped[str] = mapped_column(
+        String(255), nullable=False, unique=True, index=True
+    )
+    email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    image: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+
+class BetterAuthSession(Base):
+    __tablename__ = "session"
+
+    id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    token: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    user_id: Mapped[str] = mapped_column(
+        String(255), ForeignKey("user.id"), nullable=False, index=True
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    ip_address: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
+    user_agent: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+
+class UserStats(Base):
+    __tablename__ = "user_stats"
+
+    id: Mapped[str] = mapped_column(String(255), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        String(255), ForeignKey("user.id"), nullable=False, unique=True, index=True
+    )
+    query_count_today: Mapped[int] = mapped_column(Integer, default=0)
+    last_query_date: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    api_key: Mapped[Optional[str]] = mapped_column(
+        String(64), nullable=True, unique=True, index=True
+    )
+    api_key_created_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime, nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
