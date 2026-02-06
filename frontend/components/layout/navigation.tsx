@@ -269,7 +269,7 @@ export default function Navigation() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Link href="/login">
+              <Link href="/sign-in">
                 <Button variant="outline">Sign In</Button>
               </Link>
             )}

@@ -105,7 +105,7 @@ function KeywordSearchContent() {
   // Auth guard
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/login");
+      router.push("/sign-in");
     }
   }, [user, authLoading, router]);
 

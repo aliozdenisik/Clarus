@@ -44,7 +44,7 @@ export default function QuranPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/login");
+      router.push("/sign-in");
     }
   }, [user, authLoading, router]);
 
@@ -88,7 +88,7 @@ export default function QuranPage() {
 
   const handleLogout = async () => {
     await signOut();
-    router.push("/login");
+    router.push("/sign-in");
     toast.success("Logged out successfully");
   };
 
