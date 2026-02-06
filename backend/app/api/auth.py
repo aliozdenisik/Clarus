@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -54,6 +54,12 @@ async def get_current_user(
     if payload is None:
         raise credentials_exception
 
+    # Check if token is blacklisted
+    from app.auth import is_token_blacklisted
+
+    if await is_token_blacklisted(token):
+        raise credentials_exception
+
     user_id_str = payload.get("sub")
     if user_id_str is None:
         raise credentials_exception
@@ -78,6 +84,12 @@ async def get_current_user_from_token(token: str, db: AsyncSession) -> User:
 
     payload = decode_access_token(token)
     if payload is None:
+        raise credentials_exception
+
+    # Check if token is blacklisted
+    from app.auth import is_token_blacklisted
+
+    if await is_token_blacklisted(token):
         raise credentials_exception
 
     user_id_str = payload.get("sub")
@@ -288,8 +300,23 @@ async def refresh_token(
 
 @router.post("/logout")
 async def logout(
-    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
+    # Revoke the JWT token
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:]
+        payload = decode_access_token(token)
+        if payload and "exp" in payload:
+            from datetime import datetime
+            from app.auth.token_blacklist import revoke_token
+
+            expires_at = datetime.utcfromtimestamp(payload["exp"])
+            await revoke_token(token, expires_at)
+
+    # Clear refresh token
     current_user.refresh_token = None
     await db.commit()
     return {"success": True, "message": "Cikis yapildi"}
