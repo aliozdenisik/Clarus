@@ -19,6 +19,8 @@ import { VerseDetail } from "@/components/search/verse-tooltip";
 import { SourceBadge, SourceType } from "@/components/compare/source-badge";
 import { useLogger } from "@/lib/logger";
 import { LanguageSelector } from "@/components/search/language-selector";
+import { KeywordSelector } from "@/components/search/keyword-selector";
+import { useKeywordStore, KeywordSuggestion } from "@/lib/stores/keyword-store";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 
@@ -40,9 +42,12 @@ function SearchContent() {
   const [openPopover, setOpenPopover] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [detectedLanguage, setDetectedLanguage] = useState<string | undefined>(undefined);
+  const [isEnhancing, setIsEnhancing] = useState(false);
    const resultsContainerRef = useRef<HTMLDivElement>(null);
    const hasHandledSSEError = useRef(false);
    const hasAutoExecuted = useRef(false);
+
+  const keywordStore = useKeywordStore();
 
   const log = useLogger("SearchPage");
   const { user, isLoading, logout } = useAuth();
@@ -63,7 +68,12 @@ function SearchContent() {
      if (source && ["quran", "ot", "nt", "apocrypha"].includes(source)) {
        setActiveTab(source);
      }
-   }, [searchParams]);
+
+     const advanced = searchParams?.get("advanced");
+     if (advanced === "true") {
+       keywordStore.setAdvancedMode(true);
+     }
+   }, [searchParams, keywordStore]);
 
    useEffect(() => {
     const tokens = sseData
@@ -123,7 +133,13 @@ function SearchContent() {
     setVerseDetails({});
     setHighlightedVerse(null);
     setOpenPopover(null);
-    router.push(`/search?source=${tab}`);
+    keywordStore.reset();
+    const params = new URLSearchParams();
+    params.set("source", tab);
+    if (keywordStore.advancedMode) {
+      params.set("advanced", "true");
+    }
+    router.push(`/search?${params.toString()}`);
   };
 
   const mapSourceToType = useCallback((source: string): SourceType => {
@@ -205,6 +221,87 @@ function SearchContent() {
     }
   };
 
+  const enhanceQuery = async (searchQuery: string) => {
+    setIsEnhancing(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      const corpus = activeTab === "quran" ? "quran" : "bible";
+
+      const response = await fetch("http://localhost:8000/api/search/enhance", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ query: searchQuery, corpus }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Enhancement failed");
+      }
+
+      const data = await response.json();
+      if (data.keywords && Array.isArray(data.keywords)) {
+        const keywordSuggestions: KeywordSuggestion[] = data.keywords.map(
+          (kw: any) => ({
+            text: kw.text || kw,
+            language: kw.language || "unknown",
+            confidence: kw.confidence || 1.0,
+            selected: true,
+            source: kw.source || corpus,
+          })
+        );
+        keywordStore.setKeywords(keywordSuggestions);
+      }
+    } catch (error) {
+      log.error("Query enhancement failed", { error });
+      toast.error("Failed to extract keywords");
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
+  const handleKeywordSearch = () => {
+    if (keywordStore.selectedKeywords.length === 0) {
+      toast.error("Please select at least one keyword");
+      return;
+    }
+
+    // Perform search with selected keywords
+    if (enable_streaming) {
+      setIsSearching(true);
+      const baseUrl = "http://localhost:8000";
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        toast.error("Authentication required");
+        performBatchSearch();
+        return;
+      }
+      let url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}&token=${encodeURIComponent(token)}`;
+      if (selectedLanguage) {
+        url += `&language=${encodeURIComponent(selectedLanguage)}`;
+      }
+      // Add keywords to URL
+      const keywordTexts = keywordStore.selectedKeywords.map((k) => k.text).join(",");
+      url += `&keywords=${encodeURIComponent(keywordTexts)}`;
+      startStream(url);
+    } else {
+      performBatchSearch();
+    }
+  };
+
+  const handleAdvancedModeToggle = (checked: boolean) => {
+    keywordStore.setAdvancedMode(checked);
+    const params = new URLSearchParams(window.location.search);
+    if (checked) {
+      params.set("advanced", "true");
+    } else {
+      params.delete("advanced");
+      keywordStore.reset();
+    }
+    router.push(`/search?${params.toString()}`);
+  };
+
    const performBatchSearch = useCallback(async (queryOverride?: string) => {
      const searchQuery = queryOverride ?? query;
      if (!searchQuery.trim()) return;
@@ -219,6 +316,11 @@ function SearchContent() {
        let body: any = { query: searchQuery, mode: "semantic", top_k: 10 };
        if (selectedLanguage) {
          body.language = selectedLanguage;
+       }
+
+       // Add keywords if advanced mode is ON and keywords are selected
+       if (keywordStore.advancedMode && keywordStore.selectedKeywords.length > 0) {
+         body.keywords = keywordStore.selectedKeywords.map((k) => k.text);
        }
 
       if (activeTab !== "quran") {
@@ -256,7 +358,7 @@ function SearchContent() {
      } finally {
        setIsSearching(false);
      }
-   }, [query, activeTab, selectedLanguage]);
+   }, [query, activeTab, selectedLanguage, keywordStore.advancedMode, keywordStore.selectedKeywords]);
 
   useEffect(() => {
     if (sseError && !hasHandledSSEError.current) {
@@ -309,6 +411,21 @@ function SearchContent() {
     setOpenPopover(null);
     hasHandledSSEError.current = false;
 
+    // If keywords are selected, perform keyword-based search
+    if (keywordStore.selectedKeywords.length > 0) {
+      handleKeywordSearch();
+      return;
+    }
+
+    // If advanced mode is ON and no keywords yet, enhance first
+    // (This happens on first submit after toggling advanced mode ON)
+    if (keywordStore.advancedMode && keywordStore.keywords.length === 0) {
+      await enhanceQuery(query);
+      toast.info("Keywords extracted. Adjust selection and search again.");
+      return;
+    }
+
+    // Normal search flow
     if (enable_streaming) {
       setIsSearching(true);
       const baseUrl = "http://localhost:8000";
@@ -423,11 +540,11 @@ function SearchContent() {
                   <button
                     type="submit"
                     data-testid="search-submit-button"
-                    disabled={(isSearching && !isStreaming) || !query.trim()}
+                    disabled={(isSearching && !isStreaming) || !query.trim() || isEnhancing}
                     className="absolute inset-y-0 end-1.5 flex h-[calc(100%-12px)] my-auto items-center justify-center rounded-lg px-4 text-sm font-medium bg-gradient-to-r from-indigo-500 to-violet-500 text-white transition-all hover:from-indigo-600 hover:to-violet-600 focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 shadow-lg shadow-indigo-500/25"
                     aria-label="Submit search"
                   >
-                    {isSearching || isStreaming ? "Searching..." : "Search"}
+                    {isEnhancing ? "Extracting..." : isSearching || isStreaming ? "Searching..." : "Search"}
                   </button>
                 </div>
                 <LanguageSelector
@@ -437,6 +554,52 @@ function SearchContent() {
                 />
               </div>
             </form>
+
+            {/* Keyword Selector */}
+            <div className="w-full max-w-2xl space-y-3">
+              <KeywordSelector
+                keywords={keywordStore.keywords}
+                onSelectionChange={(selected) => {
+                  keywordStore.setKeywords(
+                    keywordStore.keywords.map((k) => ({
+                      ...k,
+                      selected: selected.some((s) => s.text === k.text),
+                    }))
+                  );
+                }}
+                isLoading={isEnhancing}
+                onSearch={handleKeywordSearch}
+              />
+              
+              {/* Action buttons */}
+              <div className="flex justify-between items-center">
+                {/* Extract keywords button - shown when no keywords and query exists */}
+                {keywordStore.keywords.length === 0 && query.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => enhanceQuery(query)}
+                    disabled={isEnhancing}
+                    className="text-xs text-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)]/80 transition-colors disabled:opacity-50"
+                  >
+                    {isEnhancing ? "Extracting keywords..." : "Extract keywords for advanced search"}
+                  </button>
+                )}
+                
+                {/* Clear keywords button - shown when keywords exist */}
+                {keywordStore.keywords.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      keywordStore.reset();
+                      toast.info("Switched to normal search");
+                    }}
+                    className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors ml-auto"
+                  >
+                    Clear keywords & use normal search
+                  </button>
+                )}
+              </div>
+            </div>
           </motion.div>
         </div>
       </AuroraSectionBackground>
