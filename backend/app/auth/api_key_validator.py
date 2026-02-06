@@ -184,9 +184,18 @@ async def get_current_user_flexible(
     if cookie_token:
         try:
             from datetime import datetime, timezone
+            from urllib.parse import unquote
+
+            # Better Auth cookie format: <token>.<hmac-signature> (URL-encoded)
+            # The DB stores only the raw token without the signature.
+            raw_token = (
+                unquote(cookie_token).rsplit(".", 1)[0]
+                if "." in unquote(cookie_token)
+                else unquote(cookie_token)
+            )
 
             session_result = await db.execute(
-                select(BetterAuthSession).where(BetterAuthSession.token == cookie_token)
+                select(BetterAuthSession).where(BetterAuthSession.token == raw_token)
             )
             session = session_result.scalar_one_or_none()
 

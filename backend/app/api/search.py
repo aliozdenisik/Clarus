@@ -128,7 +128,7 @@ async def search_quran(
     validated_query = _validate_query(request.query)
 
     rag = get_rag()
-    results = rag.search_quran(validated_query, top_k=request.top_k)
+    results = await rag.search_quran(validated_query, top_k=request.top_k)
 
     # Build verse_details dict for citation navigation
     verse_details: Dict[str, VerseDetail] = {}
@@ -195,7 +195,7 @@ async def search_bible(
     validated_query = _validate_query(request.query)
 
     rag = get_rag()
-    results = rag.search_bible(
+    results = await rag.search_bible(
         validated_query, testament=testament, top_k=request.top_k
     )
 

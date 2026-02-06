@@ -55,6 +55,92 @@ vi.mock("lucide-react", () => ({
   ExternalLink: () => <div data-testid="external-link-icon" />,
 }));
 
+// Mock GlowCard
+vi.mock("@/components/ui/glow-card", () => ({
+  GlowCard: ({ children, className }: any) => <div className={className}>{children}</div>,
+}));
+
+// Mock DotPattern + AuroraSectionBackground
+vi.mock("@/components/ui/dot-pattern", () => ({
+  DotPattern: () => null,
+  RadialGradient: () => null,
+}));
+vi.mock("@/components/ui/aurora-background", () => ({
+  AuroraSectionBackground: () => null,
+}));
+
+// Mock Skeleton
+vi.mock("@/components/ui/skeleton", () => ({
+  Skeleton: ({ className }: any) => <div data-testid="skeleton" className={className} />,
+}));
+
+// Mock design-system
+vi.mock("@/lib/design-system", () => ({
+  springPresets: {
+    snappy: { type: "spring", stiffness: 300, damping: 30 },
+    fluid: { type: "spring", stiffness: 170, damping: 26 },
+    gentle: { type: "spring", stiffness: 120, damping: 14 },
+  },
+}));
+
+// Mock compare components
+vi.mock("@/components/compare/inline-citation", () => ({
+  InlineCitation: ({ children }: any) => <span>{children}</span>,
+}));
+vi.mock("@/components/compare/source-badge", () => ({
+  SourceBadge: ({ source }: any) => <span data-testid="source-badge">{source}</span>,
+  SourceType: {},
+}));
+
+// Mock search components
+vi.mock("@/components/search/verse-tooltip", () => ({
+  VerseDetail: {},
+}));
+vi.mock("@/components/search/language-selector", () => ({
+  LanguageSelector: () => null,
+}));
+vi.mock("@/components/search/keyword-selector", () => ({
+  KeywordSelector: () => null,
+}));
+
+// Mock citation parser
+vi.mock("@/lib/utils/parse-citations", () => ({
+  parseCitations: (text: string) => [{ type: "text" as const, content: text }],
+  CitationPart: {},
+}));
+
+// Mock logger
+vi.mock("@/lib/logger", () => ({
+  useLogger: () => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  }),
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+
+// Mock keyword store
+vi.mock("@/lib/stores/keyword-store", () => ({
+  useKeywordStore: vi.fn(() => ({
+    suggestions: [],
+    isLoading: false,
+    fetchSuggestions: vi.fn(),
+    clearSuggestions: vi.fn(),
+  })),
+  KeywordSuggestion: {},
+}));
+
+// Mock Input component
+vi.mock("@/components/ui/input", () => ({
+  Input: (props: any) => <input {...props} />,
+}));
+
 // Mock fetch
 global.fetch = vi.fn();
 

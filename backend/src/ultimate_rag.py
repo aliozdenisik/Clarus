@@ -229,23 +229,27 @@ class UltimateRAG:
                     cached = await cache.get(query, cache_key)
                     if cached:
                         latency_ms = (time.perf_counter() - start) * 1000
-                    span.set_data("cache_hit", True)
-                    sentry_sdk.set_measurement(
-                        "rag.query.enhance_latency_ms", latency_ms, "millisecond"
-                    )
-                    sentry_sdk.set_measurement("rag.cache.hit", 1, "none")
-                    logger.info(
-                        "Cache hit",
-                        extra={"cache": "llm", "stage": "enhance", "corpus": corpus},
-                    )
-                    log_performance(
-                        logger,
-                        "enhance_query",
-                        latency_ms,
-                        corpus=corpus,
-                        cache_hit=True,
-                    )
-                    return cached
+                        span.set_data("cache_hit", True)
+                        sentry_sdk.set_measurement(
+                            "rag.query.enhance_latency_ms", latency_ms, "millisecond"
+                        )
+                        sentry_sdk.set_measurement("rag.cache.hit", 1, "none")
+                        logger.info(
+                            "Cache hit",
+                            extra={
+                                "cache": "llm",
+                                "stage": "enhance",
+                                "corpus": corpus,
+                            },
+                        )
+                        log_performance(
+                            logger,
+                            "enhance_query",
+                            latency_ms,
+                            corpus=corpus,
+                            cache_hit=True,
+                        )
+                        return cached
 
             # LLM call (cache miss)
             span.set_data("cache_hit", False)
