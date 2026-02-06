@@ -40,6 +40,15 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database initialized")
 
+    logger.info("Connecting to Redis...")
+    from app.redis_client import redis_manager
+
+    await redis_manager.connect()
+    if redis_manager.client:
+        logger.info("Redis connected")
+    else:
+        logger.warning("Redis unavailable - caching disabled")
+
     # Initialize Sentry if enabled
     if settings.sentry_enabled and settings.sentry_dsn_backend:
         import sentry_sdk
@@ -117,6 +126,16 @@ async def lifespan(app: FastAPI):
 
     # SHUTDOWN (triggered by uvicorn on SIGTERM/SIGINT)
     logger.info("Shutdown initiated", extra={"reason": "lifespan_end"})
+
+    try:
+        from app.redis_client import redis_manager as _redis_manager
+
+        await _redis_manager.disconnect()
+        logger.info("Redis disconnected")
+    except Exception as e:
+        logger.warning(
+            "Error disconnecting Redis", extra={"error_type": type(e).__name__}
+        )
 
     # Close database connections with timeout and error handling
     from app.db import engine
