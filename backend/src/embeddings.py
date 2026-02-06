@@ -6,7 +6,7 @@ Uses OpenRouter API with OpenAI text-embedding-3-large model for dense embedding
 This model has excellent multilingual support including Turkish.
 
 Optimizations:
-- Disk-based embedding cache (7-day TTL)
+- Redis-based embedding cache (7-day TTL)
 - Rate limiting (20 RPM for free tier safety)
 - Circuit breaker for API failures
 """
@@ -16,22 +16,23 @@ import os
 import requests
 import hashlib
 import time
+import json
 from tqdm import tqdm
-from pathlib import Path
 
 import sentry_sdk
 
 from src.circuit_breaker import embeddings_with_breaker, CircuitBreakerError
 
-# Optional imports for caching and rate limiting
+# Optional imports for Redis caching
 try:
-    from diskcache import Cache
+    import redis as sync_redis
+    from redis import asyncio as aioredis
 
-    CACHE_AVAILABLE = True
+    REDIS_AVAILABLE = True
 except ImportError:
-    CACHE_AVAILABLE = False
+    REDIS_AVAILABLE = False
     print(
-        "Warning: diskcache not installed. Embedding cache disabled. Install with: pip install diskcache"
+        "Warning: redis not installed. Embedding cache disabled. Install with: pip install redis[hiredis]"
     )
 
 
@@ -42,7 +43,7 @@ class DenseEncoder:
     This model has excellent multilingual and Turkish language support.
 
     Features:
-    - Disk-based cache (7-day TTL) for repeated queries
+    - Redis-based cache (7-day TTL) for repeated queries
     - Rate limiting (20 RPM safe default for free tier)
     - Automatic retries with exponential backoff
     """
@@ -56,7 +57,6 @@ class DenseEncoder:
     RATE_LIMIT_RPM = 20
 
     # Cache settings
-    CACHE_DIR = "./cache/embeddings"
     CACHE_EXPIRE = 86400 * 7  # 7 days
 
     def __init__(
@@ -68,7 +68,7 @@ class DenseEncoder:
         Args:
             model_name: Model identifier (default: openai/text-embedding-3-large)
             api_key: OpenRouter API key (default: from OPENROUTER_API_KEY env var)
-            use_cache: Enable disk-based embedding cache (default: True)
+            use_cache: Enable Redis-based embedding cache (default: True)
         """
         self.model_name = model_name or self.DEFAULT_MODEL
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
@@ -82,13 +82,26 @@ class DenseEncoder:
             "Content-Type": "application/json",
         }
 
-        # Initialize cache
-        self._cache = None
-        self._use_cache = use_cache and CACHE_AVAILABLE
+        # Initialize Redis cache (sync client for DenseEncoder)
+        self._redis = None
+        self._use_cache = use_cache and REDIS_AVAILABLE
         if self._use_cache:
-            cache_path = Path(self.CACHE_DIR)
-            cache_path.mkdir(parents=True, exist_ok=True)
-            self._cache = Cache(str(cache_path))
+            try:
+                from app.config import settings
+
+                self._redis = sync_redis.Redis(
+                    host=settings.redis_host,
+                    port=settings.redis_port,
+                    password=settings.redis_password or None,
+                    db=settings.redis_db,
+                    decode_responses=False,
+                    socket_timeout=5,
+                )
+                self._redis.ping()
+            except Exception:
+                # Fail-open: cache disabled if Redis unavailable
+                self._redis = None
+                self._use_cache = False
 
         # Rate limiting tracking
         self._last_request_time = 0
@@ -97,12 +110,13 @@ class DenseEncoder:
         )  # seconds between requests
 
         print(f"Initialized OpenRouter dense encoder: {self.model_name}")
-        if self._use_cache:
-            print(f"  Cache: enabled ({self.CACHE_DIR})")
+        if self._use_cache and self._redis:
+            print("  Cache: enabled (Redis)")
 
     def _get_cache_key(self, text: str) -> str:
-        """Generate cache key from model and text"""
-        return hashlib.md5(f"{self.model_name}:{text}".encode()).hexdigest()
+        """Generate Redis cache key: embedding:{model}:{md5(text)}"""
+        text_hash = hashlib.md5(text.encode()).hexdigest()
+        return f"embedding:{self.model_name}:{text_hash}"
 
     def _rate_limit_wait(self):
         """Wait if needed to respect rate limits"""
@@ -140,21 +154,30 @@ class DenseEncoder:
     def encode(self, text: str) -> List[float]:
         """
         Encode a single text to dense vector using OpenRouter API.
-        Uses cache if available.
+        Uses Redis cache if available.
         """
-        # Check cache first
-        if self._cache is not None:
-            cache_key = self._get_cache_key(text)
-            cached = self._cache.get(cache_key)
-            if cached is not None:
-                return cached
+        # Check Redis cache first
+        cache_key = None
+        if self._redis is not None:
+            try:
+                cache_key = self._get_cache_key(text)
+                cached_bytes = self._redis.get(cache_key)
+                if cached_bytes is not None:
+                    return json.loads(cached_bytes.decode())
+            except Exception:
+                # Fail-open: continue to API call if cache fails
+                pass
 
         # API call
         embedding = self._api_call(text)
 
-        # Store in cache
-        if self._cache is not None:
-            self._cache.set(cache_key, embedding, expire=self.CACHE_EXPIRE)
+        # Store in Redis cache
+        if self._redis is not None and cache_key is not None:
+            try:
+                self._redis.set(cache_key, json.dumps(embedding), ex=self.CACHE_EXPIRE)
+            except Exception:
+                # Fail-open: cache write failure doesn't affect response
+                pass
 
         return embedding
 
@@ -265,6 +288,7 @@ class AsyncDenseEncoder:
 
         async def main():
             encoder = AsyncDenseEncoder()
+            await encoder.init_cache()
             embeddings = await encoder.encode_batch_async(texts, max_concurrent=5)
 
         asyncio.run(main())
@@ -275,7 +299,6 @@ class AsyncDenseEncoder:
     EMBEDDING_DIMENSION = 3072
     RATE_LIMIT_RPM = 20
 
-    CACHE_DIR = "./cache/embeddings"
     CACHE_EXPIRE = 86400 * 7  # 7 days
 
     def __init__(
@@ -287,7 +310,7 @@ class AsyncDenseEncoder:
         Args:
             model_name: Model identifier (default: openai/text-embedding-3-large)
             api_key: OpenRouter API key (default: from OPENROUTER_API_KEY env var)
-            use_cache: Enable disk-based embedding cache (default: True)
+            use_cache: Enable Redis-based embedding cache (default: True)
         """
         self.model_name = model_name or self.DEFAULT_MODEL
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
@@ -301,27 +324,41 @@ class AsyncDenseEncoder:
             "Content-Type": "application/json",
         }
 
-        # Initialize cache
-        self._cache = None
-        self._use_cache = use_cache and CACHE_AVAILABLE
-        if self._use_cache:
-            cache_path = Path(self.CACHE_DIR)
-            cache_path.mkdir(parents=True, exist_ok=True)
-            self._cache = Cache(str(cache_path))
+        # Redis cache (async) - initialized in init_cache()
+        self._redis = None
+        self._use_cache = use_cache and REDIS_AVAILABLE
 
         print(f"Initialized Async OpenRouter encoder: {self.model_name}")
 
-    def _get_cache_key(self, text: str) -> str:
-        """Generate cache key from model and text"""
-        return hashlib.md5(f"{self.model_name}:{text}".encode()).hexdigest()
+    async def init_cache(self):
+        """Initialize async Redis connection for caching."""
+        if not self._use_cache:
+            return
 
-    def _check_cache(
+        try:
+            from app.redis_client import redis_manager
+
+            self._redis = redis_manager.client
+            if self._redis:
+                await self._redis.ping()
+                print("  Cache: enabled (Redis async)")
+        except Exception:
+            # Fail-open: cache disabled if Redis unavailable
+            self._redis = None
+            self._use_cache = False
+
+    def _get_cache_key(self, text: str) -> str:
+        """Generate Redis cache key: embedding:{model}:{md5(text)}"""
+        text_hash = hashlib.md5(text.encode()).hexdigest()
+        return f"embedding:{self.model_name}:{text_hash}"
+
+    async def _check_cache(
         self, texts: List[str]
     ) -> Tuple[List[str], List[int], List[List[float]]]:
         """
-        Check cache for texts and return: uncached texts, their indices, cached embeddings.
+        Check Redis cache for texts and return: uncached texts, their indices, cached embeddings.
         """
-        if self._cache is None:
+        if self._redis is None:
             return texts, list(range(len(texts))), []
 
         uncached_texts = []
@@ -329,11 +366,16 @@ class AsyncDenseEncoder:
         cached_embeddings = [None] * len(texts)
 
         for i, text in enumerate(texts):
-            cache_key = self._get_cache_key(text)
-            cached = self._cache.get(cache_key)
-            if cached is not None:
-                cached_embeddings[i] = cached
-            else:
+            try:
+                cache_key = self._get_cache_key(text)
+                cached_bytes = await self._redis.get(cache_key)
+                if cached_bytes is not None:
+                    cached_embeddings[i] = json.loads(cached_bytes.decode())
+                else:
+                    uncached_texts.append(text)
+                    uncached_indices.append(i)
+            except Exception:
+                # Fail-open: cache read failure, treat as cache miss
                 uncached_texts.append(text)
                 uncached_indices.append(i)
 
@@ -411,8 +453,8 @@ class AsyncDenseEncoder:
                 "aiohttp required for async encoding. Install with: pip install aiohttp"
             )
 
-        # Check cache first
-        uncached_texts, uncached_indices, embeddings = self._check_cache(texts)
+        # Check Redis cache first
+        uncached_texts, uncached_indices, embeddings = await self._check_cache(texts)
 
         if not uncached_texts:
             print("All embeddings found in cache!")
@@ -469,11 +511,17 @@ class AsyncDenseEncoder:
         for batch_result in results:
             new_embeddings.extend(batch_result)
 
-        # Cache new embeddings
-        if self._cache is not None:
+        # Cache new embeddings in Redis
+        if self._redis is not None:
             for text, embedding in zip(uncached_texts, new_embeddings):
-                cache_key = self._get_cache_key(text)
-                self._cache.set(cache_key, embedding, expire=self.CACHE_EXPIRE)
+                try:
+                    cache_key = self._get_cache_key(text)
+                    await self._redis.set(
+                        cache_key, json.dumps(embedding), ex=self.CACHE_EXPIRE
+                    )
+                except Exception:
+                    # Fail-open: cache write failure doesn't affect response
+                    pass
 
         # Merge cached and new embeddings
         for idx, embedding in zip(uncached_indices, new_embeddings):
