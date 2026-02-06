@@ -11,8 +11,10 @@ import json
 import warnings
 import requests
 import time
+import re
 import sentry_sdk
 from typing import List, Dict, Any
+from pydantic import BaseModel, Field
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -24,6 +26,44 @@ from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
 from app.logging_config import get_logger
 
 logger = get_logger(__name__)
+
+
+class KeywordSuggestion(BaseModel):
+    """A suggested keyword extracted from a query.
+
+    Attributes:
+        text: The keyword text
+        language: Language code ("tr" for Turkish, "en" for English, "ar" for Arabic)
+        confidence: Confidence score 0.0-1.0 (1.0 = high confidence)
+        selected: Whether keyword is selected by default in frontend
+        source: Extraction method ("llm", "rule_based", "fallback")
+    """
+
+    text: str = Field(..., description="Keyword text")
+    language: str = Field(default="tr", description="Language code: tr, en, ar")
+    confidence: float = Field(
+        default=1.0, ge=0.0, le=1.0, description="Confidence score 0.0-1.0"
+    )
+    selected: bool = Field(default=True, description="Default selection state in UI")
+    source: str = Field(
+        default="llm", description="Extraction method: llm, rule_based, fallback"
+    )
+
+
+class EnhanceResponse(BaseModel):
+    """Complete query enhancement response with keywords and metadata.
+
+    Attributes:
+        original_query: User's original input query
+        keywords: List of extracted/suggested keywords
+        corpus: Target corpus ("quran" or "bible")
+    """
+
+    original_query: str = Field(..., description="Original user query")
+    keywords: List[KeywordSuggestion] = Field(
+        default_factory=list, description="Extracted keywords"
+    )
+    corpus: str = Field(default="bible", description="Target corpus: quran or bible")
 
 
 class QueryEnhancer:
@@ -339,6 +379,251 @@ Adım 3: JSON formatında ver.
             extra={"corpus": corpus, "expanded_query": final_query[:80]},
         )
         return final_query
+
+    def extract_keywords(
+        self, query: str, corpus: str = "bible"
+    ) -> List[KeywordSuggestion]:
+        """
+        Extract structured keywords from query using hybrid rule-based + LLM approach.
+
+        This is the FOUNDATION method for multi-keyword search enhancement. It extracts
+        and suggests relevant keywords that can be individually toggled in the frontend.
+
+        Algorithm:
+        1. Rule-based layer: Split on conjunctions (ve, veya, ile, and, or, with, commas)
+        2. LLM layer: For complex/single-word queries, reuse expand_query() LLM results
+        3. Deduplication: Turkish-aware normalization (ı→i, İ→I, ö→o, ü→u, ş→s, ç→c, ğ→g)
+        4. Blacklist filter: Remove Quran English terms when corpus="quran"
+        5. Selection: First 7 keywords marked selected=True, rest selected=False
+
+        Args:
+            query: User's search query (Turkish or English)
+            corpus: Target corpus ("quran" or "bible")
+
+        Returns:
+            List of KeywordSuggestion objects with metadata
+        """
+        logger.info(
+            "Keyword extraction started",
+            extra={
+                "corpus": corpus,
+                "query_length": len(query),
+                "original_query": query[:50],
+            },
+        )
+
+        if not query or not query.strip():
+            logger.warning("Empty query provided to extract_keywords")
+            return []
+
+        query = query.strip()
+        keywords = []
+        extraction_method = "unknown"
+
+        # Step 1: Rule-based splitting on conjunctions
+        # Turkish: ve, veya, ile | English: and, or, with | Universal: comma
+        conjunction_pattern = (
+            r"\s+ve\s+|\s+veya\s+|\s+ile\s+|\s+and\s+|\s+or\s+|\s+with\s+|,\s*"
+        )
+        parts = [
+            p.strip()
+            for p in re.split(conjunction_pattern, query, flags=re.IGNORECASE)
+            if p.strip()
+        ]
+
+        if len(parts) >= 2:
+            # Multiple parts found - use rule-based extraction
+            extraction_method = "rule_based"
+            for part in parts:
+                if part:  # Non-empty after strip
+                    keywords.append(
+                        KeywordSuggestion(
+                            text=part,
+                            language="tr" if corpus == "quran" else "en",
+                            confidence=1.0,
+                            selected=True,
+                            source="rule_based",
+                        )
+                    )
+            logger.info(
+                "Rule-based extraction succeeded",
+                extra={"method": extraction_method, "parts_found": len(parts)},
+            )
+        else:
+            # Step 2: LLM-based extraction for single-word or complex queries
+            # Reuse expand_query()'s LLM call and extract keywords from expanded_terms
+            extraction_method = "llm"
+            try:
+                # Select prompts based on corpus (same logic as expand_query)
+                if corpus == "quran":
+                    prompt = f"Bu sorguyu Kuran araması için hazırla. Sorgu: '{query}'"
+                    system_prompt = self.SYSTEM_PROMPT_QURAN
+                    examples = self.FEW_SHOT_QURAN
+                else:
+                    prompt = f"Make this query search-ready. Query: '{query}'"
+                    system_prompt = self.SYSTEM_PROMPT_BIBLE
+                    examples = self.FEW_SHOT_BIBLE
+
+                # Call LLM with existing infrastructure (retries, circuit breaker, etc.)
+                result = self._call_llm_json(prompt, system_prompt, examples)
+
+                if result:
+                    # Extract keywords from LLM response
+                    expanded_terms = result.get("expanded_terms", [])
+                    translated_query = result.get("translated_query", query)
+
+                    # Add expanded terms as keywords
+                    for term in expanded_terms:
+                        if term:
+                            keywords.append(
+                                KeywordSuggestion(
+                                    text=term,
+                                    language="tr" if corpus == "quran" else "en",
+                                    confidence=0.9,
+                                    selected=True,
+                                    source="llm",
+                                )
+                            )
+
+                    # Add translated query if different from original
+                    if translated_query and translated_query.lower() != query.lower():
+                        keywords.append(
+                            KeywordSuggestion(
+                                text=translated_query,
+                                language="tr" if corpus == "quran" else "en",
+                                confidence=0.95,
+                                selected=True,
+                                source="llm",
+                            )
+                        )
+
+                    # Add original query terms as fallback
+                    original_parts = query.split()
+                    for part in original_parts:
+                        if part and len(part) > 1:  # Skip single characters
+                            keywords.append(
+                                KeywordSuggestion(
+                                    text=part,
+                                    language="tr" if corpus == "quran" else "en",
+                                    confidence=1.0,
+                                    selected=True,
+                                    source="llm",
+                                )
+                            )
+
+                    logger.info(
+                        "LLM extraction succeeded",
+                        extra={
+                            "method": extraction_method,
+                            "keywords_extracted": len(keywords),
+                        },
+                    )
+                else:
+                    # LLM returned empty - fallback to simple split
+                    extraction_method = "fallback"
+                    raise ValueError("LLM returned empty result")
+
+            except Exception as e:
+                # Step 3: Fallback - simple word splitting
+                extraction_method = "fallback"
+                logger.warning(
+                    f"LLM extraction failed, using fallback: {e}",
+                    extra={"error": str(e), "query": query[:50]},
+                )
+                words = query.split()
+                for word in words:
+                    if word and len(word) > 1:  # Skip single characters
+                        keywords.append(
+                            KeywordSuggestion(
+                                text=word,
+                                language="tr" if corpus == "quran" else "en",
+                                confidence=0.8,
+                                selected=True,
+                                source="fallback",
+                            )
+                        )
+
+        # Step 4: Deduplication with Turkish character normalization
+        def normalize_turkish(text: str) -> str:
+            """Normalize Turkish characters for case-insensitive comparison."""
+            text = text.lower()
+            # Turkish-specific mappings
+            tr_map = str.maketrans(
+                {
+                    "ı": "i",
+                    "İ": "i",
+                    "ö": "o",
+                    "Ö": "o",
+                    "ü": "u",
+                    "Ü": "u",
+                    "ş": "s",
+                    "Ş": "s",
+                    "ç": "c",
+                    "Ç": "c",
+                    "ğ": "g",
+                    "Ğ": "g",
+                }
+            )
+            return text.translate(tr_map)
+
+        seen = set()
+        deduplicated = []
+        for kw in keywords:
+            normalized = normalize_turkish(kw.text)
+            if normalized not in seen and normalized:  # Skip empty after normalization
+                seen.add(normalized)
+                deduplicated.append(kw)
+
+        keywords = deduplicated
+
+        # Step 5: Blacklist filter for Quran mode (same as expand_query)
+        if corpus == "quran":
+            blacklist = {
+                "god",
+                "lord",
+                "wrath",
+                "tribulation",
+                "judgment",
+                "day",
+                "bible",
+                "christ",
+                "jesus",
+                "spirit",
+                "holy",
+                "father",
+                "son",
+                "gospel",
+                "eschaton",
+                "last",
+                "times",
+                "of",
+                "the",
+                "and",
+            }
+            keywords = [
+                kw for kw in keywords if normalize_turkish(kw.text) not in blacklist
+            ]
+            logger.info(
+                "Quran blacklist filter applied",
+                extra={"keywords_after_filter": len(keywords)},
+            )
+
+        # Step 6: Selection limit - first 7 selected, rest unselected
+        for i, kw in enumerate(keywords):
+            if i >= 7:
+                kw.selected = False
+
+        logger.info(
+            f"Keyword extraction completed",
+            extra={
+                "method": extraction_method,
+                "count": len(keywords),
+                "selected_count": sum(1 for kw in keywords if kw.selected),
+                "corpus": corpus,
+            },
+        )
+
+        return keywords
 
     def generate_multi_query(
         self, query: str, n: int = 3, corpus: str = "bible"
