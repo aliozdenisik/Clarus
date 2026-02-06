@@ -11,7 +11,7 @@ class Settings(BaseSettings):
         "postgresql+asyncpg://postgres:postgres@localhost:54322/postgres"
     )
 
-    jwt_secret_key: str = "your-secret-key-change-in-production"
+    jwt_secret_key: str = ""  # Legacy: Better Auth JWKS is primary auth. Set via JWT_SECRET_KEY env var if needed.
     jwt_algorithm: str = "HS256"
     jwt_access_expire_minutes: int = 60 * 24
     jwt_refresh_expire_minutes: int = 60 * 24 * 30
@@ -82,6 +82,16 @@ class Settings(BaseSettings):
         if self.debug and self.app_env == "production":
             raise RuntimeError(
                 "Debug mode must be disabled in production (set DEBUG=false)"
+            )
+        if self.app_env == "production" and self.jwt_secret_key in (
+            "",
+            "your-secret-key-change-in-production",
+        ):
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "JWT_SECRET_KEY is not set. Better Auth JWKS is the primary auth mechanism. "
+                "Set JWT_SECRET_KEY if legacy JWT auth is still needed."
             )
 
 
