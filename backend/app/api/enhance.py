@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Dict, Any
 import os
 import sys
 import time
@@ -22,7 +22,8 @@ sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from app.api.auth import get_current_user, check_rate_limit
+from app.auth.api_key_validator import get_current_user_flexible
+from app.api.auth import check_rate_limit
 from app.db import get_db
 from src.query_enhancer import QueryEnhancer, KeywordSuggestion, EnhanceResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,7 +48,7 @@ class EnhanceRequest(BaseModel):
 @router.post("/enhance", response_model=EnhanceResponse)
 async def enhance_query(
     request: EnhanceRequest,
-    current_user=Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
     """Extract structured keywords from a search query.
@@ -60,7 +61,7 @@ async def enhance_query(
 
     Args:
         request: EnhanceRequest with query and corpus
-        current_user: Authenticated user (from JWT token)
+        current_user: Authenticated user (from JWT token or API key)
         db: Database session for rate limiting
 
     Returns:
@@ -78,7 +79,7 @@ async def enhance_query(
             extra={
                 "query": request.query[:50],
                 "corpus": request.corpus,
-                "user_id": current_user.id,
+                "user_id": current_user["id"],
             },
         )
 

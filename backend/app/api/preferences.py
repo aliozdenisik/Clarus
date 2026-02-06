@@ -2,12 +2,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Dict, Any
 from datetime import datetime
 
 from app.db import get_db
-from app.models import User, UserPreferences
-from app.api.auth import get_current_user
+from app.models import UserPreferences
+from app.auth.api_key_validator import get_current_user_flexible
 
 router = APIRouter()
 
@@ -60,10 +60,11 @@ def _get_default_preferences() -> dict:
 
 @router.get("/", response_model=PreferencesResponse)
 async def get_preferences(
-    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
+    db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(UserPreferences).where(UserPreferences.user_id == current_user.id)
+        select(UserPreferences).where(UserPreferences.user_id == current_user["id"])
     )
     prefs = result.scalar_one_or_none()
 
@@ -76,16 +77,16 @@ async def get_preferences(
 @router.put("/", response_model=PreferencesResponse)
 async def update_preferences(
     updates: PreferencesUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(UserPreferences).where(UserPreferences.user_id == current_user.id)
+        select(UserPreferences).where(UserPreferences.user_id == current_user["id"])
     )
     prefs = result.scalar_one_or_none()
 
     if not prefs:
-        prefs = UserPreferences(user_id=current_user.id)
+        prefs = UserPreferences(user_id=current_user["id"])
         db.add(prefs)
 
     update_data = updates.model_dump(exclude_unset=True)
@@ -102,10 +103,11 @@ async def update_preferences(
 
 @router.delete("/")
 async def reset_preferences(
-    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
+    db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(UserPreferences).where(UserPreferences.user_id == current_user.id)
+        select(UserPreferences).where(UserPreferences.user_id == current_user["id"])
     )
     prefs = result.scalar_one_or_none()
 
