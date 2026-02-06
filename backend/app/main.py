@@ -16,6 +16,7 @@ from app.api import (
     keyword_search,
     bible_keyword_search,
     verse_lookup,
+    enhance,
 )
 from app.db import init_db
 from app.middleware.error_handler import ErrorHandlerMiddleware
@@ -199,6 +200,7 @@ async def add_user_id_to_state(request: Request, call_next):
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
+app.include_router(enhance.router, prefix="/api/search", tags=["search"])
 app.include_router(compare.router, prefix="/api/compare", tags=["compare"])
 app.include_router(stream.router, prefix="/api/stream", tags=["stream"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
