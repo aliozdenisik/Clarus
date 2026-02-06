@@ -93,7 +93,7 @@ const demoData = {
   ],
   auth: {
     login: { text: "Sign In", url: "/sign-in" },
-    signup: { text: "Register", url: "/register" },
+    signup: { text: "Register", url: "/sign-up" },
   },
 };
 
