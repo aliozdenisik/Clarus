@@ -13,45 +13,43 @@ import { ChevronLeft } from "lucide-react";
  */
 export default function SignUpPage() {
   return (
-    <div className="space-y-6">
-      {/* Back to Home Button */}
-      <div className="flex justify-start">
+    <>
+      {/* Header with back button */}
+      <div className="flex items-center justify-between">
         <Link
           href="/"
-          className="relative z-0 flex items-center justify-center gap-2 overflow-hidden rounded-md 
-          border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]
-          px-4 py-2 font-semibold text-[var(--color-text-primary)] transition-all duration-500
-          before:absolute before:inset-0 before:-z-10 before:translate-x-[150%] before:translate-y-[150%] before:scale-[2.5]
-          before:rounded-[100%] before:bg-[var(--color-accent-primary)] before:transition-transform before:duration-1000 before:content-['']
-          hover:scale-105 hover:text-white hover:before:translate-x-[0%] hover:before:translate-y-[0%] active:scale-95"
+          className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
         >
           <ChevronLeft size={16} />
           <span>Home</span>
         </Link>
       </div>
 
-      {/* Logo */}
-      <div className="flex justify-center">
-        <span className="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent">
+      {/* Branding */}
+      <div className="space-y-2">
+        <span className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-transparent">
           Clarus
         </span>
+        <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
+          Create your account
+        </h1>
+        <p className="text-[var(--color-text-muted)]">
+          Start exploring sacred texts with AI
+        </p>
       </div>
 
-      {/* Auth View */}
-      <AuthView pathname="sign-up" />
+      {/* Better Auth Form */}
+      <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 shadow-sm">
+        <AuthView pathname="sign-up" />
+      </div>
 
       {/* Terms */}
       <p className="text-xs text-[var(--color-text-muted)] text-center">
-        By signing up, you agree to our{" "}
-        <Link href="#" className="text-[var(--color-accent-primary)] hover:underline">
-          Terms & Conditions
-        </Link>{" "}
-        and{" "}
-        <Link href="#" className="text-[var(--color-accent-primary)] hover:underline">
-          Privacy Policy
-        </Link>
-        .
+        By creating an account, you agree to our{" "}
+        <Link href="#" className="text-[var(--color-accent-primary)] hover:underline">Terms</Link>
+        {" "}and{" "}
+        <Link href="#" className="text-[var(--color-accent-primary)] hover:underline">Privacy Policy</Link>.
       </p>
-    </div>
+    </>
   );
 }
