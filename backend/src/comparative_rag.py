@@ -427,6 +427,205 @@ class ComparativeRAG:
 
     # ==================== END MULTI-QUERY SUPPORT ====================
 
+    def _search_per_keyword_multi_collection(
+        self,
+        quran_keywords: Optional[List[str]] = None,
+        bible_keywords: Optional[List[str]] = None,
+        limit_per_keyword: int = 10,
+    ) -> Dict[str, List]:
+        """
+        Per-keyword multi-collection search with RRF fusion and keyword coverage boost.
+
+        Batch encodes keywords, searches each keyword vector against appropriate collections,
+        and applies RRF fusion + keyword coverage boost to results.
+
+        Args:
+            quran_keywords: List of Turkish keywords for Quran search
+            bible_keywords: List of English keywords for Bible search
+            limit_per_keyword: Max results per keyword per collection
+
+        Returns:
+            Dict[collection_name, List[results]] with boosted scores
+        """
+        # Initialize DenseEncoder if needed
+        if not hasattr(self, "_dense_encoder") or self._dense_encoder is None:
+            from src.embeddings import DenseEncoder
+
+            self._dense_encoder = DenseEncoder()
+
+        results = {"quran": [], "ot": [], "nt": [], "apocrypha": []}
+
+        # Batch encode keywords
+        quran_vectors = []
+        bible_vectors = []
+
+        if quran_keywords:
+            self._log(f"🔑 Encoding {len(quran_keywords)} Quran keywords...")
+            quran_vectors = self._dense_encoder.encode_batch(
+                quran_keywords, batch_size=len(quran_keywords), show_progress=False
+            )
+
+        if bible_keywords:
+            self._log(f"🔑 Encoding {len(bible_keywords)} Bible keywords...")
+            bible_vectors = self._dense_encoder.encode_batch(
+                bible_keywords, batch_size=len(bible_keywords), show_progress=False
+            )
+
+        # Define search tasks for parallel execution
+        search_tasks = []
+
+        # Quran searches (one per keyword)
+        if quran_vectors:
+            searcher = self._get_quran_searcher()
+            for i, vector in enumerate(quran_vectors):
+
+                def search_quran_keyword(v=vector, kw=quran_keywords[i]):
+                    try:
+                        return (
+                            "quran",
+                            kw,
+                            searcher.search_with_vector(v, limit=limit_per_keyword),
+                        )
+                    except CircuitBreakerError:
+                        logger.warning(
+                            "Qdrant unavailable (circuit breaker open), returning empty results"
+                        )
+                        return ("quran", kw, [])
+                    except Exception:
+                        return ("quran", kw, [])
+
+                search_tasks.append(search_quran_keyword)
+
+        # Bible searches (each keyword searches all 3 collections)
+        if bible_vectors:
+            ot_searcher = self._get_ot_searcher()
+            nt_searcher = self._get_nt_searcher()
+            apoc_searcher = self._get_apocrypha_searcher()
+
+            for i, vector in enumerate(bible_vectors):
+
+                def search_ot_keyword(v=vector, kw=bible_keywords[i]):
+                    try:
+                        return (
+                            "ot",
+                            kw,
+                            ot_searcher.search_with_vector(v, limit=limit_per_keyword),
+                        )
+                    except CircuitBreakerError:
+                        logger.warning(
+                            "Qdrant unavailable (circuit breaker open), returning empty results"
+                        )
+                        return ("ot", kw, [])
+                    except Exception:
+                        return ("ot", kw, [])
+
+                def search_nt_keyword(v=vector, kw=bible_keywords[i]):
+                    try:
+                        return (
+                            "nt",
+                            kw,
+                            nt_searcher.search_with_vector(v, limit=limit_per_keyword),
+                        )
+                    except CircuitBreakerError:
+                        logger.warning(
+                            "Qdrant unavailable (circuit breaker open), returning empty results"
+                        )
+                        return ("nt", kw, [])
+                    except Exception:
+                        return ("nt", kw, [])
+
+                def search_apoc_keyword(v=vector, kw=bible_keywords[i]):
+                    try:
+                        return (
+                            "apocrypha",
+                            kw,
+                            apoc_searcher.search_with_vector(
+                                v, limit=limit_per_keyword
+                            ),
+                        )
+                    except CircuitBreakerError:
+                        logger.warning(
+                            "Qdrant unavailable (circuit breaker open), returning empty results"
+                        )
+                        return ("apocrypha", kw, [])
+                    except Exception:
+                        return ("apocrypha", kw, [])
+
+                search_tasks.extend(
+                    [search_ot_keyword, search_nt_keyword, search_apoc_keyword]
+                )
+
+        # Execute all searches in parallel
+        self._log(
+            f"🔍 Executing {len(search_tasks)} per-keyword searches in parallel..."
+        )
+        keyword_results = {
+            "quran": [],
+            "ot": [],
+            "nt": [],
+            "apocrypha": [],
+        }  # List of result lists per collection
+
+        with ThreadPoolExecutor(max_workers=len(search_tasks)) as executor:
+            futures = [executor.submit(task) for task in search_tasks]
+            for future in as_completed(futures):
+                collection, keyword, result = future.result()
+                if result:
+                    keyword_results[collection].append(result)
+
+        # Apply RRF fusion per collection
+        for collection_key in ["quran", "ot", "nt", "apocrypha"]:
+            if keyword_results[collection_key]:
+                fused = self._rrf_fusion(keyword_results[collection_key], k=60)
+
+                # Apply keyword coverage boost
+                # Count how many keywords matched each result
+                result_keyword_matches = {}
+                for result_list in keyword_results[collection_key]:
+                    for r in result_list:
+                        rid = (
+                            getattr(r, "id", None)
+                            or getattr(r, "chunk_id", None)
+                            or id(r)
+                        )
+                        result_keyword_matches[rid] = (
+                            result_keyword_matches.get(rid, 0) + 1
+                        )
+
+                # Boost scores for results matching multiple keywords
+                boosted = []
+                for r in fused:
+                    rid = (
+                        getattr(r, "id", None) or getattr(r, "chunk_id", None) or id(r)
+                    )
+                    match_count = result_keyword_matches.get(rid, 1)
+
+                    # Apply boost for ≥2 keyword matches
+                    if match_count >= 2:
+                        # Create a copy to avoid mutating original
+                        boosted_result = r
+                        if hasattr(r, "score"):
+                            original_score = r.score
+                            boost_factor = 1 + (match_count * 0.15)
+                            boosted_score = original_score * boost_factor
+                            # Update score (if mutable) or create wrapper
+                            if hasattr(r, "__dict__"):
+                                r.score = boosted_score
+                        boosted.append(r)
+                    else:
+                        boosted.append(r)
+
+                results[collection_key] = boosted
+
+        # Log results
+        counts = {k: len(v) for k, v in results.items()}
+        self._log(
+            f"   Per-keyword results: Quran={counts['quran']}, OT={counts['ot']}, "
+            f"NT={counts['nt']}, Apoc={counts['apocrypha']}"
+        )
+
+        return results
+
     def _translate_query_parallel(self, query: str) -> Tuple[str, str, str]:
         """
         Step 0: Translate query for both corpora in parallel.
@@ -674,6 +873,8 @@ class ComparativeRAG:
         query: str,
         collections: Optional[List[str]] = None,
         progress_callback: Optional[Callable[[str, str], None]] = None,
+        quran_keywords: Optional[List[str]] = None,
+        bible_keywords: Optional[List[str]] = None,
     ) -> ComparativeScriptureResult:
         """
         Execute full search pipeline without answer generation.
@@ -686,9 +887,14 @@ class ComparativeRAG:
                         Valid values: 'quran_tr', 'bible_ot', 'bible_nt', 'bible_apocrypha'
             progress_callback: Optional callback(step_id, message) for streaming progress.
                               Called at each pipeline stage to report progress.
+            quran_keywords: Optional list of Turkish keywords for Quran per-keyword search
+            bible_keywords: Optional list of English keywords for Bible per-keyword search
 
         If enable_multi_query=True: Uses 5 queries + RRF fusion for better accuracy.
         If enable_multi_query=False: Uses single enhanced query (faster).
+
+        If quran_keywords or bible_keywords are provided, per-keyword search results
+        are merged with normal results using RRF fusion.
 
         Translation is applied first: the user's query is translated to Turkish
         (for Quran) and English (for Bible) before any enhancement or search.
@@ -920,6 +1126,41 @@ class ComparativeRAG:
             )
             self._log(f"   Searches completed in {duration:.0f}ms")
 
+        # Per-keyword search (if keywords provided)
+        if quran_keywords or bible_keywords:
+            _emit(
+                "searching_keywords",
+                f"Searching per-keyword: {len(quran_keywords or [])} Quran + {len(bible_keywords or [])} Bible keywords...",
+            )
+            keyword_results = self._search_per_keyword_multi_collection(
+                quran_keywords=quran_keywords,
+                bible_keywords=bible_keywords,
+                limit_per_keyword=10,
+            )
+
+            # Merge keyword results with normal results using RRF fusion
+            if keyword_results["quran"]:
+                quran_results = self._rrf_fusion(
+                    [quran_results, keyword_results["quran"]], k=60
+                )[: self.verses_per_search]
+            if keyword_results["ot"]:
+                ot_results = self._rrf_fusion(
+                    [ot_results, keyword_results["ot"]], k=60
+                )[: self.verses_per_search]
+            if keyword_results["nt"]:
+                nt_results = self._rrf_fusion(
+                    [nt_results, keyword_results["nt"]], k=60
+                )[: self.verses_per_search]
+            if keyword_results["apocrypha"]:
+                apocrypha_results = self._rrf_fusion(
+                    [apocrypha_results, keyword_results["apocrypha"]], k=60
+                )[: self.verses_per_search]
+
+            _emit(
+                "keywords_merged",
+                f"Merged keyword results — Quran: {len(quran_results)}, OT: {len(ot_results)}, NT: {len(nt_results)}, Apoc: {len(apocrypha_results)}",
+            )
+
         total_duration = (time.time() - total_start) * 1000
 
         # Store detected_language in search_stats for response translation (Task 5)
@@ -1050,7 +1291,12 @@ class ComparativeRAG:
                 )
         return self._multi_agent_generator
 
-    def compare_multi_agent(self, query: str):
+    def compare_multi_agent(
+        self,
+        query: str,
+        quran_keywords: Optional[List[str]] = None,
+        bible_keywords: Optional[List[str]] = None,
+    ):
         """
         Full comparative pipeline with Multi-Agent answer generation.
 
@@ -1059,6 +1305,8 @@ class ComparativeRAG:
 
         Args:
             query: User's religious/philosophical question
+            quran_keywords: Optional list of Turkish keywords for Quran per-keyword search
+            bible_keywords: Optional list of English keywords for Bible per-keyword search
 
         Returns:
             MultiAgentAnswer with 5 paragraphs (OT, NT, Apocrypha, Quran, Synthesis)
@@ -1079,7 +1327,11 @@ class ComparativeRAG:
                 console.print(f'[dim]Question: "{query}"[/dim]\n')
 
             # Steps 0-2: Translate, search all 4 collections (pre-separated by testament)
-            search_result = self.search_all(query)
+            search_result = self.search_all(
+                query,
+                quran_keywords=quran_keywords,
+                bible_keywords=bible_keywords,
+            )
 
             # Store detected language for response translation (Task 5)
             self._last_detected_language = search_result.search_stats.get(
