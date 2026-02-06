@@ -270,7 +270,7 @@ export default function HomePage() {
                     <ArrowRight className="w-4 h-4" />
                   </motion.button>
                   <motion.button
-                    onClick={() => router.push("/login")}
+                    onClick={() => router.push("/sign-in")}
                     className="px-10 py-4 rounded-xl bg-transparent border border-white/20 text-white font-medium hover:bg-white/5 hover:border-white/30 transition-colors duration-200 flex items-center justify-center gap-3"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}

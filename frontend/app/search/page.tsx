@@ -61,7 +61,7 @@ function SearchContent() {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/login");
+      router.push("/sign-in");
     }
   }, [user, isLoading, router]);
 
@@ -124,7 +124,7 @@ function SearchContent() {
 
   const handleLogout = async () => {
     await signOut();
-    router.push("/login");
+    router.push("/sign-in");
     toast.success("Logged out successfully");
   };
 

@@ -72,7 +72,7 @@ export default function OldTestamentPage() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/login");
+      router.push("/sign-in");
     }
   }, [user, authLoading, router]);
 
@@ -103,7 +103,7 @@ export default function OldTestamentPage() {
 
   const handleLogout = async () => {
     await signOut();
-    router.push("/login");
+    router.push("/sign-in");
     toast.success("Logged out successfully");
   };
 
