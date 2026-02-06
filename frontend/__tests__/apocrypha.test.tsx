@@ -11,16 +11,13 @@ vi.mock('@/components/ui/glow-card', () => ({
   ),
 }));
 
-// Mock Auth
-const mockUser = { name: 'Test User', email: 'test@example.com' };
-const mockLogout = vi.fn();
-
-vi.mock('@/lib/auth/auth-context', () => ({
-  useAuth: () => ({
-    user: mockUser,
-    isLoading: false,
-    logout: mockLogout,
-  }),
+// Mock Better Auth
+vi.mock('@/lib/auth-client', () => ({
+  useSession: () => ({ data: { user: { id: '1', name: 'Test User', email: 'test@example.com' } }, isPending: false }),
+  signIn: { email: vi.fn(), social: vi.fn() },
+  signUp: { email: vi.fn() },
+  signOut: vi.fn(),
+  authClient: { token: vi.fn() },
 }));
 
 // Mock Sonner

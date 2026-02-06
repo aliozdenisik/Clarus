@@ -9,17 +9,21 @@ vi.mock('@/lib/api/sdk.gen', () => ({
 }));
 
 import HistoryPage from "../app/history/page";
-import { useAuth } from "@/lib/auth/auth-context";
 import { useRouter } from "next/navigation";
 import {
   getSearchHistoryApiSearchHistoryGet,
   deleteHistoryItemApiSearchHistoryHistoryIdDelete,
   clearHistoryApiSearchHistoryDelete,
 } from '@/lib/api/sdk.gen';
+import { useSession } from '@/lib/auth-client';
 
-// Mock hooks
-vi.mock("@/lib/auth/auth-context", () => ({
-  useAuth: vi.fn(),
+// Mock Better Auth
+vi.mock("@/lib/auth-client", () => ({
+  useSession: vi.fn(),
+  signIn: { email: vi.fn(), social: vi.fn() },
+  signUp: { email: vi.fn() },
+  signOut: vi.fn(),
+  authClient: { token: vi.fn() },
 }));
 
 vi.mock("next/navigation", () => ({
@@ -67,15 +71,14 @@ const mockHistoryItems = [
 
 describe("HistoryPage", () => {
   const mockPush = vi.fn();
-  const mockUser = { id: 1, name: "Test User", email: "test@example.com" };
+  const mockUser = { id: "1", name: "Test User", email: "test@example.com" };
 
   beforeEach(() => {
     vi.clearAllMocks();
     (useRouter as ReturnType<typeof vi.fn>).mockReturnValue({ push: mockPush });
-    (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
-      user: mockUser,
-      isLoading: false,
-      logout: vi.fn(),
+    (useSession as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: { user: mockUser },
+      isPending: false,
     });
 
     // Mock window.confirm
@@ -101,22 +104,20 @@ describe("HistoryPage", () => {
     });
   });
 
-  it("redirects to login if user is not authenticated", () => {
-    (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
-      user: null,
-      isLoading: false,
-      logout: vi.fn(),
+  it("redirects to sign-in if user is not authenticated", () => {
+    (useSession as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: null,
+      isPending: false,
     });
 
     render(<HistoryPage />);
-    expect(mockPush).toHaveBeenCalledWith("/login");
+    expect(mockPush).toHaveBeenCalledWith("/sign-in");
   });
 
   it("shows loading state initially", () => {
-    (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
-      user: mockUser,
-      isLoading: true,
-      logout: vi.fn(),
+    (useSession as ReturnType<typeof vi.fn>).mockReturnValue({
+      data: { user: mockUser },
+      isPending: true,
     });
 
     render(<HistoryPage />);

@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import SettingsPage from '../app/settings/page';
 import * as PreferencesStore from '@/lib/stores/preferences-store';
-import * as AuthContext from '@/lib/auth/auth-context';
+import * as AuthClient from '@/lib/auth-client';
 
 // Mock Next.js router
 vi.mock('next/navigation', () => ({
@@ -60,16 +60,12 @@ describe('SettingsPage', () => {
     // Mock window.confirm
     window.confirm = vi.fn(() => true);
 
-    // Mock Auth
-    vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
-      user: { id: 1, email: 'test@example.com', name: 'Test User', created_at: '2023-01-01' },
-      isLoading: false,
-      backendStatus: 'online',
-      login: vi.fn(),
-      loginWithGoogle: vi.fn(),
-      register: vi.fn(),
-      logout: vi.fn(),
-    });
+    // Mock Better Auth
+    vi.spyOn(AuthClient, 'useSession').mockReturnValue({
+      data: { user: { id: '1', email: 'test@example.com', name: 'Test User', createdAt: new Date('2023-01-01') } },
+      isPending: false,
+      error: null,
+    } as any);
 
     // Mock Store
     // We need to mock the selector behavior if the component uses selectors,

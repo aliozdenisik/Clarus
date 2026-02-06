@@ -205,15 +205,14 @@ async def add_user_id_to_state(request: Request, call_next):
     """
     Extract user_id from JWT and store in request.state.
 
-    Tries JWKS validation first (Better Auth), falls back to old JWT decode.
-    Handles both old (int) and new (UUID) user IDs.
+    Uses JWKS validation (Better Auth) to extract user ID.
     """
     auth_header = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
         token = auth_header[7:]
         user_id = None
 
-        # Try JWKS validation first (Better Auth)
+        # Try JWKS validation (Better Auth)
         try:
             from app.auth.jwks_validator import get_validator
 
@@ -224,25 +223,7 @@ async def add_user_id_to_state(request: Request, call_next):
                 "User ID extracted from JWKS-validated JWT", extra={"user_id": user_id}
             )
         except Exception as e:
-            # Fall back to old JWT decode
-            logger.debug(
-                "JWKS validation failed, trying old JWT decode", extra={"error": str(e)}
-            )
-            try:
-                from app.auth import decode_access_token
-
-                payload = decode_access_token(token)
-                if payload:
-                    user_id = payload.get("sub")
-                    logger.debug(
-                        "User ID extracted from old JWT decode",
-                        extra={"user_id": user_id},
-                    )
-            except Exception as old_decode_error:
-                logger.debug(
-                    "Both JWKS and old JWT decode failed",
-                    extra={"error": str(old_decode_error)},
-                )
+            logger.debug("JWKS validation failed", extra={"error": str(e)})
 
         # Store user_id in request state (handle both int and string UUIDs)
         if user_id:
