@@ -204,5 +204,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         except Exception as e:
             # Fail-open: log error and allow request
-            logger.warning(f"Rate limit check failed, allowing request: {e}")
+            logger.warning(
+                "Rate limit check failed, allowing request",
+                extra={"operation": "rate_limit_check", "error_type": type(e).__name__},
+            )
             return await call_next(request)

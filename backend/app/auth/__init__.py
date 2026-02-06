@@ -62,5 +62,12 @@ async def is_token_blacklisted(token: str) -> bool:
         from app.auth.token_blacklist import is_revoked
 
         return await is_revoked(token)
-    except Exception:
+    except Exception as e:
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.warning(
+            "Token blacklist check failed, allowing request",
+            extra={"operation": "is_token_blacklisted", "error_type": type(e).__name__},
+        )
         return False  # Fail-open
