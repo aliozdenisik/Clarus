@@ -38,7 +38,10 @@ async def revoke_token(token: str, expires_at: datetime) -> bool:
         logger.info(f"Token revoked with TTL {ttl_seconds}s")
         return True
     except Exception as e:
-        logger.warning(f"Failed to revoke token: {e}")
+        logger.warning(
+            "Failed to revoke token",
+            extra={"operation": "token_revoke", "error_type": type(e).__name__},
+        )
         return False
 
 
@@ -63,5 +66,12 @@ async def is_revoked(token: str) -> bool:
 
         result = await redis_manager.client.exists(key)
         return bool(result)
-    except Exception:
+    except Exception as e:
+        logger.warning(
+            "Token blacklist check failed, allowing request",
+            extra={
+                "operation": "token_blacklist_check",
+                "error_type": type(e).__name__,
+            },
+        )
         return False  # Fail-open

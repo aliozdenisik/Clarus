@@ -164,9 +164,18 @@ class DenseEncoder:
                 cached_bytes = self._redis.get(cache_key)
                 if cached_bytes is not None:
                     return json.loads(cached_bytes.decode())
-            except Exception:
+            except Exception as e:
                 # Fail-open: continue to API call if cache fails
-                pass
+                import logging
+
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    "Redis cache read failed, proceeding with API call",
+                    extra={
+                        "operation": "embedding_cache_get",
+                        "error_type": type(e).__name__,
+                    },
+                )
 
         # API call
         embedding = self._api_call(text)
@@ -175,9 +184,18 @@ class DenseEncoder:
         if self._redis is not None and cache_key is not None:
             try:
                 self._redis.set(cache_key, json.dumps(embedding), ex=self.CACHE_EXPIRE)
-            except Exception:
+            except Exception as e:
                 # Fail-open: cache write failure doesn't affect response
-                pass
+                import logging
+
+                logger = logging.getLogger(__name__)
+                logger.warning(
+                    "Redis cache write failed",
+                    extra={
+                        "operation": "embedding_cache_set",
+                        "error_type": type(e).__name__,
+                    },
+                )
 
         return embedding
 
@@ -374,8 +392,9 @@ class AsyncDenseEncoder:
                 else:
                     uncached_texts.append(text)
                     uncached_indices.append(i)
-            except Exception:
+            except Exception as e:
                 # Fail-open: cache read failure, treat as cache miss
+                print(f"Redis cache read failed: {type(e).__name__}")
                 uncached_texts.append(text)
                 uncached_indices.append(i)
 
@@ -519,9 +538,9 @@ class AsyncDenseEncoder:
                     await self._redis.set(
                         cache_key, json.dumps(embedding), ex=self.CACHE_EXPIRE
                     )
-                except Exception:
+                except Exception as e:
                     # Fail-open: cache write failure doesn't affect response
-                    pass
+                    print(f"Redis cache write failed: {type(e).__name__}")
 
         # Merge cached and new embeddings
         for idx, embedding in zip(uncached_indices, new_embeddings):
