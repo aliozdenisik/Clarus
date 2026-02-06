@@ -79,8 +79,18 @@ async def get_current_user_from_sse(db: AsyncSession, request: Request):
     if not cookie_token:
         raise HTTPException(status_code=401, detail="Authentication required")
 
+    from urllib.parse import unquote
+
+    # Better Auth cookie format: <token>.<hmac-signature> (URL-encoded)
+    # The DB stores only the raw token without the signature.
+    raw_token = (
+        unquote(cookie_token).rsplit(".", 1)[0]
+        if "." in unquote(cookie_token)
+        else unquote(cookie_token)
+    )
+
     session_result = await db.execute(
-        select(BetterAuthSession).where(BetterAuthSession.token == cookie_token)
+        select(BetterAuthSession).where(BetterAuthSession.token == raw_token)
     )
     session = session_result.scalar_one_or_none()
 
@@ -140,13 +150,13 @@ async def stream_search(
                 "[SSE /search] Starting ask call (search + answer generation)..."
             )
             if source == "quran":
-                ask_result = rag.ask_quran(q, top_k=10)
+                ask_result = await rag.ask_quran(q, top_k=10)
             elif source in ["ot", "nt", "apocrypha"]:
-                ask_result = rag.ask_bible(
+                ask_result = await rag.ask_bible(
                     q, translation="kjva", testament=source, top_k=10
                 )
             else:
-                ask_result = rag.ask_bible(q, top_k=10)
+                ask_result = await rag.ask_bible(q, top_k=10)
 
             # Extract results and answer from ask_result
             results = ask_result.search_results

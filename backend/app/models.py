@@ -33,35 +33,30 @@ class User(Base):
     last_query_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     refresh_token: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
 
-    search_history: Mapped[list["SearchHistory"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan"
-    )
-    preferences: Mapped[Optional["UserPreferences"]] = relationship(
-        back_populates="user", uselist=False, cascade="all, delete-orphan"
-    )
+    # Legacy relationships removed — SearchHistory and UserPreferences now reference Better Auth user table
 
 
 class SearchHistory(Base):
     __tablename__ = "search_history"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users_legacy.id"), nullable=False
+    user_id: Mapped[str] = mapped_column(
+        String(255), ForeignKey("user.id"), nullable=False
     )
     query: Mapped[str] = mapped_column(Text, nullable=False)
     search_type: Mapped[str] = mapped_column(String(50), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     result_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="search_history")
+    auth_user: Mapped["BetterAuthUser"] = relationship(viewonly=True)
 
 
 class UserPreferences(Base):
     __tablename__ = "user_preferences"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users_legacy.id"), unique=True, nullable=False
+    user_id: Mapped[str] = mapped_column(
+        String(255), ForeignKey("user.id"), unique=True, nullable=False
     )
 
     theme: Mapped[str] = mapped_column(String(20), default="system")
@@ -79,7 +74,7 @@ class UserPreferences(Base):
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
     )
 
-    user: Mapped["User"] = relationship(back_populates="preferences")
+    auth_user: Mapped["BetterAuthUser"] = relationship(viewonly=True)
 
 
 # ---------------------------------------------------------------------------

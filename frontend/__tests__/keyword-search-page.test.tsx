@@ -191,9 +191,9 @@ describe("KeywordSearchPage", () => {
     // Search input
     expect(screen.getByPlaceholderText(/Search for Arabic roots/i)).toBeInTheDocument();
 
-    // Tab navigation - now uses role="tab" (Radix/Vercel tabs)
-    expect(screen.getByRole("tab", { name: /Search Results/i })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: /Root Browser/i })).toBeInTheDocument();
+    // Tab navigation - vercel-tabs renders plain divs, not ARIA tabs
+    expect(screen.getByText("Search Results")).toBeInTheDocument();
+    expect(screen.getByText("Root Browser")).toBeInTheDocument();
   });
 
   it("Arabic search triggers API and displays root card", async () => {
@@ -512,8 +512,8 @@ describe("KeywordSearchPage", () => {
 
     render(<KeywordSearchPage />);
 
-    // Click Root Browser tab - now uses role="tab" (Radix/Vercel tabs)
-    const browserTab = screen.getByRole("tab", { name: /Root Browser/i });
+    // Click Root Browser tab - vercel-tabs renders plain divs
+    const browserTab = screen.getByText("Root Browser");
     await userEvent.click(browserTab);
 
     await waitFor(() => {
