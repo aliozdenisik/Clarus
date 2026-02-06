@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { Search, BookOpen, User, LogOut } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/lib/auth/auth-context";
+import { useSession, signOut } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -66,7 +66,8 @@ export default function OldTestamentPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const { user, isLoading: authLoading, logout } = useAuth();
+  const { data: session, isPending: authLoading } = useSession();
+  const user = session?.user;
   const router = useRouter();
 
   useEffect(() => {
@@ -101,7 +102,7 @@ export default function OldTestamentPage() {
   }, [user]);
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     router.push("/login");
     toast.success("Logged out successfully");
   };

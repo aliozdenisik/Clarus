@@ -1,4 +1,5 @@
 import { client } from './client.gen';
+import { getSession } from '../auth-client';
 
 /**
  * Configure the generated API client with global authentication.
@@ -10,16 +11,21 @@ import { client } from './client.gen';
  * 3. The auth function receives an Auth object, returns the raw token string
  * 4. Client prepends "Bearer " automatically (auth.gen.ts:33-35)
  * 5. Final header: `Authorization: Bearer <token>`
+ * 
+ * Updated to use Better Auth's getSession() for token retrieval.
  */
 export function configureApiClient() {
   client.setConfig({
-    auth: () => {
+    auth: async () => {
       // typeof window check: Next.js runs on both server (SSR) and client.
-      // localStorage only exists in the browser. Without this check, SSR would
-      // crash with "localStorage is not defined". Returning undefined means
+      // getSession only works in the browser. Returning undefined means
       // "no auth token available" — the SDK simply omits the Authorization header.
       if (typeof window === 'undefined') return undefined;
-      return localStorage.getItem('access_token') || undefined;
+      
+      // Fallback to localStorage for backward compatibility
+      // Better Auth stores tokens in localStorage, and our backend still uses access_token
+      const legacyToken = localStorage.getItem('access_token');
+      return legacyToken || undefined;
     },
   });
 }

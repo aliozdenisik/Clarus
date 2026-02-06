@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
-import { useAuth } from "@/lib/auth/auth-context";
+import { useSession, signOut } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { GlowCard } from "@/components/ui/glow-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,7 +34,8 @@ export default function SurahDetailPage() {
   const [surah, setSurah] = useState<SurahDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [highlightedVerse, setHighlightedVerse] = useState<number | null>(null);
-  const { user, isLoading: authLoading, logout } = useAuth();
+  const { data: session, isPending: authLoading } = useSession();
+  const user = session?.user;
   const router = useRouter();
 
   useEffect(() => {
@@ -102,7 +103,7 @@ export default function SurahDetailPage() {
   }, [user, surahId]);
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     router.push("/login");
     toast.success("Logged out successfully");
   };

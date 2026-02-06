@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
-import { useAuth } from "@/lib/auth/auth-context";
+import { signUp } from "@/lib/auth-client";
 import { toast } from "sonner";
 import Link from "next/link";
 import { ChevronLeft, Eye, EyeOff } from "lucide-react";
@@ -15,7 +15,6 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { register } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,7 +22,16 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      await register(email, password, name);
+      const result = await signUp.email({
+        email,
+        password,
+        name,
+      });
+      
+      if (result.error) {
+        throw new Error(result.error.message || "Registration failed");
+      }
+      
       toast.success("Account created successfully!");
       router.push("/search");
     } catch (error) {

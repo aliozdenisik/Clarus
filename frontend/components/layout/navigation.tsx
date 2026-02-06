@@ -21,18 +21,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/lib/auth/auth-context';
+import { useSession, signOut } from '@/lib/auth-client';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navigation() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isActive = (path: string) => pathname === path;
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
   };
 
   // Don't show navigation on login/register pages

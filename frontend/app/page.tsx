@@ -7,7 +7,7 @@ import { TextRotate, LuxuryQuote } from "@/components/ui/text-rotate";
 
 import { DotPattern, RadialGradient, GridPattern } from "@/components/ui/dot-pattern";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth/auth-context";
+import { useSession } from "@/lib/auth-client";
 import {
   Search,
   Sparkles,
@@ -166,7 +166,8 @@ const agentColorMap = {
 
 export default function HomePage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
 
   return (
     <main className="min-h-screen bg-[var(--color-bg-app)] overflow-hidden">
