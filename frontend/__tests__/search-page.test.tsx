@@ -37,14 +37,20 @@ vi.mock("sonner", () => ({
 }));
 
 // Mock framer-motion to avoid animation issues in tests
-vi.mock("framer-motion", () => ({
-  motion: {
-    div: ({ children, layoutId, initial, animate, transition, whileHover, whileTap, ...props }: any) => <div {...props}>{children}</div>,
-    h1: ({ children, layoutId, initial, animate, transition, ...props }: any) => <h1 {...props}>{children}</h1>,
-    form: ({ children, layoutId, initial, animate, transition, ...props }: any) => <form {...props}>{children}</form>,
-  },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
-}));
+vi.mock("framer-motion", () => {
+  const createMotionProxy = () => new Proxy({}, {
+    get: (_target: any, prop: string) => {
+      return ({ children, layoutId, initial, animate, transition, whileHover, whileTap, exit, variants, whileInView, viewport, ...props }: any) => {
+        const Tag = prop as any;
+        return <Tag {...props}>{children}</Tag>;
+      };
+    }
+  });
+  return {
+    motion: createMotionProxy(),
+    AnimatePresence: ({ children }: any) => <>{children}</>,
+  };
+});
 
 // Mock Lucide icons
 vi.mock("lucide-react", () => ({
@@ -66,7 +72,7 @@ vi.mock("@/components/ui/dot-pattern", () => ({
   RadialGradient: () => null,
 }));
 vi.mock("@/components/ui/aurora-background", () => ({
-  AuroraSectionBackground: () => null,
+  AuroraSectionBackground: ({ children, className }: any) => <div className={className}>{children}</div>,
 }));
 
 // Mock Skeleton
@@ -125,21 +131,24 @@ vi.mock("@/lib/logger", () => ({
   },
 }));
 
-// Mock keyword store
+// Mock keyword store — must match the real store shape used in search/page.tsx
 vi.mock("@/lib/stores/keyword-store", () => ({
   useKeywordStore: vi.fn(() => ({
-    suggestions: [],
+    advancedMode: false,
+    keywords: [],
+    selectedKeywords: [],
     isLoading: false,
-    fetchSuggestions: vi.fn(),
-    clearSuggestions: vi.fn(),
+    setAdvancedMode: vi.fn(),
+    setKeywords: vi.fn(),
+    toggleKeyword: vi.fn(),
+    selectAll: vi.fn(),
+    deselectAll: vi.fn(),
+    reset: vi.fn(),
   })),
   KeywordSuggestion: {},
 }));
 
-// Mock Input component
-vi.mock("@/components/ui/input", () => ({
-  Input: (props: any) => <input {...props} />,
-}));
+// Input component uses cn() from @/lib/utils which works fine unmocked
 
 // Mock fetch
 global.fetch = vi.fn();
@@ -199,13 +208,19 @@ describe("SearchPage", () => {
        json: async () => ({ results: mockResults }),
      });
 
-     render(<SearchPage />);
+     const { container } = render(<SearchPage />);
      
-     const input = screen.getByPlaceholderText("Search Quran...");
-     const submitButton = screen.getByRole("button", { name: /search/i });
+     const input = screen.getByTestId("search-input") as HTMLInputElement;
+     
+     // fireEvent.change should trigger React onChange for controlled inputs
+     fireEvent.change(input, { target: { value: "test query" } });
+     
+     // Debug: verify value was set
+     expect(input.value).toBe("test query");
 
-     await userEvent.type(input, "test query");
-     fireEvent.click(submitButton);
+     // Submit the form
+     const form = container.querySelector("form")!;
+     fireEvent.submit(form);
 
      await waitFor(() => {
        expect(global.fetch).toHaveBeenCalledWith(
@@ -226,20 +241,24 @@ describe("SearchPage", () => {
 
   it("displays loading state during search", async () => {
     // Delay the fetch response
-    (global.fetch as any).mockReturnValue(new Promise(resolve => 
-      setTimeout(() => resolve({
-        ok: true,
-        json: async () => ({ results: [] })
-      }), 100)
-    ));
+    let resolvePromise: any;
+    (global.fetch as any).mockReturnValue(new Promise(resolve => {
+      resolvePromise = resolve;
+    }));
 
-    render(<SearchPage />);
+    const { container } = render(<SearchPage />);
     
-    const input = screen.getByPlaceholderText("Search Quran...");
-    await userEvent.type(input, "test query");
-    fireEvent.submit(input.closest("form")!);
+    const input = screen.getByTestId("search-input");
+    fireEvent.change(input, { target: { value: "test query" } });
+    fireEvent.submit(container.querySelector("form")!);
 
-    expect(screen.getByText("Searching...")).toBeInTheDocument();
+    // The button text changes to "Searching..." during loading
+    await waitFor(() => {
+      expect(screen.getByTestId("search-submit-button")).toHaveTextContent("Searching...");
+    });
+    
+    // Cleanup: resolve the promise to avoid hanging test
+    resolvePromise({ ok: true, json: async () => ({ results: [] }) });
   });
 
   it("shows toast with results count on search success", async () => {
@@ -252,11 +271,11 @@ describe("SearchPage", () => {
       json: async () => ({ results: mockResults }),
     });
 
-    render(<SearchPage />);
+    const { container } = render(<SearchPage />);
     
-    const input = screen.getByPlaceholderText("Search Quran...");
-    await userEvent.type(input, "praise");
-    fireEvent.click(screen.getByRole("button", { name: /search/i }));
+    const input = screen.getByTestId("search-input");
+    fireEvent.change(input, { target: { value: "praise" } });
+    fireEvent.submit(container.querySelector("form")!);
 
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalledWith("Found 2 results");
@@ -269,11 +288,11 @@ describe("SearchPage", () => {
       json: async () => ({ results: [] }),
     });
 
-    render(<SearchPage />);
+    const { container } = render(<SearchPage />);
     
-    const input = screen.getByPlaceholderText("Search Quran...");
-    await userEvent.type(input, "nothing");
-    fireEvent.click(screen.getByRole("button", { name: /search/i }));
+    const input = screen.getByTestId("search-input");
+    fireEvent.change(input, { target: { value: "nothing" } });
+    fireEvent.submit(container.querySelector("form")!);
 
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalledWith("Found 0 results");
@@ -310,15 +329,17 @@ describe("SearchPage", () => {
         enable_streaming: true,
       } as any);
 
-      render(<SearchPage />);
+      const { container } = render(<SearchPage />);
       
-      const input = screen.getByPlaceholderText("Search Quran...");
-      await userEvent.type(input, "test streaming");
-      fireEvent.click(screen.getByRole("button", { name: /search/i }));
+      const input = screen.getByTestId("search-input");
+      fireEvent.change(input, { target: { value: "test streaming" } });
+      fireEvent.submit(container.querySelector("form")!);
 
-      expect(mockStartStream).toHaveBeenCalledWith(
-        expect.stringContaining("/api/stream/search?q=test%20streaming&source=quran")
-      );
+      await waitFor(() => {
+        expect(mockStartStream).toHaveBeenCalledWith(
+          expect.stringContaining("/api/stream/search?q=test%20streaming&source=quran")
+        );
+      });
     });
 
    it("auto-executes search when q param is present", async () => {

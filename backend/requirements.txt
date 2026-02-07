@@ -40,6 +40,7 @@ sentry-sdk[fastapi]
 # Database
 sqlalchemy[asyncio]>=2.0.0
 asyncpg>=0.29.0
+alembic>=1.18.0
 
 # Authentication
 PyJWT[crypto]>=2.8.0

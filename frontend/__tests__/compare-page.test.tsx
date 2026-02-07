@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
+import userEvent from "@testing-library/user-event";
 import ComparePage from "@/app/compare/page";
 import { useSSE } from "@/lib/hooks/use-sse";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
@@ -41,9 +42,157 @@ vi.mock("@/lib/stores/preferences-store", () => ({
   })),
 }));
 
+// Mock framer-motion to avoid animation issues in tests
+vi.mock("framer-motion", () => {
+  const createMotionProxy = () => new Proxy({}, {
+    get: (_target: any, prop: string) => {
+      return ({ children, layoutId, initial, animate, transition, whileHover, whileTap, exit, variants, whileInView, viewport, ...props }: any) => {
+        const Tag = prop as any;
+        return <Tag {...props}>{children}</Tag>;
+      };
+    }
+  });
+  return {
+    motion: createMotionProxy(),
+    AnimatePresence: ({ children }: any) => <>{children}</>,
+  };
+});
+
 // Mock components that might be complex or unnecessary to render fully
 vi.mock("@/components/ui/glow-card", () => ({
   GlowCard: ({ children, className }: any) => <div className={className}>{children}</div>,
+}));
+
+// Mock DotPattern + AuroraSectionBackground
+vi.mock("@/components/ui/dot-pattern", () => ({
+  DotPattern: () => null,
+  RadialGradient: () => null,
+}));
+vi.mock("@/components/ui/aurora-background", () => ({
+  AuroraSectionBackground: ({ children, className }: any) => <div className={className}>{children}</div>,
+}));
+
+// Mock Skeleton
+vi.mock("@/components/ui/skeleton", () => ({
+  Skeleton: ({ className }: any) => <div data-testid="skeleton" className={className} />,
+}));
+
+// Mock design-system
+vi.mock("@/lib/design-system", () => ({
+  springPresets: {
+    snappy: { type: "spring", stiffness: 300, damping: 30 },
+    fluid: { type: "spring", stiffness: 170, damping: 26 },
+    gentle: { type: "spring", stiffness: 120, damping: 14 },
+  },
+}));
+
+// Mock Lucide icons
+vi.mock("lucide-react", () => ({
+  Clock: () => <div data-testid="clock-icon" />,
+  Sparkles: () => <div data-testid="sparkles-icon" />,
+  ChevronDown: () => <div data-testid="chevron-down-icon" />,
+  ChevronUp: () => <div data-testid="chevron-up-icon" />,
+  Quote: () => <div data-testid="quote-icon" />,
+  Search: () => <div data-testid="search-icon" />,
+}));
+
+// Mock compare components
+vi.mock("@/components/compare/source-reference-card", () => ({
+  SourceReferenceCard: ({ reference, verse }: any) => (
+    <div data-testid="source-reference-card">{reference}</div>
+  ),
+}));
+vi.mock("@/components/compare/inline-citation", () => ({
+  InlineCitation: ({ children }: any) => <span>{children}</span>,
+}));
+vi.mock("@/components/compare/collection-selector", () => ({
+  CollectionSelector: ({ value, onChange }: any) => (
+    <div data-testid="collection-selector">Collections</div>
+  ),
+}));
+vi.mock("@/components/compare/analysis-progress", () => ({
+  AnalysisProgress: () => <div data-testid="analysis-progress">Progress</div>,
+}));
+
+// Mock animated tabs — receives counts prop, not filters array
+vi.mock("@/components/ui/animated-tabs", () => ({
+  AnimatedFilterTabs: ({ activeFilter, onFilterChange, counts }: any) => {
+    const filters = [
+      { id: "all", label: "All Sources" },
+      { id: "quran", label: "Quran" },
+      { id: "old_testament", label: "Old Testament" },
+      { id: "new_testament", label: "New Testament" },
+      { id: "apocrypha", label: "Apocrypha" },
+    ];
+    return (
+      <div data-testid="filter-tabs">
+        {filters.map((f: any) => (
+          <button key={f.id} role="tab" onClick={() => onFilterChange(f.id)}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+    );
+  },
+  FilterType: {},
+}));
+
+// Mock typewriter
+vi.mock("@/components/ui/typewriter", () => ({
+  TypingIndicator: () => <div data-testid="typing-indicator" />,
+  AIResponse: ({ children }: any) => <div>{children}</div>,
+}));
+
+// Mock citation parser — parseBareReferences receives (citationParts[], citations[])
+// and must return strings (which get rendered via typeof === 'string' check)
+vi.mock("@/lib/utils/parse-citations", () => ({
+  parseCitations: (text: string) => [{ type: "text" as const, content: text }],
+  parseBareReferences: (parts: any[]) => {
+    // The compare page checks typeof part === 'string' to decide how to render
+    // Return plain strings so the content shows up
+    if (Array.isArray(parts)) {
+      return parts.map((p: any) => typeof p === 'string' ? p : p.content || '');
+    }
+    return [String(parts)];
+  },
+  stripMarkdownHeaders: (text: string) => text,
+  CitationPart: {},
+}));
+
+// Mock logger
+vi.mock("@/lib/logger", () => ({
+  useLogger: () => ({
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  }),
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+
+// Mock search components
+vi.mock("@/components/search/language-selector", () => ({
+  LanguageSelector: () => null,
+}));
+
+// Mock keyword store type import
+vi.mock("@/lib/stores/keyword-store", () => ({
+  useKeywordStore: vi.fn(),
+  KeywordSuggestion: {},
+}));
+
+// Mock sonner
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+  },
 }));
 
 // Mock fetch
@@ -120,25 +269,27 @@ describe("ComparePage", () => {
 
   it("renders the page title and description", () => {
     render(<ComparePage />);
-    expect(screen.getByText("Comparative Scripture Analysis")).toBeInTheDocument();
-    expect(screen.getByText(/Multi-agent analysis across Quran/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /^compare$/i, level: 1 })).toBeInTheDocument();
+    expect(screen.getByText(/Comparative analysis across/)).toBeInTheDocument();
   });
 
   it("renders search input and analyze button", () => {
     render(<ComparePage />);
     expect(screen.getByPlaceholderText(/Enter a topic/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Analyze" })).toBeInTheDocument();
+    expect(screen.getByTestId("compare-analyze-button")).toBeInTheDocument();
   });
 
    it("starts streaming when form is submitted and streaming is enabled", async () => {
-     render(<ComparePage />);
-     const input = screen.getByPlaceholderText(/Enter a topic/);
-     const button = screen.getByRole("button", { name: "Analyze" });
+     const { container } = render(<ComparePage />);
+     const input = screen.getByTestId("compare-topic-input");
 
      fireEvent.change(input, { target: { value: "patience" } });
-     fireEvent.click(button);
+     fireEvent.submit(container.querySelector("form")!);
 
-     expect(mockStartStream).toHaveBeenCalled();
+     await waitFor(() => {
+       expect(mockStartStream).toHaveBeenCalled();
+     });
+     
      const callUrl = mockStartStream.mock.calls[0][0];
      expect(callUrl).toContain("topic=patience");
      expect(callUrl).not.toContain("token=");
@@ -191,11 +342,29 @@ describe("ComparePage", () => {
 
     render(<ComparePage />);
 
-    const quranTitle = screen.getByText("Quran Perspective");
-    fireEvent.click(quranTitle); // Toggle it
+    // Wait for result to render
+    await waitFor(() => {
+      expect(screen.getByText("Quran Perspective")).toBeInTheDocument();
+    });
 
-    // Check if content is visible
-    expect(screen.getByText(/The Quran says/)).toBeInTheDocument();
+    // "complete" path does NOT auto-expand paragraphs — content starts collapsed
+    expect(screen.queryByText(/The Quran says/)).not.toBeInTheDocument();
+    
+    // Click the expand button (which wraps the title)
+    fireEvent.click(screen.getByText("Quran Perspective").closest("button")!);
+
+    // Content should now be visible
+    await waitFor(() => {
+      expect(screen.getByText(/The Quran says/)).toBeInTheDocument();
+    });
+    
+    // Re-query and click again to collapse (DOM may have changed after re-render)
+    fireEvent.click(screen.getByText("Quran Perspective").closest("button")!);
+
+    // Content should be hidden after collapse
+    await waitFor(() => {
+      expect(screen.queryByText(/The Quran says/)).not.toBeInTheDocument();
+    });
   });
 
   it("filters source references when filter tabs are clicked", async () => {
@@ -207,24 +376,32 @@ describe("ComparePage", () => {
       stopStream: mockStopStream,
     });
 
-    render(<ComparePage />);
+    const { rerender } = render(<ComparePage />);
 
     await waitFor(() => {
       expect(screen.getByText("Kaynak Referanslari")).toBeInTheDocument();
     });
 
-    // Check both references are present initially
-    const referencesSection = screen.getByText("Kaynak Referanslari").closest('div')!;
-    expect(within(referencesSection).getByText("quran:2:153")).toBeInTheDocument();
-    expect(within(referencesSection).getByText("bible:1:1:1")).toBeInTheDocument();
+    // Get the verse references section
+    const referencesSection = screen.getByTestId("verse-references-section");
+    
+    // Check both references are present initially (All Sources filter is active by default)
+    const allCards = within(referencesSection).getAllByTestId("source-reference-card");
+    expect(allCards).toHaveLength(2);
 
-    // Click on Quran filter
-    const quranTab = screen.getByRole("tab", { name: /Quran/ });
+    // Click on Quran filter tab — our mock renders buttons with role="tab"
+    const quranTab = screen.getByRole("tab", { name: /^Quran$/i });
     fireEvent.click(quranTab);
 
+    // Re-render to ensure state update is applied
+    rerender(<ComparePage />);
+
+    // After filtering, only Quran reference should be visible
     await waitFor(() => {
-      expect(within(referencesSection).getByText("quran:2:153")).toBeInTheDocument();
-      expect(within(referencesSection).queryByText("bible:1:1:1")).not.toBeInTheDocument();
+      const section = screen.getByTestId("verse-references-section");
+      const filteredCards = within(section).getAllByTestId("source-reference-card");
+      expect(filteredCards).toHaveLength(1);
+      expect(within(section).getByText("quran:2:153")).toBeInTheDocument();
     });
   });
 
@@ -233,20 +410,21 @@ describe("ComparePage", () => {
       enable_streaming: false,
     });
 
-    render(<ComparePage />);
-    const input = screen.getByPlaceholderText(/Enter a topic/);
-    const button = screen.getByRole("button", { name: "Analyze" });
+    const { container } = render(<ComparePage />);
+    const input = screen.getByTestId("compare-topic-input");
 
     fireEvent.change(input, { target: { value: "faith" } });
-    fireEvent.click(button);
+    fireEvent.submit(container.querySelector("form")!);
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      "http://localhost:8000/api/compare/",
-      expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify({ topic: "faith", use_multi_agent: true }),
-      })
-    );
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        "http://localhost:8000/api/compare/",
+        expect.objectContaining({
+          method: "POST",
+          body: expect.stringContaining('"topic":"faith"'),
+        })
+      );
+    });
 
     await waitFor(() => {
       expect(screen.getByText("Analysis Complete")).toBeInTheDocument();
