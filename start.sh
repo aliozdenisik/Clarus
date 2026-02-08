@@ -95,16 +95,10 @@ main() {
     # Step 4: Start Backend API
     log_info "Starting Backend API on :8000..."
 
-    if [ ! -d venv ]; then
-        log_error "Virtual environment not found at ./venv"
-        exit 1
-    fi
-
     cd backend
-    source ../venv/bin/activate
 
-    # Start uvicorn in background
-    uvicorn app.main:app --reload > ../logs/backend.log 2>&1 &
+    # Start uvicorn in background using uv-managed .venv
+    ../.venv/bin/uvicorn app.main:app --reload > ../logs/backend.log 2>&1 &
     BACKEND_PID=$!
     cd ..
 
