@@ -283,18 +283,7 @@ async def stream_search(
             await asyncio.sleep(0.05)
 
             logger.info("[SSE /search] Stream complete, sending complete with results")
-            yield f"data: {
-                json.dumps(
-                    {
-                        'type': 'complete',
-                        'result': {
-                            'results': results_data,
-                            'answer': answer_text,
-                            'citations': citations,
-                        },
-                    }
-                )
-            }\n\n"
+            yield f"data: {json.dumps({'type': 'complete', 'result': {'results': results_data, 'answer': answer_text, 'citations': citations}})}\n\n"
 
         except Exception as e:
             logger.error(f"[SSE /search] Error during generation: {e}")
