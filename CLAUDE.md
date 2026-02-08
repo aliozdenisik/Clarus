@@ -22,8 +22,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # One-time setup (after cloning)
-python3.11 -m venv venv && source venv/bin/activate
-cd backend && pip install -r requirements.txt && cd ..
+curl -LsSf https://astral.sh/uv/install.sh | sh
+cd backend && uv sync && cd ..
 cp backend/.env.example backend/.env  # Edit and add OPENROUTER_API_KEY
 python backend/scripts/setup_all_collections.py  # Requires Docker (starts automatically)
 
@@ -42,11 +42,10 @@ python backend/scripts/setup_all_collections.py  # Requires Docker (starts autom
 
 After cloning the repository, follow these steps in order:
 
-### 1. Create Virtual Environment
+### 1. Install uv
 
 ```bash
-python3.11 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 **Note:** Python 3.11 or higher is required. Check with `python3.11 --version`.
@@ -55,7 +54,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 ```bash
 cd backend
-pip install -r requirements.txt
+uv sync
 cd ..
 ```
 
