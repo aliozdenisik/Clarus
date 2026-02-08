@@ -12,6 +12,8 @@ import { useSession, signOut } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 interface Book {
   nr: number;
   name: string;
@@ -33,12 +35,12 @@ export default function ApocryphaPage() {
     }
   }, [user, authLoading, router]);
 
-  useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        const response = await fetch("http://localhost:8000/api/metadata/bible/books?testament=apocrypha", {
-           credentials: "include",
-        });
+   useEffect(() => {
+     const fetchBooks = async () => {
+       try {
+         const response = await fetch(`${API_BASE_URL}/api/metadata/bible/books?testament=apocrypha`, {
+            credentials: "include",
+         });
         if (!response.ok) throw new Error("Failed to fetch books");
         const data = await response.json();
         setBooks(data.data?.books || []);

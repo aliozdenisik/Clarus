@@ -60,10 +60,10 @@ export const auth = betterAuth({
   },
 
   // Security: CORS protection
-  trustedOrigins: [
-    "http://localhost:3000", // Frontend dev server
-    "http://localhost:8000", // Backend API server
-  ],
+   trustedOrigins: [
+     process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000", // Frontend dev server
+     process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000", // Backend API server
+   ],
 
   // Base URL for redirects and callbacks
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",

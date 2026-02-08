@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { ArrowLeft, BookOpen, User, LogOut, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 interface ChapterSummary {
   chapter: number;
   verses_count: number;
@@ -74,16 +76,16 @@ export default function BookDetailPage() {
     }
   }, [searchParams]);
 
-  // Fetch book details
-  useEffect(() => {
-    const fetchBook = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:8000/api/metadata/bible/books/${bookNr}`,
-          {
-            credentials: "include",
-          }
-        );
+   // Fetch book details
+   useEffect(() => {
+     const fetchBook = async () => {
+       try {
+         const response = await fetch(
+           `${API_BASE_URL}/api/metadata/bible/books/${bookNr}`,
+           {
+             credentials: "include",
+           }
+         );
 
         if (!response.ok) {
           throw new Error("Failed to fetch book");
@@ -107,19 +109,19 @@ export default function BookDetailPage() {
     }
   }, [user, bookNr, searchParams]);
 
-  // Fetch chapter content when selected
-  useEffect(() => {
-    const fetchChapter = async () => {
-      if (!selectedChapter) return;
-      
-      setIsLoadingChapter(true);
-      try {
-        const response = await fetch(
-          `http://localhost:8000/api/metadata/bible/books/${bookNr}/chapters/${selectedChapter}`,
-          {
-            credentials: "include",
-          }
-        );
+   // Fetch chapter content when selected
+   useEffect(() => {
+     const fetchChapter = async () => {
+       if (!selectedChapter) return;
+       
+       setIsLoadingChapter(true);
+       try {
+         const response = await fetch(
+           `${API_BASE_URL}/api/metadata/bible/books/${bookNr}/chapters/${selectedChapter}`,
+           {
+             credentials: "include",
+           }
+         );
 
         if (!response.ok) {
           throw new Error("Failed to fetch chapter");

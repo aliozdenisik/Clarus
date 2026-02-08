@@ -11,6 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ArrowLeft, BookOpen, User, LogOut } from "lucide-react";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 interface Verse {
   id: number;
   text: string;           // Arabic text (always present)
@@ -71,15 +73,15 @@ export default function SurahDetailPage() {
     }
   }, [highlightedVerse, surah]);
 
-  useEffect(() => {
-    const fetchSurah = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:8000/api/metadata/quran/surahs/${surahId}`,
-          {
-            credentials: "include",
-          }
-        );
+   useEffect(() => {
+     const fetchSurah = async () => {
+       try {
+         const response = await fetch(
+           `${API_BASE_URL}/api/metadata/quran/surahs/${surahId}`,
+           {
+             credentials: "include",
+           }
+         );
 
         if (!response.ok) {
           throw new Error("Failed to fetch surah");

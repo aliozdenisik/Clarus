@@ -24,6 +24,8 @@ import { useKeywordStore, KeywordSuggestion } from "@/lib/stores/keyword-store";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 interface SearchResult {
   source: string;
   reference: string;
@@ -228,14 +230,14 @@ function SearchContent() {
     try {
       const corpus = activeTab === "quran" ? "quran" : "bible";
 
-      const response = await fetch("http://localhost:8000/api/search/enhance", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ query: searchQuery, corpus }),
-      });
+       const response = await fetch(`${API_BASE_URL}/api/search/enhance`, {
+         method: "POST",
+         headers: {
+           "Content-Type": "application/json",
+         },
+         credentials: "include",
+         body: JSON.stringify({ query: searchQuery, corpus }),
+       });
 
       if (!response.ok) {
         throw new Error("Enhancement failed");
@@ -268,11 +270,10 @@ function SearchContent() {
       return;
     }
 
-    // Perform search with selected keywords
-    if (enable_streaming) {
-      setIsSearching(true);
-      const baseUrl = "http://localhost:8000";
-      let url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`;
+     // Perform search with selected keywords
+     if (enable_streaming) {
+       setIsSearching(true);
+       let url = `${API_BASE_URL}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`;
       if (selectedLanguage) {
         url += `&language=${encodeURIComponent(selectedLanguage)}`;
       }
@@ -304,9 +305,9 @@ function SearchContent() {
      setIsSearching(true);
      setResults([]);
 
-      try {
-       let url = "http://localhost:8000/api/search/quran";
-       let body: Record<string, unknown> = { query: searchQuery, mode: "semantic", top_k: 10 };
+       try {
+        let url = `${API_BASE_URL}/api/search/quran`;
+        let body: Record<string, unknown> = { query: searchQuery, mode: "semantic", top_k: 10 };
        if (selectedLanguage) {
          body.language = selectedLanguage;
        }
@@ -316,10 +317,10 @@ function SearchContent() {
          body.keywords = keywordStore.selectedKeywords.map((k) => k.text);
        }
 
-      if (activeTab !== "quran") {
-        url = "http://localhost:8000/api/search/bible";
-        body = { ...body, testament: activeTab };
-      }
+       if (activeTab !== "quran") {
+         url = `${API_BASE_URL}/api/search/bible`;
+         body = { ...body, testament: activeTab };
+       }
 
       const response = await fetch(url, {
         method: "POST",
@@ -374,10 +375,9 @@ function SearchContent() {
        setVerseDetails({});
        hasHandledSSEError.current = false;
 
-       if (enable_streaming) {
-         setIsSearching(true);
-         const baseUrl = "http://localhost:8000";
-         let url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(q)}&source=${activeTab}`;
+        if (enable_streaming) {
+          setIsSearching(true);
+          let url = `${API_BASE_URL}/api/stream/search?q=${encodeURIComponent(q)}&source=${activeTab}`;
          if (selectedLanguage) {
            url += `&language=${encodeURIComponent(selectedLanguage)}`;
          }
@@ -413,11 +413,10 @@ function SearchContent() {
       return;
     }
 
-    // Normal search flow
-    if (enable_streaming) {
-      setIsSearching(true);
-      const baseUrl = "http://localhost:8000";
-      let url = `${baseUrl}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`;
+     // Normal search flow
+     if (enable_streaming) {
+       setIsSearching(true);
+       let url = `${API_BASE_URL}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`;
       if (selectedLanguage) {
         url += `&language=${encodeURIComponent(selectedLanguage)}`;
       }

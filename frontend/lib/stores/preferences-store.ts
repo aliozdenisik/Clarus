@@ -3,6 +3,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export interface UserPreferences {
   theme: 'light' | 'dark' | 'system';
   language: 'tr' | 'en' | 'ar';
@@ -77,12 +79,12 @@ export const usePreferencesStore = create<PreferencesState>()(
         set({ enable_multi_agent: enabled });
       },
 
-      fetchPreferences: async () => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await fetch('http://localhost:8000/api/preferences', {
-            credentials: 'include',
-          });
+       fetchPreferences: async () => {
+         set({ isLoading: true, error: null });
+         try {
+           const response = await fetch(`${API_BASE_URL}/api/preferences`, {
+             credentials: 'include',
+           });
 
           if (!response.ok) {
             throw new Error('Failed to fetch preferences');
@@ -110,14 +112,14 @@ export const usePreferencesStore = create<PreferencesState>()(
             enable_multi_agent: state.enable_multi_agent,
           };
 
-          const response = await fetch('http://localhost:8000/api/preferences', {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify(preferences),
-          });
+           const response = await fetch(`${API_BASE_URL}/api/preferences`, {
+             method: 'PUT',
+             headers: {
+               'Content-Type': 'application/json',
+             },
+             credentials: 'include',
+             body: JSON.stringify(preferences),
+           });
 
           if (!response.ok) {
             throw new Error('Failed to save preferences');
