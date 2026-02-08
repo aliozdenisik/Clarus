@@ -33,6 +33,8 @@ import { CollectionSelector } from "@/components/compare/collection-selector";
 import { AnalysisProgress } from "@/components/compare/analysis-progress";
 import type { KeywordSuggestion } from "@/lib/stores/keyword-store";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 interface ParagraphData {
   title: string;
   content: string;
@@ -237,15 +239,15 @@ function CompareContent() {
     };
   }, [result?.verse_details]);
 
-  const extractKeywords = async (query: string, corpus: "quran" | "bible") => {
-    const response = await fetch("http://localhost:8000/api/search/enhance", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({ query, corpus }),
-    });
+   const extractKeywords = async (query: string, corpus: "quran" | "bible") => {
+     const response = await fetch(`${API_BASE_URL}/api/search/enhance`, {
+       method: "POST",
+       headers: {
+         "Content-Type": "application/json",
+       },
+       credentials: "include",
+       body: JSON.stringify({ query, corpus }),
+     });
 
     if (!response.ok) {
       throw new Error(`Keyword extraction failed for ${corpus}`);
@@ -283,14 +285,14 @@ function CompareContent() {
         }
       }
       
-      const response = await fetch("http://localhost:8000/api/compare/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(requestBody),
-      });
+       const response = await fetch(`${API_BASE_URL}/api/compare/`, {
+         method: "POST",
+         headers: {
+           "Content-Type": "application/json",
+         },
+         credentials: "include",
+         body: JSON.stringify(requestBody),
+       });
 
       if (!response.ok) {
         throw new Error("Compare failed");
@@ -321,11 +323,10 @@ function CompareContent() {
       setResult(null);
       setExpandedParagraphs(new Set());
 
-      if (enable_streaming) {
-        try {
-          const baseUrl = "http://localhost:8000";
-          // Build SSE URL using q directly (NOT topic state, which may not be updated yet)
-          let url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(q)}`;
+       if (enable_streaming) {
+         try {
+           // Build SSE URL using q directly (NOT topic state, which may not be updated yet)
+           let url = `${API_BASE_URL}/api/stream/compare?topic=${encodeURIComponent(q)}`;
           url += `&collections=${encodeURIComponent(selectedCollections.join(','))}`;
           if (selectedLanguage) {
             url += `&language=${encodeURIComponent(selectedLanguage)}`;
@@ -501,12 +502,11 @@ function CompareContent() {
       }
     }
 
-    // Check streaming preference
-    if (enable_streaming) {
-      // Start SSE Stream — uses cookie auth via withCredentials
-      try {
-        const baseUrl = "http://localhost:8000";
-        let url = `${baseUrl}/api/stream/compare?topic=${encodeURIComponent(topic)}`;
+     // Check streaming preference
+     if (enable_streaming) {
+       // Start SSE Stream — uses cookie auth via withCredentials
+       try {
+         let url = `${API_BASE_URL}/api/stream/compare?topic=${encodeURIComponent(topic)}`;
         url += `&collections=${encodeURIComponent(selectedCollections.join(','))}`;
         if (selectedLanguage) {
           url += `&language=${encodeURIComponent(selectedLanguage)}`;

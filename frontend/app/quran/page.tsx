@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { BookOpen, Search, User, LogOut } from "lucide-react";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 interface Surah {
   id: number;
   name: string;
@@ -48,12 +50,12 @@ export default function QuranPage() {
     }
   }, [user, authLoading, router]);
 
-  useEffect(() => {
-    const fetchSurahs = async () => {
-      try {
-        const response = await fetch("http://localhost:8000/api/metadata/quran/surahs", {
-          credentials: "include",
-        });
+   useEffect(() => {
+     const fetchSurahs = async () => {
+       try {
+         const response = await fetch(`${API_BASE_URL}/api/metadata/quran/surahs`, {
+           credentials: "include",
+         });
 
         if (!response.ok) {
           throw new Error("Failed to fetch surahs");
