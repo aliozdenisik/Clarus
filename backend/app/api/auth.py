@@ -5,12 +5,15 @@ from datetime import datetime
 from pydantic import BaseModel
 import secrets
 import hashlib
+import logging
 
 from app.db import get_db
 from app.models import UserStats
 from app.config import settings
 from app.auth.api_key_validator import get_current_user_flexible
 from app.middleware.rate_limit import get_user_rate_limit_info
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter()
@@ -75,6 +78,13 @@ async def check_rate_limit(user: dict, db: AsyncSession) -> None:
 @router.get("/me")
 async def get_me(current_user: dict = Depends(get_current_user_flexible)):
     """Get current user info (from session cookie or API key)."""
+    logger.info(
+        "Auth access",
+        extra={
+            "action": "auth.access",
+            "user_id": current_user["id"],
+        },
+    )
     return {
         "id": current_user["id"],
         "email": current_user["email"],
@@ -94,6 +104,13 @@ async def logout(
     Note: Better Auth sessions are managed by the auth server.
     This endpoint just returns success for client-side cleanup.
     """
+    logger.info(
+        "Auth logout",
+        extra={
+            "action": "auth.logout",
+            "user_id": current_user["id"],
+        },
+    )
     return {"success": True, "message": "Cikis yapildi"}
 
 
@@ -167,6 +184,14 @@ async def generate_api_key(
         db.add(stats)
 
     await db.commit()
+
+    logger.info(
+        "API key generated",
+        extra={
+            "action": "auth.api_key_generated",
+            "user_id": user_id,
+        },
+    )
 
     return ApiKeyResponse(
         api_key=raw_api_key,
