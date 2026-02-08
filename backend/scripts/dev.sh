@@ -40,13 +40,9 @@ until curl -s http://localhost:6333/health > /dev/null 2>&1; do
 done
 echo -e "${GREEN}✅ Qdrant is ready${NC}"
 
-# Activate Python venv (from project root)
-echo -e "\n${BLUE}🐍 Activating Python virtual environment...${NC}"
-source "$PROJECT_ROOT/venv/bin/activate"
-
-# Start backend
+# Start backend with uv-managed .venv
 echo -e "\n${BLUE}🔧 Starting FastAPI backend on http://localhost:8000${NC}"
-cd "$PROJECT_ROOT/backend" && PYTHONPATH=. uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
+cd "$PROJECT_ROOT/backend" && PYTHONPATH=. "$PROJECT_ROOT/backend/.venv/bin/uvicorn" app.main:app --reload --host 0.0.0.0 --port 8000 &
 BACKEND_PID=$!
 
 

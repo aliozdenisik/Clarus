@@ -6,7 +6,7 @@ set -e
 
 # Configuration
 BACKEND_PATH="${1:-$(pwd)}"
-VENV_PATH="${2:-$(dirname $BACKEND_PATH)/venv}"
+VENV_PATH="${2:-$BACKEND_PATH/.venv}"
 ENV_FILE="$BACKEND_PATH/.env"
 SERVICE_NAME="clarus-backend"
 
