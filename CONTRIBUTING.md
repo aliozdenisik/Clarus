@@ -37,13 +37,12 @@ This project and everyone participating in it is governed by our [Code of Conduc
 2. **Set up the backend**
 
    ```bash
-   # Create virtual environment
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   # Install uv (if not present)
+   curl -LsSf https://astral.sh/uv/install.sh | sh
 
    # Install dependencies
    cd backend
-   pip install -r requirements.txt
+   uv sync
 
    # Copy environment file
    cp .env.example .env

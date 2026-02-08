@@ -223,8 +223,7 @@ docker compose up -d                    # Start Qdrant + PostgreSQL + Redis
 ./stop.sh                               # Stop full stack
 
 # Backend (from backend/)
-source ../venv/bin/activate
-python main.py search "sabir ve namaz"  # Quran search
+uv run python main.py search "sabir ve namaz"  # Quran search
 python main.py ask "Islam'da sabir?"    # Q&A with citations
 python main.py compare "Yaratilis"      # Multi-agent comparison
 python main.py keyword-search "كتب"   # Arabic morphological root search

@@ -98,13 +98,12 @@ Query → ENHANCE → MULTI-QUERY → PARALLEL SEARCH → RRF FUSION → MULTI-A
 git clone https://github.com/yourusername/clarus.git
 cd clarus
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+# Install uv (if not present)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Install dependencies
 cd backend
-pip install -r requirements.txt
+uv sync
 ```
 
 ### Configuration

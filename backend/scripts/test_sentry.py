@@ -117,9 +117,9 @@ def test_backend_error():
 
         return True
 
-    except ImportError:
-        print("❌ sentry_sdk not installed. Run: pip install sentry-sdk[fastapi]")
-        return False
+     except ImportError:
+         print("❌ sentry_sdk not installed. Run: uv add sentry-sdk[fastapi]")
+         return False
     except Exception as e:
         print(f"❌ Error: {e}")
         return False
