@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
+from pathlib import Path
 import json
 import os
 import httpx
@@ -11,6 +12,15 @@ DATA_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data"
 )
 QDRANT_URL = "http://localhost:6333"
+
+
+def safe_path(base: str, filename: str) -> str:
+    """Validate that resolved path stays within base directory."""
+    base_path = Path(base).resolve()
+    file_path = (base_path / filename).resolve()
+    if not str(file_path).startswith(str(base_path)):
+        raise ValueError(f"Path traversal detected: {filename}")
+    return str(file_path)
 
 
 class CollectionInfo(BaseModel):
@@ -47,7 +57,7 @@ _bible_cache: Optional[dict] = None
 def _load_quran_data() -> list[dict]:
     global _quran_cache
     if _quran_cache is None:
-        quran_path = os.path.join(DATA_DIR, "quran_tr.json")
+        quran_path = safe_path(DATA_DIR, "quran_tr.json")
         if os.path.exists(quran_path):
             with open(quran_path, "r", encoding="utf-8") as f:
                 _quran_cache = json.load(f)
@@ -59,7 +69,7 @@ def _load_quran_data() -> list[dict]:
 def _load_bible_data() -> dict:
     global _bible_cache
     if _bible_cache is None:
-        bible_path = os.path.join(DATA_DIR, "bible_kjva.json")
+        bible_path = safe_path(DATA_DIR, "bible_kjva.json")
         if os.path.exists(bible_path):
             with open(bible_path, "r", encoding="utf-8") as f:
                 _bible_cache = json.load(f)
