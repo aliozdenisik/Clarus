@@ -4,6 +4,7 @@ import logging
 from typing import Optional
 from fastapi import APIRouter, Query
 
+from app.config import settings
 from app.schemas.keyword_search import (
     KeywordSearchRequest,
     KeywordSearchResponse,
@@ -26,9 +27,7 @@ _search_instance: Optional[QuranMorphologySearch] = None
 def get_morphology_search() -> QuranMorphologySearch:
     global _search_instance
     if _search_instance is None:
-        _search_instance = QuranMorphologySearch(
-            "postgresql+asyncpg://postgres:postgres@localhost:54322/postgres"
-        )
+        _search_instance = QuranMorphologySearch(settings.database_url)
     return _search_instance
 
 
