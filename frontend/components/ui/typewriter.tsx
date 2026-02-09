@@ -201,7 +201,7 @@ export function TypingIndicator({ className, dotClassName }: TypingIndicatorProp
     <div className={cn("flex items-center gap-1", className)}>
       {[0, 1, 2].map((i) => (
         <motion.div
-          key={i}
+          key={`typing-dot-${i}`}
           className={cn(
             "w-2 h-2 rounded-full bg-[var(--color-accent-primary)]",
             dotClassName

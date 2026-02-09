@@ -204,9 +204,9 @@ const Navbar1 = ({
                   </Accordion>
                   <div className="border-t py-4">
                     <div className="grid grid-cols-2 justify-start">
-                      {mobileExtraLinks.map((link, idx) => (
+                      {mobileExtraLinks.map((link) => (
                         <a
-                          key={idx}
+                          key={`${link.name}-${link.url}`}
                           className="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-accent-foreground"
                           href={link.url}
                         >
