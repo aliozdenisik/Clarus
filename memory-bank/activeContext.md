@@ -4,27 +4,27 @@
 
 **Date**: 2026-02-09
 
-## Issue #92: SSE Single-Pass Optimization — COMPLETED ✅
+## Issue #91: Frontend Performance Hotspots — COMPLETED ✅
 
 **Date**: 2026-02-09
 
-Resolved frontend runtime performance issue by replacing repeated `filter().map()` and multi-`find()` scans with one-pass reducers in streaming handlers.
+Resolved three frontend performance bottlenecks identified in issue #91:
 
-**What changed:**
-- `frontend/app/search/page.tsx`: collapsed token aggregation + `verse_details`/`error`/`no_results`/`complete` extraction into one reducer pass.
-- `frontend/app/compare/page.tsx`: replaced repeated `Object.values().filter()` source counts with a single loop + switch counters.
-- `frontend/app/compare/page.tsx`: replaced section/paragraph `filter().map().filter(Boolean)` chain with a single-pass reducer.
-- Restored missing frontend shared modules: `frontend/lib/logger.ts`, `frontend/lib/api-client-setup.ts`, `frontend/lib/correlation.ts`, `frontend/lib/utils/hebrew.ts`, `frontend/lib/utils/verse-url.ts`.
-- Updated `.gitignore` to explicitly keep `frontend/lib/**` trackable so restored modules are commit-visible.
+- Consolidated layout reads/writes in `vercel-tabs` into a single `useLayoutEffect` to reduce layout thrashing.
+- Added root list virtualization in `root-browser` using `react-window` `List` for 1,651+ roots.
+- Cached magnetic button bounds on `mouseenter` and reused them during `mousemove` to avoid repeated `getBoundingClientRect()` calls.
 
 **Verification:**
-- `lsp_diagnostics` on modified files ✅ (no diagnostics)
-- `npm test -- --run __tests__/search-page.test.tsx __tests__/compare-page.test.tsx` ✅ (24/24 tests)
-- `npm test -- --run` ✅ (19 files, 228 tests passed)
 - `npx tsc --noEmit` ✅
-- `npm run build` ✅ (Next.js production build successful; non-blocking warnings only)
+- `npm test -- --run __tests__/keyword-search-page.test.tsx __tests__/search-tabs.test.tsx` ✅
+- `npm test -- --run` ✅ (19 files, 228 tests passed)
+- `npm run build` ✅
 
----
+**Key files updated:**
+- `frontend/components/ui/vercel-tabs.tsx`
+- `frontend/components/keyword-search/root-browser.tsx`
+- `frontend/components/ui/magnetic-button.tsx`
+- `frontend/package.json`
 
 ## Issue #94: React Stable Keys Migration — COMPLETED ✅
 

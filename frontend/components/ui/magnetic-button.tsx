@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
-import { useState, MouseEvent } from "react";
+import { useRef, useState, MouseEvent } from "react";
 import { cn } from "@/lib/utils";
 
 interface MagneticButtonProps {
@@ -21,9 +21,18 @@ export function MagneticButton({
   type = "button",
 }: MagneticButtonProps) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const rectRef = useRef<DOMRect | null>(null);
+
+  const handleMouseEnter = (e: MouseEvent<HTMLButtonElement>) => {
+    rectRef.current = e.currentTarget.getBoundingClientRect();
+  };
 
   const handleMouseMove = (e: MouseEvent<HTMLButtonElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
+    const rect = rectRef.current ?? e.currentTarget.getBoundingClientRect();
+    if (!rectRef.current) {
+      rectRef.current = rect;
+    }
+
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
     const deltaX = (e.clientX - centerX) * 0.15;
@@ -33,6 +42,7 @@ export function MagneticButton({
 
   const handleMouseLeave = () => {
     setPosition({ x: 0, y: 0 });
+    rectRef.current = null;
   };
 
   return (
@@ -43,6 +53,7 @@ export function MagneticButton({
       )}
       style={{ x: position.x, y: position.y }}
       transition={springPresets.snappy}
+      onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
