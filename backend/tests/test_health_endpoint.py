@@ -431,7 +431,7 @@ class TestHealthEndpointIntegration:
         with patch("qdrant_client.QdrantClient") as mock_qdrant:
             mock_client = MagicMock()
             mock_client.get_collections.return_value = [
-                MagicMock(name="quran_tr"),
+                MagicMock(name="quran_tr_diyanet"),
                 MagicMock(name="bible_ot"),
             ]
             mock_qdrant.return_value = mock_client
