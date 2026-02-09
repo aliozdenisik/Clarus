@@ -55,7 +55,13 @@ function SearchContent() {
    const hasHandledSSEError = useRef(false);
    const hasAutoExecuted = useRef(false);
 
-  const keywordStore = useKeywordStore();
+  // Zustand selectors — subscribe only to used fields, not the entire store
+  const advancedMode = useKeywordStore((s) => s.advancedMode);
+  const keywords = useKeywordStore((s) => s.keywords);
+  const selectedKeywords = useKeywordStore((s) => s.selectedKeywords);
+  const setAdvancedMode = useKeywordStore((s) => s.setAdvancedMode);
+  const setKeywords = useKeywordStore((s) => s.setKeywords);
+  const resetKeywordStore = useKeywordStore((s) => s.reset);
 
   const log = useLogger("SearchPage");
   const { data: session, isPending } = useSession();
@@ -81,28 +87,38 @@ function SearchContent() {
 
      const advanced = searchParams?.get("advanced");
      if (advanced === "true") {
-       keywordStore.setAdvancedMode(true);
-     }
-   }, [searchParams, keywordStore]);
+      setAdvancedMode(true);
+      }
+    }, [searchParams, setAdvancedMode]);
+
+   const sseProcessedCount = useRef(0);
 
    useEffect(() => {
+    if (sseData.length === 0) {
+      sseProcessedCount.current = 0;
+      return;
+    }
+
+    const newMessages = sseData.slice(sseProcessedCount.current);
+    sseProcessedCount.current = sseData.length;
+
     const tokens = sseData
       .filter((m) => m.type === "token")
       .map((m) => m.content)
       .join("");
     setStreamedAnswer(tokens);
 
-    const verseDetailsMsg = sseData.find((m) => m.verse_details);
+    const verseDetailsMsg = newMessages.find((m) => m.verse_details);
     if (verseDetailsMsg?.verse_details) {
       setVerseDetails(verseDetailsMsg.verse_details as Record<string, VerseDetail>);
     }
 
-    const errorMsg = sseData.find((m) => m.error);
+    const errorMsg = newMessages.find((m) => m.error);
     if (errorMsg?.error) {
       log.error("SSE server error", { error: errorMsg.error });
     }
 
-    const noResultsMsg = sseData.find((m) => m.type === "no_results");
+    const noResultsMsg = newMessages.find((m) => m.type === "no_results");
     if (noResultsMsg) {
       setStreamedAnswer("");
       setIsSearching(false);
@@ -112,7 +128,7 @@ function SearchContent() {
       );
     }
 
-    const completeMsg = sseData.find((m) => m.type === "complete");
+    const completeMsg = newMessages.find((m) => m.type === "complete");
     if (completeMsg) {
       const result = (completeMsg as { result?: { results?: SearchResult[] } }).result;
       if (result?.results) {
@@ -128,7 +144,7 @@ function SearchContent() {
       }
       setIsSearching(false);
     }
-  }, [sseData]);
+  }, [sseData.length]);
 
   const handleLogout = async () => {
     await signOut();
@@ -143,10 +159,10 @@ function SearchContent() {
     setVerseDetails({});
     setHighlightedVerse(null);
     setOpenPopover(null);
-    keywordStore.reset();
+    resetKeywordStore();
     const params = new URLSearchParams();
     params.set("source", tab);
-    if (keywordStore.advancedMode) {
+    if (advancedMode) {
       params.set("advanced", "true");
     }
     router.push(`/search?${params.toString()}`);
@@ -260,7 +276,7 @@ function SearchContent() {
             source: kw.source || corpus,
           })
         );
-        keywordStore.setKeywords(keywordSuggestions);
+        setKeywords(keywordSuggestions);
       }
     } catch (error) {
       log.error("Query enhancement failed", { error });
@@ -271,7 +287,7 @@ function SearchContent() {
   };
 
   const handleKeywordSearch = () => {
-    if (keywordStore.selectedKeywords.length === 0) {
+    if (selectedKeywords.length === 0) {
       toast.error("Please select at least one keyword");
       return;
     }
@@ -288,7 +304,7 @@ function SearchContent() {
         url += `&translator=${encodeURIComponent(selectedTranslator)}`;
       }
       // Add keywords to URL
-      const keywordTexts = keywordStore.selectedKeywords.map((k) => k.text).join(",");
+      const keywordTexts = selectedKeywords.map((k) => k.text).join(",");
       url += `&keywords=${encodeURIComponent(keywordTexts)}`;
       startStream(url);
     } else {
@@ -297,13 +313,13 @@ function SearchContent() {
   };
 
   const handleAdvancedModeToggle = (checked: boolean) => {
-    keywordStore.setAdvancedMode(checked);
+    setAdvancedMode(checked);
     const params = new URLSearchParams(window.location.search);
     if (checked) {
       params.set("advanced", "true");
     } else {
       params.delete("advanced");
-      keywordStore.reset();
+      resetKeywordStore();
     }
     router.push(`/search?${params.toString()}`);
   };
@@ -325,8 +341,8 @@ function SearchContent() {
          body.translator = selectedTranslator;
        }
 
-       if (keywordStore.advancedMode && keywordStore.selectedKeywords.length > 0) {
-         body.keywords = keywordStore.selectedKeywords.map((k) => k.text);
+       if (advancedMode && selectedKeywords.length > 0) {
+         body.keywords = selectedKeywords.map((k) => k.text);
        }
 
        let response;
@@ -354,7 +370,7 @@ function SearchContent() {
      } finally {
        setIsSearching(false);
      }
-   }, [query, activeTab, selectedLanguage, selectedTranslator, keywordStore.advancedMode, keywordStore.selectedKeywords]);
+   }, [query, activeTab, selectedLanguage, selectedTranslator, advancedMode, selectedKeywords]);
 
   useEffect(() => {
     if (sseError && !hasHandledSSEError.current) {
@@ -406,14 +422,14 @@ function SearchContent() {
     hasHandledSSEError.current = false;
 
     // If keywords are selected, perform keyword-based search
-    if (keywordStore.selectedKeywords.length > 0) {
+    if (selectedKeywords.length > 0) {
       handleKeywordSearch();
       return;
     }
 
     // If advanced mode is ON and no keywords yet, enhance first
     // (This happens on first submit after toggling advanced mode ON)
-    if (keywordStore.advancedMode && keywordStore.keywords.length === 0) {
+    if (advancedMode && keywords.length === 0) {
       await enhanceQuery(query);
       toast.info("Keywords extracted. Adjust selection and search again.");
       return;
@@ -555,10 +571,10 @@ function SearchContent() {
             {/* Keyword Selector */}
             <div className="w-full max-w-2xl space-y-3">
               <KeywordSelector
-                keywords={keywordStore.keywords}
+                keywords={keywords}
                 onSelectionChange={(selected) => {
-                  keywordStore.setKeywords(
-                    keywordStore.keywords.map((k) => ({
+                  setKeywords(
+                    keywords.map((k) => ({
                       ...k,
                       selected: selected.some((s) => s.text === k.text),
                     }))
@@ -571,7 +587,7 @@ function SearchContent() {
               {/* Action buttons */}
               <div className="flex justify-between items-center">
                 {/* Extract keywords button - shown when no keywords and query exists */}
-                {keywordStore.keywords.length === 0 && query.trim() && (
+                {keywords.length === 0 && query.trim() && (
                   <button
                     type="button"
                     onClick={() => enhanceQuery(query)}
@@ -583,11 +599,11 @@ function SearchContent() {
                 )}
                 
                 {/* Clear keywords button - shown when keywords exist */}
-                {keywordStore.keywords.length > 0 && (
+                {keywords.length > 0 && (
                   <button
                     type="button"
                     onClick={() => {
-                      keywordStore.reset();
+                      resetKeywordStore();
                       toast.info("Switched to normal search");
                     }}
                     className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors ml-auto"
