@@ -336,12 +336,20 @@ function CompareContent() {
     }
   }, [searchParams, enable_streaming, startStream, performBatchCompare, selectedLanguage]);
 
-  // Handle SSE Data updates
-  useEffect(() => {
-    if (sseData.length === 0) return;
+  const sseProcessedCount = useRef(0);
 
-    // Check for complete message
-    const completeMsg = sseData.findLast((m) => m.type === "complete");
+  // Handle SSE Data updates — depend on sseData.length, not the array reference
+  useEffect(() => {
+    if (sseData.length === 0) {
+      sseProcessedCount.current = 0;
+      return;
+    }
+
+    const newMessages = sseData.slice(sseProcessedCount.current);
+    sseProcessedCount.current = sseData.length;
+
+    // Check for complete message in new messages
+    const completeMsg = newMessages.findLast((m) => m.type === "complete");
     if (completeMsg?.result) {
       setResult(completeMsg.result as CompareResult);
       if ((completeMsg.result as any).detected_language) {
@@ -352,7 +360,7 @@ function CompareContent() {
     }
 
     // Handle verse_details from streaming (sent before text)
-    const verseDetailsMsg = sseData.findLast((m: any) => m.verse_details);
+    const verseDetailsMsg = newMessages.findLast((m: any) => m.verse_details);
     if (verseDetailsMsg?.verse_details) {
       setResult((prev) => {
         const base = prev || {
@@ -372,9 +380,8 @@ function CompareContent() {
       });
     }
 
-    // Extract stats from most recent SSE messages
-    // Backend sends: {"type": "stats", "data": {confidence, latency_ms, total_verses, total_citations}}
-    const statsMsg = sseData.findLast((m: any) => m.type === "stats");
+    // Extract stats from new SSE messages
+    const statsMsg = newMessages.findLast((m: any) => m.type === "stats");
     if (statsMsg?.data) {
       setResult((prev) => {
         const base = prev || {
@@ -397,7 +404,7 @@ function CompareContent() {
       });
     }
 
-    // Handle progressive updates
+    // Handle progressive updates — accumulate all paragraphs from full sseData
     const paragraphs = sseData
       .filter((m: any) => m.type === "section" || m.type === "paragraph")
       .map((m: any) => m.data || m.result || m.content)
@@ -431,7 +438,7 @@ function CompareContent() {
       });
       setIsLoading(false);
     }
-  }, [sseData, topic]);
+  }, [sseData.length, topic]);
 
   // Handle SSE Errors
   useEffect(() => {

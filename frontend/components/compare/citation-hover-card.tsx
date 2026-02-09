@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import * as HoverCard from "@radix-ui/react-hover-card";
 import { SourceBadge, SourceType } from "./source-badge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,7 +31,7 @@ const SOURCE_MAP: Record<string, SourceType> = {
   'bible_apocrypha': 'apocrypha'
 };
 
-export function CitationHoverCard({ reference, verseDetail, onNavigate }: CitationHoverCardProps) {
+export const CitationHoverCard = React.memo(function CitationHoverCard({ reference, verseDetail, onNavigate }: CitationHoverCardProps) {
   const displaySource = SOURCE_MAP[verseDetail.source] || 'quran';
 
   return (
@@ -95,4 +96,4 @@ export function CitationHoverCard({ reference, verseDetail, onNavigate }: Citati
       </HoverCard.Portal>
     </HoverCard.Root>
   );
-}
+});

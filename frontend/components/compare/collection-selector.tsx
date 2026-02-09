@@ -17,6 +17,26 @@ export const COLLECTION_OPTIONS: CollectionOption[] = [
   { id: "bible_apocrypha", label: "Apocrypha", labelTr: "Apokrifa" },
 ];
 
+const collectionButtonVariants = {
+  selected: {
+    backgroundColor: "rgba(99, 102, 241, 0.85)",
+    borderColor: "rgba(129, 140, 248, 0.6)",
+  },
+  unselected: {
+    backgroundColor: "rgba(39, 39, 42, 0.6)",
+    borderColor: "rgba(63, 63, 70, 0.4)",
+  },
+  selectedHover: {
+    backgroundColor: "rgba(99, 102, 241, 1)",
+  },
+  unselectedHover: {
+    backgroundColor: "rgba(39, 39, 42, 0.9)",
+  },
+  tap: { scale: 0.96 },
+};
+
+const collectionButtonTransition = { duration: 0.15 };
+
 export interface CollectionSelectorProps {
   selected: string[];
   onChange: (collections: string[]) => void;
@@ -53,21 +73,11 @@ export function CollectionSelector({
             onClick={() => toggleCollection(option.id)}
             disabled={disabled}
             initial={false}
-            animate={{
-              backgroundColor: isSelected
-                ? "rgba(99, 102, 241, 0.85)"
-                : "rgba(39, 39, 42, 0.6)",
-              borderColor: isSelected
-                ? "rgba(129, 140, 248, 0.6)"
-                : "rgba(63, 63, 70, 0.4)",
-            }}
-            whileHover={{
-              backgroundColor: isSelected
-                ? "rgba(99, 102, 241, 1)"
-                : "rgba(39, 39, 42, 0.9)",
-            }}
-            whileTap={{ scale: 0.96 }}
-            transition={{ duration: 0.15 }}
+            animate={isSelected ? "selected" : "unselected"}
+            whileHover={isSelected ? "selectedHover" : "unselectedHover"}
+            whileTap="tap"
+            variants={collectionButtonVariants}
+            transition={collectionButtonTransition}
             className={cn(
               "px-3 py-1.5 rounded-lg text-xs font-medium border transition-shadow cursor-pointer",
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/40",

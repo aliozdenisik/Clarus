@@ -137,20 +137,24 @@ vi.mock("@/lib/logger", () => ({
   },
 }));
 
-// Mock keyword store — must match the real store shape used in search/page.tsx
+// Mock keyword store — supports both selector-based and full-store calls
+const mockKeywordStoreState = {
+  advancedMode: false,
+  keywords: [],
+  selectedKeywords: [],
+  isLoading: false,
+  setAdvancedMode: vi.fn(),
+  setKeywords: vi.fn(),
+  toggleKeyword: vi.fn(),
+  selectAll: vi.fn(),
+  deselectAll: vi.fn(),
+  reset: vi.fn(),
+};
+
 vi.mock("@/lib/stores/keyword-store", () => ({
-  useKeywordStore: vi.fn(() => ({
-    advancedMode: false,
-    keywords: [],
-    selectedKeywords: [],
-    isLoading: false,
-    setAdvancedMode: vi.fn(),
-    setKeywords: vi.fn(),
-    toggleKeyword: vi.fn(),
-    selectAll: vi.fn(),
-    deselectAll: vi.fn(),
-    reset: vi.fn(),
-  })),
+  useKeywordStore: vi.fn((selector?: (state: typeof mockKeywordStoreState) => unknown) =>
+    selector ? selector(mockKeywordStoreState) : mockKeywordStoreState
+  ),
   KeywordSuggestion: {},
 }));
 
