@@ -19,6 +19,7 @@ import { VerseDetail } from "@/components/search/verse-tooltip";
 import { SourceBadge, SourceType } from "@/components/compare/source-badge";
 import { useLogger } from "@/lib/logger";
 import { LanguageSelector } from "@/components/search/language-selector";
+import { TranslatorSelector } from "@/components/search/translator-selector";
 import { KeywordSelector } from "@/components/search/keyword-selector";
 import { useKeywordStore, KeywordSuggestion } from "@/lib/stores/keyword-store";
 import { cn } from "@/lib/utils";
@@ -44,6 +45,7 @@ function SearchContent() {
   const [openPopover, setOpenPopover] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [detectedLanguage, setDetectedLanguage] = useState<string | undefined>(undefined);
+  const [selectedTranslator, setSelectedTranslator] = useState("diyanet");
   const [isEnhancing, setIsEnhancing] = useState(false);
    const resultsContainerRef = useRef<HTMLDivElement>(null);
    const hasHandledSSEError = useRef(false);
@@ -277,6 +279,10 @@ function SearchContent() {
       if (selectedLanguage) {
         url += `&language=${encodeURIComponent(selectedLanguage)}`;
       }
+      // Add translator if searching Quran
+      if (activeTab === "quran") {
+        url += `&translator=${encodeURIComponent(selectedTranslator)}`;
+      }
       // Add keywords to URL
       const keywordTexts = keywordStore.selectedKeywords.map((k) => k.text).join(",");
       url += `&keywords=${encodeURIComponent(keywordTexts)}`;
@@ -310,6 +316,11 @@ function SearchContent() {
         let body: Record<string, unknown> = { query: searchQuery, mode: "semantic", top_k: 10 };
        if (selectedLanguage) {
          body.language = selectedLanguage;
+       }
+
+       // Add translator if searching Quran
+       if (activeTab === "quran") {
+         body.translator = selectedTranslator;
        }
 
        // Add keywords if advanced mode is ON and keywords are selected
@@ -352,7 +363,7 @@ function SearchContent() {
      } finally {
        setIsSearching(false);
      }
-   }, [query, activeTab, selectedLanguage, keywordStore.advancedMode, keywordStore.selectedKeywords]);
+   }, [query, activeTab, selectedLanguage, selectedTranslator, keywordStore.advancedMode, keywordStore.selectedKeywords]);
 
   useEffect(() => {
     if (sseError && !hasHandledSSEError.current) {
@@ -380,6 +391,10 @@ function SearchContent() {
           let url = `${API_BASE_URL}/api/stream/search?q=${encodeURIComponent(q)}&source=${activeTab}`;
          if (selectedLanguage) {
            url += `&language=${encodeURIComponent(selectedLanguage)}`;
+         }
+         // Add translator if searching Quran
+         if (activeTab === "quran") {
+           url += `&translator=${encodeURIComponent(selectedTranslator)}`;
          }
          startStream(url);
        } else {
@@ -419,6 +434,10 @@ function SearchContent() {
        let url = `${API_BASE_URL}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`;
       if (selectedLanguage) {
         url += `&language=${encodeURIComponent(selectedLanguage)}`;
+      }
+      // Add translator if searching Quran
+      if (activeTab === "quran") {
+        url += `&translator=${encodeURIComponent(selectedTranslator)}`;
       }
       startStream(url);
     } else {
@@ -533,6 +552,12 @@ function SearchContent() {
                   onChange={setSelectedLanguage}
                   detectedLanguage={detectedLanguage}
                 />
+                {activeTab === "quran" && (
+                  <TranslatorSelector
+                    value={selectedTranslator}
+                    onChange={setSelectedTranslator}
+                  />
+                )}
               </div>
             </form>
 
