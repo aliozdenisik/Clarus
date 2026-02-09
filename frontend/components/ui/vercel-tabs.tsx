@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useLayoutEffect } from "react"
 import { cn } from "@/lib/utils"
 
 interface Tab {
@@ -15,6 +15,24 @@ interface TabsProps extends React.HTMLAttributes<HTMLDivElement> {
   onTabChange?: (tabId: string) => void
 }
 
+interface IndicatorStyle {
+  left: string
+  width: string
+}
+
+const DEFAULT_INDICATOR_STYLE: IndicatorStyle = { left: "0px", width: "0px" }
+
+function readIndicatorStyle(element: HTMLDivElement | null): IndicatorStyle {
+  if (!element) {
+    return DEFAULT_INDICATOR_STYLE
+  }
+
+  return {
+    left: `${element.offsetLeft}px`,
+    width: `${element.offsetWidth}px`,
+  }
+}
+
 const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
   ({ className, tabs, activeTab, onTabChange, ...props }, ref) => {
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
@@ -25,8 +43,8 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
       }
       return 0
     })
-    const [hoverStyle, setHoverStyle] = useState({})
-    const [activeStyle, setActiveStyle] = useState({ left: "0px", width: "0px" })
+    const [hoverStyle, setHoverStyle] = useState<IndicatorStyle>(DEFAULT_INDICATOR_STYLE)
+    const [activeStyle, setActiveStyle] = useState<IndicatorStyle>(DEFAULT_INDICATOR_STYLE)
     const tabRefs = useRef<(HTMLDivElement | null)[]>([])
 
     // Sync activeIndex with activeTab prop
@@ -39,42 +57,29 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
       }
     }, [activeTab, tabs, activeIndex])
 
-    useEffect(() => {
-      if (hoveredIndex !== null) {
-        const hoveredElement = tabRefs.current[hoveredIndex]
-        if (hoveredElement) {
-          const { offsetLeft, offsetWidth } = hoveredElement
-          setHoverStyle({
-            left: `${offsetLeft}px`,
-            width: `${offsetWidth}px`,
-          })
-        }
-      }
-    }, [hoveredIndex])
-
-    useEffect(() => {
+    useLayoutEffect(() => {
       const activeElement = tabRefs.current[activeIndex]
-      if (activeElement) {
-        const { offsetLeft, offsetWidth } = activeElement
-        setActiveStyle({
-          left: `${offsetLeft}px`,
-          width: `${offsetWidth}px`,
-        })
-      }
-    }, [activeIndex])
+      const nextActiveStyle = readIndicatorStyle(activeElement)
 
-    useEffect(() => {
-      requestAnimationFrame(() => {
-        const activeElement = tabRefs.current[activeIndex]
-        if (activeElement) {
-          const { offsetLeft, offsetWidth } = activeElement
-          setActiveStyle({
-            left: `${offsetLeft}px`,
-            width: `${offsetWidth}px`,
-          })
-        }
-      })
-    }, [activeIndex, tabs])
+      setActiveStyle((prevStyle) =>
+        prevStyle.left === nextActiveStyle.left && prevStyle.width === nextActiveStyle.width
+          ? prevStyle
+          : nextActiveStyle
+      )
+
+      if (hoveredIndex === null) {
+        return
+      }
+
+      const hoveredElement = tabRefs.current[hoveredIndex]
+      const nextHoverStyle = readIndicatorStyle(hoveredElement)
+
+      setHoverStyle((prevStyle) =>
+        prevStyle.left === nextHoverStyle.left && prevStyle.width === nextHoverStyle.width
+          ? prevStyle
+          : nextHoverStyle
+      )
+    }, [activeIndex, hoveredIndex, tabs])
 
     return (
       <div 
