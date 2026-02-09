@@ -31,7 +31,7 @@ from rich.panel import Panel
 from rich import print as rprint
 
 from src.data_loader import QuranDataLoader
-from src.indexer import QuranIndexer, SemanticChunkIndexer
+from src.indexer import QuranIndexer, SemanticChunkIndexer, TurkishBibleIndexer
 from src.search import (
     QuranSearcher,
     BibleSearcher,
@@ -40,6 +40,7 @@ from src.search import (
 )
 from src.bible_loader import BibleDataLoader
 from src.semantic_chunker import SemanticVerseChunker, analyze_surah_chunks
+from src.tanzil_loader import VALID_TRANSLATORS
 
 console = Console()
 
@@ -215,8 +216,11 @@ def cmd_search(args):
     """Search Quran data using Ultimate RAG Pipeline"""
     query = args.query
     limit = args.limit
+    translator = getattr(args, "translator", "diyanet")
 
-    console.print("\n[bold magenta]🚀 Ultimate RAG Pipeline[/bold magenta]")
+    console.print(
+        f"\n[bold magenta]🚀 Ultimate RAG Pipeline ({translator})[/bold magenta]"
+    )
     console.print(
         "[dim]Combining: Enhance + Multi-Query + Semantic + RRF Fusion[/dim]\n"
     )
@@ -230,6 +234,7 @@ def cmd_search(args):
             search_mode="semantic",
             final_top_k=limit,
             verbose=True,
+            translator=translator,
         )
         results = rag.search_quran(query, top_k=limit)
         return display_quran_results(args, results, query)
@@ -315,6 +320,62 @@ def cmd_info(args):
         return 1
 
     return 0
+
+
+def cmd_index_quran(args):
+    """Index Quran translation(s) from Tanzil XML"""
+    translator = args.translator
+
+    if translator == "all" or translator is None:
+        console.print("\n[bold blue]Indexing All Quran Translators[/bold blue]\n")
+        QuranIndexer.index_all_translators(qdrant_url=args.qdrant_url, recreate=True)
+    else:
+        console.print(f"\n[bold blue]Indexing Quran ({translator})[/bold blue]\n")
+        indexer = QuranIndexer(translator=translator, qdrant_url=args.qdrant_url)
+        indexer.create_collection(recreate=True)
+        count = indexer.index()
+        console.print(f"[green]✓[/green] Indexed {count} verses for {translator}")
+
+    return 0
+
+
+def cmd_index_bible_tr(args):
+    """Index Turkish Bible from OSIS XML"""
+    console.print("\n[bold blue]Indexing Turkish Bible[/bold blue]\n")
+
+    indexer = TurkishBibleIndexer(qdrant_url=args.qdrant_url)
+    counts = indexer.index_all(recreate=True)
+
+    console.print(f"\n[green]✓[/green] Indexed Turkish Bible:")
+    console.print(f"  OT: {counts['ot']} verses")
+    console.print(f"  NT: {counts['nt']} verses")
+
+    return 0
+
+
+def cmd_delete_collection(args):
+    """Delete a Qdrant collection"""
+    from qdrant_client import QdrantClient
+
+    name = args.name
+    force = args.force
+
+    console.print(f"\n[bold red]Delete Collection: {name}[/bold red]\n")
+
+    if not force:
+        response = input(f"Are you sure you want to delete '{name}'? [yes/N]: ")
+        if response.lower() != "yes":
+            console.print("[yellow]Cancelled.[/yellow]")
+            return 0
+
+    try:
+        client = QdrantClient(url=args.qdrant_url)
+        client.delete_collection(name)
+        console.print(f"[green]✓[/green] Deleted collection: {name}")
+        return 0
+    except Exception as e:
+        console.print(f"[red][ERROR] {e}[/red]")
+        return 1
 
 
 def cmd_search_bible(args):
@@ -414,8 +475,11 @@ def cmd_ask(args):
     """Ask a question about Quran - Full RAG Q&A with citations"""
     query = args.query
     limit = args.limit
+    translator = getattr(args, "translator", "diyanet")
 
-    console.print("\n[bold magenta]🧠 Ultimate RAG Q&A Pipeline (Kuran)[/bold magenta]")
+    console.print(
+        f"\n[bold magenta]🧠 Ultimate RAG Q&A Pipeline (Kuran - {translator})[/bold magenta]"
+    )
     console.print("[dim]Search + Answer Generation with Citations[/dim]\n")
 
     try:
@@ -427,6 +491,7 @@ def cmd_ask(args):
             search_mode="semantic",
             final_top_k=limit,
             verbose=True,
+            translator=translator,
         )
 
         answer = rag.ask_quran(query, top_k=limit)
@@ -511,20 +576,21 @@ def cmd_compare(args):
     verses = args.verses
     translation = args.translation
     multi_agent = args.multi_agent
+    translator = getattr(args, "translator", "diyanet")
 
     if multi_agent:
         console.print(
             f"\n[bold magenta]📚 Multi-Agent Comparative Scripture Analysis[/bold magenta]"
         )
         console.print(
-            "[dim]4 Specialist Agents (OT, NT, Apocrypha, Quran) + Synthesis Agent[/dim]\n"
+            f"[dim]4 Specialist Agents (OT, NT, Apocrypha, Quran-{translator}) + Synthesis Agent[/dim]\n"
         )
     else:
         console.print(
             "\n[bold magenta]📚 Comparative Scripture Analysis[/bold magenta]"
         )
         console.print(
-            "[dim]Searching Quran + Bible → Comparative Theological Essay[/dim]\n"
+            f"[dim]Searching Quran ({translator}) + Bible → Comparative Theological Essay[/dim]\n"
         )
 
     try:
@@ -533,6 +599,7 @@ def cmd_compare(args):
         rag = ComparativeRAG(
             qdrant_url=args.qdrant_url,
             bible_translation=translation,
+            quran_translator=translator,
             verses_per_search=verses,
             verbose=True,
         )
@@ -776,6 +843,22 @@ def main():
     search_parser.add_argument(
         "-v", "--verbose", action="store_true", help="Show detailed first result"
     )
+    search_parser.add_argument(
+        "--translator",
+        type=str,
+        default="diyanet",
+        choices=[
+            "diyanet",
+            "yazir",
+            "ates",
+            "bulac",
+            "ozturk",
+            "vakfi",
+            "yildirim",
+            "yuksel",
+        ],
+        help="Quran translator (default: diyanet)",
+    )
 
     # Search Bible command (uses Ultimate RAG Pipeline)
     search_bible_parser = subparsers.add_parser(
@@ -804,6 +887,22 @@ def main():
         type=int,
         default=10,
         help="Number of search results to use as context",
+    )
+    ask_parser.add_argument(
+        "--translator",
+        type=str,
+        default="diyanet",
+        choices=[
+            "diyanet",
+            "yazir",
+            "ates",
+            "bulac",
+            "ozturk",
+            "vakfi",
+            "yildirim",
+            "yuksel",
+        ],
+        help="Quran translator (default: diyanet)",
     )
 
     # Ask Bible command (Full RAG Q&A with citations)
@@ -840,6 +939,22 @@ def main():
         action="store_true",
         help="Use multi-agent system (5 paragraphs: OT, NT, Apocrypha, Quran, Synthesis)",
     )
+    compare_parser.add_argument(
+        "--translator",
+        type=str,
+        default="diyanet",
+        choices=[
+            "diyanet",
+            "yazir",
+            "ates",
+            "bulac",
+            "ozturk",
+            "vakfi",
+            "yildirim",
+            "yuksel",
+        ],
+        help="Quran translator (default: diyanet)",
+    )
 
     # Info command
     info_parser = subparsers.add_parser("info", help="Show collection info")
@@ -848,6 +963,42 @@ def main():
     )
     info_parser.add_argument(
         "--bible", action="store_true", help="Show only Bible collections"
+    )
+
+    # Index Quran command
+    index_quran_parser = subparsers.add_parser(
+        "index-quran", help="Index Quran translations from Tanzil XML"
+    )
+    index_quran_parser.add_argument(
+        "--translator",
+        type=str,
+        default=None,
+        choices=[
+            "diyanet",
+            "yazir",
+            "ates",
+            "bulac",
+            "ozturk",
+            "vakfi",
+            "yildirim",
+            "yuksel",
+            "all",
+        ],
+        help="Translator to index (default: all)",
+    )
+
+    # Index Turkish Bible command
+    index_bible_tr_parser = subparsers.add_parser(
+        "index-bible-tr", help="Index Turkish Bible from OSIS XML"
+    )
+
+    # Delete collection command
+    delete_col_parser = subparsers.add_parser(
+        "delete-collection", help="Delete a Qdrant collection"
+    )
+    delete_col_parser.add_argument("name", type=str, help="Collection name to delete")
+    delete_col_parser.add_argument(
+        "--force", action="store_true", help="Skip confirmation prompt"
     )
 
     # GraphRAG commands
@@ -1097,6 +1248,12 @@ def main():
         return cmd_search_bible(args)
     elif args.command == "info":
         return cmd_info(args)
+    elif args.command == "index-quran":
+        return cmd_index_quran(args)
+    elif args.command == "index-bible-tr":
+        return cmd_index_bible_tr(args)
+    elif args.command == "delete-collection":
+        return cmd_delete_collection(args)
     elif args.command == "build-graph":
         return cmd_build_graph(args)
     elif args.command == "graph-info":
