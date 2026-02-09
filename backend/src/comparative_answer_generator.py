@@ -244,7 +244,10 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         if quran_semantic:
             sections.append(
                 self._format_verses_section(
-                    quran_semantic, "quran_tr", "KURAN - SEMANTİK ARAMA SONUÇLARI", "QS"
+                    quran_semantic,
+                    "quran_tr_diyanet",
+                    "KURAN - SEMANTİK ARAMA SONUÇLARI",
+                    "QS",
                 )
             )
 
@@ -252,7 +255,10 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         if quran_chunks:
             sections.append(
                 self._format_verses_section(
-                    quran_chunks, "quran_tr", "KURAN - SEMANTİK CHUNK SONUÇLARI", "QC"
+                    quran_chunks,
+                    "quran_tr_diyanet",
+                    "KURAN - SEMANTİK CHUNK SONUÇLARI",
+                    "QC",
                 )
             )
 

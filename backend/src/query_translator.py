@@ -234,7 +234,7 @@ class QueryTranslator:
 
         Args:
             query: The user's search query.
-            corpus: Target corpus name (e.g. ``"quran_tr"``, ``"bible_ot"``).
+            corpus: Target corpus name (e.g. ``"quran"``, ``"bible_ot"``).
                     ``None`` means detect-only mode.
 
         Returns:
