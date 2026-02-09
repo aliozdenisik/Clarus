@@ -149,7 +149,7 @@ class UltimateRAG:
         if source in self._searchers:
             return self._searchers[source]
 
-        if source == "quran_tr":
+        if source.startswith("quran_tr_"):
             from src.search import QuranSearcher
 
             searcher = QuranSearcher(qdrant_url=self.qdrant_url)
@@ -379,7 +379,7 @@ class UltimateRAG:
     async def _parallel_query_preparation(
         self,
         query: str,
-        source: str = "quran_tr",
+        source: str = "quran_tr_diyanet",
         detected_language: Optional[str] = None,
     ) -> List[str]:
         """
@@ -576,7 +576,7 @@ class UltimateRAG:
             # Parallel search: Semantic chunks (if enabled) — reuse pre-computed vectors
             if self.enable_semantic_chunks:
                 # Handle Quran Semantic Chunks
-                if source == "quran_tr":
+                if source.startswith("quran_tr_"):
                     try:
                         chunk_searcher = self._get_semantic_chunk_searcher()
                         if chunk_searcher.collection_exists():
@@ -801,7 +801,7 @@ class UltimateRAG:
             # Parallel search: Semantic chunks (if enabled) — reuse pre-computed vectors
             if self.enable_semantic_chunks:
                 # Handle Quran Semantic Chunks
-                if source == "quran_tr":
+                if source.startswith("quran_tr_"):
                     try:
                         chunk_searcher = self._get_semantic_chunk_searcher()
                         if chunk_searcher.collection_exists():
@@ -957,7 +957,7 @@ class UltimateRAG:
     async def search(
         self,
         query: str,
-        source: str = "quran_tr",
+        source: str = "quran_tr_diyanet",
         top_k: int = None,
         rerank_query: str = None,  # Optional: use different query for reranking
         detected_language: Optional[str] = None,
@@ -1068,7 +1068,7 @@ class UltimateRAG:
 
             return await self.search(
                 query,
-                source="quran_tr",
+                source="quran_tr_diyanet",
                 top_k=top_k,
                 detected_language=detected_language,
             )
@@ -1239,7 +1239,9 @@ class UltimateRAG:
 
     # ============= ANSWER GENERATION (RAG) =============
 
-    async def ask(self, query: str, source: str = "quran_tr", top_k: int = None):
+    async def ask(
+        self, query: str, source: str = "quran_tr_diyanet", top_k: int = None
+    ):
         """
         Full RAG Pipeline: Search + Generate Answer with Citations
 
@@ -1332,7 +1334,7 @@ class UltimateRAG:
                 )
                 raise
 
-        return await self.ask(query, source="quran_tr", top_k=top_k)
+        return await self.ask(query, source="quran_tr_diyanet", top_k=top_k)
 
     async def ask_bible(
         self,
@@ -1375,7 +1377,9 @@ class UltimateRAG:
 
 
 # Convenience function
-def ultimate_search(query: str, source: str = "quran_tr", top_k: int = 10) -> List:
+def ultimate_search(
+    query: str, source: str = "quran_tr_diyanet", top_k: int = 10
+) -> List:
     """
     One-liner for Ultimate RAG search
 

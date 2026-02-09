@@ -323,7 +323,22 @@ async def stream_compare(
                     Valid values: quran_tr, bible_ot, bible_nt, bible_apocrypha
     """
     # Parse and validate collections
-    valid_collections = {"quran_tr", "bible_ot", "bible_nt", "bible_apocrypha"}
+    # Valid collections: all quran_tr_* translators + bible collections
+    valid_collections = {
+        "quran_tr_diyanet",
+        "quran_tr_yazir",
+        "quran_tr_ates",
+        "quran_tr_bulac",
+        "quran_tr_ozturk",
+        "quran_tr_vakfi",
+        "quran_tr_yildirim",
+        "quran_tr_yuksel",
+        "bible_ot",
+        "bible_nt",
+        "bible_apocrypha",
+        "bible_tr_ot",
+        "bible_tr_nt",
+    }
     collection_list = [
         c.strip() for c in collections.split(",") if c.strip() in valid_collections
     ]

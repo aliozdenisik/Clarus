@@ -406,7 +406,7 @@ VERSES:
         self,
         query: str,
         search_results: List,
-        source: str = "quran_tr",
+        source: str = "quran_tr_diyanet",
         max_context_results: int = 15,
         score_stats: dict = None,
     ) -> AnswerResult:

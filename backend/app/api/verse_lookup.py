@@ -90,7 +90,7 @@ async def fetch_quran_verses(
 
         # Query Qdrant with payload filter (no vector search)
         points = await client.scroll(
-            collection_name="quran_tr",
+            collection_name="quran_tr_diyanet",  # Default Diyanet translation
             scroll_filter=filter_condition,
             limit=1,
             with_payload=True,

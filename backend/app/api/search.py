@@ -117,7 +117,7 @@ async def search_quran(
         "Search request received",
         extra={
             "query": request.query[:50],
-            "collection": "quran_tr",
+            "collection": "quran_tr_diyanet",
             "top_k": request.top_k,
             "user_id": current_user["id"],
         },
@@ -158,7 +158,11 @@ async def search_quran(
 
     latency_ms = (time.perf_counter() - start) * 1000
     log_performance(
-        logger, "search_quran", latency_ms, collection="quran_tr", results=len(results)
+        logger,
+        "search_quran",
+        latency_ms,
+        collection="quran_tr_diyanet",
+        results=len(results),
     )
 
     return SearchResponse(

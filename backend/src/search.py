@@ -142,7 +142,7 @@ class QuranSearcher:
     Uses dense vectors only (text-embedding-3-large).
     """
 
-    COLLECTION_NAME = "quran_tr"
+    COLLECTION_NAME = "quran_tr_diyanet"  # Default Quran translator collection
 
     def __init__(
         self,

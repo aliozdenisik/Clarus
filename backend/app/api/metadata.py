@@ -275,7 +275,7 @@ async def get_testaments():
                 {"id": "apocrypha", "name": "Apocrypha", "name_tr": "Apokrifa"},
             ],
             "collections": {
-                "quran": "quran_tr",
+                "quran": "quran_tr_diyanet",
                 "old_testament": "bible_ot",
                 "new_testament": "bible_nt",
                 "apocrypha": "bible_apocrypha",
