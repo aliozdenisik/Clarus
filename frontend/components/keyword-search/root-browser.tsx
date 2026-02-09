@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,23 +16,27 @@ interface RootBrowserProps {
 
 type SortMode = "frequency" | "alphabetical";
 
-function RootRow({
+const RootRow = React.memo(function RootRow({
   root,
   count,
   index,
-  onClick,
+  onSelect,
 }: {
   root: string;
   count: number;
   index: number;
-  onClick: () => void;
+  onSelect: (root: string) => void;
 }) {
+  const handleClick = useCallback(() => {
+    onSelect(root);
+  }, [onSelect, root]);
+
   return (
     <motion.button
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ ...springPresets.snappy, delay: Math.min(index * 0.02, 0.5) }}
-      onClick={onClick}
+      onClick={handleClick}
       className="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-[var(--color-bg-elevated)] transition-colors group"
     >
       <span
@@ -46,7 +50,7 @@ function RootRow({
       </span>
     </motion.button>
   );
-}
+});
 
 export function RootBrowser({ onRootSelect }: RootBrowserProps) {
   const [roots, setRoots] = useState<RootListItem[]>([]);
@@ -215,7 +219,7 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
               root={rootItem.root}
               count={rootItem.count}
               index={index}
-              onClick={() => onRootSelect(rootItem.root)}
+              onSelect={onRootSelect}
             />
           ))}
         </div>
