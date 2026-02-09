@@ -617,24 +617,32 @@ function SearchContent() {
                    <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-muted)] mb-3 block">
                      AI Interpretation
                    </span>
-                   <div className="text-[var(--color-text-secondary)] leading-[1.75] text-[15px]">
-                     {parseCitations(streamedAnswer).map((part, i) => {
-                       if (typeof part === "string") {
-                         return <span key={i}>{part}</span>;
-                       }
+                    <div className="text-[var(--color-text-secondary)] leading-[1.75] text-[15px]">
+                      {(() => {
+                        let partCursor = 0;
 
-                       const verse = verseDetails[part.reference];
+                        return parseCitations(streamedAnswer).map((part) => {
+                          if (typeof part === "string") {
+                            const key = `text-${partCursor}`;
+                            partCursor += part.length;
+                            return <span key={key}>{part}</span>;
+                          }
 
-                       return (
-                         <InlineCitation
-                           key={i}
-                           reference={part.reference}
-                           verseDetail={verse}
-                           onNavigate={navigateToVerse}
-                         />
-                       );
-                     })}
-                   </div>
+                          const verse = verseDetails[part.reference];
+                          const key = `citation-${part.reference}-${partCursor}`;
+                          partCursor += part.reference.length;
+
+                          return (
+                            <InlineCitation
+                              key={key}
+                              reference={part.reference}
+                              verseDetail={verse}
+                              onNavigate={navigateToVerse}
+                            />
+                          );
+                        });
+                      })()}
+                    </div>
                  </div>
                </motion.div>
              )}
@@ -644,20 +652,20 @@ function SearchContent() {
            <Suspense
              fallback={
                <div className="space-y-3">
-                 {[...Array(3)].map((_, i) => (
-                   <Skeleton key={i} className="h-24 w-full rounded-lg" />
-                 ))}
-               </div>
-             }
+                  {[...Array(3)].map((_, i) => (
+                    <Skeleton key={`search-suspense-skeleton-${i}`} className="h-24 w-full rounded-lg" />
+                  ))}
+                </div>
+              }
            >
              {/* Loading skeletons - no answer yet */}
              {isSearching && !results.length && !streamedAnswer && (
                <div className="space-y-3">
-                 {[...Array(3)].map((_, i) => (
-                   <Skeleton key={i} className="h-24 w-full rounded-lg" />
-                 ))}
-               </div>
-             )}
+                  {[...Array(3)].map((_, i) => (
+                    <Skeleton key={`search-loading-skeleton-${i}`} className="h-24 w-full rounded-lg" />
+                  ))}
+                </div>
+              )}
 
              {/* Loading skeletons - answer streaming, waiting for sources */}
              {isSearching && !results.length && streamedAnswer && (
@@ -666,11 +674,11 @@ function SearchContent() {
                  <p className="text-xs text-[var(--color-text-muted)] tracking-wide uppercase mb-4">
                    Retrieving sources...
                  </p>
-                 {[...Array(3)].map((_, i) => (
-                   <Skeleton key={i} className="h-24 w-full rounded-lg" />
-                 ))}
-               </div>
-             )}
+                  {[...Array(3)].map((_, i) => (
+                    <Skeleton key={`search-source-skeleton-${i}`} className="h-24 w-full rounded-lg" />
+                  ))}
+                </div>
+              )}
 
              {/* Divider between AI answer and results */}
              {results.length > 0 && streamedAnswer && (
@@ -679,57 +687,68 @@ function SearchContent() {
 
              {/* Results */}
              <div ref={resultsContainerRef}>
-               <AnimatePresence mode="popLayout">
-                 {results.map((result, i) => (
-                   <motion.div
-                     key={`${result.reference}-${i}`}
-                     data-verse-id={result.reference}
-                     initial={{ opacity: 0, y: 12 }}
-                     animate={{
-                       opacity: 1,
-                       y: 0,
-                     }}
-                     exit={{ opacity: 0, scale: 0.98 }}
-                     transition={{ ...springPresets.snappy, delay: i * 0.03 }}
-                     className="mb-3"
-                   >
-                     <div
-                       className={cn(
-                         "p-4 rounded-lg bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] hover:border-[var(--color-border-glow)] transition-colors duration-200",
-                         highlightedVerse === result.reference && "border-[var(--color-accent-primary)]/40"
-                       )}
-                     >
-                       <div className="flex items-center justify-between mb-3">
-                         <div className="flex items-center gap-3">
-                           <span className="text-sm font-medium text-[var(--color-accent-primary)]">
-                             {result.reference || "Unknown Reference"}
-                           </span>
-                           <SourceBadge source={mapSourceToType(result.source)} />
-                         </div>
-                         <div className="flex items-center gap-3">
-                           <span className="text-[11px] text-[var(--color-text-muted)] tabular-nums font-mono">
-                             {(result.score * 100).toFixed(1)}%
-                           </span>
-                           <button
-                             type="button"
-                             onClick={() => navigateToVerse(result.reference)}
-                             aria-label="Go to verse"
-                             className="text-[var(--color-text-muted)] hover:text-[var(--color-accent-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]/50 rounded transition-colors duration-200"
-                           >
-                             <ExternalLink className="w-3.5 h-3.5" />
-                           </button>
-                         </div>
-                       </div>
-                       <p className="text-[var(--color-text-secondary)] leading-[1.7] text-[15px]">
-                         {extractVerseText(result.text)}
-                       </p>
-                     </div>
-                   </motion.div>
-                 ))}
-               </AnimatePresence>
-             </div>
-           </Suspense>
-         </div>
+                <AnimatePresence mode="popLayout">
+                  {(() => {
+                    const seenResultKeys = new Map<string, number>();
+
+                    return results.map((result, i) => {
+                      const baseKey = `${result.source}-${result.reference}`;
+                      const occurrence = (seenResultKeys.get(baseKey) ?? 0) + 1;
+                      seenResultKeys.set(baseKey, occurrence);
+                      const resultKey = `${baseKey}-${occurrence}`;
+
+                      return (
+                        <motion.div
+                          key={resultKey}
+                          data-verse-id={result.reference}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{
+                            opacity: 1,
+                            y: 0,
+                          }}
+                          exit={{ opacity: 0, scale: 0.98 }}
+                          transition={{ ...springPresets.snappy, delay: i * 0.03 }}
+                          className="mb-3"
+                        >
+                          <div
+                            className={cn(
+                              "p-4 rounded-lg bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] hover:border-[var(--color-border-glow)] transition-colors duration-200",
+                              highlightedVerse === result.reference && "border-[var(--color-accent-primary)]/40"
+                            )}
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-medium text-[var(--color-accent-primary)]">
+                                  {result.reference || "Unknown Reference"}
+                                </span>
+                                <SourceBadge source={mapSourceToType(result.source)} />
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-[11px] text-[var(--color-text-muted)] tabular-nums font-mono">
+                                  {(result.score * 100).toFixed(1)}%
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => navigateToVerse(result.reference)}
+                                  aria-label="Go to verse"
+                                  className="text-[var(--color-text-muted)] hover:text-[var(--color-accent-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]/50 rounded transition-colors duration-200"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                            <p className="text-[var(--color-text-secondary)] leading-[1.7] text-[15px]">
+                              {extractVerseText(result.text)}
+                            </p>
+                          </div>
+                        </motion.div>
+                      );
+                    });
+                  })()}
+                </AnimatePresence>
+              </div>
+            </Suspense>
+          </div>
        </div>
     </div>
   );
