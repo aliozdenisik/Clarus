@@ -291,7 +291,7 @@ function KeywordSearchContent() {
     };
 
     fetchTranslations();
-  }, [searchResult?.verses?.length]);
+  }, [searchResult?.query, searchResult?.root]);
 
   // Helper to get translation
   const getTranslation = useCallback(
