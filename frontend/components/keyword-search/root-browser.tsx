@@ -198,7 +198,7 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="flex items-center justify-between px-4 py-3">
+            <div key={`root-browser-skeleton-${i}`} className="flex items-center justify-between px-4 py-3">
               <Skeleton className="h-6 w-24" />
               <Skeleton className="h-4 w-12" />
             </div>
@@ -211,7 +211,7 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
         <div className="space-y-1">
           {displayRoots.map((rootItem, index) => (
             <RootRow
-              key={`${rootItem.root}-${index}`}
+              key={rootItem.root}
               root={rootItem.root}
               count={rootItem.count}
               index={index}

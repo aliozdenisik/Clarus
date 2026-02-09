@@ -57,22 +57,28 @@ function highlightText(
   // Create a set of matched words normalized for O(1) lookup
   const matchSet = new Set(matchedWords.map(w => stripFn(w.trim())));
 
+  const wordOccurrences = new Map<string, number>();
+
   // Map clean words to display words by index, comparing normalized forms
   return displayWords.map((displayWord, i) => {
     const cleanWord = cleanWords[i] || '';
     const isMatch = matchSet.has(stripFn(cleanWord));
+    const normalizedWord = stripFn(cleanWord || displayWord);
+    const occurrence = (wordOccurrences.get(normalizedWord) ?? 0) + 1;
+    wordOccurrences.set(normalizedWord, occurrence);
+    const wordKey = `${normalizedWord}-${occurrence}`;
 
     if (isMatch) {
       return (
         <mark
-          key={i}
+          key={wordKey}
           className="bg-indigo-500/20 text-indigo-300 rounded px-0.5 mx-0.5"
         >
           {displayWord}
         </mark>
       );
     }
-    return <span key={i}>{i > 0 ? ' ' : ''}{displayWord}</span>;
+    return <span key={wordKey}>{i > 0 ? ' ' : ''}{displayWord}</span>;
   });
 }
 

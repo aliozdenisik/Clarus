@@ -205,49 +205,64 @@ const TextRotate = forwardRef<TextRotateRef, TextRotateProps>(
             layout
             aria-hidden="true"
           >
-            {(splitBy === "characters"
-              ? (elements as WordObject[])
-              : (elements as string[]).map((el, i) => ({
-                  characters: [el],
-                  needsSpace: i !== elements.length - 1,
-                }))
-            ).map((wordObj, wordIndex, array) => {
-              const previousCharsCount = array
-                .slice(0, wordIndex)
-                .reduce((sum, word) => sum + word.characters.length, 0);
+            {(() => {
+              const wordOccurrences = new Map<string, number>();
 
-              return (
-                <span
-                  key={wordIndex}
-                  className={cn("inline-flex", splitLevelClassName)}
-                >
-                  {wordObj.characters.map((char, charIndex) => (
-                    <motion.span
-                      initial={initial}
-                      animate={animate}
-                      exit={exit}
-                      key={charIndex}
-                      transition={{
-                        ...transition,
-                        delay: getStaggerDelay(
-                          previousCharsCount + charIndex,
-                          array.reduce(
-                            (sum, word) => sum + word.characters.length,
-                            0
-                          )
-                        ),
-                      }}
-                      className={cn("inline-block", elementLevelClassName)}
-                    >
-                      {char}
-                    </motion.span>
-                  ))}
-                  {wordObj.needsSpace && (
-                    <span className="whitespace-pre"> </span>
-                  )}
-                </span>
-              );
-            })}
+              return (splitBy === "characters"
+                ? (elements as WordObject[])
+                : (elements as string[]).map((el, i) => ({
+                    characters: [el],
+                    needsSpace: i !== elements.length - 1,
+                  }))
+              ).map((wordObj, wordIndex, array) => {
+                const wordToken = wordObj.characters.join("");
+                const wordOccurrence = (wordOccurrences.get(wordToken) ?? 0) + 1;
+                wordOccurrences.set(wordToken, wordOccurrence);
+                const wordKey = `${wordToken}-${wordOccurrence}`;
+               const previousCharsCount = array
+                 .slice(0, wordIndex)
+                 .reduce((sum, word) => sum + word.characters.length, 0);
+                const charOccurrences = new Map<string, number>();
+
+                return (
+                  <span
+                    key={wordKey}
+                    className={cn("inline-flex", splitLevelClassName)}
+                  >
+                    {wordObj.characters.map((char, charIndex) => {
+                      const charOccurrence = (charOccurrences.get(char) ?? 0) + 1;
+                      charOccurrences.set(char, charOccurrence);
+                      const charKey = `${char}-${charOccurrence}`;
+
+                      return (
+                        <motion.span
+                          initial={initial}
+                          animate={animate}
+                          exit={exit}
+                          key={charKey}
+                          transition={{
+                            ...transition,
+                            delay: getStaggerDelay(
+                              previousCharsCount + charIndex,
+                              array.reduce(
+                                (sum, word) => sum + word.characters.length,
+                                0
+                              )
+                            ),
+                          }}
+                          className={cn("inline-block", elementLevelClassName)}
+                        >
+                          {char}
+                        </motion.span>
+                      );
+                    })}
+                    {wordObj.needsSpace && (
+                      <span className="whitespace-pre"> </span>
+                    )}
+                  </span>
+                );
+              });
+            })()}
           </motion.div>
         </AnimatePresence>
       </motion.span>
@@ -311,9 +326,9 @@ export function LuxuryQuote({
 
       {/* Progress indicators */}
       <div className="flex justify-center gap-1.5 mt-6">
-        {quotes.map((_, index) => (
+        {quotes.map((quote, index) => (
           <button
-            key={index}
+            key={`${quote.source}-${quote.text}`}
             onClick={() => setCurrentIndex(index)}
             className={cn(
               "w-1.5 h-1.5 rounded-full transition-all duration-300",

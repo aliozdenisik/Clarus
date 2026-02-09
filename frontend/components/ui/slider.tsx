@@ -54,7 +54,7 @@ const Slider = React.forwardRef<
       </SliderPrimitive.Track>
       {internalValue.map((_, index) => (
         <SliderPrimitive.Thumb
-          key={index}
+          key={`thumb-${sliderId}-${index}`}
           className="block h-5 w-5 rounded-full border-2 border-[var(--color-accent-primary)] bg-white shadow-md transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-app)] disabled:pointer-events-none disabled:opacity-50 hover:scale-110 hover:shadow-lg"
         />
       ))}
