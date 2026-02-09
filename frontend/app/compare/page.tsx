@@ -233,14 +233,37 @@ function CompareContent() {
 
   const counts = useMemo(() => {
     if (!result?.verse_details) return { all: 0, quran: 0, old_testament: 0, new_testament: 0, apocrypha: 0 };
-    const verses = Object.values(result.verse_details);
-    return {
-      all: verses.length,
-      quran: verses.filter(v => v.source === 'quran_tr').length,
-      old_testament: verses.filter(v => v.source === 'bible_ot').length,
-      new_testament: verses.filter(v => v.source === 'bible_nt').length,
-      apocrypha: verses.filter(v => v.source === 'bible_apocrypha').length,
+
+    const nextCounts = {
+      all: 0,
+      quran: 0,
+      old_testament: 0,
+      new_testament: 0,
+      apocrypha: 0,
     };
+
+    for (const verse of Object.values(result.verse_details)) {
+      nextCounts.all += 1;
+
+      switch (verse.source) {
+        case 'quran_tr':
+          nextCounts.quran += 1;
+          break;
+        case 'bible_ot':
+          nextCounts.old_testament += 1;
+          break;
+        case 'bible_nt':
+          nextCounts.new_testament += 1;
+          break;
+        case 'bible_apocrypha':
+          nextCounts.apocrypha += 1;
+          break;
+        default:
+          break;
+      }
+    }
+
+    return nextCounts;
   }, [result?.verse_details]);
 
    const extractKeywords = async (query: string, corpus: "quran" | "bible") => {
@@ -404,11 +427,26 @@ function CompareContent() {
       });
     }
 
-    // Handle progressive updates — accumulate all paragraphs from full sseData
-    const paragraphs = sseData
-      .filter((m: any) => m.type === "section" || m.type === "paragraph")
-      .map((m: any) => m.data || m.result || m.content)
-      .filter(Boolean);
+    // Handle progressive updates
+    const paragraphs = sseData.reduce<ParagraphData[]>((acc, rawMessage) => {
+      const message = rawMessage as {
+        type?: string;
+        data?: ParagraphData;
+        result?: ParagraphData;
+        content?: ParagraphData;
+      };
+
+      if (message.type !== "section" && message.type !== "paragraph") {
+        return acc;
+      }
+
+      const paragraph = message.data || message.result || message.content;
+      if (paragraph) {
+        acc.push(paragraph);
+      }
+
+      return acc;
+    }, []);
 
     if (paragraphs.length > 0) {
       setResult((prev) => {
@@ -432,8 +470,8 @@ function CompareContent() {
 
         return {
           ...base,
-          paragraphs: paragraphs as ParagraphData[],
-          total_citations: paragraphs.reduce((acc: number, p: any) => acc + (p.citations?.length || 0), 0)
+          paragraphs,
+          total_citations: paragraphs.reduce((acc, paragraph) => acc + (paragraph.citations?.length || 0), 0)
         };
       });
       setIsLoading(false);

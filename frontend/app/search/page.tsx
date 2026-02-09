@@ -38,6 +38,29 @@ interface SearchResult {
   score: number;
 }
 
+interface SearchCompletePayload {
+  results?: SearchResult[];
+  detected_language?: string;
+}
+
+interface SearchSSEMessage {
+  type?: string;
+  content?: string;
+  verse_details?: Record<string, VerseDetail>;
+  error?: string;
+  message?: string;
+  result?: SearchCompletePayload;
+  detected_language?: string;
+}
+
+interface SearchSSEAggregate {
+  tokens: string;
+  verseDetails?: Record<string, VerseDetail>;
+  error?: string;
+  noResultsMessage?: string;
+  completeMessage?: SearchSSEMessage;
+}
+
 function SearchContent() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -91,9 +114,9 @@ function SearchContent() {
       }
     }, [searchParams, setAdvancedMode]);
 
-   const sseProcessedCount = useRef(0);
+  const sseProcessedCount = useRef(0);
 
-   useEffect(() => {
+  useEffect(() => {
     if (sseData.length === 0) {
       sseProcessedCount.current = 0;
       return;
@@ -102,45 +125,69 @@ function SearchContent() {
     const newMessages = sseData.slice(sseProcessedCount.current);
     sseProcessedCount.current = sseData.length;
 
-    const tokens = sseData
-      .filter((m) => m.type === "token")
-      .map((m) => m.content)
-      .join("");
-    setStreamedAnswer(tokens);
+    const streamState = newMessages.reduce<SearchSSEAggregate>(
+      (acc, rawMessage) => {
+        const message = rawMessage as SearchSSEMessage;
 
-    const verseDetailsMsg = newMessages.find((m) => m.verse_details);
-    if (verseDetailsMsg?.verse_details) {
-      setVerseDetails(verseDetailsMsg.verse_details as Record<string, VerseDetail>);
+        if (message.type === "token") {
+          acc.tokens += message.content ?? "";
+        }
+
+        if (!acc.verseDetails && message.verse_details) {
+          acc.verseDetails = message.verse_details;
+        }
+
+        if (!acc.error && message.error) {
+          acc.error = message.error;
+        }
+
+        if (!acc.noResultsMessage && message.type === "no_results") {
+          acc.noResultsMessage = message.message || "No results found for your query.";
+        }
+
+        if (!acc.completeMessage && message.type === "complete") {
+          acc.completeMessage = message;
+        }
+
+        return acc;
+      },
+      {
+        tokens: "",
+      }
+    );
+
+    if (streamState.tokens) {
+      setStreamedAnswer((previousTokens) => previousTokens + streamState.tokens);
     }
 
-    const errorMsg = newMessages.find((m) => m.error);
-    if (errorMsg?.error) {
-      log.error("SSE server error", { error: errorMsg.error });
+    if (streamState.verseDetails) {
+      setVerseDetails(streamState.verseDetails);
     }
 
-    const noResultsMsg = newMessages.find((m) => m.type === "no_results");
-    if (noResultsMsg) {
+    if (streamState.error) {
+      log.error("SSE server error", { error: streamState.error });
+    }
+
+    if (streamState.noResultsMessage) {
       setStreamedAnswer("");
       setIsSearching(false);
-      toast.info(
-        (noResultsMsg as { message?: string }).message ||
-          "No results found for your query."
-      );
+      toast.info(streamState.noResultsMessage);
     }
 
-    const completeMsg = newMessages.find((m) => m.type === "complete");
+    const completeMsg = streamState.completeMessage;
     if (completeMsg) {
-      const result = (completeMsg as { result?: { results?: SearchResult[] } }).result;
-      if (result?.results) {
-        setResults(result.results);
+      const completeResult = completeMsg.result;
+      if (completeResult?.results) {
+        setResults(completeResult.results);
 
-        if (result.results.length === 0) {
+        if (completeResult.results.length === 0) {
           setStreamedAnswer("");
         }
       }
-      const completeResult = completeMsg as any;
-      if (completeResult.result?.detected_language || completeResult.detected_language) {
-        setDetectedLanguage(completeResult.result?.detected_language || completeResult.detected_language);
+
+      const detectedLanguage = completeResult?.detected_language || completeMsg.detected_language;
+      if (detectedLanguage) {
+        setDetectedLanguage(detectedLanguage);
       }
       setIsSearching(false);
     }
