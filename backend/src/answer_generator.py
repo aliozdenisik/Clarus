@@ -8,7 +8,7 @@ Usage:
     from src.answer_generator import AnswerGenerator
 
     generator = AnswerGenerator()
-    answer = generator.generate_answer(query, search_results, source="quran_tr")
+    answer = generator.generate_answer(query, search_results, source="quran_tr_diyanet")
     print(answer.text)  # Cevap metni [Bakara 45]...
     print(answer.citations)  # ['Bakara 45', 'Bakara 153']
 """
@@ -416,7 +416,7 @@ VERSES:
         Args:
             query: User's original question
             search_results: List of search results from UltimateRAG
-            source: Data source - "quran_tr", "bible_kjva", etc.
+            source: Data source - "quran_tr_diyanet", "bible_ot", etc.
             max_context_results: Maximum number of results to include as context
 
         Returns:

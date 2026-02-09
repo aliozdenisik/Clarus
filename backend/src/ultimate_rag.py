@@ -499,7 +499,7 @@ class UltimateRAG:
 
         Args:
             keywords: List of keyword strings to search
-            source: Data source - "quran_tr", "bible_ot", etc.
+            source: Data source - "quran_tr_diyanet", "bible_ot", etc.
             limit_per_keyword: Results per keyword (default: 10)
 
         Returns:
@@ -968,7 +968,7 @@ class UltimateRAG:
 
         Args:
             query: User's search query
-            source: Data source - "quran_tr", "bible_kjva"
+            source: Data source - "quran_tr_diyanet", "bible_ot", "bible_nt", etc.
             top_k: Number of final results (default: self.final_top_k)
             rerank_query: Optional query to use for reranking (useful for translated queries)
             detected_language: Detected language of the query (for cache metadata)
@@ -1250,7 +1250,7 @@ class UltimateRAG:
 
         Args:
             query: User's question
-            source: Data source - "quran_tr", "bible_kjva", etc.
+            source: Data source - "quran_tr_diyanet", "bible_ot", "bible_nt", etc.
             top_k: Number of search results to use as context
 
         Returns:

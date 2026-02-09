@@ -161,7 +161,7 @@ def extract_quran_verse_detail(result: SearchResult) -> Tuple[str, VerseDetail]:
         book_name=result.surah_name,
         chapter=result.surah_id,
         verse=result.verse_id,
-        source="quran_tr",
+        source="quran_tr",  # Generic marker for all Quran translators
         translation="Diyanet Isleri Baskanligi",
         surah_id=result.surah_id,  # NEW: Required for Quran URL construction
         surah_name=result.surah_name,  # NEW: Required for Quran URL construction
