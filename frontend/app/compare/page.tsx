@@ -284,7 +284,11 @@ function CompareContent() {
     return data.keywords || [];
   };
 
-  const performBatchCompare = async (topicToCompare: string) => {
+  const performBatchCompare = async (
+    topicToCompare: string,
+    overrideQuranKeywords?: KeywordSuggestion[],
+    overrideBibleKeywords?: KeywordSuggestion[],
+  ) => {
     setIsLoading(true);
     try {
       const requestBody: any = {
@@ -296,10 +300,12 @@ function CompareContent() {
       };
       
       if (advancedMode) {
-        const selectedQuranKeywords = quranKeywords
+        const effectiveQuranKw = overrideQuranKeywords ?? quranKeywords;
+        const effectiveBibleKw = overrideBibleKeywords ?? bibleKeywords;
+        const selectedQuranKeywords = effectiveQuranKw
           .filter((k) => k.selected)
           .map((k) => k.text);
-        const selectedBibleKeywords = bibleKeywords
+        const selectedBibleKeywords = effectiveBibleKw
           .filter((k) => k.selected)
           .map((k) => k.text);
         
@@ -512,11 +518,12 @@ function CompareContent() {
     setResult(null);
     setExpandedParagraphs(new Set());
 
-    // If advanced mode is ON, extract keywords first
+    let extractedQuranKw: KeywordSuggestion[] | undefined;
+    let extractedBibleKw: KeywordSuggestion[] | undefined;
+
     if (advancedMode) {
       setIsExtractingKeywords(true);
       try {
-        // Extract keywords in parallel for both corpora
         const [quranKw, bibleKw] = await Promise.all([
           selectedCollections.includes("quran_tr")
             ? extractKeywords(topic, "quran")
@@ -531,21 +538,15 @@ function CompareContent() {
         setQuranKeywords(quranKw);
         setBibleKeywords(bibleKw);
         setIsExtractingKeywords(false);
-
-        // Wait for user to select keywords before proceeding
-        // User will click "Analyze" again after selecting keywords
-        setIsLoading(false);
-        return;
+        extractedQuranKw = quranKw;
+        extractedBibleKw = bibleKw;
       } catch (error) {
         toast.error("Keyword extraction failed. Proceeding with normal search.");
         setIsExtractingKeywords(false);
-        // Fall through to normal compare
       }
     }
 
-     // Check streaming preference
      if (enable_streaming) {
-       // Start SSE Stream — uses cookie auth via withCredentials
        try {
          let url = `${API_BASE_URL}/api/stream/compare?topic=${encodeURIComponent(topic)}`;
         url += `&collections=${encodeURIComponent(selectedCollections.join(','))}`;
@@ -553,14 +554,24 @@ function CompareContent() {
           url += `&language=${encodeURIComponent(selectedLanguage)}`;
         }
         url += `&translator=${encodeURIComponent(selectedTranslator)}`;
+        if (extractedQuranKw?.length) {
+          const kwTexts = extractedQuranKw.filter((k) => k.selected).map((k) => k.text);
+          if (kwTexts.length > 0) {
+            url += `&quran_keywords=${encodeURIComponent(kwTexts.join(','))}`;
+          }
+        }
+        if (extractedBibleKw?.length) {
+          const kwTexts = extractedBibleKw.filter((k) => k.selected).map((k) => k.text);
+          if (kwTexts.length > 0) {
+            url += `&bible_keywords=${encodeURIComponent(kwTexts.join(','))}`;
+          }
+        }
         startStream(url);
       } catch (err) {
-        // Fallback
-        performBatchCompare(topic);
+        performBatchCompare(topic, extractedQuranKw, extractedBibleKw);
       }
     } else {
-      // Use batch API directly
-      performBatchCompare(topic);
+      performBatchCompare(topic, extractedQuranKw, extractedBibleKw);
     }
   };
 
