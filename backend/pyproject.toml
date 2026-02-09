@@ -46,7 +46,25 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=7.0.0"]
+dev = ["pytest>=7.0.0", "ruff>=0.8.0", "pyright>=1.1.390"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+venvPath = "."
+venv = ".venv"
+include = ["src", "app"]
+exclude = ["tests"]
