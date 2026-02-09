@@ -142,15 +142,17 @@ class QuranSearcher:
     Uses dense vectors only (text-embedding-3-large).
     """
 
-    COLLECTION_NAME = "quran_tr_diyanet"  # Default Quran translator collection
-
     def __init__(
         self,
+        translator: str = "diyanet",
         qdrant_url: str = "http://localhost:6333",
         in_memory: bool = False,
         client: Optional[QdrantClient] = None,
         dense_encoder: Optional[DenseEncoder] = None,
     ):
+        self.translator = translator
+        self.collection_name = f"quran_tr_{translator}"
+
         if client:
             self.client = client
         elif in_memory:
@@ -196,7 +198,7 @@ class QuranSearcher:
 
         results = qdrant_with_breaker(
             lambda: self.client.query_points(
-                collection_name=self.COLLECTION_NAME,
+                collection_name=self.collection_name,
                 query=query_vector,
                 using="dense",
                 limit=limit,
@@ -210,7 +212,7 @@ class QuranSearcher:
             logger,
             "semantic_search",
             latency_ms,
-            collection=self.COLLECTION_NAME,
+            collection=self.collection_name,
             mode="semantic",
             results=len(parsed),
         )
@@ -227,7 +229,7 @@ class QuranSearcher:
 
         results = qdrant_with_breaker(
             lambda: self.client.query_points(
-                collection_name=self.COLLECTION_NAME,
+                collection_name=self.collection_name,
                 query=query_vector,
                 using="dense",
                 limit=limit,
@@ -241,7 +243,7 @@ class QuranSearcher:
             logger,
             "semantic_search",
             latency_ms,
-            collection=self.COLLECTION_NAME,
+            collection=self.collection_name,
             mode="semantic_precomputed",
             results=len(parsed),
         )
@@ -276,7 +278,7 @@ class QuranSearcher:
             List of SearchResult objects
         """
         # Try to get from cache
-        cached = await get_cached_search_results(self.COLLECTION_NAME, query, limit)
+        cached = await get_cached_search_results(self.collection_name, query, limit)
         if cached:
             # Reconstruct SearchResult objects from cached data
             return [
@@ -300,11 +302,11 @@ class QuranSearcher:
 
         # Store in cache asynchronously (don't wait for it)
         try:
-            await cache_search_results(self.COLLECTION_NAME, query, limit, results)
+            await cache_search_results(self.collection_name, query, limit, results)
         except Exception as e:
             logger.warning(
                 "Failed to cache search results",
-                extra={"error": str(e), "collection": self.COLLECTION_NAME},
+                extra={"error": str(e), "collection": self.collection_name},
             )
 
         return results

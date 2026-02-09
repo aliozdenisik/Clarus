@@ -152,7 +152,9 @@ class UltimateRAG:
         if source.startswith("quran_tr_"):
             from src.search import QuranSearcher
 
-            searcher = QuranSearcher(qdrant_url=self.qdrant_url)
+            # Extract translator from source (e.g., "quran_tr_diyanet" -> "diyanet")
+            translator = source.replace("quran_tr_", "")
+            searcher = QuranSearcher(translator=translator, qdrant_url=self.qdrant_url)
         elif source.startswith("bible_"):
             from src.search import BibleSearcher
 
@@ -1033,15 +1035,28 @@ class UltimateRAG:
         return final_results
 
     async def search_quran(
-        self, query: str, top_k: int = None, detected_language: Optional[str] = None
+        self,
+        query: str,
+        translator: str = "diyanet",
+        top_k: int = None,
+        detected_language: Optional[str] = None,
     ) -> List:
-        """Shortcut for Quran search"""
+        """
+        Shortcut for Quran search
+
+        Args:
+            query: Search query
+            translator: Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
+            top_k: Number of results
+            detected_language: Detected language of query
+        """
         import sentry_sdk
 
         with sentry_sdk.start_span(
             op="rag.pipeline.quran", description="Quran search pipeline"
         ) as span:
             span.set_data("query", query[:50])  # Truncate for privacy
+            span.set_data("translator", translator)
 
             # Translate query to Turkish if needed (Quran corpus is Turkish)
             if detected_language is None:
@@ -1068,7 +1083,7 @@ class UltimateRAG:
 
             return await self.search(
                 query,
-                source="quran_tr_diyanet",
+                source=f"quran_tr_{translator}",
                 top_k=top_k,
                 detected_language=detected_language,
             )
@@ -1308,9 +1323,21 @@ class UltimateRAG:
         return AskResult(answer=answer, search_results=search_results)
 
     async def ask_quran(
-        self, query: str, top_k: int = None, detected_language: Optional[str] = None
+        self,
+        query: str,
+        translator: str = "diyanet",
+        top_k: int = None,
+        detected_language: Optional[str] = None,
     ):
-        """Shortcut for Quran Q&A - Turkish in, Turkish out"""
+        """
+        Shortcut for Quran Q&A - Turkish in, Turkish out
+
+        Args:
+            query: Question to ask
+            translator: Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
+            top_k: Number of verses to use as context
+            detected_language: Detected language of query
+        """
         # Translate query to Turkish if needed (Quran corpus is Turkish)
         if detected_language is None:
             try:
@@ -1334,7 +1361,7 @@ class UltimateRAG:
                 )
                 raise
 
-        return await self.ask(query, source="quran_tr_diyanet", top_k=top_k)
+        return await self.ask(query, source=f"quran_tr_{translator}", top_k=top_k)
 
     async def ask_bible(
         self,
