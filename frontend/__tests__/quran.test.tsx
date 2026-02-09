@@ -1,8 +1,8 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import QuranPage from "@/app/quran/page";
+import { getQuranSurahsApiMetadataQuranSurahsGet } from "@/lib/api/sdk.gen";
 
-// Mock imports
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: vi.fn(),
@@ -17,7 +17,10 @@ vi.mock("@/lib/auth-client", () => ({
   authClient: { token: vi.fn() },
 }));
 
-// Mock fetch
+vi.mock("@/lib/api/sdk.gen", () => ({
+  getQuranSurahsApiMetadataQuranSurahsGet: vi.fn(),
+}));
+
 const mockSurahs = [
   {
     id: 1,
@@ -42,15 +45,12 @@ const mockSurahs = [
   },
 ];
 
-global.fetch = vi.fn();
-
 describe("QuranPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      json: async () => mockSurahs,
-    });
+    vi.mocked(getQuranSurahsApiMetadataQuranSurahsGet).mockResolvedValue({
+      data: { data: { surahs: mockSurahs } },
+    } as any);
   });
 
   it("renders the page title", async () => {

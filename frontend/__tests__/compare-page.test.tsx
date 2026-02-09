@@ -5,6 +5,7 @@ import ComparePage from "@/app/compare/page";
 import { useSSE } from "@/lib/hooks/use-sse";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { useSearchParams } from "next/navigation";
+import { compareScripturesApiComparePost } from "@/lib/api/sdk.gen";
 
 // Mock imports
 const mockPush = vi.fn();
@@ -40,6 +41,10 @@ vi.mock("@/lib/stores/preferences-store", () => ({
   usePreferencesStore: vi.fn(() => ({
     enable_streaming: true,
   })),
+}));
+
+vi.mock("@/lib/api/sdk.gen", () => ({
+  compareScripturesApiComparePost: vi.fn(),
 }));
 
 // Mock framer-motion to avoid animation issues in tests
@@ -408,7 +413,17 @@ describe("ComparePage", () => {
   it("handles batch compare fallback if streaming is disabled", async () => {
     vi.mocked(usePreferencesStore).mockReturnValue({
       enable_streaming: false,
-    });
+    } as any);
+
+    vi.mocked(compareScripturesApiComparePost).mockResolvedValueOnce({
+      data: {
+        paragraphs: [
+          { agent: "quran", content: "Quran perspective on faith" },
+          { agent: "old_testament", content: "OT perspective on faith" },
+        ],
+        citations: {},
+      },
+    } as any);
 
     const { container } = render(<ComparePage />);
     const input = screen.getByTestId("compare-topic-input");
@@ -417,11 +432,11 @@ describe("ComparePage", () => {
     fireEvent.submit(container.querySelector("form")!);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/api/compare/",
+      expect(compareScripturesApiComparePost).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: "POST",
-          body: expect.stringContaining('"topic":"faith"'),
+          body: expect.objectContaining({
+            topic: "faith",
+          }),
         })
       );
     });
@@ -445,9 +460,8 @@ describe("ComparePage", () => {
 
      rerender(<ComparePage />);
 
-     // It should fallback to batch compare
      await waitFor(() => {
-       expect(global.fetch).toHaveBeenCalled();
+       expect(compareScripturesApiComparePost).toHaveBeenCalled();
      });
    });
 

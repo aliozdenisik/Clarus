@@ -33,6 +33,7 @@ import { TranslatorSelector } from "@/components/search/translator-selector";
 import { CollectionSelector } from "@/components/compare/collection-selector";
 import { AnalysisProgress } from "@/components/compare/analysis-progress";
 import type { KeywordSuggestion } from "@/lib/stores/keyword-store";
+import { compareScripturesApiComparePost } from "@/lib/api/sdk.gen";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -262,8 +263,7 @@ function CompareContent() {
   const performBatchCompare = async (topicToCompare: string) => {
     setIsLoading(true);
     try {
-      // Build request body with keywords if advanced mode is ON
-      const requestBody: Record<string, unknown> = {
+      const requestBody: any = {
         topic: topicToCompare,
         use_multi_agent: true,
         collections: selectedCollections,
@@ -271,7 +271,6 @@ function CompareContent() {
         translator: selectedTranslator,
       };
       
-      // Add keywords if advanced mode is ON and keywords are selected
       if (advancedMode) {
         const selectedQuranKeywords = quranKeywords
           .filter((k) => k.selected)
@@ -288,20 +287,11 @@ function CompareContent() {
         }
       }
       
-       const response = await fetch(`${API_BASE_URL}/api/compare/`, {
-         method: "POST",
-         headers: {
-           "Content-Type": "application/json",
-         },
-         credentials: "include",
-         body: JSON.stringify(requestBody),
-       });
+      const response = await compareScripturesApiComparePost({
+        body: requestBody,
+      });
 
-      if (!response.ok) {
-        throw new Error("Compare failed");
-      }
-
-      const data = await response.json();
+      const data = response.data as any;
       setResult(data);
       if (data.detected_language) {
         setDetectedLanguage(data.detected_language);

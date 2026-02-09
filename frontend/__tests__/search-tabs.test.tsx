@@ -58,11 +58,21 @@ describe('SearchTabs Component', () => {
   });
 });
 
+import {
+  searchQuranApiSearchQuranPost,
+  searchBibleApiSearchBiblePost,
+} from '@/lib/api/sdk.gen';
+
+// Mock SDK methods
+vi.mock('@/lib/api/sdk.gen', () => ({
+  searchQuranApiSearchQuranPost: vi.fn(),
+  searchBibleApiSearchBiblePost: vi.fn(),
+}));
+
 describe('SearchPage Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    global.fetch = vi.fn();
-    mockSearchParamsGet.mockReturnValue(null); // Default to null (quran)
+    mockSearchParamsGet.mockReturnValue(null);
   });
 
   it('renders search tabs', () => {
@@ -95,10 +105,9 @@ describe('SearchPage Integration', () => {
   });
 
   it('performs search with correct API endpoint for Quran', async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: [] }),
-    });
+    vi.mocked(searchQuranApiSearchQuranPost).mockResolvedValueOnce({
+      data: { results: [] },
+    } as any);
 
     render(<SearchPage />);
     
@@ -109,23 +118,21 @@ describe('SearchPage Integration', () => {
     fireEvent.click(button);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/search/quran'),
+      expect(searchQuranApiSearchQuranPost).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'POST',
-          body: expect.stringContaining('test query'),
+          body: expect.objectContaining({
+            query: 'test query',
+          }),
         })
       );
     });
   });
 
   it('performs search with correct API endpoint for Bible (OT)', async () => {
-    (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: [] }),
+    (searchBibleApiSearchBiblePost as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      data: { results: [] },
     });
 
-    // We simulate user clicking OT tab
     render(<SearchPage />);
     
     const otTab = screen.getByText('Old Testament');
@@ -138,11 +145,12 @@ describe('SearchPage Integration', () => {
     fireEvent.click(button);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/search/bible'),
+      expect(searchBibleApiSearchBiblePost).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'POST',
-          body: expect.stringContaining('"testament":"ot"'),
+          body: expect.objectContaining({
+            query: 'test query',
+            testament: 'ot',
+          }),
         })
       );
     });

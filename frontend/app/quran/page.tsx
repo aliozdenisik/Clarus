@@ -12,8 +12,7 @@ import { VerseLookupInput } from "@/components/verse-lookup";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { BookOpen, Search, User, LogOut } from "lucide-react";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { getQuranSurahsApiMetadataQuranSurahsGet } from "@/lib/api/sdk.gen";
 
 interface Surah {
   id: number;
@@ -53,18 +52,10 @@ export default function QuranPage() {
    useEffect(() => {
      const fetchSurahs = async () => {
        try {
-         const response = await fetch(`${API_BASE_URL}/api/metadata/quran/surahs`, {
-           credentials: "include",
-         });
+         const response = await getQuranSurahsApiMetadataQuranSurahsGet();
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch surahs");
-        }
-
-        const data = await response.json();
-        // Handle wrapped response format: {success: true, data: {surahs: [...]}}
+        const data = response.data as any;
         const surahList: ApiSurah[] = data.data?.surahs || data.surahs || data || [];
-        // Map API field names to component expected names
         const mappedSurahs: Surah[] = surahList.map((s: ApiSurah) => ({
           id: s.id,
           name: s.name_arabic || s.name || '',
