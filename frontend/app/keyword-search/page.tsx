@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense, useMemo } from "react";
+import { useState, useEffect, useCallback, Suspense, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
@@ -30,9 +30,7 @@ import { RootBrowser } from "@/components/keyword-search/root-browser";
 import { Skeleton } from "@/components/ui/skeleton";
 import { searchKeywordApiSearchKeywordPost, getSurahDetailApiMetadataQuranSurahsSurahIdGet, getQuranSurahsApiMetadataQuranSurahsGet } from "@/lib/api/sdk.gen";
 import type { KeywordSearchResponse } from "@/lib/api/types.gen";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Tabs as VercelTabs, Tab } from "@/components/ui/vercel-tabs";
+import { Tabs as VercelTabs } from "@/components/ui/vercel-tabs";
 import { LanguageTabs, type LanguageTab } from "@/components/keyword-search/language-tabs";
 import { BibleCategoryTabs, type BibleCategoryFilter } from "@/components/keyword-search/bible-category-tabs";
 import { AccuracyDisclaimer } from "@/components/keyword-search/accuracy-disclaimer";
@@ -76,6 +74,22 @@ interface BibleSearchResult {
   word_transliterations: Record<string, string>;
 }
 
+interface QuranSurahListResponse {
+  data?: {
+    surahs?: Array<{ id: number; transliteration: string }>;
+  };
+}
+
+interface QuranSurahDetailResponse {
+  data?: {
+    surah?: {
+      verses?: Array<{ text: string; translation: string }>;
+    };
+  };
+}
+
+const TRANSLATION_PREFETCH_BATCH_SIZE = 8;
+
 function KeywordSearchContent() {
   const [query, setQuery] = useState("");
   const [activeLanguage, setActiveLanguage] = useState<LanguageTab>("quran");
@@ -90,25 +104,131 @@ function KeywordSearchContent() {
   const [translations, setTranslations] = useState<Map<string, string>>(new Map());
   const [translationsLoading, setTranslationsLoading] = useState(false);
   const [surahTransliterations, setSurahTransliterations] = useState<Map<number, string>>(new Map());
+  const loadedSurahIdsRef = useRef<Set<number>>(new Set());
+  const inFlightSurahRequestsRef = useRef<Map<number, Promise<Map<string, string>>>>(new Map());
 
   const { data: session, isPending: authLoading } = useSession();
   const user = session?.user;
   const router = useRouter();
 
-  // Fetch surah Latin transliterations on mount
-  useEffect(() => {
-    const fetchSurahNames = async () => {
-       try {
-         const response = await getQuranSurahsApiMetadataQuranSurahsGet();
-         const body = response.data as { data?: { surahs?: Array<{ id: number; transliteration: string }> } } | undefined;
-         const surahs = body?.data?.surahs || [];
-        const map = new Map<number, string>();
-        surahs.forEach(s => map.set(s.id, s.transliteration));
-        setSurahTransliterations(map);
-      } catch { /* ignore */ }
-    };
-    fetchSurahNames();
+  const fetchSurahTranslations = useCallback(async (surahId: number): Promise<Map<string, string>> => {
+    if (loadedSurahIdsRef.current.has(surahId)) {
+      return new Map();
+    }
+
+    const existingRequest = inFlightSurahRequestsRef.current.get(surahId);
+    if (existingRequest) {
+      return existingRequest;
+    }
+
+    const request = (async () => {
+      try {
+        const response = await getSurahDetailApiMetadataQuranSurahsSurahIdGet({
+          path: { surah_id: surahId },
+        });
+        const body = response.data as QuranSurahDetailResponse | undefined;
+        const verses = body?.data?.surah?.verses;
+
+        if (!verses?.length) {
+          return new Map<string, string>();
+        }
+
+        const translationEntries = new Map<string, string>();
+        verses.forEach((verse, index) => {
+          translationEntries.set(`${surahId}:${index + 1}`, verse.translation);
+        });
+
+        loadedSurahIdsRef.current.add(surahId);
+
+        return translationEntries;
+      } catch {
+        return new Map<string, string>();
+      } finally {
+        inFlightSurahRequestsRef.current.delete(surahId);
+      }
+    })();
+
+    inFlightSurahRequestsRef.current.set(surahId, request);
+
+    return request;
   }, []);
+
+  const ensureSurahTranslations = useCallback(
+    async (surahIds: number[]) => {
+      const missingSurahIds = surahIds.filter(
+        (surahId) => !loadedSurahIdsRef.current.has(surahId)
+      );
+
+      if (!missingSurahIds.length) {
+        return;
+      }
+
+      const newTranslations = new Map<string, string>();
+
+      for (
+        let index = 0;
+        index < missingSurahIds.length;
+        index += TRANSLATION_PREFETCH_BATCH_SIZE
+      ) {
+        const batch = missingSurahIds.slice(index, index + TRANSLATION_PREFETCH_BATCH_SIZE);
+        const batchResults = await Promise.all(batch.map((surahId) => fetchSurahTranslations(surahId)));
+
+        batchResults.forEach((translationEntries) => {
+          translationEntries.forEach((translation, key) => {
+            newTranslations.set(key, translation);
+          });
+        });
+      }
+
+      if (!newTranslations.size) {
+        return;
+      }
+
+      setTranslations((currentTranslations) => {
+        const nextTranslations = new Map(currentTranslations);
+
+        newTranslations.forEach((translation, key) => {
+          nextTranslations.set(key, translation);
+        });
+
+        return nextTranslations;
+      });
+    },
+    [fetchSurahTranslations]
+  );
+
+  // Prefetch static surah metadata and translation lookup on mount
+  useEffect(() => {
+    let isActive = true;
+
+    const preloadSurahMetadata = async () => {
+      try {
+        const response = await getQuranSurahsApiMetadataQuranSurahsGet();
+        const body = response.data as QuranSurahListResponse | undefined;
+        const surahs = body?.data?.surahs ?? [];
+
+        if (!isActive) {
+          return;
+        }
+
+        const transliterationMap = new Map<number, string>();
+        surahs.forEach((surah) => {
+          transliterationMap.set(surah.id, surah.transliteration);
+        });
+        setSurahTransliterations(transliterationMap);
+
+        void ensureSurahTranslations(surahs.map((surah) => surah.id));
+      } catch {
+        // ignore
+      }
+    };
+
+    void preloadSurahMetadata();
+
+    return () => {
+      isActive = false;
+    };
+  }, [ensureSurahTranslations]);
 
   // Helper: get Latin surah name, fallback to Arabic
   const getSurahName = useCallback((surahId: number, arabicFallback: string) =>
@@ -147,10 +267,24 @@ function KeywordSearchContent() {
         });
 
         if (response.data) {
-          setSearchResult(response.data as KeywordSearchResponse);
+          const quranResult = response.data as KeywordSearchResponse;
+          const surahIds = [
+            ...new Set((quranResult.verses ?? []).map((verse) => verse.surah_id)),
+          ];
+
+          if (surahIds.length > 0) {
+            setTranslationsLoading(true);
+            try {
+              await ensureSurahTranslations(surahIds);
+            } finally {
+              setTranslationsLoading(false);
+            }
+          }
+
+          setSearchResult(quranResult);
           setBibleSearchResult(null);
         }
-       } else {
+        } else {
          // Bible search via raw fetch (Hebrew OT or Greek NT)
          const languageFilter = activeLanguage === "hebrew_ot" ? "hebrew" : "greek";
          
@@ -196,9 +330,10 @@ function KeywordSearchContent() {
       }
       setError("Search failed");
     } finally {
+      setTranslationsLoading(false);
       setIsLoading(false);
     }
-  }, [activeLanguage, bibleCategoryFilter]);
+  }, [activeLanguage, bibleCategoryFilter, ensureSurahTranslations]);
 
   // All pagination is client-side — no API calls needed
   const handlePageChange = useCallback((newPage: number) => {
@@ -227,6 +362,7 @@ function KeywordSearchContent() {
     setSelectedWord(null);
     setCurrentPage(1);
     setError(null);
+    setTranslationsLoading(false);
   }, []);
 
   // Track if category change should trigger re-search
@@ -247,51 +383,6 @@ function KeywordSearchContent() {
       handleSearch(query);
     }
   }, [shouldResearch, query, activeLanguage, handleSearch]);
-
-  // Fetch Turkish translations after search results arrive
-  useEffect(() => {
-    if (!searchResult?.verses?.length) return;
-
-    const fetchTranslations = async () => {
-      setTranslationsLoading(true);
-      const translationMap = new Map<string, string>();
-
-      // Group verses by surah_id
-      const surahIds = [...new Set(searchResult.verses!.map((v) => v.surah_id))];
-
-      // Fetch each surah's data
-      await Promise.all(
-        surahIds.map(async (surahId) => {
-           try {
-             const response = await getSurahDetailApiMetadataQuranSurahsSurahIdGet({
-               path: { surah_id: surahId },
-             });
-             // API returns { success, data: { surah: { verses: [...] } } }
-             const body = response.data as { data?: { surah?: { verses?: Array<{ text: string; translation: string }> } } } | undefined;
-             const verses = body?.data?.surah?.verses;
-             if (verses) {
-               verses.forEach(
-                 (
-                   verse: { text: string; translation: string },
-                   index: number
-                 ) => {
-                   const key = `${surahId}:${index + 1}`;
-                   translationMap.set(key, verse.translation);
-                 }
-               );
-             }
-          } catch {
-            // Silently fail for individual surahs
-          }
-        })
-      );
-
-      setTranslations(translationMap);
-      setTranslationsLoading(false);
-    };
-
-    fetchTranslations();
-  }, [searchResult?.query, searchResult?.root]);
 
   // Helper to get translation
   const getTranslation = useCallback(

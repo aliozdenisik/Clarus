@@ -87,11 +87,13 @@ vi.mock("recharts", () => ({
 // Mock the SDK methods used by the page
 const mockSearchKeyword = vi.fn();
 const mockGetSurahDetail = vi.fn();
+const mockGetQuranSurahs = vi.fn();
 const mockListRoots = vi.fn();
 
 vi.mock("@/lib/api/sdk.gen", () => ({
   searchKeywordApiSearchKeywordPost: (...args: any[]) => mockSearchKeyword(...args),
   getSurahDetailApiMetadataQuranSurahsSurahIdGet: (...args: any[]) => mockGetSurahDetail(...args),
+  getQuranSurahsApiMetadataQuranSurahsGet: (...args: any[]) => mockGetQuranSurahs(...args),
   listRootsApiSearchKeywordRootsGet: (...args: any[]) => mockListRoots(...args),
 }));
 
@@ -182,7 +184,22 @@ const mockRootsResponse = {
 describe("KeywordSearchPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetSurahDetail.mockResolvedValue({ data: { verses: [] } });
+    mockGetQuranSurahs.mockResolvedValue({
+      data: {
+        data: {
+          surahs: [],
+        },
+      },
+    });
+    mockGetSurahDetail.mockResolvedValue({
+      data: {
+        data: {
+          surah: {
+            verses: [],
+          },
+        },
+      },
+    });
   });
 
   it("renders search input and tab navigation", () => {
@@ -237,6 +254,62 @@ describe("KeywordSearchPage", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Buckwalter Latin/i)).toBeInTheDocument();
+    });
+  });
+
+  it("waits for surah translations before rendering Quran results", async () => {
+    mockSearchKeyword.mockResolvedValue(mockSearchResponse);
+
+    let resolveSurahDetail:
+      | ((value: {
+          data: {
+            data: {
+              surah: {
+                verses: Array<{ text: string; translation: string }>;
+              };
+            };
+          };
+        }) => void)
+      | undefined;
+
+    const pendingSurahDetail = new Promise<{
+      data: {
+        data: {
+          surah: {
+            verses: Array<{ text: string; translation: string }>;
+          };
+        };
+      };
+    }>((resolve) => {
+      resolveSurahDetail = resolve;
+    });
+
+    mockGetSurahDetail.mockImplementation(() => pendingSurahDetail);
+
+    render(<KeywordSearchPage />);
+
+    const input = screen.getByPlaceholderText(/Search for Arabic roots/i);
+    await userEvent.type(input, "كتب");
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+
+    await waitFor(() => {
+      expect(mockSearchKeyword).toHaveBeenCalled();
+    });
+
+    expect(screen.queryByText("Derived Words")).not.toBeInTheDocument();
+
+    resolveSurahDetail?.({
+      data: {
+        data: {
+          surah: {
+            verses: [{ text: "ذَٰلِكَ ٱلۡكِتَٰبُ", translation: "Bu kitaptır." }],
+          },
+        },
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Derived Words")).toBeInTheDocument();
     });
   });
 
