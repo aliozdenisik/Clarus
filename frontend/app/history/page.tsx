@@ -22,7 +22,7 @@ import {
   History as HistoryIcon,
   BookOpen,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns/formatDistanceToNow";
 import {
   getSearchHistoryApiSearchHistoryGet,
   deleteHistoryItemApiSearchHistoryHistoryIdDelete,

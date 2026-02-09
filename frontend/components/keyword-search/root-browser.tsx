@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
+import { List, type RowComponentProps, useListRef } from "react-window";
 import { springPresets } from "@/lib/design-system";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Search } from "lucide-react";
@@ -16,15 +17,22 @@ interface RootBrowserProps {
 
 type SortMode = "frequency" | "alphabetical";
 
+const ROOT_ROW_HEIGHT = 56;
+const ROOT_LIST_MAX_HEIGHT = 560;
+const ROOT_LIST_OVERSCAN = 8;
+
+interface RootListData {
+  roots: RootListItem[];
+  onSelect: (root: string) => void;
+}
+
 const RootRow = React.memo(function RootRow({
   root,
   count,
-  index,
   onSelect,
 }: {
   root: string;
   count: number;
-  index: number;
   onSelect: (root: string) => void;
 }) {
   const handleClick = useCallback(() => {
@@ -35,7 +43,7 @@ const RootRow = React.memo(function RootRow({
     <motion.button
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ ...springPresets.snappy, delay: Math.min(index * 0.02, 0.5) }}
+      transition={springPresets.snappy}
       onClick={handleClick}
       className="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-[var(--color-bg-elevated)] transition-colors group"
     >
@@ -52,12 +60,33 @@ const RootRow = React.memo(function RootRow({
   );
 });
 
+function VirtualizedRootRow({
+  index,
+  style,
+  roots,
+  onSelect,
+  ariaAttributes,
+}: RowComponentProps<RootListData>) {
+  const rootItem = roots[index];
+
+  if (!rootItem) {
+    return null;
+  }
+
+  return (
+    <div style={style} className="px-1" {...ariaAttributes}>
+      <RootRow root={rootItem.root} count={rootItem.count} onSelect={onSelect} />
+    </div>
+  );
+}
+
 export function RootBrowser({ onRootSelect }: RootBrowserProps) {
   const [roots, setRoots] = useState<RootListItem[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [filterText, setFilterText] = useState("");
   const [sortBy, setSortBy] = useState<SortMode>("frequency");
+  const listRef = useListRef(null);
 
   // Fetch all roots on mount
   useEffect(() => {
@@ -130,6 +159,13 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
 
   // Show featured roots initially, all roots when filtering/sorting
   const displayRoots = filterText || sortBy === "alphabetical" ? sortedRoots : featuredRoots;
+
+  const listData = useMemo<RootListData>(
+    () => ({ roots: displayRoots, onSelect: onRootSelect }),
+    [displayRoots, onRootSelect]
+  );
+
+  const listHeight = Math.min(ROOT_LIST_MAX_HEIGHT, displayRoots.length * ROOT_ROW_HEIGHT);
 
   return (
     <div className="space-y-6">
@@ -212,16 +248,17 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
 
       {/* Root list */}
       {!isLoading && displayRoots.length > 0 && (
-        <div className="space-y-1">
-          {displayRoots.map((rootItem, index) => (
-            <RootRow
-              key={rootItem.root}
-              root={rootItem.root}
-              count={rootItem.count}
-              index={index}
-              onSelect={onRootSelect}
-            />
-          ))}
+        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/40 overflow-hidden">
+          <List
+            listRef={listRef}
+            defaultHeight={ROOT_LIST_MAX_HEIGHT}
+            overscanCount={ROOT_LIST_OVERSCAN}
+            rowComponent={VirtualizedRootRow}
+            rowCount={displayRoots.length}
+            rowHeight={ROOT_ROW_HEIGHT}
+            rowProps={listData}
+            style={{ height: listHeight, width: "100%" }}
+          />
         </div>
       )}
 
