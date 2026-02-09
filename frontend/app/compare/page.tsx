@@ -448,7 +448,7 @@ function CompareContent() {
       toast.error("Streaming connection lost. Falling back to standard analysis...");
       performBatchCompare(topic);
     }
-  }, [sseError]);
+  }, [sseError, topic, performBatchCompare]);
 
   const handleCompare = async (e: React.FormEvent) => {
     e.preventDefault();
