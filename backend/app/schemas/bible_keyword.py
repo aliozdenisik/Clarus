@@ -1,7 +1,8 @@
 """Pydantic schemas for Bible morphological keyword search API."""
 
-from pydantic import BaseModel, Field
 from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class BibleKeywordSearchRequest(BaseModel):
@@ -33,7 +34,7 @@ class BibleKeywordSearchRequest(BaseModel):
     )
     category_filter: Optional[str] = Field(
         default=None,
-        description="Filter by category: 'ot', 'nt', 'apocrypha', 'pseudepigrapha', 'gnostic', 'apostolic_fathers', or None for all",
+        description="Filter by category: 'ot', 'nt', 'apocrypha', 'pseudepigrapha', 'gnostic', 'apostolic_fathers', or None for all",  # noqa: E501
     )
 
 

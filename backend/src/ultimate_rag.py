@@ -18,14 +18,13 @@ Usage:
 """
 
 import time
-from typing import List, Optional, Any
-from dataclasses import dataclass, field
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
+from typing import Any, List, Optional
 
-from src.circuit_breaker import CircuitBreakerError
-from src.query_translator import QueryTranslator, TranslationError
-from src.query_translator import CORPUS_LANGUAGES
 from app.logging_config import get_logger, log_performance
+from src.circuit_breaker import CircuitBreakerError
+from src.query_translator import CORPUS_LANGUAGES, QueryTranslator, TranslationError
 
 logger = get_logger(__name__)
 
@@ -36,6 +35,20 @@ class AskResult:
 
     answer: Any  # AnswerResult from answer_generator
     search_results: List  # List of search results used to generate the answer
+
+    @property
+    def text(self) -> str:
+        return str(getattr(self.answer, "text", ""))
+
+    @property
+    def citations(self) -> List[str]:
+        citations = getattr(self.answer, "citations", [])
+        return citations if isinstance(citations, list) else []
+
+    @property
+    def confidence(self) -> float:
+        raw_confidence = getattr(self.answer, "confidence", 0.0)
+        return float(raw_confidence) if isinstance(raw_confidence, (int, float)) else 0.0
 
 
 class UltimateRAG:
@@ -172,9 +185,7 @@ class UltimateRAG:
             else:
                 # Translation specific search
                 translation = suffix
-                searcher = BibleSearcher(
-                    translation=translation, qdrant_url=self.qdrant_url
-                )
+                searcher = BibleSearcher(translation=translation, qdrant_url=self.qdrant_url)
         else:
             raise ValueError(f"Unknown source: {source}")
 
@@ -186,9 +197,7 @@ class UltimateRAG:
         if self._semantic_chunk_searcher is None:
             from src.search import SemanticChunkSearcher
 
-            self._semantic_chunk_searcher = SemanticChunkSearcher(
-                qdrant_url=self.qdrant_url
-            )
+            self._semantic_chunk_searcher = SemanticChunkSearcher(qdrant_url=self.qdrant_url)
         return self._semantic_chunk_searcher
 
     def _log(self, message: str, style: str = "dim", **extra):
@@ -261,22 +270,16 @@ class UltimateRAG:
             if self.enable_llm_cache:
                 cache = await self._get_llm_cache()
                 if cache:
-                    await cache.set(
-                        query, cache_key, enhanced, source_language=detected_language
-                    )
+                    await cache.set(query, cache_key, enhanced, source_language=detected_language)
 
             latency_ms = (time.perf_counter() - start) * 1000
-            sentry_sdk.set_measurement(
-                "rag.query.enhance_latency_ms", latency_ms, "millisecond"
-            )
+            sentry_sdk.set_measurement("rag.query.enhance_latency_ms", latency_ms, "millisecond")
             sentry_sdk.set_measurement("rag.cache.hit", 0, "none")
             logger.info(
                 "Cache miss",
                 extra={"cache": "llm", "stage": "enhance", "corpus": corpus},
             )
-            log_performance(
-                logger, "enhance_query", latency_ms, corpus=corpus, cache_hit=False
-            )
+            log_performance(logger, "enhance_query", latency_ms, corpus=corpus, cache_hit=False)
             return enhanced
 
     async def _generate_multi_queries(
@@ -302,9 +305,7 @@ class UltimateRAG:
             if not self.enable_multi_query:
                 return [enhanced_query]
 
-            logger.info(
-                "Pipeline stage started", extra={"stage": "multi_query", "n": n}
-            )
+            logger.info("Pipeline stage started", extra={"stage": "multi_query", "n": n})
             start = time.perf_counter()
 
             # Determine corpus from source
@@ -326,17 +327,13 @@ class UltimateRAG:
                         multi = cached
                         cache_hit = True
                         span.set_data("cache_hit", True)
-                        logger.info(
-                            "Cache hit", extra={"cache": "llm", "stage": "multi_query"}
-                        )
+                        logger.info("Cache hit", extra={"cache": "llm", "stage": "multi_query"})
 
             # Generate if not cached
             if multi is None:
                 span.set_data("cache_hit", False)
                 try:
-                    multi = self.enhancer.generate_multi_query(
-                        enhanced_query, n=n, corpus=corpus
-                    )
+                    multi = self.enhancer.generate_multi_query(enhanced_query, n=n, corpus=corpus)
                     # Cache the result
                     if self.enable_llm_cache:
                         cache = await self._get_llm_cache()
@@ -348,9 +345,7 @@ class UltimateRAG:
                                 source_language=detected_language,
                             )
                 except Exception as e:
-                    logger.warning(
-                        "Multi-query generation failed", extra={"error": str(e)}
-                    )
+                    logger.warning("Multi-query generation failed", extra={"error": str(e)})
                     multi = []
 
             queries.extend(multi)
@@ -365,9 +360,7 @@ class UltimateRAG:
                     unique.append(q)
 
             latency_ms = (time.perf_counter() - start) * 1000
-            sentry_sdk.set_measurement(
-                "rag.query.multi_latency_ms", latency_ms, "millisecond"
-            )
+            sentry_sdk.set_measurement("rag.query.multi_latency_ms", latency_ms, "millisecond")
             span.set_data("query_count", len(unique))
             log_performance(
                 logger,
@@ -394,8 +387,9 @@ class UltimateRAG:
         Returns:
             Deduplicated list of all query variants
         """
-        import sentry_sdk
         import asyncio
+
+        import sentry_sdk
 
         with sentry_sdk.start_span(
             op="rag.parallel_query_prep",
@@ -539,21 +533,15 @@ class UltimateRAG:
             # Search single-verse collection with pre-computed vectors
             for i, (keyword, vector) in enumerate(zip(keywords, keyword_vectors)):
                 try:
-                    results = searcher.search_with_vector(
-                        vector, limit=limit_per_keyword
-                    )
+                    results = searcher.search_with_vector(vector, limit=limit_per_keyword)
 
                     for rank, result in enumerate(results, 1):
-                        result_id = (
-                            result.id if hasattr(result, "id") else f"{i}_{rank}"
-                        )
+                        result_id = result.id if hasattr(result, "id") else f"{i}_{rank}"
                         rrf_contribution = 1 / (k + rank)
 
                         if result_id in all_results:
                             # Accumulate RRF score and track matched keywords
-                            existing_result, existing_score, matched = all_results[
-                                result_id
-                            ]
+                            existing_result, existing_score, matched = all_results[result_id]
                             all_results[result_id] = (
                                 existing_result,
                                 existing_score + rrf_contribution,
@@ -568,7 +556,7 @@ class UltimateRAG:
 
                 except CircuitBreakerError:
                     logger.warning(
-                        "Qdrant unavailable (circuit breaker open), returning empty results for keyword: %s",
+                        "Qdrant unavailable (circuit breaker open), returning empty results for keyword: %s",  # noqa: E501
                         keyword,
                     )
                     # Continue with other keywords - don't fail entire search
@@ -586,24 +574,20 @@ class UltimateRAG:
                                 "   📦 Including semantic chunks in per-keyword search (Quran)..."
                             )
 
-                            for i, (keyword, vector) in enumerate(
-                                zip(keywords, keyword_vectors)
-                            ):
+                            for i, (keyword, vector) in enumerate(zip(keywords, keyword_vectors)):
                                 try:
                                     chunk_results = chunk_searcher.search_with_vector(
                                         vector, limit=limit_per_keyword // 2
                                     )
 
-                                    for rank, chunk_result in enumerate(
-                                        chunk_results, 1
-                                    ):
+                                    for rank, chunk_result in enumerate(chunk_results, 1):
                                         chunk_id = chunk_result.chunk_id
                                         rrf_contribution = 1 / (k + rank)
 
                                         if chunk_id in all_results:
-                                            existing_result, existing_score, matched = (
-                                                all_results[chunk_id]
-                                            )
+                                            existing_result, existing_score, matched = all_results[
+                                                chunk_id
+                                            ]
                                             all_results[chunk_id] = (
                                                 existing_result,
                                                 existing_score + rrf_contribution,
@@ -622,7 +606,7 @@ class UltimateRAG:
                                 except Exception:
                                     pass
                     except Exception:
-                        self._log(f"   Warning: Quran semantic chunks error", "yellow")
+                        self._log("   Warning: Quran semantic chunks error", "yellow")
 
                 # Handle Bible Semantic Chunks
                 elif source.startswith("bible_"):
@@ -637,29 +621,23 @@ class UltimateRAG:
 
                         if bible_chunk_searcher.collection_exists():
                             self._log(
-                                f"   📦 Including semantic chunks in per-keyword search (Bible {translation})..."
+                                f"   📦 Including semantic chunks in per-keyword search (Bible {translation})..."  # noqa: E501
                             )
 
-                            for i, (keyword, vector) in enumerate(
-                                zip(keywords, keyword_vectors)
-                            ):
+                            for i, (keyword, vector) in enumerate(zip(keywords, keyword_vectors)):
                                 try:
-                                    chunk_results = (
-                                        bible_chunk_searcher.search_with_vector(
-                                            vector, limit=limit_per_keyword // 2
-                                        )
+                                    chunk_results = bible_chunk_searcher.search_with_vector(
+                                        vector, limit=limit_per_keyword // 2
                                     )
 
-                                    for rank, chunk_result in enumerate(
-                                        chunk_results, 1
-                                    ):
+                                    for rank, chunk_result in enumerate(chunk_results, 1):
                                         chunk_id = chunk_result.chunk_id
                                         rrf_contribution = 1 / (k + rank)
 
                                         if chunk_id in all_results:
-                                            existing_result, existing_score, matched = (
-                                                all_results[chunk_id]
-                                            )
+                                            existing_result, existing_score, matched = all_results[
+                                                chunk_id
+                                            ]
                                             all_results[chunk_id] = (
                                                 existing_result,
                                                 existing_score + rrf_contribution,
@@ -678,7 +656,7 @@ class UltimateRAG:
                                 except Exception:
                                     pass
                     except Exception:
-                        self._log(f"   Warning: Bible semantic chunks error", "yellow")
+                        self._log("   Warning: Bible semantic chunks error", "yellow")
 
             # Apply keyword coverage boost: results matching 2+ keywords get boosted
             boosted_results = []
@@ -730,9 +708,7 @@ class UltimateRAG:
 
             return merged_results
 
-    def _search_all_queries(
-        self, queries: List[str], source: str, limit: int = 30
-    ) -> List:
+    def _search_all_queries(self, queries: List[str], source: str, limit: int = 30) -> List:
         """Step 3: Search with all queries and merge results (RRF)
 
         Optimized: All query embeddings are computed in a single batch API call,
@@ -740,9 +716,7 @@ class UltimateRAG:
         """
         import sentry_sdk
 
-        with sentry_sdk.start_span(
-            op="rag.search", description=f"Search {source}"
-        ) as span:
+        with sentry_sdk.start_span(op="rag.search", description=f"Search {source}") as span:
             span.set_data("source", source)
             span.set_data("query_count", len(queries))
             span.set_data("limit", limit)
@@ -773,16 +747,12 @@ class UltimateRAG:
                     results = searcher.search_with_vector(vector, limit=limit)
 
                     for rank, result in enumerate(results, 1):
-                        result_id = (
-                            result.id if hasattr(result, "id") else f"{i}_{rank}"
-                        )
+                        result_id = result.id if hasattr(result, "id") else f"{i}_{rank}"
                         rrf_contribution = 1 / (k + rank)
 
                         if result_id in all_results:
                             # Accumulate RRF score
-                            existing_result, existing_score, matched = all_results[
-                                result_id
-                            ]
+                            existing_result, existing_score, matched = all_results[result_id]
                             all_results[result_id] = (
                                 existing_result,
                                 existing_score + rrf_contribution,
@@ -793,7 +763,7 @@ class UltimateRAG:
 
                 except CircuitBreakerError:
                     logger.warning(
-                        "Qdrant unavailable (circuit breaker open), returning empty results for query: %s",
+                        "Qdrant unavailable (circuit breaker open), returning empty results for query: %s",  # noqa: E501
                         query,
                     )
                     # Continue with other queries - don't fail entire search
@@ -807,28 +777,22 @@ class UltimateRAG:
                     try:
                         chunk_searcher = self._get_semantic_chunk_searcher()
                         if chunk_searcher.collection_exists():
-                            self._log(
-                                "   📦 Including semantic chunks in search (Quran)..."
-                            )
+                            self._log("   📦 Including semantic chunks in search (Quran)...")
 
-                            for i, (query, vector) in enumerate(
-                                zip(queries, query_vectors)
-                            ):
+                            for i, (query, vector) in enumerate(zip(queries, query_vectors)):
                                 try:
                                     chunk_results = chunk_searcher.search_with_vector(
                                         vector, limit=limit // 2
                                     )
 
-                                    for rank, chunk_result in enumerate(
-                                        chunk_results, 1
-                                    ):
+                                    for rank, chunk_result in enumerate(chunk_results, 1):
                                         chunk_id = chunk_result.chunk_id
                                         rrf_contribution = 1 / (k + rank)
 
                                         if chunk_id in all_results:
-                                            existing_result, existing_score, matched = (
-                                                all_results[chunk_id]
-                                            )
+                                            existing_result, existing_score, matched = all_results[
+                                                chunk_id
+                                            ]
                                             all_results[chunk_id] = (
                                                 existing_result,
                                                 existing_score + rrf_contribution,
@@ -847,7 +811,7 @@ class UltimateRAG:
                                 except Exception:
                                     pass
                     except Exception:
-                        self._log(f"   Warning: Quran semantic chunks error", "yellow")
+                        self._log("   Warning: Quran semantic chunks error", "yellow")
 
                 # Handle Bible Semantic Chunks
                 elif source.startswith("bible_"):
@@ -862,29 +826,23 @@ class UltimateRAG:
 
                         if bible_chunk_searcher.collection_exists():
                             self._log(
-                                f"   📦 Including semantic chunks in search (Bible {translation})..."
+                                f"   📦 Including semantic chunks in search (Bible {translation})..."  # noqa: E501
                             )
 
-                            for i, (query, vector) in enumerate(
-                                zip(queries, query_vectors)
-                            ):
+                            for i, (query, vector) in enumerate(zip(queries, query_vectors)):
                                 try:
-                                    chunk_results = (
-                                        bible_chunk_searcher.search_with_vector(
-                                            vector, limit=limit // 2
-                                        )
+                                    chunk_results = bible_chunk_searcher.search_with_vector(
+                                        vector, limit=limit // 2
                                     )
 
-                                    for rank, chunk_result in enumerate(
-                                        chunk_results, 1
-                                    ):
+                                    for rank, chunk_result in enumerate(chunk_results, 1):
                                         chunk_id = chunk_result.chunk_id
                                         rrf_contribution = 1 / (k + rank)
 
                                         if chunk_id in all_results:
-                                            existing_result, existing_score, matched = (
-                                                all_results[chunk_id]
-                                            )
+                                            existing_result, existing_score, matched = all_results[
+                                                chunk_id
+                                            ]
                                             all_results[chunk_id] = (
                                                 existing_result,
                                                 existing_score + rrf_contribution,
@@ -903,12 +861,12 @@ class UltimateRAG:
                                 except Exception:
                                     pass
                     except Exception:
-                        self._log(f"   Warning: Bible semantic chunks error", "yellow")
+                        self._log("   Warning: Bible semantic chunks error", "yellow")
 
             # Sort by RRF score and return top results
-            sorted_results = sorted(
-                all_results.values(), key=lambda x: x[1], reverse=True
-            )[: self.search_pool_size]
+            sorted_results = sorted(all_results.values(), key=lambda x: x[1], reverse=True)[
+                : self.search_pool_size
+            ]
 
             # Compute score statistics for confidence scoring
             rrf_scores = [rrf_score for _, rrf_score, _ in sorted_results]
@@ -927,9 +885,7 @@ class UltimateRAG:
                 merged_results.append(result)
 
             latency_ms = (time.perf_counter() - start) * 1000
-            sentry_sdk.set_measurement(
-                "rag.query.search_latency_ms", latency_ms, "millisecond"
-            )
+            sentry_sdk.set_measurement("rag.query.search_latency_ms", latency_ms, "millisecond")
             span.set_data("result_count", len(merged_results))
             log_performance(
                 logger,
@@ -941,7 +897,7 @@ class UltimateRAG:
             )
             return merged_results
 
-    def _get_top_results(self, results: List, top_k: int = None) -> List:
+    def _get_top_results(self, results: List, top_k: Optional[int] = None) -> List:
         """
         Step 4: Return top results from Search (RRF)
 
@@ -960,8 +916,8 @@ class UltimateRAG:
         self,
         query: str,
         source: str = "quran_tr_diyanet",
-        top_k: int = None,
-        rerank_query: str = None,  # Optional: use different query for reranking
+        top_k: Optional[int] = None,
+        rerank_query: Optional[str] = None,  # Optional: use different query for reranking
         detected_language: Optional[str] = None,
         keywords: Optional[List[str]] = None,  # Optional: per-keyword parallel search
     ) -> List:
@@ -1009,9 +965,7 @@ class UltimateRAG:
                 "Performing per-keyword search",
                 extra={"keyword_count": len(keywords), "source": source},
             )
-            keyword_results = self._search_per_keyword(
-                keywords, source, limit_per_keyword=10
-            )
+            keyword_results = self._search_per_keyword(keywords, source, limit_per_keyword=10)
 
             # Merge keyword results with query results using RRF fusion
             search_results = self._rrf_fusion([search_results, keyword_results], k=60)
@@ -1038,7 +992,7 @@ class UltimateRAG:
         self,
         query: str,
         translator: str = "diyanet",
-        top_k: int = None,
+        top_k: Optional[int] = None,
         detected_language: Optional[str] = None,
     ) -> List:
         """
@@ -1046,7 +1000,8 @@ class UltimateRAG:
 
         Args:
             query: Search query
-            translator: Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
+            translator: Quran translator
+                (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
             top_k: Number of results
             detected_language: Detected language of query
         """
@@ -1091,10 +1046,10 @@ class UltimateRAG:
     def _search_all_bible_collections(
         self,
         query: str,
-        top_k: int = None,
-        rerank_query: str = None,
+        top_k: Optional[int] = None,
+        rerank_query: Optional[str] = None,
         detected_language: Optional[str] = None,
-        collections: List[str] = None,
+        collections: Optional[List[str]] = None,
     ) -> List:
         """
         Search Bible collections and merge with RRF fusion.
@@ -1104,7 +1059,7 @@ class UltimateRAG:
         Args:
             collections: List of collection names to search. Defaults to English Bible collections.
         """
-        from concurrent.futures import ThreadPoolExecutor, as_completed
+        from concurrent.futures import as_completed
 
         if top_k is None:
             top_k = self.final_top_k
@@ -1121,9 +1076,7 @@ class UltimateRAG:
                 results = searcher.search(query, mode=self.search_mode, limit=pool_size)
                 return (source, results)
             except CircuitBreakerError:
-                logger.warning(
-                    f"Qdrant unavailable (circuit breaker open) for {source}"
-                )
+                logger.warning(f"Qdrant unavailable (circuit breaker open) for {source}")
                 return (source, [])
             except Exception as e:
                 logger.error(f"Search failed for {source}: {e}")
@@ -1191,8 +1144,8 @@ class UltimateRAG:
         self,
         query: str,
         translation: str = "kjva",
-        testament: str = None,
-        top_k: int = None,
+        testament: Optional[str] = None,
+        top_k: Optional[int] = None,
         detected_language: Optional[str] = None,
         language: str = "en",
     ) -> List:
@@ -1282,9 +1235,7 @@ class UltimateRAG:
 
     # ============= ANSWER GENERATION (RAG) =============
 
-    async def ask(
-        self, query: str, source: str = "quran_tr_diyanet", top_k: int = None
-    ):
+    async def ask(self, query: str, source: str = "quran_tr_diyanet", top_k: Optional[int] = None):
         """
         Full RAG Pipeline: Search + Generate Answer with Citations
 
@@ -1299,7 +1250,6 @@ class UltimateRAG:
         Returns:
             AskResult with answer (AnswerResult) and search_results
         """
-        from src.answer_generator import AnswerResult
 
         top_k = top_k or self.final_top_k
         total_start = time.perf_counter()
@@ -1354,7 +1304,7 @@ class UltimateRAG:
         self,
         query: str,
         translator: str = "diyanet",
-        top_k: int = None,
+        top_k: Optional[int] = None,
         detected_language: Optional[str] = None,
     ):
         """
@@ -1362,7 +1312,8 @@ class UltimateRAG:
 
         Args:
             query: Question to ask
-            translator: Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
+            translator: Quran translator
+                (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
             top_k: Number of verses to use as context
             detected_language: Detected language of query
         """
@@ -1395,8 +1346,8 @@ class UltimateRAG:
         self,
         query: str,
         translation: str = "kjva",
-        testament: str = None,
-        top_k: int = None,
+        testament: Optional[str] = None,
+        top_k: Optional[int] = None,
         detected_language: Optional[str] = None,
     ):
         """
@@ -1432,9 +1383,7 @@ class UltimateRAG:
 
 
 # Convenience function
-def ultimate_search(
-    query: str, source: str = "quran_tr_diyanet", top_k: int = 10
-) -> List:
+def ultimate_search(query: str, source: str = "quran_tr_diyanet", top_k: int = 10) -> List:
     """
     One-liner for Ultimate RAG search
 
@@ -1443,12 +1392,15 @@ def ultimate_search(
         results = ultimate_search("Kur'an'da şefaat kavramı")
     """
     rag = UltimateRAG(verbose=True)
-    return rag.search(query, source=source, top_k=top_k)
+    import asyncio
+
+    return asyncio.run(rag.search(query, source=source, top_k=top_k))
 
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
-    from app.logging_config import setup_logging, LoggingConfig
+
+    from app.logging_config import LoggingConfig, setup_logging
 
     load_dotenv()
 
@@ -1466,7 +1418,9 @@ if __name__ == "__main__":
 
     logger.info("--- QURAN TESTS ---")
     for query in test_queries_quran:
-        results = rag.search_quran(query, top_k=3)
+        import asyncio
+
+        results = asyncio.run(rag.search_quran(query, top_k=3))
         logger.info(f"Query: {query}")
         for i, r in enumerate(results, 1):
             # Handle standard PointStruct or SemanticChunkSearchResult
@@ -1477,9 +1431,7 @@ if __name__ == "__main__":
             verse = getattr(
                 r,
                 "verse_id",
-                getattr(
-                    r, "verse_ids", payload.get("verse_id", payload.get("verse_ids"))
-                ),
+                getattr(r, "verse_ids", payload.get("verse_id", payload.get("verse_ids"))),
             )
 
             ref = f"{surah}:{verse}"
@@ -1493,7 +1445,9 @@ if __name__ == "__main__":
         "God's love and mercy",
     ]
     for query in test_queries_bible:
-        results = rag.search_bible(query, top_k=3)
+        import asyncio
+
+        results = asyncio.run(rag.search_bible(query, top_k=3))
         logger.info(f"Query: {query}")
         for i, r in enumerate(results, 1):
             payload = getattr(r, "payload", {}) or {}
@@ -1502,9 +1456,7 @@ if __name__ == "__main__":
             verse = getattr(r, "verse_number", payload.get("verse_number"))
 
             ref = f"{book} {chapter}:{verse}"
-            text = getattr(r, "text", getattr(r, "content", payload.get("text", "")))[
-                :100
-            ]
+            text = getattr(r, "text", getattr(r, "content", payload.get("text", "")))[:100]
 
             print(f"  {i}. [{ref}] (score: {r.score:.4f})")
             print(f"     {text}...")

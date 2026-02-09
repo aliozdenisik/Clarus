@@ -497,9 +497,7 @@ if __name__ == "__main__":
     # Print overall result
     total_passed = sum(p for _, p, _ in results)
     total_failed = sum(f for _, _, f in results)
-    console.print(
-        f"\n[bold]TOTAL: {total_passed}/{total_passed + total_failed} tests pass[/bold]"
-    )
+    console.print(f"\n[bold]TOTAL: {total_passed}/{total_passed + total_failed} tests pass[/bold]")
 
     if all_passed:
         console.print("[green]✓ ALL TESTS PASSED[/green]")

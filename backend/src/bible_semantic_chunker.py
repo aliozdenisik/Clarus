@@ -11,16 +11,17 @@ Key Features:
 - Respects book and chapter boundaries
 """
 
-import json
 import asyncio
-import numpy as np
-from pathlib import Path
-from typing import List, Dict, Any, Optional
+import json
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import numpy as np
 from tqdm import tqdm
 
 from .bible_loader import BibleChunk, BibleDataLoader
-from .embeddings import DenseEncoder, AsyncDenseEncoder
+from .embeddings import AsyncDenseEncoder, DenseEncoder
 
 
 @dataclass
@@ -38,9 +39,7 @@ class BibleSemanticChunk:
     text: str  # Combined text
     testament: str  # OT, NT, or Apocrypha
     verse_count: int = 0  # Number of verses in chunk
-    internal_similarities: List[float] = field(
-        default_factory=list
-    )  # Similarities within chunk
+    internal_similarities: List[float] = field(default_factory=list)  # Similarities within chunk
     avg_internal_similarity: float = 0.0  # Average internal similarity
 
     def __post_init__(self):
@@ -152,6 +151,8 @@ class BibleSemanticVerseChunker:
             if meta.get("num_verses") == len(self._verses):
                 print(f"Loading cached embeddings from {cache_path}")
                 self._embeddings = np.load(cache_path)
+                if self._embeddings is None:
+                    raise RuntimeError("Failed to load cached embeddings")
                 return self._embeddings
 
         # Compute embeddings
@@ -160,9 +161,7 @@ class BibleSemanticVerseChunker:
 
         # Use async encoder for faster processing (2-3x speedup)
         if self.use_async:
-            embeddings = asyncio.run(
-                self._compute_embeddings_async(texts, show_progress)
-            )
+            embeddings = asyncio.run(self._compute_embeddings_async(texts, show_progress))
         else:
             # Fallback to sync with larger batch
             embeddings = self.encoder.encode_batch(
@@ -186,6 +185,8 @@ class BibleSemanticVerseChunker:
             )
         print(f"Cached embeddings to {cache_path}")
 
+        if self._embeddings is None:
+            raise RuntimeError("Embedding computation failed")
         return self._embeddings
 
     async def _compute_embeddings_async(
@@ -222,16 +223,23 @@ class BibleSemanticVerseChunker:
         if self._embeddings is None:
             self.compute_embeddings()
 
+        if self._embeddings is None:
+            raise RuntimeError("Embeddings are not available")
+
+        embeddings_array = self._embeddings
+
         # Normalize embeddings for cosine similarity
-        norms = np.linalg.norm(self._embeddings, axis=1, keepdims=True)
+        norms = np.linalg.norm(embeddings_array, axis=1, keepdims=True)
         # Avoid division by zero
         norms[norms == 0] = 1e-10
-        normalized = self._embeddings / norms
+        normalized = embeddings_array / norms
 
         # Compute similarity between consecutive pairs
         similarities = np.sum(normalized[:-1] * normalized[1:], axis=1)
 
         self._similarities = similarities
+        if self._similarities is None:
+            raise RuntimeError("Similarity computation failed")
         return self._similarities
 
     def detect_boundaries(
@@ -247,27 +255,28 @@ class BibleSemanticVerseChunker:
         if self._similarities is None:
             self.compute_similarities()
 
+        if self._similarities is None:
+            raise RuntimeError("Similarities are not available")
+
+        similarity_values = self._similarities
+
         threshold = threshold if threshold is not None else self.similarity_threshold
 
         # Compute threshold based on strategy (same as Quran chunker)
         if threshold_type == "percentile":
             percentile_value = threshold if threshold <= 100 else 10
-            computed_threshold = np.percentile(self._similarities, percentile_value)
-            print(
-                f"Percentile-based threshold: {computed_threshold:.4f} (p={percentile_value})"
-            )
+            computed_threshold = np.percentile(similarity_values, percentile_value)
+            print(f"Percentile-based threshold: {computed_threshold:.4f} (p={percentile_value})")
 
         elif threshold_type == "gradient":
-            gradients = np.gradient(self._similarities)
-            grad_threshold = np.percentile(
-                gradients, threshold if threshold <= 100 else 10
-            )
+            gradients = np.gradient(similarity_values)
+            grad_threshold = np.percentile(gradients, threshold if threshold <= 100 else 10)
             computed_threshold = None
             print(f"Gradient-based detection: threshold={grad_threshold:.4f}")
 
         elif threshold_type == "interquartile":
-            q1 = np.percentile(self._similarities, 25)
-            q3 = np.percentile(self._similarities, 75)
+            q1 = np.percentile(similarity_values, 25)
+            q3 = np.percentile(similarity_values, 75)
             iqr = q3 - q1
             k = threshold if threshold < 10 else 1.5
             computed_threshold = q1 - k * iqr
@@ -277,9 +286,7 @@ class BibleSemanticVerseChunker:
 
         elif threshold_type == "std":
             k = threshold if threshold < 10 else 1.0
-            computed_threshold = np.mean(self._similarities) - k * np.std(
-                self._similarities
-            )
+            computed_threshold = np.mean(similarity_values) - k * np.std(similarity_values)
             print(f"Std-based threshold: {computed_threshold:.4f} (k={k})")
 
         else:  # "fixed"
@@ -287,8 +294,9 @@ class BibleSemanticVerseChunker:
             print(f"Fixed threshold: {computed_threshold:.4f}")
 
         boundaries = [0]
+        grad_threshold: Optional[float] = None
 
-        for i, sim in enumerate(self._similarities):
+        for i, sim in enumerate(similarity_values):
             next_verse_idx = i + 1
 
             # Check for hard boundaries (Book or Chapter change)
@@ -301,16 +309,15 @@ class BibleSemanticVerseChunker:
                 continue
 
             # Optionally break on chapter change
-            if (
-                self.respect_chapter_boundary
-                and curr_verse.chapter != next_verse.chapter
-            ):
+            if self.respect_chapter_boundary and curr_verse.chapter != next_verse.chapter:
                 boundaries.append(next_verse_idx)
                 continue
 
             # Semantic check
             if threshold_type == "gradient":
-                gradients = np.gradient(self._similarities)
+                gradients = np.gradient(similarity_values)
+                if grad_threshold is None:
+                    continue
                 if gradients[i] < grad_threshold:
                     boundaries.append(next_verse_idx)
             elif sim < computed_threshold:
@@ -325,6 +332,10 @@ class BibleSemanticVerseChunker:
     ) -> List[int]:
         """Apply max/min chunk size constraints to boundaries."""
         adjusted = [0]
+        if self._similarities is None:
+            return adjusted
+
+        similarity_values = self._similarities
 
         for i in range(1, len(boundaries)):
             prev_boundary = adjusted[-1]
@@ -339,7 +350,7 @@ class BibleSemanticVerseChunker:
                     search_end = min(start_idx + self.max_chunk_size, current_boundary)
 
                     if search_end - 1 > search_start:
-                        local_sims = self._similarities[search_start : search_end - 1]
+                        local_sims = similarity_values[search_start : search_end - 1]
                         # Find minimum similarity point to break at
                         min_sim_idx = np.argmin(local_sims) + search_start + 1
                         adjusted.append(min_sim_idx)
@@ -370,6 +381,11 @@ class BibleSemanticVerseChunker:
         self.compute_embeddings(show_progress=show_progress, use_cache=use_cache)
         self.compute_similarities()
 
+        if self._similarities is None:
+            raise RuntimeError("Similarities are not available")
+
+        similarity_values = self._similarities
+
         # Detect
         boundaries = self.detect_boundaries(threshold_type=threshold_type)
 
@@ -395,13 +411,13 @@ class BibleSemanticVerseChunker:
 
             internal_sims = []
             if end_idx - start_idx > 1:
-                internal_sims = self._similarities[start_idx : end_idx - 1].tolist()
+                internal_sims = similarity_values[start_idx : end_idx - 1].tolist()
 
             first = chunk_verses[0]
             last = chunk_verses[-1]
 
             # Format: translation:book:chapter:start-end_semantic
-            chunk_id = f"{first.translation}:{first.book_id}:{first.chapter}:{first.verse}-{last.verse}_semantic"
+            chunk_id = f"{first.translation}:{first.book_id}:{first.chapter}:{first.verse}-{last.verse}_semantic"  # noqa: E501
 
             chunk = BibleSemanticChunk(
                 chunk_id=chunk_id,
@@ -419,9 +435,7 @@ class BibleSemanticVerseChunker:
 
             chunks.append(chunk)
 
-        print(
-            f"\nCreated {len(chunks)} semantic chunks from {len(self._verses)} verses"
-        )
+        print(f"\nCreated {len(chunks)} semantic chunks from {len(self._verses)} verses")
         print(f"Average chunk size: {len(self._verses) / len(chunks):.2f} verses")
 
         return chunks
@@ -432,9 +446,7 @@ class BibleSemanticVerseChunker:
         output_path: Optional[Path] = None,
     ) -> Path:
         """Save semantic chunks to JSON file."""
-        output_path = output_path or Path(
-            f"data/bible_{self.translation}_semantic_chunks.json"
-        )
+        output_path = output_path or Path(f"data/bible_{self.translation}_semantic_chunks.json")
         output_path.parent.mkdir(exist_ok=True)
 
         data = [chunk.to_dict() for chunk in chunks]
@@ -450,9 +462,7 @@ class BibleSemanticVerseChunker:
         input_path: Optional[Path] = None,
     ) -> List[BibleSemanticChunk]:
         """Load semantic chunks from JSON file."""
-        input_path = input_path or Path(
-            f"data/bible_{self.translation}_semantic_chunks.json"
-        )
+        input_path = input_path or Path(f"data/bible_{self.translation}_semantic_chunks.json")
 
         with open(input_path, "r", encoding="utf-8") as f:
             data = json.load(f)

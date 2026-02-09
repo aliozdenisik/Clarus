@@ -270,7 +270,6 @@ def normalize_transliteration_for_lookup(text: str) -> str:
         'shama'
     """
     import unicodedata
-    import re
 
     # Step 0: Pre-NFD replacements for characters that would be incorrectly decomposed
     # ç (c-cedilla) → s (for chesed: chêçêd → chesed)

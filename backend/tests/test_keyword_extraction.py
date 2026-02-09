@@ -6,9 +6,11 @@ Covers rule-based splitting, LLM extraction, deduplication, blacklist filtering,
 and selection limits.
 """
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-from src.query_enhancer import QueryEnhancer, KeywordSuggestion, EnhanceResponse
+
+from src.query_enhancer import EnhanceResponse, KeywordSuggestion, QueryEnhancer
 
 
 @pytest.fixture
@@ -322,9 +324,7 @@ class TestIntegration:
     def test_rule_based_with_dedup_and_selection(self, enhancer):
         """Test rule-based extraction with deduplication and selection limit."""
         # Create a query that will produce many keywords
-        result = enhancer.extract_keywords(
-            "sabır ve namaz ve oruç ve zekât ve hac", corpus="quran"
-        )
+        result = enhancer.extract_keywords("sabır ve namaz ve oruç ve zekât ve hac", corpus="quran")
 
         # Should have multiple keywords
         assert len(result) >= 5

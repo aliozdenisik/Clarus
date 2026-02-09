@@ -436,14 +436,12 @@ def parse_verse_reference(input_str: str) -> ParsedReference | ParseError:
     # No pattern matched
     return ParseError(
         code="INVALID_FORMAT",
-        message=f"Cannot parse input: '{input_str}'. Expected formats: '2:183', 'Bakara 183', or 'Genesis 1:1'",
+        message=f"Cannot parse input: '{input_str}'. Expected formats: '2:183', 'Bakara 183', or 'Genesis 1:1'",  # noqa: E501
         input=input_str,
     )
 
 
-def _parse_quran_numeric(
-    input_str: str, match: re.Match
-) -> ParsedReference | ParseError:
+def _parse_quran_numeric(input_str: str, match: re.Match) -> ParsedReference | ParseError:
     """Parse Quran numeric format: 2:183 or 2:183-185."""
     surah_num = int(match.group(1))
     verse_start = int(match.group(2))
@@ -513,9 +511,7 @@ def _parse_quran_numeric(
     )
 
 
-def _parse_quran_numeric_multi(
-    input_str: str, match: re.Match
-) -> ParsedReference | ParseError:
+def _parse_quran_numeric_multi(input_str: str, match: re.Match) -> ParsedReference | ParseError:
     """Parse Quran numeric multiple format: 2:183,185,190."""
     surah_num = int(match.group(1))
     verse_list_str = match.group(2)
@@ -582,9 +578,7 @@ def _parse_quran_numeric_multi(
     )
 
 
-def _parse_quran_turkish(
-    input_str: str, match: re.Match
-) -> ParsedReference | ParseError:
+def _parse_quran_turkish(input_str: str, match: re.Match) -> ParsedReference | ParseError:
     """Parse Quran Turkish format: Bakara 183, Bakara 183-185, or Bakara 1,3,5."""
     surah_name = match.group(1).strip()
     verse_spec = match.group(2).strip()
@@ -633,7 +627,7 @@ def _parse_quran_turkish(
             if verse_num > max_verse:
                 return ParseError(
                     code="VERSE_OUT_OF_BOUNDS",
-                    message=f"Verse {verse_num} exceeds maximum {max_verse} for surah '{surah_name}'",
+                    message=f"Verse {verse_num} exceeds maximum {max_verse} for surah '{surah_name}'",  # noqa: E501
                     input=input_str,
                 )
     elif "-" in verse_spec:

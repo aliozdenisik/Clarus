@@ -2,9 +2,9 @@
 
 import hashlib
 import logging
-from typing import Dict, Any, Optional
+from typing import Any, Dict
 
-from fastapi import HTTPException, Request, Depends
+from fastapi import Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -78,9 +78,7 @@ async def get_current_user_from_api_key(
     }
 
 
-async def _resolve_user_by_id(
-    user_id: str, db: AsyncSession, operation: str
-) -> Dict[str, Any]:
+async def _resolve_user_by_id(user_id: str, db: AsyncSession, operation: str) -> Dict[str, Any]:
     """
     Fetch user from database and ensure user_stats exists.
 
@@ -99,9 +97,7 @@ async def _resolve_user_by_id(
     """
     from datetime import datetime
 
-    result = await db.execute(
-        select(BetterAuthUser).where(BetterAuthUser.id == user_id)
-    )
+    result = await db.execute(select(BetterAuthUser).where(BetterAuthUser.id == user_id))
     user = result.scalar_one_or_none()
 
     if not user:
@@ -112,9 +108,7 @@ async def _resolve_user_by_id(
         raise HTTPException(status_code=401, detail="User not found")
 
     # Ensure user_stats exists
-    stats_result = await db.execute(
-        select(UserStats).where(UserStats.user_id == user_id)
-    )
+    stats_result = await db.execute(select(UserStats).where(UserStats.user_id == user_id))
     stats = stats_result.scalar_one_or_none()
 
     if not stats:
@@ -199,9 +193,9 @@ async def get_current_user_flexible(
             )
             session = session_result.scalar_one_or_none()
 
-            if session and session.expires_at.replace(
-                tzinfo=timezone.utc
-            ) > datetime.now(timezone.utc):
+            if session and session.expires_at.replace(tzinfo=timezone.utc) > datetime.now(
+                timezone.utc
+            ):
                 logger.debug(
                     "Authenticated via session cookie",
                     extra={
@@ -209,9 +203,7 @@ async def get_current_user_flexible(
                         "operation": "get_current_user_flexible",
                     },
                 )
-                return await _resolve_user_by_id(
-                    session.user_id, db, "get_current_user_flexible"
-                )
+                return await _resolve_user_by_id(session.user_id, db, "get_current_user_flexible")
             elif session:
                 logger.warning(
                     "Session cookie expired",

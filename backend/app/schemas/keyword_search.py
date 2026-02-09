@@ -1,7 +1,8 @@
 """Pydantic schemas for morphological keyword search API."""
 
-from pydantic import BaseModel, Field
 from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class KeywordSearchRequest(BaseModel):
@@ -18,7 +19,7 @@ class KeywordSearchRequest(BaseModel):
     word_filter: Optional[str] = Field(
         default=None,
         max_length=100,
-        description="Filter verses to only those containing this specific derived word (token_clean form)",
+        description="Filter verses to only those containing this specific derived word (token_clean form)",  # noqa: E501
     )
 
 

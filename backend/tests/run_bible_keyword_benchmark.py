@@ -21,15 +21,15 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 console = Console()
 
@@ -163,9 +163,7 @@ async def run_all_benchmarks() -> List[BenchmarkResult]:
         TextColumn("[progress.description]{task.description}"),
         console=console,
     ) as progress:
-        task = progress.add_task(
-            "[cyan]Running benchmarks...", total=len(BENCHMARK_ROOTS)
-        )
+        task = progress.add_task("[cyan]Running benchmarks...", total=len(BENCHMARK_ROOTS))
 
         for root in BENCHMARK_ROOTS:
             progress.update(
@@ -187,8 +185,8 @@ async def run_all_benchmarks() -> List[BenchmarkResult]:
 async def test_index_usage() -> RegressionTestResult:
     """Verify that PostgreSQL uses Index Scan (not Seq Scan) for strong_number queries."""
     try:
-        from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
         from sqlalchemy import text as sa_text
+        from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
         DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:54322/postgres"
         engine = create_async_engine(DATABASE_URL, echo=False)
@@ -204,9 +202,7 @@ async def test_index_usage() -> RegressionTestResult:
 
             # Check for Index Scan (not Seq Scan)
             has_index_scan = "Index Scan" in explain_output
-            has_seq_scan = (
-                "Seq Scan" in explain_output and "Index Scan" not in explain_output
-            )
+            has_seq_scan = "Seq Scan" in explain_output and "Index Scan" not in explain_output
 
             await engine.dispose()
 
@@ -283,7 +279,7 @@ async def test_quran_keyword_search() -> RegressionTestResult:
                 test_name="Quran Keyword Search",
                 description="Verify Quran keyword search CLI still works",
                 passed=False,
-                details=f"✗ Command failed with exit code {result.returncode}\nStderr: {result.stderr[:200]}",
+                details=f"✗ Command failed with exit code {result.returncode}\nStderr: {result.stderr[:200]}",  # noqa: E501
             )
 
     except subprocess.TimeoutExpired:
@@ -339,7 +335,7 @@ async def test_frontend_tests() -> RegressionTestResult:
                 test_name="Frontend Tests",
                 description="Verify frontend tests pass",
                 passed=False,
-                details=f"✗ Tests failed with exit code {result.returncode}\nStderr: {result.stderr[:300]}",
+                details=f"✗ Tests failed with exit code {result.returncode}\nStderr: {result.stderr[:300]}",  # noqa: E501
             )
 
     except subprocess.TimeoutExpired:
@@ -408,9 +404,7 @@ def print_benchmark_results(results: List[BenchmarkResult]) -> None:
     console.print("═" * 100 + "\n")
 
     # Create results table
-    table = Table(
-        title="Benchmark Results", show_header=True, header_style="bold magenta"
-    )
+    table = Table(title="Benchmark Results", show_header=True, header_style="bold magenta")
     table.add_column("Strong's", width=10)
     table.add_column("Hebrew", width=10)
     table.add_column("Transliteration", width=15)
@@ -461,15 +455,15 @@ def print_benchmark_results(results: List[BenchmarkResult]) -> None:
         1, sum(1 for r in results if not r.error)
     )
 
-    console.print(f"\n[bold]Summary:[/bold]")
+    console.print("\n[bold]Summary:[/bold]")
     console.print(f"  Total benchmarks: {total_count}")
     console.print(
-        f"  Passed: [green]{passed_count}/{total_count}[/green] ({passed_count / total_count * 100:.0f}%)"
+        f"  Passed: [green]{passed_count}/{total_count}[/green] ({passed_count / total_count * 100:.0f}%)"  # noqa: E501
     )
     console.print(f"  Average response time: [cyan]{avg_time:.0f}ms[/cyan]")
 
     # Performance by category
-    console.print(f"\n[bold]Performance by Frequency Category:[/bold]")
+    console.print("\n[bold]Performance by Frequency Category:[/bold]")
     for category in ["low", "medium", "high", "very_high"]:
         cat_results = [r for r in results if r.frequency_category == category]
         if cat_results:
@@ -478,22 +472,18 @@ def print_benchmark_results(results: List[BenchmarkResult]) -> None:
             cat_passed = sum(1 for r in cat_results if r.passed)
             status = "✓" if cat_avg <= cat_target else "✗"
             console.print(
-                f"  {category.upper():12} ({len(cat_results)} roots): {cat_avg:6.0f}ms avg (target: {cat_target}ms) {status} [{cat_passed}/{len(cat_results)} passed]"
+                f"  {category.upper():12} ({len(cat_results)} roots): {cat_avg:6.0f}ms avg (target: {cat_target}ms) {status} [{cat_passed}/{len(cat_results)} passed]"  # noqa: E501
             )
 
 
 def print_regression_results(results: List[RegressionTestResult]) -> None:
     """Print regression test results."""
     console.print("\n" + "═" * 100)
-    console.print(
-        "[bold yellow]                         REGRESSION TEST RESULTS[/bold yellow]"
-    )
+    console.print("[bold yellow]                         REGRESSION TEST RESULTS[/bold yellow]")
     console.print("═" * 100 + "\n")
 
     # Create results table
-    table = Table(
-        title="Regression Tests", show_header=True, header_style="bold magenta"
-    )
+    table = Table(title="Regression Tests", show_header=True, header_style="bold magenta")
     table.add_column("Test", width=25)
     table.add_column("Description", width=40)
     table.add_column("Status", width=10)
@@ -517,7 +507,7 @@ def print_regression_results(results: List[RegressionTestResult]) -> None:
     # Print full details for failed tests
     failed_tests = [r for r in results if not r.passed]
     if failed_tests:
-        console.print(f"\n[bold red]Failed Test Details:[/bold red]")
+        console.print("\n[bold red]Failed Test Details:[/bold red]")
         for r in failed_tests:
             console.print(f"\n[red]✗ {r.test_name}[/red]")
             if r.error:
@@ -528,9 +518,9 @@ def print_regression_results(results: List[RegressionTestResult]) -> None:
     # Summary
     passed_count = sum(1 for r in results if r.passed)
     total_count = len(results)
-    console.print(f"\n[bold]Regression Summary:[/bold]")
+    console.print("\n[bold]Regression Summary:[/bold]")
     console.print(
-        f"  Passed: [green]{passed_count}/{total_count}[/green] ({passed_count / total_count * 100:.0f}%)"
+        f"  Passed: [green]{passed_count}/{total_count}[/green] ({passed_count / total_count * 100:.0f}%)"  # noqa: E501
     )
 
 
@@ -558,11 +548,7 @@ def compile_report(
             "by_category": {
                 category: {
                     "count": len(
-                        [
-                            r
-                            for r in benchmark_results
-                            if r.frequency_category == category
-                        ]
+                        [r for r in benchmark_results if r.frequency_category == category]
                     ),
                     "avg_time_ms": sum(
                         r.response_time_ms
@@ -571,13 +557,7 @@ def compile_report(
                     )
                     / max(
                         1,
-                        len(
-                            [
-                                r
-                                for r in benchmark_results
-                                if r.frequency_category == category
-                            ]
-                        ),
+                        len([r for r in benchmark_results if r.frequency_category == category]),
                     ),
                     "target_ms": PERFORMANCE_TARGETS[category],
                     "passed": sum(
@@ -666,17 +646,17 @@ async def main():
 
     if benchmark_pass_rate >= 80 and regression_pass_rate == 100:
         console.print(
-            "[bold green]✅ ALL TESTS PASSED[/bold green] - System meets performance targets and no regressions detected"
+            "[bold green]✅ ALL TESTS PASSED[/bold green] - System meets performance targets and no regressions detected"  # noqa: E501
         )
         return 0
     elif benchmark_pass_rate >= 60 and regression_pass_rate >= 66:
         console.print(
-            "[bold yellow]⚠️ PARTIAL PASS[/bold yellow] - Some performance issues or regressions detected"
+            "[bold yellow]⚠️ PARTIAL PASS[/bold yellow] - Some performance issues or regressions detected"  # noqa: E501
         )
         return 1
     else:
         console.print(
-            "[bold red]❌ TESTS FAILED[/bold red] - Significant performance issues or regressions detected"
+            "[bold red]❌ TESTS FAILED[/bold red] - Significant performance issues or regressions detected"  # noqa: E501
         )
         return 1
 

@@ -84,9 +84,7 @@ def load_strongs_data() -> list[dict]:
             {
                 "number": number,
                 "original_word": entry.get("lemma", ""),
-                "transliteration": entry.get(
-                    "translit", ""
-                ),  # Note: Greek uses "translit"
+                "transliteration": entry.get("translit", ""),  # Note: Greek uses "translit"
                 "definition": entry.get("strongs_def", ""),
                 "language": "greek",
             }
@@ -149,9 +147,7 @@ def validate_counts(conn) -> bool:
         log.info("✅ Total entries: %d", total_count)
 
     # Hebrew count
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_strongs WHERE language = 'hebrew'")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_strongs WHERE language = 'hebrew'"))
     hebrew_count = result.scalar()
     if hebrew_count != 8427:
         log.error("❌ Expected 8,427 Hebrew entries, got %d", hebrew_count)
@@ -160,9 +156,7 @@ def validate_counts(conn) -> bool:
         log.info("✅ Hebrew entries: %d", hebrew_count)
 
     # Greek count
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_strongs WHERE language = 'greek'")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_strongs WHERE language = 'greek'"))
     greek_count = result.scalar()
     if greek_count != 5523:
         log.error("❌ Expected 5,523 Greek entries, got %d", greek_count)

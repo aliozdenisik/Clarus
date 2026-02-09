@@ -1,13 +1,14 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, Optional
 
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.api_key_validator import get_current_user_flexible
 from app.db import get_db
 from app.models import UserPreferences
-from app.auth.api_key_validator import get_current_user_flexible
 
 router = APIRouter()
 
@@ -16,9 +17,7 @@ class PreferencesUpdate(BaseModel):
     theme: Optional[str] = Field(None, pattern="^(light|dark|system)$")
     language: Optional[str] = Field(None, pattern="^(tr|en|ar)$")
     default_search_source: Optional[str] = Field(None, pattern="^(quran|bible|all)$")
-    default_bible_testament: Optional[str] = Field(
-        None, pattern="^(ot|nt|apocrypha|all)$"
-    )
+    default_bible_testament: Optional[str] = Field(None, pattern="^(ot|nt|apocrypha|all)$")
     results_per_page: Optional[int] = Field(None, ge=5, le=50)
     enable_streaming: Optional[bool] = None
     enable_multi_agent: Optional[bool] = None

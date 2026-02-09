@@ -10,11 +10,11 @@ from pathlib import Path
 # Ensure backend/ is on sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from sqlalchemy import create_engine, text, inspect
+from sqlalchemy import create_engine, text
 
 # Import Base and models so metadata is populated
 from app.db import Base
-from app.models import QMSurah, QMAyah, QMWord  # noqa: F401 — registers tables on Base.metadata
+from app.models import QMAyah, QMSurah, QMWord  # noqa: F401 — registers tables on Base.metadata
 
 DATABASE_URL = "postgresql://postgres:postgres@localhost:54322/postgres"
 
@@ -23,9 +23,9 @@ QM_TABLES = ["qm_words", "qm_ayahs", "qm_surahs"]  # drop order (children first)
 INDEXES_SQL = [
     "CREATE INDEX IF NOT EXISTS ix_qm_words_root ON qm_words(root);",
     "CREATE INDEX IF NOT EXISTS ix_qm_words_root_bw ON qm_words(root_buckwalter);",
-    "CREATE INDEX IF NOT EXISTS ix_qm_words_root_bw_trgm ON qm_words USING gin(root_buckwalter gin_trgm_ops);",
+    "CREATE INDEX IF NOT EXISTS ix_qm_words_root_bw_trgm ON qm_words USING gin(root_buckwalter gin_trgm_ops);",  # noqa: E501
     "CREATE INDEX IF NOT EXISTS ix_qm_words_lemma ON qm_words(lemma);",
-    "CREATE INDEX IF NOT EXISTS ix_qm_words_token_clean_trgm ON qm_words USING gin(token_clean gin_trgm_ops);",
+    "CREATE INDEX IF NOT EXISTS ix_qm_words_token_clean_trgm ON qm_words USING gin(token_clean gin_trgm_ops);",  # noqa: E501
     "CREATE INDEX IF NOT EXISTS ix_qm_words_ayah_id ON qm_words(ayah_id);",
     "CREATE INDEX IF NOT EXISTS ix_qm_ayahs_surah_id ON qm_ayahs(surah_id);",
 ]
@@ -48,9 +48,7 @@ def main() -> bool:
 
         # 3. Create tables via SQLAlchemy metadata (filtered to qm_* only)
         qm_table_objects = [
-            table
-            for table in Base.metadata.sorted_tables
-            if table.name.startswith("qm_")
+            table for table in Base.metadata.sorted_tables if table.name.startswith("qm_")
         ]
         Base.metadata.create_all(engine, tables=qm_table_objects)
         print("✅ Created qm_surahs, qm_ayahs, qm_words tables")
@@ -99,9 +97,7 @@ def main() -> bool:
             for name, defn in gin_indexes:
                 print(f"   - {name}")
 
-        print(
-            "\n✅ Migration complete. All 3 qm_* tables and indexes created successfully."
-        )
+        print("\n✅ Migration complete. All 3 qm_* tables and indexes created successfully.")
         return True
 
     except Exception as e:

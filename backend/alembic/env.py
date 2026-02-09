@@ -3,28 +3,28 @@
 import asyncio
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+from alembic import context
 from app.config import settings
 from app.db import Base
 
 # Import all models so metadata is populated
 from app.models import (  # noqa: F401
-    User,
-    SearchHistory,
-    UserPreferences,
-    QMSurah,
-    QMAyah,
-    QMWord,
-    BMBook,
-    BMVerse,
-    BMWord,
-    BMStrongs,
-    BMVerseMapping,
-    BetterAuthUser,
     BetterAuthSession,
+    BetterAuthUser,
+    BMBook,
+    BMStrongs,
+    BMVerse,
+    BMVerseMapping,
+    BMWord,
+    QMAyah,
+    QMSurah,
+    QMWord,
+    SearchHistory,
+    User,
+    UserPreferences,
     UserStats,
 )
 

@@ -11,12 +11,13 @@ Run: python tests/word_search_comprehensive_test.py
 """
 
 import asyncio
-import httpx
 from dataclasses import dataclass
 from typing import Optional
+
+import httpx
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 console = Console()
 API_BASE = "http://localhost:8000"
@@ -109,15 +110,9 @@ LATIN_TESTS = [
         50,
         language_filter="hebrew",
     ),
-    TestCase(
-        "LAT-04", "latin", "dabar", "Dabar (Hebrew Latin)", 50, language_filter="hebrew"
-    ),
-    TestCase(
-        "LAT-05", "latin", "torah", "Torah (Hebrew Latin)", 10, language_filter="hebrew"
-    ),
-    TestCase(
-        "LAT-06", "latin", "amen", "Amen (Hebrew Latin)", 1, language_filter="hebrew"
-    ),
+    TestCase("LAT-04", "latin", "dabar", "Dabar (Hebrew Latin)", 50, language_filter="hebrew"),
+    TestCase("LAT-05", "latin", "torah", "Torah (Hebrew Latin)", 10, language_filter="hebrew"),
+    TestCase("LAT-06", "latin", "amen", "Amen (Hebrew Latin)", 1, language_filter="hebrew"),
     TestCase(
         "LAT-07",
         "latin",
@@ -253,7 +248,7 @@ async def run_test_category(
             else "yellow"
         )
         console.print(
-            f"  [{status_color}]{result['status']}[/{status_color}] {test.id}: {test.query} → {result.get('occurrences', 0)} occurrences ({result.get('root_source', 'N/A')})"
+            f"  [{status_color}]{result['status']}[/{status_color}] {test.id}: {test.query} → {result.get('occurrences', 0)} occurrences ({result.get('root_source', 'N/A')})"  # noqa: E501
         )
 
     return results
@@ -272,19 +267,13 @@ def print_summary_table(results: list[dict], title: str):
 
     for r in results:
         status_style = (
-            "green"
-            if r["status"] == "PASS"
-            else "red"
-            if r["status"] == "FAIL"
-            else "yellow"
+            "green" if r["status"] == "PASS" else "red" if r["status"] == "FAIL" else "yellow"
         )
         root_source = r.get("root_source") or "N/A"
         table.add_row(
             r["id"],
             r["query"],
-            r["description"][:25] + "..."
-            if len(r["description"]) > 25
-            else r["description"],
+            r["description"][:25] + "..." if len(r["description"]) > 25 else r["description"],
             str(r.get("occurrences", "N/A")),
             str(r.get("expected_min", "N/A")),
             root_source[:15] if root_source else "N/A",
@@ -293,9 +282,7 @@ def print_summary_table(results: list[dict], title: str):
         table.add_row(
             r["id"],
             r["query"],
-            r["description"][:25] + "..."
-            if len(r["description"]) > 25
-            else r["description"],
+            r["description"][:25] + "..." if len(r["description"]) > 25 else r["description"],
             str(r.get("occurrences", "N/A")),
             str(r.get("expected_min", "N/A")),
             r.get("root_source", "N/A")[:15],
@@ -339,9 +326,7 @@ async def main():
         print_summary_table(greek_results, "Greek Test Results")
 
         # Run Latin tests
-        latin_results = await run_test_category(
-            client, LATIN_TESTS, "Latin Transliteration"
-        )
+        latin_results = await run_test_category(client, LATIN_TESTS, "Latin Transliteration")
         all_results.extend(latin_results)
         print_summary_table(latin_results, "Latin Transliteration Test Results")
 

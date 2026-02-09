@@ -16,12 +16,13 @@ Usage:
 """
 
 import json
+import re
 import sys
 import time
-import re
-from pathlib import Path
 from dataclasses import dataclass, field
-from typing import List, Dict, Set, Tuple, Any
+from pathlib import Path
+from typing import Any, Dict, List, Set, Tuple
+
 from dotenv import load_dotenv
 
 # Load environment variables first
@@ -30,9 +31,9 @@ load_dotenv()
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
+from rich.console import Console  # noqa: E402
+from rich.panel import Panel  # noqa: E402
+from rich.table import Table  # noqa: E402
 
 console = Console()
 
@@ -168,9 +169,7 @@ def extract_verse_from_result(result, source: str) -> str:
             return f"{surah_id}:{verse_id}"
     else:
         book_name = getattr(result, "book_name", None)
-        chapter = getattr(result, "chapter", None) or getattr(
-            result, "chapter_number", None
-        )
+        chapter = getattr(result, "chapter", None) or getattr(result, "chapter_number", None)
         verse = getattr(result, "verse", None) or getattr(result, "verse_number", None)
 
         # Handle semantic chunks
@@ -183,9 +182,7 @@ def extract_verse_from_result(result, source: str) -> str:
             book_name = payload.get("book_name")
             chapter = payload.get("chapter") or payload.get("chapter_number")
             verse = (
-                payload.get("verse")
-                or payload.get("verse_number")
-                or payload.get("start_verse")
+                payload.get("verse") or payload.get("verse_number") or payload.get("start_verse")
             )
 
         if book_name and chapter and verse:
@@ -194,9 +191,7 @@ def extract_verse_from_result(result, source: str) -> str:
     return None
 
 
-def calculate_metrics(
-    expected: Set[str], retrieved: Set[str]
-) -> Tuple[float, float, float]:
+def calculate_metrics(expected: Set[str], retrieved: Set[str]) -> Tuple[float, float, float]:
     """Calculate precision, recall, and F1 score."""
     if not retrieved:
         return (1.0, 0.0, 0.0) if expected else (1.0, 1.0, 1.0)
@@ -222,11 +217,7 @@ def calculate_metrics(
 
     precision = len(matches) / len(retrieved) if retrieved else 0.0
     recall = len(matches) / len(expected) if expected else 1.0
-    f1 = (
-        2 * precision * recall / (precision + recall)
-        if (precision + recall) > 0
-        else 0.0
-    )
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
 
     return precision, recall, f1
 
@@ -276,7 +267,7 @@ class RAGWithStageLogging:
                 result = translator.translate_query(question, corpus=corpus)
                 translated_question = result.translated_query
                 detected_lang = result.detected_language
-            except Exception as e:
+            except Exception:
                 translated_question = question  # fallback: use original
                 detected_lang = query_language or "unknown"
             stage0_duration = (time.time() - stage0_start) * 1000
@@ -304,7 +295,7 @@ class RAGWithStageLogging:
         stage1_start = time.time()
         try:
             enhanced_query = self.rag.enhancer.expand_query(question, corpus=corpus)
-        except Exception as e:
+        except Exception:
             enhanced_query = question
 
         stage1_duration = (time.time() - stage1_start) * 1000
@@ -331,7 +322,7 @@ class RAGWithStageLogging:
                 enhanced_query, n=3, corpus=corpus
             )
             queries.extend(multi_queries)
-        except Exception as e:
+        except Exception:
             pass
 
         # Deduplicate
@@ -394,7 +385,7 @@ class RAGWithStageLogging:
 
         try:
             final_results = self.rag._rerank_results(question, search_results, top_k=10)
-        except Exception as e:
+        except Exception:
             final_results = search_results[:10]
 
         stage4_duration = (time.time() - stage4_start) * 1000
@@ -487,7 +478,7 @@ def run_single_test(rag_wrapper: RAGWithStageLogging, test: TestCase) -> TestRes
 def print_stage_log(stage: StageLog, indent: str = "   "):
     """Print a single stage log with formatting."""
     console.print(
-        f"{indent}[bold]Stage {stage.stage_number}: {stage.stage_name}[/bold] [dim]({stage.duration_ms:.0f}ms)[/dim]"
+        f"{indent}[bold]Stage {stage.stage_number}: {stage.stage_name}[/bold] [dim]({stage.duration_ms:.0f}ms)[/dim]"  # noqa: E501
     )
 
     # Print input (truncated)
@@ -500,7 +491,7 @@ def print_stage_log(stage: StageLog, indent: str = "   "):
     if isinstance(stage.output_data, list):
         if len(stage.output_data) > 5:
             console.print(
-                f"{indent}  [dim]Output:[/dim] {stage.output_data[:5]} ... (+{len(stage.output_data) - 5} more)"
+                f"{indent}  [dim]Output:[/dim] {stage.output_data[:5]} ... (+{len(stage.output_data) - 5} more)"  # noqa: E501
             )
         else:
             console.print(f"{indent}  [dim]Output:[/dim] {stage.output_data}")
@@ -560,7 +551,7 @@ def run_all_tests(test_data_path: str) -> Dict[str, Any]:
         )
         console.print(f"[dim]Question:[/dim] {test.question}")
         console.print(
-            f"[dim]Expected:[/dim] {test.expected_verses if test.expected_verses else '[HALLUCINATION TEST]'}"
+            f"[dim]Expected:[/dim] {test.expected_verses if test.expected_verses else '[HALLUCINATION TEST]'}"  # noqa: E501
         )
         console.print()
 
@@ -580,9 +571,7 @@ def run_all_tests(test_data_path: str) -> Dict[str, Any]:
             console.print(f"[red]❌ ERROR: {result.error}[/red]")
         elif result.is_hallucination_test:
             if result.hallucination_passed:
-                console.print(
-                    f"[green]✅ PASSED[/green] - System correctly returned no results"
-                )
+                console.print("[green]✅ PASSED[/green] - System correctly returned no results")
             else:
                 console.print(
                     f"[red]❌ FAILED[/red] - System hallucinated: {result.retrieved_verses[:3]}"
@@ -591,7 +580,7 @@ def run_all_tests(test_data_path: str) -> Dict[str, Any]:
             status = "✅" if result.recall > 0.5 else "⚠️" if result.recall > 0 else "❌"
             console.print(f"[dim]Retrieved:[/dim] {result.retrieved_verses[:5]}")
             console.print(
-                f"{status} [bold]P={result.precision * 100:.0f}% R={result.recall * 100:.0f}% F1={result.f1_score * 100:.0f}%[/bold] | Total: {result.elapsed_time * 1000:.0f}ms"
+                f"{status} [bold]P={result.precision * 100:.0f}% R={result.recall * 100:.0f}% F1={result.f1_score * 100:.0f}%[/bold] | Total: {result.elapsed_time * 1000:.0f}ms"  # noqa: E501
             )
 
         # Stage timing summary
@@ -657,27 +646,17 @@ def compile_report(results: List[TestResult], metadata: Dict) -> Dict[str, Any]:
         "stage_timing": stage_timing,
         "overall": calc_stats(normal_results),
         "by_source": {
-            "quran": calc_stats(
-                [r for r in quran_results if not r.is_hallucination_test]
-            ),
-            "bible": calc_stats(
-                [r for r in bible_results if not r.is_hallucination_test]
-            ),
+            "quran": calc_stats([r for r in quran_results if not r.is_hallucination_test]),
+            "bible": calc_stats([r for r in bible_results if not r.is_hallucination_test]),
         },
         "by_difficulty": {
             "easy": calc_stats([r for r in normal_results if r.difficulty == "easy"]),
-            "medium": calc_stats(
-                [r for r in normal_results if r.difficulty == "medium"]
-            ),
+            "medium": calc_stats([r for r in normal_results if r.difficulty == "medium"]),
             "hard": calc_stats([r for r in normal_results if r.difficulty == "hard"]),
         },
         "by_query_type": {
-            "native": calc_stats(
-                [r for r in normal_results if r.query_language == "native"]
-            ),
-            "translated": calc_stats(
-                [r for r in normal_results if r.query_language != "native"]
-            ),
+            "native": calc_stats([r for r in normal_results if r.query_language == "native"]),
+            "translated": calc_stats([r for r in normal_results if r.query_language != "native"]),
         },
         "hallucination": {
             "total": len(hallucination_results),
@@ -730,14 +709,12 @@ def print_report(report: Dict):
     """Print formatted report to console."""
 
     console.print("\n" + "═" * 80)
-    console.print(
-        "[bold cyan]                         TEST RESULTS SUMMARY[/bold cyan]"
-    )
+    console.print("[bold cyan]                         TEST RESULTS SUMMARY[/bold cyan]")
     console.print("═" * 80 + "\n")
 
     # Overall metrics
     overall = report["overall"]
-    console.print(f"[bold]Overall Metrics (Normal Tests):[/bold]")
+    console.print("[bold]Overall Metrics (Normal Tests):[/bold]")
     console.print(f"  Precision: [green]{overall['precision'] * 100:.1f}%[/green]")
     console.print(f"  Recall:    [green]{overall['recall'] * 100:.1f}%[/green]")
     console.print(f"  F1 Score:  [green]{overall['f1'] * 100:.1f}%[/green]")
@@ -745,17 +722,13 @@ def print_report(report: Dict):
 
     # Stage timing summary
     st = report["stage_timing"]
-    console.print(f"[bold]Average Stage Timing:[/bold]")
+    console.print("[bold]Average Stage Timing:[/bold]")
     if st["query_translation_avg_ms"] > 0:
         console.print(
-            f"  0. Query Translation: [cyan]{st['query_translation_avg_ms']:.0f}ms[/cyan] [dim](translated queries only)[/dim]"
+            f"  0. Query Translation: [cyan]{st['query_translation_avg_ms']:.0f}ms[/cyan] [dim](translated queries only)[/dim]"  # noqa: E501
         )
-    console.print(
-        f"  1. Query Enhancement: [cyan]{st['query_enhancement_avg_ms']:.0f}ms[/cyan]"
-    )
-    console.print(
-        f"  2. Multi-Query Gen:   [cyan]{st['multi_query_avg_ms']:.0f}ms[/cyan]"
-    )
+    console.print(f"  1. Query Enhancement: [cyan]{st['query_enhancement_avg_ms']:.0f}ms[/cyan]")
+    console.print(f"  2. Multi-Query Gen:   [cyan]{st['multi_query_avg_ms']:.0f}ms[/cyan]")
     console.print(f"  3. Search (RRF):      [cyan]{st['search_avg_ms']:.0f}ms[/cyan]")
     console.print(f"  4. Reranking:         [cyan]{st['rerank_avg_ms']:.0f}ms[/cyan]")
     console.print()
@@ -828,17 +801,15 @@ def print_report(report: Dict):
     # Hallucination tests
     hall = report["hallucination"]
     if hall["total"] > 0:
-        console.print(f"[bold]Hallucination Detection:[/bold]")
+        console.print("[bold]Hallucination Detection:[/bold]")
         console.print(f"  Tests: {hall['total']}")
         console.print(
-            f"  Passed: [green]{hall['passed']}/{hall['total']}[/green] ({hall['pass_rate'] * 100:.0f}%)"
+            f"  Passed: [green]{hall['passed']}/{hall['total']}[/green] ({hall['pass_rate'] * 100:.0f}%)"  # noqa: E501
         )
         console.print()
 
     # Detailed results table
-    detail_table = Table(
-        title="Detailed Results", show_header=True, header_style="bold magenta"
-    )
+    detail_table = Table(title="Detailed Results", show_header=True, header_style="bold magenta")
     detail_table.add_column("#", width=5)
     detail_table.add_column("Source", width=6)
     detail_table.add_column("Diff", width=6)
@@ -871,27 +842,19 @@ def print_report(report: Dict):
     console.print("\n" + "═" * 80)
     console.print(f"[bold]Total Tests:[/bold] {summary['total_tests']}")
     console.print(f"[bold]Total Time:[/bold] {summary['total_time']:.1f}s")
-    console.print(
-        f"[bold]Avg Time/Query:[/bold] {summary['avg_time_per_query'] * 1000:.0f}ms"
-    )
+    console.print(f"[bold]Avg Time/Query:[/bold] {summary['avg_time_per_query'] * 1000:.0f}ms")
     console.print(f"[bold]Errors:[/bold] {summary['errors']}")
 
     # Final verdict
     overall_f1 = report["overall"]["f1"]
     if overall_f1 >= 0.8:
-        console.print(
-            "\n[bold green]✅ EXCELLENT: System performs very well![/bold green]"
-        )
+        console.print("\n[bold green]✅ EXCELLENT: System performs very well![/bold green]")
     elif overall_f1 >= 0.6:
-        console.print(
-            "\n[bold yellow]⚠️ GOOD: System performs reasonably well[/bold yellow]"
-        )
+        console.print("\n[bold yellow]⚠️ GOOD: System performs reasonably well[/bold yellow]")
     elif overall_f1 >= 0.4:
         console.print("\n[bold orange3]⚠️ FAIR: System needs improvement[/bold orange3]")
     else:
-        console.print(
-            "\n[bold red]❌ POOR: System needs significant improvement[/bold red]"
-        )
+        console.print("\n[bold red]❌ POOR: System needs significant improvement[/bold red]")
 
 
 if __name__ == "__main__":

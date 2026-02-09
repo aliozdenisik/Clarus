@@ -9,21 +9,22 @@ Tests cover:
 - State transitions (closed → open → half-open → closed)
 """
 
-import pytest
 import sys
+
 import pybreaker
+import pytest
 
 # Add backend to path for imports
 sys.path.insert(0, "/home/freyja/qdrant/backend")
 
 from src.circuit_breaker import (
-    qdrant_breaker,
-    llm_breaker,
-    embeddings_breaker,
-    qdrant_with_breaker,
-    llm_with_breaker,
-    embeddings_with_breaker,
     CircuitBreakerError,
+    embeddings_breaker,
+    embeddings_with_breaker,
+    llm_breaker,
+    llm_with_breaker,
+    qdrant_breaker,
+    qdrant_with_breaker,
 )
 
 

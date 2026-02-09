@@ -8,19 +8,19 @@ Tests cover:
 """
 
 import json
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 # Add backend to path for imports
 sys.path.insert(0, "/home/freyja/qdrant/backend")
 
 from src.verse_parser import (
-    parse_verse_reference,
     ParsedReference,
     ParseError,
+    parse_verse_reference,
 )
-
 
 # Load test data
 TEST_DATA_PATH = Path(__file__).parent / "verse_lookup_test_data.json"

@@ -1,5 +1,5 @@
-
 import os
+
 import requests
 from dotenv import load_dotenv
 
@@ -19,7 +19,7 @@ try:
         print(f"Found {len(rerankers)} rerankers:")
         for r in rerankers:
             print(f" - {r}")
-        
+
         # Also print all models just in case
         if not rerankers:
             print("All models:")

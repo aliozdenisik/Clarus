@@ -10,13 +10,14 @@ This module contains:
 - build_paragraphs() helper function
 """
 
-from typing import List, Dict, Union, Tuple, cast
 import logging
 import re
+from typing import Dict, List, Tuple, Union, cast
+
 from pydantic import BaseModel
 
-from src.search import SearchResult, BibleSearchResult
 from src.multi_agent_answer_generator import MultiAgentAnswer
+from src.search import BibleSearchResult, SearchResult
 
 logger = logging.getLogger(__name__)
 
@@ -70,9 +71,7 @@ class VerseDetail(BaseModel):
     chapter: int  # Chapter/Surah number
     verse: int  # Verse number
     source: str  # Collection: 'quran_tr', 'bible_ot', 'bible_nt', 'bible_apocrypha'
-    translation: (
-        str  # "Diyanet Isleri Baskanligi" or "King James Version with Apocrypha"
-    )
+    translation: str  # "Diyanet Isleri Baskanligi" or "King James Version with Apocrypha"
     book_nr: int | None = None  # Bible book number (None for Quran)
 
 
@@ -103,9 +102,7 @@ def _extract_quran_verse_detail(result: SearchResult) -> Tuple[str, VerseDetail]
     )
 
 
-def _extract_bible_verse_detail(
-    result: BibleSearchResult, source: str
-) -> Tuple[str, VerseDetail]:
+def _extract_bible_verse_detail(result: BibleSearchResult, source: str) -> Tuple[str, VerseDetail]:
     """Extract citation reference and verse detail from Bible BibleSearchResult.
 
     Args:

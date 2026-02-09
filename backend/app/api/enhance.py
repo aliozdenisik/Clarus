@@ -1,12 +1,13 @@
 """REST API endpoint for query enhancement and keyword extraction."""
 
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
 import os
 import sys
 import time
+from typing import Any, Dict, Optional
+
 from dotenv import load_dotenv
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 
 from app.logging_config import get_logger, log_performance
 
@@ -18,15 +19,14 @@ env_path = os.path.join(
 )
 load_dotenv(env_path)
 
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from app.auth.api_key_validator import get_current_user_flexible
-from app.api.auth import check_rate_limit
-from app.db import get_db
-from src.query_enhancer import QueryEnhancer, KeywordSuggestion, EnhanceResponse
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
+
+from app.api.auth import check_rate_limit  # noqa: E402
+from app.auth.api_key_validator import get_current_user_flexible  # noqa: E402
+from app.db import get_db  # noqa: E402
+from src.query_enhancer import EnhanceResponse, KeywordSuggestion, QueryEnhancer  # noqa: E402
 
 router = APIRouter()
 

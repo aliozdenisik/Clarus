@@ -10,12 +10,13 @@ Provides end-to-end request correlation by:
 This enables tracing a user action from frontend -> backend -> logs -> monitoring.
 """
 
+import logging
+import uuid
+
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-import uuid
-import logging
 
-from app.logging_config import set_correlation_id, set_request_id, clear_context
+from app.logging_config import clear_context, set_correlation_id, set_request_id
 
 logger = logging.getLogger(__name__)
 

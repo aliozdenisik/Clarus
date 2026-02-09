@@ -12,10 +12,11 @@ Key Features:
 """
 
 import json
-import numpy as np
-from pathlib import Path
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import numpy as np
 from tqdm import tqdm
 
 from .data_loader import QuranChunk, QuranDataLoader
@@ -40,9 +41,7 @@ class SemanticChunk:
     combined_normalized: str = ""  # Normalized text for search
     combined_lemma: str = ""  # Lemmatized text for search
     verse_count: int = 0  # Number of verses in chunk
-    internal_similarities: List[float] = field(
-        default_factory=list
-    )  # Similarities within chunk
+    internal_similarities: List[float] = field(default_factory=list)  # Similarities within chunk
     avg_internal_similarity: float = 0.0  # Average internal similarity
 
     def __post_init__(self):
@@ -170,15 +169,15 @@ class SemanticVerseChunker:
             if meta.get("num_verses") == len(self._verses):
                 print(f"Loading cached embeddings from {cache_path}")
                 self._embeddings = np.load(cache_path)
+                if self._embeddings is None:
+                    raise RuntimeError("Failed to load cached embeddings")
                 return self._embeddings
 
         # Compute embeddings
         print(f"Computing embeddings for {len(self._verses)} verses...")
         texts = [v.translation for v in self._verses]
 
-        embeddings = self.encoder.encode_batch(
-            texts, show_progress=show_progress, batch_size=32
-        )
+        embeddings = self.encoder.encode_batch(texts, show_progress=show_progress, batch_size=32)
 
         self._embeddings = np.array(embeddings)
 
@@ -194,6 +193,8 @@ class SemanticVerseChunker:
             )
         print(f"Cached embeddings to {cache_path}")
 
+        if self._embeddings is None:
+            raise RuntimeError("Embedding computation failed")
         return self._embeddings
 
     def compute_similarities(
@@ -215,15 +216,21 @@ class SemanticVerseChunker:
         if self._embeddings is None:
             self.compute_embeddings()
 
+        if self._embeddings is None:
+            raise RuntimeError("Embeddings are not available")
+
         # Normalize embeddings for cosine similarity
-        norms = np.linalg.norm(self._embeddings, axis=1, keepdims=True)
-        normalized = self._embeddings / norms
+        embeddings_array = self._embeddings
+        norms = np.linalg.norm(embeddings_array, axis=1, keepdims=True)
+        normalized = embeddings_array / norms
 
         # Compute similarity between consecutive pairs
         # similarity[i] = cosine_sim(verse[i], verse[i+1])
         similarities = np.sum(normalized[:-1] * normalized[1:], axis=1)
 
         self._similarities = similarities
+        if self._similarities is None:
+            raise RuntimeError("Similarity computation failed")
         return self._similarities
 
     def detect_boundaries(
@@ -259,6 +266,11 @@ class SemanticVerseChunker:
         if self._similarities is None:
             self.compute_similarities()
 
+        if self._similarities is None:
+            raise RuntimeError("Similarities are not available")
+
+        similarities = self._similarities
+
         threshold = threshold if threshold is not None else self.similarity_threshold
 
         # Compute threshold based on strategy
@@ -266,26 +278,22 @@ class SemanticVerseChunker:
             # threshold is the percentile value (e.g., 10 means bottom 10%)
             # Lower percentile = more chunks, higher = fewer chunks
             percentile_value = threshold if threshold <= 100 else 10
-            computed_threshold = np.percentile(self._similarities, percentile_value)
-            print(
-                f"Percentile-based threshold: {computed_threshold:.4f} (p={percentile_value})"
-            )
+            computed_threshold = np.percentile(similarities, percentile_value)
+            print(f"Percentile-based threshold: {computed_threshold:.4f} (p={percentile_value})")
 
         elif threshold_type == "gradient":
             # Find positions where similarity drops sharply
             # Use gradient (rate of change) to detect boundaries
-            gradients = np.gradient(self._similarities)
+            gradients = np.gradient(similarities)
             # Threshold on negative gradients (drops in similarity)
-            grad_threshold = np.percentile(
-                gradients, threshold if threshold <= 100 else 10
-            )
+            grad_threshold = np.percentile(gradients, threshold if threshold <= 100 else 10)
             computed_threshold = None  # We'll use gradient-based detection
             print(f"Gradient-based detection: threshold={grad_threshold:.4f}")
 
         elif threshold_type == "interquartile":
             # IQR-based: split below Q1 - k*IQR
-            q1 = np.percentile(self._similarities, 25)
-            q3 = np.percentile(self._similarities, 75)
+            q1 = np.percentile(similarities, 25)
+            q3 = np.percentile(similarities, 75)
             iqr = q3 - q1
             k = threshold if threshold < 10 else 1.5  # default k=1.5
             computed_threshold = q1 - k * iqr
@@ -296,9 +304,7 @@ class SemanticVerseChunker:
         elif threshold_type == "std":
             # Standard deviation based: mean - k*std
             k = threshold if threshold < 10 else 1.0
-            computed_threshold = np.mean(self._similarities) - k * np.std(
-                self._similarities
-            )
+            computed_threshold = np.mean(similarities) - k * np.std(similarities)
             print(f"Std-based threshold: {computed_threshold:.4f} (k={k})")
 
         else:  # "fixed" or unknown
@@ -307,7 +313,8 @@ class SemanticVerseChunker:
 
         boundaries = [0]  # First verse always starts a chunk
 
-        for i, sim in enumerate(self._similarities):
+        grad_threshold: Optional[float] = None
+        for i, sim in enumerate(similarities):
             next_verse_idx = i + 1
 
             # Check surah boundary
@@ -318,7 +325,9 @@ class SemanticVerseChunker:
 
             # Gradient-based detection
             if threshold_type == "gradient":
-                gradients = np.gradient(self._similarities)
+                gradients = np.gradient(similarities)
+                if grad_threshold is None:
+                    continue
                 if gradients[i] < grad_threshold:
                     boundaries.append(next_verse_idx)
             # Standard similarity threshold check
@@ -343,6 +352,10 @@ class SemanticVerseChunker:
             Adjusted boundary list
         """
         adjusted = [0]
+        if self._similarities is None:
+            return adjusted
+
+        similarities = self._similarities
 
         for i in range(1, len(boundaries)):
             prev_boundary = adjusted[-1]
@@ -360,7 +373,7 @@ class SemanticVerseChunker:
                     search_end = min(start_idx + self.max_chunk_size, current_boundary)
 
                     if search_end - 1 > search_start:
-                        local_sims = self._similarities[search_start : search_end - 1]
+                        local_sims = similarities[search_start : search_end - 1]
                         min_sim_idx = np.argmin(local_sims) + search_start + 1
                         adjusted.append(min_sim_idx)
                         start_idx = min_sim_idx
@@ -402,6 +415,11 @@ class SemanticVerseChunker:
         self.compute_embeddings(show_progress=show_progress, use_cache=use_cache)
         self.compute_similarities()
 
+        if self._similarities is None:
+            raise RuntimeError("Similarities are not available")
+
+        similarities = self._similarities
+
         # Detect boundaries with specified threshold type
         boundaries = self.detect_boundaries(threshold_type=threshold_type)
 
@@ -430,7 +448,7 @@ class SemanticVerseChunker:
             # Get internal similarities
             internal_sims = []
             if end_idx - start_idx > 1:
-                internal_sims = self._similarities[start_idx : end_idx - 1].tolist()
+                internal_sims = similarities[start_idx : end_idx - 1].tolist()
 
             # Create chunk
             first_verse = chunk_verses[0]
@@ -449,9 +467,7 @@ class SemanticVerseChunker:
                 combined_translation=" ".join(v.translation for v in chunk_verses),
                 combined_arabic=" ".join(v.arabic_text for v in chunk_verses),
                 combined_normalized=" ".join(
-                    v.translation_normalized
-                    for v in chunk_verses
-                    if v.translation_normalized
+                    v.translation_normalized for v in chunk_verses if v.translation_normalized
                 ),
                 combined_lemma=" ".join(
                     v.translation_lemma for v in chunk_verses if v.translation_lemma
@@ -461,9 +477,7 @@ class SemanticVerseChunker:
 
             chunks.append(chunk)
 
-        print(
-            f"\nCreated {len(chunks)} semantic chunks from {len(self._verses)} verses"
-        )
+        print(f"\nCreated {len(chunks)} semantic chunks from {len(self._verses)} verses")
         print(f"Average chunk size: {len(self._verses) / len(chunks):.2f} verses")
 
         return chunks

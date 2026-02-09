@@ -1,18 +1,19 @@
 """SSE Streaming API routes for real-time LLM responses."""
 
-from fastapi import APIRouter, Depends, Query, HTTPException, Request
-from fastapi.responses import StreamingResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import AsyncGenerator, Literal
 import asyncio
 import json
 import logging
+import os
 import queue
 import sys
-import os
 import time
 import traceback
+from typing import AsyncGenerator, Literal
+
 from dotenv import load_dotenv
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = logging.getLogger(__name__)
 
@@ -22,26 +23,23 @@ env_path = os.path.join(
 )
 load_dotenv(env_path)
 
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from typing import Optional
+from typing import Optional  # noqa: E402
 
-from app.db import get_db
-from app.models import SearchHistory
-from app.api.auth import check_rate_limit
-from app.api.compare_helpers import (
-    build_verse_details,
+from app.api.auth import check_rate_limit  # noqa: E402
+from app.api.compare import extract_bible_verse_detail, extract_quran_verse_detail  # noqa: E402
+from app.api.compare_helpers import (  # noqa: E402
     build_paragraphs,
+    build_verse_details,
     strip_markdown_headers,
 )
-from app.api.compare import extract_quran_verse_detail, extract_bible_verse_detail
-from app.schemas.common import TranslatorType, DEFAULT_TRANSLATOR
-from src.ultimate_rag import UltimateRAG
-from src.comparative_rag import ComparativeRAG
-from src.query_translator import QueryTranslator, TranslationError
-
+from app.db import get_db  # noqa: E402
+from app.models import SearchHistory  # noqa: E402
+from app.schemas.common import DEFAULT_TRANSLATOR, TranslatorType  # noqa: E402
+from src.comparative_rag import ComparativeRAG  # noqa: E402
+from src.query_translator import QueryTranslator, TranslationError  # noqa: E402
+from src.ultimate_rag import UltimateRAG  # noqa: E402
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -65,11 +63,13 @@ async def get_current_user_from_sse(db: AsyncSession, request: Request):
     Raises:
         HTTPException 401: No valid session cookie or session expired
     """
-    from fastapi import HTTPException
-    from app.models import BetterAuthSession
-    from sqlalchemy import select
     from datetime import datetime, timezone
+
+    from fastapi import HTTPException
+    from sqlalchemy import select
+
     from app.auth.api_key_validator import _resolve_user_by_id
+    from app.models import BetterAuthSession
 
     cookie_token = (
         request.cookies.get("better_auth.session_token")
@@ -112,12 +112,10 @@ async def stream_search(
     source: Literal["quran", "ot", "nt", "apocrypha"] = Query(
         default="quran", description="Source collection: quran, ot, nt, or apocrypha"
     ),
-    language: Optional[str] = Query(
-        None, description="Detected user language (ISO 639-1)"
-    ),
+    language: Optional[str] = Query(None, description="Detected user language (ISO 639-1)"),
     translator: Optional[TranslatorType] = Query(
         default=DEFAULT_TRANSLATOR,
-        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
+        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",  # noqa: E501
     ),
     db: AsyncSession = Depends(get_db),
 ):
@@ -151,18 +149,12 @@ async def stream_search(
         # Perform ask (which includes search + answer generation)
         # This eliminates the duplicate search call
         try:
-            logger.info(
-                "[SSE /search] Starting ask call (search + answer generation)..."
-            )
+            logger.info("[SSE /search] Starting ask call (search + answer generation)...")
             quran_translator = translator or DEFAULT_TRANSLATOR
             if source == "quran":
-                ask_result = await rag.ask_quran(
-                    q, translator=quran_translator, top_k=10
-                )
+                ask_result = await rag.ask_quran(q, translator=quran_translator, top_k=10)
             elif source in ["ot", "nt", "apocrypha"]:
-                ask_result = await rag.ask_bible(
-                    q, translation="kjva", testament=source, top_k=10
-                )
+                ask_result = await rag.ask_bible(q, translation="kjva", testament=source, top_k=10)
             else:
                 ask_result = await rag.ask_bible(q, top_k=10)
 
@@ -175,7 +167,7 @@ async def stream_search(
             await asyncio.sleep(0.1)
 
             # Send "generating" status (already done, but keep for UI consistency)
-            yield f"data: {json.dumps({'status': 'generating', 'message': 'Yanıt oluşturuluyor...'})}\n\n"
+            yield f"data: {json.dumps({'status': 'generating', 'message': 'Yanıt oluşturuluyor...'})}\n\n"  # noqa: E501
             yield ": heartbeat\n\n"  # Keep connection alive
             logger.info("[SSE /search] Ask call completed, streaming answer...")
             await asyncio.sleep(0.1)
@@ -210,7 +202,7 @@ async def stream_search(
             # Translate answer if user's language differs from corpus language
             if detected_language and detected_language not in ("tr", "en"):
                 try:
-                    yield f"data: {json.dumps({'status': 'translating', 'message': 'Yanıt çevriliyor...'})}\n\n"
+                    yield f"data: {json.dumps({'status': 'translating', 'message': 'Yanıt çevriliyor...'})}\n\n"  # noqa: E501
                     answer_text = query_translator.translate_response(
                         answer_text,
                         target_lang=detected_language,
@@ -224,19 +216,17 @@ async def stream_search(
 
             words = answer_text.split()
 
-            logger.info(
-                f"[SSE /search] LLM returned answer, streaming {len(words)} words"
-            )
+            logger.info(f"[SSE /search] LLM returned answer, streaming {len(words)} words")
             for i, word in enumerate(words):
                 yield f"data: {json.dumps({'type': 'token', 'content': word + ' '})}\n\n"
                 await asyncio.sleep(0.03)  # 30ms per word
 
             logger.info("[SSE /search] Finished streaming words, sending citations")
             # Send citations
-            if hasattr(answer, "citations"):
-                citations = answer.citations
-            elif isinstance(answer, dict):
+            if isinstance(answer, dict):
                 citations = answer.get("citations", [])
+            elif hasattr(answer, "citations"):
+                citations = getattr(answer, "citations", [])
             else:
                 citations = []
             yield f"data: {json.dumps({'citations': citations})}\n\n"
@@ -249,11 +239,7 @@ async def stream_search(
                 # Determine source and build reference string
                 if source == "quran":
                     # Quran result: use surah_name:verse_id format
-                    ref_str = (
-                        f"{r.surah_name}:{r.verse_id}"
-                        if hasattr(r, "surah_name")
-                        else ""
-                    )
+                    ref_str = f"{r.surah_name}:{r.verse_id}" if hasattr(r, "surah_name") else ""
                     ref, detail = extract_quran_verse_detail(r)
                     if ref not in verse_details:
                         verse_details[ref] = detail.model_dump()
@@ -261,9 +247,7 @@ async def stream_search(
                 else:
                     # Bible result: use book_name chapter:verse format
                     ref_str = (
-                        f"{r.book_name} {r.chapter}:{r.verse}"
-                        if hasattr(r, "book_name")
-                        else ""
+                        f"{r.book_name} {r.chapter}:{r.verse}" if hasattr(r, "book_name") else ""
                     )
                     # Map source to bible_ot, bible_nt, or bible_apocrypha
                     if source == "ot":
@@ -291,7 +275,7 @@ async def stream_search(
             await asyncio.sleep(0.05)
 
             logger.info("[SSE /search] Stream complete, sending complete with results")
-            yield f"data: {json.dumps({'type': 'complete', 'result': {'results': results_data, 'answer': answer_text, 'citations': citations}})}\n\n"
+            yield f"data: {json.dumps({'type': 'complete', 'result': {'results': results_data, 'answer': answer_text, 'citations': citations}})}\n\n"  # noqa: E501
 
         except Exception as e:
             logger.error(f"[SSE /search] Error during generation: {e}")
@@ -317,12 +301,10 @@ async def stream_compare(
         "quran_tr,bible_ot,bible_nt,bible_apocrypha",
         description="Comma-separated list of collections to search (minimum 2)",
     ),
-    language: Optional[str] = Query(
-        None, description="Detected user language (ISO 639-1)"
-    ),
+    language: Optional[str] = Query(None, description="Detected user language (ISO 639-1)"),
     translator: Optional[TranslatorType] = Query(
         default=DEFAULT_TRANSLATOR,
-        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
+        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",  # noqa: E501
     ),
     db: AsyncSession = Depends(get_db),
 ):
@@ -351,9 +333,7 @@ async def stream_compare(
         "bible_tr_ot",
         "bible_tr_nt",
     }
-    collection_list = [
-        c.strip() for c in collections.split(",") if c.strip() in valid_collections
-    ]
+    collection_list = [c.strip() for c in collections.split(",") if c.strip() in valid_collections]
     if len(collection_list) < 2:
         raise HTTPException(
             status_code=400,
@@ -403,7 +383,7 @@ async def stream_compare(
                 while not progress_queue.empty():
                     try:
                         step_id, message = progress_queue.get_nowait()
-                        yield f"data: {json.dumps({'type': 'progress', 'step': step_id, 'message': message})}\n\n"
+                        yield f"data: {json.dumps({'type': 'progress', 'step': step_id, 'message': message})}\n\n"  # noqa: E501
                     except queue.Empty:
                         break
                 yield ": heartbeat\n\n"
@@ -415,7 +395,7 @@ async def stream_compare(
             while not progress_queue.empty():
                 try:
                     step_id, message = progress_queue.get_nowait()
-                    yield f"data: {json.dumps({'type': 'progress', 'step': step_id, 'message': message})}\n\n"
+                    yield f"data: {json.dumps({'type': 'progress', 'step': step_id, 'message': message})}\n\n"  # noqa: E501
                 except queue.Empty:
                     break
 
@@ -434,7 +414,7 @@ async def stream_compare(
             return
 
         # Initial status
-        yield f"data: {json.dumps({'type': 'progress', 'step': 'pipeline_started', 'message': 'Starting comparative analysis pipeline...'})}\n\n"
+        yield f"data: {json.dumps({'type': 'progress', 'step': 'pipeline_started', 'message': 'Starting comparative analysis pipeline...'})}\n\n"  # noqa: E501
         yield ": heartbeat\n\n"
         await asyncio.sleep(0.1)
 
@@ -442,7 +422,7 @@ async def stream_compare(
             # Step 1: Get search results (blocking call with real-time progress)
             quran_translator = translator or DEFAULT_TRANSLATOR
             logger.info(
-                f"[COMPARE] Starting search_all with collections: {collection_list}, translator: {quran_translator}"
+                f"[COMPARE] Starting search_all with collections: {collection_list}, translator: {quran_translator}"  # noqa: E501
             )
             async for event in _run_with_progress(
                 rag.search_all,
@@ -457,11 +437,11 @@ async def stream_compare(
             search_result = _thread_result["value"]
             logger.info(
                 f"[COMPARE] search_all completed, found {len(search_result.quran)} Quran, "
-                f"{len(search_result.ot)} OT, {len(search_result.nt)} NT, {len(search_result.apocrypha)} Apocrypha"
+                f"{len(search_result.ot)} OT, {len(search_result.nt)} NT, {len(search_result.apocrypha)} Apocrypha"  # noqa: E501
             )
 
             # Step 2: Build verse_details from search results (using shared helper)
-            yield f"data: {json.dumps({'type': 'progress', 'step': 'building_verse_details', 'message': 'Extracting verse metadata...'})}\n\n"
+            yield f"data: {json.dumps({'type': 'progress', 'step': 'building_verse_details', 'message': 'Extracting verse metadata...'})}\n\n"  # noqa: E501
             verse_details = build_verse_details(
                 quran_results=search_result.quran,
                 ot_results=search_result.ot,
@@ -488,12 +468,10 @@ async def stream_compare(
             ):
                 yield event
             result = _thread_result["value"]
-            logger.info(
-                f"[COMPARE] multi_agent_generator completed, result type: {type(result)}"
-            )
+            logger.info(f"[COMPARE] multi_agent_generator completed, result type: {type(result)}")
 
             # Build structured paragraphs (using shared helper)
-            paragraphs = build_paragraphs(result, as_dict=True)
+            paragraphs = build_paragraphs(result, as_dict=False)
 
             # Determine detected language for response translation
             detected_language = language  # From query param (may be None)
@@ -511,19 +489,30 @@ async def stream_compare(
 
             # Notify frontend if translation is happening
             if detected_language and detected_language not in ("tr", "en"):
-                yield f"data: {json.dumps({'type': 'progress', 'step': 'translating_response', 'message': 'Translating response...'})}\n\n"
+                yield f"data: {json.dumps({'type': 'progress', 'step': 'translating_response', 'message': 'Translating response...'})}\n\n"  # noqa: E501
 
             # Stream paragraphs one by one (with per-paragraph translation)
             for idx, para in enumerate(paragraphs, 1):
+                if isinstance(para, dict):
+                    para_content = str(para.get("content", ""))
+                    para_title = str(para.get("title", ""))
+                else:
+                    para_content = para.content
+                    para_title = para.title
+
                 if detected_language and detected_language not in ("tr", "en"):
                     try:
-                        para["content"] = strip_markdown_headers(
+                        para_content = strip_markdown_headers(
                             compare_translator.translate_response(
-                                para["content"],
+                                para_content,
                                 target_lang=detected_language,
                                 preserve_citations=True,
                             )
                         )
+                        if isinstance(para, dict):
+                            para["content"] = para_content
+                        else:
+                            para.content = para_content
                         # Titles are kept as-is: standard section names
                         # that should stay consistent across languages
                     except TranslationError as e:
@@ -532,18 +521,15 @@ async def stream_compare(
                             extra={"paragraph": idx, "error": str(e)},
                         )
                         # Graceful degradation: send untranslated paragraph
-                yield f"data: {json.dumps({'type': 'paragraph', 'data': para})}\n\n"
+                para_payload = para if isinstance(para, dict) else para.model_dump()
+                yield f"data: {json.dumps({'type': 'paragraph', 'data': para_payload})}\n\n"
                 yield ": heartbeat\n\n"
-                logger.info(
-                    f"[COMPARE] Sent paragraph {idx}/{len(paragraphs)}: {para['title']}"
-                )
+                logger.info(f"[COMPARE] Sent paragraph {idx}/{len(paragraphs)}: {para_title}")
                 await asyncio.sleep(0.1)  # Small delay for UI smoothness
 
             # Calculate and send complete statistics
             total_citations = sum(len(refs) for refs in result.citations.values())
-            total_verses = sum(
-                result.verses_provided.values()
-            )  # Align with batch endpoint
+            total_verses = sum(result.verses_provided.values())  # Align with batch endpoint
             latency_ms = int((time.time() - start_time) * 1000)
 
             stats_data = {
@@ -555,7 +541,7 @@ async def stream_compare(
             }
             yield f"data: {json.dumps({'type': 'stats', 'data': stats_data})}\n\n"
             logger.info(
-                f"[COMPARE] Sent stats: {total_verses} verses, {total_citations} citations, {latency_ms}ms"
+                f"[COMPARE] Sent stats: {total_verses} verses, {total_citations} citations, {latency_ms}ms"  # noqa: E501
             )
 
             logger.info("[COMPARE] Streaming completed successfully")

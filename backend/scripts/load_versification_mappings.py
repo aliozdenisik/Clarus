@@ -13,7 +13,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from sqlalchemy import create_engine, text
 
 # Import Base and models so metadata is populated
-from app.db import Base
 from app.models import BMVerseMapping  # noqa: F401 — registers table on Base.metadata
 
 DATABASE_URL = "postgresql://postgres:postgres@localhost:54322/postgres"
@@ -206,7 +205,7 @@ def main() -> bool:
                 conn.execute(
                     text(
                         """
-						INSERT INTO bm_verse_mappings 
+						INSERT INTO bm_verse_mappings
 						(mt_reference, lxx_reference, mapping_type, notes)
 						VALUES (:mt_ref, :lxx_ref, :mapping_type, :notes)
 						"""
@@ -233,7 +232,7 @@ def main() -> bool:
             # Show sample
             result = conn.execute(
                 text(
-                    "SELECT mt_reference, lxx_reference, mapping_type FROM bm_verse_mappings LIMIT 5"
+                    "SELECT mt_reference, lxx_reference, mapping_type FROM bm_verse_mappings LIMIT 5"  # noqa: E501
                 )
             )
             print("\n📋 Sample mappings:")

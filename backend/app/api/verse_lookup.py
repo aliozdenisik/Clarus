@@ -1,29 +1,28 @@
 """Verse lookup API routes for direct verse access by reference."""
 
-from fastapi import APIRouter, Query, HTTPException
-from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import Filter, FieldCondition, MatchValue
-from typing import List, Optional
-import sys
 import os
+import sys
+from typing import List, Optional
+
+from fastapi import APIRouter, HTTPException, Query
+from qdrant_client import AsyncQdrantClient
+from qdrant_client.http.models import FieldCondition, Filter, MatchValue
 
 # Add src to path for imports
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from app.logging_config import get_logger
+from app.schemas.common import DEFAULT_TRANSLATOR, TranslatorType
 from app.schemas.verse_lookup import (
     VerseLookupResponse,
     VerseResult,
 )
-from app.schemas.common import TranslatorType, DEFAULT_TRANSLATOR
 from src.verse_parser import (
-    parse_verse_reference,
+    SURAH_NAME_MAP,
     ParsedReference,
     ParseError,
-    SURAH_NAME_MAP,
+    parse_verse_reference,
 )
-from app.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -85,12 +84,18 @@ async def fetch_quran_verses(
     # Build collection name from translator
     collection_name = f"quran_tr_{translator}"
 
+    if parsed.surah_id is None:
+        return results
+
+    surah_id = parsed.surah_id
+    assert surah_id is not None
+
     # Fetch each verse individually
     for verse_id in parsed.verses:
         # Create filter for exact surah_id and verse_id match
         filter_condition = Filter(
             must=[
-                FieldCondition(key="surah_id", match=MatchValue(value=parsed.surah_id)),
+                FieldCondition(key="surah_id", match=MatchValue(value=surah_id)),
                 FieldCondition(key="verse_id", match=MatchValue(value=verse_id)),
             ]
         )
@@ -111,10 +116,10 @@ async def fetch_quran_verses(
                 if payload is not None:
                     results.append(
                         VerseResult(
-                            reference=f"{parsed.surah_id}:{verse_id}",
+                            reference=f"{surah_id}:{verse_id}",
                             text=payload.get("translation", ""),
                             source="quran",
-                            surah_id=parsed.surah_id,
+                            surah_id=surah_id,
                             surah_name=surah_name,
                             verse_id=verse_id,
                             arabic_text=payload.get("arabic_text"),
@@ -163,13 +168,19 @@ async def fetch_bible_verses(
         source_map[testament],
     )
 
+    if parsed.book_id is None or parsed.chapter is None:
+        return results
+
+    book_id = parsed.book_id
+    chapter = parsed.chapter
+
     # Fetch each verse individually
     for verse_num in parsed.verses:
         # Create filter for exact book_id, chapter, and verse match
         filter_condition = Filter(
             must=[
-                FieldCondition(key="book_id", match=MatchValue(value=parsed.book_id)),
-                FieldCondition(key="chapter", match=MatchValue(value=parsed.chapter)),
+                FieldCondition(key="book_id", match=MatchValue(value=book_id)),
+                FieldCondition(key="chapter", match=MatchValue(value=chapter)),
                 FieldCondition(key="verse", match=MatchValue(value=verse_num)),
             ]
         )
@@ -193,9 +204,9 @@ async def fetch_bible_verses(
                             reference=f"{parsed.book_name} {parsed.chapter}:{verse_num}",
                             text=payload.get("text", ""),
                             source=source,
-                            book_id=parsed.book_id,
+                            book_id=book_id,
                             book_name=parsed.book_name,
-                            chapter=parsed.chapter,
+                            chapter=chapter,
                             verse=verse_num,
                             # Quran fields are None
                             surah_id=None,
@@ -218,7 +229,7 @@ async def lookup_verse(
     ),
     translator: Optional[TranslatorType] = Query(
         default=DEFAULT_TRANSLATOR,
-        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
+        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",  # noqa: E501
     ),
 ):
     """Lookup verses by reference.

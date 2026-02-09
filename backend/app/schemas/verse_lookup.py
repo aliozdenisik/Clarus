@@ -1,7 +1,8 @@
 """Pydantic schemas for verse lookup API requests and responses."""
 
-from pydantic import BaseModel, Field
 from typing import Literal
+
+from pydantic import BaseModel, Field
 
 
 class VerseLookupRequest(BaseModel):
@@ -27,9 +28,7 @@ class VerseResult(BaseModel):
     when not applicable to the source (e.g., surah_id is null for Bible verses).
     """
 
-    reference: str = Field(
-        ..., description="Canonical reference: '2:183' or 'Genesis 1:1'"
-    )
+    reference: str = Field(..., description="Canonical reference: '2:183' or 'Genesis 1:1'")
     text: str = Field(..., description="Verse text in original language or translation")
     source: Literal["quran", "bible_ot", "bible_nt", "bible_apocrypha"] = Field(
         ..., description="Source collection identifier"

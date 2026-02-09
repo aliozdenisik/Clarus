@@ -1,10 +1,11 @@
 """Redis-based rate limiting middleware."""
 
+import logging
+from datetime import datetime, timedelta
+
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from datetime import datetime, timedelta
-import logging
 
 from app.config import settings
 
@@ -59,9 +60,7 @@ async def get_user_rate_limit_info(user_id: int) -> dict:
 
         # Calculate reset time (next UTC midnight)
         now = datetime.utcnow()
-        tomorrow = (now + timedelta(days=1)).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
 
         # If Redis unavailable, return safe defaults
         if redis_manager.client is None:
@@ -90,9 +89,7 @@ async def get_user_rate_limit_info(user_id: int) -> dict:
         logger.warning(f"Failed to get rate limit info: {e}")
         # Fail-open: return safe defaults
         now = datetime.utcnow()
-        tomorrow = (now + timedelta(days=1)).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
         return {
             "limit": settings.rate_limit_per_day,
             "used": 0,
@@ -171,9 +168,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
                 # Register and execute Lua script
                 script = redis_manager.client.register_script(RATE_LIMIT_SCRIPT)
-                current_count = await script(
-                    keys=[key],
-                    args=[limit, ttl_seconds],
+                current_count = int(
+                    await script(
+                        keys=[key],
+                        args=[limit, ttl_seconds],
+                    )
                 )
 
                 if current_count > limit:
@@ -184,7 +183,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                             "success": False,
                             "error": {
                                 "code": "RATE_LIMIT_EXCEEDED",
-                                "message": f"Cok fazla giris denemesi. Lutfen 1 dakika bekleyin ({limit}/dakika)",
+                                "message": f"Cok fazla giris denemesi. Lutfen 1 dakika bekleyin ({limit}/dakika)",  # noqa: E501
                                 "details": [],
                             },
                             "request_id": request_id,
@@ -202,9 +201,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
             # REGULAR ENDPOINTS: Per-day rate limiting
             # Calculate reset time (next UTC midnight)
-            tomorrow = (now + timedelta(days=1)).replace(
-                hour=0, minute=0, second=0, microsecond=0
-            )
+            tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
 
             # Build Redis key: ratelimit:{user_id}:{date}
             today = now.strftime("%Y-%m-%d")
@@ -217,9 +214,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             script = redis_manager.client.register_script(RATE_LIMIT_SCRIPT)
 
             # Execute Lua script atomically
-            current_count = await script(
-                keys=[key],
-                args=[settings.rate_limit_per_day, ttl_seconds],
+            current_count = int(
+                await script(
+                    keys=[key],
+                    args=[settings.rate_limit_per_day, ttl_seconds],
+                )
             )
 
             # Calculate remaining
@@ -237,7 +236,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                         "success": False,
                         "error": {
                             "code": "RATE_LIMIT_EXCEEDED",
-                            "message": f"Gunluk sorgu limitine ulastiniz ({settings.rate_limit_per_day}/gun)",
+                            "message": f"Gunluk sorgu limitine ulastiniz ({settings.rate_limit_per_day}/gun)",  # noqa: E501
                             "details": [],
                         },
                         "request_id": request_id,

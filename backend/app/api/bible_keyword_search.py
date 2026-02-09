@@ -2,19 +2,20 @@
 
 import logging
 from typing import Optional
+
 from fastapi import APIRouter, Query
 
 from app.schemas.bible_keyword import (
     BibleKeywordSearchRequest,
     BibleKeywordSearchResponse,
-    PaginationInfo,
-    BookDistItem,
-    BibleVerseMatchItem,
     BibleRootListItem,
     BibleRootListResponse,
     BibleStatsResponse,
+    BibleVerseMatchItem,
+    BookDistItem,
     CrossReferenceResponse,
     CrossReferenceWord,
+    PaginationInfo,
 )
 from src.bible_morphology import BibleMorphologySearch
 

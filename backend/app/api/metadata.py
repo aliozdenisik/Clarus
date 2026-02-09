@@ -1,12 +1,13 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Optional
-from pathlib import Path
 import json
 import os
-import httpx
+from pathlib import Path
+from typing import Optional
 
-from app.schemas.common import VALID_TRANSLATORS, DEFAULT_TRANSLATOR
+import httpx
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+
+from app.schemas.common import DEFAULT_TRANSLATOR, VALID_TRANSLATORS
 
 router = APIRouter()
 
@@ -65,7 +66,7 @@ def _load_quran_data() -> list[dict]:
                 _quran_cache = json.load(f)
         else:
             _quran_cache = []
-    return _quran_cache
+    return _quran_cache if _quran_cache is not None else []
 
 
 def _load_bible_data() -> dict:
@@ -77,7 +78,7 @@ def _load_bible_data() -> dict:
                 _bible_cache = json.load(f)
         else:
             _bible_cache = {"books": []}
-    return _bible_cache
+    return _bible_cache if _bible_cache is not None else {"books": []}
 
 
 def _get_testament(book_nr: int) -> str:
@@ -119,9 +120,7 @@ async def get_collections():
                         )
                     )
 
-            return MetadataResponse(
-                data={"collections": [c.model_dump() for c in result]}
-            )
+            return MetadataResponse(data={"collections": [c.model_dump() for c in result]})
 
     except httpx.RequestError:
         raise HTTPException(status_code=503, detail="Qdrant connection failed")
@@ -207,9 +206,7 @@ async def get_bible_books(testament: Optional[str] = None):
 async def get_book_detail(book_nr: int):
     bible_data = _load_bible_data()
 
-    book = next(
-        (b for b in bible_data.get("books", []) if b.get("nr") == book_nr), None
-    )
+    book = next((b for b in bible_data.get("books", []) if b.get("nr") == book_nr), None)
     if not book:
         raise HTTPException(status_code=404, detail=f"Book {book_nr} not found")
 
@@ -238,15 +235,11 @@ async def get_book_detail(book_nr: int):
 async def get_chapter_verses(book_nr: int, chapter_nr: int):
     bible_data = _load_bible_data()
 
-    book = next(
-        (b for b in bible_data.get("books", []) if b.get("nr") == book_nr), None
-    )
+    book = next((b for b in bible_data.get("books", []) if b.get("nr") == book_nr), None)
     if not book:
         raise HTTPException(status_code=404, detail=f"Book {book_nr} not found")
 
-    chapter = next(
-        (c for c in book.get("chapters", []) if c.get("chapter") == chapter_nr), None
-    )
+    chapter = next((c for c in book.get("chapters", []) if c.get("chapter") == chapter_nr), None)
     if not chapter:
         raise HTTPException(status_code=404, detail=f"Chapter {chapter_nr} not found")
 

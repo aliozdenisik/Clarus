@@ -11,13 +11,13 @@ Industry-standard logging with:
 Uses ONLY standard Python logging - no external libraries.
 """
 
-import logging
 import json
+import logging
 import sys
-from datetime import datetime, timezone
-from typing import Optional, Any
-from dataclasses import dataclass
 from contextvars import ContextVar
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Any, Optional
 
 # Context variables for request-scoped data
 request_id_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
@@ -66,7 +66,9 @@ class JSONFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         # Base log entry
         log_entry: dict[str, Any] = {
-            "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+            "timestamp": datetime.now(timezone.utc)
+            .isoformat(timespec="milliseconds")
+            .replace("+00:00", "Z"),
             "level": self.LEVEL_MAP.get(record.levelno, "UNKNOWN"),
             "logger": record.name,
             "message": record.getMessage(),
@@ -109,11 +111,28 @@ class JSONFormatter(logging.Formatter):
         # Add any extra attributes from the log record
         for key, value in record.__dict__.items():
             if key not in (
-                "name", "msg", "args", "created", "filename", "funcName",
-                "levelname", "levelno", "lineno", "module", "msecs",
-                "pathname", "process", "processName", "relativeCreated",
-                "stack_info", "exc_info", "exc_text", "thread", "threadName",
-                "message", "taskName"
+                "name",
+                "msg",
+                "args",
+                "created",
+                "filename",
+                "funcName",
+                "levelname",
+                "levelno",
+                "lineno",
+                "module",
+                "msecs",
+                "pathname",
+                "process",
+                "processName",
+                "relativeCreated",
+                "stack_info",
+                "exc_info",
+                "exc_text",
+                "thread",
+                "threadName",
+                "message",
+                "taskName",
             ):
                 try:
                     # Ensure value is JSON serializable
@@ -130,15 +149,16 @@ class ConsoleFormatter(logging.Formatter):
     Human-readable colored console formatter for development.
 
     Output format:
-    [2024-01-15 10:30:00] INFO  app.api.search - Search completed [request_id=abc123, latency_ms=150]
+    [2024-01-15 10:30:00] INFO app.api.search - Search completed
+    [request_id=abc123, latency_ms=150]
     """
 
     # ANSI color codes
     COLORS = {
-        logging.DEBUG: "\033[36m",     # Cyan
-        logging.INFO: "\033[32m",      # Green
-        logging.WARNING: "\033[33m",   # Yellow
-        logging.ERROR: "\033[31m",     # Red
+        logging.DEBUG: "\033[36m",  # Cyan
+        logging.INFO: "\033[32m",  # Green
+        logging.WARNING: "\033[33m",  # Yellow
+        logging.ERROR: "\033[31m",  # Red
         logging.CRITICAL: "\033[35m",  # Magenta
     }
     RESET = "\033[0m"
@@ -191,11 +211,15 @@ class ConsoleFormatter(logging.Formatter):
             context_str = f" {self.DIM}[{', '.join(context_parts)}]{self.RESET}"
 
         # Base log line
-        log_line = f"[{timestamp}] {level} {self.DIM}{logger_name}{self.RESET} - {message}{context_str}"
+        log_line = (
+            f"[{timestamp}] {level} {self.DIM}{logger_name}{self.RESET} - {message}{context_str}"
+        )
 
         # Add exception if present
         if record.exc_info:
-            log_line += f"\n{self.COLORS[logging.ERROR]}{self.formatException(record.exc_info)}{self.RESET}"
+            log_line += (
+                f"\n{self.COLORS[logging.ERROR]}{self.formatException(record.exc_info)}{self.RESET}"
+            )
 
         return log_line
 
@@ -254,6 +278,7 @@ def setup_logging(config: Optional[LoggingConfig] = None) -> None:
     # Optional file handler
     if config.file_path:
         from logging.handlers import RotatingFileHandler
+
         file_handler = RotatingFileHandler(
             config.file_path,
             maxBytes=10 * 1024 * 1024,  # 10MB
@@ -273,9 +298,7 @@ def setup_logging(config: Optional[LoggingConfig] = None) -> None:
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
     # Log startup
-    root_logger.info(
-        f"Logging configured: level={config.level}, format={config.format}"
-    )
+    root_logger.info(f"Logging configured: level={config.level}, format={config.format}")
 
 
 def get_logger(name: str) -> logging.Logger:

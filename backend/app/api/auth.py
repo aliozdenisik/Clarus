@@ -1,17 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from datetime import datetime
-from pydantic import BaseModel
-import secrets
 import hashlib
 import logging
+import secrets
+from datetime import datetime
 
-from app.db import get_db
-from app.models import UserStats
-from app.config import settings
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.auth.api_key_validator import get_current_user_flexible
+from app.config import settings
+from app.db import get_db
 from app.middleware.rate_limit import get_user_rate_limit_info
+from app.models import UserStats
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ async def check_rate_limit(user: dict, db: AsyncSession) -> None:
     stats = result.scalar_one_or_none()
 
     if not stats:
-        # Create UserStats if it doesn't exist (should have been created by get_current_user_flexible)
+        # Create UserStats if it doesn't exist (should have been created by get_current_user_flexible)  # noqa: E501
         stats = UserStats(
             id=f"stats_{user_id}",
             user_id=user_id,
@@ -157,9 +158,7 @@ async def generate_api_key(
     api_key_hash = hashlib.sha256(raw_api_key.encode()).hexdigest()
 
     # Update or create user_stats record
-    stats_result = await db.execute(
-        select(UserStats).where(UserStats.user_id == user_id)
-    )
+    stats_result = await db.execute(select(UserStats).where(UserStats.user_id == user_id))
     stats = stats_result.scalar_one_or_none()
 
     now = datetime.utcnow()

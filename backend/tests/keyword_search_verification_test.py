@@ -67,9 +67,7 @@ class ArabicTestCase:
     buckwalter: str
     meaning: str
     expected_occurrences: int
-    tolerance_percent: float = (
-        20.0  # Higher tolerance for root-based counting variations
-    )
+    tolerance_percent: float = 20.0  # Higher tolerance for root-based counting variations
 
 
 # =============================================================================
@@ -167,9 +165,7 @@ class TestResult:
         self.tolerance_percent = tolerance_percent
         self.passed = passed
         self.details = details or {}
-        self.variance_percent = (
-            abs(actual - expected) / expected * 100 if expected > 0 else 0
-        )
+        self.variance_percent = abs(actual - expected) / expected * 100 if expected > 0 else 0
 
     def __str__(self):
         status = "✅ PASS" if self.passed else "❌ FAIL"
@@ -323,9 +319,7 @@ async def test_arabic_keyword_search() -> list[TestResult]:
         for tc in ARABIC_TEST_CASES:
             try:
                 # Search using Buckwalter transliteration
-                search_result = await service.search_by_root(
-                    query=tc.buckwalter, per_page=0
-                )
+                search_result = await service.search_by_root(query=tc.buckwalter, per_page=0)
 
                 actual_occurrences = search_result.total_occurrences
                 unique_words = len(search_result.unique_words)
@@ -386,12 +380,8 @@ def generate_report(
     report.append("KEYWORD SEARCH VERIFICATION TEST REPORT")
     report.append("=" * 80)
     report.append(f"\nTotal Tests: {total}")
-    report.append(
-        f"Passed: {passed} ({passed / total * 100:.1f}%)" if total > 0 else "Passed: 0"
-    )
-    report.append(
-        f"Failed: {failed} ({failed / total * 100:.1f}%)" if total > 0 else "Failed: 0"
-    )
+    report.append(f"Passed: {passed} ({passed / total * 100:.1f}%)" if total > 0 else "Passed: 0")
+    report.append(f"Failed: {failed} ({failed / total * 100:.1f}%)" if total > 0 else "Failed: 0")
 
     # Hebrew summary
     hebrew_passed = sum(1 for r in hebrew_results if r.passed)
@@ -423,9 +413,7 @@ def generate_report(
 
     report.append("\n" + "=" * 80)
     report.append("DATA SOURCES:")
-    report.append(
-        "- Hebrew OT: BibleHub Strong's Concordance (https://biblehub.com/hebrew/)"
-    )
+    report.append("- Hebrew OT: BibleHub Strong's Concordance (https://biblehub.com/hebrew/)")
     report.append("- Greek NT: Blue Letter Bible (https://www.blueletterbible.org/)")
     report.append("- Arabic Quran: Quranic Arabic Corpus (https://corpus.quran.com)")
     report.append("=" * 80)

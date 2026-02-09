@@ -178,7 +178,7 @@ def parse_turkish_bible(xml_path: Path) -> dict[str, str]:
 
     # Find all book divs
     for book_div in root.findall(".//osis:div[@type='book']", NS):
-        book_osis_id = book_div.get("osisID", "")
+        book_osis_id = book_div.get("osisID", "")  # noqa: F841
         book_count += 1
 
         # Find all verses in this book
@@ -241,9 +241,7 @@ def update_turkish_text(
         else:
             not_found.append(ref)
 
-    log.info(
-        "Matched %d verses, %d not found in bm_verses", len(updates), len(not_found)
-    )
+    log.info("Matched %d verses, %d not found in bm_verses", len(updates), len(not_found))
 
     if not_found and len(not_found) <= 20:
         log.info("Not found references: %s", not_found[:20])
@@ -259,8 +257,7 @@ def update_turkish_text(
         for row in batch:
             conn.execute(
                 text(
-                    "UPDATE bm_verses SET text_turkish = :text_turkish "
-                    "WHERE reference = :reference"
+                    "UPDATE bm_verses SET text_turkish = :text_turkish WHERE reference = :reference"
                 ),
                 row,
             )

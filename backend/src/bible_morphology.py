@@ -15,27 +15,26 @@ Usage:
 
 import logging
 import re
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from typing import Optional
 
+from sqlalchemy import text as sa_text
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
     AsyncSession,
     async_sessionmaker,
+    create_async_engine,
 )
-from sqlalchemy import text as sa_text
 
-from .hebrew_normalizer import (
-    normalize_hebrew,
-    transliterate_hebrew,
-    detect_script,
-    normalize_transliteration_for_lookup,
-    normalize_user_hebrew_query,
-)
 from .greek_normalizer import (
-    normalize_greek,
     normalize_greek_transliteration_for_lookup,
     normalize_user_greek_query,
+)
+from .hebrew_normalizer import (
+    detect_script,
+    normalize_hebrew,
+    normalize_transliteration_for_lookup,
+    normalize_user_hebrew_query,
+    transliterate_hebrew,
 )
 
 logger = logging.getLogger(__name__)
@@ -127,9 +126,7 @@ class BibleMorphologySearchResult:
 
     query: str
     root: Optional[str]
-    root_source: (
-        str  # exact_match | strongs_lookup | transliteration | fuzzy | not_found
-    )
+    root_source: str  # exact_match | strongs_lookup | transliteration | fuzzy | not_found
     strong_number: Optional[str] = None
     total_occurrences: int = 0
     unique_words: list[str] = field(default_factory=list)
@@ -253,9 +250,7 @@ class BibleMorphologySearch:
                 # - Greek (G*): "zōḗ" → "zoe", "agápē" → "agape"
                 is_greek = number.startswith("G") if number else False
                 if is_greek:
-                    normalized_ascii = normalize_greek_transliteration_for_lookup(
-                        translit
-                    )
+                    normalized_ascii = normalize_greek_transliteration_for_lookup(translit)
                 else:
                     normalized_ascii = normalize_transliteration_for_lookup(translit)
 
@@ -263,9 +258,7 @@ class BibleMorphologySearch:
                     if normalized_ascii not in self._transliteration_map:
                         self._transliteration_map[normalized_ascii] = []
                     if padded_number not in self._transliteration_map[normalized_ascii]:
-                        self._transliteration_map[normalized_ascii].append(
-                            padded_number
-                        )
+                        self._transliteration_map[normalized_ascii].append(padded_number)
 
                 # DUAL-INDEXING for Hebrew Bet/Vet (ב) variants
                 # Academic basis: Hebrew ב is pronounced 'b' with dagesh (stop),
@@ -278,13 +271,8 @@ class BibleMorphologySearch:
                     if bet_vet_variant and bet_vet_variant != normalized_ascii:
                         if bet_vet_variant not in self._transliteration_map:
                             self._transliteration_map[bet_vet_variant] = []
-                        if (
-                            padded_number
-                            not in self._transliteration_map[bet_vet_variant]
-                        ):
-                            self._transliteration_map[bet_vet_variant].append(
-                                padded_number
-                            )
+                        if padded_number not in self._transliteration_map[bet_vet_variant]:
+                            self._transliteration_map[bet_vet_variant].append(padded_number)
 
         # OCCURRENCE-BASED PRIORITIZATION
         # When multiple Strong's numbers map to the same transliteration key
@@ -368,8 +356,11 @@ class BibleMorphologySearch:
             per_page: Results per page (max 200)
             language_filter: Optional filter on bm_words.language ('hebrew', 'aramaic', or None)
             word_filter: Optional filter to search within specific word forms
-            testament_filter: Optional filter on bm_books.testament ('ot', 'nt', 'apocrypha', or None)
-            category_filter: Optional filter on bm_books.category ('ot', 'nt', 'apocrypha', 'pseudepigrapha', 'gnostic', 'apostolic_fathers', or None)
+            testament_filter: Optional filter on bm_books.testament
+                ('ot', 'nt', 'apocrypha', or None)
+            category_filter: Optional filter on bm_books.category
+                ('ot', 'nt', 'apocrypha', 'pseudepigrapha', 'gnostic',
+                'apostolic_fathers', or None)
         """
         logger.info(
             "[BibleMorphology.search] START: query=%r, page=%d, per_page=%d, "
@@ -401,9 +392,7 @@ class BibleMorphologySearch:
                 query,
                 language_filter,
             )
-            identifier, root_source = await self._find_root(
-                query, language_filter=language_filter
-            )
+            identifier, root_source = await self._find_root(query, language_filter=language_filter)
             logger.info(
                 "[BibleMorphology.search] Root found: identifier=%r, root_source=%r",
                 identifier,
@@ -418,9 +407,7 @@ class BibleMorphologySearch:
             raise
 
         if identifier is None:
-            logger.info(
-                "[BibleMorphology.search] No identifier found, returning not_found"
-            )
+            logger.info("[BibleMorphology.search] No identifier found, returning not_found")
             return BibleMorphologySearchResult(
                 query=query,
                 root=None,
@@ -475,7 +462,7 @@ class BibleMorphologySearch:
                 return result
             except Exception as e:
                 logger.exception(
-                    "[BibleMorphology.search] CRASH in _search_by_lemma: query=%r, lemma=%r, error=%s",
+                    "[BibleMorphology.search] CRASH in _search_by_lemma: query=%r, lemma=%r, error=%s",  # noqa: E501
                     query,
                     identifier,
                     str(e),
@@ -502,7 +489,7 @@ class BibleMorphologySearch:
             return result
         except Exception as e:
             logger.exception(
-                "[BibleMorphology.search] CRASH in _search_by_strong: query=%r, strong_number=%r, error=%s",
+                "[BibleMorphology.search] CRASH in _search_by_strong: query=%r, strong_number=%r, error=%s",  # noqa: E501
                 query,
                 identifier,
                 str(e),
@@ -558,9 +545,7 @@ class BibleMorphologySearch:
         """Get overall Bible keyword search statistics."""
         async with self._session_maker() as session:
             # Total words in database
-            total_words_result = await session.execute(
-                sa_text("SELECT COUNT(*) FROM bm_words")
-            )
+            total_words_result = await session.execute(sa_text("SELECT COUNT(*) FROM bm_words"))
             total_words = total_words_result.scalar() or 0
 
             # Unique roots (Strong's numbers)
@@ -573,15 +558,11 @@ class BibleMorphologySearch:
             unique_roots = unique_roots_result.scalar() or 0
 
             # Total books
-            total_books_result = await session.execute(
-                sa_text("SELECT COUNT(*) FROM bm_books")
-            )
+            total_books_result = await session.execute(sa_text("SELECT COUNT(*) FROM bm_books"))
             total_books = total_books_result.scalar() or 0
 
             # Total verses
-            total_verses_result = await session.execute(
-                sa_text("SELECT COUNT(*) FROM bm_verses")
-            )
+            total_verses_result = await session.execute(sa_text("SELECT COUNT(*) FROM bm_verses"))
             total_verses = total_verses_result.scalar() or 0
 
         return {
@@ -630,7 +611,7 @@ class BibleMorphologySearch:
         # Check for Strong's number input first (works for any script)
         if STRONGS_PATTERN.match(query):
             logger.debug(
-                "[BibleMorphology._find_root] Matched Strong's pattern, routing to _find_by_strongs_number"
+                "[BibleMorphology._find_root] Matched Strong's pattern, routing to _find_by_strongs_number"  # noqa: E501
             )
             return await self._find_by_strongs_number(query)
 
@@ -646,7 +627,8 @@ class BibleMorphologySearch:
     async def _find_by_strongs_number(self, query: str) -> tuple[Optional[str], str]:
         """Direct Strong's number lookup (e.g., H3789, G2316).
 
-        For Hebrew (H####): Returns Strong's number directly since bm_words has strong_number populated.
+        For Hebrew (H####): Returns Strong's number directly since
+        bm_words has strong_number populated.
         For Greek (G####): Translates to lemma search since MorphGNT data lacks Strong's numbers.
         """
         # Normalize: uppercase prefix, zero-pad to 4 digits
@@ -667,8 +649,7 @@ class BibleMorphologySearch:
                 async with self._session_maker() as session:
                     result = await session.execute(
                         sa_text(
-                            "SELECT strong_number FROM bm_words "
-                            "WHERE strong_number = :sn LIMIT 1"
+                            "SELECT strong_number FROM bm_words WHERE strong_number = :sn LIMIT 1"
                         ),
                         {"sn": formatted},
                     )
@@ -678,8 +659,7 @@ class BibleMorphologySearch:
                     # Try unpadded
                     result = await session.execute(
                         sa_text(
-                            "SELECT strong_number FROM bm_words "
-                            "WHERE strong_number = :sn LIMIT 1"
+                            "SELECT strong_number FROM bm_words WHERE strong_number = :sn LIMIT 1"
                         ),
                         {"sn": unpadded},
                     )
@@ -690,14 +670,14 @@ class BibleMorphologySearch:
             # For Greek (G####): MorphGNT doesn't have Strong's numbers in bm_words.
             # Instead, translate Strong's number → Greek word → search by lemma.
             elif prefix == "G":
-                strongs_info = self._strongs_cache.get(
-                    formatted
-                ) or self._strongs_cache.get(unpadded)
+                strongs_info = self._strongs_cache.get(formatted) or self._strongs_cache.get(
+                    unpadded
+                )
                 if strongs_info:
                     greek_word = strongs_info.get("original_word")
                     if greek_word:
                         logger.debug(
-                            "[BibleMorphology._find_by_strongs_number] Greek Strong's %s → word '%s', searching by lemma",
+                            "[BibleMorphology._find_by_strongs_number] Greek Strong's %s → word '%s', searching by lemma",  # noqa: E501
                             formatted,
                             greek_word,
                         )
@@ -761,7 +741,7 @@ class BibleMorphologySearch:
                                 return (row[0], "strongs_to_lemma_fuzzy")
 
                         logger.warning(
-                            "[BibleMorphology._find_by_strongs_number] Greek Strong's %s word '%s' not found in bm_words",
+                            "[BibleMorphology._find_by_strongs_number] Greek Strong's %s word '%s' not found in bm_words",  # noqa: E501
                             formatted,
                             greek_word,
                         )
@@ -787,9 +767,7 @@ class BibleMorphologySearch:
         logger.debug("[BibleMorphology._find_root_hebrew] START: query=%r", query)
         try:
             normalized = normalize_hebrew(query)
-            logger.debug(
-                "[BibleMorphology._find_root_hebrew] normalized=%r", normalized
-            )
+            logger.debug("[BibleMorphology._find_root_hebrew] normalized=%r", normalized)
         except Exception:
             logger.exception(
                 "[BibleMorphology._find_root_hebrew] CRASH in normalize_hebrew: query=%r",
@@ -824,8 +802,7 @@ class BibleMorphologySearch:
                 for sn in strongs_numbers:
                     result = await session.execute(
                         sa_text(
-                            "SELECT strong_number FROM bm_words "
-                            "WHERE strong_number = :sn LIMIT 1"
+                            "SELECT strong_number FROM bm_words WHERE strong_number = :sn LIMIT 1"
                         ),
                         {"sn": sn},
                     )
@@ -896,8 +873,7 @@ class BibleMorphologySearch:
                 for sn in strongs_numbers:
                     result = await session.execute(
                         sa_text(
-                            "SELECT strong_number FROM bm_words "
-                            "WHERE strong_number = :sn LIMIT 1"
+                            "SELECT strong_number FROM bm_words WHERE strong_number = :sn LIMIT 1"
                         ),
                         {"sn": sn},
                     )
@@ -996,7 +972,7 @@ class BibleMorphologySearch:
             # SKIP if language_filter="hebrew" - don't fall back to Greek
             if language_filter == "hebrew":
                 logger.debug(
-                    "[BibleMorphology._find_root_latin] Skipping Greek lookup (language_filter=hebrew)"
+                    "[BibleMorphology._find_root_latin] Skipping Greek lookup (language_filter=hebrew)"  # noqa: E501
                 )
                 return (None, "not_found")
 
@@ -1254,7 +1230,7 @@ class BibleMorphologySearch:
                         f"SELECT COUNT(*) FROM bm_words w "
                         f"JOIN bm_verses v ON w.verse_id = v.id "
                         f"JOIN bm_books b ON v.book_id = b.id "
-                        f"WHERE w.lemma = :lemma AND w.language = 'greek'{lang_clause}{book_filter_clause}"
+                        f"WHERE w.lemma = :lemma AND w.language = 'greek'{lang_clause}{book_filter_clause}"  # noqa: E501
                     ),
                     {
                         **base_params,
@@ -1280,7 +1256,7 @@ class BibleMorphologySearch:
                         f"SELECT DISTINCT w.word_clean FROM bm_words w "
                         f"JOIN bm_verses v ON w.verse_id = v.id "
                         f"JOIN bm_books b ON v.book_id = b.id "
-                        f"WHERE w.lemma = :lemma AND w.language = 'greek' AND w.word_clean IS NOT NULL{lang_clause}{book_filter_clause} "
+                        f"WHERE w.lemma = :lemma AND w.language = 'greek' AND w.word_clean IS NOT NULL{lang_clause}{book_filter_clause} "  # noqa: E501
                         f"ORDER BY w.word_clean"
                     ),
                     {
@@ -1294,7 +1270,7 @@ class BibleMorphologySearch:
                 words_result = await session.execute(
                     sa_text(
                         f"SELECT DISTINCT w.word_clean FROM bm_words w "
-                        f"WHERE w.lemma = :lemma AND w.language = 'greek' AND w.word_clean IS NOT NULL{lang_clause} "
+                        f"WHERE w.lemma = :lemma AND w.language = 'greek' AND w.word_clean IS NOT NULL{lang_clause} "  # noqa: E501
                         f"ORDER BY w.word_clean"
                     ),
                     {**base_params, **lang_params},
@@ -1320,8 +1296,7 @@ class BibleMorphologySearch:
                 {**base_params, **lang_params, **testament_params, **category_params},
             )
             book_distribution = [
-                BookCount(book_id=r[0], book_name=r[1], count=r[2])
-                for r in dist_result.fetchall()
+                BookCount(book_id=r[0], book_name=r[1], count=r[2]) for r in dist_result.fetchall()
             ]
 
             # 4. Count total distinct verses
@@ -1330,7 +1305,7 @@ class BibleMorphologySearch:
                 f"FROM bm_words w "
                 f"JOIN bm_verses v ON w.verse_id = v.id "
                 f"JOIN bm_books b ON v.book_id = b.id "
-                f"WHERE w.lemma = :lemma AND w.language = 'greek'{lang_clause}{word_clause}{book_filter_clause}"
+                f"WHERE w.lemma = :lemma AND w.language = 'greek'{lang_clause}{word_clause}{book_filter_clause}"  # noqa: E501
             )
             total_verses_result = await session.execute(sa_text(count_sql), all_params)
             total_verses = total_verses_result.scalar() or 0
@@ -1350,7 +1325,8 @@ class BibleMorphologySearch:
                             FROM bm_words w
                             JOIN bm_verses v ON w.verse_id = v.id
                             JOIN bm_books b ON v.book_id = b.id
-                            WHERE w.lemma = :lemma AND w.language = 'greek'{lang_clause}{word_clause}{book_filter_clause}
+                            WHERE w.lemma = :lemma AND w.language = 'greek'
+                            {lang_clause}{word_clause}{book_filter_clause}
                             ORDER BY v.id
                             LIMIT :skip
                         ) sub
@@ -1373,7 +1349,8 @@ class BibleMorphologySearch:
                 FROM bm_words w
                 JOIN bm_verses v ON w.verse_id = v.id
                 JOIN bm_books b ON v.book_id = b.id
-                WHERE w.lemma = :lemma AND w.language = 'greek' AND v.id > :start_id{lang_clause}{word_clause}{book_filter_clause}
+                WHERE w.lemma = :lemma AND w.language = 'greek' AND v.id > :start_id
+                {lang_clause}{word_clause}{book_filter_clause}
                 ORDER BY v.id
             """
             verses_params = {**all_params, "start_id": start_id}
@@ -1391,7 +1368,7 @@ class BibleMorphologySearch:
                 batch_words_result = await session.execute(
                     sa_text(
                         "SELECT DISTINCT verse_id, word_clean FROM bm_words "
-                        "WHERE verse_id = ANY(:verse_ids) AND lemma = :lemma AND language = 'greek' "
+                        "WHERE verse_id = ANY(:verse_ids) AND lemma = :lemma AND language = 'greek' "  # noqa: E501
                         "AND word_clean IS NOT NULL"
                     ),
                     {"verse_ids": verse_ids, "lemma": lemma},
@@ -1516,8 +1493,7 @@ class BibleMorphologySearch:
             else:
                 total_result = await session.execute(
                     sa_text(
-                        f"SELECT COUNT(*) FROM bm_words w "
-                        f"WHERE w.strong_number = :sn{lang_clause}"
+                        f"SELECT COUNT(*) FROM bm_words w WHERE w.strong_number = :sn{lang_clause}"
                     ),
                     {**base_params, **lang_params},
                 )
@@ -1530,7 +1506,7 @@ class BibleMorphologySearch:
                         f"SELECT DISTINCT w.word_clean FROM bm_words w "
                         f"JOIN bm_verses v ON w.verse_id = v.id "
                         f"JOIN bm_books b ON v.book_id = b.id "
-                        f"WHERE w.strong_number = :sn AND w.word_clean IS NOT NULL{lang_clause}{book_filter_clause} "
+                        f"WHERE w.strong_number = :sn AND w.word_clean IS NOT NULL{lang_clause}{book_filter_clause} "  # noqa: E501
                         f"ORDER BY w.word_clean"
                     ),
                     {
@@ -1575,8 +1551,7 @@ class BibleMorphologySearch:
                 {**base_params, **lang_params, **testament_params, **category_params},
             )
             book_distribution = [
-                BookCount(book_id=r[0], book_name=r[1], count=r[2])
-                for r in dist_result.fetchall()
+                BookCount(book_id=r[0], book_name=r[1], count=r[2]) for r in dist_result.fetchall()
             ]
 
             # 4. Count total distinct verses
@@ -1605,7 +1580,8 @@ class BibleMorphologySearch:
                             FROM bm_words w
                             JOIN bm_verses v ON w.verse_id = v.id
                             JOIN bm_books b ON v.book_id = b.id
-                            WHERE w.strong_number = :sn{lang_clause}{word_clause}{book_filter_clause}
+                            WHERE w.strong_number = :sn
+                            {lang_clause}{word_clause}{book_filter_clause}
                             ORDER BY v.id
                             LIMIT :skip
                         ) sub
@@ -1628,7 +1604,8 @@ class BibleMorphologySearch:
                 FROM bm_words w
                 JOIN bm_verses v ON w.verse_id = v.id
                 JOIN bm_books b ON v.book_id = b.id
-                WHERE w.strong_number = :sn AND v.id > :start_id{lang_clause}{word_clause}{book_filter_clause}
+                WHERE w.strong_number = :sn AND v.id > :start_id
+                {lang_clause}{word_clause}{book_filter_clause}
                 ORDER BY v.id
             """
             verses_params = {**all_params, "start_id": start_id}
@@ -1702,8 +1679,10 @@ class BibleMorphologySearch:
             - definition: Definition from bm_strongs
             - original_word: Original word from bm_strongs
             - transliteration: Transliteration from bm_strongs
-            - hebrew_words: List of dicts {word, word_clean, transliteration, language, occurrence_count}
-            - greek_words: List of dicts {word, word_clean, transliteration, language, occurrence_count}
+            - hebrew_words: List of dicts
+              {word, word_clean, transliteration, language, occurrence_count}
+            - greek_words: List of dicts
+              {word, word_clean, transliteration, language, occurrence_count}
             - total_occurrences: Sum of all occurrences
         """
         strongs_number = strongs_number.replace("\x00", "").strip().upper()
@@ -1773,12 +1752,8 @@ class BibleMorphologySearch:
         return {
             "strongs_number": normalized,
             "definition": strongs_entry.get("definition") if strongs_entry else None,
-            "original_word": strongs_entry.get("original_word")
-            if strongs_entry
-            else None,
-            "transliteration": strongs_entry.get("transliteration")
-            if strongs_entry
-            else None,
+            "original_word": strongs_entry.get("original_word") if strongs_entry else None,
+            "transliteration": strongs_entry.get("transliteration") if strongs_entry else None,
             "hebrew_words": hebrew_words,
             "greek_words": greek_words,
             "total_occurrences": total_occurrences,
@@ -1827,7 +1802,6 @@ def _strip_transliteration_diacritics(text: str) -> str:
 
 if __name__ == "__main__":
     import asyncio
-    import sys
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 

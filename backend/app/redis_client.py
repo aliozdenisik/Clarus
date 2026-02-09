@@ -7,6 +7,8 @@ Provides:
 - redis_manager: Global instance for lifespan management
 """
 
+from typing import Any, Awaitable, cast
+
 from redis import asyncio as aioredis
 from redis.asyncio.connection import ConnectionPool
 
@@ -62,7 +64,7 @@ class RedisManager:
             self.client = aioredis.Redis(connection_pool=pool)
 
             # Test connection with ping
-            await self.client.ping()
+            await cast(Awaitable[Any], self.client.ping())
             logger.info("Redis connection established and verified")
 
         except Exception as e:
@@ -105,7 +107,7 @@ class RedisManager:
             return False
 
         try:
-            await self.client.ping()
+            await cast(Awaitable[Any], self.client.ping())
             return True
         except Exception:
             return False

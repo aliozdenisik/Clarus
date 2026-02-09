@@ -21,7 +21,7 @@ Usage:
 import json
 import sys
 from pathlib import Path
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -33,15 +33,13 @@ from rich.table import Table
 console = Console()
 
 # Import after path setup
-from src.query_translator import (
-    QueryTranslator,
-    TranslationResult,
-    TranslationError,
-    TURKISH_CHARS,
-    SUPPORTED_LANGUAGES,
+from src.query_translator import (  # noqa: E402
     CORPUS_LANGUAGES,
+    SUPPORTED_LANGUAGES,
+    TURKISH_CHARS,
+    QueryTranslator,
+    TranslationError,
 )
-
 
 # ============================================================================
 # MOCK HELPERS
@@ -80,9 +78,7 @@ def mock_llm_text_response(translated_text: str) -> Mock:
     mock_response = Mock()
     mock_response.status_code = 200
     mock_response.raise_for_status = Mock()
-    mock_response.json.return_value = {
-        "choices": [{"message": {"content": translated_text}}]
-    }
+    mock_response.json.return_value = {"choices": [{"message": {"content": translated_text}}]}
     return mock_response
 
 
@@ -122,22 +118,16 @@ def test_native_language_turkish_quran() -> bool:
             result = translator.translate_query("sabır ve namaz", corpus="quran_tr")
 
             # Verify heuristic worked (LLM not called)
-            assert not mock_breaker.called, (
-                "LLM should NOT be called for Turkish + quran"
-            )
+            assert not mock_breaker.called, "LLM should NOT be called for Turkish + quran"
 
             # Verify result
             assert result.detected_language == "tr", (
                 f"Expected 'tr', got '{result.detected_language}'"
             )
-            assert result.translated_query == "sabır ve namaz", (
-                "Query should be unchanged"
-            )
+            assert result.translated_query == "sabır ve namaz", "Query should be unchanged"
             assert result.was_translated is False, "was_translated should be False"
 
-            console.print(
-                "  [green]✅ PASS[/green] - Heuristic detected Turkish, skipped LLM"
-            )
+            console.print("  [green]✅ PASS[/green] - Heuristic detected Turkish, skipped LLM")
             return True
 
     except Exception as e:
@@ -162,14 +152,10 @@ def test_native_language_english_bible() -> bool:
             assert result.detected_language == "en", (
                 f"Expected 'en', got '{result.detected_language}'"
             )
-            assert result.translated_query == "love your neighbor", (
-                "Query should be unchanged"
-            )
+            assert result.translated_query == "love your neighbor", "Query should be unchanged"
             assert result.was_translated is False, "was_translated should be False"
 
-            console.print(
-                "  [green]✅ PASS[/green] - Heuristic detected English, skipped LLM"
-            )
+            console.print("  [green]✅ PASS[/green] - Heuristic detected English, skipped LLM")
             return True
 
     except Exception as e:
@@ -187,18 +173,14 @@ def test_heuristic_turkish_chars_quran() -> bool:
             result = translator.translate_query("şefaat nedir", corpus="quran")
 
             # Verify LLM was NOT called
-            assert not mock_breaker.called, (
-                "LLM should NOT be called (Turkish chars detected)"
-            )
+            assert not mock_breaker.called, "LLM should NOT be called (Turkish chars detected)"
 
             # Verify result
             assert result.detected_language == "tr"
             assert result.translated_query == "şefaat nedir"
             assert result.was_translated is False
 
-            console.print(
-                "  [green]✅ PASS[/green] - Turkish chars detected, LLM skipped"
-            )
+            console.print("  [green]✅ PASS[/green] - Turkish chars detected, LLM skipped")
             return True
 
     except Exception as e:
@@ -208,9 +190,7 @@ def test_heuristic_turkish_chars_quran() -> bool:
 
 def test_heuristic_turkish_chars_bible_calls_llm() -> bool:
     """Test heuristic: Turkish chars + bible corpus DOES call LLM."""
-    console.print(
-        "\n[bold cyan]TEST: Heuristic - Turkish chars + Bible (calls LLM)[/bold cyan]"
-    )
+    console.print("\n[bold cyan]TEST: Heuristic - Turkish chars + Bible (calls LLM)[/bold cyan]")
 
     try:
         with patch("src.query_translator.llm_with_breaker") as mock_breaker:
@@ -250,9 +230,7 @@ def test_heuristic_pure_ascii_bible() -> bool:
             result = translator.translate_query("patience", corpus="bible_nt")
 
             # Verify LLM was NOT called
-            assert not mock_breaker.called, (
-                "LLM should NOT be called (pure ASCII + bible)"
-            )
+            assert not mock_breaker.called, "LLM should NOT be called (pure ASCII + bible)"
 
             # Verify result
             assert result.detected_language == "en"
@@ -269,9 +247,7 @@ def test_heuristic_pure_ascii_bible() -> bool:
 
 def test_foreign_language_english_to_turkish() -> bool:
     """Test foreign language query: English -> Turkish for quran."""
-    console.print(
-        "\n[bold cyan]TEST: Foreign Language - English -> Turkish[/bold cyan]"
-    )
+    console.print("\n[bold cyan]TEST: Foreign Language - English -> Turkish[/bold cyan]")
 
     try:
         with patch("src.query_translator.llm_with_breaker") as mock_breaker:
@@ -303,9 +279,7 @@ def test_foreign_language_english_to_turkish() -> bool:
 
 def test_foreign_language_spanish_to_english() -> bool:
     """Test foreign language query: Spanish -> English for bible."""
-    console.print(
-        "\n[bold cyan]TEST: Foreign Language - Spanish -> English[/bold cyan]"
-    )
+    console.print("\n[bold cyan]TEST: Foreign Language - Spanish -> English[/bold cyan]")
 
     try:
         with patch("src.query_translator.llm_with_breaker") as mock_breaker:
@@ -386,12 +360,8 @@ def test_fallback_on_invalid_json() -> bool:
             result = translator.translate_query("test query", corpus="quran_tr")
 
             # Verify fallback behavior
-            assert result.detected_language == "tr", (
-                "Should fallback to corpus language"
-            )
-            assert result.translated_query == "test query", (
-                "Should return original query"
-            )
+            assert result.detected_language == "tr", "Should fallback to corpus language"
+            assert result.translated_query == "test query", "Should return original query"
             assert result.was_translated is False
 
             console.print("  [green]✅ PASS[/green] - Fallback on invalid JSON works")
@@ -417,10 +387,8 @@ def test_fallback_on_connection_error() -> bool:
 
             # Should raise TranslationError
             try:
-                result = translator.translate_query("test query", corpus="quran_tr")
-                console.print(
-                    "  [red]❌ FAIL[/red] - Should have raised TranslationError"
-                )
+                result = translator.translate_query("test query", corpus="quran_tr")  # noqa: F841
+                console.print("  [red]❌ FAIL[/red] - Should have raised TranslationError")
                 return False
             except TranslationError as e:
                 assert "Circuit breaker OPEN" in str(e)
@@ -444,9 +412,7 @@ def test_validation_empty_query() -> bool:
         # Test empty string
         try:
             translator.translate_query("", corpus="quran_tr")
-            console.print(
-                "  [red]❌ FAIL[/red] - Should have raised ValueError for empty query"
-            )
+            console.print("  [red]❌ FAIL[/red] - Should have raised ValueError for empty query")
             return False
         except ValueError as e:
             assert "must not be empty" in str(e).lower()
@@ -454,9 +420,7 @@ def test_validation_empty_query() -> bool:
         # Test whitespace-only
         try:
             translator.translate_query("   ", corpus="quran_tr")
-            console.print(
-                "  [red]❌ FAIL[/red] - Should have raised ValueError for whitespace"
-            )
+            console.print("  [red]❌ FAIL[/red] - Should have raised ValueError for whitespace")
             return False
         except ValueError as e:
             assert "must not be empty" in str(e).lower()
@@ -478,9 +442,7 @@ def test_validation_invalid_corpus() -> bool:
 
         try:
             translator.translate_query("test query", corpus="invalid_corpus")
-            console.print(
-                "  [red]❌ FAIL[/red] - Should have raised ValueError for invalid corpus"
-            )
+            console.print("  [red]❌ FAIL[/red] - Should have raised ValueError for invalid corpus")
             return False
         except ValueError as e:
             assert "invalid corpus" in str(e).lower()
@@ -496,19 +458,17 @@ def test_validation_invalid_corpus() -> bool:
 
 def test_translate_response_with_citations() -> bool:
     """Test translate_response preserves citations."""
-    console.print(
-        "\n[bold cyan]TEST: translate_response - Citation Preservation[/bold cyan]"
-    )
+    console.print("\n[bold cyan]TEST: translate_response - Citation Preservation[/bold cyan]")
 
     try:
         with patch("src.query_translator.llm_with_breaker") as mock_breaker:
             # Mock LLM to return translated text
-            translated_text = "El concepto de paciencia es central en el Corán. En [Bakara:153], Allah ordena a los creyentes buscar ayuda."
+            translated_text = "El concepto de paciencia es central en el Corán. En [Bakara:153], Allah ordena a los creyentes buscar ayuda."  # noqa: E501
             mock_breaker.return_value = mock_llm_text_response(translated_text)
 
             translator = QueryTranslator(api_key="test-key")
 
-            original_text = "Sabır kavramı Kuran'da merkezi bir öneme sahiptir. [Bakara:153] ayetinde Allah, müminlere yardım dilemelerini emreder."
+            original_text = "Sabır kavramı Kuran'da merkezi bir öneme sahiptir. [Bakara:153] ayetinde Allah, müminlere yardım dilemelerini emreder."  # noqa: E501
             result = translator.translate_response(
                 text=original_text,
                 target_lang="es",
@@ -520,14 +480,12 @@ def test_translate_response_with_citations() -> bool:
             assert result == translated_text
 
             # Verify LLM was called with preserve_citations reminder
-            call_args = mock_breaker.call_args
+            call_args = mock_breaker.call_args  # noqa: F841
             # The lambda is called, so we can't directly inspect the prompt
             # But we can verify the function was called
             assert mock_breaker.called
 
-            console.print(
-                "  [green]✅ PASS[/green] - Citations preserved in translation"
-            )
+            console.print("  [green]✅ PASS[/green] - Citations preserved in translation")
             return True
 
     except Exception as e:

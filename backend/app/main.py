@@ -1,28 +1,29 @@
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from contextlib import asynccontextmanager
-import asyncio
 
-from app.config import settings
 from app.api import (
-    auth,
-    search,
-    compare,
-    stream,
     admin,
+    auth,
+    bible_keyword_search,
+    compare,
+    enhance,
+    keyword_search,
     metadata,
     preferences,
-    keyword_search,
-    bible_keyword_search,
+    search,
+    stream,
     verse_lookup,
-    enhance,
 )
+from app.config import settings
 from app.db import init_db
-from app.middleware.error_handler import ErrorHandlerMiddleware
+from app.logging_config import LoggingConfig, get_logger, setup_logging
 from app.middleware.correlation import CorrelationIDMiddleware
+from app.middleware.error_handler import ErrorHandlerMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
-from app.logging_config import setup_logging, LoggingConfig, get_logger
 
 logger = get_logger(__name__)
 
@@ -57,8 +58,8 @@ async def lifespan(app: FastAPI):
     if settings.sentry_enabled and settings.sentry_dsn_backend:
         import sentry_sdk
         from sentry_sdk.integrations.fastapi import FastApiIntegration
-        from sentry_sdk.integrations.starlette import StarletteIntegration
         from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+        from sentry_sdk.integrations.starlette import StarletteIntegration
 
         def before_send(event, hint):
             """Redact sensitive data from Sentry events - PII and LLM content"""
@@ -137,9 +138,7 @@ async def lifespan(app: FastAPI):
         await _redis_manager.disconnect()
         logger.info("Redis disconnected")
     except Exception as e:
-        logger.warning(
-            "Error disconnecting Redis", extra={"error_type": type(e).__name__}
-        )
+        logger.warning("Error disconnecting Redis", extra={"error_type": type(e).__name__})
 
     # Close database connections with timeout and error handling
     from app.db import engine
@@ -164,9 +163,7 @@ async def lifespan(app: FastAPI):
     # Wait for task cancellation with timeout
     if tasks:
         try:
-            await asyncio.wait_for(
-                asyncio.gather(*tasks, return_exceptions=True), timeout=5.0
-            )
+            await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=5.0)
         except asyncio.TimeoutError:
             logger.warning(
                 "Tasks did not cancel within timeout",
@@ -184,7 +181,7 @@ app = FastAPI(
 )
 
 # Middleware order: Last added = first executed
-# Execution order: CorrelationIDMiddleware -> ErrorHandlerMiddleware -> SecurityHeadersMiddleware -> CORSMiddleware -> route
+# Execution order: CorrelationIDMiddleware -> ErrorHandlerMiddleware -> SecurityHeadersMiddleware -> CORSMiddleware -> route  # noqa: E501
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(ErrorHandlerMiddleware)
 app.add_middleware(CorrelationIDMiddleware)
@@ -259,9 +256,7 @@ app.include_router(stream.router, prefix="/api/stream", tags=["stream"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 app.include_router(metadata.router, prefix="/api/metadata", tags=["metadata"])
 app.include_router(preferences.router, prefix="/api/preferences", tags=["preferences"])
-app.include_router(
-    keyword_search.router, prefix="/api/search/keyword", tags=["keyword"]
-)
+app.include_router(keyword_search.router, prefix="/api/search/keyword", tags=["keyword"])
 app.include_router(
     bible_keyword_search.router,
     prefix="/api/keyword-search/bible",

@@ -373,9 +373,7 @@ def parse_lxx_file(
             verse_words[verse_key].append(word_data["word"])
 
             # Normalize word
-            word_clean = (
-                normalize_greek(word_data["word"]) if word_data["word"] else None
-            )
+            word_clean = normalize_greek(word_data["word"]) if word_data["word"] else None
 
             # Transliteration
             transliteration = transliterate_greek(word_clean) if word_clean else None
@@ -490,9 +488,7 @@ def insert_lxx_books(conn, books_to_insert: list[tuple]) -> None:
             continue
 
         # Check if book already exists
-        result = conn.execute(
-            text("SELECT id FROM bm_books WHERE id = :id"), {"id": book_id}
-        )
+        result = conn.execute(text("SELECT id FROM bm_books WHERE id = :id"), {"id": book_id})
         if result.fetchone():
             continue
 
@@ -678,7 +674,7 @@ INDEXES_SQL = [
     "CREATE INDEX IF NOT EXISTS ix_bm_words_lemma ON bm_words(lemma);",
     "CREATE INDEX IF NOT EXISTS ix_bm_words_strong ON bm_words(strong_number);",
     "CREATE INDEX IF NOT EXISTS ix_bm_words_word_clean ON bm_words(word_clean);",
-    "CREATE INDEX IF NOT EXISTS ix_bm_words_word_clean_trgm ON bm_words USING gin(word_clean gin_trgm_ops);",
+    "CREATE INDEX IF NOT EXISTS ix_bm_words_word_clean_trgm ON bm_words USING gin(word_clean gin_trgm_ops);",  # noqa: E501
     "CREATE INDEX IF NOT EXISTS ix_bm_words_verse_id ON bm_words(verse_id);",
     "CREATE INDEX IF NOT EXISTS ix_bm_words_language ON bm_words(language);",
     "CREATE INDEX IF NOT EXISTS ix_bm_verses_book_id ON bm_verses(book_id);",
@@ -710,16 +706,12 @@ def validate_and_summarize(conn) -> bool:
     log.info("Books (LXX Deuterocanonical): %d", lxx_book_count)
 
     # LXX Verse count
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 67 AND 99")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 67 AND 99"))
     lxx_verse_count = result.scalar()
     log.info("Verses (LXX Deuterocanonical): %d", lxx_verse_count)
 
     # Greek word count (all)
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_words WHERE language = 'greek'")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_words WHERE language = 'greek'"))
     greek_word_count = result.scalar()
     log.info("Words (Greek total): %d", greek_word_count)
 
@@ -730,9 +722,7 @@ def validate_and_summarize(conn) -> bool:
 
     # Language breakdown
     result = conn.execute(
-        text(
-            "SELECT language, COUNT(*) FROM bm_words GROUP BY language ORDER BY language"
-        )
+        text("SELECT language, COUNT(*) FROM bm_words GROUP BY language ORDER BY language")
     )
     lang_counts = {row[0]: row[1] for row in result}
     for lang, cnt in lang_counts.items():
@@ -741,7 +731,7 @@ def validate_and_summarize(conn) -> bool:
     # Unique Greek lemmas
     result = conn.execute(
         text(
-            "SELECT COUNT(DISTINCT lemma) FROM bm_words WHERE language = 'greek' AND lemma IS NOT NULL"
+            "SELECT COUNT(DISTINCT lemma) FROM bm_words WHERE language = 'greek' AND lemma IS NOT NULL"  # noqa: E501
         )
     )
     unique_lemmas = result.scalar()
@@ -771,7 +761,7 @@ def validate_and_summarize(conn) -> bool:
     )
     row = result.fetchone()
     if row:
-        print(f"\n  Sample Wisdom 1:1:")
+        print("\n  Sample Wisdom 1:1:")
         print(f"    Book: {row[0]}")
         print(f"    Greek: {row[3]}")
     else:
@@ -788,9 +778,7 @@ def validate_and_summarize(conn) -> bool:
 
 def main() -> bool:
     """Run the LXX ETL pipeline. Returns True on success."""
-    parser = argparse.ArgumentParser(
-        description="ETL: CCAT LXX -> bm_books, bm_verses, bm_words"
-    )
+    parser = argparse.ArgumentParser(description="ETL: CCAT LXX -> bm_books, bm_verses, bm_words")
     parser.add_argument(
         "--book",
         type=str,

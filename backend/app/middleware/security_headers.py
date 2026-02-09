@@ -13,9 +13,10 @@ Adds security headers to all API responses to protect against common web vulnera
 This middleware applies to all HTTP responses, including error responses.
 """
 
+import logging
+
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +32,28 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     - Referrer-Policy: Strict referrer policy
     - X-XSS-Protection: Disable legacy XSS protection (rely on CSP)
     - Permissions-Policy: Restrict browser features (camera, microphone, geolocation)
-    - Content-Security-Policy: Minimal CSP for JSON API (no inline scripts)
+    - Content-Security-Policy: Strict API CSP + docs-specific CSP for Swagger/ReDoc
 
     Usage:
         # In main.py, add BEFORE ErrorHandlerMiddleware
         app.add_middleware(SecurityHeadersMiddleware)
     """
+
+    @staticmethod
+    def _content_security_policy(path: str) -> str:
+        """Return route-aware CSP. Docs need Swagger CDN + inline bootstrap script."""
+        if path.startswith("/docs") or path.startswith("/redoc"):
+            return (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                "img-src 'self' data: https://fastapi.tiangolo.com; "
+                "font-src 'self' data: https://cdn.jsdelivr.net; "
+                "connect-src 'self'; "
+                "frame-ancestors 'none'"
+            )
+
+        return "default-src 'self'; frame-ancestors 'none'"
 
     async def dispatch(self, request: Request, call_next):
         """
@@ -53,9 +70,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
 
             # Strict-Transport-Security: Enforce HTTPS for 1 year, include subdomains
-            response.headers["Strict-Transport-Security"] = (
-                "max-age=31536000; includeSubDomains"
-            )
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
             # X-Content-Type-Options: Prevent MIME type sniffing
             response.headers["X-Content-Type-Options"] = "nosniff"
@@ -71,15 +86,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
             # Permissions-Policy: Restrict access to browser features
             # Deny: camera, microphone, geolocation
-            response.headers["Permissions-Policy"] = (
-                "camera=(), microphone=(), geolocation=()"
-            )
+            response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
 
-            # Content-Security-Policy: Minimal policy for JSON API
-            # - default-src 'self': Only allow resources from same origin
-            # - frame-ancestors 'none': Prevent framing
-            response.headers["Content-Security-Policy"] = (
-                "default-src 'self'; frame-ancestors 'none'"
+            # Content-Security-Policy: strict for API, relaxed for FastAPI docs
+            response.headers["Content-Security-Policy"] = self._content_security_policy(
+                request.url.path
             )
 
             return response

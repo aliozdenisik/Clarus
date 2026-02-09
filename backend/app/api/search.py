@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
-import sys
 import os
+import sys
 import time
+from typing import Any, Dict, Optional
+
 from dotenv import load_dotenv
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.logging_config import get_logger, log_performance
 
@@ -17,23 +18,20 @@ env_path = os.path.join(
 )
 load_dotenv(env_path)
 
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from app.db import get_db
-from app.models import SearchHistory
-from app.auth.api_key_validator import get_current_user_flexible
-from app.api.auth import check_rate_limit
-from app.config import settings
-from app.schemas.common import QueryValidation, TranslatorType, DEFAULT_TRANSLATOR
-from src.ultimate_rag import UltimateRAG
-from app.api.compare import (
+from app.api.auth import check_rate_limit  # noqa: E402
+from app.api.compare import (  # noqa: E402
     VerseDetail,
-    extract_quran_verse_detail,
     extract_bible_verse_detail,
+    extract_quran_verse_detail,
 )
-
+from app.auth.api_key_validator import get_current_user_flexible  # noqa: E402
+from app.config import settings  # noqa: E402
+from app.db import get_db  # noqa: E402
+from app.models import SearchHistory  # noqa: E402
+from app.schemas.common import DEFAULT_TRANSLATOR, QueryValidation, TranslatorType  # noqa: E402
+from src.ultimate_rag import UltimateRAG  # noqa: E402
 
 router = APIRouter()
 
@@ -58,7 +56,7 @@ class SearchRequest(BaseModel):
     )
     translator: Optional[TranslatorType] = Field(
         default=DEFAULT_TRANSLATOR,
-        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
+        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",  # noqa: E501
     )
 
 
@@ -74,9 +72,7 @@ class SearchResponse(BaseModel):
     query: str
     results: list[VerseResult]
     total: int
-    verse_details: Optional[Dict[str, VerseDetail]] = (
-        None  # NEW: Rich verse metadata for citations
-    )
+    verse_details: Optional[Dict[str, VerseDetail]] = None  # NEW: Rich verse metadata for citations
     detected_language: Optional[str] = None
 
 
@@ -135,9 +131,7 @@ async def search_quran(
     validated_query = _validate_query(request.query)
 
     rag = get_rag()
-    results = await rag.search_quran(
-        validated_query, translator=translator, top_k=request.top_k
-    )
+    results = await rag.search_quran(validated_query, translator=translator, top_k=request.top_k)
 
     # Build verse_details dict for citation navigation
     verse_details: Dict[str, VerseDetail] = {}
@@ -158,7 +152,7 @@ async def search_quran(
     verses = [
         VerseResult(
             source="Kuran",
-            reference=f"{r.surah_name}:{r.verse_id}",  # FIXED: Match citation format (removed surah_id)
+            reference=f"{r.surah_name}:{r.verse_id}",  # FIXED: Match citation format (removed surah_id)  # noqa: E501
             text=r.translation,
             score=r.score,
         )
@@ -208,9 +202,7 @@ async def search_bible(
     validated_query = _validate_query(request.query)
 
     rag = get_rag()
-    results = await rag.search_bible(
-        validated_query, testament=testament, top_k=request.top_k
-    )
+    results = await rag.search_bible(validated_query, testament=testament, top_k=request.top_k)
 
     # Build verse_details dict for citation navigation
     verse_details: Dict[str, VerseDetail] = {}
@@ -248,7 +240,7 @@ async def search_bible(
     verses = [
         VerseResult(
             source="Incil",
-            reference=f"{getattr(r, 'book_name', '')} {getattr(r, 'chapter', '')}:{getattr(r, 'verse', '')}",
+            reference=f"{getattr(r, 'book_name', '')} {getattr(r, 'chapter', '')}:{getattr(r, 'verse', '')}",  # noqa: E501
             text=getattr(r, "text", getattr(r, "translation", "")),
             score=r.score,
         )
@@ -256,9 +248,7 @@ async def search_bible(
     ]
 
     latency_ms = (time.perf_counter() - start) * 1000
-    log_performance(
-        logger, "search_bible", latency_ms, collection=collection, results=len(results)
-    )
+    log_performance(logger, "search_bible", latency_ms, collection=collection, results=len(results))
 
     return SearchResponse(
         query=validated_query,
@@ -278,17 +268,13 @@ async def get_search_history(
     current_user: Dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
-    base_query = select(SearchHistory).where(
-        SearchHistory.user_id == current_user["id"]
-    )
+    base_query = select(SearchHistory).where(SearchHistory.user_id == current_user["id"])
 
     if search_type:
         base_query = base_query.where(SearchHistory.search_type.contains(search_type))
 
     total_result = await db.execute(
-        select(func.count(SearchHistory.id)).where(
-            SearchHistory.user_id == current_user["id"]
-        )
+        select(func.count(SearchHistory.id)).where(SearchHistory.user_id == current_user["id"])
     )
     total_items = total_result.scalar() or 0
 
@@ -354,9 +340,7 @@ async def clear_history(
 ):
     from sqlalchemy import delete
 
-    await db.execute(
-        delete(SearchHistory).where(SearchHistory.user_id == current_user["id"])
-    )
+    await db.execute(delete(SearchHistory).where(SearchHistory.user_id == current_user["id"]))
     await db.commit()
 
     return {"success": True, "message": "Tum gecmis temizlendi"}

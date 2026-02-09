@@ -1,13 +1,14 @@
 """Compare API routes for multi-scripture comparison."""
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Tuple, Any
-import sys
 import os
+import sys
 import time as time_module
+from typing import Any, Dict, List, Optional, Tuple
+
 from dotenv import load_dotenv
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.logging_config import get_logger, log_performance
 
@@ -19,21 +20,18 @@ env_path = os.path.join(
 )
 load_dotenv(env_path)
 
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from app.db import get_db
-from app.models import SearchHistory
-from app.auth.api_key_validator import get_current_user_flexible
-from app.api.auth import check_rate_limit
-from app.schemas.common import TranslatorType, DEFAULT_TRANSLATOR
-from src.comparative_rag import ComparativeRAG
-from src.search import SearchResult, BibleSearchResult
-from src.citation_sanitizer import sanitize_citations
-from src.query_translator import QueryTranslator, TranslationError
-from app.api.compare_helpers import strip_markdown_headers
-
+from app.api.auth import check_rate_limit  # noqa: E402
+from app.api.compare_helpers import strip_markdown_headers  # noqa: E402
+from app.auth.api_key_validator import get_current_user_flexible  # noqa: E402
+from app.db import get_db  # noqa: E402
+from app.models import SearchHistory  # noqa: E402
+from app.schemas.common import DEFAULT_TRANSLATOR, TranslatorType  # noqa: E402
+from src.citation_sanitizer import sanitize_citations  # noqa: E402
+from src.comparative_rag import ComparativeRAG  # noqa: E402
+from src.query_translator import QueryTranslator, TranslationError  # noqa: E402
+from src.search import BibleSearchResult, SearchResult  # noqa: E402
 
 router = APIRouter()
 
@@ -64,7 +62,7 @@ class CompareRequest(BaseModel):
     )
     translator: Optional[TranslatorType] = Field(
         default=DEFAULT_TRANSLATOR,
-        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
+        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",  # noqa: E501
     )
     quran_keywords: Optional[List[str]] = Field(
         None,
@@ -122,9 +120,7 @@ class VerseDetail(BaseModel):
     chapter: int  # Chapter/Surah number
     verse: int  # Verse number
     source: str  # Collection: 'quran_tr', 'bible_ot', 'bible_nt', 'bible_apocrypha'
-    translation: (
-        str  # "Diyanet Isleri Baskanligi" or "King James Version with Apocrypha"
-    )
+    translation: str  # "Diyanet Isleri Baskanligi" or "King James Version with Apocrypha"
     book_nr: int | None = None  # Bible book number (None for Quran)
 
     # Quran-specific fields (optional for backward compatibility)
@@ -174,9 +170,7 @@ def extract_quran_verse_detail(result: SearchResult) -> Tuple[str, VerseDetail]:
     )
 
 
-def extract_bible_verse_detail(
-    result: BibleSearchResult, source: str
-) -> Tuple[str, VerseDetail]:
+def extract_bible_verse_detail(result: BibleSearchResult, source: str) -> Tuple[str, VerseDetail]:
     """Extract citation reference and verse detail from a Bible BibleSearchResult."""
     # Citation format: "BookName Chapter:Verse" e.g., "Genesis 1:1" (NO BRACKETS!)
     reference = f"{result.book_name} {result.chapter}:{result.verse}"
@@ -300,21 +294,15 @@ async def compare_scriptures(
         )
 
         # Sanitize agent output (defense-in-depth against malformed citations)
-        result.old_testament_commentary = sanitize_citations(
-            result.old_testament_commentary
-        )
-        result.new_testament_commentary = sanitize_citations(
-            result.new_testament_commentary
-        )
+        result.old_testament_commentary = sanitize_citations(result.old_testament_commentary)
+        result.new_testament_commentary = sanitize_citations(result.new_testament_commentary)
         result.apocrypha_commentary = sanitize_citations(result.apocrypha_commentary)
         result.quran_commentary = sanitize_citations(result.quran_commentary)
         result.synthesis = sanitize_citations(result.synthesis)
 
         # Sanitize citations dict values
         for source_key, citation_list in result.citations.items():
-            result.citations[source_key] = [
-                sanitize_citations(c) for c in citation_list
-            ]
+            result.citations[source_key] = [sanitize_citations(c) for c in citation_list]
 
         # Build structured paragraphs from MultiAgentAnswer
         paragraphs = []
@@ -393,9 +381,7 @@ async def compare_scriptures(
 
         # Response translation: translate essay + paragraphs for non-Turkish/English users
         # Use request.language if provided, otherwise auto-detect from search_result
-        detected_language = request.language or search_result.search_stats.get(
-            "detected_language"
-        )
+        detected_language = request.language or search_result.search_stats.get("detected_language")
         essay_text = result.to_essay()
         response_language = "tr"  # Default: essay is in Turkish
 
@@ -455,20 +441,14 @@ async def compare_scriptures(
         result.essay = sanitize_citations(result.essay)
 
         # Sanitize references
-        result.quran_references = [
-            sanitize_citations(r) for r in result.quran_references
-        ]
-        result.bible_references = [
-            sanitize_citations(r) for r in result.bible_references
-        ]
+        result.quran_references = [sanitize_citations(r) for r in result.quran_references]
+        result.bible_references = [sanitize_citations(r) for r in result.bible_references]
         result.all_references = [sanitize_citations(r) for r in result.all_references]
 
         latency_ms = int((time_module.perf_counter() - start_time) * 1000)
 
         total_citations_count = len(result.all_references)
-        verses_count = (
-            result.verses_provided if hasattr(result, "verses_provided") else 80
-        )
+        verses_count = result.verses_provided if hasattr(result, "verses_provided") else 80
 
         # Log performance for single-agent mode
         log_performance(

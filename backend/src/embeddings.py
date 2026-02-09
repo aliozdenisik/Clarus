@@ -11,17 +11,17 @@ Optimizations:
 - Circuit breaker for API failures
 """
 
-from typing import List, Tuple
-import os
-import requests
 import hashlib
-import time
 import json
+import os
+import time
+from typing import Any, List, Optional, Tuple, cast
+
+import requests
+import sentry_sdk
 from tqdm import tqdm
 
-import sentry_sdk
-
-from src.circuit_breaker import embeddings_with_breaker, CircuitBreakerError
+from src.circuit_breaker import CircuitBreakerError, embeddings_with_breaker
 
 # Optional imports for Redis caching
 try:
@@ -30,9 +30,11 @@ try:
 
     REDIS_AVAILABLE = True
 except ImportError:
+    sync_redis = None
+    aioredis = None
     REDIS_AVAILABLE = False
     print(
-        "Warning: redis not installed. Embedding cache disabled. Install with: pip install redis[hiredis]"
+        "Warning: redis not installed. Embedding cache disabled. Install with: pip install redis[hiredis]"  # noqa: E501
     )
 
 
@@ -60,7 +62,10 @@ class DenseEncoder:
     CACHE_EXPIRE = 86400 * 7  # 7 days
 
     def __init__(
-        self, model_name: str = None, api_key: str = None, use_cache: bool = True
+        self,
+        model_name: Optional[str] = None,
+        api_key: Optional[str] = None,
+        use_cache: bool = True,
     ):
         """
         Initialize the OpenRouter Dense Encoder.
@@ -89,6 +94,9 @@ class DenseEncoder:
             try:
                 from app.config import settings
 
+                if sync_redis is None:
+                    raise RuntimeError("redis sync client unavailable")
+
                 self._redis = sync_redis.Redis(
                     host=settings.redis_host,
                     port=settings.redis_port,
@@ -105,9 +113,7 @@ class DenseEncoder:
 
         # Rate limiting tracking
         self._last_request_time = 0
-        self._min_request_interval = (
-            60.0 / self.RATE_LIMIT_RPM
-        )  # seconds between requests
+        self._min_request_interval = 60.0 / self.RATE_LIMIT_RPM  # seconds between requests
 
         print(f"Initialized OpenRouter dense encoder: {self.model_name}")
         if self._use_cache and self._redis:
@@ -163,7 +169,7 @@ class DenseEncoder:
                 cache_key = self._get_cache_key(text)
                 cached_bytes = self._redis.get(cache_key)
                 if cached_bytes is not None:
-                    return json.loads(cached_bytes.decode())
+                    return json.loads(cast(bytes, cached_bytes).decode())
             except Exception as e:
                 # Fail-open: continue to API call if cache fails
                 import logging
@@ -255,32 +261,28 @@ class DenseEncoder:
                         break  # Success, exit retry loop
 
                     except CircuitBreakerError:
-                        print(
-                            "\nCircuit breaker OPEN for embeddings - batch encoding failed"
-                        )
+                        print("\nCircuit breaker OPEN for embeddings - batch encoding failed")
                         raise  # Propagate immediately, no retry
 
                     except (
                         requests.exceptions.Timeout,
                         requests.exceptions.ReadTimeout,
-                    ) as e:
+                    ):
                         if attempt < max_retries - 1:
                             wait_time = 2**attempt * 5  # 5s, 10s, 20s
                             print(
-                                f"\nTimeout error, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})"
+                                f"\nTimeout error, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})"  # noqa: E501
                             )
                             time.sleep(wait_time)
                         else:
-                            print(
-                                f"\nFailed after {max_retries} attempts. Raising error."
-                            )
+                            print(f"\nFailed after {max_retries} attempts. Raising error.")
                             raise
 
                     except requests.exceptions.RequestException as e:
                         if attempt < max_retries - 1:
                             wait_time = 2**attempt * 5
                             print(
-                                f"\nAPI error: {e}, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})"
+                                f"\nAPI error: {e}, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})"  # noqa: E501
                             )
                             time.sleep(wait_time)
                         else:
@@ -325,7 +327,10 @@ class AsyncDenseEncoder:
     CACHE_EXPIRE = 86400 * 7  # 7 days
 
     def __init__(
-        self, model_name: str = None, api_key: str = None, use_cache: bool = True
+        self,
+        model_name: Optional[str] = None,
+        api_key: Optional[str] = None,
+        use_cache: bool = True,
     ):
         """
         Initialize the Async Dense Encoder.
@@ -363,7 +368,7 @@ class AsyncDenseEncoder:
 
             self._redis = redis_manager.client
             if self._redis:
-                await self._redis.ping()
+                await cast(Any, self._redis.ping())
                 print("  Cache: enabled (Redis async)")
         except Exception:
             # Fail-open: cache disabled if Redis unavailable
@@ -377,23 +382,23 @@ class AsyncDenseEncoder:
 
     async def _check_cache(
         self, texts: List[str]
-    ) -> Tuple[List[str], List[int], List[List[float]]]:
+    ) -> Tuple[List[str], List[int], List[Optional[List[float]]]]:
         """
         Check Redis cache for texts and return: uncached texts, their indices, cached embeddings.
         """
         if self._redis is None:
-            return texts, list(range(len(texts))), [None] * len(texts)
+            return texts, list(range(len(texts))), [None for _ in texts]
 
         uncached_texts = []
         uncached_indices = []
-        cached_embeddings = [None] * len(texts)
+        cached_embeddings: List[Optional[List[float]]] = [None for _ in texts]
 
         for i, text in enumerate(texts):
             try:
                 cache_key = self._get_cache_key(text)
                 cached_bytes = await self._redis.get(cache_key)
                 if cached_bytes is not None:
-                    cached_embeddings[i] = json.loads(cached_bytes.decode())
+                    cached_embeddings[i] = json.loads(cast(bytes, cached_bytes).decode())
                 else:
                     uncached_texts.append(text)
                     uncached_indices.append(i)
@@ -431,7 +436,7 @@ class AsyncDenseEncoder:
                     if attempt < retry_count - 1:
                         wait_time = 2**attempt * 5
                         print(
-                            f"\nAsync timeout, retrying in {wait_time}s... (attempt {attempt + 1}/{retry_count})"
+                            f"\nAsync timeout, retrying in {wait_time}s... (attempt {attempt + 1}/{retry_count})"  # noqa: E501
                         )
                         await asyncio.sleep(wait_time)
                     else:
@@ -443,6 +448,8 @@ class AsyncDenseEncoder:
                         await asyncio.sleep(wait_time)
                     else:
                         raise
+
+        raise RuntimeError("Async embedding retries exhausted")
 
     async def encode_batch_async(
         self,
@@ -489,7 +496,7 @@ class AsyncDenseEncoder:
             print(f"Cache hits: {cache_hits}/{len(texts)}")
 
         print(
-            f"Processing {len(uncached_texts)} texts in {(len(uncached_texts) + batch_size - 1) // batch_size} batches (size={batch_size}, concurrent={max_concurrent})"
+            f"Processing {len(uncached_texts)} texts in {(len(uncached_texts) + batch_size - 1) // batch_size} batches (size={batch_size}, concurrent={max_concurrent})"  # noqa: E501
         )
 
         # Create batches from uncached texts
@@ -508,26 +515,16 @@ class AsyncDenseEncoder:
             enable_cleanup_closed=True,
         )
 
-        timeout = aiohttp.ClientTimeout(
-            total=300, connect=30
-        )  # 5 min total, 30s connect
+        timeout = aiohttp.ClientTimeout(total=300, connect=30)  # 5 min total, 30s connect
 
-        async with aiohttp.ClientSession(
-            connector=connector, timeout=timeout
-        ) as session:
+        async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
             if show_progress:
                 from tqdm.asyncio import tqdm_asyncio
 
-                tasks = [
-                    self._encode_batch_async(session, batch, semaphore)
-                    for batch in batches
-                ]
+                tasks = [self._encode_batch_async(session, batch, semaphore) for batch in batches]
                 results = await tqdm_asyncio.gather(*tasks, desc="Async encoding")
             else:
-                tasks = [
-                    self._encode_batch_async(session, batch, semaphore)
-                    for batch in batches
-                ]
+                tasks = [self._encode_batch_async(session, batch, semaphore) for batch in batches]
                 results = await asyncio.gather(*tasks)
 
         # Flatten results
@@ -540,9 +537,7 @@ class AsyncDenseEncoder:
             for text, embedding in zip(uncached_texts, new_embeddings):
                 try:
                     cache_key = self._get_cache_key(text)
-                    await self._redis.set(
-                        cache_key, json.dumps(embedding), ex=self.CACHE_EXPIRE
-                    )
+                    await self._redis.set(cache_key, json.dumps(embedding), ex=self.CACHE_EXPIRE)
                 except Exception as e:
                     # Fail-open: cache write failure doesn't affect response
                     print(f"Redis cache write failed: {type(e).__name__}")

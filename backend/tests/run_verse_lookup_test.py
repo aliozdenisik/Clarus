@@ -12,22 +12,22 @@ Usage:
     python backend/tests/run_verse_lookup_test.py
 """
 
+import asyncio
 import json
+import subprocess
 import sys
 import time
-import asyncio
-import subprocess
-from pathlib import Path
-from typing import Dict, List, Any, Tuple
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import httpx
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 console = Console()
 
@@ -143,7 +143,7 @@ async def run_api_test(client: httpx.AsyncClient, test: TestCase) -> TestResult:
 
                         # Check source
                         expected_source = test.expected.get("source")
-                        actual_source = first_verse.get("source")
+                        actual_source = first_verse.get("source")  # noqa: F841
 
                         if expected_source == "quran":
                             # Verify surah_id and verses
@@ -153,13 +153,10 @@ async def run_api_test(client: httpx.AsyncClient, test: TestCase) -> TestResult:
                             expected_verses = test.expected.get("verses", [])
                             actual_verses = [v.get("verse_id") for v in verses]
 
-                            if (
-                                actual_surah == expected_surah
-                                and actual_verses == expected_verses
-                            ):
+                            if actual_surah == expected_surah and actual_verses == expected_verses:
                                 passed = True
                             else:
-                                error = f"Mismatch: expected surah={expected_surah} verses={expected_verses}, got surah={actual_surah} verses={actual_verses}"
+                                error = f"Mismatch: expected surah={expected_surah} verses={expected_verses}, got surah={actual_surah} verses={actual_verses}"  # noqa: E501
                         else:
                             # Bible verse
                             expected_book = test.expected.get("book_id")
@@ -178,7 +175,7 @@ async def run_api_test(client: httpx.AsyncClient, test: TestCase) -> TestResult:
                             ):
                                 passed = True
                             else:
-                                error = f"Mismatch: expected book={expected_book} ch={expected_chapter} verses={expected_verses}, got book={actual_book} ch={actual_chapter} verses={actual_verses}"
+                                error = f"Mismatch: expected book={expected_book} ch={expected_chapter} verses={expected_verses}, got book={actual_book} ch={actual_chapter} verses={actual_verses}"  # noqa: E501
                     else:
                         error = "Empty verses array"
             else:
@@ -385,8 +382,9 @@ async def run_regression_test() -> bool:
 
     try:
         # Import RAG pipeline
-        from src.ultimate_rag import UltimateRAG
         import os
+
+        from src.ultimate_rag import UltimateRAG
 
         # Check if API key is available
         if not os.getenv("OPENROUTER_API_KEY"):
@@ -443,9 +441,7 @@ def print_summary_report(
     """Print comprehensive test summary report."""
 
     console.print("\n" + "═" * 80)
-    console.print(
-        "[bold cyan]                    VERSE LOOKUP TEST SUMMARY[/bold cyan]"
-    )
+    console.print("[bold cyan]                    VERSE LOOKUP TEST SUMMARY[/bold cyan]")
     console.print("═" * 80 + "\n")
 
     # API Tests Summary
@@ -454,7 +450,7 @@ def print_summary_report(
     console.print(f"  Passed:  [green]{api_summary.passed}[/green]")
     console.print(f"  Failed:  [red]{api_summary.failed}[/red]")
     console.print(
-        f"  Success Rate: [{'green' if api_summary.passed / api_summary.total >= 0.95 else 'yellow'}]{api_summary.passed / api_summary.total * 100:.1f}%[/]"
+        f"  Success Rate: [{'green' if api_summary.passed / api_summary.total >= 0.95 else 'yellow'}]{api_summary.passed / api_summary.total * 100:.1f}%[/]"  # noqa: E501
     )
     console.print(f"  Avg Time: {api_summary.total_time_ms / api_summary.total:.0f}ms")
     console.print()
@@ -488,7 +484,7 @@ def print_summary_report(
     console.print(f"  Passed:  [green]{cli_passed}[/green]")
     console.print(f"  Failed:  [red]{cli_total - cli_passed}[/red]")
     console.print(
-        f"  Success Rate: [{'green' if cli_passed == cli_total else 'yellow'}]{cli_passed / cli_total * 100:.0f}%[/]"
+        f"  Success Rate: [{'green' if cli_passed == cli_total else 'yellow'}]{cli_passed / cli_total * 100:.0f}%[/]"  # noqa: E501
     )
     console.print()
 
@@ -502,9 +498,7 @@ def print_summary_report(
 
     # Overall verdict
     # Allow 1 known failure (Bible verse bounds validation - documented limitation)
-    critical_passed = (
-        api_summary.failed <= 1 and cli_passed == cli_total and regression_passed
-    )
+    critical_passed = api_summary.failed <= 1 and cli_passed == cli_total and regression_passed
 
     console.print("═" * 80)
     if api_summary.failed == 0 and cli_passed == cli_total and regression_passed:
@@ -517,12 +511,10 @@ def print_summary_report(
         )
         if api_summary.failed > 0:
             console.print(
-                "[dim]Note: 1 known limitation (Bible verse bounds validation - requires verse-per-chapter data)[/dim]"
+                "[dim]Note: 1 known limitation (Bible verse bounds validation - requires verse-per-chapter data)[/dim]"  # noqa: E501
             )
     else:
-        console.print(
-            "[bold yellow]⚠️ SOME TESTS FAILED - REVIEW REQUIRED[/bold yellow]"
-        )
+        console.print("[bold yellow]⚠️ SOME TESTS FAILED - REVIEW REQUIRED[/bold yellow]")
 
 
 # ============================================================================
@@ -607,9 +599,7 @@ async def main():
 
     # Exit with appropriate code
     # Allow 1 known failure (Bible verse bounds validation)
-    critical_passed = (
-        api_summary.failed <= 1 and cli_passed == cli_total and regression_passed
-    )
+    critical_passed = api_summary.failed <= 1 and cli_passed == cli_total and regression_passed
     sys.exit(0 if critical_passed else 1)
 
 

@@ -16,8 +16,8 @@ Usage:
     ./venv/bin/python scripts/setup_all_collections.py --yes  # Skip confirmation prompts
 """
 
-import sys
 import asyncio
+import sys
 import time
 from pathlib import Path
 
@@ -28,35 +28,26 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
-from rich.progress import (
-    Progress,
-    SpinnerColumn,
-    TextColumn,
-    BarColumn,
-    TaskProgressColumn,
-)
-from qdrant_client import QdrantClient
-from qdrant_client.models import (
-    VectorParams,
+from qdrant_client import QdrantClient  # noqa: E402
+from qdrant_client.models import (  # noqa: E402
     Distance,
-    PointStruct,
-    SparseVectorParams,
-    SparseIndexParams,
     HnswConfigDiff,
+    PayloadSchemaType,
+    PointStruct,
     ScalarQuantization,
     ScalarQuantizationConfig,
-    PayloadSchemaType,
-    SparseVector,
+    SparseIndexParams,
+    SparseVectorParams,
+    VectorParams,
 )
+from rich.console import Console  # noqa: E402
+from rich.panel import Panel  # noqa: E402
+from rich.table import Table  # noqa: E402
 
-from src.data_loader import QuranDataLoader
-from src.bible_loader import BibleDataLoader, get_testament
-from src.embeddings import AsyncDenseEncoder
-from src.tanzil_loader import TanzilLoader, VALID_TRANSLATORS
-from src.indexer import QuranIndexer, TurkishBibleIndexer
+from src.bible_loader import BibleDataLoader  # noqa: E402
+from src.embeddings import AsyncDenseEncoder  # noqa: E402
+from src.indexer import TurkishBibleIndexer  # noqa: E402
+from src.tanzil_loader import VALID_TRANSLATORS, TanzilLoader  # noqa: E402
 
 console = Console()
 QDRANT_URL = "http://localhost:6333"
@@ -76,9 +67,7 @@ TESTAMENT_COLLECTIONS = {
 }
 
 
-def delete_old_collections(
-    client: QdrantClient, skip_confirmation: bool = False
-) -> int:
+def delete_old_collections(client: QdrantClient, skip_confirmation: bool = False) -> int:
     """Delete old single-translator collections with confirmation."""
     existing = [c.name for c in client.get_collections().collections]
     to_delete = [name for name in OLD_COLLECTIONS if name in existing]
@@ -86,7 +75,7 @@ def delete_old_collections(
     if not to_delete:
         return 0
 
-    console.print(f"\n[yellow]Found old collections to delete:[/yellow]")
+    console.print("\n[yellow]Found old collections to delete:[/yellow]")
     for name in to_delete:
         console.print(f"  - {name}")
 
@@ -120,9 +109,7 @@ def create_collection(
                 distance=Distance.COSINE,
                 hnsw_config=HnswConfigDiff(m=16, ef_construct=200),
                 quantization_config=ScalarQuantization(
-                    scalar=ScalarQuantizationConfig(
-                        type="int8", quantile=0.99, always_ram=True
-                    )
+                    scalar=ScalarQuantizationConfig(type="int8", quantile=0.99, always_ram=True)
                 ),
             )
         },
@@ -133,18 +120,14 @@ def create_collection(
 
     # Create payload indexes
     for field, schema in payload_indexes:
-        client.create_payload_index(
-            collection_name=name, field_name=field, field_schema=schema
-        )
+        client.create_payload_index(collection_name=name, field_name=field, field_schema=schema)
 
 
 async def index_quran_translators(
     client: QdrantClient, encoder: AsyncDenseEncoder, translators: list[str]
 ) -> dict[str, int]:
     """Index all specified Quran translators."""
-    console.print(
-        f"\n[bold blue]📖 Indexing Quran ({len(translators)} translators)[/bold blue]"
-    )
+    console.print(f"\n[bold blue]📖 Indexing Quran ({len(translators)} translators)[/bold blue]")
 
     loader = TanzilLoader()
     counts = {}
@@ -241,16 +224,14 @@ async def index_turkish_bible(client: QdrantClient) -> dict[str, int]:
         "bible_tr_nt": result["nt"],
     }
 
-    console.print(f"  [green]✓[/green] Indexed Turkish Bible:")
+    console.print("  [green]✓[/green] Indexed Turkish Bible:")
     console.print(f"    OT: {result['ot']} verses")
     console.print(f"    NT: {result['nt']} verses")
 
     return counts
 
 
-async def index_english_bible(
-    client: QdrantClient, encoder: AsyncDenseEncoder
-) -> dict[str, int]:
+async def index_english_bible(client: QdrantClient, encoder: AsyncDenseEncoder) -> dict[str, int]:
     """Index English Bible verses into testament-specific collections."""
     console.print("\n[bold yellow]📜 Indexing English Bible (KJVA)[/bold yellow]")
 
@@ -330,17 +311,13 @@ async def main():
 
     parser = argparse.ArgumentParser(description="Setup all Qdrant collections")
     parser.add_argument("--skip-quran", action="store_true", help="Skip Quran indexing")
-    parser.add_argument(
-        "--skip-bible", action="store_true", help="Skip all Bible indexing"
-    )
+    parser.add_argument("--skip-bible", action="store_true", help="Skip all Bible indexing")
     parser.add_argument(
         "--skip-english-bible",
         action="store_true",
         help="Skip English Bible (keep Turkish)",
     )
-    parser.add_argument(
-        "--skip-turkish-bible", action="store_true", help="Skip Turkish Bible"
-    )
+    parser.add_argument("--skip-turkish-bible", action="store_true", help="Skip Turkish Bible")
     parser.add_argument(
         "--translator",
         type=str,
@@ -348,12 +325,8 @@ async def main():
         choices=list(VALID_TRANSLATORS),
         help="Index only one specific Quran translator",
     )
-    parser.add_argument(
-        "--no-flush", action="store_true", help="Skip Redis cache flush"
-    )
-    parser.add_argument(
-        "--yes", "-y", action="store_true", help="Skip confirmation prompts"
-    )
+    parser.add_argument("--no-flush", action="store_true", help="Skip Redis cache flush")
+    parser.add_argument("--yes", "-y", action="store_true", help="Skip confirmation prompts")
     args = parser.parse_args()
 
     console.print(
@@ -409,9 +382,7 @@ async def main():
             r.flushall()
             console.print("  [green]✓[/green] Redis cache flushed")
         except Exception as e:
-            console.print(
-                f"  [yellow]⚠[/yellow] Redis flush failed (non-critical): {e}"
-            )
+            console.print(f"  [yellow]⚠[/yellow] Redis flush failed (non-critical): {e}")
 
     # Summary
     elapsed = time.time() - start_time
@@ -424,9 +395,7 @@ async def main():
 
     # Sort results by type
     quran_collections = {k: v for k, v in results.items() if k.startswith("quran_tr_")}
-    turkish_bible_collections = {
-        k: v for k, v in results.items() if k.startswith("bible_tr_")
-    }
+    turkish_bible_collections = {k: v for k, v in results.items() if k.startswith("bible_tr_")}
     english_bible_collections = {
         k: v for k, v in results.items() if k in TESTAMENT_COLLECTIONS.values()
     }

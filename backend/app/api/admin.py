@@ -1,15 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from datetime import datetime, timedelta
-from typing import Dict, Any
 import platform
-import httpx
+from datetime import datetime, timedelta
+from typing import Any, Dict
 
-from app.db import get_db
-from app.models import User, SearchHistory
+import httpx
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.auth.api_key_validator import get_current_user_flexible
 from app.config import settings
+from app.db import get_db
+from app.models import SearchHistory, User
 
 router = APIRouter()
 
@@ -125,14 +126,10 @@ async def get_system_info(
 
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "http://localhost:6333/collections", timeout=5.0
-            )
+            response = await client.get("http://localhost:6333/collections", timeout=5.0)
             if response.status_code == 200:
                 collections_data = response.json()
-                collections_count = len(
-                    collections_data.get("result", {}).get("collections", [])
-                )
+                collections_count = len(collections_data.get("result", {}).get("collections", []))
                 qdrant_status = "connected"
             else:
                 qdrant_status = "error"

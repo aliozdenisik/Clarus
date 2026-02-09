@@ -206,10 +206,7 @@ def get_scrollmapper_category(filename: str) -> str:
     fn = filename.lower()
 
     # Apostolic Fathers
-    if any(
-        x in fn
-        for x in ["didache", "hermas", "clement", "barnabas", "polycarp", "ignatius"]
-    ):
+    if any(x in fn for x in ["didache", "hermas", "clement", "barnabas", "polycarp", "ignatius"]):
         return "apostolic_fathers"
 
     # Gnostic texts
@@ -395,9 +392,7 @@ def load_scrollmapper(conn, data_dir: Path) -> None:
                                 "verse": v_num,
                                 "text_original": None,  # No original language text
                                 "text_english": v_text if v_text else None,
-                                "reference": v_name
-                                if v_name
-                                else f"{book_name} {ch_num}:{v_num}",
+                                "reference": v_name if v_name else f"{book_name} {ch_num}:{v_num}",
                             }
                         )
 
@@ -550,7 +545,7 @@ def parse_oshb_book(
     unmapped_count = 0
 
     # Find the book div
-    book_div = root.find(f".//osis:div[@type='book']", NS)
+    book_div = root.find(".//osis:div[@type='book']", NS)
     if book_div is None:
         log.error("No book div found in %s", xml_path.name)
         return [], []
@@ -578,11 +573,7 @@ def parse_oshb_book(
             position = 0
 
             for child in verse_el:
-                tag = (
-                    etree.QName(child.tag).localname
-                    if isinstance(child.tag, str)
-                    else ""
-                )
+                tag = etree.QName(child.tag).localname if isinstance(child.tag, str) else ""
 
                 if tag == "w":
                     position += 1
@@ -634,9 +625,7 @@ def parse_oshb_book(
                         root_word = word_clean
 
                     # Transliteration
-                    transliteration = (
-                        transliterate_hebrew(word_clean) if word_clean else None
-                    )
+                    transliteration = transliterate_hebrew(word_clean) if word_clean else None
 
                     # Language detection from morph tag
                     language = "aramaic" if morph_attr.startswith("A") else "hebrew"
@@ -848,9 +837,7 @@ def insert_verses(
 
 def _build_verse_id_map(conn) -> dict[tuple[int, int, int], int]:
     """Build mapping of (book_id, chapter, verse) -> verse_db_id."""
-    result = conn.execute(
-        text("SELECT id, book_id, chapter, verse FROM bm_verses ORDER BY id")
-    )
+    result = conn.execute(text("SELECT id, book_id, chapter, verse FROM bm_verses ORDER BY id"))
     verse_map: dict[tuple[int, int, int], int] = {}
     for row in result:
         verse_map[(row[1], row[2], row[3])] = row[0]
@@ -943,7 +930,7 @@ INDEXES_SQL = [
     "CREATE INDEX IF NOT EXISTS ix_bm_words_lemma ON bm_words(lemma);",
     "CREATE INDEX IF NOT EXISTS ix_bm_words_strong ON bm_words(strong_number);",
     "CREATE INDEX IF NOT EXISTS ix_bm_words_word_clean ON bm_words(word_clean);",
-    "CREATE INDEX IF NOT EXISTS ix_bm_words_word_clean_trgm ON bm_words USING gin(word_clean gin_trgm_ops);",
+    "CREATE INDEX IF NOT EXISTS ix_bm_words_word_clean_trgm ON bm_words USING gin(word_clean gin_trgm_ops);",  # noqa: E501
     "CREATE INDEX IF NOT EXISTS ix_bm_words_verse_id ON bm_words(verse_id);",
     "CREATE INDEX IF NOT EXISTS ix_bm_words_language ON bm_words(language);",
     "CREATE INDEX IF NOT EXISTS ix_bm_verses_book_id ON bm_verses(book_id);",
@@ -972,9 +959,7 @@ def validate_and_summarize(conn) -> bool:
     ot_book_count = result.scalar()
     log.info("Books (OT): %d", ot_book_count)
 
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_books WHERE testament = 'apocrypha'")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_books WHERE testament = 'apocrypha'"))
     apocrypha_book_count = result.scalar()
     log.info("Books (Apocrypha/Scrollmapper): %d", apocrypha_book_count)
 
@@ -990,29 +975,21 @@ def validate_and_summarize(conn) -> bool:
 
     # Hebrew vs Aramaic
     result = conn.execute(
-        text(
-            "SELECT language, COUNT(*) FROM bm_words GROUP BY language ORDER BY language"
-        )
+        text("SELECT language, COUNT(*) FROM bm_words GROUP BY language ORDER BY language")
     )
     lang_counts = {row[0]: row[1] for row in result}
     for lang, cnt in lang_counts.items():
         log.info("  %s words: %d", lang, cnt)
 
     # Words with/without Strong's
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_words WHERE strong_number IS NOT NULL")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_words WHERE strong_number IS NOT NULL"))
     with_strongs = result.scalar()
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_words WHERE strong_number IS NULL")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_words WHERE strong_number IS NULL"))
     without_strongs = result.scalar()
     log.info("Words with Strong's: %d, without: %d", with_strongs, without_strongs)
 
     # Unique roots
-    result = conn.execute(
-        text("SELECT COUNT(DISTINCT root) FROM bm_words WHERE root IS NOT NULL")
-    )
+    result = conn.execute(text("SELECT COUNT(DISTINCT root) FROM bm_words WHERE root IS NOT NULL"))
     unique_roots = result.scalar()
     log.info("Unique roots: %d", unique_roots)
 
@@ -1027,13 +1004,9 @@ def validate_and_summarize(conn) -> bool:
     top_roots = [(row[0], row[1]) for row in result]
 
     # English text coverage
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_verses WHERE text_english IS NOT NULL")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_verses WHERE text_english IS NOT NULL"))
     english_count = result.scalar()
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_verses WHERE text_english IS NULL")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_verses WHERE text_english IS NULL"))
     no_english = result.scalar()
 
     # Print summary
@@ -1070,7 +1043,7 @@ def validate_and_summarize(conn) -> bool:
     )
     row = result.fetchone()
     if row:
-        print(f"\n  Sample Gen 1:1:")
+        print("\n  Sample Gen 1:1:")
         print(f"    Book: {row[0]}")
         print(f"    Hebrew: {row[3]}")
         print(f"    English: {row[4]}")
@@ -1089,7 +1062,7 @@ def validate_and_summarize(conn) -> bool:
     )
     rows = result.fetchall()
     if rows:
-        print(f"\n  Sample words from Gen 1:1:")
+        print("\n  Sample words from Gen 1:1:")
         for r in rows:
             print(
                 f"    {r[0]} | clean={r[1]} | strong={r[2]} | root={r[3]} | "
@@ -1198,9 +1171,7 @@ def main() -> bool:
             log.info("Parsing OSHB XML files...")
             for order, abbrev in books_to_process:
                 xml_path = OSHB_DIR / f"{abbrev}.xml"
-                verse_rows, word_rows = parse_oshb_book(
-                    xml_path, order, abbrev, strongs_cache
-                )
+                verse_rows, word_rows = parse_oshb_book(xml_path, order, abbrev, strongs_cache)
                 all_verse_rows.extend(verse_rows)
                 all_word_rows.extend(word_rows)
 

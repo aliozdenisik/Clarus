@@ -5,25 +5,24 @@ Provides semantic search capabilities for Quran and Bible data.
 Uses dense vectors only (text-embedding-3-large).
 """
 
-import time
-import json
 import hashlib
-from typing import List, Optional, Any
+import json
+import time
 from dataclasses import dataclass
+from typing import Any, List, Optional
 
 from qdrant_client import QdrantClient
 
-from .embeddings import DenseEncoder
-from .circuit_breaker import qdrant_with_breaker
-from .turkish_utils import expand_turkish_query
 from app.logging_config import get_logger, log_performance
+
+from .circuit_breaker import qdrant_with_breaker
+from .embeddings import DenseEncoder
+from .turkish_utils import expand_turkish_query
 
 logger = get_logger(__name__)
 
 
-async def get_cached_search_results(
-    collection: str, query: str, limit: int
-) -> Optional[List[Any]]:
+async def get_cached_search_results(collection: str, query: str, limit: int) -> Optional[List[Any]]:
     """
     Retrieve cached search results from Redis.
 
@@ -58,9 +57,7 @@ async def get_cached_search_results(
         return None
 
 
-async def cache_search_results(
-    collection: str, query: str, limit: int, results: List[Any]
-) -> None:
+async def cache_search_results(collection: str, query: str, limit: int, results: List[Any]) -> None:
     """
     Cache search results in Redis with 1-hour TTL.
 
@@ -218,9 +215,7 @@ class QuranSearcher:
         )
         return parsed
 
-    def search_with_vector(
-        self, query_vector: List[float], limit: int = 10
-    ) -> List[SearchResult]:
+    def search_with_vector(self, query_vector: List[float], limit: int = 10) -> List[SearchResult]:
         """
         Search using a pre-computed dense vector.
         Skips embedding computation — use when vectors are batch-encoded upfront.
@@ -249,9 +244,7 @@ class QuranSearcher:
         )
         return parsed
 
-    def search(
-        self, query: str, mode: str = "semantic", limit: int = 10
-    ) -> List[SearchResult]:
+    def search(self, query: str, mode: str = "semantic", limit: int = 10) -> List[SearchResult]:
         """
         Search interface. Only semantic search is supported.
 
@@ -485,9 +478,7 @@ class BibleSearcher:
         """
         return self.semantic_search(query, limit)
 
-    async def semantic_search_cached(
-        self, query: str, limit: int = 10
-    ) -> List[BibleSearchResult]:
+    async def semantic_search_cached(self, query: str, limit: int = 10) -> List[BibleSearchResult]:
         """
         Perform semantic search with Redis caching.
         Falls back to direct Qdrant query if cache unavailable.
@@ -563,7 +554,7 @@ class SemanticChunkSearchResult:
             if len(self.combined_translation) > 200
             else self.combined_translation
         )
-        return f"[{self.surah_name} {verse_range}] (Score: {self.score:.4f}, {self.verse_count} verses)\n   {preview}"
+        return f"[{self.surah_name} {verse_range}] (Score: {self.score:.4f}, {self.verse_count} verses)\n   {preview}"  # noqa: E501
 
 
 class SemanticChunkSearcher:
@@ -732,7 +723,7 @@ class BibleSemanticChunkSearchResult:
             else str(self.start_verse)
         )
         preview = self.text[:200] + "..." if len(self.text) > 200 else self.text
-        return f"[{self.book_name} {self.chapter}:{verse_range}] (Score: {self.score:.4f}, {self.verse_count} verses)\n   {preview}"
+        return f"[{self.book_name} {self.chapter}:{verse_range}] (Score: {self.score:.4f}, {self.verse_count} verses)\n   {preview}"  # noqa: E501
 
 
 class BibleSemanticChunkSearcher:
@@ -784,9 +775,7 @@ class BibleSemanticChunkSearcher:
             )
         return parsed
 
-    def semantic_search(
-        self, query: str, limit: int = 10
-    ) -> List[BibleSemanticChunkSearchResult]:
+    def semantic_search(self, query: str, limit: int = 10) -> List[BibleSemanticChunkSearchResult]:
         """Perform semantic search on chunk collection."""
         start = time.perf_counter()
         query_vector = self.dense_encoder.encode(query)

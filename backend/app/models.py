@@ -1,17 +1,18 @@
 from datetime import datetime
+from typing import Optional
+
 from sqlalchemy import (
-    String,
-    Integer,
+    JSON,
+    Boolean,
     Date,
     DateTime,
     ForeignKey,
+    Integer,
+    String,
     Text,
-    Boolean,
-    JSON,
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from typing import Optional
 
 from app.db import Base
 
@@ -20,29 +21,23 @@ class User(Base):
     __tablename__ = "users_legacy"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    email: Mapped[str] = mapped_column(
-        String(255), unique=True, nullable=False, index=True
-    )
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     hashed_password: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    google_id: Mapped[Optional[str]] = mapped_column(
-        String(255), unique=True, nullable=True
-    )
+    google_id: Mapped[Optional[str]] = mapped_column(String(255), unique=True, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     query_count_today: Mapped[int] = mapped_column(Integer, default=0)
     last_query_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     refresh_token: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
 
-    # Legacy relationships removed — SearchHistory and UserPreferences now reference Better Auth user table
+    # Legacy relationships removed — SearchHistory and UserPreferences now reference Better Auth user table  # noqa: E501
 
 
 class SearchHistory(Base):
     __tablename__ = "search_history"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[str] = mapped_column(
-        String(255), ForeignKey("user.id"), nullable=False
-    )
+    user_id: Mapped[str] = mapped_column(String(255), ForeignKey("user.id"), nullable=False)
     query: Mapped[str] = mapped_column(Text, nullable=False)
     search_type: Mapped[str] = mapped_column(String(50), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -62,9 +57,7 @@ class UserPreferences(Base):
     theme: Mapped[str] = mapped_column(String(20), default="system")
     language: Mapped[str] = mapped_column(String(10), default="tr")
     default_search_source: Mapped[str] = mapped_column(String(20), default="quran")
-    default_bible_testament: Mapped[Optional[str]] = mapped_column(
-        String(20), nullable=True
-    )
+    default_bible_testament: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     results_per_page: Mapped[int] = mapped_column(Integer, default=10)
     enable_streaming: Mapped[bool] = mapped_column(Boolean, default=True)
     enable_multi_agent: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -103,9 +96,7 @@ class QMAyah(Base):
     __tablename__ = "qm_ayahs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    surah_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("qm_surahs.id"), nullable=False
-    )
+    surah_id: Mapped[int] = mapped_column(Integer, ForeignKey("qm_surahs.id"), nullable=False)
     ayah_number: Mapped[int] = mapped_column(Integer, nullable=False)
     text_uthmani: Mapped[str] = mapped_column(Text, nullable=False)
     text_clean: Mapped[str] = mapped_column(Text, nullable=False)
@@ -115,18 +106,14 @@ class QMAyah(Base):
         back_populates="ayah", cascade="all, delete-orphan"
     )
 
-    __table_args__ = (
-        UniqueConstraint("surah_id", "ayah_number", name="uq_qm_ayah_surah_ayah"),
-    )
+    __table_args__ = (UniqueConstraint("surah_id", "ayah_number", name="uq_qm_ayah_surah_ayah"),)
 
 
 class QMWord(Base):
     __tablename__ = "qm_words"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    ayah_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("qm_ayahs.id"), nullable=False
-    )
+    ayah_id: Mapped[int] = mapped_column(Integer, ForeignKey("qm_ayahs.id"), nullable=False)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     word_index: Mapped[int] = mapped_column(Integer, nullable=False)
     token: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
@@ -169,9 +156,7 @@ class BMVerse(Base):
     __tablename__ = "bm_verses"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    book_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("bm_books.id"), nullable=False
-    )
+    book_id: Mapped[int] = mapped_column(Integer, ForeignKey("bm_books.id"), nullable=False)
     chapter: Mapped[int] = mapped_column(Integer, nullable=False)
     verse: Mapped[int] = mapped_column(Integer, nullable=False)
     text_original: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -193,9 +178,7 @@ class BMWord(Base):
     __tablename__ = "bm_words"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    verse_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("bm_verses.id"), nullable=False
-    )
+    verse_id: Mapped[int] = mapped_column(Integer, ForeignKey("bm_verses.id"), nullable=False)
     position: Mapped[int] = mapped_column(Integer, nullable=False)
     word: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     word_clean: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
@@ -210,9 +193,7 @@ class BMWord(Base):
 
     verse: Mapped["BMVerse"] = relationship(back_populates="words")
 
-    __table_args__ = (
-        UniqueConstraint("verse_id", "position", name="uq_bm_word_verse_pos"),
-    )
+    __table_args__ = (UniqueConstraint("verse_id", "position", name="uq_bm_word_verse_pos"),)
 
 
 class BMStrongs(Base):
@@ -240,12 +221,8 @@ class BMVerseMapping(Base):
     mapping_type: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    mt_book: Mapped[Optional["BMBook"]] = relationship(
-        foreign_keys=[mt_book_id], viewonly=True
-    )
-    lxx_book: Mapped[Optional["BMBook"]] = relationship(
-        foreign_keys=[lxx_book_id], viewonly=True
-    )
+    mt_book: Mapped[Optional["BMBook"]] = relationship(foreign_keys=[mt_book_id], viewonly=True)
+    lxx_book: Mapped[Optional["BMBook"]] = relationship(foreign_keys=[lxx_book_id], viewonly=True)
 
 
 # ---------------------------------------------------------------------------
@@ -260,12 +237,8 @@ class BetterAuthUser(Base):
 
     id: Mapped[str] = mapped_column(String(255), primary_key=True)
     name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    email: Mapped[str] = mapped_column(
-        String(255), nullable=False, unique=True, index=True
-    )
-    email_verified: Mapped[bool] = mapped_column(
-        "emailVerified", Boolean, default=False
-    )
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    email_verified: Mapped[bool] = mapped_column("emailVerified", Boolean, default=False)
     image: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column("createdAt", DateTime, nullable=False)
     updated_at: Mapped[datetime] = mapped_column("updatedAt", DateTime, nullable=False)
@@ -282,12 +255,8 @@ class BetterAuthSession(Base):
         "userId", String(255), ForeignKey("user.id"), nullable=False, index=True
     )
     expires_at: Mapped[datetime] = mapped_column("expiresAt", DateTime, nullable=False)
-    ip_address: Mapped[Optional[str]] = mapped_column(
-        "ipAddress", String(45), nullable=True
-    )
-    user_agent: Mapped[Optional[str]] = mapped_column(
-        "userAgent", String(500), nullable=True
-    )
+    ip_address: Mapped[Optional[str]] = mapped_column("ipAddress", String(45), nullable=True)
+    user_agent: Mapped[Optional[str]] = mapped_column("userAgent", String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column("createdAt", DateTime, nullable=False)
     updated_at: Mapped[datetime] = mapped_column("updatedAt", DateTime, nullable=False)
 
@@ -304,9 +273,7 @@ class UserStats(Base):
     api_key: Mapped[Optional[str]] = mapped_column(
         String(64), nullable=True, unique=True, index=True
     )
-    api_key_created_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime, nullable=True
-    )
+    api_key_created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, onupdate=datetime.utcnow

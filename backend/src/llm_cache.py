@@ -17,8 +17,9 @@ Cost Impact: 60-80% reduction in LLM API calls for typical workloads.
 import hashlib
 import json
 import logging
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+
 import numpy as np
-from typing import Optional, Dict, Any, List, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from redis import asyncio as aioredis
@@ -161,11 +162,7 @@ class SemanticLLMCache:
             for md5_bytes, embedding_json_bytes in stored_embeddings.items():
                 try:
                     # Decode bytes to string
-                    md5 = (
-                        md5_bytes.decode()
-                        if isinstance(md5_bytes, bytes)
-                        else md5_bytes
-                    )
+                    md5 = md5_bytes.decode() if isinstance(md5_bytes, bytes) else md5_bytes
                     embedding_json = (
                         embedding_json_bytes.decode()
                         if isinstance(embedding_json_bytes, bytes)
@@ -176,9 +173,7 @@ class SemanticLLMCache:
                     stored_embedding = json.loads(embedding_json)
 
                     # Compute similarity
-                    similarity = self._cosine_similarity(
-                        query_embedding, stored_embedding
-                    )
+                    similarity = self._cosine_similarity(query_embedding, stored_embedding)
 
                     if similarity > best_similarity and similarity >= self.threshold:
                         best_similarity = similarity
@@ -196,9 +191,7 @@ class SemanticLLMCache:
             logger.warning(f"Semantic search failed: {e}")
             return None
 
-    async def get(
-        self, query: str, operation: str, skip_semantic: bool = False
-    ) -> Optional[Any]:
+    async def get(self, query: str, operation: str, skip_semantic: bool = False) -> Optional[Any]:
         """
         Get cached response for query.
 
@@ -230,9 +223,7 @@ class SemanticLLMCache:
 
                 # Decode and deserialize
                 cached_json = (
-                    cached_bytes.decode()
-                    if isinstance(cached_bytes, bytes)
-                    else cached_bytes
+                    cached_bytes.decode() if isinstance(cached_bytes, bytes) else cached_bytes
                 )
                 cached = json.loads(cached_json)
 
@@ -265,9 +256,7 @@ class SemanticLLMCache:
 
                     # Decode and deserialize
                     cached_json = (
-                        cached_bytes.decode()
-                        if isinstance(cached_bytes, bytes)
-                        else cached_bytes
+                        cached_bytes.decode() if isinstance(cached_bytes, bytes) else cached_bytes
                     )
                     cached = json.loads(cached_json)
 
@@ -347,9 +336,7 @@ class SemanticLLMCache:
             # Delete all llm_cache:* keys
             cursor = 0
             while True:
-                cursor, keys = await self._redis.scan(
-                    cursor=cursor, match="llm_cache:*", count=100
-                )
+                cursor, keys = await self._redis.scan(cursor=cursor, match="llm_cache:*", count=100)
                 if keys:
                     await self._redis.delete(*keys)
                 if cursor == 0:
@@ -384,9 +371,7 @@ class SemanticLLMCache:
             "total_requests": total,
             "hit_rate": hit_rate,
             "semantic_hit_ratio": (
-                self.stats["semantic_hits"] / self.stats["hits"]
-                if self.stats["hits"] > 0
-                else 0.0
+                self.stats["semantic_hits"] / self.stats["hits"] if self.stats["hits"] > 0 else 0.0
             ),
         }
 

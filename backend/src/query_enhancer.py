@@ -6,24 +6,25 @@ Uses OpenRouter API for query expansion and multi-query generation.
 Supports strictly separated modes for Bible (English/KJV) and Quran (Turkish).
 """
 
-import os
 import json
-import warnings
-import requests
-import time
+import os
 import re
+import time
+import warnings
+from typing import Any, Dict, List, Optional
+
+import requests
 import sentry_sdk
-from typing import List, Dict, Any
 from pydantic import BaseModel, Field
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
-from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
 from app.logging_config import get_logger
+from src.circuit_breaker import CircuitBreakerError, llm_with_breaker
 
 logger = get_logger(__name__)
 
@@ -41,13 +42,9 @@ class KeywordSuggestion(BaseModel):
 
     text: str = Field(..., description="Keyword text")
     language: str = Field(default="tr", description="Language code: tr, en, ar")
-    confidence: float = Field(
-        default=1.0, ge=0.0, le=1.0, description="Confidence score 0.0-1.0"
-    )
+    confidence: float = Field(default=1.0, ge=0.0, le=1.0, description="Confidence score 0.0-1.0")
     selected: bool = Field(default=True, description="Default selection state in UI")
-    source: str = Field(
-        default="llm", description="Extraction method: llm, rule_based, fallback"
-    )
+    source: str = Field(default="llm", description="Extraction method: llm, rule_based, fallback")
 
 
 class EnhanceResponse(BaseModel):
@@ -93,11 +90,14 @@ class QueryEnhancer:
     DEFAULT_MODEL = "google/gemini-2.5-flash"
 
     # --- BIBLE PROMPTS (English / KJV) ---
-    SYSTEM_PROMPT_BIBLE = """You are an expert Biblical Scholar and Linguist specializing in the King James Version (KJV).
-Your goal is to convert user queries (which may be in Turkish or English) into precise search terms for a KJV database.
+    SYSTEM_PROMPT_BIBLE = """You are an expert Biblical Scholar and Linguist
+specializing in the King James Version (KJV).
+Your goal is to convert user queries (which may be in Turkish or English) into
+precise search terms for a KJV database.
 
 Step 1: Identify the language. If Turkish, translate accurately to English.
-Step 2: Identify key biblical themes and archaic KJV synonyms (e.g., "you" -> "thee/thou", "love" -> "charity").
+Step 2: Identify key biblical themes and archaic KJV synonyms
+(e.g., "you" -> "thee/thou", "love" -> "charity").
 Step 3: Output the result strictly in the following JSON format:
 
 {
@@ -150,7 +150,8 @@ KURALLAR:
 Adım 1: Dili algıla. İngilizce ise Türkçeye çevir.
 Adım 2: TÜRKÇE eşanlamlılar ve çeviri varyantları üret.
 - Eşanlamlılar: Aynı anlama gelen farklı Türkçe kelimeler (sabır → sebat, tahammül)
-- Çeviri varyantları: Arapça kökenli İslami terimlerin bu Kuran çevirisinde kullanılan Türkçe karşılıkları (tabut → sandık, salat → namaz)
+- Çeviri varyantları: Arapça kökenli İslami terimlerin bu Kuran çevirisinde
+  kullanılan Türkçe karşılıkları (tabut → sandık, salat → namaz)
 NOT: Sadece kullanıcı sorgusunda bulunan terimleri genişlet. Yeni kavramlar ekleme.
 Adım 3: JSON formatında ver.
 
@@ -215,7 +216,7 @@ Adım 3: JSON formatında ver.
         },
     ]
 
-    def __init__(self, model: str = None, api_key: str = None):
+    def __init__(self, model: Optional[str] = None, api_key: Optional[str] = None):
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
             raise ValueError("OpenRouter API key required.")
@@ -230,9 +231,7 @@ Adım 3: JSON formatında ver.
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=2, min=2, max=60),
         retry=retry_if_exception_type(requests.exceptions.RequestException),
-        before_sleep=lambda rs: logger.info(
-            f"Retrying LLM call, attempt {rs.attempt_number}/5"
-        ),
+        before_sleep=lambda rs: logger.info(f"Retrying LLM call, attempt {rs.attempt_number}/5"),
     )
     def _call_llm_json(
         self, prompt: str, system_prompt: str, examples: List[Dict]
@@ -274,9 +273,7 @@ Adım 3: JSON formatında ver.
                     raise ValueError("Invalid LLM response: missing 'choices' field")
 
                 choice = response_json["choices"][0]
-                if "message" not in choice or "content" not in choice.get(
-                    "message", {}
-                ):
+                if "message" not in choice or "content" not in choice.get("message", {}):
                     logger.error(f"Invalid LLM response structure: {choice}")
                     raise ValueError("Invalid LLM response: missing message content")
 
@@ -291,9 +288,7 @@ Adım 3: JSON formatında ver.
                 sentry_sdk.set_measurement("llm.tokens.output", output_tokens, "none")
 
                 # Simple cost estimate (OpenRouter typical pricing)
-                estimated_cost = (
-                    input_tokens * 0.15 + output_tokens * 0.60
-                ) / 1_000_000
+                estimated_cost = (input_tokens * 0.15 + output_tokens * 0.60) / 1_000_000
                 sentry_sdk.set_measurement("llm.cost.estimated", estimated_cost, "none")
 
                 span.set_data("input_tokens", input_tokens)
@@ -306,9 +301,7 @@ Adım 3: JSON formatında ver.
                 return json.loads(content)
             except CircuitBreakerError:
                 # Circuit breaker open - fail fast, do NOT retry
-                logger.warning(
-                    "Circuit breaker OPEN for LLM - query enhancement failed"
-                )
+                logger.warning("Circuit breaker OPEN for LLM - query enhancement failed")
                 return {}
             except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
                 # Let these propagate to @retry decorator
@@ -380,9 +373,7 @@ Adım 3: JSON formatında ver.
         )
         return final_query
 
-    def extract_keywords(
-        self, query: str, corpus: str = "bible"
-    ) -> List[KeywordSuggestion]:
+    def extract_keywords(self, query: str, corpus: str = "bible") -> List[KeywordSuggestion]:
         """
         Extract structured keywords from query using hybrid rule-based + LLM approach.
 
@@ -422,9 +413,7 @@ Adım 3: JSON formatında ver.
 
         # Step 1: Rule-based splitting on conjunctions
         # Turkish: ve, veya, ile | English: and, or, with | Universal: comma
-        conjunction_pattern = (
-            r"\s+ve\s+|\s+veya\s+|\s+ile\s+|\s+and\s+|\s+or\s+|\s+with\s+|,\s*"
-        )
+        conjunction_pattern = r"\s+ve\s+|\s+veya\s+|\s+ile\s+|\s+and\s+|\s+or\s+|\s+with\s+|,\s*"
         parts = [
             p.strip()
             for p in re.split(conjunction_pattern, query, flags=re.IGNORECASE)
@@ -600,9 +589,7 @@ Adım 3: JSON formatında ver.
                 "the",
                 "and",
             }
-            keywords = [
-                kw for kw in keywords if normalize_turkish(kw.text) not in blacklist
-            ]
+            keywords = [kw for kw in keywords if normalize_turkish(kw.text) not in blacklist]
             logger.info(
                 "Quran blacklist filter applied",
                 extra={"keywords_after_filter": len(keywords)},
@@ -614,7 +601,7 @@ Adım 3: JSON formatında ver.
                 kw.selected = False
 
         logger.info(
-            f"Keyword extraction completed",
+            "Keyword extraction completed",
             extra={
                 "method": extraction_method,
                 "count": len(keywords),
@@ -625,9 +612,7 @@ Adım 3: JSON formatında ver.
 
         return keywords
 
-    def generate_multi_query(
-        self, query: str, n: int = 3, corpus: str = "bible"
-    ) -> List[str]:
+    def generate_multi_query(self, query: str, n: int = 3, corpus: str = "bible") -> List[str]:
         """Generate multiple query perspectives based on corpus."""
         logger.info(
             "Multi-query generation started",
@@ -636,7 +621,8 @@ Adım 3: JSON formatında ver.
 
         if corpus == "quran":
             system_prompt = """Sen uzman bir İslam Alimisin.
-            Görev: Kullanıcı sorgusunu temel alarak Türkçe Kuran araması için 3-5 farklı arama varyasyonu üret.
+            Görev: Kullanıcı sorgusunu temel alarak Türkçe Kuran araması için
+            3-5 farklı arama varyasyonu üret.
 
             KRİTİK KURAL: Çıktıların tümü TÜRKÇE olmalıdır. İngilizce sorgu gelirse Türkçeye çevir.
 
@@ -683,7 +669,8 @@ Adım 3: JSON formatında ver.
             stacklevel=2,
         )
         system_prompt = """You are a translation expert specializing in Biblical terminology.
-Your task: Translate the Turkish query into English for searching the King James Version (KJV) Bible.
+Your task: Translate the Turkish query into English for searching the
+King James Version (KJV) Bible.
 
 RULES:
 1. Translate accurately, preserving religious/theological meaning
@@ -693,9 +680,7 @@ RULES:
 Output valid JSON only:
 {"english_query": "the translated query in English"}"""
 
-        prompt = (
-            f"Translate this Turkish query to English for KJV Bible search: '{query}'"
-        )
+        prompt = f"Translate this Turkish query to English for KJV Bible search: '{query}'"
 
         result = self._call_llm_json(prompt, system_prompt, [])
         translated = result.get("english_query", query)

@@ -13,23 +13,24 @@ Usage:
     print(answer.citations)  # ['Bakara 45', 'Bakara 153']
 """
 
-import os
 import json
-import requests
+import os
 import time
-import sentry_sdk
-from typing import List, Optional
 from dataclasses import dataclass
+from typing import List, Optional
+
+import requests
+import sentry_sdk
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
-from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
-from src.confidence_scorer import ConfidenceScorer, ConfidenceBreakdown
 from app.logging_config import get_logger, log_performance
+from src.circuit_breaker import CircuitBreakerError, llm_with_breaker
+from src.confidence_scorer import ConfidenceScorer
 
 logger = get_logger(__name__)
 
@@ -90,14 +91,14 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
             "content": """SORU: Sabır neden önemlidir?
 
 AYETLER:
-[1] Bakara:45 - Sabır ve namazla yardım dileyin. Şüphesiz bu, kalbi Allah'a saygıyla dopdolu olanlardan başkasına ağır gelir.
-[2] Bakara:153 - Ey iman edenler! Sabır ve namazla yardım dileyin. Şüphesiz Allah sabredenlerle beraberdir.""",
+[1] Bakara:45 - Sabır ve namazla yardım dileyin. Şüphesiz bu, kalbi Allah'a saygıyla dopdolu olanlardan başkasına ağır gelir.  # noqa: E501
+[2] Bakara:153 - Ey iman edenler! Sabır ve namazla yardım dileyin. Şüphesiz Allah sabredenlerle beraberdir.""",  # noqa: E501
         },
         {
             "role": "assistant",
             "content": json.dumps(
                 {
-                    "answer": "Kuran'a göre sabır, müminin en önemli erdemlerinden biridir. Allah, müminlere zorluklar karşısında sabır ve namazla yardım dilemelerini emretmektedir [Bakara:45]. Sabrın önemi, Allah'ın sabredenlerle beraber olduğu müjdesiyle vurgulanır [Bakara:153]. Bu, sabrın sadece bir erdem değil, aynı zamanda Allah'ın yardımına ulaşmanın bir yolu olduğunu gösterir.",
+                    "answer": "Kuran'a göre sabır, müminin en önemli erdemlerinden biridir. Allah, müminlere zorluklar karşısında sabır ve namazla yardım dilemelerini emretmektedir [Bakara:45]. Sabrın önemi, Allah'ın sabredenlerle beraber olduğu müjdesiyle vurgulanır [Bakara:153]. Bu, sabrın sadece bir erdem değil, aynı zamanda Allah'ın yardımına ulaşmanın bir yolu olduğunu gösterir.",  # noqa: E501
                     "cited_references": ["Bakara:45", "Bakara:153"],
                     "confidence": 0.0,
                 },
@@ -132,14 +133,14 @@ OUTPUT FORMAT (JSON):
             "content": """QUESTION: What does the Bible say about God's love?
 
 VERSES:
-[1] John 3:16 - For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.
-[2] Romans 5:8 - But God commendeth his love toward us, in that, while we were yet sinners, Christ died for us.""",
+[1] John 3:16 - For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.  # noqa: E501
+[2] Romans 5:8 - But God commendeth his love toward us, in that, while we were yet sinners, Christ died for us.""",  # noqa: E501
         },
         {
             "role": "assistant",
             "content": json.dumps(
                 {
-                    "answer": "İncil'e göre Tanrı'nın sevgisi benzersiz ve koşulsuzdur. Tanrı dünyayı o kadar çok sevdi ki, biricik Oğlu'nu verdi - bu, O'na iman edenlerin mahvolmaması, sonsuz yaşama kavuşması içindir [John 3:16]. Daha da dikkat çekici olan, Tanrı'nın bu sevgiyi biz henüz günahkârken göstermesidir; Mesih bizim için öldü [Romans 5:8]. Bu, ilahi sevginin insan liyakatine değil, Tanrı'nın merhametine dayandığını gösterir.",
+                    "answer": "İncil'e göre Tanrı'nın sevgisi benzersiz ve koşulsuzdur. Tanrı dünyayı o kadar çok sevdi ki, biricik Oğlu'nu verdi - bu, O'na iman edenlerin mahvolmaması, sonsuz yaşama kavuşması içindir [John 3:16]. Daha da dikkat çekici olan, Tanrı'nın bu sevgiyi biz henüz günahkârken göstermesidir; Mesih bizim için öldü [Romans 5:8]. Bu, ilahi sevginin insan liyakatine değil, Tanrı'nın merhametine dayandığını gösterir.",  # noqa: E501
                     "cited_references": ["John 3:16", "Romans 5:8"],
                     "confidence": 0.0,
                 },
@@ -148,7 +149,7 @@ VERSES:
         },
     ]
 
-    def __init__(self, model: str = None, api_key: str = None):
+    def __init__(self, model: Optional[str] = None, api_key: Optional[str] = None):
         """Initialize Answer Generator with OpenRouter API"""
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
@@ -168,9 +169,7 @@ VERSES:
         # Try to get from object attributes first
         if "quran" in source:
             surah = getattr(result, "surah_id", None)
-            verse = getattr(result, "verse_id", None) or getattr(
-                result, "verse_ids", None
-            )
+            verse = getattr(result, "verse_id", None) or getattr(result, "verse_ids", None)
 
             # Fallback to payload
             if surah is None and hasattr(result, "payload"):
@@ -190,12 +189,8 @@ VERSES:
         else:
             # Bible format
             book = getattr(result, "book_name", None)
-            chapter = getattr(result, "chapter_number", None) or getattr(
-                result, "chapter", None
-            )
-            verse = getattr(result, "verse_number", None) or getattr(
-                result, "verse", None
-            )
+            chapter = getattr(result, "chapter_number", None) or getattr(result, "chapter", None)
+            verse = getattr(result, "verse_number", None) or getattr(result, "verse", None)
 
             # Fallback to payload
             if book is None and hasattr(result, "payload"):
@@ -246,6 +241,7 @@ VERSES:
 
         return "\n".join(context_parts)
 
+    @staticmethod
     def _is_retryable_error(exception):
         """Check if exception is retryable (timeout, connection, or rate limit)"""
         if isinstance(
@@ -254,9 +250,7 @@ VERSES:
         ):
             return True
         if isinstance(exception, requests.exceptions.HTTPError):
-            return (
-                exception.response is not None and exception.response.status_code == 429
-            )
+            return exception.response is not None and exception.response.status_code == 429
         return False
 
     @retry(
@@ -325,9 +319,7 @@ VERSES:
                     raise ValueError("Invalid LLM response: missing 'choices' field")
 
                 choice = response_json["choices"][0]
-                if "message" not in choice or "content" not in choice.get(
-                    "message", {}
-                ):
+                if "message" not in choice or "content" not in choice.get("message", {}):
                     logger.error(f"Invalid LLM response structure: {choice}")
                     raise ValueError("Invalid LLM response: missing message content")
 
@@ -343,9 +335,7 @@ VERSES:
                 sentry_sdk.set_measurement("llm.tokens.output", output_tokens, "none")
 
                 # Simple cost estimate (OpenRouter typical pricing)
-                estimated_cost = (
-                    input_tokens * 0.15 + output_tokens * 0.60
-                ) / 1_000_000
+                estimated_cost = (input_tokens * 0.15 + output_tokens * 0.60) / 1_000_000
                 sentry_sdk.set_measurement("llm.cost.estimated", estimated_cost, "none")
 
                 span.set_data("input_tokens", input_tokens)
@@ -380,9 +370,7 @@ VERSES:
                 raise
             except requests.exceptions.RequestException as e:
                 # Other HTTP errors - don't retry
-                logger.error(
-                    "API request failed", extra={"error": str(e), "model": self.model}
-                )
+                logger.error("API request failed", extra={"error": str(e), "model": self.model})
                 span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {
                     "answer": "Cevap üretilemedi.",
@@ -408,7 +396,7 @@ VERSES:
         search_results: List,
         source: str = "quran_tr_diyanet",
         max_context_results: int = 15,
-        score_stats: dict = None,
+        score_stats: Optional[dict] = None,
     ) -> AnswerResult:
         """
         Generate a cited answer from search results.
@@ -432,9 +420,7 @@ VERSES:
         )
 
         if not search_results:
-            logger.warning(
-                "No search results for answer generation", extra={"source": source}
-            )
+            logger.warning("No search results for answer generation", extra={"source": source})
             return AnswerResult(
                 text="Verilen kaynaklarda bu soruyla ilgili bilgi bulunamadı.",
                 citations=[],

@@ -25,24 +25,25 @@ Architecture:
 Output: 5 paragraphs (OT, NT, Apocrypha, Quran, Synthesis)
 """
 
-import os
 import json
-import requests
+import os
 import time
-import sentry_sdk
-from typing import List, Dict, Any, Optional, Callable
-from dataclasses import dataclass, field
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional
+
+import requests
+import sentry_sdk
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
-from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
-from src.confidence_scorer import ConfidenceScorer
 from app.logging_config import get_logger, log_performance
+from src.circuit_breaker import CircuitBreakerError, llm_with_breaker
+from src.confidence_scorer import ConfidenceScorer
 
 logger = get_logger(__name__)
 
@@ -68,14 +69,10 @@ class MultiAgentAnswer:
         sections = []
 
         if self.old_testament_commentary:
-            sections.append(
-                f"## Eski Ahit (Old Testament)\n\n{self.old_testament_commentary}"
-            )
+            sections.append(f"## Eski Ahit (Old Testament)\n\n{self.old_testament_commentary}")
 
         if self.new_testament_commentary:
-            sections.append(
-                f"## Yeni Ahit (New Testament)\n\n{self.new_testament_commentary}"
-            )
+            sections.append(f"## Yeni Ahit (New Testament)\n\n{self.new_testament_commentary}")
 
         if self.apocrypha_commentary:
             sections.append(f"## Apokrifa (Apocrypha)\n\n{self.apocrypha_commentary}")
@@ -95,7 +92,7 @@ class BaseSpecialistAgent:
     OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
     MODEL = "google/gemini-3-flash-preview"
 
-    def __init__(self, api_key: str = None):
+    def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
             raise ValueError("OpenRouter API key required")
@@ -109,9 +106,7 @@ class BaseSpecialistAgent:
         """Extract reference string from search result"""
         if "quran" in source:
             surah_name = getattr(result, "surah_name", None)
-            verse = getattr(result, "verse_id", None) or getattr(
-                result, "verse_ids", None
-            )
+            verse = getattr(result, "verse_id", None) or getattr(result, "verse_ids", None)
 
             if surah_name is None and hasattr(result, "payload"):
                 payload = result.payload or {}
@@ -123,12 +118,8 @@ class BaseSpecialistAgent:
             return "Unknown"
         else:
             book = getattr(result, "book_name", None)
-            chapter = getattr(result, "chapter_number", None) or getattr(
-                result, "chapter", None
-            )
-            verse = getattr(result, "verse_number", None) or getattr(
-                result, "verse", None
-            )
+            chapter = getattr(result, "chapter_number", None) or getattr(result, "chapter", None)
+            verse = getattr(result, "verse_number", None) or getattr(result, "verse", None)
 
             if book is None and hasattr(result, "payload"):
                 payload = result.payload or {}
@@ -174,9 +165,7 @@ class BaseSpecialistAgent:
     )
     def _call_llm(self, messages: List[Dict], max_tokens: int = 1000) -> dict:
         """Call OpenRouter API"""
-        with sentry_sdk.start_span(
-            op="llm.openrouter.agent", description="Agent LLM call"
-        ) as span:
+        with sentry_sdk.start_span(op="llm.openrouter.agent", description="Agent LLM call") as span:
             start_time = time.perf_counter()
             span.set_data("model", self.MODEL)
 
@@ -206,9 +195,7 @@ class BaseSpecialistAgent:
                     raise ValueError("Invalid LLM response: missing 'choices' field")
 
                 choice = response_json["choices"][0]
-                if "message" not in choice or "content" not in choice.get(
-                    "message", {}
-                ):
+                if "message" not in choice or "content" not in choice.get("message", {}):
                     logger.error(f"Invalid LLM response structure: {choice}")
                     raise ValueError("Invalid LLM response: missing message content")
 
@@ -239,9 +226,7 @@ class BaseSpecialistAgent:
                 return {"commentary": "", "citations": [], "confidence": 0.0}
             except Exception as e:
                 # Other errors - don't retry
-                logger.error(
-                    "LLM call failed", extra={"error": str(e), "model": self.MODEL}
-                )
+                logger.error("LLM call failed", extra={"error": str(e), "model": self.MODEL})
                 span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {"commentary": "", "citations": [], "confidence": 0.0}
 
@@ -338,7 +323,8 @@ class ApocryphaAgent(BaseSpecialistAgent):
     SYSTEM_PROMPT = """Sen uzman bir Apokrifa (Deuterokanonik kitaplar) alimi ve tefsircisisin.
 Görevin: Kullanıcının sorusunu, sana verilen Apokrifa ayetlerine dayanarak yorumlamak.
 
-Bu kitaplar şunları içerir: Tobit, Judith, 1-2 Maccabees, Wisdom of Solomon, Sirach (Ecclesiasticus), Baruch, vb.
+Bu kitaplar şunları içerir: Tobit, Judith, 1-2 Maccabees, Wisdom of Solomon,
+Sirach (Ecclesiasticus), Baruch, vb.
 
 KRİTİK KURALLAR:
 1. SADECE verilen Apokrifa ayetlerindeki bilgileri kullan
@@ -488,7 +474,7 @@ class MultiAgentOrchestrator:
     4. Return 5-paragraph result
     """
 
-    def __init__(self, api_key: str = None, verbose: bool = True):
+    def __init__(self, api_key: Optional[str] = None, verbose: bool = True):
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         self.verbose = verbose
 
@@ -543,7 +529,7 @@ class MultiAgentOrchestrator:
         ot_verses: List,
         nt_verses: List,
         apocrypha_verses: List,
-        collection_stats: dict = None,
+        collection_stats: Optional[dict] = None,
         progress_callback: Optional[Callable[[str, str], None]] = None,
     ) -> MultiAgentAnswer:
         """
@@ -664,7 +650,7 @@ class MultiAgentOrchestrator:
                     completed_count += 1
                     _emit(
                         "agent_completed",
-                        f"{agent_labels.get(key, key)} agent completed ({completed_count}/{agent_count})",
+                        f"{agent_labels.get(key, key)} agent completed ({completed_count}/{agent_count})",  # noqa: E501
                     )
 
         # Extract commentaries
@@ -707,9 +693,7 @@ class MultiAgentOrchestrator:
         synthesis = summary_result.get("synthesis", "")
         _emit("summary_completed", "Comparative synthesis complete")
         summary_latency_ms = (time.perf_counter() - summary_start) * 1000
-        log_performance(
-            logger, "summary_agent", summary_latency_ms, synthesis_len=len(synthesis)
-        )
+        log_performance(logger, "summary_agent", summary_latency_ms, synthesis_len=len(synthesis))
 
         _emit("scoring_confidence", "Calculating confidence score...")
         # === OBJECTIVE CONFIDENCE SCORING (two-phase sigmoid-calibrated) ===
@@ -718,7 +702,7 @@ class MultiAgentOrchestrator:
             all_rrf_scores = collection_stats["all_rrf_scores"]
         else:
             logger.warning(
-                "collection_stats not provided or missing all_rrf_scores, computing from search results"
+                "collection_stats not provided or missing all_rrf_scores, computing from search results"  # noqa: E501
             )
             all_rrf_scores = sorted(
                 [r.score for r in (quran_verses or [])]
@@ -735,13 +719,9 @@ class MultiAgentOrchestrator:
         for agent_result_var in [ot_result, nt_result, apoc_result, quran_result]:
             all_citations += len(agent_result_var.get("citations", []))
 
-        total_verses_provided = (
-            collection_stats.get("total_verses", 80) if collection_stats else 80
-        )
+        total_verses_provided = collection_stats.get("total_verses", 80) if collection_stats else 80
         collections_with_results = (
-            collection_stats.get("collections_with_results", 4)
-            if collection_stats
-            else 4
+            collection_stats.get("collections_with_results", 4) if collection_stats else 4
         )
 
         breakdown = self.confidence_scorer.compute(

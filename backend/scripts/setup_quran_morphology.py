@@ -25,10 +25,9 @@ from urllib.request import urlretrieve
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from sqlalchemy import create_engine, text
-
 from pyarabic import araby
 from pyarabic.trans import utf82latin as _arabic_to_buckwalter
+from sqlalchemy import create_engine, text
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -117,8 +116,7 @@ def verify_files() -> bool:
     if missing:
         log.error("Missing required data files:\n%s", "\n".join(missing))
         log.error(
-            "Download Tanzil XML files from https://tanzil.net/download/ "
-            "and place them in %s",
+            "Download Tanzil XML files from https://tanzil.net/download/ and place them in %s",
             TANZIL_DIR,
         )
         return False
@@ -250,9 +248,7 @@ def parse_tsv_words() -> list[dict]:
                 position = int(loc_parts[2])
                 word_index = int(loc_parts[3])
             except ValueError:
-                log.warning(
-                    "Line %d: non-integer in location: %r", line_num, location_str
-                )
+                log.warning("Line %d: non-integer in location: %r", line_num, location_str)
                 skipped += 1
                 continue
 
@@ -429,9 +425,7 @@ def insert_ayahs(
     log.info("Inserted %d ayahs", len(ayah_rows))
 
     # Build mapping: (surah_id, ayah_number) → db id
-    result = conn.execute(
-        text("SELECT id, surah_id, ayah_number FROM qm_ayahs ORDER BY id")
-    )
+    result = conn.execute(text("SELECT id, surah_id, ayah_number FROM qm_ayahs ORDER BY id"))
     ayah_id_map: dict[tuple[int, int], int] = {}
     for row in result:
         ayah_id_map[(row[1], row[2])] = row[0]
@@ -538,9 +532,7 @@ def validate_counts(conn) -> bool:
         log.info("✅ Words: %d", word_count)
 
     # Unique roots
-    result = conn.execute(
-        text("SELECT COUNT(DISTINCT root) FROM qm_words WHERE root IS NOT NULL")
-    )
+    result = conn.execute(text("SELECT COUNT(DISTINCT root) FROM qm_words WHERE root IS NOT NULL"))
     root_count = result.scalar()
     log.info("📊 Unique roots: %d", root_count)
 
@@ -583,9 +575,7 @@ def print_summary(conn) -> None:
     ayah_count = result.scalar()
     result = conn.execute(text("SELECT COUNT(*) FROM qm_words"))
     word_count = result.scalar()
-    result = conn.execute(
-        text("SELECT COUNT(DISTINCT root) FROM qm_words WHERE root IS NOT NULL")
-    )
+    result = conn.execute(text("SELECT COUNT(DISTINCT root) FROM qm_words WHERE root IS NOT NULL"))
     root_count = result.scalar()
     result = conn.execute(
         text("SELECT COUNT(DISTINCT lemma) FROM qm_words WHERE lemma IS NOT NULL")

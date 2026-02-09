@@ -24,7 +24,7 @@ import json
 import sys
 from pathlib import Path
 from typing import List, Tuple
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -36,8 +36,7 @@ from rich.table import Table
 console = Console()
 
 # Import after path setup
-from src.query_translator import QueryTranslator
-
+from src.query_translator import QueryTranslator  # noqa: E402
 
 # ============================================================================
 # MOCK HELPERS
@@ -283,9 +282,7 @@ def _run_single_test(
 
             # Verify LLM call expectation
             if needs_llm:
-                assert mock_breaker.called, (
-                    f"LLM should have been called for '{query}' + {corpus}"
-                )
+                assert mock_breaker.called, f"LLM should have been called for '{query}' + {corpus}"
             else:
                 assert not mock_breaker.called, (
                     f"LLM should NOT have been called for '{query}' + {corpus}"
@@ -309,7 +306,7 @@ def _run_single_test(
                 )
             else:
                 console.print(
-                    f'  [green]✅ PASS[/green]: "{query}" + {corpus} → {expected_lang}, no translation'
+                    f'  [green]✅ PASS[/green]: "{query}" + {corpus} → {expected_lang}, no translation'  # noqa: E501
                 )
             return True
 
@@ -338,16 +335,12 @@ def run_all_tests() -> None:
         category_results: List[Tuple[str, List[bool]]] = []
 
         # Category 1: Heuristic Pre-Filter (8 tests)
-        results = run_category_tests(
-            "Category 1: Heuristic Pre-Filter (8 tests)", HEURISTIC_TESTS
-        )
+        results = run_category_tests("Category 1: Heuristic Pre-Filter (8 tests)", HEURISTIC_TESTS)
         category_results.append(("Turkish (heuristic)", results[:4]))
         category_results.append(("English (heuristic)", results[4:]))
 
         # Category 2: English → Turkish (8 tests)
-        results = run_category_tests(
-            "Category 2: English → Turkish (8 tests)", EN_TO_TR_TESTS
-        )
+        results = run_category_tests("Category 2: English → Turkish (8 tests)", EN_TO_TR_TESTS)
         category_results.append(("English → Turkish", results))
 
         # Category 3: Spanish (6 tests)
@@ -357,27 +350,19 @@ def run_all_tests() -> None:
         category_results.append(("Spanish", results))
 
         # Category 4: French (5 tests)
-        results = run_category_tests(
-            "Category 4: French → Corpus Language (5 tests)", FRENCH_TESTS
-        )
+        results = run_category_tests("Category 4: French → Corpus Language (5 tests)", FRENCH_TESTS)
         category_results.append(("French", results))
 
         # Category 5: Arabic (5 tests)
-        results = run_category_tests(
-            "Category 5: Arabic → Corpus Language (5 tests)", ARABIC_TESTS
-        )
+        results = run_category_tests("Category 5: Arabic → Corpus Language (5 tests)", ARABIC_TESTS)
         category_results.append(("Arabic", results))
 
         # Category 6: German (4 tests)
-        results = run_category_tests(
-            "Category 6: German → Corpus Language (4 tests)", GERMAN_TESTS
-        )
+        results = run_category_tests("Category 6: German → Corpus Language (4 tests)", GERMAN_TESTS)
         category_results.append(("German", results))
 
         # Category 7: Edge Cases (4 tests)
-        results = run_category_tests(
-            "Category 7: Edge Cases (4 tests)", EDGE_CASE_TESTS
-        )
+        results = run_category_tests("Category 7: Edge Cases (4 tests)", EDGE_CASE_TESTS)
         category_results.append(("Edge Cases", results))
 
     # ── Summary ──────────────────────────────────────────────────────────

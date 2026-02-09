@@ -9,26 +9,27 @@ Optimizations:
 - Payload indexes for fast filtered searches
 """
 
-from typing import List, Optional, Dict
 from pathlib import Path
-from tqdm import tqdm
+from typing import Dict, List, Optional
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
-    VectorParams,
-    SparseVectorParams,
-    SparseIndexParams,
     Distance,
-    PointStruct,
     HnswConfigDiff,
+    PayloadSchemaType,
+    PointStruct,
     ScalarQuantization,
     ScalarQuantizationConfig,
-    PayloadSchemaType,
+    ScalarType,
+    SparseIndexParams,
+    SparseVectorParams,
+    VectorParams,
 )
+from tqdm import tqdm
 
 from .data_loader import QuranChunk
 from .embeddings import DenseEncoder
-from .tanzil_loader import TanzilLoader, VALID_TRANSLATORS
+from .tanzil_loader import VALID_TRANSLATORS, TanzilLoader
 
 
 class QuranIndexer:
@@ -105,10 +106,10 @@ class QuranIndexer:
         # Get dense vector dimension
         dense_dim = self.encoder.dense_dimension
         print(
-            f"Creating collection {self.collection_name} ({self.translator}) with dense dimension: {dense_dim}"
+            f"Creating collection {self.collection_name} ({self.translator}) with dense dimension: {dense_dim}"  # noqa: E501
         )
-        print(f"  HNSW config: m=16, ef_construct=200")
-        print(f"  Quantization: Scalar int8 (75% RAM savings)")
+        print("  HNSW config: m=16, ef_construct=200")
+        print("  Quantization: Scalar int8 (75% RAM savings)")
 
         self.client.create_collection(
             collection_name=self.collection_name,
@@ -122,7 +123,7 @@ class QuranIndexer:
                     ),
                     quantization_config=ScalarQuantization(
                         scalar=ScalarQuantizationConfig(
-                            type="int8", quantile=0.99, always_ram=True
+                            type=ScalarType.INT8, quantile=0.99, always_ram=True
                         )
                     ),
                 )
@@ -244,7 +245,6 @@ class QuranIndexer:
         Returns:
             Number of indexed chunks
         """
-        import asyncio
         from .embeddings import AsyncDenseEncoder
 
         if not self._collection_exists:
@@ -295,7 +295,6 @@ class QuranIndexer:
         Returns:
             Number of indexed verses
         """
-        from .tanzil_loader import TanzilLoader
 
         loader = TanzilLoader()
         verses = loader.load_translation(self.translator)
@@ -404,8 +403,8 @@ class SemanticChunkIndexer:
         # Get dense vector dimension
         dense_dim = self.encoder.dense_dimension
         print(f"Creating semantic chunks collection with dense dimension: {dense_dim}")
-        print(f"  HNSW config: m=16, ef_construct=200")
-        print(f"  Quantization: Scalar int8 (75% RAM savings)")
+        print("  HNSW config: m=16, ef_construct=200")
+        print("  Quantization: Scalar int8 (75% RAM savings)")
 
         self.client.create_collection(
             collection_name=self.COLLECTION_NAME,
@@ -419,7 +418,7 @@ class SemanticChunkIndexer:
                     ),
                     quantization_config=ScalarQuantization(
                         scalar=ScalarQuantizationConfig(
-                            type="int8", quantile=0.99, always_ram=True
+                            type=ScalarType.INT8, quantile=0.99, always_ram=True
                         )
                     ),
                 )
@@ -484,9 +483,7 @@ class SemanticChunkIndexer:
         print("Indexing to Qdrant...")
         total_indexed = 0
 
-        for i in tqdm(
-            range(0, len(chunks), batch_size), desc="Indexing semantic chunks"
-        ):
+        for i in tqdm(range(0, len(chunks), batch_size), desc="Indexing semantic chunks"):
             batch_chunks = chunks[i : i + batch_size]
             batch_dense = dense_vectors[i : i + batch_size]
 
@@ -569,7 +566,7 @@ class BibleSemanticChunkIndexer:
                     hnsw_config=HnswConfigDiff(m=16, ef_construct=200),
                     quantization_config=ScalarQuantization(
                         scalar=ScalarQuantizationConfig(
-                            type="int8", quantile=0.99, always_ram=True
+                            type=ScalarType.INT8, quantile=0.99, always_ram=True
                         )
                     ),
                 )
@@ -624,9 +621,7 @@ class BibleSemanticChunkIndexer:
         print("Indexing to Qdrant...")
         total_indexed = 0
 
-        for i in tqdm(
-            range(0, len(chunks), batch_size), desc="Indexing semantic chunks"
-        ):
+        for i in tqdm(range(0, len(chunks), batch_size), desc="Indexing semantic chunks"):
             batch_chunks = chunks[i : i + batch_size]
             batch_dense = dense_vectors[i : i + batch_size]
 
@@ -661,7 +656,6 @@ class BibleSemanticChunkIndexer:
         - max_concurrent=10: Parallel API calls for 2-3x speedup
         - upsert_batch_size=500: Bulk Qdrant inserts
         """
-        import asyncio
         from .embeddings import AsyncDenseEncoder
 
         if not self._collection_exists:
@@ -790,11 +784,9 @@ class TurkishBibleIndexer:
 
         # Get dense vector dimension
         dense_dim = self.encoder.dense_dimension
-        print(
-            f"Creating collection {collection_name} with dense dimension: {dense_dim}"
-        )
-        print(f"  HNSW config: m=16, ef_construct=200")
-        print(f"  Quantization: Scalar int8 (75% RAM savings)")
+        print(f"Creating collection {collection_name} with dense dimension: {dense_dim}")
+        print("  HNSW config: m=16, ef_construct=200")
+        print("  Quantization: Scalar int8 (75% RAM savings)")
 
         self.client.create_collection(
             collection_name=collection_name,
@@ -808,7 +800,7 @@ class TurkishBibleIndexer:
                     ),
                     quantization_config=ScalarQuantization(
                         scalar=ScalarQuantizationConfig(
-                            type="int8", quantile=0.99, always_ram=True
+                            type=ScalarType.INT8, quantile=0.99, always_ram=True
                         )
                     ),
                 )

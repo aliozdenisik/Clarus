@@ -8,11 +8,11 @@ Note: Tanzil XML files contain malformed comments (with -- sequences inside comm
 which violates XML 1.0 spec. This loader strips comments before parsing.
 """
 
-import xml.etree.ElementTree as ET
-from pathlib import Path
-from typing import List, Dict, Optional, Any
 import logging
 import re
+import xml.etree.ElementTree as ET
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -146,8 +146,7 @@ class TanzilLoader:
         xml_path = self.turkish_quran_dir / f"tr.{translator}.xml"
         if not xml_path.exists():
             raise FileNotFoundError(
-                f"Translation XML not found: {xml_path}\n"
-                f"Expected at: {xml_path.absolute()}"
+                f"Translation XML not found: {xml_path}\nExpected at: {xml_path.absolute()}"
             )
 
         # Load surah metadata
@@ -186,9 +185,7 @@ class TanzilLoader:
                 text = aya.get("text", "")
 
                 if not text.strip():
-                    logger.warning(
-                        f"Empty verse text: {translator} {surah_number}:{verse_number}"
-                    )
+                    logger.warning(f"Empty verse text: {translator} {surah_number}:{verse_number}")
                     continue
 
                 verses.append(
@@ -220,13 +217,10 @@ class TanzilLoader:
         surah_9_verses = [v for v in verses if v["surah_number"] == 9]
         if len(surah_9_verses) != 129:
             logger.warning(
-                f"Translation {translator} Surah 9 has {len(surah_9_verses)} verses, "
-                f"expected 129"
+                f"Translation {translator} Surah 9 has {len(surah_9_verses)} verses, expected 129"
             )
 
-        logger.info(
-            f"Loaded {translator}: {len(verses)} verses across {unique_surahs} surahs"
-        )
+        logger.info(f"Loaded {translator}: {len(verses)} verses across {unique_surahs} surahs")
 
         return verses
 
@@ -278,7 +272,7 @@ if __name__ == "__main__":
         # Show sample verse
         if verses:
             sample = verses[0]
-            print(f"\nSample verse:")
+            print("\nSample verse:")
             print(f"  Surah: {sample['surah_name']} ({sample['surah_number']})")
             print(f"  Verse: {sample['verse_number']}")
             print(f"  Text: {sample['text'][:80]}...")

@@ -12,23 +12,23 @@ Usage:
 """
 
 import logging
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from typing import Optional
 
+from sqlalchemy import text as sa_text
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
     AsyncSession,
     async_sessionmaker,
+    create_async_engine,
 )
-from sqlalchemy import text as sa_text
 
 from .arabic_normalizer import (
-    normalize_arabic,
-    is_arabic,
-    normalize_latin_query,
-    buckwalter_to_arabic,
-    strip_buckwalter_vowels,
     arabic_to_buckwalter,
+    buckwalter_to_arabic,
+    is_arabic,
+    normalize_arabic,
+    normalize_latin_query,
+    strip_buckwalter_vowels,
 )
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ class MorphologySearchResult:
 
     query: str
     root: Optional[str]
-    root_source: str  # exact_match | prefix_stripped | algorithmic | buckwalter_exact | buckwalter_fuzzy | not_found
+    root_source: str  # exact_match | prefix_stripped | algorithmic | buckwalter_exact | buckwalter_fuzzy | not_found  # noqa: E501
     total_occurrences: int = 0
     unique_words: list[str] = field(default_factory=list)
     surah_distribution: list[SurahCount] = field(default_factory=list)
@@ -189,9 +189,7 @@ class QuranMorphologySearch:
 
         async with self._session_maker() as session:
             total_result = await session.execute(
-                sa_text(
-                    "SELECT COUNT(DISTINCT root) FROM qm_words WHERE root IS NOT NULL"
-                )
+                sa_text("SELECT COUNT(DISTINCT root) FROM qm_words WHERE root IS NOT NULL")
             )
             total = total_result.scalar()
 
@@ -226,7 +224,7 @@ class QuranMorphologySearch:
     # ------------------------------------------------------------------
 
     async def _find_root(self, query: str) -> tuple[Optional[str], str]:
-        """Hybrid root extraction: special terms -> DB lookup -> prefix strip -> algorithmic (Arabic) or Buckwalter (Latin)."""
+        """Hybrid root extraction: special terms -> DB lookup -> prefix strip -> algorithmic (Arabic) or Buckwalter (Latin)."""  # noqa: E501
         # Step 0: Check well-known terms before any other processing.
         # Normalise the lookup key the same way each path would.
         if is_arabic(query):
@@ -249,8 +247,7 @@ class QuranMorphologySearch:
             # Step 1: Exact match on token_clean
             result = await session.execute(
                 sa_text(
-                    "SELECT root FROM qm_words "
-                    "WHERE token_clean = :q AND root IS NOT NULL LIMIT 1"
+                    "SELECT root FROM qm_words WHERE token_clean = :q AND root IS NOT NULL LIMIT 1"
                 ),
                 {"q": normalized},
             )
@@ -279,9 +276,9 @@ class QuranMorphologySearch:
             result = await session.execute(
                 sa_text(
                     """
-                    SELECT DISTINCT root FROM qm_words 
-                    WHERE REPLACE(REPLACE(REPLACE(root, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا') = :q 
-                    AND root IS NOT NULL 
+                    SELECT DISTINCT root FROM qm_words
+                    WHERE REPLACE(REPLACE(REPLACE(root, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا') = :q
+                    AND root IS NOT NULL
                     LIMIT 1
                     """
                 ),
@@ -302,9 +299,7 @@ class QuranMorphologySearch:
                 # Verify this root exists in DB
                 async with self._session_maker() as session:
                     result = await session.execute(
-                        sa_text(
-                            "SELECT DISTINCT root FROM qm_words WHERE root = :q LIMIT 1"
-                        ),
+                        sa_text("SELECT DISTINCT root FROM qm_words WHERE root = :q LIMIT 1"),
                         {"q": algo_root},
                     )
                     row = result.fetchone()
@@ -472,7 +467,7 @@ class QuranMorphologySearch:
         per_page: int,
         word_filter: str | None = None,
     ) -> MorphologySearchResult:
-        """Query all data for a given root: count, unique words, surah distribution, paginated verses."""
+        """Query all data for a given root: count, unique words, surah distribution, paginated verses."""  # noqa: E501
         async with self._session_maker() as session:
             # 1. Total occurrences
             total_result = await session.execute(
@@ -532,9 +527,7 @@ class QuranMorphologySearch:
             if word_filter:
                 count_sql += " AND w.token_clean = :word_filter"
                 count_params["word_filter"] = word_filter
-            total_verses_result = await session.execute(
-                sa_text(count_sql), count_params
-            )
+            total_verses_result = await session.execute(sa_text(count_sql), count_params)
             total_verses = total_verses_result.scalar()
 
             # 5. Verse results (paginated or all when per_page=0)
@@ -594,13 +587,13 @@ class QuranMorphologySearch:
             query=query,
             root=root,
             root_source=source,
-            total_occurrences=total_occurrences,
+            total_occurrences=int(total_occurrences or 0),
             unique_words=unique_words,
             surah_distribution=surah_distribution,
             verses=verses,
             page=page,
             per_page=per_page,
-            total_verses=total_verses,
+            total_verses=int(total_verses or 0),
             root_buckwalter=root_buckwalter,
             word_transliterations=word_transliterations,
         )

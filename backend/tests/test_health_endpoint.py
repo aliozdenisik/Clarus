@@ -10,10 +10,11 @@ Tests cover:
 - Mocked Qdrant client for isolation
 """
 
-import pytest
-import sys
 import asyncio
-from unittest.mock import patch, MagicMock
+import sys
+from unittest.mock import MagicMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 # Add backend to path for imports

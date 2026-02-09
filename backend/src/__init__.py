@@ -1,13 +1,28 @@
 # Clarus - Hybrid Search Package
 from .data_loader import QuranDataLoader
-from .embeddings import DenseEncoder, AsyncDenseEncoder
+from .embeddings import AsyncDenseEncoder, DenseEncoder
 from .indexer import QuranIndexer, SemanticChunkIndexer
-from .search import QuranSearcher, BibleSearcher, SemanticChunkSearcher
 from .query_enhancer import QueryEnhancer
+from .search import BibleSearcher, QuranSearcher, SemanticChunkSearcher
 from .semantic_chunker import SemanticChunk, SemanticVerseChunker
 
 # GraphRAG (optional - requires neo4j)
 try:
-    from .graph_rag import GraphRAGBuilder, GraphRAGSearcher, Neo4jConnection
+    from .graph_rag import GraphRAGBuilder
 except ImportError:
-    pass  # neo4j not installed
+    GraphRAGBuilder = None  # neo4j not installed
+
+__all__ = [
+    "QuranDataLoader",
+    "AsyncDenseEncoder",
+    "DenseEncoder",
+    "QuranIndexer",
+    "SemanticChunkIndexer",
+    "QueryEnhancer",
+    "BibleSearcher",
+    "QuranSearcher",
+    "SemanticChunkSearcher",
+    "SemanticChunk",
+    "SemanticVerseChunker",
+    "GraphRAGBuilder",
+]

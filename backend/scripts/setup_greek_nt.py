@@ -242,9 +242,7 @@ def parse_morphgnt_book(
 
     # Track verses to build text_original
     verse_words: dict[tuple[int, int], list[str]] = {}  # (chapter, verse) -> words
-    verse_positions: dict[
-        tuple[int, int], int
-    ] = {}  # (chapter, verse) -> position counter
+    verse_positions: dict[tuple[int, int], int] = {}  # (chapter, verse) -> position counter
 
     with open(txt_path, "r", encoding="utf-8") as f:
         for line in f:
@@ -254,9 +252,7 @@ def parse_morphgnt_book(
 
             parts = line.split()
             if len(parts) != 7:
-                log.warning(
-                    "Unexpected line format in %s: %s", txt_path.name, line[:50]
-                )
+                log.warning("Unexpected line format in %s: %s", txt_path.name, line[:50])
                 continue
 
             bcv, pos, parse, text_col, word_col, normalized, lemma = parts
@@ -267,7 +263,7 @@ def parse_morphgnt_book(
                 log.warning("Invalid bcv format: %s", bcv)
                 continue
 
-            bcv_book = int(bcv[0:2])
+            bcv_book = int(bcv[0:2])  # noqa: F841
             chapter = int(bcv[2:4])
             verse = int(bcv[4:6])
 
@@ -347,7 +343,7 @@ def delete_nt_data(conn) -> None:
     log.info("Deleting existing NT data (book_id 40-66)...")
     conn.execute(
         text(
-            "DELETE FROM bm_words WHERE verse_id IN (SELECT id FROM bm_verses WHERE book_id BETWEEN 40 AND 66)"
+            "DELETE FROM bm_words WHERE verse_id IN (SELECT id FROM bm_verses WHERE book_id BETWEEN 40 AND 66)"  # noqa: E501
         )
     )
     conn.execute(text("DELETE FROM bm_verses WHERE book_id BETWEEN 40 AND 66"))
@@ -489,7 +485,7 @@ def _build_nt_verse_id_map(conn) -> dict[tuple[int, int, int], int]:
     """Build mapping of (book_id, chapter, verse) -> verse_db_id for NT."""
     result = conn.execute(
         text(
-            "SELECT id, book_id, chapter, verse FROM bm_verses WHERE book_id BETWEEN 40 AND 66 ORDER BY id"
+            "SELECT id, book_id, chapter, verse FROM bm_verses WHERE book_id BETWEEN 40 AND 66 ORDER BY id"  # noqa: E501
         )
     )
     verse_map: dict[tuple[int, int, int], int] = {}
@@ -584,7 +580,7 @@ INDEXES_SQL = [
     "CREATE INDEX IF NOT EXISTS ix_bm_words_lemma ON bm_words(lemma);",
     "CREATE INDEX IF NOT EXISTS ix_bm_words_strong ON bm_words(strong_number);",
     "CREATE INDEX IF NOT EXISTS ix_bm_words_word_clean ON bm_words(word_clean);",
-    "CREATE INDEX IF NOT EXISTS ix_bm_words_word_clean_trgm ON bm_words USING gin(word_clean gin_trgm_ops);",
+    "CREATE INDEX IF NOT EXISTS ix_bm_words_word_clean_trgm ON bm_words USING gin(word_clean gin_trgm_ops);",  # noqa: E501
     "CREATE INDEX IF NOT EXISTS ix_bm_words_verse_id ON bm_words(verse_id);",
     "CREATE INDEX IF NOT EXISTS ix_bm_words_language ON bm_words(language);",
     "CREATE INDEX IF NOT EXISTS ix_bm_verses_book_id ON bm_verses(book_id);",
@@ -614,16 +610,12 @@ def validate_and_summarize(conn) -> bool:
     log.info("Books (NT): %d", nt_book_count)
 
     # NT Verse count
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 40 AND 66")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 40 AND 66"))
     nt_verse_count = result.scalar()
     log.info("Verses (NT): %d", nt_verse_count)
 
     # Greek word count
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_words WHERE language = 'greek'")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_words WHERE language = 'greek'"))
     greek_word_count = result.scalar()
     log.info("Words (Greek): %d", greek_word_count)
 
@@ -634,9 +626,7 @@ def validate_and_summarize(conn) -> bool:
 
     # Language breakdown
     result = conn.execute(
-        text(
-            "SELECT language, COUNT(*) FROM bm_words GROUP BY language ORDER BY language"
-        )
+        text("SELECT language, COUNT(*) FROM bm_words GROUP BY language ORDER BY language")
     )
     lang_counts = {row[0]: row[1] for row in result}
     for lang, cnt in lang_counts.items():
@@ -645,7 +635,7 @@ def validate_and_summarize(conn) -> bool:
     # Unique Greek lemmas
     result = conn.execute(
         text(
-            "SELECT COUNT(DISTINCT lemma) FROM bm_words WHERE language = 'greek' AND lemma IS NOT NULL"
+            "SELECT COUNT(DISTINCT lemma) FROM bm_words WHERE language = 'greek' AND lemma IS NOT NULL"  # noqa: E501
         )
     )
     unique_lemmas = result.scalar()
@@ -664,13 +654,13 @@ def validate_and_summarize(conn) -> bool:
     # English text coverage for NT
     result = conn.execute(
         text(
-            "SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 40 AND 66 AND text_english IS NOT NULL"
+            "SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 40 AND 66 AND text_english IS NOT NULL"  # noqa: E501
         )
     )
     english_count = result.scalar()
     result = conn.execute(
         text(
-            "SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 40 AND 66 AND text_english IS NULL"
+            "SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 40 AND 66 AND text_english IS NULL"  # noqa: E501
         )
     )
     no_english = result.scalar()
@@ -706,7 +696,7 @@ def validate_and_summarize(conn) -> bool:
     )
     row = result.fetchone()
     if row:
-        print(f"\n  Sample Matt 1:1:")
+        print("\n  Sample Matt 1:1:")
         print(f"    Book: {row[0]}")
         print(f"    Greek: {row[3]}")
         print(f"    English: {row[4]}")
@@ -725,7 +715,7 @@ def validate_and_summarize(conn) -> bool:
     )
     rows = result.fetchall()
     if rows:
-        print(f"\n  Sample words from Matt 1:1:")
+        print("\n  Sample words from Matt 1:1:")
         for r in rows:
             print(
                 f"    {r[0]} | clean={r[1]} | lemma={r[2]} | root={r[3]} | "

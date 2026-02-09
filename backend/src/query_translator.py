@@ -25,9 +25,9 @@ import sentry_sdk
 from pybreaker import CircuitBreakerError
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
 from src.circuit_breaker import llm_with_breaker
@@ -68,20 +68,20 @@ CORPUS_LANGUAGES: dict[str, str] = {
 # System prompts
 # ---------------------------------------------------------------------------
 
-QUERY_DETECT_AND_TRANSLATE_PROMPT = """You are a theological translation expert specializing in sacred text terminology across Islam and Christianity.
+QUERY_DETECT_AND_TRANSLATE_PROMPT = """You are a theological translation expert specializing in sacred text terminology across Islam and Christianity.  # noqa: E501
 
-TASK: Detect the language of the user's search query, then translate it to {target_lang} for searching {corpus_context}.
+TASK: Detect the language of the user's search query, then translate it to {target_lang} for searching {corpus_context}.  # noqa: E501
 
 STEP 1 — DETECT: Identify the ISO 639-1 language code of the input query.
-Supported languages: en (English), tr (Turkish), es (Spanish), fr (French), it (Italian), pt (Portuguese), ar (Arabic), de (German).
+Supported languages: en (English), tr (Turkish), es (Spanish), fr (French), it (Italian), pt (Portuguese), ar (Arabic), de (German).  # noqa: E501
 If the query contains multiple languages, detect the DOMINANT language.
 
 STEP 2 — TRANSLATE (or return unchanged):
-- If the detected language is ALREADY {target_lang}, return the query UNCHANGED with "was_translated": false.
+- If the detected language is ALREADY {target_lang}, return the query UNCHANGED with "was_translated": false.  # noqa: E501
 - If the detected language is DIFFERENT from {target_lang}, translate the query with these rules:
-  1. PRESERVE proper nouns exactly as-is: Allah, Musa, Isa, Ibrahim, Quran, Bible, Torah, Gospel, Injil, Zebur
+  1. PRESERVE proper nouns exactly as-is: Allah, Musa, Isa, Ibrahim, Quran, Bible, Torah, Gospel, Injil, Zebur  # noqa: E501
   2. PRESERVE book/surah names: Genesis, Exodus, Bakara, Al-Imran, Matta, Yuhanna
-  3. PRESERVE citation references: [Bakara:153], [Genesis 1:1] — do NOT translate text inside brackets
+  3. PRESERVE citation references: [Bakara:153], [Genesis 1:1] — do NOT translate text inside brackets  # noqa: E501
   4. Use FORMAL theological register (not colloquial). Examples:
      - "sabır" → "patience" (not "waiting" or "endurance")
      - "şefaat" → "intercession" (not "recommendation")
@@ -98,26 +98,26 @@ OUTPUT: Return a JSON object with exactly these fields:
 
 EXAMPLES:
 Input: "¿Qué dice el Corán sobre la paciencia?" (target: tr)
-Output: {{"detected_language": "es", "translated_query": "Kuran'da sabır hakkında ne söyleniyor?", "was_translated": true}}
+Output: {{"detected_language": "es", "translated_query": "Kuran'da sabır hakkında ne söyleniyor?", "was_translated": true}}  # noqa: E501
 
 Input: "sabır ve namaz" (target: tr)
 Output: {{"detected_language": "tr", "translated_query": "sabır ve namaz", "was_translated": false}}
 
 Input: "What is love according to the Bible?" (target: en)
-Output: {{"detected_language": "en", "translated_query": "What is love according to the Bible?", "was_translated": false}}
+Output: {{"detected_language": "en", "translated_query": "What is love according to the Bible?", "was_translated": false}}  # noqa: E501
 
 Input: "Geduld im Islam" (target: tr)
-Output: {{"detected_language": "de", "translated_query": "İslam'da sabır", "was_translated": true}}"""
+Output: {{"detected_language": "de", "translated_query": "İslam'da sabır", "was_translated": true}}"""  # noqa: E501
 
-RESPONSE_TRANSLATION_SYSTEM_PROMPT = """You are a theological essay translator specializing in comparative religious analysis.
+RESPONSE_TRANSLATION_SYSTEM_PROMPT = """You are a theological essay translator specializing in comparative religious analysis.  # noqa: E501
 
-TASK: Translate the following essay from its current language to {target_lang} while preserving all structural and reference elements.
+TASK: Translate the following essay from its current language to {target_lang} while preserving all structural and reference elements.  # noqa: E501
 
 CRITICAL PRESERVATION RULES (DO NOT TRANSLATE):
 1. Text within square brackets: [Bakara:153], [Genesis 1:1], [Matthew 5:3-5]
 2. Book/surah names: Genesis, Exodus, Leviticus, Bakara, Al-Imran, Matta, Yuhanna, etc.
 3. Source labels: Quran, Bible, Old Testament, New Testament, Apocrypha
-4. Section headers in Turkish: ## Eski Ahit, ## Yeni Ahit, ## Apokrifa, ## Kuran-ı Kerim, ## Karşılaştırmalı Değerlendirme
+4. Section headers in Turkish: ## Eski Ahit, ## Yeni Ahit, ## Apokrifa, ## Kuran-ı Kerim, ## Karşılaştırmalı Değerlendirme  # noqa: E501
    → Keep these headers as-is (they are proper names of the analysis sections)
 5. ALL markdown formatting: ## headers, **bold**, *italic*, - bullet points, 1. numbered lists
 6. Horizontal rules: ---
@@ -134,12 +134,12 @@ EXAMPLE:
 Input (Turkish → Spanish):
 ## Kuran-ı Kerim
 
-Sabır kavramı Kuran'da merkezi bir öneme sahiptir. [Bakara:153] ayetinde Allah, müminlere sabır ve namazla yardım dilemelerini emreder.
+Sabır kavramı Kuran'da merkezi bir öneme sahiptir. [Bakara:153] ayetinde Allah, müminlere sabır ve namazla yardım dilemelerini emreder.  # noqa: E501
 
 Output:
 ## Kuran-ı Kerim
 
-El concepto de paciencia tiene una importancia central en el Corán. En el versículo [Bakara:153], Allah ordena a los creyentes buscar ayuda a través de la paciencia y la oración."""
+El concepto de paciencia tiene una importancia central en el Corán. En el versículo [Bakara:153], Allah ordena a los creyentes buscar ayuda a través de la paciencia y la oración."""  # noqa: E501
 
 
 # ---------------------------------------------------------------------------
@@ -251,13 +251,10 @@ class QueryTranslator:
 
         if corpus is not None and corpus not in CORPUS_LANGUAGES:
             raise ValueError(
-                f"Invalid corpus '{corpus}'. "
-                f"Supported: {sorted(CORPUS_LANGUAGES.keys())}"
+                f"Invalid corpus '{corpus}'. Supported: {sorted(CORPUS_LANGUAGES.keys())}"
             )
 
-        target_lang: Optional[str] = (
-            CORPUS_LANGUAGES[corpus] if corpus is not None else None
-        )
+        target_lang: Optional[str] = CORPUS_LANGUAGES[corpus] if corpus is not None else None
 
         # --- Heuristic pre-filters (skip LLM) ----------------------------
         if corpus is not None:
@@ -327,9 +324,7 @@ class QueryTranslator:
 
         # Turkish chars + quran corpus → already Turkish
         if target_lang == "tr" and any(ch in query for ch in TURKISH_CHARS):
-            logger.debug(
-                "Heuristic: Turkish characters detected for Quran corpus — skipping LLM."
-            )
+            logger.debug("Heuristic: Turkish characters detected for Quran corpus — skipping LLM.")
             return TranslationResult(
                 detected_language="tr",
                 translated_query=query,
@@ -338,9 +333,7 @@ class QueryTranslator:
 
         # Pure ASCII + bible corpus → already English
         if target_lang == "en" and query.isascii():
-            logger.debug(
-                "Heuristic: Pure ASCII detected for Bible corpus — skipping LLM."
-            )
+            logger.debug("Heuristic: Pure ASCII detected for Bible corpus — skipping LLM.")
             return TranslationResult(
                 detected_language="en",
                 translated_query=query,
@@ -418,9 +411,7 @@ class QueryTranslator:
                         original_text=prompt,
                     )
 
-                content: str = (
-                    response_json["choices"][0].get("message", {}).get("content", "")
-                )
+                content: str = response_json["choices"][0].get("message", {}).get("content", "")
                 if not content:
                     raise TranslationError(
                         "Empty content in LLM response.",
@@ -508,9 +499,7 @@ class QueryTranslator:
                         original_text=prompt[:200],
                     )
 
-                content: str = (
-                    response_json["choices"][0].get("message", {}).get("content", "")
-                )
+                content: str = response_json["choices"][0].get("message", {}).get("content", "")
                 if not content:
                     raise TranslationError(
                         "Empty content in response translation.",
@@ -584,8 +573,7 @@ class QueryTranslator:
 
         except (json.JSONDecodeError, KeyError, TypeError) as exc:
             logger.warning(
-                "Failed to parse translation LLM response (%s) — "
-                "falling back to corpus language.",
+                "Failed to parse translation LLM response (%s) — falling back to corpus language.",
                 exc,
             )
             return self._fallback_result(query, target_lang)
@@ -613,9 +601,7 @@ class QueryTranslator:
         unchanged.
         """
         fallback_lang = target_lang if target_lang else "en"
-        logger.info(
-            "Fallback: assuming query is '%s', returning unchanged.", fallback_lang
-        )
+        logger.info("Fallback: assuming query is '%s', returning unchanged.", fallback_lang)
         return TranslationResult(
             detected_language=fallback_lang,
             translated_query=query,

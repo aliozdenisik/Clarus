@@ -1,16 +1,16 @@
 """JWKS-based JWT validator for Better Auth integration."""
 
 import logging
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 from cachetools import TTLCache
 from fastapi import Depends, HTTPException, Request
-from jwt import PyJWKClient, decode, PyJWKClientError
+from jwt import PyJWKClient, PyJWKClientError, decode
 from jwt.exceptions import (
     ExpiredSignatureError,
-    InvalidTokenError,
     InvalidSignatureError,
+    InvalidTokenError,
 )
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -65,7 +65,7 @@ class JWKSValidator:
         self.fallback_cache: TTLCache = TTLCache(maxsize=cache_maxsize, ttl=cache_ttl)
 
         logger.info(
-            f"Initialized JWKS validator",
+            "Initialized JWKS validator",
             extra={
                 "jwks_url": jwks_url,
                 "issuer": issuer,
@@ -108,9 +108,7 @@ class JWKSValidator:
             if kid:
                 self.fallback_cache[kid] = signing_key
 
-            logger.debug(
-                "Token validated successfully", extra={"user_id": payload.get("sub")}
-            )
+            logger.debug("Token validated successfully", extra={"user_id": payload.get("sub")})
             return payload
 
         except ExpiredSignatureError:
@@ -118,9 +116,7 @@ class JWKSValidator:
             raise ValueError("Token has expired")
 
         except InvalidSignatureError:
-            logger.warning(
-                "Invalid token signature", extra={"operation": "validate_token"}
-            )
+            logger.warning("Invalid token signature", extra={"operation": "validate_token"})
             raise ValueError("Invalid token signature")
 
         except PyJWKClientError as e:
@@ -282,9 +278,7 @@ async def get_current_user(
         )
 
     # Fetch user from database
-    result = await db.execute(
-        select(BetterAuthUser).where(BetterAuthUser.id == user_id)
-    )
+    result = await db.execute(select(BetterAuthUser).where(BetterAuthUser.id == user_id))
     user = result.scalar_one_or_none()
 
     if not user:
@@ -298,9 +292,7 @@ async def get_current_user(
         )
 
     # Ensure user_stats record exists
-    stats_result = await db.execute(
-        select(UserStats).where(UserStats.user_id == user_id)
-    )
+    stats_result = await db.execute(select(UserStats).where(UserStats.user_id == user_id))
     stats = stats_result.scalar_one_or_none()
 
     if not stats:

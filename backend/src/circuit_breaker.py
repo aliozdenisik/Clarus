@@ -24,14 +24,15 @@ Usage:
         raise
 """
 
-import pybreaker
 import logging
+
+import pybreaker
 import sentry_sdk
 
 logger = logging.getLogger(__name__)
 
 # Re-export CircuitBreakerError for convenience
-from pybreaker import CircuitBreakerError
+from pybreaker import CircuitBreakerError  # noqa: E402
 
 qdrant_breaker = pybreaker.CircuitBreaker(fail_max=5, reset_timeout=60, name="qdrant")
 
@@ -39,9 +40,7 @@ qdrant_breaker = pybreaker.CircuitBreaker(fail_max=5, reset_timeout=60, name="qd
 llm_breaker = pybreaker.CircuitBreaker(fail_max=3, reset_timeout=30, name="openrouter")
 
 # Embeddings breaker - higher tolerance (batch operations, more resilient)
-embeddings_breaker = pybreaker.CircuitBreaker(
-    fail_max=10, reset_timeout=120, name="embeddings"
-)
+embeddings_breaker = pybreaker.CircuitBreaker(fail_max=10, reset_timeout=120, name="embeddings")
 
 
 def qdrant_with_breaker(func):

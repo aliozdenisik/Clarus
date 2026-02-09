@@ -9,8 +9,8 @@ consistency.
 import unicodedata
 
 from pyarabic import araby
-from pyarabic.trans import utf82latin as _arabic_to_buckwalter
 from pyarabic.trans import tim2utf8 as _buckwalter_to_arabic
+from pyarabic.trans import utf82latin as _arabic_to_buckwalter
 
 
 def normalize_arabic(text: str) -> str:

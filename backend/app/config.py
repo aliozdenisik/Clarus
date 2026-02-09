@@ -1,17 +1,17 @@
-from pydantic_settings import BaseSettings
-from pydantic import ConfigDict
 from functools import lru_cache
 from typing import Optional
 
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
-    model_config = ConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    database_url: str = (
-        "postgresql+asyncpg://postgres:postgres@localhost:54322/postgres"
+    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:54322/postgres"
+
+    jwt_secret_key: str = (
+        ""  # Legacy: Better Auth JWKS is primary auth. Set via JWT_SECRET_KEY env var if needed.
     )
-
-    jwt_secret_key: str = ""  # Legacy: Better Auth JWKS is primary auth. Set via JWT_SECRET_KEY env var if needed.
     jwt_algorithm: str = "HS256"
     jwt_access_expire_minutes: int = 60 * 24
     jwt_refresh_expire_minutes: int = 60 * 24 * 30
@@ -73,9 +73,7 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> list[str]:
         if self.cors_origins == "*":
             return ["*"]
-        return [
-            origin.strip() for origin in self.cors_origins.split(",") if origin.strip()
-        ]
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     @property
     def is_production(self) -> bool:
@@ -90,9 +88,7 @@ class Settings(BaseSettings):
     def validate_production_settings(self) -> None:
         """Raise RuntimeError if dangerous settings are used in production."""
         if self.debug and self.app_env == "production":
-            raise RuntimeError(
-                "Debug mode must be disabled in production (set DEBUG=false)"
-            )
+            raise RuntimeError("Debug mode must be disabled in production (set DEBUG=false)")
         if self.app_env == "production" and self.jwt_secret_key in (
             "",
             "your-secret-key-change-in-production",

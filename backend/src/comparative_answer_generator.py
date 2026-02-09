@@ -12,22 +12,23 @@ Features:
 - Priority ordering by relevance score
 """
 
-import os
 import json
 import logging
-import requests
+import os
 import time
-import sentry_sdk
-from typing import List, Optional
 from dataclasses import dataclass
+from typing import List, Optional
+
+import requests
+import sentry_sdk
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
-from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
+from src.circuit_breaker import CircuitBreakerError, llm_with_breaker
 from src.confidence_scorer import ConfidenceScorer
 
 logger = logging.getLogger(__name__)
@@ -64,7 +65,8 @@ class ComparativeAnswerGenerator:
     MODEL = "google/gemini-3-flash-preview"  # Gemini 2.5 Flash normal
 
     SYSTEM_PROMPT = """You are an expert comparative theologian and scholar of Abrahamic religions.
-Your task: Write a comprehensive, comparative theological essay that synthesizes content from both the Quran and the Bible to answer the user's question.
+Your task: Write a comprehensive, comparative theological essay that synthesizes
+content from both the Quran and the Bible to answer the user's question.
 
 CRITICAL RULES:
 1. Use ONLY the provided verses - never make things up!
@@ -116,13 +118,13 @@ KURAN AYETLERİ (skorla sıralı, en güvenilir ilk):
             "role": "assistant",
             "content": json.dumps(
                 {
-                    "essay": """Sabır kavramı hem Kuran'da hem de İncil'de merkezi bir erdem olarak işlenir. Her iki kutsal metin de sabrın zorluklarla bağlantısını vurgular ve imanlılar için temel bir özellik olarak sunar.
+                    "essay": """Sabır kavramı hem Kuran'da hem de İncil'de merkezi bir erdem olarak işlenir. Her iki kutsal metin de sabrın zorluklarla bağlantısını vurgular ve imanlılar için temel bir özellik olarak sunar.  # noqa: E501
 
-Kuran'da sabır, Allah'a yaklaşmanın bir yolu olarak sunulur. "Sabır ve namazla yardım dileyin" [Bakara:45] ayeti, sabrı ibadetle birleştirerek ruhani bir disiplin olarak konumlandırır. Dahası, "Allah sabredenlerle beraberdir" [Bakara:153] vaadi, sabrın ilahi beraberliğe götüren bir yol olduğunu gösterir.
+Kuran'da sabır, Allah'a yaklaşmanın bir yolu olarak sunulur. "Sabır ve namazla yardım dileyin" [Bakara:45] ayeti, sabrı ibadetle birleştirerek ruhani bir disiplin olarak konumlandırır. Dahası, "Allah sabredenlerle beraberdir" [Bakara:153] vaadi, sabrın ilahi beraberliğe götüren bir yol olduğunu gösterir.  # noqa: E501
 
-İncil'de ise sabır, imanın sınanmasıyla elde edilen bir erdem olarak açıklanır. "İmanınızın sınanması sabır üretir" [James 1:3] ifadesi, zorlukların karakteri geliştirdiğini öğretir. Benzer şekilde, "sıkıntı sabır doğurur" [Romans 5:3] ayeti bu anlayışı pekiştirir.
+İncil'de ise sabır, imanın sınanmasıyla elde edilen bir erdem olarak açıklanır. "İmanınızın sınanması sabır üretir" [James 1:3] ifadesi, zorlukların karakteri geliştirdiğini öğretir. Benzer şekilde, "sıkıntı sabır doğurur" [Romans 5:3] ayeti bu anlayışı pekiştirir.  # noqa: E501
 
-Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olarak sunar. Kuran sabrı ibadet ve ilahi beraberlikle ilişkilendirirken, İncil onu iman sınaması ve karakter gelişimi çerçevesinde ele alır. Ortak nokta, zorlukların sabrı geliştirmesi ve bunun ilahi onay getirmesidir.""",
+Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olarak sunar. Kuran sabrı ibadet ve ilahi beraberlikle ilişkilendirirken, İncil onu iman sınaması ve karakter gelişimi çerçevesinde ele alır. Ortak nokta, zorlukların sabrı geliştirmesi ve bunun ilahi onay getirmesidir.""",  # noqa: E501
                     "quran_citations": ["Bakara:45", "Bakara:153"],
                     "bible_citations": ["James 1:3", "Romans 5:3"],
                     "all_references_ordered": [
@@ -138,7 +140,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         },
     ]
 
-    def __init__(self, model: str = None, api_key: str = None):
+    def __init__(self, model: Optional[str] = None, api_key: Optional[str] = None):
         """Initialize Comparative Answer Generator with OpenRouter API"""
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
@@ -158,9 +160,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         """Extract reference string from search result based on source"""
         if "quran" in source:
             surah = getattr(result, "surah_id", None)
-            verse = getattr(result, "verse_id", None) or getattr(
-                result, "verse_ids", None
-            )
+            verse = getattr(result, "verse_id", None) or getattr(result, "verse_ids", None)
             surah_name = getattr(result, "surah_name", None)
 
             # Fallback to payload
@@ -177,12 +177,8 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         else:
             # Bible format
             book = getattr(result, "book_name", None)
-            chapter = getattr(result, "chapter_number", None) or getattr(
-                result, "chapter", None
-            )
-            verse = getattr(result, "verse_number", None) or getattr(
-                result, "verse", None
-            )
+            chapter = getattr(result, "chapter_number", None) or getattr(result, "chapter", None)
+            verse = getattr(result, "verse_number", None) or getattr(result, "verse", None)
 
             # Fallback to payload
             if book is None and hasattr(result, "payload"):
@@ -215,9 +211,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         """Extract relevance score from result"""
         return getattr(result, "score", 0.0)
 
-    def _format_verses_section(
-        self, results: List, source: str, label: str, prefix: str
-    ) -> str:
+    def _format_verses_section(self, results: List, source: str, label: str, prefix: str) -> str:
         """Format verses with scores for a single source"""
         lines = []
         for i, result in enumerate(results, 1):
@@ -288,9 +282,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=2, min=2, max=60),
         retry=retry_if_exception_type(requests.exceptions.RequestException),
-        before_sleep=lambda rs: logger.info(
-            f"Retrying LLM call, attempt {rs.attempt_number}/5"
-        ),
+        before_sleep=lambda rs: logger.info(f"Retrying LLM call, attempt {rs.attempt_number}/5"),
     )
     def _call_llm(self, query: str, context: str) -> dict:
         """Call OpenRouter API for comparative essay generation"""
@@ -331,9 +323,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
                     raise ValueError("Invalid LLM response: missing 'choices' field")
 
                 choice = response_json["choices"][0]
-                if "message" not in choice or "content" not in choice.get(
-                    "message", {}
-                ):
+                if "message" not in choice or "content" not in choice.get("message", {}):
                     logger.error(f"Invalid LLM response structure: {choice}")
                     raise ValueError("Invalid LLM response: missing message content")
 
@@ -343,12 +333,10 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
                 return result
             except CircuitBreakerError:
                 # Circuit breaker open - fail fast, do NOT retry
-                logger.warning(
-                    "Circuit breaker OPEN for LLM - comparative essay generation failed"
-                )
+                logger.warning("Circuit breaker OPEN for LLM - comparative essay generation failed")
                 span.set_data("latency_ms", (time.time() - start_time) * 1000)
                 return {
-                    "essay": "Karşılaştırmalı analiz üretilemedi (servis geçici olarak kullanılamıyor).",
+                    "essay": "Karşılaştırmalı analiz üretilemedi (servis geçici olarak kullanılamıyor).",  # noqa: E501
                     "quran_citations": [],
                     "bible_citations": [],
                     "all_references_ordered": [],
@@ -387,7 +375,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         quran_chunks: List,
         bible_semantic: List,
         bible_chunks: List,
-        collection_stats: dict = None,
+        collection_stats: Optional[dict] = None,
         translator: str = "diyanet",
     ) -> ComparativeAnswer:
         """
@@ -406,10 +394,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
             ComparativeAnswer with essay, citations, and confidence
         """
         total_verses = (
-            len(quran_semantic)
-            + len(quran_chunks)
-            + len(bible_semantic)
-            + len(bible_chunks)
+            len(quran_semantic) + len(quran_chunks) + len(bible_semantic) + len(bible_chunks)
         )
 
         if total_verses == 0:
@@ -436,10 +421,8 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         if collection_stats:
             all_rrf_scores = collection_stats.get("all_rrf_scores", [])
             num_queries = collection_stats.get("num_queries", 1)
-            total_verses_context = collection_stats.get("total_verses", 80)
-            collections_with_results = collection_stats.get(
-                "collections_with_results", 4
-            )
+            total_verses_context = collection_stats.get("total_verses", 80)  # noqa: F841
+            collections_with_results = collection_stats.get("collections_with_results", 4)
         else:
             # Fallback: build from search results
             all_rrf_scores = sorted(
@@ -451,9 +434,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
             )
             num_queries = 1
             collections_with_results = sum(
-                1
-                for lst in [quran_semantic, quran_chunks, bible_semantic, bible_chunks]
-                if lst
+                1 for lst in [quran_semantic, quran_chunks, bible_semantic, bible_chunks] if lst
             )
 
         # Count citations from LLM response

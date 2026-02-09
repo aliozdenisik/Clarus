@@ -1,9 +1,10 @@
 """Common schemas for standardized API responses."""
 
 import html
-from pydantic import BaseModel, Field, ConfigDict
-from typing import TypeVar, Generic, Optional, Literal
 from datetime import datetime
+from typing import Generic, Literal, Optional, TypeVar
+
+from pydantic import BaseModel, ConfigDict, Field
 
 T = TypeVar("T")
 
@@ -59,9 +60,7 @@ class ErrorResponse(BaseModel):
                 "error": {
                     "code": "VALIDATION_ERROR",
                     "message": "Query is too long",
-                    "details": [
-                        {"field": "query", "message": "Max 500 characters allowed"}
-                    ],
+                    "details": [{"field": "query", "message": "Max 500 characters allowed"}],
                 },
                 "request_id": "req_abc123",
                 "timestamp": "2026-01-24T10:30:00Z",
@@ -72,9 +71,7 @@ class ErrorResponse(BaseModel):
     success: bool = Field(default=False, description="Always false for errors")
     error: dict = Field(..., description="Error information")
     request_id: Optional[str] = Field(None, description="Request ID for tracing")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Error timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Error timestamp")
 
 
 class SuccessResponse(BaseModel, Generic[T]):

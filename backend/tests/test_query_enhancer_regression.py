@@ -5,9 +5,11 @@ Ensures that existing methods continue to work correctly after extract_keywords(
 implementation. Tests method signatures, return types, and basic functionality.
 """
 
-import pytest
 import inspect
 from unittest.mock import patch
+
+import pytest
+
 from src.query_enhancer import QueryEnhancer
 
 
@@ -87,9 +89,7 @@ class TestGenerateMultiQueryRegression:
     @patch.object(QueryEnhancer, "_call_llm_json")
     def test_generate_multi_query_returns_list(self, mock_llm, enhancer):
         """Test generate_multi_query returns a list."""
-        mock_llm.return_value = {
-            "queries": ["sabır nedir", "sabır ayetleri", "sabır kavramı"]
-        }
+        mock_llm.return_value = {"queries": ["sabır nedir", "sabır ayetleri", "sabır kavramı"]}
         result = enhancer.generate_multi_query("sabır", n=3, corpus="quran")
         assert isinstance(result, list)
         assert len(result) > 0
@@ -112,9 +112,7 @@ class TestGenerateMultiQueryRegression:
     @patch.object(QueryEnhancer, "_call_llm_json")
     def test_generate_multi_query_quran_mode(self, mock_llm, enhancer):
         """Test generate_multi_query works in Quran mode."""
-        mock_llm.return_value = {
-            "queries": ["sabır nedir", "sabır ayetleri", "sabır kavramı"]
-        }
+        mock_llm.return_value = {"queries": ["sabır nedir", "sabır ayetleri", "sabır kavramı"]}
         result = enhancer.generate_multi_query("sabır", n=3, corpus="quran")
         assert isinstance(result, list)
         assert len(result) > 0
