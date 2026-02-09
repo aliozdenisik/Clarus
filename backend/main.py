@@ -214,6 +214,8 @@ def display_quran_results(args, results, query):
 
 def cmd_search(args):
     """Search Quran data using Ultimate RAG Pipeline"""
+    import asyncio
+
     query = args.query
     limit = args.limit
     translator = getattr(args, "translator", "diyanet")
@@ -234,9 +236,10 @@ def cmd_search(args):
             search_mode="semantic",
             final_top_k=limit,
             verbose=True,
-            translator=translator,
         )
-        results = rag.search_quran(query, top_k=limit)
+        results = asyncio.run(
+            rag.search_quran(query, translator=translator, top_k=limit)
+        )
         return display_quran_results(args, results, query)
     except Exception as e:
         console.print(f"[red][ERROR] Ultimate RAG failed: {e}[/red]")
@@ -380,6 +383,8 @@ def cmd_delete_collection(args):
 
 def cmd_search_bible(args):
     """Search Bible data using Ultimate RAG Pipeline"""
+    import asyncio
+
     query = args.query
     translation = args.translation
     limit = args.limit
@@ -399,7 +404,9 @@ def cmd_search_bible(args):
             final_top_k=limit,
             verbose=True,
         )
-        results = rag.search_bible(query, translation=translation, top_k=limit)
+        results = asyncio.run(
+            rag.search_bible(query, translation=translation, top_k=limit)
+        )
 
         if not results:
             console.print("[yellow]No results found.[/yellow]")
@@ -473,6 +480,8 @@ def cmd_search_bible(args):
 
 def cmd_ask(args):
     """Ask a question about Quran - Full RAG Q&A with citations"""
+    import asyncio
+
     query = args.query
     limit = args.limit
     translator = getattr(args, "translator", "diyanet")
@@ -491,10 +500,9 @@ def cmd_ask(args):
             search_mode="semantic",
             final_top_k=limit,
             verbose=True,
-            translator=translator,
         )
 
-        answer = rag.ask_quran(query, top_k=limit)
+        answer = asyncio.run(rag.ask_quran(query, translator=translator, top_k=limit))
 
         # Display answer
         console.print(
@@ -523,6 +531,8 @@ def cmd_ask(args):
 
 def cmd_ask_bible(args):
     """Ask a question about Bible - Full RAG Q&A with citations"""
+    import asyncio
+
     query = args.query
     translation = args.translation
     limit = args.limit
@@ -543,7 +553,7 @@ def cmd_ask_bible(args):
             verbose=True,
         )
 
-        answer = rag.ask_bible(query, translation=translation, top_k=limit)
+        answer = asyncio.run(rag.ask_bible(query, translation=translation, top_k=limit))
 
         # Display answer
         console.print(
@@ -599,13 +609,12 @@ def cmd_compare(args):
         rag = ComparativeRAG(
             qdrant_url=args.qdrant_url,
             bible_translation=translation,
-            quran_translator=translator,
             verses_per_search=verses,
             verbose=True,
         )
 
         if multi_agent:
-            result = rag.compare_multi_agent(query)
+            result = rag.compare_multi_agent(query, translator=translator)
             essay_text = result.to_essay()
             confidence = result.confidence
             confidence_breakdown = getattr(result, "confidence_breakdown", None)
@@ -615,7 +624,7 @@ def cmd_compare(args):
             for source, refs in citations.items():
                 all_refs.extend([f"({source}) {ref}" for ref in refs])
         else:
-            result = rag.compare(query)
+            result = rag.compare(query, translator=translator)
             essay_text = result.essay
             confidence = result.confidence
             confidence_breakdown = getattr(result, "confidence_breakdown", None)
