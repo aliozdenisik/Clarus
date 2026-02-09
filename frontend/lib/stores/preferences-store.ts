@@ -2,8 +2,10 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import {
+  getPreferencesApiPreferencesGet,
+  updatePreferencesApiPreferencesPut,
+} from '@/lib/api/sdk.gen';
 
 export interface UserPreferences {
   theme: 'light' | 'dark' | 'system';
@@ -79,24 +81,18 @@ export const usePreferencesStore = create<PreferencesState>()(
         set({ enable_multi_agent: enabled });
       },
 
-       fetchPreferences: async () => {
-         set({ isLoading: true, error: null });
-         try {
-           const response = await fetch(`${API_BASE_URL}/api/preferences`, {
-             credentials: 'include',
-           });
+     fetchPreferences: async () => {
+       set({ isLoading: true, error: null });
+       try {
+         const response = await getPreferencesApiPreferencesGet();
 
-          if (!response.ok) {
-            throw new Error('Failed to fetch preferences');
-          }
-
-          const data: UserPreferences = await response.json();
-          set({ ...data, isLoading: false, error: null });
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          set({ isLoading: false, error: errorMessage });
-        }
-      },
+        const data = response.data as any as UserPreferences;
+        set({ ...data, isLoading: false, error: null });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        set({ isLoading: false, error: errorMessage });
+      }
+    },
 
       savePreferences: async () => {
         set({ isLoading: true, error: null });
@@ -112,20 +108,11 @@ export const usePreferencesStore = create<PreferencesState>()(
             enable_multi_agent: state.enable_multi_agent,
           };
 
-           const response = await fetch(`${API_BASE_URL}/api/preferences`, {
-             method: 'PUT',
-             headers: {
-               'Content-Type': 'application/json',
-             },
-             credentials: 'include',
-             body: JSON.stringify(preferences),
-           });
+          const response = await updatePreferencesApiPreferencesPut({
+            body: preferences as any,
+          });
 
-          if (!response.ok) {
-            throw new Error('Failed to save preferences');
-          }
-
-          const data: UserPreferences = await response.json();
+          const data = response.data as any as UserPreferences;
           set({ ...data, isLoading: false, error: null });
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';

@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSSE } from "@/lib/hooks/use-sse";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { toast } from "sonner";
+import { searchQuranApiSearchQuranPost, searchBibleApiSearchBiblePost } from "@/lib/api/sdk.gen";
 
 // Mock Better Auth
 vi.mock("@/lib/auth-client", () => ({
@@ -34,6 +35,11 @@ vi.mock("sonner", () => ({
     success: vi.fn(),
     error: vi.fn(),
   },
+}));
+
+vi.mock("@/lib/api/sdk.gen", () => ({
+  searchQuranApiSearchQuranPost: vi.fn(),
+  searchBibleApiSearchBiblePost: vi.fn(),
 }));
 
 // Mock framer-motion to avoid animation issues in tests
@@ -150,8 +156,11 @@ vi.mock("@/lib/stores/keyword-store", () => ({
 
 // Input component uses cn() from @/lib/utils which works fine unmocked
 
-// Mock fetch
-global.fetch = vi.fn();
+// Mock SDK
+vi.mock("@/lib/api/sdk.gen", () => ({
+  searchQuranApiSearchQuranPost: vi.fn(),
+  searchBibleApiSearchBiblePost: vi.fn(),
+}));
 
 import { useSession } from "@/lib/auth-client";
 
@@ -186,11 +195,13 @@ describe("SearchPage", () => {
       enable_streaming: false,
     } as any);
 
-    // Default fetch mock
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      json: async () => ({ results: [] }),
-    });
+    // Default SDK mock
+    vi.mocked(searchQuranApiSearchQuranPost).mockResolvedValue({
+      data: { results: [] },
+    } as any);
+    vi.mocked(searchBibleApiSearchBiblePost).mockResolvedValue({
+      data: { results: [] },
+    } as any);
   });
 
   it("renders search title and input", () => {
@@ -203,31 +214,27 @@ describe("SearchPage", () => {
      const mockResults = [
        { source: "quran", reference: "2:255", text: "Ayat al-Kursi", score: 0.95 }
      ];
-     (global.fetch as any).mockResolvedValueOnce({
-       ok: true,
-       json: async () => ({ results: mockResults }),
-     });
+     vi.mocked(searchQuranApiSearchQuranPost).mockResolvedValueOnce({
+       data: { results: mockResults },
+     } as any);
 
      const { container } = render(<SearchPage />);
      
      const input = screen.getByTestId("search-input") as HTMLInputElement;
      
-     // fireEvent.change should trigger React onChange for controlled inputs
      fireEvent.change(input, { target: { value: "test query" } });
      
-     // Debug: verify value was set
      expect(input.value).toBe("test query");
 
-     // Submit the form
      const form = container.querySelector("form")!;
      fireEvent.submit(form);
 
      await waitFor(() => {
-       expect(global.fetch).toHaveBeenCalledWith(
-         expect.stringContaining("/api/search/quran"),
+       expect(searchQuranApiSearchQuranPost).toHaveBeenCalledWith(
          expect.objectContaining({
-           method: "POST",
-           body: expect.stringContaining('"query":"test query"')
+           body: expect.objectContaining({
+             query: "test query"
+           })
          })
        );
      });
@@ -240,11 +247,10 @@ describe("SearchPage", () => {
    });
 
   it("displays loading state during search", async () => {
-    // Delay the fetch response
     let resolvePromise: any;
-    (global.fetch as any).mockReturnValue(new Promise(resolve => {
+    vi.mocked(searchQuranApiSearchQuranPost).mockReturnValue(new Promise(resolve => {
       resolvePromise = resolve;
-    }));
+    }) as any);
 
     const { container } = render(<SearchPage />);
     
@@ -252,13 +258,11 @@ describe("SearchPage", () => {
     fireEvent.change(input, { target: { value: "test query" } });
     fireEvent.submit(container.querySelector("form")!);
 
-    // The button text changes to "Searching..." during loading
     await waitFor(() => {
       expect(screen.getByTestId("search-submit-button")).toHaveTextContent("Searching...");
     });
     
-    // Cleanup: resolve the promise to avoid hanging test
-    resolvePromise({ ok: true, json: async () => ({ results: [] }) });
+    resolvePromise({ data: { results: [] } });
   });
 
   it("shows toast with results count on search success", async () => {
@@ -266,10 +270,9 @@ describe("SearchPage", () => {
       { source: "quran", reference: "1:1", text: "Bismillah", score: 1.0 },
       { source: "quran", reference: "1:2", text: "Alhamdulillah", score: 0.9 }
     ];
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: mockResults }),
-    });
+    vi.mocked(searchQuranApiSearchQuranPost).mockResolvedValueOnce({
+      data: { results: mockResults },
+    } as any);
 
     const { container } = render(<SearchPage />);
     
@@ -283,10 +286,9 @@ describe("SearchPage", () => {
   });
 
   it("shows empty state when no results are found", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ results: [] }),
-    });
+    vi.mocked(searchQuranApiSearchQuranPost).mockResolvedValueOnce({
+      data: { results: [] },
+    } as any);
 
     const { container } = render(<SearchPage />);
     
@@ -348,11 +350,11 @@ describe("SearchPage", () => {
      render(<SearchPage />);
      
      await waitFor(() => {
-       expect(global.fetch).toHaveBeenCalledWith(
-         expect.stringContaining("/api/search/quran"),
+       expect(searchQuranApiSearchQuranPost).toHaveBeenCalledWith(
          expect.objectContaining({
-           method: "POST",
-           body: expect.stringContaining('"query":"sabir"')
+           body: expect.objectContaining({
+             query: "sabir",
+           }),
          })
        );
      });
@@ -364,7 +366,8 @@ describe("SearchPage", () => {
      render(<SearchPage />);
      
      await waitFor(() => {
-       expect(global.fetch).not.toHaveBeenCalled();
+       expect(searchQuranApiSearchQuranPost).not.toHaveBeenCalled();
+       expect(searchBibleApiSearchBiblePost).not.toHaveBeenCalled();
      });
    });
 
@@ -374,7 +377,8 @@ describe("SearchPage", () => {
      render(<SearchPage />);
      
      await waitFor(() => {
-       expect(global.fetch).not.toHaveBeenCalled();
+       expect(searchQuranApiSearchQuranPost).not.toHaveBeenCalled();
+       expect(searchBibleApiSearchBiblePost).not.toHaveBeenCalled();
      });
    });
 

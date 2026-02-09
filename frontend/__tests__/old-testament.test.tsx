@@ -1,8 +1,8 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import OldTestamentPage from '../app/old-testament/page';
+import { getBibleBooksApiMetadataBibleBooksGet } from '@/lib/api/sdk.gen';
 
-// Mock GlowCard to avoid complex rendering in tests
 vi.mock('@/components/ui/glow-card', () => ({
   GlowCard: ({ children, onClick }: { children: React.ReactNode, onClick?: () => void }) => (
     <div data-testid="glow-card" onClick={onClick}>
@@ -11,7 +11,6 @@ vi.mock('@/components/ui/glow-card', () => ({
   ),
 }));
 
-// Mock Better Auth
 vi.mock('@/lib/auth-client', () => ({
   useSession: () => ({ data: { user: { id: '1', name: 'Test User', email: 'test@example.com' } }, isPending: false }),
   signIn: { email: vi.fn(), social: vi.fn() },
@@ -20,7 +19,6 @@ vi.mock('@/lib/auth-client', () => ({
   authClient: { token: vi.fn() },
 }));
 
-// Mock Sonner
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
@@ -28,12 +26,15 @@ vi.mock('sonner', () => ({
   },
 }));
 
-// Mock Navigation
 const mockPush = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockPush,
   }),
+}));
+
+vi.mock('@/lib/api/sdk.gen', () => ({
+  getBibleBooksApiMetadataBibleBooksGet: vi.fn(),
 }));
 
 describe('Old Testament Browse Page', () => {
@@ -45,23 +46,17 @@ describe('Old Testament Browse Page', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    global.fetch = vi.fn();
+    vi.mocked(getBibleBooksApiMetadataBibleBooksGet).mockResolvedValue({
+      data: { data: { books: mockBooks } },
+    } as any);
   });
 
   it('fetches and displays OT books', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: { books: mockBooks } }),
-    });
-
     render(<OldTestamentPage />);
 
-     expect(global.fetch).toHaveBeenCalledWith(
-       expect.stringContaining('/api/metadata/bible/books?testament=old_testament'),
-       expect.objectContaining({
-         credentials: 'include',
-       })
-     );
+    expect(getBibleBooksApiMetadataBibleBooksGet).toHaveBeenCalledWith({
+      query: { testament: 'old_testament' },
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Genesis')).toBeInTheDocument();
@@ -73,10 +68,6 @@ describe('Old Testament Browse Page', () => {
   });
 
   it('filters books by name', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: { books: mockBooks } }),
-    });
 
     render(<OldTestamentPage />);
 
@@ -92,11 +83,6 @@ describe('Old Testament Browse Page', () => {
   });
 
   it('navigates to search on book click', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: { books: mockBooks } }),
-    });
-
     render(<OldTestamentPage />);
 
     await waitFor(() => {
@@ -109,18 +95,14 @@ describe('Old Testament Browse Page', () => {
   });
 
   it('handles empty state or loading', async () => {
-    // Test loading state if applicable, or empty result
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: { books: [] } }),
-    });
+    vi.mocked(getBibleBooksApiMetadataBibleBooksGet).mockResolvedValueOnce({
+      data: { data: { books: [] } },
+    } as any);
 
     render(<OldTestamentPage />);
     
-    // Ideally check for a loading spinner or skeleton first
-    // Then empty state
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalled();
+      expect(getBibleBooksApiMetadataBibleBooksGet).toHaveBeenCalled();
     });
   });
 });

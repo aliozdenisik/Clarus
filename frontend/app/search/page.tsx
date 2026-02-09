@@ -24,6 +24,10 @@ import { KeywordSelector } from "@/components/search/keyword-selector";
 import { useKeywordStore, KeywordSuggestion } from "@/lib/stores/keyword-store";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import {
+  searchQuranApiSearchQuranPost,
+  searchBibleApiSearchBiblePost,
+} from "@/lib/api/sdk.gen";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -312,41 +316,28 @@ function SearchContent() {
      setResults([]);
 
        try {
-        let url = `${API_BASE_URL}/api/search/quran`;
         let body: Record<string, unknown> = { query: searchQuery, mode: "semantic", top_k: 10 };
        if (selectedLanguage) {
          body.language = selectedLanguage;
        }
 
-       // Add translator if searching Quran
        if (activeTab === "quran") {
          body.translator = selectedTranslator;
        }
 
-       // Add keywords if advanced mode is ON and keywords are selected
        if (keywordStore.advancedMode && keywordStore.selectedKeywords.length > 0) {
          body.keywords = keywordStore.selectedKeywords.map((k) => k.text);
        }
 
-       if (activeTab !== "quran") {
-         url = `${API_BASE_URL}/api/search/bible`;
+       let response;
+       if (activeTab === "quran") {
+         response = await searchQuranApiSearchQuranPost({ body: body as any });
+       } else {
          body = { ...body, testament: activeTab };
+         response = await searchBibleApiSearchBiblePost({ body: body as any });
        }
 
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        throw new Error("Search failed");
-      }
-
-      const data = await response.json();
+      const data = response.data as any;
       setResults(data.results);
 
       if (data.verse_details) {

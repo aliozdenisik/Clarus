@@ -12,8 +12,7 @@ import { useSession, signOut } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useLogger } from "@/lib/logger";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { getBibleBooksApiMetadataBibleBooksGet } from "@/lib/api/sdk.gen";
 
 interface Book {
   nr: number;
@@ -83,11 +82,10 @@ export default function OldTestamentPage() {
    useEffect(() => {
      const fetchBooks = async () => {
        try {
-         const response = await fetch(`${API_BASE_URL}/api/metadata/bible/books?testament=old_testament`, {
-            credentials: "include",
+         const response = await getBibleBooksApiMetadataBibleBooksGet({
+           query: { testament: "old_testament" },
          });
-        if (!response.ok) throw new Error("Failed to fetch books");
-        const data = await response.json();
+        const data = response.data as any;
         setBooks(data.data?.books || []);
        } catch (error) {
          log.error("Failed to load books", { error });
@@ -100,7 +98,7 @@ export default function OldTestamentPage() {
     if (user) {
       fetchBooks();
     }
-  }, [user]);
+  }, [user, log]);
 
   const handleLogout = async () => {
     await signOut();
