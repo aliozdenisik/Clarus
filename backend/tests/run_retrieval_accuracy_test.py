@@ -262,7 +262,7 @@ class RAGWithStageLogging:
 
         # Determine corpus for enhancer
         corpus = "quran" if source == "quran" else "bible"
-        rag_source = "quran_tr" if source == "quran" else "bible_kjva"
+        rag_source = "quran_tr_diyanet" if source == "quran" else "bible_kjva"
 
         # =================================================================
         # STAGE 0: Query Translation (multilingual queries only)

@@ -68,7 +68,9 @@ def test_multi_agent_flow():
     search_table.add_column("Count", justify="right")
     search_table.add_column("Agent")
 
-    search_table.add_row("quran_tr", str(len(search_result.quran)), "QuranAgent")
+    search_table.add_row(
+        "quran_tr_diyanet", str(len(search_result.quran)), "QuranAgent"
+    )
     search_table.add_row("bible_ot", str(len(search_result.ot)), "OldTestamentAgent")
     search_table.add_row("bible_nt", str(len(search_result.nt)), "NewTestamentAgent")
     search_table.add_row(
@@ -94,7 +96,7 @@ def test_multi_agent_flow():
     split_table.add_row(
         "ApocryphaAgent", "bible_apocrypha", str(len(search_result.apocrypha))
     )
-    split_table.add_row("QuranAgent", "quran_tr", str(len(search_result.quran)))
+    split_table.add_row("QuranAgent", "quran_tr_diyanet", str(len(search_result.quran)))
 
     console.print(split_table)
 

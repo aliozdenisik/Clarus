@@ -81,9 +81,9 @@ def mock_llm_json_response(
 HEURISTIC_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
     # Category 1: Heuristic Pre-Filter (8 tests)
     # Turkish chars + quran → skip LLM
-    ("sabır ve namaz", "quran_tr", "tr", "sabır ve namaz", False, False),
+    ("sabır ve namaz", "quran_tr_diyanet", "tr", "sabır ve namaz", False, False),
     ("şefaat nedir", "quran", "tr", "şefaat nedir", False, False),
-    ("İslam'da tövbe", "quran_tr", "tr", "İslam'da tövbe", False, False),
+    ("İslam'da tövbe", "quran_tr_diyanet", "tr", "İslam'da tövbe", False, False),
     ("Kuran'daki güzel ahlak", "quran", "tr", "Kuran'daki güzel ahlak", False, False),
     # Pure ASCII + bible → skip LLM
     ("love your neighbor", "bible", "en", "love your neighbor", False, False),
@@ -102,21 +102,42 @@ HEURISTIC_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
 EN_TO_TR_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
     # Category 2: English → Turkish Translation (8 tests)
     # ASCII + quran → no heuristic (quran heuristic checks Turkish chars, not ASCII)
-    ("patience in Islam", "quran_tr", "en", "İslam'da sabır", True, True),
-    ("prayer and worship", "quran_tr", "en", "namaz ve ibadet", True, True),
-    ("creation of the universe", "quran_tr", "en", "evrenin yaratılışı", True, True),
-    ("mercy and compassion", "quran_tr", "en", "merhamet ve şefkat", True, True),
-    ("Day of Judgment", "quran_tr", "en", "kıyamet günü", True, True),
+    ("patience in Islam", "quran_tr_diyanet", "en", "İslam'da sabır", True, True),
+    ("prayer and worship", "quran_tr_diyanet", "en", "namaz ve ibadet", True, True),
+    (
+        "creation of the universe",
+        "quran_tr_diyanet",
+        "en",
+        "evrenin yaratılışı",
+        True,
+        True,
+    ),
+    (
+        "mercy and compassion",
+        "quran_tr_diyanet",
+        "en",
+        "merhamet ve şefkat",
+        True,
+        True,
+    ),
+    ("Day of Judgment", "quran_tr_diyanet", "en", "kıyamet günü", True, True),
     (
         "prophets and messengers",
-        "quran_tr",
+        "quran_tr_diyanet",
         "en",
         "peygamberler ve elçiler",
         True,
         True,
     ),
-    ("charity and almsgiving", "quran_tr", "en", "sadaka ve zekat", True, True),
-    ("repentance and forgiveness", "quran_tr", "en", "tövbe ve bağışlama", True, True),
+    ("charity and almsgiving", "quran_tr_diyanet", "en", "sadaka ve zekat", True, True),
+    (
+        "repentance and forgiveness",
+        "quran_tr_diyanet",
+        "en",
+        "tövbe ve bağışlama",
+        True,
+        True,
+    ),
 ]
 
 SPANISH_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
