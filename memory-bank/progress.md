@@ -107,6 +107,7 @@
 - [x] **Accuracy disclaimer UI** (2026-02-04): Added expandable accuracy verification panel to Bible Word Search with "Clarus can make mistakes" disclaimer, BLB comparison table, data source info (8 tests)
 - [x] Better Auth UI — sign-in/sign-up pages, session management via useSession()
 - [x] **Issue #94 React key stability** (2026-02-09): Replaced index-based keys in dynamic lists and standardized deterministic skeleton keys across search/compare/history/browse/components
+- [x] **Issue #92 SSE pass optimization** (2026-02-09): Replaced multi-pass `filter().map()` chains and repeated `find()` scans in search/compare streaming handlers with single-pass reducers and one-loop source counters
 
 ### CLI Commands
 
@@ -204,6 +205,7 @@
 8. ~~**SSE Stats Format Mismatch**: Compare page stats (confidence, latency, verses) showing zero values~~ → **FIXED** (2026-01-29, Issue #17 — SSE message format alignment)
 9. ~~**Arabic hamza normalization mismatch**: 137 roots unreachable via Arabic input~~ → **FIXED** (2026-02-01)
 10. ~~**Null byte crash**: HTTP 500 on null byte input~~ → **FIXED** (2026-02-01)
+11. ~~**Frontend module resolution regressions on `origin/main`**: missing aliases/files (`@/lib/logger`, `@/lib/api-client-setup`, `@/lib/utils/hebrew`, `@/lib/utils/verse-url`) block frontend checks~~ → **FIXED** (2026-02-09, modules restored + `.gitignore` exception for `frontend/lib/**`)
 
 ## Technical Debt (GitHub Issues)
 

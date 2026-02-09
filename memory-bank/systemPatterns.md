@@ -132,6 +132,25 @@ Frontend API calls use a globally configured SDK client that auto-injects auth t
 - No manual token handling in components — SDK auto-injects
 - Auth token stored as `access_token` in localStorage (set by AuthContext)
 
+### Frontend API Interceptor Pattern
+
+Frontend API calls include request tracing through a dedicated setup module loaded once by provider bootstrap:
+
+```
+components/providers.tsx
+  -> lib/api-provider.tsx
+     -> import "@/lib/api-client-setup"
+        -> configureApiClient()
+        -> register request/response/error interceptors
+           - request: inject X-Correlation-ID when present
+           - response/error: structured logger entries
+```
+
+**Supporting modules:**
+- `frontend/lib/logger.ts`
+- `frontend/lib/correlation.ts`
+- `frontend/lib/api-client-setup.ts`
+
 ### History Re-run Flow
 
 When a user clicks a history card, the app navigates to the appropriate page with the query pre-filled:
@@ -192,6 +211,24 @@ Static placeholders (skeleton loaders)
 **Don't:**
 - Use direct index keys (`key={i}`, `key={index}`) in dynamic/reorderable lists.
 - Use runtime-random keys (`Math.random`, timestamps) in render paths.
+
+### SSE Message Aggregation Pattern (Issue #92)
+
+For streaming UI state derivation, frontend pages avoid repeated passes over `sseData` and instead aggregate in one reducer pass.
+
+```
+sseData[]
+  -> reduce(acc, message)
+      - append token text
+      - capture first verse_details/error/no_results/complete payload
+      - collect section/paragraph payloads
+  -> single state update phase
+```
+
+**Key Design Decisions:**
+- Replace chained `filter().map()` pipelines with one `reduce()` to avoid multi-pass scans.
+- Replace multiple `.find()` calls on the same array with one aggregated lookup pass.
+- Replace repeated `Object.values(...).filter(...).length` counting with a single loop + source switch counters.
 
 ## Resilience Patterns
 
