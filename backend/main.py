@@ -273,8 +273,9 @@ def cmd_info(args):
             name = collection.name
 
             # Determine collection type
-            if name == "quran_tr":
-                col_type = "Quran"
+            if name.startswith("quran_tr_"):
+                translator = name.replace("quran_tr_", "")
+                col_type = f"Quran ({translator})"
                 if not show_all and not show_quran:
                     continue
             elif name.startswith("bible_"):
@@ -856,8 +857,8 @@ def main():
     build_graph_parser.add_argument(
         "--collection",
         type=str,
-        default="quran_tr",
-        help="Qdrant collection to process (default: quran_tr)",
+        default="quran_tr_diyanet",
+        help="Qdrant collection to process (default: quran_tr_diyanet)",
     )
     build_graph_parser.add_argument(
         "--limit",
@@ -1726,7 +1727,7 @@ def cmd_verse_lookup(args):
                     )
 
                     points = await client.scroll(
-                        collection_name="quran_tr",
+                        collection_name="quran_tr_diyanet",  # Default Diyanet translation
                         scroll_filter=filter_condition,
                         limit=1,
                         with_payload=True,

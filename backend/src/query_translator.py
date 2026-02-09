@@ -47,11 +47,21 @@ SUPPORTED_LANGUAGES: Set[str] = {"en", "tr", "es", "fr", "it", "pt", "ar", "de"}
 
 CORPUS_LANGUAGES: dict[str, str] = {
     "quran": "tr",
-    "quran_tr": "tr",
+    "quran_tr": "tr",  # Deprecated - keep for backward compatibility
+    "quran_tr_diyanet": "tr",
+    "quran_tr_yazir": "tr",
+    "quran_tr_ates": "tr",
+    "quran_tr_bulac": "tr",
+    "quran_tr_ozturk": "tr",
+    "quran_tr_vakfi": "tr",
+    "quran_tr_yildirim": "tr",
+    "quran_tr_yuksel": "tr",
     "bible": "en",
     "bible_ot": "en",
     "bible_nt": "en",
     "bible_apocrypha": "en",
+    "bible_tr_ot": "tr",
+    "bible_tr_nt": "tr",
 }
 
 # ---------------------------------------------------------------------------

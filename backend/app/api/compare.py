@@ -53,7 +53,7 @@ class CompareRequest(BaseModel):
     topic: str
     use_multi_agent: bool = True
     collections: List[str] = Field(
-        default=["quran_tr", "bible_ot", "bible_nt", "bible_apocrypha"],
+        default=["quran_tr_diyanet", "bible_ot", "bible_nt", "bible_apocrypha"],
         description="Collections to search and compare. Minimum 2 required.",
     )
     language: Optional[str] = Field(
@@ -73,7 +73,22 @@ class CompareRequest(BaseModel):
     @classmethod
     def validate_collections(cls, v: List[str]) -> List[str]:
         """Validate collections list."""
-        valid_collections = {"quran_tr", "bible_ot", "bible_nt", "bible_apocrypha"}
+        # Valid collections: all quran_tr_* translators + bible collections
+        valid_collections = {
+            "quran_tr_diyanet",
+            "quran_tr_yazir",
+            "quran_tr_ates",
+            "quran_tr_bulac",
+            "quran_tr_ozturk",
+            "quran_tr_vakfi",
+            "quran_tr_yildirim",
+            "quran_tr_yuksel",
+            "bible_ot",
+            "bible_nt",
+            "bible_apocrypha",
+            "bible_tr_ot",
+            "bible_tr_nt",
+        }
         if not v:
             raise ValueError("At least 2 collections required")
         if len(v) < 2:
@@ -204,8 +219,22 @@ async def compare_scriptures(
     translator = QueryTranslator()
 
     if request.use_multi_agent:
-        # Validate collections
-        valid_collections = {"quran_tr", "bible_ot", "bible_nt", "bible_apocrypha"}
+        # Validate collections (all quran_tr_* translators + bible collections)
+        valid_collections = {
+            "quran_tr_diyanet",
+            "quran_tr_yazir",
+            "quran_tr_ates",
+            "quran_tr_bulac",
+            "quran_tr_ozturk",
+            "quran_tr_vakfi",
+            "quran_tr_yildirim",
+            "quran_tr_yuksel",
+            "bible_ot",
+            "bible_nt",
+            "bible_apocrypha",
+            "bible_tr_ot",
+            "bible_tr_nt",
+        }
         collections = [c for c in request.collections if c in valid_collections]
         if len(collections) < 2:
             raise HTTPException(
@@ -228,7 +257,9 @@ async def compare_scriptures(
         # Step 2: Build verse_details from search results (only for selected collections)
         verse_details: Dict[str, VerseDetail] = {}
 
-        if "quran_tr" in collections:
+        # Check if any Quran translator collection is selected
+        has_quran = any(c.startswith("quran_tr_") for c in collections)
+        if has_quran:
             for r in search_result.quran:
                 ref, detail = extract_quran_verse_detail(r)
                 if ref not in verse_details:  # Deduplicate
