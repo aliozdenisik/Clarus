@@ -5,6 +5,14 @@ const nextConfig: NextConfig = {
   // Add empty turbopack config to silence Turbopack/webpack conflict warning
   // Next.js 16 uses Turbopack by default, but Sentry SDK adds webpack config internally
   turbopack: {},
+  
+  // Tree-shake lucide-react barrel imports at build time
+  // Transforms: import { Search } from 'lucide-react' → direct icon imports
+  modularizeImports: {
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
+    },
+  },
 };
 
 export default withSentryConfig(nextConfig, {
