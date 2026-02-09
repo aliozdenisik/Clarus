@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSession, signOut } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useLogger } from "@/lib/logger";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -65,12 +66,13 @@ const HEBREW_NAMES: Record<string, string> = {
 };
 
 export default function OldTestamentPage() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user;
-  const router = useRouter();
+   const [books, setBooks] = useState<Book[]>([]);
+   const [isLoading, setIsLoading] = useState(true);
+   const [searchQuery, setSearchQuery] = useState("");
+   const { data: session, isPending: authLoading } = useSession();
+   const user = session?.user;
+   const router = useRouter();
+   const log = useLogger("OldTestamentPage");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -87,10 +89,10 @@ export default function OldTestamentPage() {
         if (!response.ok) throw new Error("Failed to fetch books");
         const data = await response.json();
         setBooks(data.data?.books || []);
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to load books");
-      } finally {
+       } catch (error) {
+         log.error("Failed to load books", { error });
+         toast.error("Failed to load books");
+       } finally {
         setIsLoading(false);
       }
     };
