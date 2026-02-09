@@ -29,6 +29,7 @@ import { InlineCitation } from "@/components/compare/inline-citation";
 import { parseCitations, parseBareReferences, stripMarkdownHeaders } from "@/lib/utils/parse-citations";
 import { useLogger } from "@/lib/logger";
 import { LanguageSelector } from "@/components/search/language-selector";
+import { TranslatorSelector } from "@/components/search/translator-selector";
 import { CollectionSelector } from "@/components/compare/collection-selector";
 import { AnalysisProgress } from "@/components/compare/analysis-progress";
 import type { KeywordSuggestion } from "@/lib/stores/keyword-store";
@@ -88,6 +89,7 @@ function CompareContent() {
   const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [detectedLanguage, setDetectedLanguage] = useState<string | undefined>(undefined);
+  const [selectedTranslator, setSelectedTranslator] = useState("diyanet");
   const [selectedCollections, setSelectedCollections] = useState<string[]>([
     "quran_tr", "bible_ot", "bible_nt", "bible_apocrypha"
   ]);
@@ -266,6 +268,7 @@ function CompareContent() {
         use_multi_agent: true,
         collections: selectedCollections,
         ...(selectedLanguage && { language: selectedLanguage }),
+        translator: selectedTranslator,
       };
       
       // Add keywords if advanced mode is ON and keywords are selected
@@ -331,6 +334,7 @@ function CompareContent() {
           if (selectedLanguage) {
             url += `&language=${encodeURIComponent(selectedLanguage)}`;
           }
+          url += `&translator=${encodeURIComponent(selectedTranslator)}`;
           startStream(url);
         } catch (err) {
           performBatchCompare(q);    // Fallback to batch
@@ -511,6 +515,7 @@ function CompareContent() {
         if (selectedLanguage) {
           url += `&language=${encodeURIComponent(selectedLanguage)}`;
         }
+        url += `&translator=${encodeURIComponent(selectedTranslator)}`;
         startStream(url);
       } catch (err) {
         // Fallback
@@ -638,6 +643,12 @@ function CompareContent() {
                   onChange={setSelectedLanguage}
                   detectedLanguage={detectedLanguage}
                 />
+                {selectedCollections.includes("quran_tr") && (
+                  <TranslatorSelector
+                    value={selectedTranslator}
+                    onChange={setSelectedTranslator}
+                  />
+                )}
               </div>
               
               {/* Collection Selector - compact inline */}
