@@ -295,6 +295,11 @@ class DenseEncoder:
         """Get the embedding dimension (3072 for text-embedding-3-large)"""
         return self.EMBEDDING_DIMENSION
 
+    @property
+    def dense_dimension(self) -> int:
+        """Alias for dimension — used by indexer classes."""
+        return self.EMBEDDING_DIMENSION
+
 
 class AsyncDenseEncoder:
     """
@@ -556,6 +561,11 @@ class AsyncDenseEncoder:
     @property
     def dimension(self) -> int:
         """Get the embedding dimension"""
+        return self.EMBEDDING_DIMENSION
+
+    @property
+    def dense_dimension(self) -> int:
+        """Alias for dimension — used by indexer classes."""
         return self.EMBEDDING_DIMENSION
 
 
