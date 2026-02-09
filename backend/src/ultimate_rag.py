@@ -1245,7 +1245,7 @@ class UltimateRAG:
             )
 
         # Otherwise, search all 3 Bible collections and merge with RRF
-        return await self._search_all_bible_collections(
+        return self._search_all_bible_collections(
             query,
             top_k=top_k,
             rerank_query=translated_query,
