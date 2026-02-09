@@ -377,7 +377,7 @@ class AsyncDenseEncoder:
         Check Redis cache for texts and return: uncached texts, their indices, cached embeddings.
         """
         if self._redis is None:
-            return texts, list(range(len(texts))), []
+            return texts, list(range(len(texts))), [None] * len(texts)
 
         uncached_texts = []
         uncached_indices = []
