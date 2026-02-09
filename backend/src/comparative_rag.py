@@ -446,6 +446,7 @@ class ComparativeRAG:
         quran_keywords: Optional[List[str]] = None,
         bible_keywords: Optional[List[str]] = None,
         limit_per_keyword: int = 10,
+        collections: Optional[List[str]] = None,
     ) -> Dict[str, List]:
         """
         Per-keyword multi-collection search with RRF fusion and keyword coverage boost.
@@ -457,6 +458,8 @@ class ComparativeRAG:
             quran_keywords: List of Turkish keywords for Quran search
             bible_keywords: List of English keywords for Bible search
             limit_per_keyword: Max results per keyword per collection
+            collections: List of collections to search. If None, searches all 4.
+                        Valid values: 'quran_tr_*', 'bible_ot', 'bible_nt', 'bible_apocrypha'
 
         Returns:
             Dict[collection_name, List[results]] with boosted scores
@@ -468,6 +471,36 @@ class ComparativeRAG:
             self._dense_encoder = DenseEncoder()
 
         results = {"quran": [], "ot": [], "nt": [], "apocrypha": []}
+
+        # Determine active collection keys
+        collection_to_key = {
+            "quran_tr_diyanet": "quran",
+            "quran_tr_yazir": "quran",
+            "quran_tr_ates": "quran",
+            "quran_tr_bulac": "quran",
+            "quran_tr_ozturk": "quran",
+            "quran_tr_vakfi": "quran",
+            "quran_tr_yildirim": "quran",
+            "quran_tr_yuksel": "quran",
+            "bible_ot": "ot",
+            "bible_nt": "nt",
+            "bible_apocrypha": "apocrypha",
+            "bible_tr_ot": "ot",
+            "bible_tr_nt": "nt",
+        }
+        if collections is not None:
+            active_keys = set(
+                collection_to_key[c] for c in collections if c in collection_to_key
+            )
+        else:
+            active_keys = {"quran", "ot", "nt", "apocrypha"}
+
+        # Skip keywords for collections that aren't active
+        if "quran" not in active_keys:
+            quran_keywords = None
+        bible_active = active_keys & {"ot", "nt", "apocrypha"}
+        if not bible_active:
+            bible_keywords = None
 
         # Batch encode keywords
         quran_vectors = []
@@ -510,64 +543,42 @@ class ComparativeRAG:
 
                 search_tasks.append(search_quran_keyword)
 
-        # Bible searches (each keyword searches all 3 collections)
+        # Bible searches (each keyword searches only active Bible collections)
         if bible_vectors:
-            ot_searcher = self._get_ot_searcher()
-            nt_searcher = self._get_nt_searcher()
-            apoc_searcher = self._get_apocrypha_searcher()
+            from src.search import BibleSearcher
+
+            bible_searchers: List[Tuple[str, BibleSearcher]] = []
+            if "ot" in active_keys:
+                bible_searchers.append(("ot", self._get_ot_searcher()))
+            if "nt" in active_keys:
+                bible_searchers.append(("nt", self._get_nt_searcher()))
+            if "apocrypha" in active_keys:
+                bible_searchers.append(("apocrypha", self._get_apocrypha_searcher()))
 
             for i, vector in enumerate(bible_vectors):
+                for collection_key, searcher in bible_searchers:
 
-                def search_ot_keyword(v=vector, kw=bible_keywords[i]):
-                    try:
-                        return (
-                            "ot",
-                            kw,
-                            ot_searcher.search_with_vector(v, limit=limit_per_keyword),
-                        )
-                    except CircuitBreakerError:
-                        logger.warning(
-                            "Qdrant unavailable (circuit breaker open), returning empty results"
-                        )
-                        return ("ot", kw, [])
-                    except Exception:
-                        return ("ot", kw, [])
+                    def make_search_task(
+                        v=vector,
+                        kw=bible_keywords[i],  # type: ignore[index]
+                        s=searcher,
+                        ck=collection_key,
+                    ):
+                        try:
+                            return (
+                                ck,
+                                kw,
+                                s.search_with_vector(v, limit=limit_per_keyword),
+                            )
+                        except CircuitBreakerError:
+                            logger.warning(
+                                "Qdrant unavailable (circuit breaker open), returning empty results"
+                            )
+                            return (ck, kw, [])
+                        except Exception:
+                            return (ck, kw, [])
 
-                def search_nt_keyword(v=vector, kw=bible_keywords[i]):
-                    try:
-                        return (
-                            "nt",
-                            kw,
-                            nt_searcher.search_with_vector(v, limit=limit_per_keyword),
-                        )
-                    except CircuitBreakerError:
-                        logger.warning(
-                            "Qdrant unavailable (circuit breaker open), returning empty results"
-                        )
-                        return ("nt", kw, [])
-                    except Exception:
-                        return ("nt", kw, [])
-
-                def search_apoc_keyword(v=vector, kw=bible_keywords[i]):
-                    try:
-                        return (
-                            "apocrypha",
-                            kw,
-                            apoc_searcher.search_with_vector(
-                                v, limit=limit_per_keyword
-                            ),
-                        )
-                    except CircuitBreakerError:
-                        logger.warning(
-                            "Qdrant unavailable (circuit breaker open), returning empty results"
-                        )
-                        return ("apocrypha", kw, [])
-                    except Exception:
-                        return ("apocrypha", kw, [])
-
-                search_tasks.extend(
-                    [search_ot_keyword, search_nt_keyword, search_apoc_keyword]
-                )
+                    search_tasks.append(make_search_task)
 
         # Execute all searches in parallel
         self._log(
@@ -1039,6 +1050,7 @@ class ComparativeRAG:
                 quran_keywords=quran_keywords,
                 bible_keywords=bible_keywords,
                 limit_per_keyword=10,
+                collections=collections,
             )
 
             # Merge keyword results with normal results using RRF fusion
