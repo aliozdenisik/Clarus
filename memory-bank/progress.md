@@ -10,6 +10,8 @@
 - [x] Query enhancement with LLM
 - [x] Embedding caching (Redis Stack 7.2)
 - [x] LLM Response Caching (Semantic cache)
+- [x] Multi-translator Quran indexing (8 Turkish translations from Tanzil XML)
+- [x] Turkish Bible indexing (OT + NT from OSIS XML)
 
 ### Advanced Features
 
@@ -114,6 +116,8 @@
 - [x] `info` - Collection info
 - [x] `cache-info` / `cache-clear` - Cache management
 - [x] `keyword-search` - Morphological root-based Quran keyword search (Arabic + Buckwalter Latin)
+- [x] `search --translator` - Multi-translator Quran search
+- [x] `index-quran` / `index-bible-tr` - Turkish collection indexing
 
 ## Test Coverage Improvements (2026-01-27)
 
@@ -185,6 +189,7 @@
 | Frontend | Complete | Next.js 15 + Framer Motion |
 | Docker Setup | Complete | PostgreSQL + Qdrant |
 | Browser Tests | Passed | Login ✅, Search ✅, Compare ✅ (rich refs) |
+| Multi-Translator | Complete | 8 Quran + 2 Turkish Bible |
 
 ## Known Issues
 
