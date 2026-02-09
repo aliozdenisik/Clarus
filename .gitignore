@@ -201,3 +201,9 @@ test_citation_fix.py
 docs/
 !docs/roadmap/
 !docs/roadmap/**
+
+# ----------------
+# Local GitHub Actions Testing
+# ----------------
+.secrets
+.actrc
