@@ -169,6 +169,30 @@ useEffect reads `q` param from URL
 - `e.stopPropagation()` on delete button prevents navigation when deleting
 - Compare page uses `Suspense` wrapper for `useSearchParams` (Next.js 15 requirement)
 
+### React List Key Stability Pattern (Issue #94)
+
+Frontend rendering follows stable-key rules to prevent reconciliation bugs and animation glitches:
+
+```
+Dynamic lists (results/citations/paragraphs)
+  -> use data identity keys (reference/id/source composite)
+
+Repeated primitive values (duplicate citations/words)
+  -> use deterministic occurrence keys (value + occurrence counter)
+
+Static placeholders (skeleton loaders)
+  -> use deterministic prefixed keys (skeleton-context-index)
+```
+
+**Do:**
+- Prefer domain IDs (`id`, `reference`, `source-reference`) for key identity.
+- Use composite keys only when a single stable field is insufficient.
+- Keep skeleton keys deterministic and namespaced by UI context.
+
+**Don't:**
+- Use direct index keys (`key={i}`, `key={index}`) in dynamic/reorderable lists.
+- Use runtime-random keys (`Math.random`, timestamps) in render paths.
+
 ## Resilience Patterns
 
 ### Circuit Breaker (pybreaker)
@@ -330,4 +354,3 @@ is_arabic() detection
 - Independent from Qdrant collections — different data sources, different purposes
 - Hamza normalization at query time (SQL REPLACE) — preserves original DB data
 - Null byte sanitization — prevents PostgreSQL encoding crash
-

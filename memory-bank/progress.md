@@ -106,6 +106,7 @@
 - [x] **Bible keyword search verification** (2026-02-04): Validated against Blue Letter Bible — all discrepancies <1% (acceptable text tradition variance)
 - [x] **Accuracy disclaimer UI** (2026-02-04): Added expandable accuracy verification panel to Bible Word Search with "Clarus can make mistakes" disclaimer, BLB comparison table, data source info (8 tests)
 - [x] Better Auth UI — sign-in/sign-up pages, session management via useSession()
+- [x] **Issue #94 React key stability** (2026-02-09): Replaced index-based keys in dynamic lists and standardized deterministic skeleton keys across search/compare/history/browse/components
 
 ### CLI Commands
 
