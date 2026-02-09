@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, Suspense, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { useSession } from "@/lib/auth-client";
@@ -10,7 +11,16 @@ import { SearchInput } from "@/components/keyword-search/search-input";
 import { RootCard } from "@/components/keyword-search/root-card";
 import { StatsBar } from "@/components/keyword-search/stats-bar";
 import { DerivedWords } from "@/components/keyword-search/derived-words";
-import { SurahChart } from "@/components/keyword-search/surah-chart";
+// Lazy-load recharts (~200KB) — only needed when chart is visible
+const SurahChart = dynamic(
+  () => import("@/components/keyword-search/surah-chart").then(mod => ({ default: mod.SurahChart })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full animate-pulse rounded-lg bg-zinc-800/50" style={{ height: "400px" }} />
+    )
+  }
+);
 import { VerseCard } from "@/components/keyword-search/verse-card";
 import { Pagination } from "@/components/keyword-search/pagination";
 import { stripArabicDiacritics } from "@/lib/utils/arabic";
