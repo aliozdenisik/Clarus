@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { GlowCard } from "@/components/ui/glow-card";
 import { SourceBadge, SourceType } from "./source-badge";
 import { ExternalLink } from "lucide-react";
@@ -44,7 +45,7 @@ function buildVerseUrl(verse: VerseDetail): string | null {
   return null;
 }
 
-export function SourceReferenceCard({ verse, reference, isHighlighted, index = 0 }: SourceReferenceCardProps) {
+export const SourceReferenceCard = React.memo(function SourceReferenceCard({ verse, reference, isHighlighted, index = 0 }: SourceReferenceCardProps) {
   const displaySource = SOURCE_MAP[verse.source] || 'quran';
   const verseUrl = buildVerseUrl(verse);
   
@@ -102,4 +103,4 @@ export function SourceReferenceCard({ verse, reference, isHighlighted, index = 0
       </GlowCard>
     </motion.div>
   );
-}
+});

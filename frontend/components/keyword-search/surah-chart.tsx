@@ -69,6 +69,11 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   );
 }
 
+const xAxisTickStyle = { fill: "#a1a1aa", fontSize: 12 };
+const axisLineStyle = { stroke: "#3f3f46" };
+const tooltipCursorStyle = { fill: "rgba(99, 102, 241, 0.1)" };
+const barRadius: [number, number, number, number] = [0, 4, 4, 0];
+
 export function SurahChart({ data, language }: SurahChartProps) {
   const [showAll, setShowAll] = useState(false);
 
@@ -129,25 +134,25 @@ export function SurahChart({ data, language }: SurahChartProps) {
             />
             <XAxis
               type="number"
-              tick={{ fill: "#a1a1aa", fontSize: 12 }}
-              axisLine={{ stroke: "#3f3f46" }}
+              tick={xAxisTickStyle}
+              axisLine={axisLineStyle}
             />
             <YAxis
               type="category"
               dataKey="surah_name"
               tick={<CustomYAxisTick />}
               width={90}
-              axisLine={{ stroke: "#3f3f46" }}
+              axisLine={axisLineStyle}
             />
             <Tooltip
               content={<CustomTooltip />}
-              cursor={{ fill: "rgba(99, 102, 241, 0.1)" }}
+              cursor={tooltipCursorStyle}
             />
             <Bar
               dataKey="count"
               fill="#6366f1"
               fillOpacity={0.8}
-              radius={[0, 4, 4, 0]}
+              radius={barRadius}
               isAnimationActive={true}
               animationDuration={800}
             />

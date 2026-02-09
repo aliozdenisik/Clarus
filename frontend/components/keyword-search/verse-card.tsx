@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
 import { GlowCard } from "@/components/ui/glow-card";
@@ -82,7 +83,7 @@ function highlightText(
   });
 }
 
-export function VerseCard({
+export const VerseCard = React.memo(function VerseCard({
   surahId,
   surahName,
   ayahNumber,
@@ -96,7 +97,10 @@ export function VerseCard({
   language = "arabic",
   chapter,
 }: VerseCardProps) {
-  const highlightedText = highlightText(textUthmani, textClean, matchedWords, language);
+  const highlightedText = useMemo(
+    () => highlightText(textUthmani, textClean, matchedWords, language),
+    [textUthmani, textClean, matchedWords, language]
+  );
   const isHebrew = language === "hebrew";
   const isGreek = language === "greek";
 
@@ -184,4 +188,4 @@ export function VerseCard({
       </GlowCard>
     </motion.div>
   );
-}
+});
