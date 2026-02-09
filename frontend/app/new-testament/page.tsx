@@ -180,7 +180,7 @@ export default function NewTestamentPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {isLoading
             ? [...Array(12)].map((_, i) => (
-                <Skeleton key={i} className="h-32 w-full rounded-xl" />
+                <Skeleton key={`new-testament-skeleton-${i}`} className="h-32 w-full rounded-xl" />
               ))
             : filteredBooks.map((book, i) => (
                 <motion.div
