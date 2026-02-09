@@ -445,7 +445,13 @@ async def stream_compare(
                 f"[COMPARE] Starting search_all with collections: {collection_list}, translator: {quran_translator}"
             )
             async for event in _run_with_progress(
-                rag.search_all, topic, collection_list, quran_translator, on_progress
+                rag.search_all,
+                topic,
+                collection_list,
+                on_progress,
+                None,
+                None,
+                quran_translator,
             ):
                 yield event
             search_result = _thread_result["value"]
