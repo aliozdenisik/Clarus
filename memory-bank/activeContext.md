@@ -4,6 +4,53 @@
 
 **Date**: 2026-02-06
 
+## RFC-009: Verified Source Data — COMPLETED ✅
+
+**Date**: 2026-02-09
+
+Completed RFC-009 Tier 1: Multi-translator Quran support (8 Turkish translations from Tanzil XML) and Turkish Bible indexing (OSIS XML). All collections indexed and verified.
+
+**Implementation Summary (13 code tasks + indexing + verification):**
+
+**Data Loaders:**
+- TanzilLoader: Parses Tanzil XML for 8 Turkish Quran translations (6,236 verses each)
+- OsisLoader: Parses OSIS XML for Turkish Bible (OT: 22,724 + NT: 7,458 verses)
+
+**Indexing:**
+- 8 Quran collections: quran_tr_{ates,bulac,diyanet,ozturk,vakfi,yazir,yildirim,yuksel}
+- 2 Turkish Bible collections: bible_tr_ot, bible_tr_nt
+- Old quran_tr collection deleted
+- Total: 13 collections, ~123,000 vectors
+
+**Code Changes (12 commits):**
+- Data loaders: tanzil_loader.py, osis_loader.py
+- Indexer: QuranIndexer multi-translator, TurkishBibleIndexer
+- Search: QuranSearcher translator routing
+- RAG: UltimateRAG, ComparativeRAG translator params
+- API: All endpoints accept translator parameter
+- CLI: --translator flag, asyncio.run() fixes
+- Frontend: Translator selector UI
+- Tests: Updated collection references
+
+**Verification Results:**
+- `python main.py info`: 13 collections, all green ✅
+- `python main.py search "sabır ve namaz"`: Diyanet results ✅
+- `python main.py search --translator yazir`: Yazır-specific results ✅
+- `python main.py compare "Yaratılış"`: 93% confidence, 80 verses ✅
+- All 8 Quran collections: 6,236 verses each ✅
+- bible_tr_ot: 22,724, bible_tr_nt: 7,458 ✅
+
+**Known Gap:** CLI `search-bible --language tr` not implemented (Turkish Bible collections indexed but no CLI route yet)
+
+**Key Files:**
+- `backend/src/tanzil_loader.py` — Tanzil XML parser
+- `backend/src/osis_loader.py` — OSIS XML parser
+- `backend/src/indexer.py` — QuranIndexer + TurkishBibleIndexer
+- `backend/data/tanzil/` — 8 Turkish Quran XML files
+- `backend/data/turkish_bible.xml` — Turkish Bible OSIS XML
+
+---
+
 ## Better Auth Framework Integration (Issue #75) - COMPLETED ✅
 
 **Date**: 2026-02-06
