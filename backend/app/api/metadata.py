@@ -6,6 +6,8 @@ import json
 import os
 import httpx
 
+from app.schemas.common import VALID_TRANSLATORS, DEFAULT_TRANSLATOR
+
 router = APIRouter()
 
 DATA_DIR = os.path.join(
@@ -280,5 +282,21 @@ async def get_testaments():
                 "new_testament": "bible_nt",
                 "apocrypha": "bible_apocrypha",
             },
+        }
+    )
+
+
+@router.get("/translators")
+async def get_translators():
+    """Get list of available Quran translators.
+
+    Returns:
+        MetadataResponse with translator list and default translator.
+    """
+    return MetadataResponse(
+        data={
+            "translators": sorted(list(VALID_TRANSLATORS)),
+            "default": DEFAULT_TRANSLATOR,
+            "total": len(VALID_TRANSLATORS),
         }
     )

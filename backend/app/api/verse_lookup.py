@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Query, HTTPException
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.http.models import Filter, FieldCondition, MatchValue
-from typing import List
+from typing import List, Optional
 import sys
 import os
 
@@ -16,6 +16,7 @@ from app.schemas.verse_lookup import (
     VerseLookupResponse,
     VerseResult,
 )
+from app.schemas.common import TranslatorType, DEFAULT_TRANSLATOR
 from src.verse_parser import (
     parse_verse_reference,
     ParsedReference,
@@ -58,13 +59,16 @@ def get_bible_collection(testament: str) -> str:
 
 
 async def fetch_quran_verses(
-    client: AsyncQdrantClient, parsed: ParsedReference
+    client: AsyncQdrantClient,
+    parsed: ParsedReference,
+    translator: str = DEFAULT_TRANSLATOR,
 ) -> List[VerseResult]:
     """Fetch Quran verses from Qdrant using payload filter.
 
     Args:
         client: AsyncQdrantClient instance
         parsed: ParsedReference with surah_id and verses
+        translator: Quran translator (default: "diyanet")
 
     Returns:
         List of VerseResult objects
@@ -78,6 +82,9 @@ async def fetch_quran_verses(
             surah_name = name
             break
 
+    # Build collection name from translator
+    collection_name = f"quran_tr_{translator}"
+
     # Fetch each verse individually
     for verse_id in parsed.verses:
         # Create filter for exact surah_id and verse_id match
@@ -90,7 +97,7 @@ async def fetch_quran_verses(
 
         # Query Qdrant with payload filter (no vector search)
         points = await client.scroll(
-            collection_name="quran_tr_diyanet",  # Default Diyanet translation
+            collection_name=collection_name,
             scroll_filter=filter_condition,
             limit=1,
             with_payload=True,
@@ -209,6 +216,10 @@ async def lookup_verse(
         max_length=100,
         description="Verse reference: '2:183', 'Bakara 183', 'Genesis 1:1', etc.",
     ),
+    translator: Optional[TranslatorType] = Query(
+        default=DEFAULT_TRANSLATOR,
+        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
+    ),
 ):
     """Lookup verses by reference.
 
@@ -245,8 +256,9 @@ async def lookup_verse(
     client = get_qdrant_client()
 
     try:
+        quran_translator = translator or DEFAULT_TRANSLATOR
         if result.source == "quran":
-            verses = await fetch_quran_verses(client, result)
+            verses = await fetch_quran_verses(client, result, quran_translator)
         else:  # bible
             verses = await fetch_bible_verses(client, result)
 
