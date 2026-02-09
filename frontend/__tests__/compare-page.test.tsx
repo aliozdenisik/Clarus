@@ -1,6 +1,5 @@
 import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import userEvent from "@testing-library/user-event";
 import ComparePage from "@/app/compare/page";
 import { useSSE } from "@/lib/hooks/use-sse";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
@@ -298,6 +297,96 @@ describe("ComparePage", () => {
      const callUrl = mockStartStream.mock.calls[0][0];
      expect(callUrl).toContain("topic=patience");
      expect(callUrl).not.toContain("token=");
+    });
+
+   it("auto-starts streaming after advanced keyword extraction", async () => {
+     const { container } = render(<ComparePage />);
+
+     (global.fetch as any)
+       .mockResolvedValueOnce({
+         ok: true,
+         json: async () => ({
+           keywords: [
+             { text: "sabir", language: "tr", confidence: 0.95, selected: true, source: "llm" },
+           ],
+         }),
+       })
+       .mockResolvedValueOnce({
+         ok: true,
+         json: async () => ({
+           keywords: [
+             { text: "patience", language: "en", confidence: 0.94, selected: true, source: "llm" },
+           ],
+         }),
+       });
+
+     fireEvent.click(screen.getByLabelText(/Gelişmiş Arama/i));
+     const input = screen.getByTestId("compare-topic-input");
+     fireEvent.change(input, { target: { value: "patience" } });
+     fireEvent.submit(container.querySelector("form")!);
+
+     await waitFor(() => {
+       expect(mockStartStream).toHaveBeenCalledTimes(1);
+     });
+
+     const callUrl = mockStartStream.mock.calls[0][0];
+     expect(callUrl).toContain("topic=patience");
+     expect(callUrl).toContain("quran_keywords=sabir");
+     expect(callUrl).toContain("bible_keywords=patience");
+   });
+
+   it("auto-starts batch compare after advanced keyword extraction when streaming is disabled", async () => {
+     vi.mocked(usePreferencesStore).mockReturnValue({
+       enable_streaming: false,
+     } as any);
+
+     vi.mocked(compareScripturesApiComparePost).mockResolvedValueOnce({
+       data: {
+         ...mockCompareResult,
+       },
+     } as any);
+
+     (global.fetch as any)
+       .mockResolvedValueOnce({
+         ok: true,
+         json: async () => ({
+           keywords: [
+             { text: "sabir", language: "tr", confidence: 0.95, selected: true, source: "llm" },
+             { text: "dua", language: "tr", confidence: 0.8, selected: false, source: "llm" },
+           ],
+         }),
+       })
+       .mockResolvedValueOnce({
+         ok: true,
+         json: async () => ({
+           keywords: [
+             { text: "patience", language: "en", confidence: 0.94, selected: true, source: "llm" },
+             { text: "prayer", language: "en", confidence: 0.75, selected: false, source: "llm" },
+           ],
+         }),
+       });
+
+     const { container } = render(<ComparePage />);
+
+     fireEvent.click(screen.getByLabelText(/Gelişmiş Arama/i));
+     const input = screen.getByTestId("compare-topic-input");
+     fireEvent.change(input, { target: { value: "patience" } });
+     fireEvent.submit(container.querySelector("form")!);
+
+     await waitFor(() => {
+       expect(compareScripturesApiComparePost).toHaveBeenCalledTimes(1);
+     });
+
+     expect(compareScripturesApiComparePost).toHaveBeenCalledWith(
+       expect.objectContaining({
+         body: expect.objectContaining({
+           topic: "patience",
+           quran_keywords: ["sabir"],
+           bible_keywords: ["patience"],
+         }),
+       })
+     );
+     expect(mockStartStream).not.toHaveBeenCalled();
    });
 
   it("shows loading state when isStreaming is true", () => {
@@ -499,4 +588,3 @@ describe("ComparePage", () => {
      });
    });
 });
-

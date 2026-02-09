@@ -280,11 +280,44 @@ function CompareContent() {
       throw new Error(`Keyword extraction failed for ${corpus}`);
     }
 
-    const data = await response.json();
-    return data.keywords || [];
-  };
+     const data = await response.json();
+     return data.keywords || [];
+   };
 
-  const performBatchCompare = async (topicToCompare: string) => {
+   const getSelectedKeywordLists = (
+     quranSuggestions: KeywordSuggestion[],
+     bibleSuggestions: KeywordSuggestion[]
+   ) => ({
+     quran: quranSuggestions.filter((keyword) => keyword.selected).map((keyword) => keyword.text),
+     bible: bibleSuggestions.filter((keyword) => keyword.selected).map((keyword) => keyword.text),
+   });
+
+   const buildCompareStreamUrl = (
+     topicToCompare: string,
+     selectedKeywordLists?: { quran: string[]; bible: string[] }
+   ) => {
+     const params = new URLSearchParams({
+       topic: topicToCompare,
+       collections: selectedCollections.join(','),
+       translator: selectedTranslator,
+     });
+
+     if (selectedLanguage) {
+       params.set("language", selectedLanguage);
+     }
+
+     if (selectedKeywordLists) {
+       selectedKeywordLists.quran.forEach((keyword) => params.append("quran_keywords", keyword));
+       selectedKeywordLists.bible.forEach((keyword) => params.append("bible_keywords", keyword));
+     }
+
+     return `${API_BASE_URL}/api/stream/compare?${params.toString()}`;
+   };
+
+  const performBatchCompare = async (
+    topicToCompare: string,
+    selectedKeywordLists?: { quran: string[]; bible: string[] }
+  ) => {
     setIsLoading(true);
     try {
       const requestBody: any = {
@@ -296,18 +329,14 @@ function CompareContent() {
       };
       
       if (advancedMode) {
-        const selectedQuranKeywords = quranKeywords
-          .filter((k) => k.selected)
-          .map((k) => k.text);
-        const selectedBibleKeywords = bibleKeywords
-          .filter((k) => k.selected)
-          .map((k) => k.text);
+        const keywordLists =
+          selectedKeywordLists ?? getSelectedKeywordLists(quranKeywords, bibleKeywords);
         
-        if (selectedQuranKeywords.length > 0) {
-          requestBody.quran_keywords = selectedQuranKeywords;
+        if (keywordLists.quran.length > 0) {
+          requestBody.quran_keywords = keywordLists.quran;
         }
-        if (selectedBibleKeywords.length > 0) {
-          requestBody.bible_keywords = selectedBibleKeywords;
+        if (keywordLists.bible.length > 0) {
+          requestBody.bible_keywords = keywordLists.bible;
         }
       }
       
@@ -511,6 +540,7 @@ function CompareContent() {
     setIsLoading(true);
     setResult(null);
     setExpandedParagraphs(new Set());
+    let extractedKeywordLists: { quran: string[]; bible: string[] } | undefined;
 
     // If advanced mode is ON, extract keywords first
     if (advancedMode) {
@@ -530,12 +560,8 @@ function CompareContent() {
 
         setQuranKeywords(quranKw);
         setBibleKeywords(bibleKw);
+        extractedKeywordLists = getSelectedKeywordLists(quranKw, bibleKw);
         setIsExtractingKeywords(false);
-
-        // Wait for user to select keywords before proceeding
-        // User will click "Analyze" again after selecting keywords
-        setIsLoading(false);
-        return;
       } catch (error) {
         toast.error("Keyword extraction failed. Proceeding with normal search.");
         setIsExtractingKeywords(false);
@@ -547,21 +573,16 @@ function CompareContent() {
      if (enable_streaming) {
        // Start SSE Stream — uses cookie auth via withCredentials
        try {
-         let url = `${API_BASE_URL}/api/stream/compare?topic=${encodeURIComponent(topic)}`;
-        url += `&collections=${encodeURIComponent(selectedCollections.join(','))}`;
-        if (selectedLanguage) {
-          url += `&language=${encodeURIComponent(selectedLanguage)}`;
-        }
-        url += `&translator=${encodeURIComponent(selectedTranslator)}`;
-        startStream(url);
-      } catch (err) {
-        // Fallback
-        performBatchCompare(topic);
-      }
-    } else {
-      // Use batch API directly
-      performBatchCompare(topic);
-    }
+          const url = buildCompareStreamUrl(topic, extractedKeywordLists);
+         startStream(url);
+       } catch (err) {
+         // Fallback
+         performBatchCompare(topic, extractedKeywordLists);
+       }
+     } else {
+       // Use batch API directly
+       performBatchCompare(topic, extractedKeywordLists);
+     }
   };
 
   if (authLoading) {

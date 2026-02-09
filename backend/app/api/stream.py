@@ -306,6 +306,14 @@ async def stream_compare(
         default=DEFAULT_TRANSLATOR,
         description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",  # noqa: E501
     ),
+    quran_keywords: Optional[list[str]] = Query(
+        default=None,
+        description="Optional Turkish keywords for Quran per-keyword search",
+    ),
+    bible_keywords: Optional[list[str]] = Query(
+        default=None,
+        description="Optional English keywords for Bible per-keyword search",
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     """Stream comparative analysis with multi-agent output.
@@ -429,8 +437,8 @@ async def stream_compare(
                 topic,
                 collection_list,
                 on_progress,
-                None,
-                None,
+                quran_keywords,
+                bible_keywords,
                 quran_translator,
             ):
                 yield event
