@@ -4,6 +4,28 @@
 
 **Date**: 2026-02-09
 
+## Issue #91: Frontend Performance Hotspots — COMPLETED ✅
+
+**Date**: 2026-02-09
+
+Resolved three frontend performance bottlenecks identified in issue #91:
+
+- Consolidated layout reads/writes in `vercel-tabs` into a single `useLayoutEffect` to reduce layout thrashing.
+- Added root list virtualization in `root-browser` using `react-window` `List` for 1,651+ roots.
+- Cached magnetic button bounds on `mouseenter` and reused them during `mousemove` to avoid repeated `getBoundingClientRect()` calls.
+
+**Verification:**
+- `npx tsc --noEmit` ✅
+- `npm test -- --run __tests__/keyword-search-page.test.tsx __tests__/search-tabs.test.tsx` ✅
+- `npm test -- --run` ✅ (19 files, 228 tests passed)
+- `npm run build` ✅
+
+**Key files updated:**
+- `frontend/components/ui/vercel-tabs.tsx`
+- `frontend/components/keyword-search/root-browser.tsx`
+- `frontend/components/ui/magnetic-button.tsx`
+- `frontend/package.json`
+
 ## Issue #94: React Stable Keys Migration — COMPLETED ✅
 
 **Date**: 2026-02-09
