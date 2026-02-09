@@ -112,6 +112,7 @@ function CompareContent() {
   const highlightTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasAutoExecuted = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const lastHandledSseError = useRef<Error | null>(null);
   const log = useLogger("ComparePage");
   const { data: session, isPending: authLoading } = useSession();
   const user = session?.user;
@@ -434,7 +435,8 @@ function CompareContent() {
 
   // Handle SSE Errors
   useEffect(() => {
-    if (sseError) {
+    if (sseError && sseError !== lastHandledSseError.current) {
+      lastHandledSseError.current = sseError;
       toast.error("Streaming connection lost. Falling back to standard analysis...");
       performBatchCompare(topic);
     }
