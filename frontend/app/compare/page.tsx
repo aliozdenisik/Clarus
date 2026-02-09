@@ -797,21 +797,21 @@ function CompareContent() {
              })()}
              
              {/* Show remaining skeletons */}
-             {[...Array(Math.max(0, 5 - (result?.paragraphs?.length || 0)))].map((_, i) => (
-               <Skeleton key={i} className="h-32 w-full" />
-             ))}
-           </motion.div>
-         )}
+              {[...Array(Math.max(0, 5 - (result?.paragraphs?.length || 0)))].map((_, i) => (
+                <Skeleton key={`compare-progress-skeleton-${i}`} className="h-32 w-full" />
+              ))}
+            </motion.div>
+          )}
 
          {/* Analysis & Essay Section - Inside Suspense (progressive loading) */}
          <Suspense
            fallback={
              <div className="space-y-4">
-               {[...Array(5)].map((_, i) => (
-                 <Skeleton key={i} className="h-32 w-full" />
-               ))}
-             </div>
-           }
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={`compare-suspense-skeleton-${i}`} className="h-32 w-full" />
+                ))}
+              </div>
+            }
          >
            {/* Results */}
            <AnimatePresence mode="wait">
@@ -859,93 +859,117 @@ function CompareContent() {
 
                  {/* Paragraphs */}
                  <div className="space-y-4">
-                   {result.paragraphs.map((paragraph, index) => (
-                     <motion.div
-                       key={index}
-                       initial={{ opacity: 0, y: 20 }}
-                       animate={{ opacity: 1, y: 0 }}
-                       transition={{
-                         ...springPresets.snappy,
-                         delay: index * 0.1,
-                       }}
-                     >
-                       <GlowCard>
-                         {/* Paragraph Header */}
-                         <button
-                           onClick={() => toggleParagraph(index)}
-                           className="flex w-full items-center justify-between text-left"
-                         >
-                           <h3 className="text-lg font-semibold text-[var(--color-accent-primary)]">
-                             {stripMarkdownHeaders(paragraph.title)}
-                           </h3>
-                           {expandedParagraphs.has(index) ? (
-                             <ChevronUp className="h-5 w-5 text-[var(--color-text-muted)]" />
-                           ) : (
-                             <ChevronDown className="h-5 w-5 text-[var(--color-text-muted)]" />
-                           )}
-                         </button>
+                    {result.paragraphs.map((paragraph, index) => {
+                      const paragraphKey = `${stripMarkdownHeaders(paragraph.title)}-${paragraph.content.slice(0, 48)}`;
 
-                         {/* Paragraph Content */}
-                         <AnimatePresence>
-                           {expandedParagraphs.has(index) && (
-                             <motion.div
-                               initial={{ height: 0, opacity: 0 }}
-                               animate={{ height: "auto", opacity: 1 }}
-                               exit={{ height: 0, opacity: 0 }}
-                               transition={springPresets.snappy}
-                               className="overflow-hidden"
-                             >
-                               <div className="mt-4 pt-4">
-                                 <div className="relative pl-6 border-l-2 border-[var(--color-accent-primary)] py-1">
-                                   <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-[var(--color-accent-primary)] mb-3 block opacity-70">
-                                     AI Interpretation
-                                   </span>
-                                   <p className="text-[var(--color-text-primary)] leading-[1.85] text-[15px] whitespace-pre-wrap">
-                                     {parseBareReferences(parseCitations(stripMarkdownHeaders(paragraph.content)), paragraph.citations).map((part, i) => {
-                                       if (typeof part === 'string') {
-                                         return <span key={i}>{part}</span>;
-                                       }
-                                       
-                                       const verse = result.verse_details?.[part.reference];
-                                       
-                                       return (
-                                         <InlineCitation
-                                           key={i}
-                                           reference={part.reference}
-                                           verseDetail={verse}
-                                           onNavigate={navigateToVerse}
-                                         />
-                                       );
-                                     })}
-                                   </p>
-                                 </div>
+                      return (
+                        <motion.div
+                          key={paragraphKey}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{
+                            ...springPresets.snappy,
+                            delay: index * 0.1,
+                          }}
+                        >
+                          <GlowCard>
+                            {/* Paragraph Header */}
+                            <button
+                              onClick={() => toggleParagraph(index)}
+                              className="flex w-full items-center justify-between text-left"
+                            >
+                              <h3 className="text-lg font-semibold text-[var(--color-accent-primary)]">
+                                {stripMarkdownHeaders(paragraph.title)}
+                              </h3>
+                              {expandedParagraphs.has(index) ? (
+                                <ChevronUp className="h-5 w-5 text-[var(--color-text-muted)]" />
+                              ) : (
+                                <ChevronDown className="h-5 w-5 text-[var(--color-text-muted)]" />
+                              )}
+                            </button>
 
-                                 {/* Citations */}
-                                 {paragraph.citations.length > 0 && (
-                                   <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)]">
-                                     <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">
-                                       Citations:
-                                     </p>
-                                     <div className="flex flex-wrap gap-2">
-                                       {paragraph.citations.map((citation, i) => (
-                                         <span
-                                           key={i}
-                                           className="inline-block px-2 py-1 text-xs rounded-md bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
-                                         >
-                                           {citation}
-                                         </span>
-                                       ))}
-                                     </div>
-                                   </div>
-                                 )}
-                               </div>
-                             </motion.div>
-                           )}
-                         </AnimatePresence>
-                       </GlowCard>
-                     </motion.div>
-                   ))}
-                 </div>
+                            {/* Paragraph Content */}
+                            <AnimatePresence>
+                              {expandedParagraphs.has(index) && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={springPresets.snappy}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="mt-4 pt-4">
+                                    <div className="relative pl-6 border-l-2 border-[var(--color-accent-primary)] py-1">
+                                      <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-[var(--color-accent-primary)] mb-3 block opacity-70">
+                                        AI Interpretation
+                                      </span>
+                                      <p className="text-[var(--color-text-primary)] leading-[1.85] text-[15px] whitespace-pre-wrap">
+                                        {(() => {
+                                          let partCursor = 0;
+
+                                          return parseBareReferences(
+                                            parseCitations(stripMarkdownHeaders(paragraph.content)),
+                                            paragraph.citations
+                                          ).map((part) => {
+                                            if (typeof part === 'string') {
+                                              const key = `text-${partCursor}`;
+                                              partCursor += part.length;
+                                              return <span key={key}>{part}</span>;
+                                            }
+
+                                            const verse = result.verse_details?.[part.reference];
+                                            const key = `citation-${part.reference}-${partCursor}`;
+                                            partCursor += part.reference.length;
+
+                                            return (
+                                              <InlineCitation
+                                                key={key}
+                                                reference={part.reference}
+                                                verseDetail={verse}
+                                                onNavigate={navigateToVerse}
+                                              />
+                                            );
+                                          });
+                                        })()}
+                                      </p>
+                                    </div>
+
+                                    {/* Citations */}
+                                    {paragraph.citations.length > 0 && (
+                                      <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)]">
+                                        <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">
+                                          Citations:
+                                        </p>
+                                        <div className="flex flex-wrap gap-2">
+                                          {(() => {
+                                            const citationOccurrences = new Map<string, number>();
+
+                                            return paragraph.citations.map((citation) => {
+                                              const occurrence = (citationOccurrences.get(citation) ?? 0) + 1;
+                                              citationOccurrences.set(citation, occurrence);
+
+                                              return (
+                                                <span
+                                                  key={`${citation}-${occurrence}`}
+                                                  className="inline-block px-2 py-1 text-xs rounded-md bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
+                                                >
+                                                  {citation}
+                                                </span>
+                                              );
+                                            });
+                                          })()}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </GlowCard>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
 
                  {/* Ornamental divider */}
                  {result.paragraphs.length > 0 && result.verse_details && (
@@ -1030,17 +1054,26 @@ function CompareContent() {
                                    {source.replace("_", " ")}
                                  </p>
                                  <div className="flex flex-wrap gap-2">
-                                   {citations.map((citation, i) => (
-                                     <span
-                                       key={i}
-                                       className="inline-block px-2 py-1 text-xs rounded-md bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
-                                     >
-                                       {citation}
-                                     </span>
-                                   ))}
-                                 </div>
-                               </div>
-                             )
+                                    {(() => {
+                                      const citationOccurrences = new Map<string, number>();
+
+                                      return citations.map((citation) => {
+                                        const occurrence = (citationOccurrences.get(citation) ?? 0) + 1;
+                                        citationOccurrences.set(citation, occurrence);
+
+                                        return (
+                                          <span
+                                            key={`${source}-${citation}-${occurrence}`}
+                                            className="inline-block px-2 py-1 text-xs rounded-md bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
+                                          >
+                                            {citation}
+                                          </span>
+                                        );
+                                      });
+                                    })()}
+                                  </div>
+                                </div>
+                              )
                          )}
                        </div>
                      </GlowCard>
