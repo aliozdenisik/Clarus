@@ -115,7 +115,7 @@ export function KeywordSelector({
               {isLoading && (
                 <div className="flex gap-2 overflow-x-auto pb-2">
                   {[...Array(5)].map((_, i) => (
-                    <Skeleton key={i} className="h-8 w-24 rounded-full shrink-0" />
+                    <Skeleton key={`keyword-selector-skeleton-${i}`} className="h-8 w-24 rounded-full shrink-0" />
                   ))}
                 </div>
               )}

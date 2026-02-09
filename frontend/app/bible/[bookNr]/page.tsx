@@ -215,7 +215,7 @@ export default function BookDetailPage() {
           <Skeleton className="h-12 w-full mb-4" />
           <div className="space-y-4">
             {[...Array(10)].map((_, i) => (
-              <Skeleton key={i} className="h-20 w-full" />
+              <Skeleton key={`book-detail-page-skeleton-${i}`} className="h-20 w-full" />
             ))}
           </div>
         </div>
@@ -324,7 +324,7 @@ export default function BookDetailPage() {
               className="space-y-4"
             >
               {[...Array(10)].map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
+                <Skeleton key={`book-chapter-skeleton-${i}`} className="h-16 w-full" />
               ))}
             </motion.div>
           ) : chapterContent ? (

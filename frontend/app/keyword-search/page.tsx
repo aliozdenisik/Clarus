@@ -541,14 +541,14 @@ function KeywordSearchContent() {
                   </div>
                   {/* Stats skeleton */}
                   <div className="grid grid-cols-3 gap-4">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-20" />
+                    {[1, 2, 3].map((slot) => (
+                      <Skeleton key={`keyword-stats-skeleton-${slot}`} className="h-20" />
                     ))}
                   </div>
                   {/* Verse skeletons */}
                   <div className="space-y-4">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Skeleton key={i} className="h-40" />
+                    {[1, 2, 3, 4, 5].map((slot) => (
+                      <Skeleton key={`keyword-verse-skeleton-${slot}`} className="h-40" />
                     ))}
                   </div>
                 </div>

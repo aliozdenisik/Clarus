@@ -313,7 +313,7 @@ export default function HistoryPage() {
           <div className="space-y-4">
              <div className="text-[var(--color-text-secondary)] mb-4">Loading history...</div>
             {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full" />
+              <Skeleton key={`history-skeleton-${i}`} className="h-24 w-full" />
             ))}
           </div>
         ) : !items || items.length === 0 ? (

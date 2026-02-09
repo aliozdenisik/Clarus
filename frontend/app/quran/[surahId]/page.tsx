@@ -115,7 +115,7 @@ export default function SurahDetailPage() {
           <Skeleton className="h-6 w-48 mb-8" />
           <div className="space-y-4">
             {[...Array(10)].map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full" />
+              <Skeleton key={`surah-detail-skeleton-${i}`} className="h-24 w-full" />
             ))}
           </div>
         </div>
