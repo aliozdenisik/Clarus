@@ -176,6 +176,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Keep frontend source library files tracked
+!frontend/lib/
+!frontend/lib/**
+
 # ----------------
 # Claude Code (Local AI Configuration)
 # ----------------
