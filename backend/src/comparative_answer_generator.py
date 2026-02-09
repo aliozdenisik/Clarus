@@ -236,6 +236,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         quran_chunks: List,
         bible_semantic: List,
         bible_chunks: List,
+        translator: str = "diyanet",
     ) -> str:
         """Format all 80 verses as context for LLM"""
         sections = []
@@ -245,7 +246,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
             sections.append(
                 self._format_verses_section(
                     quran_semantic,
-                    "quran_tr_diyanet",
+                    f"quran_tr_{translator}",
                     "KURAN - SEMANTİK ARAMA SONUÇLARI",
                     "QS",
                 )
@@ -256,7 +257,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
             sections.append(
                 self._format_verses_section(
                     quran_chunks,
-                    "quran_tr_diyanet",
+                    f"quran_tr_{translator}",
                     "KURAN - SEMANTİK CHUNK SONUÇLARI",
                     "QC",
                 )
@@ -387,6 +388,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         bible_semantic: List,
         bible_chunks: List,
         collection_stats: dict = None,
+        translator: str = "diyanet",
     ) -> ComparativeAnswer:
         """
         Generate a comparative theological essay from multi-scripture results.
@@ -398,6 +400,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
             bible_semantic: 20 results from Bible semantic search
             bible_chunks: 20 results from Bible chunk search
             collection_stats: Optional dict with search statistics for confidence computation
+            translator: Quran translation to use (default: "diyanet")
 
         Returns:
             ComparativeAnswer with essay, citations, and confidence
@@ -422,7 +425,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
 
         # Format context from all 80 verses
         context = self._format_context(
-            quran_semantic, quran_chunks, bible_semantic, bible_chunks
+            quran_semantic, quran_chunks, bible_semantic, bible_chunks, translator
         )
 
         # Call LLM for comparative essay generation

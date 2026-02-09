@@ -761,6 +761,7 @@ class ComparativeRAG:
         progress_callback: Optional[Callable[[str, str], None]] = None,
         quran_keywords: Optional[List[str]] = None,
         bible_keywords: Optional[List[str]] = None,
+        translator: str = "diyanet",
     ) -> ComparativeScriptureResult:
         """
         Execute full search pipeline without answer generation.
@@ -775,6 +776,8 @@ class ComparativeRAG:
                               Called at each pipeline stage to report progress.
             quran_keywords: Optional list of Turkish keywords for Quran per-keyword search
             bible_keywords: Optional list of English keywords for Bible per-keyword search
+            translator: Quran translation to use (default: "diyanet").
+                       Valid values: diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel
 
         If enable_multi_query=True: Uses 5 queries + RRF fusion for better accuracy.
         If enable_multi_query=False: Uses single enhanced query (faster).
@@ -790,7 +793,7 @@ class ComparativeRAG:
         # Default to all collections if not specified
         if collections is None:
             collections = [
-                "quran_tr_diyanet",
+                f"quran_tr_{translator}",
                 "bible_ot",
                 "bible_nt",
                 "bible_apocrypha",
@@ -1085,12 +1088,13 @@ class ComparativeRAG:
 
         return result
 
-    def compare(self, query: str):
+    def compare(self, query: str, translator: str = "diyanet"):
         """
         Full comparative pipeline: Search + Generate Comparative Essay
 
         Args:
             query: User's religious/philosophical question
+            translator: Quran translation to use (default: "diyanet")
 
         Returns:
             ComparativeAnswer with essay, citations, and confidence
@@ -1102,7 +1106,7 @@ class ComparativeRAG:
             console.print(f'[dim]Question: "{query}"[/dim]\n')
 
         # Steps 0-3: Translate, enhance, search and select top results
-        search_result = self.search_all(query)
+        search_result = self.search_all(query, translator=translator)
 
         # Store detected language for response translation (Task 5)
         self._last_detected_language = search_result.search_stats.get(
@@ -1196,6 +1200,7 @@ class ComparativeRAG:
         query: str,
         quran_keywords: Optional[List[str]] = None,
         bible_keywords: Optional[List[str]] = None,
+        translator: str = "diyanet",
     ):
         """
         Full comparative pipeline with Multi-Agent answer generation.
@@ -1207,6 +1212,7 @@ class ComparativeRAG:
             query: User's religious/philosophical question
             quran_keywords: Optional list of Turkish keywords for Quran per-keyword search
             bible_keywords: Optional list of English keywords for Bible per-keyword search
+            translator: Quran translation to use (default: "diyanet")
 
         Returns:
             MultiAgentAnswer with 5 paragraphs (OT, NT, Apocrypha, Quran, Synthesis)
@@ -1231,6 +1237,7 @@ class ComparativeRAG:
                 query,
                 quran_keywords=quran_keywords,
                 bible_keywords=bible_keywords,
+                translator=translator,
             )
 
             # Store detected language for response translation (Task 5)
