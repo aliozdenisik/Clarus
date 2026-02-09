@@ -755,290 +755,301 @@ function CompareContent() {
         </div>
       </AuroraSectionBackground>
 
-      {/* Content */}
-      <div className="relative px-6 pb-16">
-        <div className="mx-auto max-w-3xl">
-        {/* Loading State & Streaming Progress */}
-        {(isLoading || isStreaming) && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-4 mb-8"
-          >
-            {/* Granular pipeline progress (streaming mode) */}
-            {(() => {
-              const progressEvents = sseData
-                .filter((m) => m.type === "progress" && m.step && m.message)
-                .map((m) => ({ step: m.step as string, message: m.message as string }));
-              
-              if (progressEvents.length > 0) {
-                return (
-                  <AnalysisProgress
-                    progressEvents={progressEvents}
-                    hasParagraphs={(result?.paragraphs?.length ?? 0) > 0}
-                    className="mb-4"
-                  />
-                );
-              }
+       {/* Content */}
+       <div className="relative px-6 pb-16">
+         <div className="mx-auto max-w-3xl">
+         {/* Loading State & Streaming Progress - Outside Suspense (renders immediately) */}
+         {(isLoading || isStreaming) && (
+           <motion.div
+             initial={{ opacity: 0 }}
+             animate={{ opacity: 1 }}
+             className="space-y-4 mb-8"
+           >
+             {/* Granular pipeline progress (streaming mode) */}
+             {(() => {
+               const progressEvents = sseData
+                 .filter((m) => m.type === "progress" && m.step && m.message)
+                 .map((m) => ({ step: m.step as string, message: m.message as string }));
+               
+               if (progressEvents.length > 0) {
+                 return (
+                   <AnalysisProgress
+                     progressEvents={progressEvents}
+                     hasParagraphs={(result?.paragraphs?.length ?? 0) > 0}
+                     className="mb-4"
+                   />
+                 );
+               }
 
-              // Fallback for batch mode (no SSE progress events)
-              return (
-                <div className="flex items-center gap-3 text-[var(--color-text-muted)] mb-4">
-                  <TypingIndicator />
-                  <span className="text-sm">
-                    {result?.paragraphs?.length 
-                      ? `Analyzing... (${result.paragraphs.length}/5 agents completed)`
-                      : "Initializing multi-agent analysis..."}
-                  </span>
-                </div>
-              );
-            })()}
-            
-            {/* Show remaining skeletons */}
-            {[...Array(Math.max(0, 5 - (result?.paragraphs?.length || 0)))].map((_, i) => (
-              <Skeleton key={i} className="h-32 w-full" />
-            ))}
-          </motion.div>
-        )}
+               // Fallback for batch mode (no SSE progress events)
+               return (
+                 <div className="flex items-center gap-3 text-[var(--color-text-muted)] mb-4">
+                   <TypingIndicator />
+                   <span className="text-sm">
+                     {result?.paragraphs?.length 
+                       ? `Analyzing... (${result.paragraphs.length}/5 agents completed)`
+                       : "Initializing multi-agent analysis..."}
+                   </span>
+                 </div>
+               );
+             })()}
+             
+             {/* Show remaining skeletons */}
+             {[...Array(Math.max(0, 5 - (result?.paragraphs?.length || 0)))].map((_, i) => (
+               <Skeleton key={i} className="h-32 w-full" />
+             ))}
+           </motion.div>
+         )}
 
-        {/* Results */}
-        <AnimatePresence mode="wait">
-          {result && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={springPresets.fluid}
-            >
-              {/* Stats Header */}
-              <GlowCard className="mb-6">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-[var(--color-accent-primary)]" />
-                    <span className="font-semibold text-[var(--color-text-primary)]">
-                      Analysis Complete
-                    </span>
-                  </div>
-                    <div className="flex flex-wrap gap-4 text-sm text-[var(--color-text-muted)]">
-                     <div className="flex items-center gap-1">
-                      <Quote className="h-4 w-4" />
-                      <span>{result.total_citations} citations</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      <span>{(result.latency_ms / 1000).toFixed(1)}s</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span
-                        className={`font-medium ${
-                          result.confidence >= 0.8
-                            ? "text-green-400"
-                            : result.confidence >= 0.6
-                              ? "text-yellow-400"
-                              : "text-red-400"
-                        }`}
-                      >
-                        {(result.confidence * 100).toFixed(0)}% confidence
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </GlowCard>
+         {/* Analysis & Essay Section - Inside Suspense (progressive loading) */}
+         <Suspense
+           fallback={
+             <div className="space-y-4">
+               {[...Array(5)].map((_, i) => (
+                 <Skeleton key={i} className="h-32 w-full" />
+               ))}
+             </div>
+           }
+         >
+           {/* Results */}
+           <AnimatePresence mode="wait">
+             {result && (
+               <motion.div
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={{ opacity: 1, y: 0 }}
+                 exit={{ opacity: 0, y: -20 }}
+                 transition={springPresets.fluid}
+               >
+                 {/* Stats Header */}
+                 <GlowCard className="mb-6">
+                   <div className="flex flex-wrap items-center justify-between gap-4">
+                     <div className="flex items-center gap-2">
+                       <Sparkles className="h-5 w-5 text-[var(--color-accent-primary)]" />
+                       <span className="font-semibold text-[var(--color-text-primary)]">
+                         Analysis Complete
+                       </span>
+                     </div>
+                       <div className="flex flex-wrap gap-4 text-sm text-[var(--color-text-muted)]">
+                        <div className="flex items-center gap-1">
+                         <Quote className="h-4 w-4" />
+                         <span>{result.total_citations} citations</span>
+                       </div>
+                       <div className="flex items-center gap-1">
+                         <Clock className="h-4 w-4" />
+                         <span>{(result.latency_ms / 1000).toFixed(1)}s</span>
+                       </div>
+                       <div className="flex items-center gap-1">
+                         <span
+                           className={`font-medium ${
+                             result.confidence >= 0.8
+                               ? "text-green-400"
+                               : result.confidence >= 0.6
+                                 ? "text-yellow-400"
+                                 : "text-red-400"
+                           }`}
+                         >
+                           {(result.confidence * 100).toFixed(0)}% confidence
+                         </span>
+                       </div>
+                     </div>
+                   </div>
+                 </GlowCard>
 
-              {/* Paragraphs */}
-              <div className="space-y-4">
-                {result.paragraphs.map((paragraph, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      ...springPresets.snappy,
-                      delay: index * 0.1,
-                    }}
-                  >
-                    <GlowCard>
-                      {/* Paragraph Header */}
-                      <button
-                        onClick={() => toggleParagraph(index)}
-                        className="flex w-full items-center justify-between text-left"
-                      >
-                        <h3 className="text-lg font-semibold text-[var(--color-accent-primary)]">
-                          {stripMarkdownHeaders(paragraph.title)}
-                        </h3>
-                        {expandedParagraphs.has(index) ? (
-                          <ChevronUp className="h-5 w-5 text-[var(--color-text-muted)]" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5 text-[var(--color-text-muted)]" />
-                        )}
-                      </button>
+                 {/* Paragraphs */}
+                 <div className="space-y-4">
+                   {result.paragraphs.map((paragraph, index) => (
+                     <motion.div
+                       key={index}
+                       initial={{ opacity: 0, y: 20 }}
+                       animate={{ opacity: 1, y: 0 }}
+                       transition={{
+                         ...springPresets.snappy,
+                         delay: index * 0.1,
+                       }}
+                     >
+                       <GlowCard>
+                         {/* Paragraph Header */}
+                         <button
+                           onClick={() => toggleParagraph(index)}
+                           className="flex w-full items-center justify-between text-left"
+                         >
+                           <h3 className="text-lg font-semibold text-[var(--color-accent-primary)]">
+                             {stripMarkdownHeaders(paragraph.title)}
+                           </h3>
+                           {expandedParagraphs.has(index) ? (
+                             <ChevronUp className="h-5 w-5 text-[var(--color-text-muted)]" />
+                           ) : (
+                             <ChevronDown className="h-5 w-5 text-[var(--color-text-muted)]" />
+                           )}
+                         </button>
 
-                      {/* Paragraph Content */}
-                      <AnimatePresence>
-                        {expandedParagraphs.has(index) && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={springPresets.snappy}
-                            className="overflow-hidden"
-                          >
-                            <div className="mt-4 pt-4">
-                              <div className="relative pl-6 border-l-2 border-[var(--color-accent-primary)] py-1">
-                                <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-[var(--color-accent-primary)] mb-3 block opacity-70">
-                                  AI Interpretation
-                                </span>
-                                <p className="text-[var(--color-text-primary)] leading-[1.85] text-[15px] whitespace-pre-wrap">
-                                  {parseBareReferences(parseCitations(stripMarkdownHeaders(paragraph.content)), paragraph.citations).map((part, i) => {
-                                    if (typeof part === 'string') {
-                                      return <span key={i}>{part}</span>;
-                                    }
-                                    
-                                    const verse = result.verse_details?.[part.reference];
-                                    
-                                    return (
-                                      <InlineCitation
-                                        key={i}
-                                        reference={part.reference}
-                                        verseDetail={verse}
-                                        onNavigate={navigateToVerse}
-                                      />
-                                    );
-                                  })}
-                                </p>
-                              </div>
+                         {/* Paragraph Content */}
+                         <AnimatePresence>
+                           {expandedParagraphs.has(index) && (
+                             <motion.div
+                               initial={{ height: 0, opacity: 0 }}
+                               animate={{ height: "auto", opacity: 1 }}
+                               exit={{ height: 0, opacity: 0 }}
+                               transition={springPresets.snappy}
+                               className="overflow-hidden"
+                             >
+                               <div className="mt-4 pt-4">
+                                 <div className="relative pl-6 border-l-2 border-[var(--color-accent-primary)] py-1">
+                                   <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-[var(--color-accent-primary)] mb-3 block opacity-70">
+                                     AI Interpretation
+                                   </span>
+                                   <p className="text-[var(--color-text-primary)] leading-[1.85] text-[15px] whitespace-pre-wrap">
+                                     {parseBareReferences(parseCitations(stripMarkdownHeaders(paragraph.content)), paragraph.citations).map((part, i) => {
+                                       if (typeof part === 'string') {
+                                         return <span key={i}>{part}</span>;
+                                       }
+                                       
+                                       const verse = result.verse_details?.[part.reference];
+                                       
+                                       return (
+                                         <InlineCitation
+                                           key={i}
+                                           reference={part.reference}
+                                           verseDetail={verse}
+                                           onNavigate={navigateToVerse}
+                                         />
+                                       );
+                                     })}
+                                   </p>
+                                 </div>
 
-                              {/* Citations */}
-                              {paragraph.citations.length > 0 && (
-                                <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)]">
-                                  <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">
-                                    Citations:
-                                  </p>
-                                  <div className="flex flex-wrap gap-2">
-                                    {paragraph.citations.map((citation, i) => (
-                                      <span
-                                        key={i}
-                                        className="inline-block px-2 py-1 text-xs rounded-md bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
-                                      >
-                                        {citation}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </GlowCard>
-                  </motion.div>
-                ))}
-              </div>
+                                 {/* Citations */}
+                                 {paragraph.citations.length > 0 && (
+                                   <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)]">
+                                     <p className="text-xs font-medium text-[var(--color-text-muted)] mb-2">
+                                       Citations:
+                                     </p>
+                                     <div className="flex flex-wrap gap-2">
+                                       {paragraph.citations.map((citation, i) => (
+                                         <span
+                                           key={i}
+                                           className="inline-block px-2 py-1 text-xs rounded-md bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
+                                         >
+                                           {citation}
+                                         </span>
+                                       ))}
+                                     </div>
+                                   </div>
+                                 )}
+                               </div>
+                             </motion.div>
+                           )}
+                         </AnimatePresence>
+                       </GlowCard>
+                     </motion.div>
+                   ))}
+                 </div>
 
-              {/* Ornamental divider */}
-              {result.paragraphs.length > 0 && result.verse_details && (
-                <div className="flex items-center gap-4 my-8">
-                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--color-border-subtle)] to-transparent" />
-                  <div className="w-1 h-1 rotate-45 bg-[var(--color-accent-primary)] opacity-30" />
-                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--color-border-subtle)] to-transparent" />
-                </div>
-              )}
+                 {/* Ornamental divider */}
+                 {result.paragraphs.length > 0 && result.verse_details && (
+                   <div className="flex items-center gap-4 my-8">
+                     <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--color-border-subtle)] to-transparent" />
+                     <div className="w-1 h-1 rotate-45 bg-[var(--color-accent-primary)] opacity-30" />
+                     <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[var(--color-border-subtle)] to-transparent" />
+                   </div>
+                 )}
 
-              {/* Kaynak Referanslari */}
-              {result.verse_details && Object.keys(result.verse_details).length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    ...springPresets.snappy,
-                    delay: result.paragraphs.length * 0.1 + 0.1,
-                  }}
-                  className="mt-6"
-                  data-testid="verse-references-section"
-                >
-                  <GlowCard>
-                    <h3
-                      className="text-lg font-semibold text-[var(--color-text-primary)] mb-4"
-                      data-testid="verse-references-heading"
-                    >
-                      Kaynak Referanslari
-                    </h3>
-                    
-                    <AnimatedFilterTabs
-                      activeFilter={activeFilter}
-                      onFilterChange={setActiveFilter}
-                      counts={counts}
-                    />
-                    
-                    <div className="space-y-4 mt-4">
-                      {filteredVerses.length > 0 ? (
-                        filteredVerses.map(([reference, verse], index) => (
-                          <SourceReferenceCard
-                            key={reference}
-                            reference={reference}
-                            verse={verse}
-                            isHighlighted={highlightedVerse === reference}
-                            index={index}
-                          />
-                        ))
-                      ) : (
-                        <p className="text-[var(--color-text-muted)] text-center py-8">
-                          Bu kategori icin sonuc bulunamadi.
-                          {activeFilter !== 'all' && (
-                            <span> Tum sonuclari gormek icin "Tumu" sekmesine tiklayin.</span>
-                          )}
-                        </p>
-                      )}
-                    </div>
-                  </GlowCard>
-                </motion.div>
-              )}
+                 {/* Kaynak Referanslari */}
+                 {result.verse_details && Object.keys(result.verse_details).length > 0 && (
+                   <motion.div
+                     initial={{ opacity: 0, y: 20 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{
+                       ...springPresets.snappy,
+                       delay: result.paragraphs.length * 0.1 + 0.1,
+                     }}
+                     className="mt-6"
+                     data-testid="verse-references-section"
+                   >
+                     <GlowCard>
+                       <h3
+                         className="text-lg font-semibold text-[var(--color-text-primary)] mb-4"
+                         data-testid="verse-references-heading"
+                       >
+                         Kaynak Referanslari
+                       </h3>
+                       
+                       <AnimatedFilterTabs
+                         activeFilter={activeFilter}
+                         onFilterChange={setActiveFilter}
+                         counts={counts}
+                       />
+                       
+                       <div className="space-y-4 mt-4">
+                         {filteredVerses.length > 0 ? (
+                           filteredVerses.map(([reference, verse], index) => (
+                             <SourceReferenceCard
+                               key={reference}
+                               reference={reference}
+                               verse={verse}
+                               isHighlighted={highlightedVerse === reference}
+                               index={index}
+                             />
+                           ))
+                         ) : (
+                           <p className="text-[var(--color-text-muted)] text-center py-8">
+                             Bu kategori icin sonuc bulunamadi.
+                             {activeFilter !== 'all' && (
+                               <span> Tum sonuclari gormek icin "Tumu" sekmesine tiklayin.</span>
+                             )}
+                           </p>
+                         )}
+                       </div>
+                     </GlowCard>
+                   </motion.div>
+                 )}
 
-              {/* All Citations Summary */}
-              {Object.keys(result.citations).length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    ...springPresets.snappy,
-                    delay: result.paragraphs.length * 0.1,
-                  }}
-                  className="mt-6"
-                >
-                  <GlowCard>
-                    <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
-                      All Citations by Source
-                    </h3>
-                    <div className="space-y-4">
-                      {Object.entries(result.citations).map(
-                        ([source, citations]) =>
-                          citations.length > 0 && (
-                            <div key={source}>
-                              <p className="text-sm font-medium text-[var(--color-accent-primary)] mb-2 capitalize">
-                                {source.replace("_", " ")}
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                {citations.map((citation, i) => (
-                                  <span
-                                    key={i}
-                                    className="inline-block px-2 py-1 text-xs rounded-md bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
-                                  >
-                                    {citation}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )
-                      )}
-                    </div>
-                  </GlowCard>
-                </motion.div>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-        </div>
-      </div>
+                 {/* All Citations Summary */}
+                 {Object.keys(result.citations).length > 0 && (
+                   <motion.div
+                     initial={{ opacity: 0, y: 20 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{
+                       ...springPresets.snappy,
+                       delay: result.paragraphs.length * 0.1,
+                     }}
+                     className="mt-6"
+                   >
+                     <GlowCard>
+                       <h3 className="text-lg font-semibold text-[var(--color-text-primary)] mb-4">
+                         All Citations by Source
+                       </h3>
+                       <div className="space-y-4">
+                         {Object.entries(result.citations).map(
+                           ([source, citations]) =>
+                             citations.length > 0 && (
+                               <div key={source}>
+                                 <p className="text-sm font-medium text-[var(--color-accent-primary)] mb-2 capitalize">
+                                   {source.replace("_", " ")}
+                                 </p>
+                                 <div className="flex flex-wrap gap-2">
+                                   {citations.map((citation, i) => (
+                                     <span
+                                       key={i}
+                                       className="inline-block px-2 py-1 text-xs rounded-md bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]"
+                                     >
+                                       {citation}
+                                     </span>
+                                   ))}
+                                 </div>
+                               </div>
+                             )
+                         )}
+                       </div>
+                     </GlowCard>
+                   </motion.div>
+                 )}
+               </motion.div>
+             )}
+           </AnimatePresence>
+         </Suspense>
+         </div>
+       </div>
     </div>
   );
 }
