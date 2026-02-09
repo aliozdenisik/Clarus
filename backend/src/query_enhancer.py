@@ -614,7 +614,7 @@ Adım 3: JSON formatında ver.
                 kw.selected = False
 
         logger.info(
-            f"Keyword extraction completed",
+            "Keyword extraction completed",
             extra={
                 "method": extraction_method,
                 "count": len(keywords),

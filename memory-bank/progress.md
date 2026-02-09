@@ -52,6 +52,7 @@
 - [x] Pagination for list endpoints
 - [x] Input validation & XSS prevention
 - [x] Compare API with rich response schema
+- [x] Stream compare keyword params (`quran_keywords`, `bible_keywords`) forwarded to `search_all`
 - [x] **SSE streaming format fix** (structured paragraphs + stats)
 - [x] Citation sanitizer for LLM output normalization
 - [x] Strengthened LLM prompts against double-bracket drift
@@ -108,6 +109,8 @@
 - [x] Better Auth UI — sign-in/sign-up pages, session management via useSession()
 - [x] **Issue #94 React key stability** (2026-02-09): Replaced index-based keys in dynamic lists and standardized deterministic skeleton keys across search/compare/history/browse/components
 - [x] **Issue #91 frontend perf hotspots** (2026-02-09): Batched vercel-tabs layout measurements, virtualized root-browser with react-window, cached magnetic-button bounds for mousemove
+- [x] **Issue #79 compare advanced-mode waterfall** (2026-02-09): Keyword extraction now auto-proceeds to compare in the same submit (streaming + batch), with regression tests
+- [x] **Issue #78 keyword-search translation waterfall** (2026-02-09): Removed post-render translation fetch waterfall by adding mount-time translation cache warm-up, deduped per-surah fetch orchestration, and pre-render translation readiness in Quran keyword search flow
 
 ### CLI Commands
 

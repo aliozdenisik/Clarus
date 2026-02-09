@@ -46,7 +46,14 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=7.0.0"]
+dev = ["pytest>=7.0.0", "ruff>=0.8.0", "pyright>=1.1.0"]
+
+[tool.ruff]
+target-version = "py311"
+exclude = ["scripts/test_sentry.py"]
+
+[tool.ruff.lint]
+ignore = ["E402", "F401", "F841"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

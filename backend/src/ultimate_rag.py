@@ -19,7 +19,7 @@ Usage:
 
 import time
 from typing import List, Optional, Any
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor
 
 from src.circuit_breaker import CircuitBreakerError
@@ -622,7 +622,7 @@ class UltimateRAG:
                                 except Exception:
                                     pass
                     except Exception:
-                        self._log(f"   Warning: Quran semantic chunks error", "yellow")
+                        self._log("   Warning: Quran semantic chunks error", "yellow")
 
                 # Handle Bible Semantic Chunks
                 elif source.startswith("bible_"):
@@ -678,7 +678,7 @@ class UltimateRAG:
                                 except Exception:
                                     pass
                     except Exception:
-                        self._log(f"   Warning: Bible semantic chunks error", "yellow")
+                        self._log("   Warning: Bible semantic chunks error", "yellow")
 
             # Apply keyword coverage boost: results matching 2+ keywords get boosted
             boosted_results = []
@@ -847,7 +847,7 @@ class UltimateRAG:
                                 except Exception:
                                     pass
                     except Exception:
-                        self._log(f"   Warning: Quran semantic chunks error", "yellow")
+                        self._log("   Warning: Quran semantic chunks error", "yellow")
 
                 # Handle Bible Semantic Chunks
                 elif source.startswith("bible_"):
@@ -903,7 +903,7 @@ class UltimateRAG:
                                 except Exception:
                                     pass
                     except Exception:
-                        self._log(f"   Warning: Bible semantic chunks error", "yellow")
+                        self._log("   Warning: Bible semantic chunks error", "yellow")
 
             # Sort by RRF score and return top results
             sorted_results = sorted(
@@ -1104,7 +1104,7 @@ class UltimateRAG:
         Args:
             collections: List of collection names to search. Defaults to English Bible collections.
         """
-        from concurrent.futures import ThreadPoolExecutor, as_completed
+        from concurrent.futures import as_completed
 
         if top_k is None:
             top_k = self.final_top_k
@@ -1299,7 +1299,6 @@ class UltimateRAG:
         Returns:
             AskResult with answer (AnswerResult) and search_results
         """
-        from src.answer_generator import AnswerResult
 
         top_k = top_k or self.final_top_k
         total_start = time.perf_counter()

@@ -28,19 +28,13 @@ sys.path.insert(0, str(Path(__file__).parent))
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
-from rich import print as rprint
 
 from src.data_loader import QuranDataLoader
 from src.indexer import QuranIndexer, SemanticChunkIndexer, TurkishBibleIndexer
 from src.search import (
-    QuranSearcher,
-    BibleSearcher,
     SemanticChunkSearcher,
-    print_results,
 )
-from src.bible_loader import BibleDataLoader
 from src.semantic_chunker import SemanticVerseChunker, analyze_surah_chunks
-from src.tanzil_loader import VALID_TRANSLATORS
 
 console = Console()
 
@@ -192,7 +186,7 @@ def display_quran_results(args, results, query):
                     f"Ayet {first.verse_id} | {first.surah_type.capitalize()}\n\n"
                     f"[dim]Arabic:[/dim]\n{first.arabic_text}\n\n"
                     f"[dim]Translation:[/dim]\n{first.translation}",
-                    title=f"[green]Top Result[/green]",
+                    title="[green]Top Result[/green]",
                     expand=False,
                 )
             )
@@ -204,7 +198,7 @@ def display_quran_results(args, results, query):
                     f"Ayetler {first.start_verse}-{first.end_verse} ({first.verse_count} ayet) | {first.surah_type.capitalize()}\n\n"
                     f"[dim]Arabic:[/dim]\n{first.combined_arabic}\n\n"
                     f"[dim]Translation:[/dim]\n{first.combined_translation}",
-                    title=f"[green]Top Result (Semantic Chunk)[/green]",
+                    title="[green]Top Result (Semantic Chunk)[/green]",
                     expand=False,
                 )
             )
@@ -349,7 +343,7 @@ def cmd_index_bible_tr(args):
     indexer = TurkishBibleIndexer(qdrant_url=args.qdrant_url)
     counts = indexer.index_all(recreate=True)
 
-    console.print(f"\n[green]✓[/green] Indexed Turkish Bible:")
+    console.print("\n[green]✓[/green] Indexed Turkish Bible:")
     console.print(f"  OT: {counts['ot']} verses")
     console.print(f"  NT: {counts['nt']} verses")
 
@@ -470,7 +464,7 @@ def cmd_search_bible(args):
                     f"[bold]{ref_text}[/bold]\n"
                     f"{testament_display} | {getattr(first, 'translation', getattr(first, 'verse_count', 'N/A') + ' verses')}\n\n"
                     f"[dim]Text:[/dim]\n{first.text}",
-                    title=f"[green]Top Result[/green]",
+                    title="[green]Top Result[/green]",
                     expand=False,
                 )
             )
@@ -596,7 +590,7 @@ def cmd_compare(args):
 
     if multi_agent:
         console.print(
-            f"\n[bold magenta]📚 Multi-Agent Comparative Scripture Analysis[/bold magenta]"
+            "\n[bold magenta]📚 Multi-Agent Comparative Scripture Analysis[/bold magenta]"
         )
         console.print(
             f"[dim]4 Specialist Agents (OT, NT, Apocrypha, Quran-{translator}) + Synthesis Agent[/dim]\n"
@@ -773,7 +767,7 @@ def cmd_search_bible_semantic(args):
                 f"[bold]{first.book_name} {first.chapter}:{verse_range}[/bold]\n"
                 f"{first.testament} | {first.verse_count} verses\n\n"
                 f"[dim]Text:[/dim]\n{first.text}",
-                title=f"[green]Top Semantic Result[/green]",
+                title="[green]Top Semantic Result[/green]",
                 expand=False,
             )
         )
@@ -1009,9 +1003,7 @@ def main():
     )
 
     # Index Turkish Bible command
-    index_bible_tr_parser = subparsers.add_parser(
-        "index-bible-tr", help="Index Turkish Bible from OSIS XML"
-    )
+    subparsers.add_parser("index-bible-tr", help="Index Turkish Bible from OSIS XML")
 
     # Delete collection command
     delete_col_parser = subparsers.add_parser(
@@ -1063,9 +1055,7 @@ def main():
         help="Save checkpoint every N documents (default: 100)",
     )
 
-    graph_info_parser = subparsers.add_parser(
-        "graph-info", help="Show knowledge graph statistics"
-    )
+    subparsers.add_parser("graph-info", help="Show knowledge graph statistics")
 
     # Add --graph flag to search parsers
     search_parser.add_argument(
@@ -1180,9 +1170,7 @@ def main():
     )
 
     # Cache management commands
-    cache_info_parser = subparsers.add_parser(
-        "cache-info", help="Show semantic cache statistics"
-    )
+    subparsers.add_parser("cache-info", help="Show semantic cache statistics")
 
     cache_clear_parser = subparsers.add_parser(
         "cache-clear", help="Clear semantic cache"
@@ -1621,7 +1609,7 @@ def cmd_build_graph(args):
 
         # Show stats
         stats = builder.get_graph_stats()
-        console.print(f"\n[green][OK][/green] Knowledge graph built!")
+        console.print("\n[green][OK][/green] Knowledge graph built!")
         console.print(f"  Nodes: {stats['total_nodes']}")
         console.print(f"  Relationships: {stats['total_relationships']}")
 
@@ -1757,7 +1745,7 @@ def cmd_search_semantic(args):
     query = args.query
     limit = args.limit
 
-    console.print(f"\n[bold magenta]🔍 Semantic Chunk Search[/bold magenta]")
+    console.print("\n[bold magenta]🔍 Semantic Chunk Search[/bold magenta]")
     console.print(f"[dim]Query: {query}[/dim]\n")
 
     try:
@@ -1862,7 +1850,7 @@ def cmd_analyze_chunks(args):
 def cmd_verse_lookup(args):
     """Look up a specific verse by reference."""
     import asyncio
-    from src.verse_parser import parse_verse_reference, ParsedReference, ParseError
+    from src.verse_parser import parse_verse_reference, ParseError
     from qdrant_client import AsyncQdrantClient
     from qdrant_client.http.models import Filter, FieldCondition, MatchValue
 
@@ -1928,8 +1916,6 @@ def cmd_verse_lookup(args):
                                 )
 
             else:  # Bible
-                from src.verse_parser import BIBLE_BOOK_MAP
-
                 # Determine collection from testament
                 testament_to_collection = {
                     "OT": "bible_ot",

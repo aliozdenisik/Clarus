@@ -1,0 +1,18 @@
+{
+  "include": ["src", "app", "tests"],
+  "typeCheckingMode": "basic",
+  "pythonVersion": "3.11",
+  "reportArgumentType": "warning",
+  "reportAttributeAccessIssue": "warning",
+  "reportCallIssue": "warning",
+  "reportReturnType": "warning",
+  "reportOperatorIssue": "warning",
+  "reportIndexIssue": "warning",
+  "reportGeneralTypeIssues": "warning",
+  "reportAssignmentType": "warning",
+  "reportOptionalSubscript": "warning",
+  "reportOptionalMemberAccess": "warning",
+  "reportSelfClsParameterName": "warning",
+  "reportMissingModuleSource": false,
+  "reportMissingImports": "warning"
+}

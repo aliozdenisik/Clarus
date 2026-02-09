@@ -250,7 +250,7 @@ if __name__ == "__main__":
         ot_verses, nt_verses = loader.load()
 
         print(f"\n{'=' * 60}")
-        print(f"OSIS LOADER TEST RESULTS")
+        print("OSIS LOADER TEST RESULTS")
         print(f"{'=' * 60}")
         print(f"OT Verses: {len(ot_verses):,}")
         print(f"NT Verses: {len(nt_verses):,}")
@@ -259,14 +259,14 @@ if __name__ == "__main__":
 
         # Show samples
         if ot_verses:
-            print(f"\nFirst OT verse:")
+            print("\nFirst OT verse:")
             v = ot_verses[0]
             print(f"  {v['book']} {v['chapter']}:{v['verse']}")
             print(f"  Testament: {v['testament']}")
             print(f"  Text: {v['text'][:100]}...")
 
         if nt_verses:
-            print(f"\nFirst NT verse:")
+            print("\nFirst NT verse:")
             v = nt_verses[0]
             print(f"  {v['book']} {v['chapter']}:{v['verse']}")
             print(f"  Testament: {v['testament']}")
@@ -274,20 +274,20 @@ if __name__ == "__main__":
 
         # Show last verses
         if ot_verses:
-            print(f"\nLast OT verse:")
+            print("\nLast OT verse:")
             v = ot_verses[-1]
             print(f"  {v['book']} {v['chapter']}:{v['verse']}")
             print(f"  Text: {v['text'][:100]}...")
 
         if nt_verses:
-            print(f"\nLast NT verse:")
+            print("\nLast NT verse:")
             v = nt_verses[-1]
             print(f"  {v['book']} {v['chapter']}:{v['verse']}")
             print(f"  Text: {v['text'][:100]}...")
 
         # Verify OT/NT separation
         print(f"\n{'=' * 60}")
-        print(f"VERIFICATION")
+        print("VERIFICATION")
         print(f"{'=' * 60}")
 
         # Check for OT/NT overlap
@@ -301,20 +301,20 @@ if __name__ == "__main__":
         if overlap:
             print(f"\n⚠️  WARNING: Books in both OT and NT: {overlap}")
         else:
-            print(f"\n✅ No book overlap between OT and NT")
+            print("\n✅ No book overlap between OT and NT")
 
         # Check all verses have correct testament
         ot_wrong = [v for v in ot_verses if v["testament"] != "OT"]
         nt_wrong = [v for v in nt_verses if v["testament"] != "NT"]
 
         if ot_wrong or nt_wrong:
-            print(f"⚠️  WARNING: Testament mismatch found!")
+            print("⚠️  WARNING: Testament mismatch found!")
             if ot_wrong:
                 print(f"  {len(ot_wrong)} verses in OT list with wrong testament")
             if nt_wrong:
                 print(f"  {len(nt_wrong)} verses in NT list with wrong testament")
         else:
-            print(f"✅ All verses have correct testament")
+            print("✅ All verses have correct testament")
 
     except Exception as e:
         print(f"\n❌ ERROR: {e}")

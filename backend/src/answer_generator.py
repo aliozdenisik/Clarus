@@ -28,7 +28,7 @@ from tenacity import (
 )
 
 from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
-from src.confidence_scorer import ConfidenceScorer, ConfidenceBreakdown
+from src.confidence_scorer import ConfidenceScorer
 from app.logging_config import get_logger, log_performance
 
 logger = get_logger(__name__)

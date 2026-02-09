@@ -4,6 +4,52 @@
 
 **Date**: 2026-02-09
 
+## Issue #79: Compare Advanced Mode Auto-Continue — COMPLETED ✅
+
+**Date**: 2026-02-09
+
+Resolved compare-page UX waterfall where advanced keyword extraction stopped the flow and forced extra submit attempts.
+
+**What changed:**
+- Removed the early return in compare advanced mode so extraction now auto-continues into comparison on the same submit.
+- Added stream URL builder in compare page to include selected `quran_keywords` and `bible_keywords` when advanced mode is active.
+- Updated batch compare path to accept extracted keyword overrides immediately after extraction (no second click).
+- Extended SSE compare API to accept optional `quran_keywords`/`bible_keywords` query params and forward them into `ComparativeRAG.search_all`.
+- Added regression tests covering advanced-mode auto-proceed for both streaming and batch flows.
+
+**Verification:**
+- `npm test -- --run __tests__/compare-page.test.tsx` ✅
+- `npx tsc --noEmit` ✅
+- `npm run build` ✅
+- `uv run python -m py_compile app/api/stream.py` ✅
+
+**Key files updated:**
+- `frontend/app/compare/page.tsx`
+- `frontend/__tests__/compare-page.test.tsx`
+- `backend/app/api/stream.py`
+
+## Issue #78: Keyword Search Translation Waterfall — COMPLETED ✅
+
+**Date**: 2026-02-09
+
+Resolved post-render translation waterfall in `/keyword-search` by prefetching and caching Quran surah translations, then ensuring required surah translations are loaded before Quran search results render.
+
+**What changed:**
+- Added mount-time prefetch for surah transliterations plus background translation warm-up.
+- Added deduped translation fetch cache using a loaded-surah set and in-flight request map.
+- Removed the post-render translation `useEffect` that caused untranslated content flashes.
+- Updated Quran search flow to await required surah translations before `setSearchResult`.
+- Added a page test proving results wait for translation resolution before rendering.
+
+**Verification:**
+- `npm test -- --run __tests__/keyword-search-page.test.tsx __tests__/keyword-search-components.test.tsx __tests__/quran.test.tsx` ✅
+- `npm run type-check` ✅
+- `npm run build` ✅
+
+**Key files updated:**
+- `frontend/app/keyword-search/page.tsx`
+- `frontend/__tests__/keyword-search-page.test.tsx`
+
 ## Issue #91: Frontend Performance Hotspots — COMPLETED ✅
 
 **Date**: 2026-02-09

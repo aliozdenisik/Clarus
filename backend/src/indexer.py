@@ -107,8 +107,8 @@ class QuranIndexer:
         print(
             f"Creating collection {self.collection_name} ({self.translator}) with dense dimension: {dense_dim}"
         )
-        print(f"  HNSW config: m=16, ef_construct=200")
-        print(f"  Quantization: Scalar int8 (75% RAM savings)")
+        print("  HNSW config: m=16, ef_construct=200")
+        print("  Quantization: Scalar int8 (75% RAM savings)")
 
         self.client.create_collection(
             collection_name=self.collection_name,
@@ -244,7 +244,6 @@ class QuranIndexer:
         Returns:
             Number of indexed chunks
         """
-        import asyncio
         from .embeddings import AsyncDenseEncoder
 
         if not self._collection_exists:
@@ -295,7 +294,6 @@ class QuranIndexer:
         Returns:
             Number of indexed verses
         """
-        from .tanzil_loader import TanzilLoader
 
         loader = TanzilLoader()
         verses = loader.load_translation(self.translator)
@@ -404,8 +402,8 @@ class SemanticChunkIndexer:
         # Get dense vector dimension
         dense_dim = self.encoder.dense_dimension
         print(f"Creating semantic chunks collection with dense dimension: {dense_dim}")
-        print(f"  HNSW config: m=16, ef_construct=200")
-        print(f"  Quantization: Scalar int8 (75% RAM savings)")
+        print("  HNSW config: m=16, ef_construct=200")
+        print("  Quantization: Scalar int8 (75% RAM savings)")
 
         self.client.create_collection(
             collection_name=self.COLLECTION_NAME,
@@ -661,7 +659,6 @@ class BibleSemanticChunkIndexer:
         - max_concurrent=10: Parallel API calls for 2-3x speedup
         - upsert_batch_size=500: Bulk Qdrant inserts
         """
-        import asyncio
         from .embeddings import AsyncDenseEncoder
 
         if not self._collection_exists:
@@ -793,8 +790,8 @@ class TurkishBibleIndexer:
         print(
             f"Creating collection {collection_name} with dense dimension: {dense_dim}"
         )
-        print(f"  HNSW config: m=16, ef_construct=200")
-        print(f"  Quantization: Scalar int8 (75% RAM savings)")
+        print("  HNSW config: m=16, ef_construct=200")
+        print("  Quantization: Scalar int8 (75% RAM savings)")
 
         self.client.create_collection(
             collection_name=collection_name,

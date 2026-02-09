@@ -5,9 +5,7 @@ Stub module — planned feature. Referenced by:
   - QuranSearcher.parallel_keyword_search (search.py)
 """
 
-from typing import Any, List
-
-from qdrant_client.models import Prefetch
+from typing import List
 
 
 class MultiQueryGenerator:

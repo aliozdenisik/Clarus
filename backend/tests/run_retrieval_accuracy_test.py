@@ -276,7 +276,7 @@ class RAGWithStageLogging:
                 result = translator.translate_query(question, corpus=corpus)
                 translated_question = result.translated_query
                 detected_lang = result.detected_language
-            except Exception as e:
+            except Exception:
                 translated_question = question  # fallback: use original
                 detected_lang = query_language or "unknown"
             stage0_duration = (time.time() - stage0_start) * 1000
@@ -304,7 +304,7 @@ class RAGWithStageLogging:
         stage1_start = time.time()
         try:
             enhanced_query = self.rag.enhancer.expand_query(question, corpus=corpus)
-        except Exception as e:
+        except Exception:
             enhanced_query = question
 
         stage1_duration = (time.time() - stage1_start) * 1000
@@ -331,7 +331,7 @@ class RAGWithStageLogging:
                 enhanced_query, n=3, corpus=corpus
             )
             queries.extend(multi_queries)
-        except Exception as e:
+        except Exception:
             pass
 
         # Deduplicate
@@ -394,7 +394,7 @@ class RAGWithStageLogging:
 
         try:
             final_results = self.rag._rerank_results(question, search_results, top_k=10)
-        except Exception as e:
+        except Exception:
             final_results = search_results[:10]
 
         stage4_duration = (time.time() - stage4_start) * 1000
@@ -581,7 +581,7 @@ def run_all_tests(test_data_path: str) -> Dict[str, Any]:
         elif result.is_hallucination_test:
             if result.hallucination_passed:
                 console.print(
-                    f"[green]✅ PASSED[/green] - System correctly returned no results"
+                    "[green]✅ PASSED[/green] - System correctly returned no results"
                 )
             else:
                 console.print(
@@ -737,7 +737,7 @@ def print_report(report: Dict):
 
     # Overall metrics
     overall = report["overall"]
-    console.print(f"[bold]Overall Metrics (Normal Tests):[/bold]")
+    console.print("[bold]Overall Metrics (Normal Tests):[/bold]")
     console.print(f"  Precision: [green]{overall['precision'] * 100:.1f}%[/green]")
     console.print(f"  Recall:    [green]{overall['recall'] * 100:.1f}%[/green]")
     console.print(f"  F1 Score:  [green]{overall['f1'] * 100:.1f}%[/green]")
@@ -745,7 +745,7 @@ def print_report(report: Dict):
 
     # Stage timing summary
     st = report["stage_timing"]
-    console.print(f"[bold]Average Stage Timing:[/bold]")
+    console.print("[bold]Average Stage Timing:[/bold]")
     if st["query_translation_avg_ms"] > 0:
         console.print(
             f"  0. Query Translation: [cyan]{st['query_translation_avg_ms']:.0f}ms[/cyan] [dim](translated queries only)[/dim]"
@@ -828,7 +828,7 @@ def print_report(report: Dict):
     # Hallucination tests
     hall = report["hallucination"]
     if hall["total"] > 0:
-        console.print(f"[bold]Hallucination Detection:[/bold]")
+        console.print("[bold]Hallucination Detection:[/bold]")
         console.print(f"  Tests: {hall['total']}")
         console.print(
             f"  Passed: [green]{hall['passed']}/{hall['total']}[/green] ({hall['pass_rate'] * 100:.0f}%)"

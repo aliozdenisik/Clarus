@@ -628,7 +628,6 @@ class ComparativeRAG:
                     # Apply boost for ≥2 keyword matches
                     if match_count >= 2:
                         # Create a copy to avoid mutating original
-                        boosted_result = r
                         if hasattr(r, "score"):
                             original_score = r.score
                             boost_factor = 1 + (match_count * 0.15)
@@ -1114,7 +1113,7 @@ class ComparativeRAG:
         total_start = time.time()
 
         if self.verbose:
-            console.print(f"\n[bold blue]📚 Comparative Scripture Analysis[/bold blue]")
+            console.print("\n[bold blue]📚 Comparative Scripture Analysis[/bold blue]")
             console.print(f'[dim]Question: "{query}"[/dim]\n')
 
         # Steps 0-3: Translate, enhance, search and select top results
@@ -1240,7 +1239,7 @@ class ComparativeRAG:
 
             if self.verbose:
                 console.print(
-                    f"\n[bold blue]📚 Multi-Agent Comparative Scripture Analysis[/bold blue]"
+                    "\n[bold blue]📚 Multi-Agent Comparative Scripture Analysis[/bold blue]"
                 )
                 console.print(f'[dim]Question: "{query}"[/dim]\n')
 

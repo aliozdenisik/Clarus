@@ -97,14 +97,20 @@ main() {
 
     cd backend
 
-    # Start uvicorn in background using uv-managed .venv
-    ../.venv/bin/uvicorn app.main:app --reload > ../logs/backend.log 2>&1 &
+    # Start uvicorn in background using backend's uv-managed environment
+    uv run uvicorn app.main:app --reload > ../logs/backend.log 2>&1 &
     BACKEND_PID=$!
     cd ..
 
+    sleep 2
+    if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
+        log_error "Backend failed to start"
+        log_info "Check logs: tail -n 100 logs/backend.log"
+        exit 1
+    fi
+
     log_success "Backend API started (PID: $BACKEND_PID)"
     log_info "Backend logs: tail -f logs/backend.log"
-    sleep 2
 
     # Step 5: Start Frontend
     log_info "Starting Frontend on :3000..."

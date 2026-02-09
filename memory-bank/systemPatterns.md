@@ -83,6 +83,7 @@
 - **Batched tab indicator layout**: `frontend/components/ui/vercel-tabs.tsx` reads active/hover geometry and updates indicator state in one `useLayoutEffect` pass.
 - **Virtualized long root lists**: `frontend/components/keyword-search/root-browser.tsx` uses `react-window` `List` for root browsing to avoid rendering all root rows at once.
 - **Mousemove DOM-read caching**: `frontend/components/ui/magnetic-button.tsx` caches button bounds on `mouseenter` and reuses the cached rect during pointer movement.
+- **Keyword translation lookup prefetch**: `frontend/app/keyword-search/page.tsx` prefetches Quran surah transliterations and warms a translation cache on mount, dedupes per-surah in-flight requests via refs, and awaits required surah translations before rendering Quran search results.
 
 ## Data Flow
 
@@ -217,6 +218,25 @@ Static placeholders (skeleton loaders)
 **Don't:**
 - Use direct index keys (`key={i}`, `key={index}`) in dynamic/reorderable lists.
 - Use runtime-random keys (`Math.random`, timestamps) in render paths.
+
+### Compare Advanced Mode Auto-Continue Pattern (Issue #79)
+
+Advanced compare submission uses a single-action flow: keyword enrichment happens first, then comparison starts automatically without another submit.
+
+```
+User submit (advanced mode on)
+  -> extract Quran/Bible keywords in parallel
+  -> set keyword chips in UI state
+  -> continue automatically to compare request
+     - batch: send body with quran_keywords/bible_keywords
+     - stream: append repeated quran_keywords/bible_keywords query params
+```
+
+**Key Design Decisions:**
+- No early-return after extraction in `handleCompare`; comparison starts in same submit cycle.
+- Reuse extracted keyword selections immediately (avoid waiting for async state readback).
+- Streaming endpoint accepts repeated keyword query params and forwards them to `ComparativeRAG.search_all`.
+- Keep extraction-failure fallback: proceed with normal compare if enhancement fails.
 
 ### SSE Message Aggregation Pattern (Issue #92)
 

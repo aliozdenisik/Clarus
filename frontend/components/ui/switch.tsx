@@ -18,7 +18,8 @@ const Switch = React.forwardRef<
   const [isChecked, setIsChecked] = React.useState(
     props?.checked ?? props?.defaultChecked ?? false
   );
-  const switchId = id || React.useId();
+  const generatedId = React.useId();
+  const switchId = id || generatedId;
 
   React.useEffect(() => {
     if (props?.checked !== undefined) {

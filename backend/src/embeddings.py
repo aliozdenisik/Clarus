@@ -263,7 +263,7 @@ class DenseEncoder:
                     except (
                         requests.exceptions.Timeout,
                         requests.exceptions.ReadTimeout,
-                    ) as e:
+                    ):
                         if attempt < max_retries - 1:
                             wait_time = 2**attempt * 5  # 5s, 10s, 20s
                             print(

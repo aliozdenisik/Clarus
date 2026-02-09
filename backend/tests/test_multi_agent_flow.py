@@ -60,7 +60,7 @@ def test_multi_agent_flow():
 
     # Step 2: Show search results distribution
     console.print(
-        f"\n[yellow]Step 2: Search Results Distribution (Per Testament)[/yellow]"
+        "\n[yellow]Step 2: Search Results Distribution (Per Testament)[/yellow]"
     )
 
     search_table = Table(title="Search Results by Testament")
@@ -83,7 +83,7 @@ def test_multi_agent_flow():
 
     # Step 3: Direct to agents (no more splitting needed!)
     console.print(
-        f"\n[yellow]Step 3: Results Ready for Agents (No Split Needed)[/yellow]"
+        "\n[yellow]Step 3: Results Ready for Agents (No Split Needed)[/yellow]"
     )
 
     split_table = Table(title="Verses Directly Available Per Agent")
@@ -102,7 +102,7 @@ def test_multi_agent_flow():
 
     # Step 4: Run multi-agent generation
     console.print(
-        f"\n[yellow]Step 4: Running 4 Specialist Agents + Summary Agent[/yellow]"
+        "\n[yellow]Step 4: Running 4 Specialist Agents + Summary Agent[/yellow]"
     )
     gen_start = time.time()
 
@@ -118,7 +118,7 @@ def test_multi_agent_flow():
     total_time = time.time() - total_start
 
     # Step 5: Show agent outputs
-    console.print(f"\n[bold green]═══ AGENT OUTPUTS ═══[/bold green]\n")
+    console.print("\n[bold green]═══ AGENT OUTPUTS ═══[/bold green]\n")
 
     # OT Agent
     if answer.old_testament_commentary:
@@ -183,7 +183,7 @@ def test_multi_agent_flow():
         )
 
     # Final stats
-    console.print(f"\n[bold cyan]═══ PERFORMANCE METRICS ═══[/bold cyan]")
+    console.print("\n[bold cyan]═══ PERFORMANCE METRICS ═══[/bold cyan]")
 
     metrics_table = Table()
     metrics_table.add_column("Metric", style="cyan")

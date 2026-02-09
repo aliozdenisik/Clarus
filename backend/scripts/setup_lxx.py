@@ -771,7 +771,7 @@ def validate_and_summarize(conn) -> bool:
     )
     row = result.fetchone()
     if row:
-        print(f"\n  Sample Wisdom 1:1:")
+        print("\n  Sample Wisdom 1:1:")
         print(f"    Book: {row[0]}")
         print(f"    Greek: {row[3]}")
     else:

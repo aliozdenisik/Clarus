@@ -178,7 +178,7 @@ def parse_turkish_bible(xml_path: Path) -> dict[str, str]:
 
     # Find all book divs
     for book_div in root.findall(".//osis:div[@type='book']", NS):
-        book_osis_id = book_div.get("osisID", "")
+        book_div.get("osisID", "")
         book_count += 1
 
         # Find all verses in this book

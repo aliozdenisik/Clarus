@@ -436,7 +436,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         if collection_stats:
             all_rrf_scores = collection_stats.get("all_rrf_scores", [])
             num_queries = collection_stats.get("num_queries", 1)
-            total_verses_context = collection_stats.get("total_verses", 80)
+            collection_stats.get("total_verses", 80)
             collections_with_results = collection_stats.get(
                 "collections_with_results", 4
             )

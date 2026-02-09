@@ -35,7 +35,6 @@ console = Console()
 # Import after path setup
 from src.query_translator import (
     QueryTranslator,
-    TranslationResult,
     TranslationError,
     TURKISH_CHARS,
     SUPPORTED_LANGUAGES,
@@ -417,7 +416,7 @@ def test_fallback_on_connection_error() -> bool:
 
             # Should raise TranslationError
             try:
-                result = translator.translate_query("test query", corpus="quran_tr")
+                translator.translate_query("test query", corpus="quran_tr")
                 console.print(
                     "  [red]❌ FAIL[/red] - Should have raised TranslationError"
                 )
@@ -520,7 +519,6 @@ def test_translate_response_with_citations() -> bool:
             assert result == translated_text
 
             # Verify LLM was called with preserve_citations reminder
-            call_args = mock_breaker.call_args
             # The lambda is called, so we can't directly inspect the prompt
             # But we can verify the function was called
             assert mock_breaker.called
