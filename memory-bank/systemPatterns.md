@@ -78,6 +78,12 @@
 | `app/api/` | RAG modules | API endpoints |
 | `src/` | Qdrant, LLM APIs | RAG pipeline |
 
+## Frontend Performance Patterns
+
+- **Batched tab indicator layout**: `frontend/components/ui/vercel-tabs.tsx` reads active/hover geometry and updates indicator state in one `useLayoutEffect` pass.
+- **Virtualized long root lists**: `frontend/components/keyword-search/root-browser.tsx` uses `react-window` `List` for root browsing to avoid rendering all root rows at once.
+- **Mousemove DOM-read caching**: `frontend/components/ui/magnetic-button.tsx` caches button bounds on `mouseenter` and reuses the cached rect during pointer movement.
+
 ## Data Flow
 
 ### CLI Search Flow
