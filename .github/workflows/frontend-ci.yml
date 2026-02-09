@@ -45,7 +45,7 @@ jobs:
 
       - name: Run TypeScript type check
         working-directory: frontend
-        run: npx tsc --noEmit
+        run: npm run type-check
 
   test:
     runs-on: ubuntu-latest
