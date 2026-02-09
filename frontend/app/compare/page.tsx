@@ -112,7 +112,7 @@ function CompareContent() {
   const highlightTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasAutoExecuted = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const lastHandledSseError = useRef<Error | null>(null);
+  const lastHandledSseError = useRef<string | null>(null);
   const log = useLogger("ComparePage");
   const { data: session, isPending: authLoading } = useSession();
   const user = session?.user;
