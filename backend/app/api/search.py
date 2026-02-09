@@ -26,7 +26,7 @@ from app.models import SearchHistory
 from app.auth.api_key_validator import get_current_user_flexible
 from app.api.auth import check_rate_limit
 from app.config import settings
-from app.schemas.common import QueryValidation
+from app.schemas.common import QueryValidation, TranslatorType, DEFAULT_TRANSLATOR
 from src.ultimate_rag import UltimateRAG
 from app.api.compare import (
     VerseDetail,
@@ -55,6 +55,10 @@ class SearchRequest(BaseModel):
         None,
         pattern=r"^(en|tr|es|fr|it|pt|ar|de)$",
         description="Response language (auto-detect if omitted)",
+    )
+    translator: Optional[TranslatorType] = Field(
+        default=DEFAULT_TRANSLATOR,
+        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
     )
 
 
@@ -113,11 +117,14 @@ async def search_quran(
     db: AsyncSession = Depends(get_db),
 ):
     start = time.perf_counter()
+    translator = request.translator or DEFAULT_TRANSLATOR
+    collection_name = f"quran_tr_{translator}"
     logger.info(
         "Search request received",
         extra={
             "query": request.query[:50],
-            "collection": "quran_tr_diyanet",
+            "collection": collection_name,
+            "translator": translator,
             "top_k": request.top_k,
             "user_id": current_user["id"],
         },
@@ -128,7 +135,9 @@ async def search_quran(
     validated_query = _validate_query(request.query)
 
     rag = get_rag()
-    results = await rag.search_quran(validated_query, top_k=request.top_k)
+    results = await rag.search_quran(
+        validated_query, translator=translator, top_k=request.top_k
+    )
 
     # Build verse_details dict for citation navigation
     verse_details: Dict[str, VerseDetail] = {}
@@ -161,7 +170,7 @@ async def search_quran(
         logger,
         "search_quran",
         latency_ms,
-        collection="quran_tr_diyanet",
+        collection=collection_name,
         results=len(results),
     )
 

@@ -37,6 +37,7 @@ from app.api.compare_helpers import (
     strip_markdown_headers,
 )
 from app.api.compare import extract_quran_verse_detail, extract_bible_verse_detail
+from app.schemas.common import TranslatorType, DEFAULT_TRANSLATOR
 from src.ultimate_rag import UltimateRAG
 from src.comparative_rag import ComparativeRAG
 from src.query_translator import QueryTranslator, TranslationError
@@ -114,6 +115,10 @@ async def stream_search(
     language: Optional[str] = Query(
         None, description="Detected user language (ISO 639-1)"
     ),
+    translator: Optional[TranslatorType] = Query(
+        default=DEFAULT_TRANSLATOR,
+        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     """Stream search results with AI answer generation.
@@ -136,7 +141,7 @@ async def stream_search(
     async def generate():
         logger.info(f"[SSE /search] Starting stream for query: {q}, source: {source}")
         rag = UltimateRAG()
-        translator = QueryTranslator()
+        query_translator = QueryTranslator()
 
         # First, send search status
         yield f"data: {json.dumps({'status': 'searching', 'message': 'Aranıyor...'})}\n\n"
@@ -149,8 +154,11 @@ async def stream_search(
             logger.info(
                 "[SSE /search] Starting ask call (search + answer generation)..."
             )
+            quran_translator = translator or DEFAULT_TRANSLATOR
             if source == "quran":
-                ask_result = await rag.ask_quran(q, top_k=10)
+                ask_result = await rag.ask_quran(
+                    q, translator=quran_translator, top_k=10
+                )
             elif source in ["ot", "nt", "apocrypha"]:
                 ask_result = await rag.ask_bible(
                     q, translation="kjva", testament=source, top_k=10
@@ -194,7 +202,7 @@ async def stream_search(
             detected_language = language  # From query param
             if not detected_language:
                 try:
-                    detect_result = translator.translate_query(q, corpus=None)
+                    detect_result = query_translator.translate_query(q, corpus=None)
                     detected_language = detect_result.detected_language
                 except Exception:
                     detected_language = None
@@ -203,7 +211,7 @@ async def stream_search(
             if detected_language and detected_language not in ("tr", "en"):
                 try:
                     yield f"data: {json.dumps({'status': 'translating', 'message': 'Yanıt çevriliyor...'})}\n\n"
-                    answer_text = translator.translate_response(
+                    answer_text = query_translator.translate_response(
                         answer_text,
                         target_lang=detected_language,
                         preserve_citations=True,
@@ -311,6 +319,10 @@ async def stream_compare(
     ),
     language: Optional[str] = Query(
         None, description="Detected user language (ISO 639-1)"
+    ),
+    translator: Optional[TranslatorType] = Query(
+        default=DEFAULT_TRANSLATOR,
+        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
     ),
     db: AsyncSession = Depends(get_db),
 ):
@@ -428,11 +440,12 @@ async def stream_compare(
 
         try:
             # Step 1: Get search results (blocking call with real-time progress)
+            quran_translator = translator or DEFAULT_TRANSLATOR
             logger.info(
-                f"[COMPARE] Starting search_all with collections: {collection_list}"
+                f"[COMPARE] Starting search_all with collections: {collection_list}, translator: {quran_translator}"
             )
             async for event in _run_with_progress(
-                rag.search_all, topic, collection_list, on_progress
+                rag.search_all, topic, collection_list, quran_translator, on_progress
             ):
                 yield event
             search_result = _thread_result["value"]

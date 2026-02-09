@@ -2,10 +2,28 @@
 
 import html
 from pydantic import BaseModel, Field, ConfigDict
-from typing import TypeVar, Generic, Optional
+from typing import TypeVar, Generic, Optional, Literal
 from datetime import datetime
 
 T = TypeVar("T")
+
+# Valid Quran translators (imported from tanzil_loader)
+VALID_TRANSLATORS = {
+    "diyanet",
+    "yazir",
+    "ates",
+    "bulac",
+    "ozturk",
+    "vakfi",
+    "yildirim",
+    "yuksel",
+}
+DEFAULT_TRANSLATOR = "diyanet"
+
+# Type alias for translator validation
+TranslatorType = Literal[
+    "diyanet", "yazir", "ates", "bulac", "ozturk", "vakfi", "yildirim", "yuksel"
+]
 
 
 class ErrorDetail(BaseModel):

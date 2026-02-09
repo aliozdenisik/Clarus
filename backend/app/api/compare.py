@@ -27,6 +27,7 @@ from app.db import get_db
 from app.models import SearchHistory
 from app.auth.api_key_validator import get_current_user_flexible
 from app.api.auth import check_rate_limit
+from app.schemas.common import TranslatorType, DEFAULT_TRANSLATOR
 from src.comparative_rag import ComparativeRAG
 from src.search import SearchResult, BibleSearchResult
 from src.citation_sanitizer import sanitize_citations
@@ -60,6 +61,10 @@ class CompareRequest(BaseModel):
         None,
         pattern=r"^(en|tr|es|fr|it|pt|ar|de)$",
         description="Response language (auto-detect if omitted)",
+    )
+    translator: Optional[TranslatorType] = Field(
+        default=DEFAULT_TRANSLATOR,
+        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
     )
     quran_keywords: Optional[List[str]] = Field(
         None,
@@ -247,9 +252,11 @@ async def compare_scriptures(
         )
 
         # Step 1: Get search results for selected collections only
+        quran_translator = request.translator or DEFAULT_TRANSLATOR
         search_result = rag.search_all(
             request.topic,
             collections=collections,
+            translator=quran_translator,
             quran_keywords=request.quran_keywords,
             bible_keywords=request.bible_keywords,
         )
@@ -441,7 +448,8 @@ async def compare_scriptures(
         )
     else:
         # Single essay mode (ComparativeAnswer)
-        result = rag.compare(request.topic)
+        quran_translator = request.translator or DEFAULT_TRANSLATOR
+        result = rag.compare(request.topic, translator=quran_translator)
 
         # Sanitize essay output
         result.essay = sanitize_citations(result.essay)
