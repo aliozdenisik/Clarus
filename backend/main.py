@@ -388,11 +388,15 @@ def cmd_search_bible(args):
     query = args.query
     translation = args.translation
     limit = args.limit
+    language = getattr(args, "language", "en")
 
     console.print("\n[bold magenta]🚀 Ultimate RAG Pipeline (Bible)[/bold magenta]")
     console.print(
         "[dim]Combining: Enhance + Multi-Query + Semantic + RRF Fusion[/dim]\n"
     )
+
+    if language == "tr":
+        console.print("[dim]Language: Turkish Bible[/dim]")
 
     try:
         from src.ultimate_rag import UltimateRAG
@@ -405,7 +409,9 @@ def cmd_search_bible(args):
             verbose=True,
         )
         results = asyncio.run(
-            rag.search_bible(query, translation=translation, top_k=limit)
+            rag.search_bible(
+                query, translation=translation, top_k=limit, language=language
+            )
         )
 
         if not results:
@@ -884,6 +890,12 @@ def main():
     )
     search_bible_parser.add_argument(
         "-v", "--verbose", action="store_true", help="Show detailed first result"
+    )
+    search_bible_parser.add_argument(
+        "--language",
+        default="en",
+        choices=["en", "tr"],
+        help="Bible language: en (English KJVA) or tr (Turkish) (default: en)",
     )
 
     # Ask Quran command (Full RAG Q&A with citations)

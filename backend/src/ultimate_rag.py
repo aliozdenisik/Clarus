@@ -1094,16 +1094,23 @@ class UltimateRAG:
         top_k: int = None,
         rerank_query: str = None,
         detected_language: Optional[str] = None,
+        collections: List[str] = None,
     ) -> List:
         """
-        Search all 3 Bible collections (OT, NT, Apocrypha) and merge with RRF fusion.
+        Search Bible collections and merge with RRF fusion.
 
         This is used when no specific testament is requested.
+
+        Args:
+            collections: List of collection names to search. Defaults to English Bible collections.
         """
         from concurrent.futures import ThreadPoolExecutor, as_completed
 
         if top_k is None:
             top_k = self.final_top_k
+
+        if collections is None:
+            collections = ["bible_ot", "bible_nt", "bible_apocrypha"]
 
         # Search each collection in parallel
         pool_size = top_k * 2  # Get more results for better fusion
@@ -1122,25 +1129,17 @@ class UltimateRAG:
                 logger.error(f"Search failed for {source}: {e}")
                 return (source, [])
 
-        # Parallel search across all 3 collections
+        # Parallel search across all collections
         results_by_source = {}
-        with ThreadPoolExecutor(max_workers=3) as executor:
-            futures = [
-                executor.submit(search_collection, "bible_ot"),
-                executor.submit(search_collection, "bible_nt"),
-                executor.submit(search_collection, "bible_apocrypha"),
-            ]
+        with ThreadPoolExecutor(max_workers=len(collections)) as executor:
+            futures = [executor.submit(search_collection, col) for col in collections]
 
             for future in as_completed(futures):
                 source, results = future.result()
                 results_by_source[source] = results
 
-        # Merge results with RRF fusion
-        all_results = [
-            results_by_source["bible_ot"],
-            results_by_source["bible_nt"],
-            results_by_source["bible_apocrypha"],
-        ]
+        # Merge results with RRF fusion - use collections list to preserve order
+        all_results = [results_by_source.get(col, []) for col in collections]
 
         # Filter out empty result lists
         all_results = [r for r in all_results if r]
@@ -1195,6 +1194,7 @@ class UltimateRAG:
         testament: str = None,
         top_k: int = None,
         detected_language: Optional[str] = None,
+        language: str = "en",
     ) -> List:
         """
         Shortcut for Bible search.
@@ -1205,11 +1205,39 @@ class UltimateRAG:
         If testament is specified (e.g., "ot", "nt", "apocrypha"), searches only that collection.
         Otherwise, searches all 3 Bible collections (bible_ot, bible_nt, bible_apocrypha) and
         merges results using RRF fusion.
+
+        Args:
+            language: "en" for English Bible (default) or "tr" for Turkish Bible
         """
         original_query = query
         translated_query = None
 
-        # Translate query to English for Bible search
+        # Handle Turkish Bible search
+        if language == "tr":
+            # Turkish Bible - no translation needed, query is already Turkish
+            detected_language = "tr"
+            translated_query = None
+
+            if testament:
+                source = f"bible_tr_{testament}"
+                return await self.search(
+                    query,
+                    source=source,
+                    top_k=top_k,
+                    rerank_query=None,
+                    detected_language="tr",
+                )
+
+            # Search all Turkish Bible collections
+            return self._search_all_bible_collections(
+                query,
+                top_k=top_k,
+                rerank_query=None,
+                detected_language="tr",
+                collections=["bible_tr_ot", "bible_tr_nt"],
+            )
+
+        # English Bible search - translate query to English
         if detected_language is None:
             try:
                 result = self.translator.translate_query(query, "bible")
