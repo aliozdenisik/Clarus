@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, Suspense, useMemo } from "react"
+import { useState, useEffect, useCallback, Suspense, useMemo, useRef } from "react"
 import dynamic from "next/dynamic"
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
@@ -90,6 +90,11 @@ const isQuranVerseMatch = (verse: VerseMatchItem | BibleVerseMatch): verse is Ve
 const isBibleVerseMatch = (verse: VerseMatchItem | BibleVerseMatch): verse is BibleVerseMatch =>
   "book_id" in verse
 
+const isAbortError = (error: unknown): boolean =>
+  error instanceof DOMException
+    ? error.name === "AbortError"
+    : error instanceof Error && error.name === "AbortError"
+
 function KeywordSearchContent() {
   const [query, setQuery] = useState("")
   const [activeLanguage, setActiveLanguage] = useState<LanguageTab>("quran")
@@ -104,16 +109,35 @@ function KeywordSearchContent() {
   const [translations, setTranslations] = useState<Map<string, string>>(new Map())
   const [translationsLoading, setTranslationsLoading] = useState(false)
   const [surahTransliterations, setSurahTransliterations] = useState<Map<number, string>>(new Map())
+  const searchAbortControllerRef = useRef<AbortController | null>(null)
 
   const { data: session, isPending: authLoading } = useSession()
   const user = session?.user
   const router = useRouter()
 
+  useEffect(() => {
+    return () => {
+      if (searchAbortControllerRef.current) {
+        searchAbortControllerRef.current.abort()
+        searchAbortControllerRef.current = null
+      }
+    }
+  }, [])
+
   // Fetch surah Latin transliterations on mount
   useEffect(() => {
+    const controller = new AbortController()
+
     const fetchSurahNames = async () => {
       try {
-        const response = await getQuranSurahsApiMetadataQuranSurahsGet()
+        const response = await getQuranSurahsApiMetadataQuranSurahsGet({
+          signal: controller.signal,
+        })
+
+        if (controller.signal.aborted) {
+          return
+        }
+
         const body = response.data as
           | { data?: { surahs?: Array<{ id: number; transliteration: string }> } }
           | undefined
@@ -121,11 +145,17 @@ function KeywordSearchContent() {
         const map = new Map<number, string>()
         surahs.forEach((s) => map.set(s.id, s.transliteration))
         setSurahTransliterations(map)
-      } catch {
-        /* ignore */
+      } catch (error) {
+        if (isAbortError(error)) {
+          return
+        }
       }
     }
     fetchSurahNames()
+
+    return () => {
+      controller.abort()
+    }
   }, [])
 
   // Helper: get Latin surah name, fallback to Arabic
@@ -155,6 +185,13 @@ function KeywordSearchContent() {
         return
       }
 
+      if (searchAbortControllerRef.current) {
+        searchAbortControllerRef.current.abort()
+      }
+
+      const controller = new AbortController()
+      searchAbortControllerRef.current = controller
+
       setIsLoading(true)
       setError(null)
       setSelectedWord(null)
@@ -168,7 +205,12 @@ function KeywordSearchContent() {
               page: 1,
               per_page: 0, // 0 = return ALL verses in one call
             },
+            signal: controller.signal,
           })
+
+          if (controller.signal.aborted) {
+            return
+          }
 
           if (response.data) {
             setSearchResult(response.data as KeywordSearchResponse)
@@ -194,8 +236,13 @@ function KeywordSearchContent() {
           const res = await fetch(`${API_BASE_URL}/api/keyword-search/bible/`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
             body: JSON.stringify(requestBody),
           })
+
+          if (controller.signal.aborted) {
+            return
+          }
 
           if (!res.ok) {
             if (res.status === 429) {
@@ -208,10 +255,18 @@ function KeywordSearchContent() {
           }
 
           const data = (await res.json()) as BibleSearchResult
+          if (controller.signal.aborted) {
+            return
+          }
+
           setBibleSearchResult(data)
           setSearchResult(null)
         }
       } catch (err: unknown) {
+        if (isAbortError(err)) {
+          return
+        }
+
         const error = err as { status?: number }
         if (error.status === 429) {
           toast.error("Daily search limit reached. Please try again tomorrow.")
@@ -220,7 +275,13 @@ function KeywordSearchContent() {
         }
         setError("Search failed")
       } finally {
-        setIsLoading(false)
+        if (searchAbortControllerRef.current === controller) {
+          searchAbortControllerRef.current = null
+        }
+
+        if (!controller.signal.aborted) {
+          setIsLoading(false)
+        }
       }
     },
     [activeLanguage, bibleCategoryFilter]
@@ -286,7 +347,12 @@ function KeywordSearchContent() {
 
   // Fetch Turkish translations after search results arrive
   useEffect(() => {
-    if (!searchResult?.verses?.length) return
+    if (!searchResult?.verses?.length) {
+      setTranslationsLoading(false)
+      return
+    }
+
+    const controller = new AbortController()
 
     const fetchTranslations = async () => {
       setTranslationsLoading(true)
@@ -301,7 +367,13 @@ function KeywordSearchContent() {
           try {
             const response = await getSurahDetailApiMetadataQuranSurahsSurahIdGet({
               path: { surah_id: surahId },
+              signal: controller.signal,
             })
+
+            if (controller.signal.aborted) {
+              return
+            }
+
             // API returns { success, data: { surah: { verses: [...] } } }
             const body = response.data as
               | { data?: { surah?: { verses?: Array<{ text: string; translation: string }> } } }
@@ -313,17 +385,29 @@ function KeywordSearchContent() {
                 translationMap.set(key, verse.translation)
               })
             }
-          } catch {
+          } catch (error) {
+            if (isAbortError(error)) {
+              return
+            }
+
             // Silently fail for individual surahs
           }
         })
       )
+
+      if (controller.signal.aborted) {
+        return
+      }
 
       setTranslations(translationMap)
       setTranslationsLoading(false)
     }
 
     fetchTranslations()
+
+    return () => {
+      controller.abort()
+    }
   }, [searchResult?.query, searchResult?.root, searchResult?.verses])
 
   // Helper to get translation

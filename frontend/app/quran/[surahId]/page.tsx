@@ -74,27 +74,52 @@ export default function SurahDetailPage() {
   }, [highlightedVerse, surah])
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const fetchSurah = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/api/metadata/quran/surahs/${surahId}`, {
           credentials: "include",
+          signal: controller.signal,
         })
+
+        if (controller.signal.aborted) {
+          return
+        }
 
         if (!response.ok) {
           throw new Error("Failed to fetch surah")
         }
 
         const data = await response.json()
+
+        if (controller.signal.aborted) {
+          return
+        }
+
         setSurah(data.data?.surah || null)
-      } catch {
+      } catch (error) {
+        if (
+          (error instanceof DOMException && error.name === "AbortError") ||
+          (error instanceof Error && error.name === "AbortError")
+        ) {
+          return
+        }
+
         toast.error("Failed to load surah")
       } finally {
-        setIsLoading(false)
+        if (!controller.signal.aborted) {
+          setIsLoading(false)
+        }
       }
     }
 
     if (user && surahId) {
       fetchSurah()
+    }
+
+    return () => {
+      controller.abort()
     }
   }, [user, surahId])
 

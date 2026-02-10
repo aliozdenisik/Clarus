@@ -87,6 +87,11 @@ const COLLECTION_VERSE_COUNTS: Record<string, number> = {
   bible_apocrypha: 5717,
 }
 
+const isAbortError = (error: unknown): boolean =>
+  error instanceof DOMException
+    ? error.name === "AbortError"
+    : error instanceof Error && error.name === "AbortError"
+
 function CompareContent() {
   const [topic, setTopic] = useState("")
   const [result, setResult] = useState<CompareResult | null>(null)
@@ -122,6 +127,8 @@ function CompareContent() {
   const hasAutoExecuted = useRef(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const lastHandledSseError = useRef<string | null>(null)
+  const keywordExtractionAbortRef = useRef<AbortController | null>(null)
+  const batchCompareAbortRef = useRef<AbortController | null>(null)
   const log = useLogger("ComparePage")
   const { data: session, isPending: authLoading } = useSession()
   const user = session?.user
@@ -225,6 +232,16 @@ function CompareContent() {
   // Cleanup timer on unmount
   useEffect(() => {
     return () => {
+      if (keywordExtractionAbortRef.current) {
+        keywordExtractionAbortRef.current.abort()
+        keywordExtractionAbortRef.current = null
+      }
+
+      if (batchCompareAbortRef.current) {
+        batchCompareAbortRef.current.abort()
+        batchCompareAbortRef.current = null
+      }
+
       if (highlightTimerRef.current) {
         clearTimeout(highlightTimerRef.current)
       }
@@ -274,13 +291,18 @@ function CompareContent() {
     return nextCounts
   }, [result?.verse_details])
 
-  const extractKeywords = async (query: string, corpus: "quran" | "bible") => {
+  const extractKeywords = async (
+    query: string,
+    corpus: "quran" | "bible",
+    signal?: AbortSignal
+  ) => {
     const response = await fetch(`${API_BASE_URL}/api/search/enhance`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       credentials: "include",
+      signal,
       body: JSON.stringify({ query, corpus }),
     })
 
@@ -294,6 +316,13 @@ function CompareContent() {
 
   const performBatchCompare = useCallback(
     async (topicToCompare: string) => {
+      if (batchCompareAbortRef.current) {
+        batchCompareAbortRef.current.abort()
+      }
+
+      const controller = new AbortController()
+      batchCompareAbortRef.current = controller
+
       setIsLoading(true)
       try {
         const requestBody: CompareRequestPayload = {
@@ -318,18 +347,38 @@ function CompareContent() {
 
         const response = await compareScripturesApiComparePost({
           body: requestBody,
+          signal: controller.signal,
         })
 
+        if (controller.signal.aborted) {
+          return
+        }
+
         const data = response.data as CompareResult
+
+        if (controller.signal.aborted) {
+          return
+        }
+
         setResult(data)
         if (data.detected_language) {
           setDetectedLanguage(data.detected_language)
         }
         toast.success(`Analysis complete in ${(data.latency_ms / 1000).toFixed(1)}s`)
-      } catch {
+      } catch (error) {
+        if (isAbortError(error)) {
+          return
+        }
+
         toast.error("Analysis failed. Please try again.")
       } finally {
-        setIsLoading(false)
+        if (batchCompareAbortRef.current === controller) {
+          batchCompareAbortRef.current = null
+        }
+
+        if (!controller.signal.aborted) {
+          setIsLoading(false)
+        }
       }
     },
     [
@@ -549,16 +598,28 @@ function CompareContent() {
     // If advanced mode is ON, extract keywords first
     if (advancedMode) {
       setIsExtractingKeywords(true)
+
+      if (keywordExtractionAbortRef.current) {
+        keywordExtractionAbortRef.current.abort()
+      }
+
+      const controller = new AbortController()
+      keywordExtractionAbortRef.current = controller
+
       try {
         // Extract keywords in parallel for both corpora
         const [quranKw, bibleKw] = await Promise.all([
           selectedCollections.includes("quran_tr")
-            ? extractKeywords(topic, "quran")
+            ? extractKeywords(topic, "quran", controller.signal)
             : Promise.resolve([]),
           selectedCollections.some((c) => ["bible_ot", "bible_nt", "bible_apocrypha"].includes(c))
-            ? extractKeywords(topic, "bible")
+            ? extractKeywords(topic, "bible", controller.signal)
             : Promise.resolve([]),
         ])
+
+        if (controller.signal.aborted) {
+          return
+        }
 
         setQuranKeywords(quranKw)
         setBibleKeywords(bibleKw)
@@ -568,10 +629,18 @@ function CompareContent() {
         // User will click "Analyze" again after selecting keywords
         setIsLoading(false)
         return
-      } catch {
+      } catch (error) {
+        if (isAbortError(error)) {
+          return
+        }
+
         toast.error("Keyword extraction failed. Proceeding with normal search.")
         setIsExtractingKeywords(false)
         // Fall through to normal compare
+      } finally {
+        if (keywordExtractionAbortRef.current === controller) {
+          keywordExtractionAbortRef.current = null
+        }
       }
     }
 

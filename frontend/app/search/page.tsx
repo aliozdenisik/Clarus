@@ -58,6 +58,11 @@ interface SearchSSEAggregate {
   completeMessage?: SearchSSEMessage
 }
 
+const isAbortError = (error: unknown): boolean =>
+  error instanceof DOMException
+    ? error.name === "AbortError"
+    : error instanceof Error && error.name === "AbortError"
+
 function SearchContent() {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<SearchResult[]>([])
@@ -73,6 +78,8 @@ function SearchContent() {
   const resultsContainerRef = useRef<HTMLDivElement>(null)
   const hasHandledSSEError = useRef(false)
   const hasAutoExecuted = useRef(false)
+  const enhanceAbortControllerRef = useRef<AbortController | null>(null)
+  const batchSearchAbortControllerRef = useRef<AbortController | null>(null)
 
   // Zustand selectors — subscribe only to used fields, not the entire store
   const advancedMode = useKeywordStore((s) => s.advancedMode)
@@ -97,6 +104,20 @@ function SearchContent() {
       router.push("/sign-in")
     }
   }, [user, isLoading, router])
+
+  useEffect(() => {
+    return () => {
+      if (enhanceAbortControllerRef.current) {
+        enhanceAbortControllerRef.current.abort()
+        enhanceAbortControllerRef.current = null
+      }
+
+      if (batchSearchAbortControllerRef.current) {
+        batchSearchAbortControllerRef.current.abort()
+        batchSearchAbortControllerRef.current = null
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const source = searchParams?.get("source") as SearchSource
@@ -287,6 +308,13 @@ function SearchContent() {
   }
 
   const enhanceQuery = async (searchQuery: string): Promise<KeywordSuggestion[] | null> => {
+    if (enhanceAbortControllerRef.current) {
+      enhanceAbortControllerRef.current.abort()
+    }
+
+    const controller = new AbortController()
+    enhanceAbortControllerRef.current = controller
+
     setIsEnhancing(true)
     try {
       const corpus = activeTab === "quran" ? "quran" : "bible"
@@ -297,6 +325,7 @@ function SearchContent() {
           "Content-Type": "application/json",
         },
         credentials: "include",
+        signal: controller.signal,
         body: JSON.stringify({ query: searchQuery, corpus }),
       })
 
@@ -305,6 +334,10 @@ function SearchContent() {
       }
 
       const data = await response.json()
+      if (controller.signal.aborted) {
+        return null
+      }
+
       if (data.keywords && Array.isArray(data.keywords)) {
         const keywordSuggestions: KeywordSuggestion[] = data.keywords.map(
           (
@@ -323,11 +356,21 @@ function SearchContent() {
 
       return []
     } catch (error) {
+      if (isAbortError(error)) {
+        return null
+      }
+
       log.error("Query enhancement failed", { error })
       toast.error("Failed to extract keywords")
       return null
     } finally {
-      setIsEnhancing(false)
+      if (enhanceAbortControllerRef.current === controller) {
+        enhanceAbortControllerRef.current = null
+      }
+
+      if (!controller.signal.aborted) {
+        setIsEnhancing(false)
+      }
     }
   }
 
@@ -364,6 +407,13 @@ function SearchContent() {
       const searchQuery = queryOverride ?? query
       if (!searchQuery.trim()) return
 
+      if (batchSearchAbortControllerRef.current) {
+        batchSearchAbortControllerRef.current.abort()
+      }
+
+      const controller = new AbortController()
+      batchSearchAbortControllerRef.current = controller
+
       const keywordsToUse = keywordsOverride ?? selectedKeywords
 
       setIsSearching(true)
@@ -385,10 +435,20 @@ function SearchContent() {
 
         let response
         if (activeTab === "quran") {
-          response = await searchQuranApiSearchQuranPost({ body: body as never })
+          response = await searchQuranApiSearchQuranPost({
+            body: body as never,
+            signal: controller.signal,
+          })
         } else {
           body = { ...body, testament: activeTab }
-          response = await searchBibleApiSearchBiblePost({ body: body as never })
+          response = await searchBibleApiSearchBiblePost({
+            body: body as never,
+            signal: controller.signal,
+          })
+        }
+
+        if (controller.signal.aborted) {
+          return
         }
 
         const data = response.data as {
@@ -396,6 +456,11 @@ function SearchContent() {
           verse_details?: Record<string, VerseDetail>
           detected_language?: string
         }
+
+        if (controller.signal.aborted) {
+          return
+        }
+
         setResults(data.results)
 
         if (data.verse_details) {
@@ -407,10 +472,20 @@ function SearchContent() {
         }
 
         toast.success(`Found ${data.results.length} results`)
-      } catch {
+      } catch (error) {
+        if (isAbortError(error)) {
+          return
+        }
+
         toast.error("Search failed. Please try again.")
       } finally {
-        setIsSearching(false)
+        if (batchSearchAbortControllerRef.current === controller) {
+          batchSearchAbortControllerRef.current = null
+        }
+
+        if (!controller.signal.aborted) {
+          setIsSearching(false)
+        }
       }
     },
     [query, activeTab, selectedLanguage, selectedTranslator, advancedMode, selectedKeywords]
