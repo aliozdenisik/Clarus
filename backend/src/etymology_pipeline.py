@@ -13,6 +13,7 @@ import json
 import logging
 import os
 import random
+import re
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -45,6 +46,14 @@ TRANSLATION_SYSTEM_PROMPT = (
     "Preserve academic terminology. Return JSON: "
     '{"translation": "...", "confidence": 0.0-1.0}'
 )
+CORPUS_DEFINITION_PROMPT = (
+    "You are a Quranic Arabic lexicography expert. "
+    "Given an Arabic root and its Quran frequency, provide a concise Turkish definition "
+    "of the root's primary meaning in Quranic context. Return JSON: "
+    '{"translation": "...", "confidence": 0.0-1.0}'
+)
+_TRANSLATION_RE = re.compile(r'"translation"\s*:\s*"((?:[^"\\]|\\.)*)"', re.DOTALL)
+_CONFIDENCE_RE = re.compile(r'"confidence"\s*:\s*([\d.]+)')
 ETYMOLOGY_EXPORT_DIR = Path(__file__).resolve().parent.parent / "data" / "etymology"
 
 
@@ -340,18 +349,7 @@ class EtymologyPipeline:
 
             self._forms_connection = None
 
-            lane_rows = [row for row in processed_rows if row["source"] == "lane"]
-            translated_lane_rows = self._translate_batch(lane_rows)
-            translated_by_root = {row["root"]: row for row in translated_lane_rows}
-
-            final_rows: list[dict[str, object]] = []
-            for row in processed_rows:
-                translated = translated_by_root.get(str(row["root"]))
-                if translated is not None:
-                    row["definition_tr"] = translated.get("definition_tr")
-                    row["tr_translation_confidence"] = translated.get("tr_translation_confidence")
-                    row["tr_translation_source"] = translated.get("tr_translation_source")
-                final_rows.append(row)
+            final_rows = self._translate_batch(processed_rows)
 
             inserted_rows = 0
             if not self.dry_run:
@@ -377,7 +375,7 @@ class EtymologyPipeline:
             lane_pct = (lane_matches / total_roots * 100.0) if total_roots else 0.0
             corpus_pct = (corpus_only_count / total_roots * 100.0) if total_roots else 0.0
             forms_pct = (forms_available / total_roots * 100.0) if total_roots else 0.0
-            tr_pct = (turkish_translations / lane_matches * 100.0) if lane_matches else 0.0
+            tr_pct = (turkish_translations / total_roots * 100.0) if total_roots else 0.0
             low_conf_pct = (low_conf_translations / turkish_translations * 100.0) if turkish_translations else 0.0
 
             logger.info("═══ Etymology Pipeline Complete ═══")
@@ -391,7 +389,7 @@ class EtymologyPipeline:
             )
             logger.info("Corpus-only: %s (%.1f%%)", corpus_only_count, corpus_pct)
             logger.info("Morphological forms: %s roots (%.1f%%)", forms_available, forms_pct)
-            logger.info("Turkish translations: %s (%.1f%% of Lane matches)", turkish_translations, tr_pct)
+            logger.info("Turkish translations: %s (%.1f%% of all roots)", turkish_translations, tr_pct)
             logger.info("Low-confidence translations: %s (%.1f%%)", low_conf_translations, low_conf_pct)
 
             return PipelineResult(
@@ -466,13 +464,67 @@ class EtymologyPipeline:
             )
         return extract_morphological_forms(root, list(rows))
 
+    def _parse_translation_response(self, content: str) -> tuple[str | None, float | None]:
+        payload: dict[str, object] | None = None
+
+        try:
+            candidate = json.loads(content)
+            if isinstance(candidate, dict):
+                payload = candidate
+        except json.JSONDecodeError:
+            payload = None
+
+        if payload is None:
+            sanitized_content = re.sub(r"[\x00-\x1f\x7f]", " ", content)
+            try:
+                candidate = json.loads(sanitized_content)
+                if isinstance(candidate, dict):
+                    payload = candidate
+            except json.JSONDecodeError:
+                payload = None
+
+        translation: str | None = None
+        confidence: float | None = None
+        if payload is not None:
+            translation_raw = payload.get("translation")
+            confidence_raw = payload.get("confidence")
+            translation = str(translation_raw).strip() if translation_raw else None
+            if isinstance(confidence_raw, int | float):
+                confidence = max(0.0, min(1.0, float(confidence_raw)))
+            return translation, confidence
+
+        sanitized_content = re.sub(r"[\x00-\x1f\x7f]", " ", content)
+        translation_match = _TRANSLATION_RE.search(sanitized_content)
+        confidence_match = _CONFIDENCE_RE.search(sanitized_content)
+        if translation_match is None:
+            return None, None
+
+        raw_translation = translation_match.group(1)
+        try:
+            translation = json.loads(f'"{raw_translation}"')
+        except json.JSONDecodeError:
+            translation = raw_translation.replace(r"\n", " ").replace(r"\t", " ").replace(r"\"", '"').strip()
+
+        if confidence_match is not None:
+            try:
+                confidence = max(0.0, min(1.0, float(confidence_match.group(1))))
+            except ValueError:
+                confidence = None
+
+        return (translation.strip() if translation else None), confidence
+
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=20),
         retry=retry_if_exception_type((requests.exceptions.ConnectionError, requests.exceptions.Timeout)),
         before_sleep=lambda rs: logger.info("Retrying translation request, attempt %d/3", rs.attempt_number),
     )
-    def _translate_definition(self, definition_en: str) -> tuple[str | None, float | None]:
+    def _translate_definition(
+        self,
+        definition_en: str,
+        *,
+        system_prompt: str = TRANSLATION_SYSTEM_PROMPT,
+    ) -> tuple[str | None, float | None]:
         if not self.openrouter_api_key:
             return None, None
 
@@ -481,7 +533,7 @@ class EtymologyPipeline:
             "Content-Type": "application/json",
         }
         messages = [
-            {"role": "system", "content": TRANSLATION_SYSTEM_PROMPT},
+            {"role": "system", "content": system_prompt},
             {
                 "role": "user",
                 "content": definition_en,
@@ -513,16 +565,7 @@ class EtymologyPipeline:
         if not content:
             return None, None
 
-        payload = json.loads(content)
-        translation_raw = payload.get("translation")
-        confidence_raw = payload.get("confidence")
-
-        translation = str(translation_raw).strip() if translation_raw else None
-        confidence: float | None = None
-        if isinstance(confidence_raw, int | float):
-            confidence = max(0.0, min(1.0, float(confidence_raw)))
-
-        return translation, confidence
+        return self._parse_translation_response(content)
 
     def _translate_batch(self, entries: list[dict[str, object]]) -> list[dict[str, object]]:
         """Translate English definitions to Turkish via OpenRouter LLM."""
@@ -535,9 +578,21 @@ class EtymologyPipeline:
             for entry in chunk:
                 definition_en = entry.get("definition_en")
                 if not isinstance(definition_en, str) or not definition_en.strip():
-                    entry["definition_tr"] = None
-                    entry["tr_translation_confidence"] = None
-                    entry["tr_translation_source"] = None
+                    root = str(entry.get("root", ""))
+                    freq = entry.get("quran_frequency", 0)
+                    if root and self.openrouter_api_key:
+                        prompt_text = f"Arabic root: {root}, Quran frequency: {freq}"
+                        translation, confidence = self._translate_definition(
+                            prompt_text,
+                            system_prompt=CORPUS_DEFINITION_PROMPT,
+                        )
+                        entry["definition_tr"] = translation
+                        entry["tr_translation_confidence"] = confidence
+                        entry["tr_translation_source"] = "llm_generated"
+                    else:
+                        entry["definition_tr"] = None
+                        entry["tr_translation_confidence"] = None
+                        entry["tr_translation_source"] = None
                     translated_entries.append(entry)
                     continue
 
