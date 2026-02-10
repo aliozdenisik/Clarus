@@ -298,6 +298,140 @@ BIBLE_BOOK_MAP: dict[str, dict[str, int | str]] = {
     "2 Maccabees": {"id": 81, "testament": "Apocrypha", "chapters": 15},
 }
 
+# Verse counts per chapter for Bible books (book_id -> [ch1_verses, ch2_verses, ...])
+# Used for verse bounds validation. Books not listed here skip verse validation.
+BIBLE_VERSE_COUNTS: dict[int, list[int]] = {
+    1: [
+        31,
+        25,
+        24,
+        26,
+        32,
+        22,
+        24,
+        22,
+        29,
+        32,
+        32,
+        20,
+        18,
+        24,
+        21,
+        16,
+        27,
+        33,
+        38,
+        18,
+        34,
+        24,
+        20,
+        67,
+        34,
+        35,
+        46,
+        22,
+        35,
+        43,
+        55,
+        32,
+        20,
+        31,
+        29,
+        43,
+        36,
+        30,
+        23,
+        23,
+        57,
+        38,
+        34,
+        34,
+        28,
+        34,
+        31,
+        22,
+        33,
+        26,
+    ],  # Genesis
+    40: [
+        25,
+        23,
+        17,
+        25,
+        48,
+        34,
+        29,
+        34,
+        38,
+        42,
+        30,
+        50,
+        58,
+        36,
+        39,
+        28,
+        27,
+        35,
+        30,
+        34,
+        46,
+        46,
+        39,
+        51,
+        46,
+        75,
+        66,
+        20,
+    ],  # Matthew
+    43: [
+        51,
+        25,
+        36,
+        54,
+        47,
+        71,
+        53,
+        59,
+        41,
+        42,
+        57,
+        50,
+        38,
+        31,
+        27,
+        33,
+        26,
+        40,
+        42,
+        31,
+        25,
+    ],  # John
+    66: [
+        20,
+        29,
+        22,
+        11,
+        14,
+        17,
+        17,
+        13,
+        21,
+        11,
+        19,
+        17,
+        18,
+        20,
+        8,
+        21,
+        18,
+        24,
+        21,
+        15,
+        27,
+        21,
+    ],  # Revelation
+}
+
 
 def get_book_by_name(name: str) -> dict[str, int | str] | None:
     """Lookup Bible book by name (case-insensitive).
@@ -753,8 +887,18 @@ def _parse_bible(input_str: str, match: re.Match) -> ParsedReference | ParseErro
         # Single verse
         verses = [verse_start]
 
-    # Note: We don't validate verse bounds for Bible because we don't have
-    # verse count per chapter in BIBLE_BOOK_MAP. This is acceptable for now.
+    # Validate verse bounds if verse count data is available for this book
+    if book_id in BIBLE_VERSE_COUNTS:
+        chapter_verses = BIBLE_VERSE_COUNTS[book_id]
+        if chapter <= len(chapter_verses):
+            max_verse = chapter_verses[chapter - 1]
+            for v in verses:
+                if v > max_verse:
+                    return ParseError(
+                        code="VERSE_OUT_OF_BOUNDS",
+                        message=f"Verse {v} exceeds maximum {max_verse} for {book_name} chapter {chapter}",
+                        input=input_str,
+                    )
 
     return ParsedReference(
         source="bible",

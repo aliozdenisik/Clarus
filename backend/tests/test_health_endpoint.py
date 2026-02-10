@@ -77,12 +77,18 @@ class TestHealthResponseStructure:
         data = response.json()
         assert "qdrant" in data
 
-    def test_response_has_exactly_four_fields(self):
-        """Response should have exactly 4 fields."""
+    def test_response_has_exactly_five_fields(self):
+        """Response should have exactly 5 fields."""
         response = self.client.get("/api/health")
         data = response.json()
-        assert len(data) == 4
-        assert set(data.keys()) == {"status", "version", "event_loop", "qdrant"}
+        assert len(data) == 5
+        assert set(data.keys()) == {
+            "status",
+            "version",
+            "event_loop",
+            "qdrant",
+            "redis",
+        }
 
 
 class TestHealthFieldTypes:
@@ -187,8 +193,8 @@ class TestHealthStatusCodes:
             if data["status"] == "healthy":
                 assert response.status_code == 200
 
-    def test_degraded_returns_503(self):
-        """Degraded status should return HTTP 503."""
+    def test_degraded_returns_200(self):
+        """Degraded status should return HTTP 200 (only unhealthy returns 503)."""
         with patch("qdrant_client.QdrantClient") as mock_qdrant:
             mock_qdrant.side_effect = Exception("Connection failed")
 
@@ -196,7 +202,7 @@ class TestHealthStatusCodes:
             data = response.json()
 
             if data["status"] == "degraded":
-                assert response.status_code == 503
+                assert response.status_code == 200
 
     def test_unhealthy_returns_503(self):
         """Unhealthy status should return HTTP 503."""
@@ -283,7 +289,7 @@ class TestHealthStatusConsistency:
         self.client = TestClient(app)
 
     def test_healthy_when_all_ok(self):
-        """Status should be 'healthy' when event_loop and qdrant are ok."""
+        """Status should be 'healthy' when all components are ok."""
         with patch("qdrant_client.QdrantClient") as mock_qdrant:
             mock_client = MagicMock()
             mock_client.get_collections.return_value = MagicMock()
@@ -292,8 +298,14 @@ class TestHealthStatusConsistency:
             response = self.client.get("/api/health")
             data = response.json()
 
-            if data["event_loop"] == "ok" and data["qdrant"] == "connected":
+            if (
+                data["event_loop"] == "ok"
+                and data["qdrant"] == "connected"
+                and data["redis"]["status"] == "connected"
+            ):
                 assert data["status"] == "healthy"
+            elif data["event_loop"] == "ok" and data["qdrant"] == "connected":
+                assert data["status"] in ["healthy", "degraded"]
 
     def test_degraded_when_qdrant_fails(self):
         """Status should be 'degraded' when qdrant fails but event_loop ok."""
@@ -335,17 +347,25 @@ class TestHealthMultipleRequests:
             assert "version" in data
             assert "event_loop" in data
             assert "qdrant" in data
+            assert "redis" in data
 
     def test_responses_are_consistent(self):
         """Multiple responses should have consistent structure."""
         responses = [self.client.get("/api/health").json() for _ in range(3)]
 
         for data in responses:
-            assert set(data.keys()) == {"status", "version", "event_loop", "qdrant"}
+            assert set(data.keys()) == {
+                "status",
+                "version",
+                "event_loop",
+                "qdrant",
+                "redis",
+            }
             assert isinstance(data["status"], str)
             assert isinstance(data["version"], str)
             assert isinstance(data["event_loop"], str)
             assert isinstance(data["qdrant"], str)
+            assert isinstance(data["redis"], dict)
 
 
 class TestHealthEdgeCases:

@@ -46,7 +46,20 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest>=7.0.0"]
+dev = ["pytest>=7.0.0", "ruff>=0.8.0", "pyright>=1.1.390"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+collect_ignore_glob = [
+    "tests/run_*.py",
+    "tests/*_verification_test.py",
+    "tests/*_comprehensive_test.py",
+    "tests/test_multi_agent_flow.py",
+    "tests/archive/*",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

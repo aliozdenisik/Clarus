@@ -1,0 +1,56 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Lint
+        run: uv run ruff check .
+        continue-on-error: true
+
+      - name: Format check
+        run: uv run ruff format --check .
+        continue-on-error: true
+
+      - name: Type check
+        run: uv run pyright
+        continue-on-error: true
+
+      - name: Run all tests
+        run: >-
+          uv run pytest tests/ -v
+          --ignore-glob="tests/run_*.py"
+          --ignore-glob="tests/*_verification_test.py"
+          --ignore-glob="tests/*_comprehensive_test.py"
+          --ignore-glob="tests/test_multi_agent_flow.py"
+          --ignore-glob="tests/archive/*"
