@@ -1,38 +1,38 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { vi, describe, it, expect, beforeEach } from "vitest";
-import userEvent from "@testing-library/user-event";
-import type React from "react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { vi, describe, it, expect, beforeEach } from "vitest"
+import userEvent from "@testing-library/user-event"
+import type React from "react"
 
 type MockProps = {
-  children?: React.ReactNode;
-  className?: string;
-  data?: Array<unknown>;
-  [key: string]: unknown;
-};
+  children?: React.ReactNode
+  className?: string
+  data?: Array<unknown>
+  [key: string]: unknown
+}
 
 // Mock next/navigation
-const mockPush = vi.fn();
+const mockPush = vi.fn()
 vi.mock("next/navigation", () => ({
   useRouter: vi.fn(() => ({ push: mockPush })),
   useSearchParams: vi.fn(() => new URLSearchParams()),
-}));
+}))
 
 // Mock Better Auth
 vi.mock("@/lib/auth-client", () => ({
   useSession: vi.fn(() => ({
-    data: { user: { id: '1', name: "Test User", email: "test@example.com" } },
+    data: { user: { id: "1", name: "Test User", email: "test@example.com" } },
     isPending: false,
   })),
   signIn: { email: vi.fn(), social: vi.fn() },
   signUp: { email: vi.fn() },
   signOut: vi.fn(),
   authClient: { token: vi.fn() },
-}));
+}))
 
 // Mock sonner toast
 vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
-}));
+}))
 
 // Mock framer-motion (CRITICAL — prevents animation issues)
 vi.mock("framer-motion", () => ({
@@ -43,7 +43,7 @@ vi.mock("framer-motion", () => ({
     button: ({ children, ...props }: MockProps) => <button {...props}>{children}</button>,
   },
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
-}));
+}))
 
 // Mock Lucide icons
 vi.mock("lucide-react", () => ({
@@ -60,17 +60,17 @@ vi.mock("lucide-react", () => ({
   LogOut: () => <div data-testid="logout-icon" />,
   BookOpen: () => <div data-testid="book-open-icon" />,
   Languages: () => <div data-testid="languages-icon" />,
-}));
+}))
 
 // Mock GlowCard
 vi.mock("@/components/ui/glow-card", () => ({
   GlowCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
-}));
+}))
 
 // Mock Skeleton
 vi.mock("@/components/ui/skeleton", () => ({
   Skeleton: ({ className }: MockProps) => <div data-testid="skeleton" className={className} />,
-}));
+}))
 
 // Mock design-system
 vi.mock("@/lib/design-system", () => ({
@@ -79,32 +79,39 @@ vi.mock("@/lib/design-system", () => ({
     fluid: { type: "spring", stiffness: 170, damping: 26 },
     gentle: { type: "spring", stiffness: 120, damping: 14 },
   },
-}));
+}))
 
 // Mock Recharts (SVG rendering doesn't work in jsdom)
 vi.mock("recharts", () => ({
-  ResponsiveContainer: ({ children }: MockProps) => <div data-testid="responsive-container">{children}</div>,
-  BarChart: ({ children, data }: MockProps) => <div data-testid="bar-chart" data-count={data?.length}>{children}</div>,
+  ResponsiveContainer: ({ children }: MockProps) => (
+    <div data-testid="responsive-container">{children}</div>
+  ),
+  BarChart: ({ children, data }: MockProps) => (
+    <div data-testid="bar-chart" data-count={data?.length}>
+      {children}
+    </div>
+  ),
   Bar: () => <div data-testid="bar" />,
   XAxis: () => <div data-testid="x-axis" />,
   YAxis: () => <div data-testid="y-axis" />,
   Tooltip: () => <div data-testid="tooltip" />,
   CartesianGrid: () => <div data-testid="cartesian-grid" />,
-}));
+}))
 
 // Mock the SDK methods used by the page
-const mockSearchKeyword = vi.fn();
-const mockGetSurahDetail = vi.fn();
-const mockListRoots = vi.fn();
+const mockSearchKeyword = vi.fn()
+const mockGetSurahDetail = vi.fn()
+const mockListRoots = vi.fn()
 
 vi.mock("@/lib/api/sdk.gen", () => ({
   searchKeywordApiSearchKeywordPost: (...args: unknown[]) => mockSearchKeyword(...args),
-  getSurahDetailApiMetadataQuranSurahsSurahIdGet: (...args: unknown[]) => mockGetSurahDetail(...args),
+  getSurahDetailApiMetadataQuranSurahsSurahIdGet: (...args: unknown[]) =>
+    mockGetSurahDetail(...args),
   listRootsApiSearchKeywordRootsGet: (...args: unknown[]) => mockListRoots(...args),
-}));
+}))
 
-import KeywordSearchPage from "@/app/keyword-search/page";
-import { toast } from "sonner";
+import KeywordSearchPage from "@/app/keyword-search/page"
+import { toast } from "sonner"
 
 // ── Test Data Fixtures ──────────────────────────────────────────────────────
 
@@ -116,7 +123,7 @@ const mockSearchResponse = {
     total_occurrences: 319,
     unique_words: ["كتاب", "كتب", "اكتبوه"],
     root_buckwalter: "ktb",
-    word_transliterations: { "كتاب": "ktAb", "كتب": "ktb", "اكتبوه": "AktbwhA" },
+    word_transliterations: { كتاب: "ktAb", كتب: "ktb", اكتبوه: "AktbwhA" },
     surah_distribution: [
       { surah_id: 2, surah_name: "البقرة", count: 45 },
       { surah_id: 3, surah_name: "آل عمران", count: 23 },
@@ -148,7 +155,7 @@ const mockSearchResponse = {
       has_prev: false,
     },
   },
-};
+}
 
 const mockNotFoundResponse = {
   data: {
@@ -170,7 +177,7 @@ const mockNotFoundResponse = {
       has_prev: false,
     },
   },
-};
+}
 
 const mockRootsResponse = {
   data: {
@@ -183,50 +190,50 @@ const mockRootsResponse = {
     page: 1,
     per_page: 200,
   },
-};
+}
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 describe("KeywordSearchPage", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    mockGetSurahDetail.mockResolvedValue({ data: { verses: [] } });
-  });
+    vi.clearAllMocks()
+    mockGetSurahDetail.mockResolvedValue({ data: { verses: [] } })
+  })
 
   it("renders search input and tab navigation", () => {
-    render(<KeywordSearchPage />);
+    render(<KeywordSearchPage />)
 
     // Search input
-    expect(screen.getByPlaceholderText(/Search for Arabic roots/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Search for Arabic roots/i)).toBeInTheDocument()
 
     // Tab navigation - vercel-tabs renders plain divs, not ARIA tabs
-    expect(screen.getByText("Search Results")).toBeInTheDocument();
-    expect(screen.getByText("Root Browser")).toBeInTheDocument();
-  });
+    expect(screen.getByText("Search Results")).toBeInTheDocument()
+    expect(screen.getByText("Root Browser")).toBeInTheDocument()
+  })
 
   it("Arabic search triggers API and displays root card", async () => {
-    mockSearchKeyword.mockResolvedValue(mockSearchResponse);
+    mockSearchKeyword.mockResolvedValue(mockSearchResponse)
 
-    render(<KeywordSearchPage />);
+    render(<KeywordSearchPage />)
 
-    const input = screen.getByPlaceholderText(/Search for Arabic roots/i);
-    await userEvent.type(input, "كتب");
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+    const input = screen.getByPlaceholderText(/Search for Arabic roots/i)
+    await userEvent.type(input, "كتب")
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" })
 
     await waitFor(() => {
       expect(mockSearchKeyword).toHaveBeenCalledWith(
         expect.objectContaining({
           body: expect.objectContaining({ query: "كتب" }),
         })
-      );
-    });
+      )
+    })
 
     await waitFor(() => {
       // "كتب" appears in both RootCard and DerivedWords, so use getAllByText
-      const elements = screen.getAllByText("كتب");
-      expect(elements.length).toBeGreaterThanOrEqual(1);
-    });
-  });
+      const elements = screen.getAllByText("كتب")
+      expect(elements.length).toBeGreaterThanOrEqual(1)
+    })
+  })
 
   it("Buckwalter search triggers API and displays results", async () => {
     const buckwalterResponse = {
@@ -234,63 +241,63 @@ describe("KeywordSearchPage", () => {
         ...mockSearchResponse.data,
         root_source: "buckwalter_exact",
       },
-    };
-    mockSearchKeyword.mockResolvedValue(buckwalterResponse);
+    }
+    mockSearchKeyword.mockResolvedValue(buckwalterResponse)
 
-    render(<KeywordSearchPage />);
+    render(<KeywordSearchPage />)
 
-    const input = screen.getByPlaceholderText(/Search for Arabic roots/i);
-    await userEvent.type(input, "ktb");
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+    const input = screen.getByPlaceholderText(/Search for Arabic roots/i)
+    await userEvent.type(input, "ktb")
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" })
 
     await waitFor(() => {
-      expect(screen.getByText(/Buckwalter Latin/i)).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByText(/Buckwalter Latin/i)).toBeInTheDocument()
+    })
+  })
 
   it("root not found shows empty state message", async () => {
-    mockSearchKeyword.mockResolvedValue(mockNotFoundResponse);
+    mockSearchKeyword.mockResolvedValue(mockNotFoundResponse)
 
-    render(<KeywordSearchPage />);
+    render(<KeywordSearchPage />)
 
-    const input = screen.getByPlaceholderText(/Search for Arabic roots/i);
-    await userEvent.type(input, "xyz");
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+    const input = screen.getByPlaceholderText(/Search for Arabic roots/i)
+    await userEvent.type(input, "xyz")
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" })
 
     await waitFor(() => {
-      expect(screen.getByText(/No root found/i)).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByText(/No root found/i)).toBeInTheDocument()
+    })
+  })
 
   it("loading skeletons appear during search", async () => {
     // Mock API to return a pending promise (never resolves)
-    mockSearchKeyword.mockReturnValue(new Promise(() => {}));
+    mockSearchKeyword.mockReturnValue(new Promise(() => {}))
 
-    render(<KeywordSearchPage />);
+    render(<KeywordSearchPage />)
 
-    const input = screen.getByPlaceholderText(/Search for Arabic roots/i);
-    await userEvent.type(input, "كتب");
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+    const input = screen.getByPlaceholderText(/Search for Arabic roots/i)
+    await userEvent.type(input, "كتب")
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" })
 
     await waitFor(() => {
-      const skeletons = screen.getAllByTestId("skeleton");
-      expect(skeletons.length).toBeGreaterThan(0);
-    });
-  });
+      const skeletons = screen.getAllByTestId("skeleton")
+      expect(skeletons.length).toBeGreaterThan(0)
+    })
+  })
 
   it("network error shows toast", async () => {
-    mockSearchKeyword.mockRejectedValue(new Error("Network error"));
+    mockSearchKeyword.mockRejectedValue(new Error("Network error"))
 
-    render(<KeywordSearchPage />);
+    render(<KeywordSearchPage />)
 
-    const input = screen.getByPlaceholderText(/Search for Arabic roots/i);
-    await userEvent.type(input, "كتب");
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+    const input = screen.getByPlaceholderText(/Search for Arabic roots/i)
+    await userEvent.type(input, "كتب")
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" })
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith("Search failed. Please try again.");
-    });
-  });
+      expect(toast.error).toHaveBeenCalledWith("Search failed. Please try again.")
+    })
+  })
 
   it("pagination controls appear when verses exceed page size", async () => {
     // Generate 60 verses (> VERSES_PER_PAGE=50) to trigger client-side pagination
@@ -301,28 +308,35 @@ describe("KeywordSearchPage", () => {
       text_uthmani: `آية ${i + 1}`,
       text_clean: `اية ${i + 1}`,
       matched_words: ["كتاب"],
-    }));
+    }))
     const paginatedResponse = {
       data: {
         ...mockSearchResponse.data,
         verses: manyVerses,
-        pagination: { page: 1, per_page: 0, total_verses: 60, total_pages: 1, has_next: false, has_prev: false },
+        pagination: {
+          page: 1,
+          per_page: 0,
+          total_verses: 60,
+          total_pages: 1,
+          has_next: false,
+          has_prev: false,
+        },
       },
-    };
-    mockSearchKeyword.mockResolvedValue(paginatedResponse);
+    }
+    mockSearchKeyword.mockResolvedValue(paginatedResponse)
 
-    render(<KeywordSearchPage />);
+    render(<KeywordSearchPage />)
 
-    const input = screen.getByPlaceholderText(/Search for Arabic roots/i);
-    await userEvent.type(input, "كتب");
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+    const input = screen.getByPlaceholderText(/Search for Arabic roots/i)
+    await userEvent.type(input, "كتب")
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" })
 
     await waitFor(() => {
       // Client-side pagination: 60 verses / 50 per page = 2 pages
-      expect(screen.getByText(/Page 1 of 2/i)).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: /Next/i })).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByText(/Page 1 of 2/i)).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /Next/i })).toBeInTheDocument()
+    })
+  })
 
   it("clicking Next page paginates client-side without API call", async () => {
     // Generate 60 verses to trigger client-side pagination
@@ -333,57 +347,64 @@ describe("KeywordSearchPage", () => {
       text_uthmani: `آية ${i + 1}`,
       text_clean: `اية ${i + 1}`,
       matched_words: ["كتاب"],
-    }));
+    }))
     const paginatedResponse = {
       data: {
         ...mockSearchResponse.data,
         verses: manyVerses,
-        pagination: { page: 1, per_page: 0, total_verses: 60, total_pages: 1, has_next: false, has_prev: false },
+        pagination: {
+          page: 1,
+          per_page: 0,
+          total_verses: 60,
+          total_pages: 1,
+          has_next: false,
+          has_prev: false,
+        },
       },
-    };
-    mockSearchKeyword.mockResolvedValue(paginatedResponse);
+    }
+    mockSearchKeyword.mockResolvedValue(paginatedResponse)
 
-    render(<KeywordSearchPage />);
+    render(<KeywordSearchPage />)
 
-    const input = screen.getByPlaceholderText(/Search for Arabic roots/i);
-    await userEvent.type(input, "كتب");
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+    const input = screen.getByPlaceholderText(/Search for Arabic roots/i)
+    await userEvent.type(input, "كتب")
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" })
 
     await waitFor(() => {
-      expect(screen.getByText(/Page 1 of 2/i)).toBeInTheDocument();
-    });
+      expect(screen.getByText(/Page 1 of 2/i)).toBeInTheDocument()
+    })
 
     // Reset mock to verify NO additional API call is made
-    mockSearchKeyword.mockClear();
+    mockSearchKeyword.mockClear()
 
-    const nextButton = screen.getByRole("button", { name: /Next/i });
-    fireEvent.click(nextButton);
+    const nextButton = screen.getByRole("button", { name: /Next/i })
+    fireEvent.click(nextButton)
 
     await waitFor(() => {
-      expect(screen.getByText(/Page 2 of 2/i)).toBeInTheDocument();
-    });
+      expect(screen.getByText(/Page 2 of 2/i)).toBeInTheDocument()
+    })
 
     // No API call should have been made — pagination is fully client-side
-    expect(mockSearchKeyword).not.toHaveBeenCalled();
-  });
+    expect(mockSearchKeyword).not.toHaveBeenCalled()
+  })
 
   it("derived word tag click filters verses", async () => {
-    mockSearchKeyword.mockResolvedValue(mockSearchResponse);
+    mockSearchKeyword.mockResolvedValue(mockSearchResponse)
 
-    render(<KeywordSearchPage />);
+    render(<KeywordSearchPage />)
 
-    const input = screen.getByPlaceholderText(/Search for Arabic roots/i);
-    await userEvent.type(input, "كتب");
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+    const input = screen.getByPlaceholderText(/Search for Arabic roots/i)
+    await userEvent.type(input, "كتب")
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" })
 
     // Wait for results to render
     await waitFor(() => {
-      expect(screen.getByText("Derived Words")).toBeInTheDocument();
-    });
+      expect(screen.getByText("Derived Words")).toBeInTheDocument()
+    })
 
     // Click on a derived word tag — "كتاب" (accessible name now includes transliteration: "كتابktAb")
-    const wordTag = screen.getByRole("button", { name: /^كتابktAb$/ });
-    fireEvent.click(wordTag);
+    const wordTag = screen.getByRole("button", { name: /^كتابktAb$/ })
+    fireEvent.click(wordTag)
 
     // After filtering, only verse with matched_words containing "الكتاب" should show
     // The first verse has matched_words: ["الكتاب"], second has ["اكتبوه"]
@@ -398,9 +419,9 @@ describe("KeywordSearchPage", () => {
     await waitFor(() => {
       // The "All Words" button should no longer be the active one
       // The clicked word tag should now be active (bg-indigo-500)
-      expect(wordTag).toBeInTheDocument();
-    });
-  });
+      expect(wordTag).toBeInTheDocument()
+    })
+  })
 
   it("selecting a derived word updates chart and stats", async () => {
     // Use mock data where matched_words exactly match unique_words (after diacritics strip)
@@ -412,7 +433,7 @@ describe("KeywordSearchPage", () => {
         total_occurrences: 319,
         unique_words: ["كتاب", "اكتبوه"],
         root_buckwalter: "ktb",
-        word_transliterations: { "كتاب": "ktAb", "اكتبوه": "AktbwhA" },
+        word_transliterations: { كتاب: "ktAb", اكتبوه: "AktbwhA" },
         surah_distribution: [
           { surah_id: 2, surah_name: "البقرة", count: 45 },
           { surah_id: 3, surah_name: "آل عمران", count: 23 },
@@ -452,85 +473,85 @@ describe("KeywordSearchPage", () => {
           has_prev: false,
         },
       },
-    };
-    mockSearchKeyword.mockResolvedValue(detailedResponse);
+    }
+    mockSearchKeyword.mockResolvedValue(detailedResponse)
 
-    render(<KeywordSearchPage />);
+    render(<KeywordSearchPage />)
 
-    const input = screen.getByPlaceholderText(/Search for Arabic roots/i);
-    await userEvent.type(input, "كتب");
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+    const input = screen.getByPlaceholderText(/Search for Arabic roots/i)
+    await userEvent.type(input, "كتب")
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" })
 
     await waitFor(() => {
-      expect(screen.getByText("Derived Words")).toBeInTheDocument();
-    });
+      expect(screen.getByText("Derived Words")).toBeInTheDocument()
+    })
 
     // Stats should show total: 319 occurrences initially
-    expect(screen.getByText("319")).toBeInTheDocument();
+    expect(screen.getByText("319")).toBeInTheDocument()
     // 2 unique words — use getAllByText since "2" appears in multiple places (stats + surah distribution)
-    const initialTwos = screen.getAllByText("2");
-    expect(initialTwos.length).toBeGreaterThanOrEqual(1);
+    const initialTwos = screen.getAllByText("2")
+    expect(initialTwos.length).toBeGreaterThanOrEqual(1)
 
     // Click a derived word — "كتاب" (accessible name includes transliteration: "كتابktAb")
-    const wordTag = screen.getByRole("button", { name: /^كتابktAb$/ });
-    fireEvent.click(wordTag);
+    const wordTag = screen.getByRole("button", { name: /^كتابktAb$/ })
+    fireEvent.click(wordTag)
 
     // After filtering, stats should update:
     // Filtered: 2 verses with كتاب (surah 2 + surah 3), 1 unique word, 2 surahs
     // The "319" should disappear since totalOccurrences is now 2
     await waitFor(() => {
-      expect(screen.queryByText("319")).not.toBeInTheDocument();
-    });
+      expect(screen.queryByText("319")).not.toBeInTheDocument()
+    })
 
     // uniqueWords should now be 1
     await waitFor(() => {
-      expect(screen.getByText("1")).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByText("1")).toBeInTheDocument()
+    })
+  })
 
   it("deselecting a derived word reverts chart and stats", async () => {
-    mockSearchKeyword.mockResolvedValue(mockSearchResponse);
+    mockSearchKeyword.mockResolvedValue(mockSearchResponse)
 
-    render(<KeywordSearchPage />);
+    render(<KeywordSearchPage />)
 
-    const input = screen.getByPlaceholderText(/Search for Arabic roots/i);
-    await userEvent.type(input, "كتب");
-    fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+    const input = screen.getByPlaceholderText(/Search for Arabic roots/i)
+    await userEvent.type(input, "كتب")
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" })
 
     await waitFor(() => {
-      expect(screen.getByText("Derived Words")).toBeInTheDocument();
-    });
+      expect(screen.getByText("Derived Words")).toBeInTheDocument()
+    })
 
     // Click a derived word to select
-    const wordTag = screen.getByRole("button", { name: /^كتابktAb$/ });
-    fireEvent.click(wordTag);
+    const wordTag = screen.getByRole("button", { name: /^كتابktAb$/ })
+    fireEvent.click(wordTag)
 
     // Click same word again to deselect
-    fireEvent.click(wordTag);
+    fireEvent.click(wordTag)
 
     // Stats should revert to original values
     await waitFor(() => {
-      expect(screen.getByText("319")).toBeInTheDocument();
-      expect(screen.getByText("2")).toBeInTheDocument(); // 2 visible words (كتاب + اكتبوه on this page)
-    });
-  });
+      expect(screen.getByText("319")).toBeInTheDocument()
+      expect(screen.getByText("2")).toBeInTheDocument() // 2 visible words (كتاب + اكتبوه on this page)
+    })
+  })
 
   it("tab switch to Root Browser fetches roots", async () => {
-    mockListRoots.mockResolvedValue(mockRootsResponse);
+    mockListRoots.mockResolvedValue(mockRootsResponse)
 
-    render(<KeywordSearchPage />);
+    render(<KeywordSearchPage />)
 
     // Click Root Browser tab - vercel-tabs renders plain divs
-    const browserTab = screen.getByText("Root Browser");
-    await userEvent.click(browserTab);
+    const browserTab = screen.getByText("Root Browser")
+    await userEvent.click(browserTab)
 
     await waitFor(() => {
-      expect(mockListRoots).toHaveBeenCalled();
-    });
+      expect(mockListRoots).toHaveBeenCalled()
+    })
 
     await waitFor(() => {
       // Root items should appear (the RootBrowser component renders them)
-      expect(screen.getByText("كتب")).toBeInTheDocument();
-    });
-  });
-});
+      expect(screen.getByText("كتب")).toBeInTheDocument()
+    })
+  })
+})

@@ -52,7 +52,7 @@ Bu gruptaki 2 issue'yu sırayla uygula:
    - Frontend: CollectionSelector component
    - Seçilmeyen ajanlar çalışmaz
 
-2. SONRA #71'i yap: Otonom agent. 
+2. SONRA #71'i yap: Otonom agent.
    - Query analyzer ile intent detection
    - keyword/semantic/hybrid karar verme
    - Tool execution (keyword search, semantic search)

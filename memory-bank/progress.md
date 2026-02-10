@@ -177,6 +177,18 @@
 - [ ] Batch query API
 - [ ] History result snapshots (RFC-002 — store search response JSON for instant recall)
 
+### Developer Experience / Code Quality
+
+- [x] **Comprehensive pre-commit hooks** (2026-02-10): Industry-standard pre-commit framework with 11 hooks across 6 repos
+  - File quality: trailing-whitespace, end-of-file-fixer, check-yaml/json/toml, check-merge-conflict, check-added-large-files, check-ast, debug-statements, no-commit-to-branch
+  - Security: gitleaks with custom .gitleaks.toml for OpenRouter + Google OAuth patterns
+  - Typo detection: codespell with Turkish/Arabic/Hebrew false-positive allowlist
+  - Backend: ruff lint (20 rule sets, 35 targeted ignores) + ruff format
+  - Backend types: pyright (pre-push stage)
+  - Frontend: ESLint (--max-warnings=0) + Prettier (tailwindcss plugin) + tsc (pre-push stage)
+  - CI hardening: removed continue-on-error from lint/format/typecheck steps
+  - Resolved 1,363 initial ruff violations via auto-fix + targeted ignores
+
 ## Current Status
 
 | Area | Status | Notes |
@@ -192,6 +204,7 @@
 | Docker Setup | Complete | PostgreSQL + Qdrant |
 | Browser Tests | Passed | Login ✅, Search ✅, Compare ✅ (rich refs) |
 | Multi-Translator | Complete | 8 Quran + 2 Turkish Bible |
+| Pre-commit Hooks | Complete | 11 hooks, gitleaks, ruff, eslint, prettier |
 
 ## Known Issues
 

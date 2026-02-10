@@ -7,11 +7,11 @@ Tests real queries from test_data.json through the full ComparativeRAG pipeline.
 """
 
 import json
+import re
 import sys
 import time
-import re
 from pathlib import Path
-from typing import List, Optional, Set, Tuple
+
 from dotenv import load_dotenv
 
 # Load environment variables first
@@ -32,7 +32,7 @@ from src.comparative_rag import ComparativeRAG
 # ============================================================================
 
 
-def parse_verse_reference(ref: str, source: str) -> Set[str]:
+def parse_verse_reference(ref: str, source: str) -> set[str]:
     """Parse a verse reference into a set of individual verse identifiers."""
     verses = set()
     ref = ref.strip()
@@ -61,14 +61,14 @@ def parse_verse_reference(ref: str, source: str) -> Set[str]:
     return verses
 
 
-def expand_expected_verses(expected: List[str], source: str) -> Set[str]:
+def expand_expected_verses(expected: list[str], source: str) -> set[str]:
     all_verses = set()
     for ref in expected:
         all_verses.update(parse_verse_reference(ref, source))
     return all_verses
 
 
-def extract_verse_from_result(result, source: str) -> Optional[str]:
+def extract_verse_from_result(result, source: str) -> str | None:
     """Extract verse reference from a search result object."""
     # Logic extracted from run_retrieval_accuracy_test.py
     if source == "quran":
@@ -105,9 +105,7 @@ def extract_verse_from_result(result, source: str) -> Optional[str]:
     return None
 
 
-def calculate_metrics(
-    expected: Set[str], retrieved: Set[str]
-) -> Tuple[float, float, float]:
+def calculate_metrics(expected: set[str], retrieved: set[str]) -> tuple[float, float, float]:
     if not retrieved:
         return (1.0, 0.0, 0.0) if expected else (1.0, 1.0, 1.0)
     if not expected:  # Hallucination test
@@ -128,11 +126,7 @@ def calculate_metrics(
 
     precision = len(matches) / len(retrieved) if retrieved else 0.0
     recall = len(matches) / len(expected) if expected else 1.0
-    f1 = (
-        2 * precision * recall / (precision + recall)
-        if (precision + recall) > 0
-        else 0.0
-    )
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
     return precision, recall, f1
 
 
@@ -142,13 +136,11 @@ def calculate_metrics(
 
 
 def run_benchmark():
-    console.print(
-        Panel.fit("[bold cyan]E2E RAG Benchmark (Retrieval + Generation)[/bold cyan]")
-    )
+    console.print(Panel.fit("[bold cyan]E2E RAG Benchmark (Retrieval + Generation)[/bold cyan]"))
 
     # 1. Load Data
     test_data_path = Path(__file__).parent / "test_data.json"
-    with open(test_data_path, "r", encoding="utf-8") as f:
+    with open(test_data_path, encoding="utf-8") as f:
         data = json.load(f)
     tests = data["tests"]
 
@@ -160,9 +152,7 @@ def run_benchmark():
 
     # 3. Run Tests
     for i, test in enumerate(tests):
-        console.print(
-            f"\n[bold]Test {i + 1}/{len(tests)}: {test['id']}[/bold] - {test['question']}"
-        )
+        console.print(f"\n[bold]Test {i + 1}/{len(tests)}: {test['id']}[/bold] - {test['question']}")
 
         start_time = time.time()
 
@@ -192,15 +182,11 @@ def run_benchmark():
                 collect_verses(search_result.apocrypha, "bible")
 
             # Calculate Retrieval Metrics
-            expected_set = expand_expected_verses(
-                test["expected_verses"], test["source"]
-            )
+            expected_set = expand_expected_verses(test["expected_verses"], test["source"])
             retrieved_set = set(retrieved_verses)
             precision, recall, f1 = calculate_metrics(expected_set, retrieved_set)
 
-            console.print(
-                f"  [cyan]Retrieval:[/cyan] P={precision:.2f} R={recall:.2f} F1={f1:.2f}"
-            )
+            console.print(f"  [cyan]Retrieval:[/cyan] P={precision:.2f} R={recall:.2f} F1={f1:.2f}")
 
             # B. Generation Stage
             # Only generate if we retrieved something, or if it's a hallucination test?
@@ -231,9 +217,7 @@ def run_benchmark():
 
         except Exception as e:
             console.print(f"[red]Error:[/red] {e}")
-            results.append(
-                {"id": test["id"], "question": test["question"], "error": str(e)}
-            )
+            results.append({"id": test["id"], "question": test["question"], "error": str(e)})
 
     # 4. Generate Report
     generate_markdown_report(results)
@@ -285,9 +269,7 @@ def generate_markdown_report(results):
         md_lines.append(f"### {r['id']}: {r['question']}")
         md_lines.append(f"**Confidence:** {r['confidence']:.0%}")
         md_lines.append("\n**Synthesis:**")
-        md_lines.append(
-            f"> {r['synthesis'].replace(chr(10), '  ' + chr(10))}"
-        )  # Blockquote
+        md_lines.append(f"> {r['synthesis'].replace(chr(10), '  ' + chr(10))}")  # Blockquote
         md_lines.append("\n---")
 
     with open(report_path, "w", encoding="utf-8") as f:

@@ -7,7 +7,7 @@ Stub module — planned feature. Referenced by CLI commands:
 Requires: neo4j (pip install neo4j)
 """
 
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 
 class GraphRAGBuilder:
@@ -18,8 +18,7 @@ class GraphRAGBuilder:
 
     def __init__(self, qdrant_url: str = "localhost:6333") -> None:
         raise NotImplementedError(
-            "GraphRAGBuilder is not yet implemented. "
-            "Install neo4j and configure NEO4J_PASSWORD to use."
+            "GraphRAGBuilder is not yet implemented. Install neo4j and configure NEO4J_PASSWORD to use."
         )
 
     def clear_graph(self) -> None:
@@ -34,8 +33,8 @@ class GraphRAGBuilder:
         workers: int = 1,
         resume: bool = False,
         checkpoint_interval: int = 100,
-    ) -> Tuple[List[Any], List[Any]]:
+    ) -> tuple[list[Any], list[Any]]:
         raise NotImplementedError
 
-    def get_graph_stats(self) -> Dict[str, Any]:
+    def get_graph_stats(self) -> dict[str, Any]:
         raise NotImplementedError

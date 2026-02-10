@@ -2,9 +2,10 @@
 
 import hashlib
 import logging
-from typing import Dict, Any
+from datetime import UTC
+from typing import Any
 
-from fastapi import HTTPException, Request, Depends
+from fastapi import Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 async def get_current_user_from_api_key(
     request: Request,
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Extract and validate API key from X-API-Key header.
 
@@ -65,7 +66,7 @@ async def get_current_user_from_api_key(
             headers={"WWW-Authenticate": "ApiKey"},
         )
 
-    stats, user = row
+    _stats, user = row
 
     # Return user dict (same format as JWT auth)
     return {
@@ -78,9 +79,7 @@ async def get_current_user_from_api_key(
     }
 
 
-async def _resolve_user_by_id(
-    user_id: str, db: AsyncSession, operation: str
-) -> Dict[str, Any]:
+async def _resolve_user_by_id(user_id: str, db: AsyncSession, operation: str) -> dict[str, Any]:
     """
     Fetch user from database and ensure user_stats exists.
 
@@ -99,9 +98,7 @@ async def _resolve_user_by_id(
     """
     from datetime import datetime
 
-    result = await db.execute(
-        select(BetterAuthUser).where(BetterAuthUser.id == user_id)
-    )
+    result = await db.execute(select(BetterAuthUser).where(BetterAuthUser.id == user_id))
     user = result.scalar_one_or_none()
 
     if not user:
@@ -112,9 +109,7 @@ async def _resolve_user_by_id(
         raise HTTPException(status_code=401, detail="User not found")
 
     # Ensure user_stats exists
-    stats_result = await db.execute(
-        select(UserStats).where(UserStats.user_id == user_id)
-    )
+    stats_result = await db.execute(select(UserStats).where(UserStats.user_id == user_id))
     stats = stats_result.scalar_one_or_none()
 
     if not stats:
@@ -146,7 +141,7 @@ async def _resolve_user_by_id(
 async def get_current_user_flexible(
     request: Request,
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Flexible authentication: tries cookie, then API key.
 
@@ -183,25 +178,19 @@ async def get_current_user_flexible(
     )
     if cookie_token:
         try:
-            from datetime import datetime, timezone
+            from datetime import datetime
             from urllib.parse import unquote
 
             # Better Auth cookie format: <token>.<hmac-signature> (URL-encoded)
             # The DB stores only the raw token without the signature.
             raw_token = (
-                unquote(cookie_token).rsplit(".", 1)[0]
-                if "." in unquote(cookie_token)
-                else unquote(cookie_token)
+                unquote(cookie_token).rsplit(".", 1)[0] if "." in unquote(cookie_token) else unquote(cookie_token)
             )
 
-            session_result = await db.execute(
-                select(BetterAuthSession).where(BetterAuthSession.token == raw_token)
-            )
+            session_result = await db.execute(select(BetterAuthSession).where(BetterAuthSession.token == raw_token))
             session = session_result.scalar_one_or_none()
 
-            if session and session.expires_at.replace(
-                tzinfo=timezone.utc
-            ) > datetime.now(timezone.utc):
+            if session and session.expires_at.replace(tzinfo=UTC) > datetime.now(UTC):
                 logger.debug(
                     "Authenticated via session cookie",
                     extra={
@@ -209,9 +198,7 @@ async def get_current_user_flexible(
                         "operation": "get_current_user_flexible",
                     },
                 )
-                return await _resolve_user_by_id(
-                    session.user_id, db, "get_current_user_flexible"
-                )
+                return await _resolve_user_by_id(session.user_id, db, "get_current_user_flexible")
             elif session:
                 logger.warning(
                     "Session cookie expired",

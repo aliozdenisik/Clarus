@@ -36,15 +36,12 @@ jobs:
 
       - name: Lint
         run: uv run ruff check .
-        continue-on-error: true
 
       - name: Format check
         run: uv run ruff format --check .
-        continue-on-error: true
 
       - name: Type check
         run: uv run pyright
-        continue-on-error: true
 
       - name: Run all tests
         run: >-

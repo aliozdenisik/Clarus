@@ -1,13 +1,13 @@
-import { Book, Menu, Sunset, Trees, Zap } from "lucide-react";
-import Image from "next/image";
+import { Book, Menu, Sunset, Trees, Zap } from "lucide-react"
+import Image from "next/image"
 
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/accordion"
+import { Button } from "@/components/ui/button"
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -15,45 +15,39 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@/components/ui/navigation-menu"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 
 interface MenuItem {
-  title: string;
-  url: string;
-  description?: string;
-  icon?: React.ReactElement;
-  items?: MenuItem[];
+  title: string
+  url: string
+  description?: string
+  icon?: React.ReactElement
+  items?: MenuItem[]
 }
 
 interface Navbar1Props {
   logo?: {
-    url: string;
-    src: string;
-    alt: string;
-    title: string;
-  };
-  menu?: MenuItem[];
+    url: string
+    src: string
+    alt: string
+    title: string
+  }
+  menu?: MenuItem[]
   mobileExtraLinks?: {
-    name: string;
-    url: string;
-  }[];
+    name: string
+    url: string
+  }[]
   auth?: {
     login: {
-      text: string;
-      url: string;
-    };
+      text: string
+      url: string
+    }
     signup: {
-      text: string;
-      url: string;
-    };
-  };
+      text: string
+      url: string
+    }
+  }
 }
 
 const Navbar1 = ({
@@ -89,8 +83,7 @@ const Navbar1 = ({
         },
         {
           title: "Support",
-          description:
-            "Get in touch with our support team or visit our community forums",
+          description: "Get in touch with our support team or visit our community forums",
           icon: <Zap className="size-5 shrink-0" />,
           url: "#",
         },
@@ -157,9 +150,7 @@ const Navbar1 = ({
             </a>
             <div className="flex items-center">
               <NavigationMenu>
-                <NavigationMenuList>
-                  {menu.map((item) => renderMenuItem(item))}
-                </NavigationMenuList>
+                <NavigationMenuList>{menu.map((item) => renderMenuItem(item))}</NavigationMenuList>
               </NavigationMenu>
             </div>
           </div>
@@ -189,18 +180,12 @@ const Navbar1 = ({
                   <SheetTitle>
                     <a href={logo.url} className="flex items-center gap-2">
                       <Image src={logo.src} className="w-8" alt={logo.alt} width={32} height={32} />
-                      <span className="text-lg font-semibold">
-                        {logo.title}
-                      </span>
+                      <span className="text-lg font-semibold">{logo.title}</span>
                     </a>
                   </SheetTitle>
                 </SheetHeader>
                 <div className="my-6 flex flex-col gap-6">
-                  <Accordion
-                    type="single"
-                    collapsible
-                    className="flex w-full flex-col gap-4"
-                  >
+                  <Accordion type="single" collapsible className="flex w-full flex-col gap-4">
                     {menu.map((item) => renderMobileMenuItem(item))}
                   </Accordion>
                   <div className="border-t py-4">
@@ -208,7 +193,7 @@ const Navbar1 = ({
                       {mobileExtraLinks.map((link) => (
                         <a
                           key={`${link.name}-${link.url}`}
-                          className="inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-accent-foreground"
+                          className="text-muted-foreground hover:bg-muted hover:text-accent-foreground inline-flex h-10 items-center gap-2 rounded-md px-4 py-2 text-sm font-medium whitespace-nowrap transition-colors"
                           href={link.url}
                         >
                           {link.name}
@@ -231,8 +216,8 @@ const Navbar1 = ({
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
 const renderMenuItem = (item: MenuItem) => {
   if (item.items) {
@@ -244,17 +229,15 @@ const renderMenuItem = (item: MenuItem) => {
             {item.items.map((subItem) => (
               <NavigationMenuLink key={subItem.title} asChild>
                 <a
-                  className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-muted hover:text-accent-foreground"
+                  className="hover:bg-muted hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
                   href={subItem.url}
                 >
                   <li className="flex gap-4">
                     {subItem.icon}
                     <div>
-                      <div className="text-sm font-semibold">
-                        {subItem.title}
-                      </div>
+                      <div className="text-sm font-semibold">{subItem.title}</div>
                       {subItem.description && (
-                        <p className="text-sm leading-snug text-muted-foreground">
+                        <p className="text-muted-foreground text-sm leading-snug">
                           {subItem.description}
                         </p>
                       )}
@@ -266,19 +249,19 @@ const renderMenuItem = (item: MenuItem) => {
           </ul>
         </NavigationMenuContent>
       </NavigationMenuItem>
-    );
+    )
   }
 
   return (
     <a
       key={item.title}
-      className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-accent-foreground"
+      className="group bg-background text-muted-foreground hover:bg-muted hover:text-accent-foreground inline-flex h-10 w-max items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors"
       href={item.url}
     >
       {item.title}
     </a>
-  );
-};
+  )
+}
 
 const renderMobileMenuItem = (item: MenuItem) => {
   if (item.items) {
@@ -291,14 +274,14 @@ const renderMobileMenuItem = (item: MenuItem) => {
           {item.items.map((subItem) => (
             <a
               key={subItem.title}
-              className="flex select-none gap-4 rounded-md p-3 leading-none outline-none transition-colors hover:bg-muted hover:text-accent-foreground"
+              className="hover:bg-muted hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none transition-colors outline-none select-none"
               href={subItem.url}
             >
               {subItem.icon}
               <div>
                 <div className="text-sm font-semibold">{subItem.title}</div>
                 {subItem.description && (
-                  <p className="text-sm leading-snug text-muted-foreground">
+                  <p className="text-muted-foreground text-sm leading-snug">
                     {subItem.description}
                   </p>
                 )}
@@ -307,14 +290,14 @@ const renderMobileMenuItem = (item: MenuItem) => {
           ))}
         </AccordionContent>
       </AccordionItem>
-    );
+    )
   }
 
   return (
     <a key={item.title} href={item.url} className="font-semibold">
       {item.title}
     </a>
-  );
-};
+  )
+}
 
-export { Navbar1 };
+export { Navbar1 }

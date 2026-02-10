@@ -1,28 +1,32 @@
-"use client";
+"use client"
 
-import { motion } from "framer-motion";
-import { springPresets } from "@/lib/design-system";
-import { cn } from "@/lib/utils";
+import { motion } from "framer-motion"
+import { springPresets } from "@/lib/design-system"
+import { cn } from "@/lib/utils"
 
 interface DerivedWordsProps {
-  words: string[];
-  selectedWord: string | null;
-  onWordSelect: (word: string | null) => void;
-  transliterations?: Record<string, string>;
-  language?: "arabic" | "hebrew" | "greek";
+  words: string[]
+  selectedWord: string | null
+  onWordSelect: (word: string | null) => void
+  transliterations?: Record<string, string>
+  language?: "arabic" | "hebrew" | "greek"
 }
 
-export function DerivedWords({ words, selectedWord, onWordSelect, transliterations, language = "arabic" }: DerivedWordsProps) {
-  const isHebrew = language === "hebrew";
-  const isGreek = language === "greek";
-  
+export function DerivedWords({
+  words,
+  selectedWord,
+  onWordSelect,
+  transliterations,
+  language = "arabic",
+}: DerivedWordsProps) {
+  const isHebrew = language === "hebrew"
+  const isGreek = language === "greek"
+
   return (
     <div className="space-y-4">
       {/* Section Header */}
       <div className="flex items-center gap-3">
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
-          Derived Words
-        </h3>
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Derived Words</h3>
         <span className="text-[var(--color-text-muted)]">◆</span>
       </div>
 
@@ -35,7 +39,7 @@ export function DerivedWords({ words, selectedWord, onWordSelect, transliteratio
           transition={springPresets.snappy}
           onClick={() => onWordSelect(null)}
           className={cn(
-            "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+            "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
             selectedWord === null
               ? "bg-indigo-500 text-white"
               : "bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)]/80"
@@ -53,25 +57,25 @@ export function DerivedWords({ words, selectedWord, onWordSelect, transliteratio
             transition={{ ...springPresets.snappy, delay: (index + 1) * 0.03 }}
             onClick={() => onWordSelect(selectedWord === word ? null : word)}
             className={cn(
-              "px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex flex-col items-center gap-0.5",
+              "flex flex-col items-center gap-0.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
               selectedWord === word
                 ? "bg-indigo-500 text-white"
                 : "bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)]/80"
             )}
           >
-            <span 
-              lang={isGreek ? "el" : isHebrew ? "he" : "ar"} 
+            <span
+              lang={isGreek ? "el" : isHebrew ? "he" : "ar"}
               className={isGreek ? "font-greek" : isHebrew ? "font-hebrew" : "font-arabic"}
               dir={isGreek ? "ltr" : "rtl"}
             >
               {isGreek ? word : <bdi>{word}</bdi>}
             </span>
             {transliterations?.[word] && (
-              <span className="text-[10px] opacity-70 font-sans">{transliterations[word]}</span>
+              <span className="font-sans text-[10px] opacity-70">{transliterations[word]}</span>
             )}
           </motion.button>
         ))}
       </div>
     </div>
-  );
+  )
 }

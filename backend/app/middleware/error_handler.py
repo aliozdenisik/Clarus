@@ -1,9 +1,9 @@
+import uuid
+from datetime import datetime
+
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from typing import Optional
-from datetime import datetime
-import uuid
 
 from app.logging_config import get_logger, set_user_id
 
@@ -24,7 +24,7 @@ class APIError(Exception):
         message: str,
         code: str = "INTERNAL_ERROR",
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
-        details: Optional[list[dict]] = None,
+        details: list[dict] | None = None,
     ):
         self.message = message
         self.code = code
@@ -34,7 +34,7 @@ class APIError(Exception):
 
 
 class ValidationError(APIError):
-    def __init__(self, message: str, details: Optional[list[dict]] = None):
+    def __init__(self, message: str, details: list[dict] | None = None):
         super().__init__(
             message=message,
             code="VALIDATION_ERROR",
@@ -75,7 +75,7 @@ def create_error_response(
     code: str,
     message: str,
     status_code: int,
-    details: Optional[list[dict]] = None,
+    details: list[dict] | None = None,
 ) -> JSONResponse:
     return JSONResponse(
         status_code=status_code,
@@ -125,11 +125,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 },
             )
             # Don't capture rate limit errors in Sentry (expected behavior)
-            if (
-                SENTRY_AVAILABLE
-                and sentry_sdk is not None
-                and not isinstance(e, RateLimitError)
-            ):
+            if SENTRY_AVAILABLE and sentry_sdk is not None and not isinstance(e, RateLimitError):
                 sentry_sdk.capture_exception(e)
             return create_error_response(
                 request_id=request_id,

@@ -1,20 +1,20 @@
 """REST API endpoints for Bible morphological keyword search."""
 
 import logging
-from typing import Optional
+
 from fastapi import APIRouter, Query
 
 from app.schemas.bible_keyword import (
     BibleKeywordSearchRequest,
     BibleKeywordSearchResponse,
-    PaginationInfo,
-    BookDistItem,
-    BibleVerseMatchItem,
     BibleRootListItem,
     BibleRootListResponse,
     BibleStatsResponse,
+    BibleVerseMatchItem,
+    BookDistItem,
     CrossReferenceResponse,
     CrossReferenceWord,
+    PaginationInfo,
 )
 from src.bible_morphology import BibleMorphologySearch
 
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # Lazy singleton
-_search_instance: Optional[BibleMorphologySearch] = None
+_search_instance: BibleMorphologySearch | None = None
 
 
 async def get_bible_search() -> BibleMorphologySearch:
@@ -60,8 +60,7 @@ async def search_bible_keyword(request: BibleKeywordSearchRequest):
             category_filter=request.category_filter,
         )
         logger.info(
-            "[BibleKeywordSearch] Search completed: root=%r, root_source=%r, "
-            "total_occurrences=%d, total_verses=%d",
+            "[BibleKeywordSearch] Search completed: root=%r, root_source=%r, total_occurrences=%d, total_verses=%d",
             result.root,
             result.root_source,
             result.total_occurrences,
@@ -89,8 +88,7 @@ async def search_bible_keyword(request: BibleKeywordSearchRequest):
         total_occurrences=result.total_occurrences,
         unique_words=result.unique_words,
         book_distribution=[
-            BookDistItem(book_id=bd.book_id, book_name=bd.book_name, count=bd.count)
-            for bd in result.book_distribution
+            BookDistItem(book_id=bd.book_id, book_name=bd.book_name, count=bd.count) for bd in result.book_distribution
         ],
         verses=[
             BibleVerseMatchItem(
@@ -165,8 +163,7 @@ async def get_bible_root_info(
         total_occurrences=result.total_occurrences,
         unique_words=result.unique_words,
         book_distribution=[
-            BookDistItem(book_id=bd.book_id, book_name=bd.book_name, count=bd.count)
-            for bd in result.book_distribution
+            BookDistItem(book_id=bd.book_id, book_name=bd.book_name, count=bd.count) for bd in result.book_distribution
         ],
         verses=[
             BibleVerseMatchItem(

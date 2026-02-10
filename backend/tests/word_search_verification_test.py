@@ -24,20 +24,17 @@ import asyncio
 import json
 import logging
 import sys
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 # Add parent to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.quran_morphology import QuranMorphologySearch
 from src.bible_morphology import BibleMorphologySearch
+from src.quran_morphology import QuranMorphologySearch
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -63,16 +60,16 @@ class TestResult:
     actual_books_count: int = 0
     actual_book_distribution: dict = field(default_factory=dict)
     actual_verse_count: int = 0
-    actual_root: Optional[str] = None
+    actual_root: str | None = None
     actual_root_source: str = ""
 
     # Expected results from external sources
-    expected_total_occurrences: Optional[int] = None
-    expected_unique_words_count: Optional[int] = None
+    expected_total_occurrences: int | None = None
+    expected_unique_words_count: int | None = None
     expected_unique_words: list[str] = field(default_factory=list)
-    expected_books_count: Optional[int] = None
+    expected_books_count: int | None = None
     expected_book_distribution: dict = field(default_factory=dict)
-    expected_verse_count: Optional[int] = None
+    expected_verse_count: int | None = None
 
     # Comparison results
     total_occurrence_pass: bool = False
@@ -86,7 +83,7 @@ class TestResult:
 
     # Overall
     overall_pass: bool = False
-    error: Optional[str] = None
+    error: str | None = None
     execution_time_ms: float = 0.0
 
     def to_dict(self) -> dict:
@@ -142,17 +139,15 @@ class WordSearchVerificationTest:
     INTERSECTION_MIN = 0.80  # 80% minimum intersection for word lists
 
     def __init__(self):
-        self.quran_search: Optional[QuranMorphologySearch] = None
-        self.bible_search: Optional[BibleMorphologySearch] = None
+        self.quran_search: QuranMorphologySearch | None = None
+        self.bible_search: BibleMorphologySearch | None = None
         self.results: list[TestResult] = []
         self.summary = TestSummary()
 
     async def setup(self):
         """Initialize search services."""
         logger.info("Initializing search services...")
-        self.quran_search = QuranMorphologySearch(
-            "postgresql+asyncpg://postgres:postgres@localhost:54322/postgres"
-        )
+        self.quran_search = QuranMorphologySearch("postgresql+asyncpg://postgres:postgres@localhost:54322/postgres")
         self.bible_search = await BibleMorphologySearch.get_instance()
         logger.info("Search services initialized")
 
@@ -162,17 +157,17 @@ class WordSearchVerificationTest:
             await self.quran_search.close()
         logger.info("Search services closed")
 
-    async def run_all_tests(self, input_file: str, expected_file: Optional[str] = None):
+    async def run_all_tests(self, input_file: str, expected_file: str | None = None):
         """Run all tests from input file."""
 
         # Load test input
-        with open(input_file, "r", encoding="utf-8") as f:
+        with open(input_file, encoding="utf-8") as f:
             test_input = json.load(f)
 
         # Load expected values if provided
         expected_data = {}
         if expected_file and Path(expected_file).exists():
-            with open(expected_file, "r", encoding="utf-8") as f:
+            with open(expected_file, encoding="utf-8") as f:
                 expected_data = json.load(f)
 
         tests = test_input.get("tests", {})
@@ -181,9 +176,7 @@ class WordSearchVerificationTest:
         logger.info("=" * 60)
         logger.info("Running QURAN tests...")
         logger.info("=" * 60)
-        await self._run_source_tests(
-            "quran", tests.get("quran", {}), expected_data.get("quran", {})
-        )
+        await self._run_source_tests("quran", tests.get("quran", {}), expected_data.get("quran", {}))
 
         # Run Hebrew OT tests
         logger.info("=" * 60)
@@ -215,7 +208,7 @@ class WordSearchVerificationTest:
         source: str,
         tests: dict,
         expected: dict,
-        language_filter: Optional[str] = None,
+        language_filter: str | None = None,
     ):
         """Run tests for a single source (quran/hebrew/greek)."""
         import time
@@ -248,19 +241,12 @@ class WordSearchVerificationTest:
                             page=1,
                             per_page=0,  # Get all verses
                         )
-                        result.actual_total_occurrences = (
-                            search_result.total_occurrences
-                        )
-                        result.actual_unique_words_count = len(
-                            search_result.unique_words
-                        )
+                        result.actual_total_occurrences = search_result.total_occurrences
+                        result.actual_unique_words_count = len(search_result.unique_words)
                         result.actual_unique_words = search_result.unique_words
-                        result.actual_books_count = len(
-                            search_result.surah_distribution
-                        )
+                        result.actual_books_count = len(search_result.surah_distribution)
                         result.actual_book_distribution = {
-                            sd.surah_name: sd.count
-                            for sd in search_result.surah_distribution
+                            sd.surah_name: sd.count for sd in search_result.surah_distribution
                         }
                         result.actual_verse_count = search_result.total_verses
                         result.actual_root = search_result.root
@@ -273,17 +259,12 @@ class WordSearchVerificationTest:
                             per_page=0,  # Get all verses
                             language_filter=language_filter,
                         )
-                        result.actual_total_occurrences = (
-                            search_result.total_occurrences
-                        )
-                        result.actual_unique_words_count = len(
-                            search_result.unique_words
-                        )
+                        result.actual_total_occurrences = search_result.total_occurrences
+                        result.actual_unique_words_count = len(search_result.unique_words)
                         result.actual_unique_words = search_result.unique_words
                         result.actual_books_count = len(search_result.book_distribution)
                         result.actual_book_distribution = {
-                            bd.book_name: bd.count
-                            for bd in search_result.book_distribution
+                            bd.book_name: bd.count for bd in search_result.book_distribution
                         }
                         result.actual_verse_count = search_result.total_verses
                         result.actual_root = search_result.root
@@ -320,11 +301,7 @@ class WordSearchVerificationTest:
                 self.results.append(result)
 
                 # Log result
-                status = (
-                    "PASS"
-                    if result.overall_pass
-                    else ("ERROR" if result.error else "FAIL")
-                )
+                status = "PASS" if result.overall_pass else ("ERROR" if result.error else "FAIL")
                 logger.info(
                     f"[{status}] {test_id}: {query!r} - "
                     f"occurrences={result.actual_total_occurrences}, "
@@ -343,9 +320,7 @@ class WordSearchVerificationTest:
             act = result.actual_total_occurrences
             if exp > 0:
                 result.total_occurrence_diff_pct = abs(act - exp) / exp * 100
-                result.total_occurrence_pass = (
-                    result.total_occurrence_diff_pct <= self.TOLERANCE_PCT
-                )
+                result.total_occurrence_pass = result.total_occurrence_diff_pct <= self.TOLERANCE_PCT
             else:
                 result.total_occurrence_pass = act == 0
         else:
@@ -360,9 +335,7 @@ class WordSearchVerificationTest:
             if exp_set:
                 intersection = len(exp_set & act_set)
                 result.unique_words_intersection_pct = intersection / len(exp_set) * 100
-                result.unique_words_pass = (
-                    result.unique_words_intersection_pct >= self.INTERSECTION_MIN * 100
-                )
+                result.unique_words_pass = result.unique_words_intersection_pct >= self.INTERSECTION_MIN * 100
             else:
                 result.unique_words_pass = len(act_set) == 0
         elif expected.get("unique_words_count") is not None:
@@ -371,9 +344,7 @@ class WordSearchVerificationTest:
             act = result.actual_unique_words_count
             if exp > 0:
                 diff_pct = abs(act - exp) / exp * 100
-                result.unique_words_pass = (
-                    diff_pct <= self.TOLERANCE_PCT * 2
-                )  # More lenient for count-only
+                result.unique_words_pass = diff_pct <= self.TOLERANCE_PCT * 2  # More lenient for count-only
             else:
                 result.unique_words_pass = act == 0
         else:
@@ -386,9 +357,7 @@ class WordSearchVerificationTest:
             act = result.actual_books_count
             if exp > 0:
                 result.books_count_diff_pct = abs(act - exp) / exp * 100
-                result.books_count_pass = (
-                    result.books_count_diff_pct <= self.TOLERANCE_PCT
-                )
+                result.books_count_pass = result.books_count_diff_pct <= self.TOLERANCE_PCT
             else:
                 result.books_count_pass = act == 0
         else:
@@ -401,9 +370,7 @@ class WordSearchVerificationTest:
             act = result.actual_verse_count
             if exp > 0:
                 result.verse_count_diff_pct = abs(act - exp) / exp * 100
-                result.verse_count_pass = (
-                    result.verse_count_diff_pct <= self.TOLERANCE_PCT
-                )
+                result.verse_count_pass = result.verse_count_diff_pct <= self.TOLERANCE_PCT
             else:
                 result.verse_count_pass = act == 0
         else:
@@ -464,30 +431,14 @@ class WordSearchVerificationTest:
             s.overall_pass_rate = s.passed_tests / s.total_tests * 100
 
         # Metric-specific pass rates (excluding edge cases and errors)
-        valid_results = [
-            r for r in self.results if not r.error and r.input_type != "edge_case"
-        ]
+        valid_results = [r for r in self.results if not r.error and r.input_type != "edge_case"]
         if valid_results:
             s.total_occurrence_pass_rate = (
-                sum(1 for r in valid_results if r.total_occurrence_pass)
-                / len(valid_results)
-                * 100
+                sum(1 for r in valid_results if r.total_occurrence_pass) / len(valid_results) * 100
             )
-            s.unique_words_pass_rate = (
-                sum(1 for r in valid_results if r.unique_words_pass)
-                / len(valid_results)
-                * 100
-            )
-            s.books_count_pass_rate = (
-                sum(1 for r in valid_results if r.books_count_pass)
-                / len(valid_results)
-                * 100
-            )
-            s.verse_count_pass_rate = (
-                sum(1 for r in valid_results if r.verse_count_pass)
-                / len(valid_results)
-                * 100
-            )
+            s.unique_words_pass_rate = sum(1 for r in valid_results if r.unique_words_pass) / len(valid_results) * 100
+            s.books_count_pass_rate = sum(1 for r in valid_results if r.books_count_pass) / len(valid_results) * 100
+            s.verse_count_pass_rate = sum(1 for r in valid_results if r.verse_count_pass) / len(valid_results) * 100
 
     def generate_report(self, output_dir: str) -> str:
         """Generate markdown report."""
@@ -504,9 +455,7 @@ class WordSearchVerificationTest:
         report_lines.append("")
         report_lines.append("| Metric | Value |")
         report_lines.append("|--------|-------|")
-        report_lines.append(
-            f"| **Overall Pass Rate** | **{self.summary.overall_pass_rate:.1f}%** |"
-        )
+        report_lines.append(f"| **Overall Pass Rate** | **{self.summary.overall_pass_rate:.1f}%** |")
         report_lines.append(f"| Passed | {self.summary.passed_tests} |")
         report_lines.append(f"| Failed | {self.summary.failed_tests} |")
         report_lines.append(f"| Errors | {self.summary.error_tests} |")
@@ -519,9 +468,7 @@ class WordSearchVerificationTest:
         report_lines.append("|--------|-------|--------|-----------|")
         if self.summary.quran_total > 0:
             rate = self.summary.quran_passed / self.summary.quran_total * 100
-            report_lines.append(
-                f"| Quran | {self.summary.quran_total} | {self.summary.quran_passed} | {rate:.1f}% |"
-            )
+            report_lines.append(f"| Quran | {self.summary.quran_total} | {self.summary.quran_passed} | {rate:.1f}% |")
         if self.summary.hebrew_total > 0:
             rate = self.summary.hebrew_passed / self.summary.hebrew_total * 100
             report_lines.append(
@@ -541,9 +488,7 @@ class WordSearchVerificationTest:
         report_lines.append("|------------|-------|--------|-----------|")
         if self.summary.latin_total > 0:
             rate = self.summary.latin_passed / self.summary.latin_total * 100
-            report_lines.append(
-                f"| Latin | {self.summary.latin_total} | {self.summary.latin_passed} | {rate:.1f}% |"
-            )
+            report_lines.append(f"| Latin | {self.summary.latin_total} | {self.summary.latin_passed} | {rate:.1f}% |")
         if self.summary.original_total > 0:
             rate = self.summary.original_passed / self.summary.original_total * 100
             report_lines.append(
@@ -561,18 +506,10 @@ class WordSearchVerificationTest:
         report_lines.append("")
         report_lines.append("| Metric | Pass Rate |")
         report_lines.append("|--------|-----------|")
-        report_lines.append(
-            f"| Total Occurrence (±5%) | {self.summary.total_occurrence_pass_rate:.1f}% |"
-        )
-        report_lines.append(
-            f"| Unique Words (80% intersection) | {self.summary.unique_words_pass_rate:.1f}% |"
-        )
-        report_lines.append(
-            f"| Books/Surahs Count (±5%) | {self.summary.books_count_pass_rate:.1f}% |"
-        )
-        report_lines.append(
-            f"| Verse Count (±5%) | {self.summary.verse_count_pass_rate:.1f}% |"
-        )
+        report_lines.append(f"| Total Occurrence (±5%) | {self.summary.total_occurrence_pass_rate:.1f}% |")
+        report_lines.append(f"| Unique Words (80% intersection) | {self.summary.unique_words_pass_rate:.1f}% |")
+        report_lines.append(f"| Books/Surahs Count (±5%) | {self.summary.books_count_pass_rate:.1f}% |")
+        report_lines.append(f"| Verse Count (±5%) | {self.summary.verse_count_pass_rate:.1f}% |")
         report_lines.append("")
 
         # Detailed Results
@@ -591,12 +528,8 @@ class WordSearchVerificationTest:
             }[source]
             report_lines.append(f"### {source_name}")
             report_lines.append("")
-            report_lines.append(
-                "| ID | Query | Description | Status | Occurrences | Words | Books | Verses |"
-            )
-            report_lines.append(
-                "|-----|-------|-------------|--------|-------------|-------|-------|--------|"
-            )
+            report_lines.append("| ID | Query | Description | Status | Occurrences | Words | Books | Verses |")
+            report_lines.append("|-----|-------|-------------|--------|-------------|-------|-------|--------|")
 
             for r in source_results:
                 status = "✅" if r.overall_pass else ("❌ ERROR" if r.error else "❌")
@@ -624,9 +557,7 @@ class WordSearchVerificationTest:
                 report_lines.append(f"### {r.test_id}: `{r.query}`")
                 report_lines.append(f"- **Source:** {r.source}")
                 report_lines.append(f"- **Description:** {r.description}")
-                report_lines.append(
-                    f"- **Root Found:** {r.actual_root} ({r.actual_root_source})"
-                )
+                report_lines.append(f"- **Root Found:** {r.actual_root} ({r.actual_root_source})")
                 if not r.total_occurrence_pass:
                     report_lines.append(
                         f"- **Total Occurrence:** {r.actual_total_occurrences} (expected: {r.expected_total_occurrences}, diff: {r.total_occurrence_diff_pct:.1f}%)"
@@ -700,9 +631,7 @@ async def main():
 
     try:
         await runner.setup()
-        await runner.run_all_tests(
-            str(input_file), str(expected_file) if expected_file.exists() else None
-        )
+        await runner.run_all_tests(str(input_file), str(expected_file) if expected_file.exists() else None)
         runner.generate_report(str(test_dir))
 
         # Print summary
@@ -716,11 +645,7 @@ async def main():
         print(f"Overall Pass Rate: {runner.summary.overall_pass_rate:.1f}%")
         print("=" * 60)
 
-        return (
-            0
-            if runner.summary.failed_tests == 0 and runner.summary.error_tests == 0
-            else 1
-        )
+        return 0 if runner.summary.failed_tests == 0 and runner.summary.error_tests == 0 else 1
 
     finally:
         await runner.teardown()

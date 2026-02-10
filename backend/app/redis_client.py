@@ -7,9 +7,10 @@ Provides:
 - redis_manager: Global instance for lifespan management
 """
 
+from collections.abc import Awaitable
+
 from redis import asyncio as aioredis
 from redis.asyncio.connection import ConnectionPool
-from collections.abc import Awaitable
 
 from app.config import settings
 from app.logging_config import get_logger

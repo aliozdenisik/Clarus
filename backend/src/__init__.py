@@ -18,16 +18,16 @@ except ImportError:
     GraphRAGBuilder = None
 
 __all__ = [
-    "QuranDataLoader",
-    "DenseEncoder",
     "AsyncDenseEncoder",
-    "QuranIndexer",
-    "SemanticChunkIndexer",
-    "QuranSearcher",
     "BibleSearcher",
-    "SemanticChunkSearcher",
-    "QueryEnhancer",
-    "SemanticChunk",
-    "SemanticVerseChunker",
+    "DenseEncoder",
     "GraphRAGBuilder",
+    "QueryEnhancer",
+    "QuranDataLoader",
+    "QuranIndexer",
+    "QuranSearcher",
+    "SemanticChunk",
+    "SemanticChunkIndexer",
+    "SemanticChunkSearcher",
+    "SemanticVerseChunker",
 ]

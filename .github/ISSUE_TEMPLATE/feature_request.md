@@ -26,9 +26,9 @@ Have you considered any alternative solutions or workarounds?
 
 Describe specific use cases where this feature would be valuable:
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Additional Context
 

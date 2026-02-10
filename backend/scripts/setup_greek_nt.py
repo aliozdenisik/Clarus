@@ -176,7 +176,7 @@ def load_kjva_nt_english() -> dict[tuple[str, int, int], str]:
         log.warning("KJVA file not found: %s — English text will be empty", KJVA_FILE)
         return {}
 
-    with open(KJVA_FILE, "r", encoding="utf-8") as f:
+    with open(KJVA_FILE, encoding="utf-8") as f:
         data = json.load(f)
 
     kjva_map: dict[tuple[str, int, int], str] = {}
@@ -242,11 +242,9 @@ def parse_morphgnt_book(
 
     # Track verses to build text_original
     verse_words: dict[tuple[int, int], list[str]] = {}  # (chapter, verse) -> words
-    verse_positions: dict[
-        tuple[int, int], int
-    ] = {}  # (chapter, verse) -> position counter
+    verse_positions: dict[tuple[int, int], int] = {}  # (chapter, verse) -> position counter
 
-    with open(txt_path, "r", encoding="utf-8") as f:
+    with open(txt_path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
@@ -254,9 +252,7 @@ def parse_morphgnt_book(
 
             parts = line.split()
             if len(parts) != 7:
-                log.warning(
-                    "Unexpected line format in %s: %s", txt_path.name, line[:50]
-                )
+                log.warning("Unexpected line format in %s: %s", txt_path.name, line[:50])
                 continue
 
             bcv, pos, parse, text_col, word_col, normalized, lemma = parts
@@ -345,9 +341,7 @@ def delete_nt_data(conn) -> None:
     """Delete existing NT data (book_id 40-66) without affecting OT/Apocrypha."""
     log.info("Deleting existing NT data (book_id 40-66)...")
     conn.execute(
-        text(
-            "DELETE FROM bm_words WHERE verse_id IN (SELECT id FROM bm_verses WHERE book_id BETWEEN 40 AND 66)"
-        )
+        text("DELETE FROM bm_words WHERE verse_id IN (SELECT id FROM bm_verses WHERE book_id BETWEEN 40 AND 66)")
     )
     conn.execute(text("DELETE FROM bm_verses WHERE book_id BETWEEN 40 AND 66"))
     conn.execute(text("DELETE FROM bm_books WHERE id BETWEEN 40 AND 66"))
@@ -487,9 +481,7 @@ def insert_nt_verses(
 def _build_nt_verse_id_map(conn) -> dict[tuple[int, int, int], int]:
     """Build mapping of (book_id, chapter, verse) -> verse_db_id for NT."""
     result = conn.execute(
-        text(
-            "SELECT id, book_id, chapter, verse FROM bm_verses WHERE book_id BETWEEN 40 AND 66 ORDER BY id"
-        )
+        text("SELECT id, book_id, chapter, verse FROM bm_verses WHERE book_id BETWEEN 40 AND 66 ORDER BY id")
     )
     verse_map: dict[tuple[int, int, int], int] = {}
     for row in result:
@@ -613,16 +605,12 @@ def validate_and_summarize(conn) -> bool:
     log.info("Books (NT): %d", nt_book_count)
 
     # NT Verse count
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 40 AND 66")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 40 AND 66"))
     nt_verse_count = result.scalar()
     log.info("Verses (NT): %d", nt_verse_count)
 
     # Greek word count
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_words WHERE language = 'greek'")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_words WHERE language = 'greek'"))
     greek_word_count = result.scalar()
     log.info("Words (Greek): %d", greek_word_count)
 
@@ -632,20 +620,14 @@ def validate_and_summarize(conn) -> bool:
     log.info("Words (Total): %d", total_word_count)
 
     # Language breakdown
-    result = conn.execute(
-        text(
-            "SELECT language, COUNT(*) FROM bm_words GROUP BY language ORDER BY language"
-        )
-    )
+    result = conn.execute(text("SELECT language, COUNT(*) FROM bm_words GROUP BY language ORDER BY language"))
     lang_counts = {row[0]: row[1] for row in result}
     for lang, cnt in lang_counts.items():
         log.info("  %s words: %d", lang, cnt)
 
     # Unique Greek lemmas
     result = conn.execute(
-        text(
-            "SELECT COUNT(DISTINCT lemma) FROM bm_words WHERE language = 'greek' AND lemma IS NOT NULL"
-        )
+        text("SELECT COUNT(DISTINCT lemma) FROM bm_words WHERE language = 'greek' AND lemma IS NOT NULL")
     )
     unique_lemmas = result.scalar()
     log.info("Unique Greek lemmas: %d", unique_lemmas)
@@ -662,15 +644,11 @@ def validate_and_summarize(conn) -> bool:
 
     # English text coverage for NT
     result = conn.execute(
-        text(
-            "SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 40 AND 66 AND text_english IS NOT NULL"
-        )
+        text("SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 40 AND 66 AND text_english IS NOT NULL")
     )
     english_count = result.scalar()
     result = conn.execute(
-        text(
-            "SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 40 AND 66 AND text_english IS NULL"
-        )
+        text("SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 40 AND 66 AND text_english IS NULL")
     )
     no_english = result.scalar()
 
@@ -742,9 +720,7 @@ def validate_and_summarize(conn) -> bool:
 
 def main() -> bool:
     """Run the Greek NT ETL pipeline. Returns True on success."""
-    parser = argparse.ArgumentParser(
-        description="ETL: MorphGNT + KJVA JSON -> bm_books, bm_verses, bm_words (NT)"
-    )
+    parser = argparse.ArgumentParser(description="ETL: MorphGNT + KJVA JSON -> bm_books, bm_verses, bm_words (NT)")
     parser.add_argument(
         "--book",
         type=str,

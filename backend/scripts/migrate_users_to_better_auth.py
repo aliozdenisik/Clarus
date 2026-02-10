@@ -20,23 +20,22 @@ Usage:
 import argparse
 import importlib
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime, timezone
-from typing import Optional
 
 # Ensure backend/ is on sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
     Progress,
     SpinnerColumn,
     TextColumn,
-    BarColumn,
-    MofNCompleteColumn,
 )
+from rich.table import Table
 
 console = Console()
 
@@ -51,7 +50,7 @@ def _load_psycopg2():
     """Load psycopg2 modules dynamically to keep script optional."""
     psycopg2_module = importlib.import_module("psycopg2")
     extras_module = importlib.import_module("psycopg2.extras")
-    real_dict_cursor = getattr(extras_module, "RealDictCursor")
+    real_dict_cursor = extras_module.RealDictCursor
     return psycopg2_module, real_dict_cursor
 
 
@@ -71,14 +70,14 @@ def fetch_legacy_users(conn):
     _, real_dict_cursor = _load_psycopg2()
     with conn.cursor(cursor_factory=real_dict_cursor) as cursor:
         cursor.execute("""
-            SELECT 
-                id, 
-                email, 
-                name, 
-                hashed_password, 
-                google_id, 
-                created_at, 
-                query_count_today, 
+            SELECT
+                id,
+                email,
+                name,
+                hashed_password,
+                google_id,
+                created_at,
+                query_count_today,
                 last_query_date,
                 refresh_token
             FROM users_legacy
@@ -96,9 +95,7 @@ def _fetch_count(cursor, query: str) -> int:
     return int(row[0])
 
 
-def migrate_user(
-    conn, user: dict, dry_run: bool = True
-) -> tuple[bool, Optional[str], Optional[str]]:
+def migrate_user(conn, user: dict, dry_run: bool = True) -> tuple[bool, str | None, str | None]:
     """
     Migrate a single user to Better Auth tables.
 
@@ -112,8 +109,8 @@ def migrate_user(
             new_user_id = cursor.fetchone()[0]
 
             # Prepare timestamp values
-            created_at = user["created_at"] or datetime.now(timezone.utc)
-            updated_at = datetime.now(timezone.utc)
+            created_at = user["created_at"] or datetime.now(UTC)
+            updated_at = datetime.now(UTC)
 
             # 1. INSERT into user table
             user_sql = """
@@ -143,7 +140,7 @@ def migrate_user(
 
                 account_sql = """
                     INSERT INTO account (
-                        id, "userId", "accountId", "providerId", password, 
+                        id, "userId", "accountId", "providerId", password,
                         "createdAt", "updatedAt"
                     )
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -169,7 +166,7 @@ def migrate_user(
 
                 account_sql = """
                     INSERT INTO account (
-                        id, "userId", "accountId", "providerId", 
+                        id, "userId", "accountId", "providerId",
                         "refreshToken", "createdAt", "updatedAt"
                     )
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
@@ -202,7 +199,7 @@ def migrate_user(
 
             stats_sql = """
                 INSERT INTO user_stats (
-                    id, user_id, query_count_today, last_query_date, 
+                    id, user_id, query_count_today, last_query_date,
                     created_at, updated_at
                 )
                 VALUES (%s, %s, %s, %s, %s, %s)
@@ -252,11 +249,7 @@ def migrate_all_users(dry_run: bool = True, batch_size: int = 100):
         console.print(f"[green]✅ Found {total_users} users to migrate[/green]\n")
 
         # Show mode
-        mode = (
-            "[bold red]DRY-RUN MODE[/bold red]"
-            if dry_run
-            else "[bold green]EXECUTION MODE[/bold green]"
-        )
+        mode = "[bold red]DRY-RUN MODE[/bold red]" if dry_run else "[bold green]EXECUTION MODE[/bold green]"
         console.print(
             Panel(
                 f"{mode}\n\n"
@@ -285,15 +278,13 @@ def migrate_all_users(dry_run: bool = True, batch_size: int = 100):
             )
 
             for user in users:
-                success, new_user_id, error_msg = migrate_user(conn, user, dry_run)
+                success, _new_user_id, error_msg = migrate_user(conn, user, dry_run)
 
                 if success:
                     migrated_count += 1
                 else:
                     failed_count += 1
-                    failed_users.append(
-                        {"id": user["id"], "email": user["email"], "error": error_msg}
-                    )
+                    failed_users.append({"id": user["id"], "email": user["email"], "error": error_msg})
 
                 progress.update(task, advance=1)
 
@@ -322,33 +313,21 @@ def migrate_all_users(dry_run: bool = True, batch_size: int = 100):
                 table.add_row(
                     str(failed["id"]),
                     failed["email"],
-                    failed["error"][:80] + "..."
-                    if len(failed["error"]) > 80
-                    else failed["error"],
+                    failed["error"][:80] + "..." if len(failed["error"]) > 80 else failed["error"],
                 )
 
             console.print(table)
 
         # Next steps
         if dry_run and failed_count == 0:
-            console.print(
-                "\n[bold green]✨ Dry-run successful! No errors detected.[/bold green]"
-            )
+            console.print("\n[bold green]✨ Dry-run successful! No errors detected.[/bold green]")
             console.print("[yellow]To execute the migration, run:[/yellow]")
-            console.print(
-                "    [cyan]python migrate_users_to_better_auth.py --execute[/cyan]"
-            )
+            console.print("    [cyan]python migrate_users_to_better_auth.py --execute[/cyan]")
         elif not dry_run and failed_count == 0:
-            console.print(
-                "\n[bold green]✨ Migration complete! All users migrated successfully.[/bold green]"
-            )
-            console.print(
-                f"[dim]Migrated user IDs tracked: {len(MIGRATED_USER_IDS)}[/dim]"
-            )
+            console.print("\n[bold green]✨ Migration complete! All users migrated successfully.[/bold green]")
+            console.print(f"[dim]Migrated user IDs tracked: {len(MIGRATED_USER_IDS)}[/dim]")
         elif not dry_run:
-            console.print(
-                "\n[yellow]⚠️  Migration completed with errors. Review failed users above.[/yellow]"
-            )
+            console.print("\n[yellow]⚠️  Migration completed with errors. Review failed users above.[/yellow]")
 
     except Exception as e:
         console.print(f"\n[red]❌ Fatal error during migration:[/red] {e}")
@@ -414,9 +393,7 @@ def rollback_migration():
 
             conn.commit()
 
-            console.print(
-                "\n[bold green]✅ Rollback complete. All Better Auth records deleted.[/bold green]"
-            )
+            console.print("\n[bold green]✅ Rollback complete. All Better Auth records deleted.[/bold green]")
 
     except Exception as e:
         conn.rollback()
@@ -444,15 +421,11 @@ def show_status():
             stats_count = _fetch_count(cursor, "SELECT COUNT(*) FROM user_stats")
 
             # Create status table
-            table = Table(
-                title="Migration Status", show_header=True, header_style="bold cyan"
-            )
+            table = Table(title="Migration Status", show_header=True, header_style="bold cyan")
             table.add_column("Table", style="dim")
             table.add_column("Count", justify="right")
 
-            table.add_row(
-                "[yellow]users_legacy[/yellow]", f"[yellow]{legacy_count}[/yellow]"
-            )
+            table.add_row("[yellow]users_legacy[/yellow]", f"[yellow]{legacy_count}[/yellow]")
             table.add_row("user (Better Auth)", str(user_count))
             table.add_row("account (Better Auth)", str(account_count))
             table.add_row("user_stats (Better Auth)", str(stats_count))
@@ -463,9 +436,7 @@ def show_status():
 
             if user_count > 0:
                 console.print("[green]✅ Better Auth tables contain data[/green]")
-                console.print(
-                    f"[dim]Looks like migration has been run ({user_count} users migrated)[/dim]"
-                )
+                console.print(f"[dim]Looks like migration has been run ({user_count} users migrated)[/dim]")
             else:
                 console.print("[yellow]⚠️  Better Auth tables are empty[/yellow]")
                 console.print("[dim]Migration has not been run yet[/dim]")
@@ -485,24 +456,22 @@ def main():
 Examples:
   # Dry-run (default - shows what would happen)
   python migrate_users_to_better_auth.py
-  
+
   # Execute migration
   python migrate_users_to_better_auth.py --execute
-  
+
   # Rollback migration (deletes all Better Auth users)
   python migrate_users_to_better_auth.py --rollback
-  
+
   # Show current status
   python migrate_users_to_better_auth.py --status
-  
+
   # Custom batch size
   python migrate_users_to_better_auth.py --execute --batch-size 50
         """,
     )
 
-    parser.add_argument(
-        "--execute", action="store_true", help="Execute migration (default is dry-run)"
-    )
+    parser.add_argument("--execute", action="store_true", help="Execute migration (default is dry-run)")
 
     parser.add_argument(
         "--rollback",
@@ -510,9 +479,7 @@ Examples:
         help="Rollback migration (delete all Better Auth users)",
     )
 
-    parser.add_argument(
-        "--status", action="store_true", help="Show current migration status"
-    )
+    parser.add_argument("--status", action="store_true", help="Show current migration status")
 
     parser.add_argument(
         "--batch-size",

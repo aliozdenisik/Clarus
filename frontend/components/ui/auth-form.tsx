@@ -8,7 +8,7 @@ import { useTheme } from "next-themes"
 
 const AuthForm: React.FC = () => {
   return (
-    <div className="bg-white dark:bg-zinc-950 py-20 text-zinc-800 dark:text-zinc-200 selection:bg-zinc-300 dark:selection:bg-zinc-600">
+    <div className="bg-white py-20 text-zinc-800 selection:bg-zinc-300 dark:bg-zinc-950 dark:text-zinc-200 dark:selection:bg-zinc-600">
       <BackButton />
       <motion.div
         initial={{ opacity: 0, y: 25 }}
@@ -38,9 +38,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const Button: React.FC<ButtonProps> = ({ children, className, ...props }) => (
   <button
-    className={`rounded-md bg-gradient-to-br from-blue-400 to-blue-700 px-4 py-2 text-lg text-zinc-50 
-    ring-2 ring-blue-500/50 ring-offset-2 ring-offset-white dark:ring-offset-zinc-950 
-    transition-all hover:scale-[1.02] hover:ring-transparent active:scale-[0.98] active:ring-blue-500/70 ${className}`}
+    className={`rounded-md bg-gradient-to-br from-blue-400 to-blue-700 px-4 py-2 text-lg text-zinc-50 ring-2 ring-blue-500/50 ring-offset-2 ring-offset-white transition-all hover:scale-[1.02] hover:ring-transparent active:scale-[0.98] active:ring-blue-500/70 dark:ring-offset-zinc-950 ${className}`}
     {...props}
   >
     {children}
@@ -65,7 +63,7 @@ const Header: React.FC = () => (
     <h1 className="text-2xl font-semibold">Sign in to your account</h1>
     <p className="mt-2 text-zinc-500 dark:text-zinc-400">
       Don&apos;t have an account?{" "}
-      <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">
+      <a href="#" className="text-blue-600 hover:underline dark:text-blue-400">
         Create one.
       </a>
     </p>
@@ -88,13 +86,7 @@ const SocialButton: React.FC<{
   children?: React.ReactNode
 }> = ({ icon, fullWidth, children }) => (
   <button
-    className={`relative z-0 flex items-center justify-center gap-2 overflow-hidden rounded-md 
-    border border-zinc-300 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 
-    px-4 py-2 font-semibold text-zinc-800 dark:text-zinc-200 transition-all duration-500
-    before:absolute before:inset-0 before:-z-10 before:translate-x-[150%] before:translate-y-[150%] before:scale-[2.5]
-    before:rounded-[100%] before:bg-zinc-800 dark:before:bg-zinc-200 before:transition-transform before:duration-1000 before:content-[""]
-    hover:scale-105 hover:text-zinc-100 dark:hover:text-zinc-900 hover:before:translate-x-[0%] hover:before:translate-y-[0%] active:scale-95
-    ${fullWidth ? "col-span-2" : ""}`}
+    className={`relative z-0 flex items-center justify-center gap-2 overflow-hidden rounded-md border border-zinc-300 bg-zinc-100 px-4 py-2 font-semibold text-zinc-800 transition-all duration-500 before:absolute before:inset-0 before:-z-10 before:translate-x-[150%] before:translate-y-[150%] before:scale-[2.5] before:rounded-[100%] before:bg-zinc-800 before:transition-transform before:duration-1000 before:content-[""] hover:scale-105 hover:text-zinc-100 hover:before:translate-x-[0%] hover:before:translate-y-[0%] active:scale-95 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:before:bg-zinc-200 dark:hover:text-zinc-900 ${fullWidth ? "col-span-2" : ""}`}
   >
     {icon}
     <span>{children}</span>
@@ -115,28 +107,19 @@ const LoginForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit}>
       <div className="mb-3">
-        <label
-          htmlFor="email-input"
-          className="mb-1.5 block text-zinc-500 dark:text-zinc-400"
-        >
+        <label htmlFor="email-input" className="mb-1.5 block text-zinc-500 dark:text-zinc-400">
           Email
         </label>
         <input
           id="email-input"
           type="email"
           placeholder="your.email@provider.com"
-          className="w-full rounded-md border border-zinc-300 dark:border-zinc-700 
-          bg-white dark:bg-zinc-900 px-3 py-2 text-zinc-800 dark:text-zinc-200
-          placeholder-zinc-400 dark:placeholder-zinc-500 
-          ring-1 ring-transparent transition-shadow focus:outline-0 focus:ring-blue-700"
+          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-800 placeholder-zinc-400 ring-1 ring-transparent transition-shadow focus:ring-blue-700 focus:outline-0 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:placeholder-zinc-500"
         />
       </div>
       <div className="mb-6">
         <div className="mb-1.5 flex items-end justify-between">
-          <label
-            htmlFor="password-input"
-            className="block text-zinc-500 dark:text-zinc-400"
-          >
+          <label htmlFor="password-input" className="block text-zinc-500 dark:text-zinc-400">
             Password
           </label>
           <a href="#" className="text-sm text-blue-600 dark:text-blue-400">
@@ -147,10 +130,7 @@ const LoginForm: React.FC = () => {
           id="password-input"
           type="password"
           placeholder="••••••••••••"
-          className="w-full rounded-md border border-zinc-300 dark:border-zinc-700 
-          bg-white dark:bg-zinc-900 px-3 py-2 text-zinc-800 dark:text-zinc-200
-          placeholder-zinc-400 dark:placeholder-zinc-500 
-          ring-1 ring-transparent transition-shadow focus:outline-0 focus:ring-blue-700"
+          className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-800 placeholder-zinc-400 ring-1 ring-transparent transition-shadow focus:ring-blue-700 focus:outline-0 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:placeholder-zinc-500"
         />
       </div>
       <Button type="submit" className="w-full">
@@ -179,7 +159,7 @@ const BackgroundDecoration: React.FC = () => {
 
   return (
     <div
-      className="absolute right-0 top-0 z-0 size-[50vw]"
+      className="absolute top-0 right-0 z-0 size-[50vw]"
       style={{
         backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke-width='2' stroke='rgb(30 58 138 / 0.5)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e")`,
       }}

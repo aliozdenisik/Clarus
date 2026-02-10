@@ -6,9 +6,11 @@ Covers rule-based splitting, LLM extraction, deduplication, blacklist filtering,
 and selection limits.
 """
 
-import pytest
 from unittest.mock import patch
-from src.query_enhancer import QueryEnhancer, KeywordSuggestion, EnhanceResponse
+
+import pytest
+
+from src.query_enhancer import EnhanceResponse, KeywordSuggestion, QueryEnhancer
 
 
 @pytest.fixture
@@ -268,9 +270,7 @@ class TestPydanticModels:
 
     def test_keyword_suggestion_model(self):
         """Test KeywordSuggestion Pydantic model validates correctly."""
-        kw = KeywordSuggestion(
-            text="sabır", language="tr", confidence=0.95, selected=True, source="llm"
-        )
+        kw = KeywordSuggestion(text="sabır", language="tr", confidence=0.95, selected=True, source="llm")
         assert kw.text == "sabır"
         assert kw.language == "tr"
         assert kw.confidence == 0.95
@@ -301,9 +301,7 @@ class TestPydanticModels:
             KeywordSuggestion(text="sabır", language="tr"),
             KeywordSuggestion(text="namaz", language="tr"),
         ]
-        response = EnhanceResponse(
-            original_query="sabır ve namaz", keywords=keywords, corpus="quran"
-        )
+        response = EnhanceResponse(original_query="sabır ve namaz", keywords=keywords, corpus="quran")
         assert response.original_query == "sabır ve namaz"
         assert len(response.keywords) == 2
         assert response.corpus == "quran"
@@ -322,9 +320,7 @@ class TestIntegration:
     def test_rule_based_with_dedup_and_selection(self, enhancer):
         """Test rule-based extraction with deduplication and selection limit."""
         # Create a query that will produce many keywords
-        result = enhancer.extract_keywords(
-            "sabır ve namaz ve oruç ve zekât ve hac", corpus="quran"
-        )
+        result = enhancer.extract_keywords("sabır ve namaz ve oruç ve zekât ve hac", corpus="quran")
 
         # Should have multiple keywords
         assert len(result) >= 5

@@ -11,19 +11,18 @@ Optimizations:
 - Circuit breaker for API failures
 """
 
-import os
-import requests
 import hashlib
-import time
 import json
+import os
+import time
 from collections.abc import Awaitable
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
+import requests
+import sentry_sdk
 from tqdm import tqdm
 
-import sentry_sdk
-
-from src.circuit_breaker import embeddings_with_breaker, CircuitBreakerError
+from src.circuit_breaker import CircuitBreakerError, embeddings_with_breaker
 
 # Optional imports for Redis caching
 sync_redis = None
@@ -33,9 +32,7 @@ try:
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
-    print(
-        "Warning: redis not installed. Embedding cache disabled. Install with: pip install redis[hiredis]"
-    )
+    print("Warning: redis not installed. Embedding cache disabled. Install with: pip install redis[hiredis]")
 
 
 class DenseEncoder:
@@ -63,8 +60,8 @@ class DenseEncoder:
 
     def __init__(
         self,
-        model_name: Optional[str] = None,
-        api_key: Optional[str] = None,
+        model_name: str | None = None,
+        api_key: str | None = None,
         use_cache: bool = True,
     ):
         """
@@ -79,8 +76,7 @@ class DenseEncoder:
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
             raise ValueError(
-                "OpenRouter API key required. Set OPENROUTER_API_KEY environment variable "
-                "or pass api_key parameter."
+                "OpenRouter API key required. Set OPENROUTER_API_KEY environment variable or pass api_key parameter."
             )
         self._headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -113,9 +109,7 @@ class DenseEncoder:
 
         # Rate limiting tracking
         self._last_request_time = 0
-        self._min_request_interval = (
-            60.0 / self.RATE_LIMIT_RPM
-        )  # seconds between requests
+        self._min_request_interval = 60.0 / self.RATE_LIMIT_RPM  # seconds between requests
 
         print(f"Initialized OpenRouter dense encoder: {self.model_name}")
         if self._use_cache and self._redis:
@@ -133,11 +127,9 @@ class DenseEncoder:
             time.sleep(self._min_request_interval - elapsed)
         self._last_request_time = time.time()
 
-    def _api_call(self, text: str) -> List[float]:
+    def _api_call(self, text: str) -> list[float]:
         """Make API call with rate limiting and circuit breaker"""
-        with sentry_sdk.start_span(
-            op="embedding.openai.single", description="Single embedding"
-        ) as span:
+        with sentry_sdk.start_span(op="embedding.openai.single", description="Single embedding") as span:
             start_time = time.time()
             span.set_data("model", self.model_name)
             span.set_data("text_length", len(text))
@@ -159,7 +151,7 @@ class DenseEncoder:
             span.set_data("latency_ms", (time.time() - start_time) * 1000)
             return result
 
-    def encode(self, text: str) -> List[float]:
+    def encode(self, text: str) -> list[float]:
         """
         Encode a single text to dense vector using OpenRouter API.
         Uses Redis cache if available.
@@ -212,11 +204,11 @@ class DenseEncoder:
 
     def encode_batch(
         self,
-        texts: List[str],
+        texts: list[str],
         batch_size: int = 32,
         show_progress: bool = True,
         max_retries: int = 3,
-    ) -> List[List[float]]:
+    ) -> list[list[float]]:
         """
         Encode multiple texts to dense vectors.
         Processes in batches to avoid API limits.
@@ -228,9 +220,7 @@ class DenseEncoder:
             show_progress: Show progress bar
             max_retries: Maximum retry attempts per batch
         """
-        with sentry_sdk.start_span(
-            op="embedding.openai.batch", description="Batch embedding"
-        ) as span:
+        with sentry_sdk.start_span(op="embedding.openai.batch", description="Batch embedding") as span:
             start_time = time.time()
             span.set_data("model", self.model_name)
             span.set_data("batch_size", batch_size)
@@ -266,9 +256,7 @@ class DenseEncoder:
                         break  # Success, exit retry loop
 
                     except CircuitBreakerError:
-                        print(
-                            "\nCircuit breaker OPEN for embeddings - batch encoding failed"
-                        )
+                        print("\nCircuit breaker OPEN for embeddings - batch encoding failed")
                         raise  # Propagate immediately, no retry
 
                     except (
@@ -277,14 +265,10 @@ class DenseEncoder:
                     ):
                         if attempt < max_retries - 1:
                             wait_time = 2**attempt * 5  # 5s, 10s, 20s
-                            print(
-                                f"\nTimeout error, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})"
-                            )
+                            print(f"\nTimeout error, retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})")
                             time.sleep(wait_time)
                         else:
-                            print(
-                                f"\nFailed after {max_retries} attempts. Raising error."
-                            )
+                            print(f"\nFailed after {max_retries} attempts. Raising error.")
                             raise
 
                     except requests.exceptions.RequestException as e:
@@ -337,8 +321,8 @@ class AsyncDenseEncoder:
 
     def __init__(
         self,
-        model_name: Optional[str] = None,
-        api_key: Optional[str] = None,
+        model_name: str | None = None,
+        api_key: str | None = None,
         use_cache: bool = True,
     ):
         """
@@ -353,8 +337,7 @@ class AsyncDenseEncoder:
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
             raise ValueError(
-                "OpenRouter API key required. Set OPENROUTER_API_KEY environment variable "
-                "or pass api_key parameter."
+                "OpenRouter API key required. Set OPENROUTER_API_KEY environment variable or pass api_key parameter."
             )
         self._headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -391,9 +374,7 @@ class AsyncDenseEncoder:
         text_hash = hashlib.md5(text.encode()).hexdigest()
         return f"embedding:{self.model_name}:{text_hash}"
 
-    async def _check_cache(
-        self, texts: List[str]
-    ) -> Tuple[List[str], List[int], List[Optional[List[float]]]]:
+    async def _check_cache(self, texts: list[str]) -> tuple[list[str], list[int], list[list[float] | None]]:
         """
         Check Redis cache for texts and return: uncached texts, their indices, cached embeddings.
         """
@@ -402,7 +383,7 @@ class AsyncDenseEncoder:
 
         uncached_texts = []
         uncached_indices = []
-        cached_embeddings: List[Optional[List[float]]] = [None for _ in texts]
+        cached_embeddings: list[list[float] | None] = [None for _ in texts]
 
         for i, text in enumerate(texts):
             try:
@@ -425,8 +406,8 @@ class AsyncDenseEncoder:
         return uncached_texts, uncached_indices, cached_embeddings
 
     async def _encode_batch_async(
-        self, session, batch: List[str], semaphore, retry_count: int = 3
-    ) -> List[List[float]]:
+        self, session, batch: list[str], semaphore, retry_count: int = 3
+    ) -> list[list[float]]:
         """Encode a single batch with rate limiting via semaphore."""
         import asyncio
 
@@ -446,12 +427,10 @@ class AsyncDenseEncoder:
                         sorted_data = sorted(data["data"], key=lambda x: x["index"])
                         return [item["embedding"] for item in sorted_data]
 
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     if attempt < retry_count - 1:
                         wait_time = 2**attempt * 5
-                        print(
-                            f"\nAsync timeout, retrying in {wait_time}s... (attempt {attempt + 1}/{retry_count})"
-                        )
+                        print(f"\nAsync timeout, retrying in {wait_time}s... (attempt {attempt + 1}/{retry_count})")
                         await asyncio.sleep(wait_time)
                     else:
                         raise
@@ -467,11 +446,11 @@ class AsyncDenseEncoder:
 
     async def encode_batch_async(
         self,
-        texts: List[str],
+        texts: list[str],
         batch_size: int = 256,  # Increased from 32 - OpenRouter supports up to 2048
         max_concurrent: int = 10,  # Increased from 5 - OpenRouter has no rate limits with credits
         show_progress: bool = True,
-    ) -> List[List[float]]:
+    ) -> list[list[float]]:
         """
         Encode multiple texts concurrently with controlled parallelism.
 
@@ -494,9 +473,7 @@ class AsyncDenseEncoder:
         try:
             import aiohttp
         except ImportError:
-            raise ImportError(
-                "aiohttp required for async encoding. Install with: pip install aiohttp"
-            )
+            raise ImportError("aiohttp required for async encoding. Install with: pip install aiohttp")
 
         # Check Redis cache first
         uncached_texts, uncached_indices, embeddings = await self._check_cache(texts)
@@ -529,26 +506,16 @@ class AsyncDenseEncoder:
             enable_cleanup_closed=True,
         )
 
-        timeout = aiohttp.ClientTimeout(
-            total=300, connect=30
-        )  # 5 min total, 30s connect
+        timeout = aiohttp.ClientTimeout(total=300, connect=30)  # 5 min total, 30s connect
 
-        async with aiohttp.ClientSession(
-            connector=connector, timeout=timeout
-        ) as session:
+        async with aiohttp.ClientSession(connector=connector, timeout=timeout) as session:
             if show_progress:
                 from tqdm.asyncio import tqdm_asyncio
 
-                tasks = [
-                    self._encode_batch_async(session, batch, semaphore)
-                    for batch in batches
-                ]
+                tasks = [self._encode_batch_async(session, batch, semaphore) for batch in batches]
                 results = await tqdm_asyncio.gather(*tasks, desc="Async encoding")
             else:
-                tasks = [
-                    self._encode_batch_async(session, batch, semaphore)
-                    for batch in batches
-                ]
+                tasks = [self._encode_batch_async(session, batch, semaphore) for batch in batches]
                 results = await asyncio.gather(*tasks)
 
         # Flatten results
@@ -558,23 +525,21 @@ class AsyncDenseEncoder:
 
         # Cache new embeddings in Redis
         if self._redis is not None:
-            for text, embedding in zip(uncached_texts, new_embeddings):
+            for text, embedding in zip(uncached_texts, new_embeddings, strict=False):
                 try:
                     cache_key = self._get_cache_key(text)
-                    await self._redis.set(
-                        cache_key, json.dumps(embedding), ex=self.CACHE_EXPIRE
-                    )
+                    await self._redis.set(cache_key, json.dumps(embedding), ex=self.CACHE_EXPIRE)
                 except Exception as e:
                     # Fail-open: cache write failure doesn't affect response
                     print(f"Redis cache write failed: {type(e).__name__}")
 
         # Merge cached and new embeddings
-        for idx, embedding in zip(uncached_indices, new_embeddings):
+        for idx, embedding in zip(uncached_indices, new_embeddings, strict=False):
             embeddings[idx] = embedding
 
         return [e for e in embeddings if e is not None]
 
-    async def encode_async(self, text: str) -> List[float]:
+    async def encode_async(self, text: str) -> list[float]:
         """Encode a single text asynchronously."""
         embeddings = await self.encode_batch_async([text], show_progress=False)
         return embeddings[0]

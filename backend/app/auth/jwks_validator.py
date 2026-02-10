@@ -1,16 +1,16 @@
 """JWKS-based JWT validator for Better Auth integration."""
 
 import logging
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any
 
 from cachetools import TTLCache
 from fastapi import Depends, HTTPException, Request
-from jwt import PyJWKClient, decode, PyJWKClientError
+from jwt import PyJWKClient, PyJWKClientError, decode
 from jwt.exceptions import (
     ExpiredSignatureError,
-    InvalidTokenError,
     InvalidSignatureError,
+    InvalidTokenError,
 )
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -73,7 +73,7 @@ class JWKSValidator:
             },
         )
 
-    def validate_token(self, token: str) -> Dict[str, Any]:
+    def validate_token(self, token: str) -> dict[str, Any]:
         """
         Validate JWT token using JWKS.
 
@@ -108,9 +108,7 @@ class JWKSValidator:
             if kid:
                 self.fallback_cache[kid] = signing_key
 
-            logger.debug(
-                "Token validated successfully", extra={"user_id": payload.get("sub")}
-            )
+            logger.debug("Token validated successfully", extra={"user_id": payload.get("sub")})
             return payload
 
         except ExpiredSignatureError:
@@ -118,9 +116,7 @@ class JWKSValidator:
             raise ValueError("Token has expired")
 
         except InvalidSignatureError:
-            logger.warning(
-                "Invalid token signature", extra={"operation": "validate_token"}
-            )
+            logger.warning("Invalid token signature", extra={"operation": "validate_token"})
             raise ValueError("Invalid token signature")
 
         except PyJWKClientError as e:
@@ -136,16 +132,16 @@ class JWKSValidator:
                 "Token validation failed",
                 extra={"operation": "validate_token", "error": str(e)},
             )
-            raise ValueError(f"Invalid token: {str(e)}")
+            raise ValueError(f"Invalid token: {e!s}")
 
         except Exception as e:
             logger.error(
                 "Unexpected error during token validation",
                 extra={"operation": "validate_token", "error": str(e)},
             )
-            raise ValueError(f"Token validation error: {str(e)}")
+            raise ValueError(f"Token validation error: {e!s}")
 
-    def _validate_with_fallback(self, token: str) -> Dict[str, Any]:
+    def _validate_with_fallback(self, token: str) -> dict[str, Any]:
         """
         Validate token using cached keys when JWKS endpoint is unreachable.
 
@@ -187,7 +183,7 @@ class JWKSValidator:
 
 
 # Global validator instance
-_validator: Optional[JWKSValidator] = None
+_validator: JWKSValidator | None = None
 
 
 def get_validator() -> JWKSValidator:
@@ -202,7 +198,7 @@ def get_validator() -> JWKSValidator:
     return _validator
 
 
-async def get_current_user_from_jwt(request: Request) -> Dict[str, Any]:
+async def get_current_user_from_jwt(request: Request) -> dict[str, Any]:
     """
     Extract and validate JWT token from Authorization header.
 
@@ -252,9 +248,9 @@ async def get_current_user_from_jwt(request: Request) -> Dict[str, Any]:
 
 
 async def get_current_user(
-    jwt_payload: Dict[str, Any] = Depends(get_current_user_from_jwt),
+    jwt_payload: dict[str, Any] = Depends(get_current_user_from_jwt),
     db: AsyncSession = Depends(get_db),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get current user from JWT payload and database.
 
@@ -282,9 +278,7 @@ async def get_current_user(
         )
 
     # Fetch user from database
-    result = await db.execute(
-        select(BetterAuthUser).where(BetterAuthUser.id == user_id)
-    )
+    result = await db.execute(select(BetterAuthUser).where(BetterAuthUser.id == user_id))
     user = result.scalar_one_or_none()
 
     if not user:
@@ -298,9 +292,7 @@ async def get_current_user(
         )
 
     # Ensure user_stats record exists
-    stats_result = await db.execute(
-        select(UserStats).where(UserStats.user_id == user_id)
-    )
+    stats_result = await db.execute(select(UserStats).where(UserStats.user_id == user_id))
     stats = stats_result.scalar_one_or_none()
 
     if not stats:

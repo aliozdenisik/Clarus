@@ -1,100 +1,104 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { springPresets } from "@/lib/design-system";
-import { useSession, signOut } from "@/lib/auth-client";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { GlowCard } from "@/components/ui/glow-card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { VerseLookupInput } from "@/components/verse-lookup";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { BookOpen, Search, User, LogOut } from "lucide-react";
-import { getQuranSurahsApiMetadataQuranSurahsGet } from "@/lib/api/sdk.gen";
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { springPresets } from "@/lib/design-system"
+import { useSession, signOut } from "@/lib/auth-client"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { GlowCard } from "@/components/ui/glow-card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { VerseLookupInput } from "@/components/verse-lookup"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+import { BookOpen, Search, User, LogOut } from "lucide-react"
+import { getQuranSurahsApiMetadataQuranSurahsGet } from "@/lib/api/sdk.gen"
 
 interface Surah {
-  id: number;
-  name: string;
-  name_transliterated: string;
-  verse_count: number;
-  revelation_type: string;
+  id: number
+  name: string
+  name_transliterated: string
+  verse_count: number
+  revelation_type: string
 }
 
 // API response format (may vary)
 interface ApiSurah {
-  id: number;
-  name?: string;
-  name_arabic?: string;
-  transliteration?: string;
-  name_transliterated?: string;
-  total_verses?: number;
-  verse_count?: number;
-  type?: string;
-  revelation_type?: string;
+  id: number
+  name?: string
+  name_arabic?: string
+  transliteration?: string
+  name_transliterated?: string
+  total_verses?: number
+  verse_count?: number
+  type?: string
+  revelation_type?: string
 }
 
 export default function QuranPage() {
-  const [surahs, setSurahs] = useState<Surah[]>([]);
-  const [filter, setFilter] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user;
-  const router = useRouter();
+  const [surahs, setSurahs] = useState<Surah[]>([])
+  const [filter, setFilter] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+  const { data: session, isPending: authLoading } = useSession()
+  const user = session?.user
+  const router = useRouter()
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/sign-in");
+      router.push("/sign-in")
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router])
 
-   useEffect(() => {
-     const fetchSurahs = async () => {
-       try {
-         const response = await getQuranSurahsApiMetadataQuranSurahsGet();
+  useEffect(() => {
+    const fetchSurahs = async () => {
+      try {
+        const response = await getQuranSurahsApiMetadataQuranSurahsGet()
 
-         const data = response.data as { data?: { surahs?: ApiSurah[] }; surahs?: ApiSurah[] } | ApiSurah[] | undefined;
-         const surahList: ApiSurah[] = Array.isArray(data)
-           ? data
-           : data?.data?.surahs || data?.surahs || [];
+        const data = response.data as
+          | { data?: { surahs?: ApiSurah[] }; surahs?: ApiSurah[] }
+          | ApiSurah[]
+          | undefined
+        const surahList: ApiSurah[] = Array.isArray(data)
+          ? data
+          : data?.data?.surahs || data?.surahs || []
         const mappedSurahs: Surah[] = surahList.map((s: ApiSurah) => ({
           id: s.id,
-          name: s.name_arabic || s.name || '',
-          name_transliterated: s.transliteration || s.name_transliterated || s.name || '',
+          name: s.name_arabic || s.name || "",
+          name_transliterated: s.transliteration || s.name_transliterated || s.name || "",
           verse_count: s.total_verses || s.verse_count || 0,
-          revelation_type: s.type || s.revelation_type || '',
-        }));
-        setSurahs(mappedSurahs);
+          revelation_type: s.type || s.revelation_type || "",
+        }))
+        setSurahs(mappedSurahs)
       } catch {
-        toast.error("Failed to load surahs");
+        toast.error("Failed to load surahs")
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
     if (user) {
-      fetchSurahs();
+      fetchSurahs()
     }
-  }, [user]);
+  }, [user])
 
   const handleLogout = async () => {
-    await signOut();
-    router.push("/sign-in");
-    toast.success("Logged out successfully");
-  };
+    await signOut()
+    router.push("/sign-in")
+    toast.success("Logged out successfully")
+  }
 
-  const filteredSurahs = surahs.filter((surah) =>
-    surah.name_transliterated.toLowerCase().includes(filter.toLowerCase()) ||
-    surah.id.toString().includes(filter)
-  );
+  const filteredSurahs = surahs.filter(
+    (surah) =>
+      surah.name_transliterated.toLowerCase().includes(filter.toLowerCase()) ||
+      surah.id.toString().includes(filter)
+  )
 
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
         <div className="text-[var(--color-text-secondary)]">Loading...</div>
       </div>
-    );
+    )
   }
 
   return (
@@ -112,7 +116,7 @@ export default function QuranPage() {
             <span className="text-sm">{user?.name || user?.email}</span>
           </div>
           <div className="flex items-center gap-2">
-             <Button
+            <Button
               variant="ghost"
               size="sm"
               onClick={() => router.push("/search")}
@@ -141,10 +145,10 @@ export default function QuranPage() {
           className="mb-6"
         >
           <div className="mb-3">
-            <h2 className="text-sm font-medium text-[var(--color-text-secondary)] uppercase tracking-wide">
+            <h2 className="text-sm font-medium tracking-wide text-[var(--color-text-secondary)] uppercase">
               Ayet Ara
             </h2>
-            <p className="text-xs text-[var(--color-text-muted)] mt-1">
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
               Doğrudan bir ayete git (örn: Bakara 183 veya 2:183)
             </p>
           </div>
@@ -163,7 +167,7 @@ export default function QuranPage() {
         >
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="mb-2 text-3xl font-bold text-[var(--color-text-primary)] flex items-center gap-3">
+              <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-[var(--color-text-primary)]">
                 <BookOpen className="h-8 w-8 text-[var(--color-accent-primary)]" />
                 Quran Browse
               </h1>
@@ -173,7 +177,7 @@ export default function QuranPage() {
             </div>
             <div className="w-full md:w-72">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
+                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
                 <Input
                   type="text"
                   placeholder="Search surah..."
@@ -208,8 +212,8 @@ export default function QuranPage() {
                     onClick={() => router.push(`/quran/${surah.id}`)}
                     className="w-full text-left"
                   >
-                    <GlowCard className="h-full hover:border-[var(--color-accent-primary)] transition-colors">
-                      <div className="flex flex-col h-full justify-between gap-4">
+                    <GlowCard className="h-full transition-colors hover:border-[var(--color-accent-primary)]">
+                      <div className="flex h-full flex-col justify-between gap-4">
                         <div className="flex items-start justify-between">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-bg-secondary)] text-sm font-medium text-[var(--color-text-secondary)]">
                             {surah.id}
@@ -218,7 +222,7 @@ export default function QuranPage() {
                             {surah.name}
                           </span>
                         </div>
-                        
+
                         <div>
                           <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
                             {surah.name_transliterated}
@@ -237,7 +241,7 @@ export default function QuranPage() {
             </AnimatePresence>
           </div>
         )}
-        
+
         {!isLoading && filteredSurahs.length === 0 && (
           <div className="py-20 text-center text-[var(--color-text-muted)]">
             No surahs found matching &quot;{filter}&quot;
@@ -245,5 +249,5 @@ export default function QuranPage() {
         )}
       </div>
     </div>
-  );
+  )
 }

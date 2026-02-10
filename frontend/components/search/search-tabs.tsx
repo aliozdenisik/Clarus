@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { Tabs, Tab } from "@/components/ui/vercel-tabs";
+import * as React from "react"
+import { Tabs, Tab } from "@/components/ui/vercel-tabs"
 
-export type SearchSource = "quran" | "ot" | "nt" | "apocrypha";
+export type SearchSource = "quran" | "ot" | "nt" | "apocrypha"
 
 interface SearchTabsProps {
-  activeTab: SearchSource;
-  onTabChange: (tab: SearchSource) => void;
+  activeTab: SearchSource
+  onTabChange: (tab: SearchSource) => void
 }
 
 const tabs: Tab[] = [
@@ -15,7 +15,7 @@ const tabs: Tab[] = [
   { id: "ot", label: "Old Testament" },
   { id: "nt", label: "New Testament" },
   { id: "apocrypha", label: "Apocrypha" },
-];
+]
 
 export function SearchTabs({ activeTab, onTabChange }: SearchTabsProps) {
   return (
@@ -26,5 +26,5 @@ export function SearchTabs({ activeTab, onTabChange }: SearchTabsProps) {
         onTabChange={(tabId) => onTabChange(tabId as SearchSource)}
       />
     </div>
-  );
+  )
 }

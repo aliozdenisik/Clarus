@@ -21,15 +21,15 @@ import asyncio
 import sys
 import time
 from dataclasses import dataclass
-from typing import List
+
 from dotenv import load_dotenv
 
 # Load environment variables first
 load_dotenv()
 
 from rich.console import Console
-from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 # Add parent directory to path
 sys.path.insert(0, ".")
@@ -44,8 +44,8 @@ class TestQuery:
     id: int
     query: str  # Turkish query
     category: str
-    expected_books: List[str]  # Expected books to find
-    expected_verses: List[str]  # Expected verse references (e.g., "John 3:16")
+    expected_books: list[str]  # Expected books to find
+    expected_verses: list[str]  # Expected verse references (e.g., "John 3:16")
     description: str
 
 
@@ -308,17 +308,11 @@ TEST_QUERIES = [
 ]
 
 
-def evaluate_result(
-    result, expected_books: List[str], expected_verses: List[str]
-) -> dict:
+def evaluate_result(result, expected_books: list[str], expected_verses: list[str]) -> dict:
     """Evaluate a single search result against expected values"""
     # Get reference from result - try multiple attribute names
     ref = ""
-    if (
-        hasattr(result, "book_name")
-        and hasattr(result, "chapter")
-        and hasattr(result, "verse")
-    ):
+    if hasattr(result, "book_name") and hasattr(result, "chapter") and hasattr(result, "verse"):
         ref = f"{result.book_name} {result.chapter}:{result.verse}"
     elif hasattr(result, "reference"):
         ref = result.reference
@@ -341,9 +335,7 @@ def evaluate_result(
         "reference": ref,
         "book_match": book_match,
         "verse_match": verse_match,
-        "score": getattr(result, "score", 0)
-        if hasattr(result, "score")
-        else result.get("score", 0),
+        "score": getattr(result, "score", 0) if hasattr(result, "score") else result.get("score", 0),
     }
 
 
@@ -351,18 +343,10 @@ async def run_tests():
     """Run all test queries and evaluate results"""
     from src.ultimate_rag import UltimateRAG
 
-    console.print(
-        "\n[bold cyan]═══════════════════════════════════════════════════════════════[/bold cyan]"
-    )
-    console.print(
-        "[bold cyan]   İncil Ultimate RAG Test Paketi - 30 TÜRKÇE Sorgu           [/bold cyan]"
-    )
-    console.print(
-        "[bold cyan]   (Sorgular otomatik olarak İngilizce'ye çevrilecek)         [/bold cyan]"
-    )
-    console.print(
-        "[bold cyan]═══════════════════════════════════════════════════════════════[/bold cyan]\n"
-    )
+    console.print("\n[bold cyan]═══════════════════════════════════════════════════════════════[/bold cyan]")
+    console.print("[bold cyan]   İncil Ultimate RAG Test Paketi - 30 TÜRKÇE Sorgu           [/bold cyan]")
+    console.print("[bold cyan]   (Sorgular otomatik olarak İngilizce'ye çevrilecek)         [/bold cyan]")
+    console.print("[bold cyan]═══════════════════════════════════════════════════════════════[/bold cyan]\n")
 
     # Initialize RAG
     console.print("[dim]Ultimate RAG Pipeline başlatılıyor...[/dim]")
@@ -383,25 +367,19 @@ async def run_tests():
         task = progress.add_task("Test ediliyor...", total=total_queries)
 
         for test in TEST_QUERIES:
-            progress.update(
-                task, description=f"[cyan]Sorgu {test.id}/30:[/cyan] {test.category}"
-            )
+            progress.update(task, description=f"[cyan]Sorgu {test.id}/30:[/cyan] {test.category}")
 
             try:
                 # Run search - Turkish query will be translated to English
-                search_results = await rag.search_bible(
-                    test.query, translation="kjva", top_k=5
-                )
+                search_results = await rag.search_bible(test.query, translation="kjva", top_k=5)
 
                 # Evaluate results
                 query_book_match = False
                 query_verse_match = False
                 top_refs = []
 
-                for i, res in enumerate(search_results[:5]):
-                    eval_result = evaluate_result(
-                        res, test.expected_books, test.expected_verses
-                    )
+                for _i, res in enumerate(search_results[:5]):
+                    eval_result = evaluate_result(res, test.expected_books, test.expected_verses)
                     top_refs.append(eval_result["reference"])
 
                     if eval_result["book_match"]:
@@ -445,15 +423,9 @@ async def run_tests():
     elapsed_time = time.time() - start_time
 
     # Print results table
-    console.print(
-        "\n[bold]═══════════════════════════════════════════════════════════════[/bold]"
-    )
-    console.print(
-        "[bold]                         TEST SONUÇLARI                        [/bold]"
-    )
-    console.print(
-        "[bold]═══════════════════════════════════════════════════════════════[/bold]\n"
-    )
+    console.print("\n[bold]═══════════════════════════════════════════════════════════════[/bold]")
+    console.print("[bold]                         TEST SONUÇLARI                        [/bold]")
+    console.print("[bold]═══════════════════════════════════════════════════════════════[/bold]\n")
 
     table = Table(show_header=True, header_style="bold magenta")
     table.add_column("#", width=3)
@@ -478,24 +450,16 @@ async def run_tests():
     console.print(table)
 
     # Print summary
-    console.print(
-        "\n[bold]═══════════════════════════════════════════════════════════════[/bold]"
-    )
-    console.print(
-        "[bold]                           ÖZET                                [/bold]"
-    )
-    console.print(
-        "[bold]═══════════════════════════════════════════════════════════════[/bold]\n"
-    )
+    console.print("\n[bold]═══════════════════════════════════════════════════════════════[/bold]")
+    console.print("[bold]                           ÖZET                                [/bold]")
+    console.print("[bold]═══════════════════════════════════════════════════════════════[/bold]\n")
 
     book_accuracy = (total_book_matches / total_queries) * 100
     verse_accuracy = (total_verse_matches / total_queries) * 100
 
     console.print(f"[cyan]Toplam Sorgu:[/cyan] {total_queries}")
     console.print(f"[cyan]Toplam Süre:[/cyan] {elapsed_time:.2f} saniye")
-    console.print(
-        f"[cyan]Ortalama Sorgu Süresi:[/cyan] {elapsed_time / total_queries:.2f} saniye"
-    )
+    console.print(f"[cyan]Ortalama Sorgu Süresi:[/cyan] {elapsed_time / total_queries:.2f} saniye")
     console.print()
     console.print(
         f"[green]Kitap Eşleşme Doğruluğu:[/green] {total_book_matches}/{total_queries} ({book_accuracy:.1f}%)"
@@ -506,21 +470,13 @@ async def run_tests():
 
     # Score interpretation
     if verse_accuracy >= 80:
-        console.print(
-            "\n[bold green]✅ MÜKEMMEL: Sistem çok iyi performans gösteriyor![/bold green]"
-        )
+        console.print("\n[bold green]✅ MÜKEMMEL: Sistem çok iyi performans gösteriyor![/bold green]")
     elif verse_accuracy >= 60:
-        console.print(
-            "\n[bold yellow]⚠️ İYİ: Sistem makul düzeyde performans gösteriyor[/bold yellow]"
-        )
+        console.print("\n[bold yellow]⚠️ İYİ: Sistem makul düzeyde performans gösteriyor[/bold yellow]")
     elif verse_accuracy >= 40:
-        console.print(
-            "\n[bold orange3]⚠️ ORTA: Sistem iyileştirme gerektiriyor[/bold orange3]"
-        )
+        console.print("\n[bold orange3]⚠️ ORTA: Sistem iyileştirme gerektiriyor[/bold orange3]")
     else:
-        console.print(
-            "\n[bold red]❌ DÜŞÜK: Sistem önemli iyileştirme gerektiriyor[/bold red]"
-        )
+        console.print("\n[bold red]❌ DÜŞÜK: Sistem önemli iyileştirme gerektiriyor[/bold red]")
 
     return {
         "total_queries": total_queries,
@@ -535,8 +491,6 @@ async def run_tests():
 
 if __name__ == "__main__":
     console.print("[bold]İncil Ultimate RAG Test Paketi Başlatılıyor...[/bold]\n")
-    console.print(
-        "[dim]NOT: Tüm sorgular Türkçe olarak girilecek ve sistem tarafından[/dim]"
-    )
+    console.print("[dim]NOT: Tüm sorgular Türkçe olarak girilecek ve sistem tarafından[/dim]")
     console.print("[dim]      otomatik olarak İngilizce'ye çevrilecektir.[/dim]\n")
     results = asyncio.run(run_tests())

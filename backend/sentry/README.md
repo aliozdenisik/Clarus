@@ -97,7 +97,7 @@ Navigate to **Sentry Dashboard → Dashboards → Create Dashboard**
 ### Widgets to Create
 
 #### 1. Query Count (24h) - Big Number
-- **Query**: `count()` 
+- **Query**: `count()`
 - **Filter**: `transaction:app.api.stream.* OR transaction:rag.*`
 - **Display**: Big Number
 
@@ -126,7 +126,7 @@ Navigate to **Sentry Dashboard → Dashboards → Create Dashboard**
 - **Display**: Line chart by day
 
 #### 7. LLM Token Usage - Area Chart
-- **Queries**: 
+- **Queries**:
   - `sum(measurements.llm.tokens.input)`
   - `sum(measurements.llm.tokens.output)`
 - **Display**: Stacked area chart

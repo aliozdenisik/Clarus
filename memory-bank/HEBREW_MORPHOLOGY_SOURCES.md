@@ -36,7 +36,7 @@ The **ETCBC BHSA** is the most authoritative and academically rigorous source fo
 #### Data Completeness
 - **Text Source**: Biblia Hebraica Stuttgartensia (BHS), 5th edition (1977/1997)
 - **Coverage**: Complete Hebrew Bible (39 books, 23,145 verses)
-- **Morphological Features**: 
+- **Morphological Features**:
   - Part of speech (sp): noun, verb, adjective, preposition, etc.
   - Gender (gn): masculine, feminine
   - Number (nu): singular, plural, dual
@@ -409,4 +409,3 @@ Format: `HC/R/Ncmsc`
 - **OSHB GitHub**: https://github.com/openscriptures/morphhb
 - **OSHB Website**: https://hb.openscriptures.org
 - **Text-Fabric Documentation**: https://annotation.github.io/text-fabric/tf
-

@@ -156,7 +156,7 @@ The Greek NT morphology ecosystem is fragmented:
 **Sample Entry:**
 ```xml
 <div type="entry" n="24">
-  <w gloss="1b" lemma="אָבִיב" morph="n-m" POS="aw-beeb'" 
+  <w gloss="1b" lemma="אָבִיב" morph="n-m" POS="aw-beeb'"
      xlit="ʼâbîyb" ID="H24" xml:lang="heb">אביב</w>
   <foreign xml:lang="grc">
     <w gloss="G:3501" />
@@ -346,20 +346,20 @@ from xml.etree import ElementTree as ET
 class BiblicalKeywordSearch:
     def __init__(self, kjva_text, strongs_data, morphology_data):
         self.index = self._build_index()
-    
+
     def search(self, query):
         # 1. Stem the query
         stem = self.stemmer.stem(query)
-        
+
         # 2. Look up Strong's numbers
         strong_nums = self.strongs_lookup.get(query, [])
-        
+
         # 3. Search index
         results = self.index.search(
             stem=stem,
             strong_numbers=strong_nums
         )
-        
+
         return results
 ```
 

@@ -10,10 +10,10 @@ Zeyrek kütüphanesi ile Türkçe kelimeleri kök formuna indirir.
     Allaha → Allah
 """
 
-import re
 import logging
-import warnings
 import os
+import re
+import warnings
 
 # Suppress ALL Zeyrek verbose output
 logging.basicConfig(level=logging.ERROR)
@@ -33,8 +33,8 @@ def get_analyzer():
     """Zeyrek analyzer'ı lazy load et"""
     global _analyzer
     if _analyzer is None:
-        import sys
         import io
+        import sys
 
         old_stdout = sys.stdout
         old_stderr = sys.stderr
@@ -49,7 +49,7 @@ def get_analyzer():
 
             # Disable debug mode if available
             if hasattr(_analyzer, "debug"):
-                setattr(_analyzer, "debug", False)
+                _analyzer.debug = False  # pyright: ignore[reportAttributeAccessIssue]
 
             sys.stdout = old_stdout
             sys.stderr = old_stderr
@@ -95,8 +95,8 @@ def get_lemma(word: str) -> str:
         >>> get_lemma("namazla")
         "namaz"
     """
-    import sys
     import io
+    import sys
 
     # Küçük harfe çevir ve temizle
     word_lower = word.lower().strip()

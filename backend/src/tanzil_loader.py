@@ -8,11 +8,11 @@ Note: Tanzil XML files contain malformed comments (with -- sequences inside comm
 which violates XML 1.0 spec. This loader strips comments before parsing.
 """
 
-import xml.etree.ElementTree as ET
-from pathlib import Path
-from typing import List, Dict, Optional, Any
 import logging
 import re
+import xml.etree.ElementTree as ET
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class TanzilLoader:
     Surah metadata is loaded from backend/data/tanzil/quran-data.xml
     """
 
-    def __init__(self, data_dir: Optional[Path] = None):
+    def __init__(self, data_dir: Path | None = None):
         """
         Initialize the Tanzil loader.
 
@@ -61,9 +61,9 @@ class TanzilLoader:
         self.metadata_path = self.data_dir / "tanzil" / "quran-data.xml"
 
         # Cache for surah metadata
-        self._surah_metadata: Optional[Dict[int, Dict[str, str]]] = None
+        self._surah_metadata: dict[int, dict[str, str]] | None = None
 
-    def _load_surah_metadata(self) -> Dict[int, Dict[str, str]]:
+    def _load_surah_metadata(self) -> dict[int, dict[str, str]]:
         """
         Load surah metadata from quran-data.xml.
 
@@ -79,12 +79,11 @@ class TanzilLoader:
 
         if not self.metadata_path.exists():
             raise FileNotFoundError(
-                f"Surah metadata not found: {self.metadata_path}\n"
-                f"Expected at: {self.metadata_path.absolute()}"
+                f"Surah metadata not found: {self.metadata_path}\nExpected at: {self.metadata_path.absolute()}"
             )
 
         try:
-            with open(self.metadata_path, "r", encoding="utf-8") as f:
+            with open(self.metadata_path, encoding="utf-8") as f:
                 content = f.read()
 
             # Remove XML comments (Tanzil files have -- inside comments)
@@ -117,7 +116,7 @@ class TanzilLoader:
         self._surah_metadata = metadata
         return metadata
 
-    def load_translation(self, translator: str) -> List[Dict[str, Any]]:
+    def load_translation(self, translator: str) -> list[dict[str, Any]]:
         """
         Load a single Turkish Quran translation.
 
@@ -139,16 +138,12 @@ class TanzilLoader:
         """
         if translator not in VALID_TRANSLATORS:
             raise ValueError(
-                f"Invalid translator: {translator}\n"
-                f"Valid translators: {', '.join(sorted(VALID_TRANSLATORS))}"
+                f"Invalid translator: {translator}\nValid translators: {', '.join(sorted(VALID_TRANSLATORS))}"
             )
 
         xml_path = self.turkish_quran_dir / f"tr.{translator}.xml"
         if not xml_path.exists():
-            raise FileNotFoundError(
-                f"Translation XML not found: {xml_path}\n"
-                f"Expected at: {xml_path.absolute()}"
-            )
+            raise FileNotFoundError(f"Translation XML not found: {xml_path}\nExpected at: {xml_path.absolute()}")
 
         # Load surah metadata
         surah_metadata = self._load_surah_metadata()
@@ -157,7 +152,7 @@ class TanzilLoader:
         # Note: Tanzil XML files have malformed comments (containing -- sequences)
         # We need to strip comments before parsing
         try:
-            with open(xml_path, "r", encoding="utf-8") as f:
+            with open(xml_path, encoding="utf-8") as f:
                 content = f.read()
 
             # Remove XML comments (<!-- ... -->)
@@ -186,9 +181,7 @@ class TanzilLoader:
                 text = aya.get("text", "")
 
                 if not text.strip():
-                    logger.warning(
-                        f"Empty verse text: {translator} {surah_number}:{verse_number}"
-                    )
+                    logger.warning(f"Empty verse text: {translator} {surah_number}:{verse_number}")
                     continue
 
                 verses.append(
@@ -203,34 +196,23 @@ class TanzilLoader:
 
         # Validate verse count
         if len(verses) != EXPECTED_VERSE_COUNT:
-            logger.warning(
-                f"Translation {translator} has {len(verses)} verses, "
-                f"expected {EXPECTED_VERSE_COUNT}"
-            )
+            logger.warning(f"Translation {translator} has {len(verses)} verses, expected {EXPECTED_VERSE_COUNT}")
 
         # Validate surah count
-        unique_surahs = len(set(v["surah_number"] for v in verses))
+        unique_surahs = len({v["surah_number"] for v in verses})
         if unique_surahs != EXPECTED_SURAH_COUNT:
-            logger.warning(
-                f"Translation {translator} has {unique_surahs} surahs, "
-                f"expected {EXPECTED_SURAH_COUNT}"
-            )
+            logger.warning(f"Translation {translator} has {unique_surahs} surahs, expected {EXPECTED_SURAH_COUNT}")
 
         # Validate Surah 9 (At-Tawba) has 129 verses
         surah_9_verses = [v for v in verses if v["surah_number"] == 9]
         if len(surah_9_verses) != 129:
-            logger.warning(
-                f"Translation {translator} Surah 9 has {len(surah_9_verses)} verses, "
-                f"expected 129"
-            )
+            logger.warning(f"Translation {translator} Surah 9 has {len(surah_9_verses)} verses, expected 129")
 
-        logger.info(
-            f"Loaded {translator}: {len(verses)} verses across {unique_surahs} surahs"
-        )
+        logger.info(f"Loaded {translator}: {len(verses)} verses across {unique_surahs} surahs")
 
         return verses
 
-    def load_all_translations(self) -> Dict[str, List[Dict[str, Any]]]:
+    def load_all_translations(self) -> dict[str, list[dict[str, Any]]]:
         """
         Load all available Turkish Quran translations.
 

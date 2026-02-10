@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import dynamic from "next/dynamic";
-import { useState } from "react";
-import { logger } from "@/lib/logger";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import dynamic from "next/dynamic"
+import { useState } from "react"
+import { logger } from "@/lib/logger"
 
 // Initialize API client interceptors (correlation ID, logging)
-import "@/lib/api-client-setup";
+import "@/lib/api-client-setup"
 
 // Lazy-load DevTools (~100-200KB) — only in development
 const ReactQueryDevtools =
@@ -18,7 +18,7 @@ const ReactQueryDevtools =
           })),
         { ssr: false }
       )
-    : () => null;
+    : () => null
 
 export function ApiProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -34,17 +34,17 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
               logger.error("API mutation failed", error, {
                 component: "ApiProvider",
                 action: "mutation",
-              });
+              })
             },
           },
         },
       })
-  );
+  )
 
   return (
     <QueryClientProvider client={queryClient}>
       {children}
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
-  );
+  )
 }

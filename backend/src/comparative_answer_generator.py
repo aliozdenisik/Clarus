@@ -12,22 +12,22 @@ Features:
 - Priority ordering by relevance score
 """
 
-import os
 import json
 import logging
-import requests
+import os
 import time
-import sentry_sdk
-from typing import List, Optional
 from dataclasses import dataclass
+
+import requests
+import sentry_sdk
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
-from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
+from src.circuit_breaker import CircuitBreakerError, llm_with_breaker
 from src.confidence_scorer import ConfidenceScorer
 
 logger = logging.getLogger(__name__)
@@ -38,13 +38,13 @@ class ComparativeAnswer:
     """Comparative theological analysis result"""
 
     essay: str  # Full essay with inline citations
-    quran_references: List[str]  # Used Quran verse references
-    bible_references: List[str]  # Used Bible verse references
-    all_references: List[str]  # Numbered list of all refs (in order of use)
+    quran_references: list[str]  # Used Quran verse references
+    bible_references: list[str]  # Used Bible verse references
+    all_references: list[str]  # Numbered list of all refs (in order of use)
     confidence: float  # 0.0 - 1.0 confidence score
     query: str  # Original query
     verses_provided: int  # Total verses given to LLM (80)
-    confidence_breakdown: Optional[dict] = None  # Detailed confidence breakdown
+    confidence_breakdown: dict | None = None  # Detailed confidence breakdown
 
 
 class ComparativeAnswerGenerator:
@@ -138,13 +138,11 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         },
     ]
 
-    def __init__(self, model: Optional[str] = None, api_key: Optional[str] = None):
+    def __init__(self, model: str | None = None, api_key: str | None = None):
         """Initialize Comparative Answer Generator with OpenRouter API"""
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
-            raise ValueError(
-                "OpenRouter API key required. Set OPENROUTER_API_KEY environment variable."
-            )
+            raise ValueError("OpenRouter API key required. Set OPENROUTER_API_KEY environment variable.")
         self.model = model or self.MODEL
         self._headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -158,9 +156,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         """Extract reference string from search result based on source"""
         if "quran" in source:
             surah = getattr(result, "surah_id", None)
-            verse = getattr(result, "verse_id", None) or getattr(
-                result, "verse_ids", None
-            )
+            verse = getattr(result, "verse_id", None) or getattr(result, "verse_ids", None)
             surah_name = getattr(result, "surah_name", None)
 
             # Fallback to payload
@@ -177,12 +173,8 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         else:
             # Bible format
             book = getattr(result, "book_name", None)
-            chapter = getattr(result, "chapter_number", None) or getattr(
-                result, "chapter", None
-            )
-            verse = getattr(result, "verse_number", None) or getattr(
-                result, "verse", None
-            )
+            chapter = getattr(result, "chapter_number", None) or getattr(result, "chapter", None)
+            verse = getattr(result, "verse_number", None) or getattr(result, "verse", None)
 
             # Fallback to payload
             if book is None and hasattr(result, "payload"):
@@ -215,9 +207,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         """Extract relevance score from result"""
         return getattr(result, "score", 0.0)
 
-    def _format_verses_section(
-        self, results: List, source: str, label: str, prefix: str
-    ) -> str:
+    def _format_verses_section(self, results: list, source: str, label: str, prefix: str) -> str:
         """Format verses with scores for a single source"""
         lines = []
         for i, result in enumerate(results, 1):
@@ -232,10 +222,10 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
 
     def _format_context(
         self,
-        quran_semantic: List,
-        quran_chunks: List,
-        bible_semantic: List,
-        bible_chunks: List,
+        quran_semantic: list,
+        quran_chunks: list,
+        bible_semantic: list,
+        bible_chunks: list,
         translator: str = "diyanet",
     ) -> str:
         """Format all 80 verses as context for LLM"""
@@ -277,9 +267,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         # Bible Chunks (20)
         if bible_chunks:
             sections.append(
-                self._format_verses_section(
-                    bible_chunks, "bible_kjva", "İNCİL - SEMANTİK CHUNK SONUÇLARI", "BC"
-                )
+                self._format_verses_section(bible_chunks, "bible_kjva", "İNCİL - SEMANTİK CHUNK SONUÇLARI", "BC")
             )
 
         return "\n".join(sections)
@@ -288,9 +276,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=2, min=2, max=60),
         retry=retry_if_exception_type(requests.exceptions.RequestException),
-        before_sleep=lambda rs: logger.info(
-            f"Retrying LLM call, attempt {rs.attempt_number}/5"
-        ),
+        before_sleep=lambda rs: logger.info(f"Retrying LLM call, attempt {rs.attempt_number}/5"),
     )
     def _call_llm(self, query: str, context: str) -> dict:
         """Call OpenRouter API for comparative essay generation"""
@@ -325,15 +311,11 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
 
                 # Defensive parsing for LLM response
                 if "choices" not in response_json or not response_json["choices"]:
-                    logger.error(
-                        f"Invalid LLM response: missing 'choices'. Response: {response_json}"
-                    )
+                    logger.error(f"Invalid LLM response: missing 'choices'. Response: {response_json}")
                     raise ValueError("Invalid LLM response: missing 'choices' field")
 
                 choice = response_json["choices"][0]
-                if "message" not in choice or "content" not in choice.get(
-                    "message", {}
-                ):
+                if "message" not in choice or "content" not in choice.get("message", {}):
                     logger.error(f"Invalid LLM response structure: {choice}")
                     raise ValueError("Invalid LLM response: missing message content")
 
@@ -343,9 +325,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
                 return result
             except CircuitBreakerError:
                 # Circuit breaker open - fail fast, do NOT retry
-                logger.warning(
-                    "Circuit breaker OPEN for LLM - comparative essay generation failed"
-                )
+                logger.warning("Circuit breaker OPEN for LLM - comparative essay generation failed")
                 span.set_data("latency_ms", (time.time() - start_time) * 1000)
                 return {
                     "essay": "Karşılaştırmalı analiz üretilemedi (servis geçici olarak kullanılamıyor).",
@@ -383,11 +363,11 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
     def generate_comparative_answer(
         self,
         query: str,
-        quran_semantic: List,
-        quran_chunks: List,
-        bible_semantic: List,
-        bible_chunks: List,
-        collection_stats: Optional[dict[str, object]] = None,
+        quran_semantic: list,
+        quran_chunks: list,
+        bible_semantic: list,
+        bible_chunks: list,
+        collection_stats: dict[str, object] | None = None,
         translator: str = "diyanet",
     ) -> ComparativeAnswer:
         """
@@ -405,12 +385,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         Returns:
             ComparativeAnswer with essay, citations, and confidence
         """
-        total_verses = (
-            len(quran_semantic)
-            + len(quran_chunks)
-            + len(bible_semantic)
-            + len(bible_chunks)
-        )
+        total_verses = len(quran_semantic) + len(quran_chunks) + len(bible_semantic) + len(bible_chunks)
 
         if total_verses == 0:
             return ComparativeAnswer(
@@ -424,9 +399,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
             )
 
         # Format context from all 80 verses
-        context = self._format_context(
-            quran_semantic, quran_chunks, bible_semantic, bible_chunks, translator
-        )
+        context = self._format_context(quran_semantic, quran_chunks, bible_semantic, bible_chunks, translator)
 
         # Call LLM for comparative essay generation
         print(f"Generating comparative essay with {total_verses} verses...")
@@ -441,17 +414,11 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
                 all_rrf_scores = []
 
             raw_num_queries = collection_stats.get("num_queries", 1)
-            num_queries = (
-                int(raw_num_queries) if isinstance(raw_num_queries, (int, float)) else 1
-            )
+            num_queries = int(raw_num_queries) if isinstance(raw_num_queries, int | float) else 1
 
-            raw_collections_with_results = collection_stats.get(
-                "collections_with_results", 4
-            )
+            raw_collections_with_results = collection_stats.get("collections_with_results", 4)
             collections_with_results = (
-                int(raw_collections_with_results)
-                if isinstance(raw_collections_with_results, (int, float))
-                else 4
+                int(raw_collections_with_results) if isinstance(raw_collections_with_results, int | float) else 4
             )
         else:
             # Fallback: build from search results
@@ -464,15 +431,11 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
             )
             num_queries = 1
             collections_with_results = sum(
-                1
-                for lst in [quran_semantic, quran_chunks, bible_semantic, bible_chunks]
-                if lst
+                1 for lst in [quran_semantic, quran_chunks, bible_semantic, bible_chunks] if lst
             )
 
         # Count citations from LLM response
-        cited_count = len(llm_result.get("quran_citations", [])) + len(
-            llm_result.get("bible_citations", [])
-        )
+        cited_count = len(llm_result.get("quran_citations", [])) + len(llm_result.get("bible_citations", []))
 
         essay_text = llm_result.get("essay", "")
         breakdown = self.confidence_scorer.compute(

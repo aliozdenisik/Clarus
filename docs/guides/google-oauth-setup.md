@@ -73,7 +73,7 @@ This guide explains how to configure Google OAuth for Clarus development environ
    ```env
    NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-client-id-from-step-3
    ```
-   
+
    **Note**: Only the Client ID is needed for frontend. The secret stays in backend only.
 
 2. Restart the frontend:
@@ -121,7 +121,7 @@ This guide explains how to configure Google OAuth for Clarus development environ
 
 **Cause**: Browser is blocking the Google popup.
 
-**Solution**: 
+**Solution**:
 1. Click the popup blocker icon in browser address bar
 2. Allow popups for `localhost:3000`
 

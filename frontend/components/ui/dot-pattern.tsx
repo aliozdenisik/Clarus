@@ -1,17 +1,17 @@
-"use client";
+"use client"
 
-import { useId } from "react";
-import { cn } from "@/lib/utils";
+import { useId } from "react"
+import { cn } from "@/lib/utils"
 
 interface DotPatternProps {
-  width?: number;
-  height?: number;
-  x?: number;
-  y?: number;
-  cx?: number;
-  cy?: number;
-  cr?: number;
-  className?: string;
+  width?: number
+  height?: number
+  x?: number
+  y?: number
+  cx?: number
+  cy?: number
+  cr?: number
+  className?: string
 }
 
 export function DotPattern({
@@ -25,7 +25,7 @@ export function DotPattern({
   className,
   ...props
 }: DotPatternProps) {
-  const id = useId();
+  const id = useId()
 
   return (
     <svg
@@ -51,22 +51,19 @@ export function DotPattern({
       </defs>
       <rect width="100%" height="100%" strokeWidth={0} fill={`url(#${id})`} />
     </svg>
-  );
+  )
 }
 
 // Grid pattern for backgrounds
 interface GridPatternProps {
-  size?: number;
-  className?: string;
+  size?: number
+  className?: string
 }
 
 export function GridPattern({ size = 60, className }: GridPatternProps) {
   return (
     <div
-      className={cn(
-        "pointer-events-none absolute inset-0 opacity-[0.02]",
-        className
-      )}
+      className={cn("pointer-events-none absolute inset-0 opacity-[0.02]", className)}
       style={{
         backgroundImage: `
           linear-gradient(to right, currentColor 1px, transparent 1px),
@@ -75,16 +72,16 @@ export function GridPattern({ size = 60, className }: GridPatternProps) {
         backgroundSize: `${size}px ${size}px`,
       }}
     />
-  );
+  )
 }
 
 // Radial gradient overlay
 interface RadialGradientProps {
-  className?: string;
-  color?: string;
-  size?: string;
-  position?: string;
-  opacity?: number;
+  className?: string
+  color?: string
+  size?: string
+  position?: string
+  opacity?: number
 }
 
 export function RadialGradient({
@@ -102,30 +99,27 @@ export function RadialGradient({
         opacity,
       }}
     />
-  );
+  )
 }
 
 // Noise texture overlay
 export function NoiseTexture({ className }: { className?: string }) {
   return (
     <div
-      className={cn(
-        "pointer-events-none absolute inset-0 opacity-[0.015]",
-        className
-      )}
+      className={cn("pointer-events-none absolute inset-0 opacity-[0.015]", className)}
       style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
       }}
     />
-  );
+  )
 }
 
 // Luxury card with decorative elements
 interface LuxuryCardProps {
-  children: React.ReactNode;
-  className?: string;
-  variant?: "default" | "elevated" | "glowing";
-  accentColor?: string;
+  children: React.ReactNode
+  className?: string
+  variant?: "default" | "elevated" | "glowing"
+  accentColor?: string
 }
 
 export function LuxuryCard({
@@ -138,33 +132,29 @@ export function LuxuryCard({
     default: "bg-[var(--color-bg-secondary)] border-white/5",
     elevated: "bg-[var(--color-bg-elevated)] border-white/10 shadow-xl shadow-black/20",
     glowing: "bg-[var(--color-bg-secondary)] border-white/10",
-  };
+  }
 
   return (
     <div
-      className={cn(
-        "relative rounded-2xl border overflow-hidden",
-        variants[variant],
-        className
-      )}
+      className={cn("relative overflow-hidden rounded-2xl border", variants[variant], className)}
     >
       {/* Corner accents for luxury feel */}
       {variant === "glowing" && (
         <>
           <div
-            className="absolute -top-1 -left-1 w-3 h-3"
+            className="absolute -top-1 -left-1 h-3 w-3"
             style={{ backgroundColor: accentColor }}
           />
           <div
-            className="absolute -top-1 -right-1 w-3 h-3"
+            className="absolute -top-1 -right-1 h-3 w-3"
             style={{ backgroundColor: accentColor }}
           />
           <div
-            className="absolute -bottom-1 -left-1 w-3 h-3"
+            className="absolute -bottom-1 -left-1 h-3 w-3"
             style={{ backgroundColor: accentColor }}
           />
           <div
-            className="absolute -bottom-1 -right-1 w-3 h-3"
+            className="absolute -right-1 -bottom-1 h-3 w-3"
             style={{ backgroundColor: accentColor }}
           />
         </>
@@ -176,7 +166,7 @@ export function LuxuryCard({
       {/* Gradient overlay */}
       {variant === "glowing" && (
         <div
-          className="absolute inset-0 opacity-10 pointer-events-none"
+          className="pointer-events-none absolute inset-0 opacity-10"
           style={{
             background: `radial-gradient(circle at 50% 0%, ${accentColor}, transparent 50%)`,
           }}
@@ -186,16 +176,16 @@ export function LuxuryCard({
       {/* Content */}
       <div className="relative z-10">{children}</div>
     </div>
-  );
+  )
 }
 
 // Quote card with luxury styling
 interface LuxuryQuoteCardProps {
-  quote: string;
-  source: string;
-  sourceDetail?: string;
-  accentColor?: string;
-  className?: string;
+  quote: string
+  source: string
+  sourceDetail?: string
+  accentColor?: string
+  className?: string
 }
 
 export function LuxuryQuoteCard({
@@ -210,21 +200,21 @@ export function LuxuryQuoteCard({
       <div className="p-6 md:p-8">
         {/* Quote mark */}
         <div
-          className="text-6xl font-serif leading-none mb-4 opacity-20"
+          className="mb-4 font-serif text-6xl leading-none opacity-20"
           style={{ color: accentColor }}
         >
           &quot;
         </div>
 
         {/* Quote text */}
-        <blockquote className="text-lg md:text-xl text-[var(--color-text-primary)] leading-relaxed mb-6 font-light italic">
+        <blockquote className="mb-6 text-lg leading-relaxed font-light text-[var(--color-text-primary)] italic md:text-xl">
           {quote}
         </blockquote>
 
         {/* Divider */}
-        <div className="flex items-center gap-3 mb-4">
+        <div className="mb-4 flex items-center gap-3">
           <div
-            className="flex-1 h-px"
+            className="h-px flex-1"
             style={{
               background: `linear-gradient(to right, transparent, ${accentColor}40, transparent)`,
             }}
@@ -234,11 +224,9 @@ export function LuxuryQuoteCard({
         {/* Source */}
         <div className="text-right">
           <cite className="not-italic">
-            <span className="text-[var(--color-text-primary)] font-medium">
-              {source}
-            </span>
+            <span className="font-medium text-[var(--color-text-primary)]">{source}</span>
             {sourceDetail && (
-              <span className="text-[var(--color-text-secondary)] text-sm ml-2">
+              <span className="ml-2 text-sm text-[var(--color-text-secondary)]">
                 — {sourceDetail}
               </span>
             )}
@@ -246,5 +234,5 @@ export function LuxuryQuoteCard({
         </div>
       </div>
     </LuxuryCard>
-  );
+  )
 }

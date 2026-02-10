@@ -1,13 +1,10 @@
 """Pydantic schemas for morphological keyword search API."""
 
 from pydantic import BaseModel, Field
-from typing import Optional
 
 
 class KeywordSearchRequest(BaseModel):
-    query: str = Field(
-        ..., min_length=1, max_length=100, description="Arabic word or Buckwalter root"
-    )
+    query: str = Field(..., min_length=1, max_length=100, description="Arabic word or Buckwalter root")
     page: int = Field(default=1, ge=1, description="Page number")
     per_page: int = Field(
         default=0,
@@ -15,7 +12,7 @@ class KeywordSearchRequest(BaseModel):
         le=10000,
         description="Results per page. 0 = return all verses (no pagination)",
     )
-    word_filter: Optional[str] = Field(
+    word_filter: str | None = Field(
         default=None,
         max_length=100,
         description="Filter verses to only those containing this specific derived word (token_clean form)",
@@ -49,14 +46,14 @@ class PaginationInfo(BaseModel):
 class KeywordSearchResponse(BaseModel):
     success: bool = True
     query: str
-    root: Optional[str] = None
+    root: str | None = None
     root_source: str
     total_occurrences: int = 0
     unique_words: list[str] = Field(default_factory=list)
     surah_distribution: list[SurahDistItem] = Field(default_factory=list)
     verses: list[VerseMatchItem] = Field(default_factory=list)
     pagination: PaginationInfo
-    root_buckwalter: Optional[str] = None
+    root_buckwalter: str | None = None
     word_transliterations: dict[str, str] = Field(default_factory=dict)
 
 

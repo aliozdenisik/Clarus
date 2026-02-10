@@ -5,10 +5,11 @@ Loads Quran data from risan/quran-json repository and prepares chunks for indexi
 """
 
 import json
-import requests
-from pathlib import Path
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+import requests
 from tqdm import tqdm
 
 
@@ -28,7 +29,7 @@ class QuranChunk:
     translation_normalized: str = ""  # ASCII normalized for search
     translation_lemma: str = ""  # Lemmatized for morphological search
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "surah_id": self.surah_id,
@@ -49,11 +50,11 @@ class QuranDataLoader:
 
     CDN_URL = "https://cdn.jsdelivr.net/npm/quran-json@3.1.2/dist/quran_tr.json"
 
-    def __init__(self, data_dir: Optional[Path] = None):
+    def __init__(self, data_dir: Path | None = None):
         self.data_dir = data_dir or Path("data")
         self.data_dir.mkdir(exist_ok=True)
         self.cache_path = self.data_dir / "quran_tr.json"
-        self._data: Optional[List[Dict]] = None
+        self._data: list[dict] | None = None
 
     def download_data(self, force: bool = False) -> Path:
         """Download Quran Turkish translation from CDN"""
@@ -71,7 +72,7 @@ class QuranDataLoader:
         print(f"Downloaded and cached to: {self.cache_path}")
         return self.cache_path
 
-    def load_data(self) -> List[Dict]:
+    def load_data(self) -> list[dict]:
         """Load Quran data from cache or download"""
         if self._data is not None:
             return self._data
@@ -79,16 +80,14 @@ class QuranDataLoader:
         if not self.cache_path.exists():
             self.download_data()
 
-        with open(self.cache_path, "r", encoding="utf-8") as f:
+        with open(self.cache_path, encoding="utf-8") as f:
             loaded = json.load(f)
             self._data = loaded if isinstance(loaded, list) else []
 
         assert self._data is not None
         return self._data
 
-    def create_chunks(
-        self, show_progress: bool = True, with_preprocessing: bool = True
-    ) -> List[QuranChunk]:
+    def create_chunks(self, show_progress: bool = True, with_preprocessing: bool = True) -> list[QuranChunk]:
         """
         Create verse-based chunks for indexing.
         Each verse becomes a separate searchable chunk.
@@ -98,7 +97,7 @@ class QuranDataLoader:
             with_preprocessing: If True, compute normalized and lemmatized fields
         """
         data = self.load_data()
-        chunks: List[QuranChunk] = []
+        chunks: list[QuranChunk] = []
 
         # Lazy import preprocessing modules
         normalize_fn = None
@@ -160,7 +159,7 @@ class QuranDataLoader:
 
         return chunks
 
-    def get_stats(self) -> Dict[str, int]:
+    def get_stats(self) -> dict[str, int]:
         """Get statistics about the loaded data"""
         data = self.load_data()
         total_verses = sum(surah["total_verses"] for surah in data)

@@ -9,28 +9,28 @@
  * 4. Cleared when the action completes
  */
 
-import { logger } from "./logger";
+import { logger } from "./logger"
 
-let currentCorrelationId: string | undefined;
+let currentCorrelationId: string | undefined
 
 /**
  * Start a new correlation for a user action.
  */
 export function startCorrelation(): string {
-  currentCorrelationId = crypto.randomUUID();
-  logger.setCorrelationId(currentCorrelationId);
+  currentCorrelationId = crypto.randomUUID()
+  logger.setCorrelationId(currentCorrelationId)
   logger.debug("Correlation started", {
     action: "correlation_start",
     correlationId: currentCorrelationId,
-  });
-  return currentCorrelationId;
+  })
+  return currentCorrelationId
 }
 
 /**
  * Get the current correlation ID.
  */
 export function getCorrelationId(): string | undefined {
-  return currentCorrelationId;
+  return currentCorrelationId
 }
 
 /**
@@ -41,17 +41,17 @@ export function endCorrelation(): void {
     logger.debug("Correlation ended", {
       action: "correlation_end",
       correlationId: currentCorrelationId,
-    });
+    })
   }
-  currentCorrelationId = undefined;
-  logger.clearCorrelationId();
+  currentCorrelationId = undefined
+  logger.clearCorrelationId()
 }
 
 /**
  * Get headers object with correlation ID for API requests.
  */
 export function getCorrelationHeaders(): Record<string, string> {
-  return currentCorrelationId ? { "X-Correlation-ID": currentCorrelationId } : {};
+  return currentCorrelationId ? { "X-Correlation-ID": currentCorrelationId } : {}
 }
 
 /**
@@ -61,11 +61,11 @@ export function withCorrelation<T, Args extends unknown[]>(
   operation: (...args: Args) => Promise<T>
 ): (...args: Args) => Promise<T> {
   return async (...args: Args): Promise<T> => {
-    startCorrelation();
+    startCorrelation()
     try {
-      return await operation(...args);
+      return await operation(...args)
     } finally {
-      endCorrelation();
+      endCorrelation()
     }
-  };
+  }
 }

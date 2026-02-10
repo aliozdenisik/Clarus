@@ -1,1 +1,1 @@
-export { usePreferencesStore, type UserPreferences } from './preferences-store';
+export { usePreferencesStore, type UserPreferences } from "./preferences-store"

@@ -107,10 +107,10 @@ Cons:
 async def polar_webhook(request: Request):
     payload = await request.json()
     signature = request.headers.get("X-Polar-Signature")
-    
+
     if not verify_signature(payload, signature):
         raise HTTPException(401)
-    
+
     match payload["type"]:
         case "subscription.created":
             user = await get_user_by_email(payload["email"])

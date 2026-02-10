@@ -1,14 +1,17 @@
 # Search Components Upgrade - 21st.dev Integration
 
 ## Overview
+
 Replaced existing search components with production-ready 21st.dev components for a utilitarian luxury aesthetic.
 
 ## Changes Made
 
 ### 1. Input Component (`components/ui/input.tsx`)
+
 **Updated to 21st.dev "Search input with icon and button" pattern**
 
 **Key Features:**
+
 - Height: `h-9` (36px) for compact, refined appearance
 - Border radius: `rounded-lg` for soft, premium feel
 - Enhanced focus states with ring effect: `focus-visible:ring-[3px] focus-visible:ring-ring/20`
@@ -17,6 +20,7 @@ Replaced existing search components with production-ready 21st.dev components fo
 - Improved placeholder styling: `placeholder:text-muted-foreground/70`
 
 **Design Tokens:**
+
 ```css
 border: border-input
 background: bg-background
@@ -25,9 +29,11 @@ focus-ring: ring-ring/20
 ```
 
 ### 2. SearchTabs Component (`components/search/search-tabs.tsx`)
+
 **Replaced custom Vercel-style tabs with Radix Tabs + 21st.dev underline variant**
 
 **Key Features:**
+
 - Uses `@radix-ui/react-tabs` for accessibility and keyboard navigation
 - Underline active indicator: `after:bg-[var(--color-accent-primary)]`
 - Hover states with elevated background: `hover:bg-[var(--color-bg-elevated)]`
@@ -36,15 +42,18 @@ focus-ring: ring-ring/20
 - Clean, minimal design with proper spacing
 
 **Design Pattern:**
+
 ```tsx
 <TabsPrimitive.List> // Container with border-bottom
   <TabsPrimitive.Trigger> // Individual tabs with underline on active
 ```
 
 ### 3. Search Page (`app/search/page.tsx`)
+
 **Updated search form to use new Input component with integrated button**
 
 **Key Changes:**
+
 - Imported `Input` component from `@/components/ui/input`
 - Replaced raw `<input>` with `<Input>` component
 - Updated icon positioning: `ps-3` (padding-start) for RTL support
@@ -53,19 +62,19 @@ focus-ring: ring-ring/20
 - Improved accessibility: `aria-label="Submit search"`
 
 **Layout Structure:**
+
 ```tsx
 <div className="relative flex-1">
-  <Input className="peer pe-20 ps-10 h-11" />
+  <Input className="peer h-11 ps-10 pe-20" />
   <div className="pointer-events-none absolute inset-y-0 start-0">
     <Search icon />
   </div>
-  <button className="absolute inset-y-0 end-1">
-    Search
-  </button>
+  <button className="absolute inset-y-0 end-1">Search</button>
 </div>
 ```
 
 ### 4. CSS Variables (`app/globals.css`)
+
 **Added 21st.dev design tokens**
 
 ```css
@@ -76,23 +85,29 @@ focus-ring: ring-ring/20
 ```
 
 ### 5. Dependencies
+
 **Installed:**
+
 - `@radix-ui/react-tabs` - For accessible tab component
 
 ### 6. Bug Fix (`components/ui/navbar.tsx`)
+
 **Fixed TypeScript error:**
+
 - Changed `icon?: JSX.Element` to `icon?: React.ReactElement`
 - Resolves namespace error in TypeScript strict mode
 
 ## Design Philosophy
 
 ### Utilitarian Luxury Aesthetic
+
 - **Minimal**: Clean lines, no unnecessary decoration
 - **Premium**: Subtle shadows, smooth transitions, refined spacing
 - **Functional**: Every element serves a purpose
 - **Tactile**: Hover states, focus rings, and micro-interactions
 
 ### Color Palette
+
 - Background: `#09090b` (Zinc-950)
 - Surface: `#18181b` (Zinc-900)
 - Elevated: `#27272a` (Zinc-800)
@@ -101,6 +116,7 @@ focus-ring: ring-ring/20
 - Text Muted: `#71717a` (Zinc-500)
 
 ### Typography
+
 - Font: DM Sans with OpenType features (`cv05`, `cv08`, `ss01`)
 - Sizes: 14px (sm), 15px (base), 16px (lg)
 - Weights: 400 (regular), 500 (medium), 600 (semibold)
@@ -108,11 +124,13 @@ focus-ring: ring-ring/20
 ## Testing
 
 ### Build Status
+
 ✅ Production build successful
 ✅ TypeScript compilation passed
 ✅ No runtime errors
 
 ### Verification Steps
+
 1. Search input renders with proper styling
 2. Icon positioned correctly on left
 3. Button integrated inside input on right
@@ -165,6 +183,7 @@ focus-ring: ring-ring/20
 ## Rollback Instructions
 
 If needed, revert these commits:
+
 1. `git revert <commit-hash>` - Revert search components upgrade
 2. `npm uninstall @radix-ui/react-tabs` - Remove dependency
 3. Restore original `vercel-tabs.tsx` usage in `search-tabs.tsx`

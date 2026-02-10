@@ -12,11 +12,12 @@ Create Date: 2026-02-07 08:00:03.355739
 
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
+from typing import Union
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "175d5d2987fd"
@@ -30,9 +31,7 @@ def upgrade() -> None:
 
     # --- search_history ---
     # Drop old FK to users_legacy
-    op.drop_constraint(
-        "search_history_user_id_fkey", "search_history", type_="foreignkey"
-    )
+    op.drop_constraint("search_history_user_id_fkey", "search_history", type_="foreignkey")
     # Change column type from INTEGER to TEXT
     op.alter_column(
         "search_history",
@@ -43,9 +42,7 @@ def upgrade() -> None:
         postgresql_using="user_id::TEXT",
     )
     # Delete orphaned rows that don't have a matching Better Auth user
-    op.execute(
-        'DELETE FROM search_history WHERE user_id NOT IN (SELECT id FROM "user")'
-    )
+    op.execute('DELETE FROM search_history WHERE user_id NOT IN (SELECT id FROM "user")')
     # Add new FK to Better Auth user table
     op.create_foreign_key(
         "search_history_user_id_fkey",
@@ -57,9 +54,7 @@ def upgrade() -> None:
 
     # --- user_preferences ---
     # Drop old FK to users_legacy
-    op.drop_constraint(
-        "user_preferences_user_id_fkey", "user_preferences", type_="foreignkey"
-    )
+    op.drop_constraint("user_preferences_user_id_fkey", "user_preferences", type_="foreignkey")
     # Change column type from INTEGER to TEXT
     op.alter_column(
         "user_preferences",
@@ -87,9 +82,7 @@ def downgrade() -> None:
     """
 
     # --- user_preferences ---
-    op.drop_constraint(
-        "user_preferences_user_id_fkey", "user_preferences", type_="foreignkey"
-    )
+    op.drop_constraint("user_preferences_user_id_fkey", "user_preferences", type_="foreignkey")
     op.alter_column(
         "user_preferences",
         "user_id",
@@ -107,9 +100,7 @@ def downgrade() -> None:
     )
 
     # --- search_history ---
-    op.drop_constraint(
-        "search_history_user_id_fkey", "search_history", type_="foreignkey"
-    )
+    op.drop_constraint("search_history_user_id_fkey", "search_history", type_="foreignkey")
     op.alter_column(
         "search_history",
         "user_id",

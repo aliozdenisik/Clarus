@@ -12,22 +12,22 @@ Usage:
     python backend/tests/run_verse_lookup_test.py
 """
 
+import asyncio
 import json
+import subprocess
 import sys
 import time
-import asyncio
-import subprocess
-from pathlib import Path
-from typing import Dict, List, Any, Tuple
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import httpx
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 console = Console()
 
@@ -44,7 +44,7 @@ class TestCase:
     id: str
     category: str
     input: str
-    expected: Dict[str, Any]
+    expected: dict[str, Any]
     description: str
 
 
@@ -55,8 +55,8 @@ class TestResult:
     test_id: str
     category: str
     input: str
-    expected: Dict[str, Any]
-    actual: Dict[str, Any] | None
+    expected: dict[str, Any]
+    actual: dict[str, Any] | None
     passed: bool
     error: str | None = None
     elapsed_ms: float = 0.0
@@ -70,7 +70,7 @@ class TestSummary:
     passed: int = 0
     failed: int = 0
     errors: int = 0
-    by_category: Dict[str, Dict[str, int]] = field(default_factory=dict)
+    by_category: dict[str, dict[str, int]] = field(default_factory=dict)
     total_time_ms: float = 0.0
 
 
@@ -152,10 +152,7 @@ async def run_api_test(client: httpx.AsyncClient, test: TestCase) -> TestResult:
                             expected_verses = test.expected.get("verses", [])
                             actual_verses = [v.get("verse_id") for v in verses]
 
-                            if (
-                                actual_surah == expected_surah
-                                and actual_verses == expected_verses
-                            ):
+                            if actual_surah == expected_surah and actual_verses == expected_verses:
                                 passed = True
                             else:
                                 error = f"Mismatch: expected surah={expected_surah} verses={expected_verses}, got surah={actual_surah} verses={actual_verses}"
@@ -185,7 +182,7 @@ async def run_api_test(client: httpx.AsyncClient, test: TestCase) -> TestResult:
                 actual = {"status_code": response.status_code}
 
     except Exception as e:
-        error = f"Exception: {str(e)}"
+        error = f"Exception: {e!s}"
         elapsed_ms = (time.time() - start_time) * 1000
 
     return TestResult(
@@ -202,7 +199,7 @@ async def run_api_test(client: httpx.AsyncClient, test: TestCase) -> TestResult:
 
 async def run_all_api_tests(
     test_data_path: Path, base_url: str = "http://localhost:8000"
-) -> Tuple[List[TestResult], TestSummary]:
+) -> tuple[list[TestResult], TestSummary]:
     """Run all API tests from test data file.
 
     Args:
@@ -214,14 +211,13 @@ async def run_all_api_tests(
     """
     console.print(
         Panel.fit(
-            "[bold cyan]API Tests: Verse Lookup Endpoint[/bold cyan]\n"
-            f"[dim]Testing {base_url}/api/verse/lookup[/dim]",
+            f"[bold cyan]API Tests: Verse Lookup Endpoint[/bold cyan]\n[dim]Testing {base_url}/api/verse/lookup[/dim]",
             border_style="cyan",
         )
     )
 
     # Load test data
-    with open(test_data_path, "r", encoding="utf-8") as f:
+    with open(test_data_path, encoding="utf-8") as f:
         data = json.load(f)
 
     test_cases = [
@@ -238,7 +234,7 @@ async def run_all_api_tests(
     console.print(f"\n[dim]Loaded {len(test_cases)} test cases[/dim]\n")
 
     # Run tests
-    results: List[TestResult] = []
+    results: list[TestResult] = []
     summary = TestSummary()
 
     async with httpx.AsyncClient(base_url=base_url) as client:
@@ -283,7 +279,7 @@ async def run_all_api_tests(
 # ============================================================================
 
 
-def run_cli_test(input_ref: str, expected_source: str) -> Tuple[bool, str]:
+def run_cli_test(input_ref: str, expected_source: str) -> tuple[bool, str]:
     """Run a single CLI verse-lookup test.
 
     Args:
@@ -320,10 +316,10 @@ def run_cli_test(input_ref: str, expected_source: str) -> Tuple[bool, str]:
     except subprocess.TimeoutExpired:
         return False, "Command timeout"
     except Exception as e:
-        return False, f"Exception: {str(e)}"
+        return False, f"Exception: {e!s}"
 
 
-def run_cli_tests() -> Tuple[int, int]:
+def run_cli_tests() -> tuple[int, int]:
     """Run representative CLI tests.
 
     Returns:
@@ -331,8 +327,7 @@ def run_cli_tests() -> Tuple[int, int]:
     """
     console.print(
         Panel.fit(
-            "[bold cyan]CLI Tests: verse-lookup Command[/bold cyan]\n"
-            "[dim]Testing python main.py verse-lookup[/dim]",
+            "[bold cyan]CLI Tests: verse-lookup Command[/bold cyan]\n[dim]Testing python main.py verse-lookup[/dim]",
             border_style="cyan",
         )
     )
@@ -384,14 +379,13 @@ async def run_regression_test() -> bool:
 
     try:
         # Import RAG pipeline
-        from src.ultimate_rag import UltimateRAG
         import os
+
+        from src.ultimate_rag import UltimateRAG
 
         # Check if API key is available
         if not os.getenv("OPENROUTER_API_KEY"):
-            console.print(
-                "\n[yellow]⚠️ SKIPPED[/yellow] - OPENROUTER_API_KEY not set (test environment)"
-            )
+            console.print("\n[yellow]⚠️ SKIPPED[/yellow] - OPENROUTER_API_KEY not set (test environment)")
             return True  # Pass gracefully in test environment
 
         rag = UltimateRAG(verbose=False)
@@ -424,7 +418,7 @@ async def run_regression_test() -> bool:
             console.print(f"\n[yellow]⚠️ SKIPPED[/yellow] - {str(e)[:80]}")
             return True  # Pass gracefully
         else:
-            console.print(f"[red]✗[/red] Exception: {str(e)}")
+            console.print(f"[red]✗[/red] Exception: {e!s}")
             return False
 
 
@@ -442,9 +436,7 @@ def print_summary_report(
     """Print comprehensive test summary report."""
 
     console.print("\n" + "═" * 80)
-    console.print(
-        "[bold cyan]                    VERSE LOOKUP TEST SUMMARY[/bold cyan]"
-    )
+    console.print("[bold cyan]                    VERSE LOOKUP TEST SUMMARY[/bold cyan]")
     console.print("═" * 80 + "\n")
 
     # API Tests Summary
@@ -459,9 +451,7 @@ def print_summary_report(
     console.print()
 
     # Category breakdown table
-    category_table = Table(
-        title="API Tests by Category", show_header=True, header_style="bold magenta"
-    )
+    category_table = Table(title="API Tests by Category", show_header=True, header_style="bold magenta")
     category_table.add_column("Category", width=20)
     category_table.add_column("Total", width=8)
     category_table.add_column("Passed", width=8)
@@ -501,27 +491,19 @@ def print_summary_report(
 
     # Overall verdict
     # Allow 1 known failure (Bible verse bounds validation - documented limitation)
-    critical_passed = (
-        api_summary.failed <= 1 and cli_passed == cli_total and regression_passed
-    )
+    critical_passed = api_summary.failed <= 1 and cli_passed == cli_total and regression_passed
 
     console.print("═" * 80)
     if api_summary.failed == 0 and cli_passed == cli_total and regression_passed:
-        console.print(
-            "[bold green]✅ ALL TESTS PASSED - VERSE LOOKUP READY FOR PRODUCTION[/bold green]"
-        )
+        console.print("[bold green]✅ ALL TESTS PASSED - VERSE LOOKUP READY FOR PRODUCTION[/bold green]")
     elif critical_passed:
-        console.print(
-            "[bold green]✅ CRITICAL TESTS PASSED - VERSE LOOKUP READY FOR PRODUCTION[/bold green]"
-        )
+        console.print("[bold green]✅ CRITICAL TESTS PASSED - VERSE LOOKUP READY FOR PRODUCTION[/bold green]")
         if api_summary.failed > 0:
             console.print(
                 "[dim]Note: 1 known limitation (Bible verse bounds validation - requires verse-per-chapter data)[/dim]"
             )
     else:
-        console.print(
-            "[bold yellow]⚠️ SOME TESTS FAILED - REVIEW REQUIRED[/bold yellow]"
-        )
+        console.print("[bold yellow]⚠️ SOME TESTS FAILED - REVIEW REQUIRED[/bold yellow]")
 
 
 # ============================================================================
@@ -606,9 +588,7 @@ async def main():
 
     # Exit with appropriate code
     # Allow 1 known failure (Bible verse bounds validation)
-    critical_passed = (
-        api_summary.failed <= 1 and cli_passed == cli_total and regression_passed
-    )
+    critical_passed = api_summary.failed <= 1 and cli_passed == cli_total and regression_passed
     sys.exit(0 if critical_passed else 1)
 
 

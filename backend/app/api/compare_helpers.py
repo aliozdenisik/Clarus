@@ -10,13 +10,14 @@ This module contains:
 - build_paragraphs() helper function
 """
 
-from typing import List, Dict, Union, Tuple, cast
 import logging
 import re
+from typing import Union, cast
+
 from pydantic import BaseModel
 
-from src.search import SearchResult, BibleSearchResult
 from src.multi_agent_answer_generator import MultiAgentAnswer
+from src.search import BibleSearchResult, SearchResult
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ class ParagraphData(BaseModel):
 
     title: str
     content: str
-    citations: List[str]
+    citations: list[str]
 
 
 class VerseDetail(BaseModel):
@@ -70,9 +71,7 @@ class VerseDetail(BaseModel):
     chapter: int  # Chapter/Surah number
     verse: int  # Verse number
     source: str  # Collection: 'quran_tr', 'bible_ot', 'bible_nt', 'bible_apocrypha'
-    translation: (
-        str  # "Diyanet Isleri Baskanligi" or "King James Version with Apocrypha"
-    )
+    translation: str  # "Diyanet Isleri Baskanligi" or "King James Version with Apocrypha"
     book_nr: int | None = None  # Bible book number (None for Quran)
 
 
@@ -81,7 +80,7 @@ class VerseDetail(BaseModel):
 # =============================================================================
 
 
-def _extract_quran_verse_detail(result: SearchResult) -> Tuple[str, VerseDetail]:
+def _extract_quran_verse_detail(result: SearchResult) -> tuple[str, VerseDetail]:
     """Extract citation reference and verse detail from Quran SearchResult.
 
     Args:
@@ -103,9 +102,7 @@ def _extract_quran_verse_detail(result: SearchResult) -> Tuple[str, VerseDetail]
     )
 
 
-def _extract_bible_verse_detail(
-    result: BibleSearchResult, source: str
-) -> Tuple[str, VerseDetail]:
+def _extract_bible_verse_detail(result: BibleSearchResult, source: str) -> tuple[str, VerseDetail]:
     """Extract citation reference and verse detail from Bible BibleSearchResult.
 
     Args:
@@ -135,13 +132,13 @@ def _extract_bible_verse_detail(
 
 
 def build_verse_details(
-    quran_results: List[SearchResult],
-    ot_results: List[BibleSearchResult],
-    nt_results: List[BibleSearchResult],
-    apocrypha_results: List[BibleSearchResult],
+    quran_results: list[SearchResult],
+    ot_results: list[BibleSearchResult],
+    nt_results: list[BibleSearchResult],
+    apocrypha_results: list[BibleSearchResult],
     *,
     as_dict: bool = False,
-) -> Dict[str, Union[VerseDetail, dict]]:
+) -> dict[str, Union[VerseDetail, dict]]:
     """
     Build verse details dictionary from search results.
 
@@ -169,7 +166,7 @@ def build_verse_details(
         >>> verse_details = build_verse_details(q, ot, nt, ap, as_dict=True)
         >>> verse_details["Bakara:153"]  # {"text": "...", ...}
     """
-    verse_details: Dict[str, VerseDetail] = {}
+    verse_details: dict[str, VerseDetail] = {}
 
     # Extract Quran verses
     for result in quran_results:
@@ -201,14 +198,14 @@ def build_verse_details(
     if as_dict:
         return {ref: detail.model_dump() for ref, detail in verse_details.items()}
 
-    return cast(Dict[str, Union[VerseDetail, dict]], verse_details)
+    return cast("dict[str, Union[VerseDetail, dict]]", verse_details)
 
 
 def build_paragraphs(
     result: MultiAgentAnswer,
     *,
     as_dict: bool = False,
-) -> List[Union[ParagraphData, dict]]:
+) -> list[Union[ParagraphData, dict]]:
     """
     Build structured paragraphs from MultiAgentAnswer.
 
@@ -232,7 +229,7 @@ def build_paragraphs(
         >>> paragraphs = build_paragraphs(result, as_dict=True)
         >>> paragraphs[0]  # {"title": "Eski Ahit", ...}
     """
-    paragraphs: List[Union[ParagraphData, dict]] = []
+    paragraphs: list[Union[ParagraphData, dict]] = []
 
     # Paragraph 1: Old Testament
     if result.old_testament_commentary:

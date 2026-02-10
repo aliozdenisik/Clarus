@@ -1,29 +1,27 @@
 """Verse lookup API routes for direct verse access by reference."""
 
-from fastapi import APIRouter, Query, HTTPException
-from qdrant_client import AsyncQdrantClient
-from qdrant_client.http.models import Filter, FieldCondition, MatchValue
-from typing import List, Optional
-import sys
 import os
+import sys
+
+from fastapi import APIRouter, HTTPException, Query
+from qdrant_client import AsyncQdrantClient
+from qdrant_client.http.models import FieldCondition, Filter, MatchValue
 
 # Add src to path for imports
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+from app.logging_config import get_logger
+from app.schemas.common import DEFAULT_TRANSLATOR, TranslatorType
 from app.schemas.verse_lookup import (
     VerseLookupResponse,
     VerseResult,
 )
-from app.schemas.common import TranslatorType, DEFAULT_TRANSLATOR
 from src.verse_parser import (
-    parse_verse_reference,
+    SURAH_NAME_MAP,
     ParsedReference,
     ParseError,
-    SURAH_NAME_MAP,
+    parse_verse_reference,
 )
-from app.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -62,7 +60,7 @@ async def fetch_quran_verses(
     client: AsyncQdrantClient,
     parsed: ParsedReference,
     translator: str = DEFAULT_TRANSLATOR,
-) -> List[VerseResult]:
+) -> list[VerseResult]:
     """Fetch Quran verses from Qdrant using payload filter.
 
     Args:
@@ -133,9 +131,7 @@ async def fetch_quran_verses(
     return results
 
 
-async def fetch_bible_verses(
-    client: AsyncQdrantClient, parsed: ParsedReference
-) -> List[VerseResult]:
+async def fetch_bible_verses(client: AsyncQdrantClient, parsed: ParsedReference) -> list[VerseResult]:
     """Fetch Bible verses from Qdrant using payload filter.
 
     Args:
@@ -168,7 +164,7 @@ async def fetch_bible_verses(
         "Apocrypha": "bible_apocrypha",
     }
     source = cast(
-        Literal["quran", "bible_ot", "bible_nt", "bible_apocrypha"],
+        "Literal['quran', 'bible_ot', 'bible_nt', 'bible_apocrypha']",
         source_map[testament],
     )
 
@@ -225,7 +221,7 @@ async def lookup_verse(
         max_length=100,
         description="Verse reference: '2:183', 'Bakara 183', 'Genesis 1:1', etc.",
     ),
-    translator: Optional[TranslatorType] = Query(
+    translator: TranslatorType | None = Query(
         default=DEFAULT_TRANSLATOR,
         description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
     ),
@@ -287,7 +283,7 @@ async def lookup_verse(
             detail={
                 "success": False,
                 "error": "INTERNAL_ERROR",
-                "message": f"Failed to fetch verses: {str(e)}",
+                "message": f"Failed to fetch verses: {e!s}",
                 "input": ref,
             },
         )

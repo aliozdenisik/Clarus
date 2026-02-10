@@ -338,7 +338,7 @@ def parse_lxx_file(
     verse_words: dict[tuple[int, int], list[str]] = {}
     verse_positions: dict[tuple[int, int], int] = {}
 
-    with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+    with open(file_path, encoding="utf-8", errors="replace") as f:
         for line in f:
             line = line.rstrip()
             if not line:
@@ -373,9 +373,7 @@ def parse_lxx_file(
             verse_words[verse_key].append(word_data["word"])
 
             # Normalize word
-            word_clean = (
-                normalize_greek(word_data["word"]) if word_data["word"] else None
-            )
+            word_clean = normalize_greek(word_data["word"]) if word_data["word"] else None
 
             # Transliteration
             transliteration = transliterate_greek(word_clean) if word_clean else None
@@ -439,10 +437,7 @@ def delete_lxx_data(conn, deuterocanonical_only: bool = False) -> None:
     if deuterocanonical_only:
         log.info("Deleting existing LXX deuterocanonical data (book_id 67-99)...")
         conn.execute(
-            text(
-                "DELETE FROM bm_words WHERE verse_id IN "
-                "(SELECT id FROM bm_verses WHERE book_id BETWEEN 67 AND 99)"
-            )
+            text("DELETE FROM bm_words WHERE verse_id IN (SELECT id FROM bm_verses WHERE book_id BETWEEN 67 AND 99)")
         )
         conn.execute(text("DELETE FROM bm_verses WHERE book_id BETWEEN 67 AND 99"))
         conn.execute(text("DELETE FROM bm_books WHERE id BETWEEN 67 AND 99"))
@@ -459,10 +454,7 @@ def delete_lxx_data(conn, deuterocanonical_only: bool = False) -> None:
         )
         # Delete deuterocanonical books entirely
         conn.execute(
-            text(
-                "DELETE FROM bm_words WHERE verse_id IN "
-                "(SELECT id FROM bm_verses WHERE book_id BETWEEN 67 AND 99)"
-            )
+            text("DELETE FROM bm_words WHERE verse_id IN (SELECT id FROM bm_verses WHERE book_id BETWEEN 67 AND 99)")
         )
         conn.execute(text("DELETE FROM bm_verses WHERE book_id BETWEEN 67 AND 99"))
         conn.execute(text("DELETE FROM bm_books WHERE id BETWEEN 67 AND 99"))
@@ -483,16 +475,14 @@ def insert_lxx_books(conn, books_to_insert: list[tuple]) -> None:
     rows: list[dict] = []
 
     for book_tuple in books_to_insert:
-        file_num, filename, book_id, abbrev, english_name, is_deut = book_tuple
+        _file_num, _filename, book_id, abbrev, english_name, _is_deut = book_tuple
 
         # Only insert deuterocanonical books (canonical OT should exist)
         if book_id < 67:
             continue
 
         # Check if book already exists
-        result = conn.execute(
-            text("SELECT id FROM bm_books WHERE id = :id"), {"id": book_id}
-        )
+        result = conn.execute(text("SELECT id FROM bm_books WHERE id = :id"), {"id": book_id})
         if result.fetchone():
             continue
 
@@ -703,23 +693,17 @@ def validate_and_summarize(conn) -> bool:
     checks_passed = True
 
     # LXX Book counts
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_books WHERE category = 'lxx_deuterocanonical'")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_books WHERE category = 'lxx_deuterocanonical'"))
     lxx_book_count = result.scalar()
     log.info("Books (LXX Deuterocanonical): %d", lxx_book_count)
 
     # LXX Verse count
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 67 AND 99")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_verses WHERE book_id BETWEEN 67 AND 99"))
     lxx_verse_count = result.scalar()
     log.info("Verses (LXX Deuterocanonical): %d", lxx_verse_count)
 
     # Greek word count (all)
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_words WHERE language = 'greek'")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_words WHERE language = 'greek'"))
     greek_word_count = result.scalar()
     log.info("Words (Greek total): %d", greek_word_count)
 
@@ -729,20 +713,14 @@ def validate_and_summarize(conn) -> bool:
     log.info("Words (Total): %d", total_word_count)
 
     # Language breakdown
-    result = conn.execute(
-        text(
-            "SELECT language, COUNT(*) FROM bm_words GROUP BY language ORDER BY language"
-        )
-    )
+    result = conn.execute(text("SELECT language, COUNT(*) FROM bm_words GROUP BY language ORDER BY language"))
     lang_counts = {row[0]: row[1] for row in result}
     for lang, cnt in lang_counts.items():
         log.info("  %s words: %d", lang, cnt)
 
     # Unique Greek lemmas
     result = conn.execute(
-        text(
-            "SELECT COUNT(DISTINCT lemma) FROM bm_words WHERE language = 'greek' AND lemma IS NOT NULL"
-        )
+        text("SELECT COUNT(DISTINCT lemma) FROM bm_words WHERE language = 'greek' AND lemma IS NOT NULL")
     )
     unique_lemmas = result.scalar()
     log.info("Unique Greek lemmas: %d", unique_lemmas)
@@ -788,9 +766,7 @@ def validate_and_summarize(conn) -> bool:
 
 def main() -> bool:
     """Run the LXX ETL pipeline. Returns True on success."""
-    parser = argparse.ArgumentParser(
-        description="ETL: CCAT LXX -> bm_books, bm_verses, bm_words"
-    )
+    parser = argparse.ArgumentParser(description="ETL: CCAT LXX -> bm_books, bm_verses, bm_words")
     parser.add_argument(
         "--book",
         type=str,
@@ -852,7 +828,7 @@ def main() -> bool:
 
         log.info("Parsing LXX files...")
         for book_tuple in books_to_process:
-            file_num, filename, book_id, abbrev, english_name, is_deut = book_tuple
+            _file_num, filename, book_id, abbrev, _english_name, _is_deut = book_tuple
             file_path = LXX_DIR / filename
 
             verse_rows, word_rows = parse_lxx_file(file_path, book_id, abbrev)

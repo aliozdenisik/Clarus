@@ -1,21 +1,21 @@
+from app.middleware.correlation import CorrelationIDMiddleware
 from app.middleware.error_handler import (
-    ErrorHandlerMiddleware,
     APIError,
-    ValidationError,
     AuthenticationError,
-    RateLimitError,
+    ErrorHandlerMiddleware,
     NotFoundError,
+    RateLimitError,
+    ValidationError,
 )
 from app.middleware.rate_limit import RateLimitMiddleware
-from app.middleware.correlation import CorrelationIDMiddleware
 
 __all__ = [
-    "ErrorHandlerMiddleware",
-    "RateLimitMiddleware",
-    "CorrelationIDMiddleware",
     "APIError",
-    "ValidationError",
     "AuthenticationError",
-    "RateLimitError",
+    "CorrelationIDMiddleware",
+    "ErrorHandlerMiddleware",
     "NotFoundError",
+    "RateLimitError",
+    "RateLimitMiddleware",
+    "ValidationError",
 ]

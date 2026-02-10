@@ -121,7 +121,25 @@ Looking for something to work on? Check out issues labeled:
    - Add tests for new functionality
    - Update documentation as needed
 
-3. **Test your changes**
+3. **Set up pre-commit hooks (recommended)**
+
+   Pre-commit hooks automatically run linters and formatters before each commit, ensuring code quality:
+
+   ```bash
+   # Install pre-commit (if not already installed)
+   pip install pre-commit
+
+   # Install hooks
+   ./scripts/setup-pre-commit.sh
+   ```
+
+   Once installed, hooks will run automatically on `git commit`. To run manually:
+
+   ```bash
+   pre-commit run --all-files
+   ```
+
+4. **Test your changes**
 
    ```bash
    # Backend linting and type checking
@@ -129,7 +147,7 @@ Looking for something to work on? Check out issues labeled:
    ruff check .
    ruff format .
    pyright
-   
+
    # Backend tests
    uv run pytest tests/ -v
 
@@ -139,7 +157,9 @@ Looking for something to work on? Check out issues labeled:
    npm test
    ```
 
-4. **Commit your changes**
+5. **Commit your changes**
+
+   Pre-commit hooks will run automatically. If they fail, fix the issues and try again.
 
    Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
@@ -149,7 +169,7 @@ Looking for something to work on? Check out issues labeled:
    git commit -m "docs: update API documentation"
    ```
 
-5. **Push and create a PR**
+6. **Push and create a PR**
 
    ```bash
    git push origin feature/your-feature-name

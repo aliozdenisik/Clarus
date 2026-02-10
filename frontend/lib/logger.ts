@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/nextjs";
+import * as Sentry from "@sentry/nextjs"
 
 export enum LogLevel {
   DEBUG = 0,
@@ -12,22 +12,22 @@ const LOG_LEVELS: Record<string, LogLevel> = {
   info: LogLevel.INFO,
   warn: LogLevel.WARN,
   error: LogLevel.ERROR,
-};
+}
 
 export interface LogContext {
-  component?: string;
-  action?: string;
-  [key: string]: unknown;
+  component?: string
+  action?: string
+  [key: string]: unknown
 }
 
 interface StructuredLog {
-  timestamp: string;
-  level: keyof typeof LogLevel;
-  message: string;
-  correlationId?: string;
-  component?: string;
-  action?: string;
-  context?: Record<string, unknown>;
+  timestamp: string
+  level: keyof typeof LogLevel
+  message: string
+  correlationId?: string
+  component?: string
+  action?: string
+  context?: Record<string, unknown>
 }
 
 class ChildLogger {
@@ -37,99 +37,99 @@ class ChildLogger {
   ) {}
 
   debug(message: string, context?: LogContext): void {
-    this.parent.debug(message, { ...this.defaultContext, ...context });
+    this.parent.debug(message, { ...this.defaultContext, ...context })
   }
 
   info(message: string, context?: LogContext): void {
-    this.parent.info(message, { ...this.defaultContext, ...context });
+    this.parent.info(message, { ...this.defaultContext, ...context })
   }
 
   warn(message: string, context?: LogContext): void {
-    this.parent.warn(message, { ...this.defaultContext, ...context });
+    this.parent.warn(message, { ...this.defaultContext, ...context })
   }
 
   error(message: string, error?: unknown, context?: LogContext): void {
-    this.parent.error(message, error, { ...this.defaultContext, ...context });
+    this.parent.error(message, error, { ...this.defaultContext, ...context })
   }
 }
 
 export class Logger {
-  private static instance: Logger | undefined;
-  private level: LogLevel;
-  private correlationId?: string;
+  private static instance: Logger | undefined
+  private level: LogLevel
+  private correlationId?: string
 
   private constructor() {
-    const envLevel = process.env.NEXT_PUBLIC_LOG_LEVEL?.toLowerCase() || "info";
-    this.level = LOG_LEVELS[envLevel] ?? LogLevel.INFO;
+    const envLevel = process.env.NEXT_PUBLIC_LOG_LEVEL?.toLowerCase() || "info"
+    this.level = LOG_LEVELS[envLevel] ?? LogLevel.INFO
   }
 
   static getInstance(): Logger {
     if (!Logger.instance) {
-      Logger.instance = new Logger();
+      Logger.instance = new Logger()
     }
-    return Logger.instance;
+    return Logger.instance
   }
 
   setLevel(level: LogLevel): void {
-    this.level = level;
+    this.level = level
   }
 
   setCorrelationId(correlationId: string): void {
-    this.correlationId = correlationId;
+    this.correlationId = correlationId
   }
 
   clearCorrelationId(): void {
-    this.correlationId = undefined;
+    this.correlationId = undefined
   }
 
   generateCorrelationId(): string {
-    const correlationId = crypto.randomUUID();
-    this.setCorrelationId(correlationId);
-    return correlationId;
+    const correlationId = crypto.randomUUID()
+    this.setCorrelationId(correlationId)
+    return correlationId
   }
 
   child(defaultContext: LogContext): ChildLogger {
-    return new ChildLogger(this, defaultContext);
+    return new ChildLogger(this, defaultContext)
   }
 
   debug(message: string, context?: LogContext): void {
-    this.log(LogLevel.DEBUG, message, undefined, context);
+    this.log(LogLevel.DEBUG, message, undefined, context)
   }
 
   info(message: string, context?: LogContext): void {
-    this.log(LogLevel.INFO, message, undefined, context);
+    this.log(LogLevel.INFO, message, undefined, context)
   }
 
   warn(message: string, context?: LogContext): void {
-    this.log(LogLevel.WARN, message, undefined, context);
+    this.log(LogLevel.WARN, message, undefined, context)
   }
 
   error(message: string, error?: unknown, context?: LogContext): void {
-    this.log(LogLevel.ERROR, message, error, context);
+    this.log(LogLevel.ERROR, message, error, context)
   }
 
   private log(level: LogLevel, message: string, error?: unknown, context?: LogContext): void {
     if (level < this.level) {
-      return;
+      return
     }
 
-    const entry = this.buildEntry(level, message, context);
-    const payload = JSON.stringify(entry);
+    const entry = this.buildEntry(level, message, context)
+    const payload = JSON.stringify(entry)
 
     switch (level) {
       case LogLevel.DEBUG:
-        console.debug(payload);
-        break;
+        console.debug(payload)
+        break
       case LogLevel.INFO:
-        console.info(payload);
-        break;
+        console.info(payload)
+        break
       case LogLevel.WARN:
-        console.warn(payload);
-        break;
+        console.warn(payload)
+        break
       case LogLevel.ERROR:
       default:
-        console.error(payload);
-        break;
+        console.error(payload)
+        break
     }
 
     if (level >= LogLevel.WARN) {
@@ -142,7 +142,7 @@ export class Logger {
           action: entry.action,
           correlationId: entry.correlationId,
         },
-      });
+      })
     }
 
     if (level === LogLevel.ERROR && error) {
@@ -153,12 +153,12 @@ export class Logger {
           correlationId: entry.correlationId,
         },
         extra: entry.context,
-      });
+      })
     }
   }
 
   private buildEntry(level: LogLevel, message: string, context?: LogContext): StructuredLog {
-    const { component, action, ...rest } = context || {};
+    const { component, action, ...rest } = context || {}
 
     return {
       timestamp: new Date().toISOString(),
@@ -168,21 +168,21 @@ export class Logger {
       component,
       action,
       context: Object.keys(rest).length > 0 ? rest : undefined,
-    };
+    }
   }
 }
 
-export const logger = Logger.getInstance();
+export const logger = Logger.getInstance()
 
 export function useLogger(component: string): ChildLogger {
-  return logger.child({ component });
+  return logger.child({ component })
 }
 
 export function logPerformance(
   operation: string,
   context?: LogContext
 ): (extraContext?: Record<string, unknown>) => void {
-  const startedAt = performance.now();
+  const startedAt = performance.now()
 
   return (extraContext?: Record<string, unknown>) => {
     logger.info(`${operation} completed`, {
@@ -190,6 +190,6 @@ export function logPerformance(
       operation,
       latency_ms: performance.now() - startedAt,
       ...extraContext,
-    });
-  };
+    })
+  }
 }

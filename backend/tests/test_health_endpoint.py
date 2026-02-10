@@ -10,10 +10,10 @@ Tests cover:
 - Mocked Qdrant client for isolation
 """
 
-import pytest
 import sys
-import asyncio
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
 
 # Add backend to path for imports
@@ -272,7 +272,7 @@ class TestHealthQdrantConnectivity:
     def test_qdrant_disconnected_on_timeout(self):
         """Qdrant should show 'disconnected' on timeout."""
         with patch("qdrant_client.QdrantClient") as mock_qdrant:
-            mock_qdrant.side_effect = asyncio.TimeoutError("Timeout")
+            mock_qdrant.side_effect = TimeoutError("Timeout")
 
             response = self.client.get("/api/health")
             data = response.json()
@@ -298,11 +298,7 @@ class TestHealthStatusConsistency:
             response = self.client.get("/api/health")
             data = response.json()
 
-            if (
-                data["event_loop"] == "ok"
-                and data["qdrant"] == "connected"
-                and data["redis"]["status"] == "connected"
-            ):
+            if data["event_loop"] == "ok" and data["qdrant"] == "connected" and data["redis"]["status"] == "connected":
                 assert data["status"] == "healthy"
             elif data["event_loop"] == "ok" and data["qdrant"] == "connected":
                 assert data["status"] in ["healthy", "degraded"]
@@ -321,7 +317,7 @@ class TestHealthStatusConsistency:
     def test_unhealthy_when_event_loop_blocked(self):
         """Status should be 'unhealthy' when event loop is blocked."""
         with patch("asyncio.wait_for") as mock_wait:
-            mock_wait.side_effect = asyncio.TimeoutError("Event loop blocked")
+            mock_wait.side_effect = TimeoutError("Event loop blocked")
 
             response = self.client.get("/api/health")
             data = response.json()
@@ -388,7 +384,7 @@ class TestHealthEdgeCases:
     def test_health_with_qdrant_timeout_error(self):
         """Health should handle Qdrant timeout errors gracefully."""
         with patch("qdrant_client.QdrantClient") as mock_qdrant:
-            mock_qdrant.side_effect = asyncio.TimeoutError("Timeout")
+            mock_qdrant.side_effect = TimeoutError("Timeout")
 
             response = self.client.get("/api/health")
             assert response.status_code in [200, 503]

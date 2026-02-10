@@ -13,11 +13,11 @@ Usage:
 NEVER run in production!
 """
 
-import sys
-import os
 import argparse
-import time
 import logging
+import os
+import sys
+import time
 
 # Add backend to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -25,9 +25,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dotenv import load_dotenv
 
 # Load environment variables
-env_path = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"
-)
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
 load_dotenv(env_path)
 
 # Configure logging
@@ -50,6 +48,7 @@ def check_not_production():
 def test_error_burst():
     """Send 100 errors to trigger error rate alert."""
     import sentry_sdk
+
     from app.config import settings
 
     # Initialize Sentry if not already done
@@ -85,6 +84,7 @@ def test_error_burst():
 def test_slow_query():
     """Simulate a 35s slow operation."""
     import sentry_sdk
+
     from app.config import settings
 
     # Initialize Sentry if not already done
@@ -103,12 +103,12 @@ def test_slow_query():
     print("TEST: Slow Query (35s)")
     print("=" * 60)
 
-    with sentry_sdk.start_transaction(op="test", name="chaos-slow-query"):
-        with sentry_sdk.start_span(
-            op="rag.search", description="Simulated slow search"
-        ):
-            print("   Sleeping for 35 seconds...")
-            time.sleep(35)
+    with (
+        sentry_sdk.start_transaction(op="test", name="chaos-slow-query"),
+        sentry_sdk.start_span(op="rag.search", description="Simulated slow search"),
+    ):
+        print("   Sleeping for 35 seconds...")
+        time.sleep(35)
 
     sentry_sdk.flush(timeout=10)
     print("\n✅ Slow query complete!")
@@ -118,8 +118,9 @@ def test_slow_query():
 def test_circuit_open():
     """Force circuit breaker to open state."""
     import sentry_sdk
+
     from app.config import settings
-    from src.circuit_breaker import qdrant_breaker, CircuitBreakerError
+    from src.circuit_breaker import CircuitBreakerError, qdrant_breaker
 
     # Initialize Sentry if not already done
     if not sentry_sdk.get_client():
@@ -141,9 +142,7 @@ def test_circuit_open():
     for i in range(6):
         try:
             # Call with a lambda that raises an exception
-            qdrant_breaker.call(
-                lambda: (_ for _ in ()).throw(Exception("forced failure"))
-            )
+            qdrant_breaker.call(lambda: (_ for _ in ()).throw(Exception("forced failure")))
         except (Exception, CircuitBreakerError):
             print(f"   Forced failure {i + 1}/6")
 
@@ -171,9 +170,7 @@ Examples:
     )
     parser.add_argument("--error-burst", action="store_true", help="Send 100 errors")
     parser.add_argument("--slow-query", action="store_true", help="35s slow query")
-    parser.add_argument(
-        "--circuit-open", action="store_true", help="Force breaker open"
-    )
+    parser.add_argument("--circuit-open", action="store_true", help="Force breaker open")
     parser.add_argument("--all", action="store_true", help="Run all tests")
 
     args = parser.parse_args()

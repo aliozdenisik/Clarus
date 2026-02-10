@@ -14,7 +14,13 @@ from sqlalchemy import create_engine, text
 
 # Import Base and models so metadata is populated
 from app.db import Base
-from app.models import BMBook, BMVerse, BMWord, BMStrongs, BMVerseMapping  # noqa: F401 — registers tables on Base.metadata
+from app.models import (  # noqa: F401 — registers tables on Base.metadata
+    BMBook,
+    BMStrongs,
+    BMVerse,
+    BMVerseMapping,
+    BMWord,
+)
 
 DATABASE_URL = "postgresql://postgres:postgres@localhost:54322/postgres"
 
@@ -57,15 +63,9 @@ def main() -> bool:
             print("✅ Dropped existing bm_* tables (if any)")
 
         # 3. Create tables via SQLAlchemy metadata (filtered to bm_* only)
-        bm_table_objects = [
-            table
-            for table in Base.metadata.sorted_tables
-            if table.name.startswith("bm_")
-        ]
+        bm_table_objects = [table for table in Base.metadata.sorted_tables if table.name.startswith("bm_")]
         Base.metadata.create_all(engine, tables=bm_table_objects)
-        print(
-            "✅ Created bm_books, bm_verses, bm_words, bm_strongs, bm_verse_mappings tables"
-        )
+        print("✅ Created bm_books, bm_verses, bm_words, bm_strongs, bm_verse_mappings tables")
 
         # 4. Create indexes explicitly
         with engine.begin() as conn:
@@ -78,8 +78,7 @@ def main() -> bool:
             # Check tables exist
             result = conn.execute(
                 text(
-                    "SELECT table_name FROM information_schema.tables "
-                    "WHERE table_name LIKE 'bm_%' ORDER BY table_name"
+                    "SELECT table_name FROM information_schema.tables WHERE table_name LIKE 'bm_%' ORDER BY table_name"
                 )
             )
             tables = [row[0] for row in result]
@@ -91,10 +90,7 @@ def main() -> bool:
 
             # Check indexes
             result = conn.execute(
-                text(
-                    "SELECT indexname FROM pg_indexes "
-                    "WHERE tablename LIKE 'bm_%' ORDER BY indexname"
-                )
+                text("SELECT indexname FROM pg_indexes WHERE tablename LIKE 'bm_%' ORDER BY indexname")
             )
             indexes = [row[0] for row in result]
             print(f"📋 Indexes found ({len(indexes)}): {indexes}")
@@ -112,12 +108,10 @@ def main() -> bool:
             )
             gin_indexes = [(row[0], row[1]) for row in result]
             print(f"📋 GIN trigram indexes ({len(gin_indexes)}):")
-            for name, defn in gin_indexes:
+            for name, _defn in gin_indexes:
                 print(f"   - {name}")
 
-        print(
-            "\n✅ Migration complete. All 5 bm_* tables and 11+ indexes created successfully."
-        )
+        print("\n✅ Migration complete. All 5 bm_* tables and 11+ indexes created successfully.")
         return True
 
     except Exception as e:

@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi } from 'vitest';
-import { InlineCitation } from '@/components/compare/inline-citation';
+import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { describe, it, expect, vi } from "vitest"
+import { InlineCitation } from "@/components/compare/inline-citation"
 
 const mockVerseDetail = {
   text: "In the beginning God created the heaven and the earth.",
@@ -10,61 +10,61 @@ const mockVerseDetail = {
   verse: 1,
   source: "bible_ot",
   translation: "King James Version with Apocrypha",
-  book_nr: 1
-};
+  book_nr: 1,
+}
 
-describe('InlineCitation', () => {
-  describe('with verseDetail (HoverCard mode)', () => {
-    it('renders as button element', () => {
+describe("InlineCitation", () => {
+  describe("with verseDetail (HoverCard mode)", () => {
+    it("renders as button element", () => {
       render(
-        <InlineCitation 
-          reference="Genesis 1:1" 
+        <InlineCitation
+          reference="Genesis 1:1"
           verseDetail={mockVerseDetail}
-          onNavigate={vi.fn()} 
+          onNavigate={vi.fn()}
         />
-      );
-      expect(screen.getByRole('button')).toBeInTheDocument();
-    });
+      )
+      expect(screen.getByRole("button")).toBeInTheDocument()
+    })
 
-    it('displays reference text without brackets', () => {
+    it("displays reference text without brackets", () => {
       render(
-        <InlineCitation 
-          reference="Genesis 1:1" 
+        <InlineCitation
+          reference="Genesis 1:1"
           verseDetail={mockVerseDetail}
-          onNavigate={vi.fn()} 
+          onNavigate={vi.fn()}
         />
-      );
-      expect(screen.getByText('Genesis 1:1')).toBeInTheDocument();
-    });
+      )
+      expect(screen.getByText("Genesis 1:1")).toBeInTheDocument()
+    })
 
-    it('has accessible aria-label', () => {
+    it("has accessible aria-label", () => {
       render(
-        <InlineCitation 
-          reference="Genesis 1:1" 
+        <InlineCitation
+          reference="Genesis 1:1"
           verseDetail={mockVerseDetail}
-          onNavigate={vi.fn()} 
+          onNavigate={vi.fn()}
         />
-      );
-      expect(screen.getByRole('button')).toHaveAttribute('aria-label', 'View Genesis 1:1');
-    });
+      )
+      expect(screen.getByRole("button")).toHaveAttribute("aria-label", "View Genesis 1:1")
+    })
 
-    it('renders HoverCard trigger button', () => {
-      const handleNavigate = vi.fn();
+    it("renders HoverCard trigger button", () => {
+      const handleNavigate = vi.fn()
       render(
-        <InlineCitation 
-          reference="Genesis 1:1" 
+        <InlineCitation
+          reference="Genesis 1:1"
           verseDetail={mockVerseDetail}
-          onNavigate={handleNavigate} 
+          onNavigate={handleNavigate}
         />
-      );
-      
+      )
+
       // Verify trigger button exists
-      const button = screen.getByRole('button');
-      expect(button).toBeInTheDocument();
-      expect(button).toHaveTextContent('Genesis 1:1');
-    });
+      const button = screen.getByRole("button")
+      expect(button).toBeInTheDocument()
+      expect(button).toHaveTextContent("Genesis 1:1")
+    })
 
-    it('handles Quran citation format', () => {
+    it("handles Quran citation format", () => {
       const quranVerse = {
         text: "الحمد لله رب العالمين",
         book_name: "Fatiha",
@@ -73,61 +73,42 @@ describe('InlineCitation', () => {
         source: "quran_tr",
         translation: "Diyanet İşleri Başkanlığı Meali",
         surah_id: 1,
-        verse_id: 2
-      };
-      
-      render(
-        <InlineCitation 
-          reference="Bakara:153" 
-          verseDetail={quranVerse}
-          onNavigate={vi.fn()} 
-        />
-      );
-      expect(screen.getByText('Bakara:153')).toBeInTheDocument();
-      expect(screen.getByRole('button')).toHaveAttribute('aria-label', 'View Bakara:153');
-    });
-  });
+        verse_id: 2,
+      }
 
-  describe('without verseDetail (fallback mode)', () => {
-    it('renders as clickable button with accent style', () => {
       render(
-        <InlineCitation 
-          reference="Genesis 1:1" 
-          onNavigate={vi.fn()} 
-        />
-      );
-      
-      const element = screen.getByRole('button');
-      expect(element).toHaveTextContent('Genesis 1:1');
-      expect(element).toHaveAttribute('aria-label', 'View Genesis 1:1');
-    });
+        <InlineCitation reference="Bakara:153" verseDetail={quranVerse} onNavigate={vi.fn()} />
+      )
+      expect(screen.getByText("Bakara:153")).toBeInTheDocument()
+      expect(screen.getByRole("button")).toHaveAttribute("aria-label", "View Bakara:153")
+    })
+  })
 
-    it('opens Bible verse page in new tab for Bible reference', async () => {
-      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-      render(
-        <InlineCitation 
-          reference="1 Corinthians 15:46" 
-          onNavigate={vi.fn()} 
-        />
-      );
-      
-      await userEvent.click(screen.getByRole('button'));
-      expect(openSpy).toHaveBeenCalledWith('/bible/46?chapter=15&verse=46', '_blank');
-      openSpy.mockRestore();
-    });
+  describe("without verseDetail (fallback mode)", () => {
+    it("renders as clickable button with accent style", () => {
+      render(<InlineCitation reference="Genesis 1:1" onNavigate={vi.fn()} />)
 
-    it('opens Quran verse page in new tab for Quran reference', async () => {
-      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-      render(
-        <InlineCitation 
-          reference="Bakara:153" 
-          onNavigate={vi.fn()} 
-        />
-      );
-      
-      await userEvent.click(screen.getByRole('button'));
-      expect(openSpy).toHaveBeenCalledWith('/quran/2?verse=153', '_blank');
-      openSpy.mockRestore();
-    });
-  });
-});
+      const element = screen.getByRole("button")
+      expect(element).toHaveTextContent("Genesis 1:1")
+      expect(element).toHaveAttribute("aria-label", "View Genesis 1:1")
+    })
+
+    it("opens Bible verse page in new tab for Bible reference", async () => {
+      const openSpy = vi.spyOn(window, "open").mockImplementation(() => null)
+      render(<InlineCitation reference="1 Corinthians 15:46" onNavigate={vi.fn()} />)
+
+      await userEvent.click(screen.getByRole("button"))
+      expect(openSpy).toHaveBeenCalledWith("/bible/46?chapter=15&verse=46", "_blank")
+      openSpy.mockRestore()
+    })
+
+    it("opens Quran verse page in new tab for Quran reference", async () => {
+      const openSpy = vi.spyOn(window, "open").mockImplementation(() => null)
+      render(<InlineCitation reference="Bakara:153" onNavigate={vi.fn()} />)
+
+      await userEvent.click(screen.getByRole("button"))
+      expect(openSpy).toHaveBeenCalledWith("/quran/2?verse=153", "_blank")
+      openSpy.mockRestore()
+    })
+  })
+})
