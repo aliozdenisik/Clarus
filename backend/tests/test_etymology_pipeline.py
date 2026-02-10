@@ -1,5 +1,6 @@
-"""Tests for Quranic Arabic etymology table schema."""
+"""Tests for Quranic Arabic etymology table schema and ETL pipeline."""
 
+import json
 from collections.abc import AsyncGenerator
 from importlib import import_module
 from pathlib import Path
@@ -27,6 +28,7 @@ except ModuleNotFoundError:
 
 DATABASE_DSN = "postgresql://postgres:postgres@localhost:54322/postgres"
 LANE_DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "lane_lexicon"
+DATABASE_URL = "postgresql://postgres:postgres@localhost:54322/postgres"
 
 
 @pytest.fixture(scope="module")
@@ -249,3 +251,93 @@ class TestLaneAdapter:
         missing_dir = tmp_path / "lane_missing"
         with pytest.raises(FileNotFoundError, match=r"Lane.*database"):
             LaneLexiconAdapter(missing_dir)
+
+
+@pytest.mark.skipif(not ETYMOLOGY_PIPELINE_AVAILABLE, reason="Task 3 etymology pipeline module not yet available")
+class TestEtymologyPipeline:
+    """Pipeline integration tests for Issue #128 Task 4."""
+
+    def test_pipeline_runs_corpus_only(self, tmp_path: Path) -> None:
+        pipeline_cls = etymology_pipeline.EtymologyPipeline
+        pipeline = pipeline_cls(
+            db_url=DATABASE_URL,
+            lane_db_path=None,
+            openrouter_api_key=None,
+            dry_run=True,
+        )
+        result = pipeline.run()
+
+        assert result.success is True
+        assert result.total_roots > 0
+        assert result.lane_matches == 0
+
+    def test_pipeline_idempotent(self, tmp_path: Path) -> None:
+        pipeline_cls = etymology_pipeline.EtymologyPipeline
+        pipeline = pipeline_cls(
+            db_url=DATABASE_URL,
+            lane_db_path=None,
+            openrouter_api_key=None,
+            dry_run=False,
+        )
+
+        first = pipeline.run()
+        second = pipeline.run()
+
+        assert first.success is True
+        assert second.success is True
+        assert first.inserted_rows == second.inserted_rows
+        assert first.total_roots == second.total_roots
+
+    def test_pipeline_exports_validation_files(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        pipeline_cls = etymology_pipeline.EtymologyPipeline
+        export_dir = tmp_path / "etymology"
+        monkeypatch.setattr(etymology_pipeline, "ETYMOLOGY_EXPORT_DIR", export_dir)
+
+        pipeline = pipeline_cls(
+            db_url=DATABASE_URL,
+            lane_db_path=None,
+            openrouter_api_key=None,
+            dry_run=True,
+        )
+        result = pipeline.run()
+
+        assert result.success is True
+        expected_files = {
+            "lane_unmatched_roots.json",
+            "tr_low_confidence_translations.json",
+            "spot_check_sample.json",
+        }
+        existing_files = {path.name for path in export_dir.glob("*.json")}
+        assert expected_files.issubset(existing_files)
+
+        with (export_dir / "spot_check_sample.json").open(encoding="utf-8") as file_handle:
+            sample = json.load(file_handle)
+        assert isinstance(sample, list)
+
+    def test_pipeline_populates_all_roots(self) -> None:
+        pipeline_cls = etymology_pipeline.EtymologyPipeline
+        pipeline = pipeline_cls(
+            db_url=DATABASE_URL,
+            lane_db_path=None,
+            openrouter_api_key=None,
+            dry_run=False,
+        )
+        result = pipeline.run()
+
+        assert result.success is True
+        assert result.inserted_rows == result.total_roots
+        assert result.total_roots >= 1500
+
+    def test_pipeline_handles_lane_missing(self, tmp_path: Path) -> None:
+        pipeline_cls = etymology_pipeline.EtymologyPipeline
+        missing_lane_dir = tmp_path / "does-not-exist"
+        pipeline = pipeline_cls(
+            db_url=DATABASE_URL,
+            lane_db_path=missing_lane_dir,
+            openrouter_api_key=None,
+            dry_run=True,
+        )
+        result = pipeline.run()
+
+        assert result.success is True
+        assert result.lane_matches == 0
