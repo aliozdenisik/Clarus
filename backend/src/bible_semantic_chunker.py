@@ -151,8 +151,9 @@ class BibleSemanticVerseChunker:
                 meta = json.load(f)
             if meta.get("num_verses") == len(self._verses):
                 print(f"Loading cached embeddings from {cache_path}")
-                self._embeddings = np.load(cache_path)
-                return self._embeddings
+                loaded_embeddings = np.load(cache_path)
+                self._embeddings = loaded_embeddings
+                return loaded_embeddings
 
         # Compute embeddings
         print(f"Computing embeddings for {len(self._verses)} verses...")
@@ -171,22 +172,23 @@ class BibleSemanticVerseChunker:
                 batch_size=100,  # Increased from 32
             )
 
-        self._embeddings = np.array(embeddings)
+        computed_embeddings = np.array(embeddings)
+        self._embeddings = computed_embeddings
 
         # Cache embeddings
-        np.save(cache_path, self._embeddings)
+        np.save(cache_path, computed_embeddings)
         with open(cache_meta_path, "w", encoding="utf-8") as f:
             json.dump(
                 {
                     "num_verses": len(self._verses),
-                    "embedding_dim": self._embeddings.shape[1],
+                    "embedding_dim": computed_embeddings.shape[1],
                     "translation": self.translation,
                 },
                 f,
             )
         print(f"Cached embeddings to {cache_path}")
 
-        return self._embeddings
+        return computed_embeddings
 
     async def _compute_embeddings_async(
         self,
@@ -222,17 +224,20 @@ class BibleSemanticVerseChunker:
         if self._embeddings is None:
             self.compute_embeddings()
 
+        assert self._embeddings is not None
+        embeddings_array = self._embeddings
+
         # Normalize embeddings for cosine similarity
-        norms = np.linalg.norm(self._embeddings, axis=1, keepdims=True)
+        norms = np.linalg.norm(embeddings_array, axis=1, keepdims=True)
         # Avoid division by zero
         norms[norms == 0] = 1e-10
-        normalized = self._embeddings / norms
+        normalized = embeddings_array / norms
 
         # Compute similarity between consecutive pairs
         similarities = np.sum(normalized[:-1] * normalized[1:], axis=1)
 
         self._similarities = similarities
-        return self._similarities
+        return similarities
 
     def detect_boundaries(
         self,
@@ -247,27 +252,33 @@ class BibleSemanticVerseChunker:
         if self._similarities is None:
             self.compute_similarities()
 
+        assert self._similarities is not None
+        similarities_array = self._similarities
+
         threshold = threshold if threshold is not None else self.similarity_threshold
+        gradients: Optional[np.ndarray] = None
+        grad_threshold = 0.0
 
         # Compute threshold based on strategy (same as Quran chunker)
         if threshold_type == "percentile":
             percentile_value = threshold if threshold <= 100 else 10
-            computed_threshold = np.percentile(self._similarities, percentile_value)
+            computed_threshold = np.percentile(similarities_array, percentile_value)
             print(
                 f"Percentile-based threshold: {computed_threshold:.4f} (p={percentile_value})"
             )
 
         elif threshold_type == "gradient":
-            gradients = np.gradient(self._similarities)
-            grad_threshold = np.percentile(
-                gradients, threshold if threshold <= 100 else 10
+            gradient_values = np.gradient(similarities_array)
+            gradients = gradient_values
+            grad_threshold = float(
+                np.percentile(gradient_values, threshold if threshold <= 100 else 10)
             )
             computed_threshold = None
             print(f"Gradient-based detection: threshold={grad_threshold:.4f}")
 
         elif threshold_type == "interquartile":
-            q1 = np.percentile(self._similarities, 25)
-            q3 = np.percentile(self._similarities, 75)
+            q1 = np.percentile(similarities_array, 25)
+            q3 = np.percentile(similarities_array, 75)
             iqr = q3 - q1
             k = threshold if threshold < 10 else 1.5
             computed_threshold = q1 - k * iqr
@@ -277,8 +288,8 @@ class BibleSemanticVerseChunker:
 
         elif threshold_type == "std":
             k = threshold if threshold < 10 else 1.0
-            computed_threshold = np.mean(self._similarities) - k * np.std(
-                self._similarities
+            computed_threshold = np.mean(similarities_array) - k * np.std(
+                similarities_array
             )
             print(f"Std-based threshold: {computed_threshold:.4f} (k={k})")
 
@@ -288,7 +299,7 @@ class BibleSemanticVerseChunker:
 
         boundaries = [0]
 
-        for i, sim in enumerate(self._similarities):
+        for i, sim in enumerate(similarities_array):
             next_verse_idx = i + 1
 
             # Check for hard boundaries (Book or Chapter change)
@@ -310,8 +321,7 @@ class BibleSemanticVerseChunker:
 
             # Semantic check
             if threshold_type == "gradient":
-                gradients = np.gradient(self._similarities)
-                if gradients[i] < grad_threshold:
+                if gradients is not None and gradients[i] < grad_threshold:
                     boundaries.append(next_verse_idx)
             elif sim < computed_threshold:
                 boundaries.append(next_verse_idx)
@@ -324,6 +334,9 @@ class BibleSemanticVerseChunker:
         n_verses: int,
     ) -> List[int]:
         """Apply max/min chunk size constraints to boundaries."""
+        assert self._similarities is not None
+        similarities_array = self._similarities
+
         adjusted = [0]
 
         for i in range(1, len(boundaries)):
@@ -339,7 +352,7 @@ class BibleSemanticVerseChunker:
                     search_end = min(start_idx + self.max_chunk_size, current_boundary)
 
                     if search_end - 1 > search_start:
-                        local_sims = self._similarities[search_start : search_end - 1]
+                        local_sims = similarities_array[search_start : search_end - 1]
                         # Find minimum similarity point to break at
                         min_sim_idx = np.argmin(local_sims) + search_start + 1
                         adjusted.append(min_sim_idx)
@@ -373,6 +386,9 @@ class BibleSemanticVerseChunker:
         # Detect
         boundaries = self.detect_boundaries(threshold_type=threshold_type)
 
+        assert self._similarities is not None
+        similarities_array = self._similarities
+
         # Constraint
         boundaries = self._apply_size_constraints(boundaries, len(self._verses))
 
@@ -395,7 +411,7 @@ class BibleSemanticVerseChunker:
 
             internal_sims = []
             if end_idx - start_idx > 1:
-                internal_sims = self._similarities[start_idx : end_idx - 1].tolist()
+                internal_sims = similarities_array[start_idx : end_idx - 1].tolist()
 
             first = chunk_verses[0]
             last = chunk_verses[-1]

@@ -16,7 +16,8 @@ import requests
 import hashlib
 import time
 import json
-from typing import List, Tuple
+from collections.abc import Awaitable
+from typing import Any, List, Optional, Tuple
 
 from tqdm import tqdm
 
@@ -61,7 +62,10 @@ class DenseEncoder:
     CACHE_EXPIRE = 86400 * 7  # 7 days
 
     def __init__(
-        self, model_name: str = None, api_key: str = None, use_cache: bool = True
+        self,
+        model_name: Optional[str] = None,
+        api_key: Optional[str] = None,
+        use_cache: bool = True,
     ):
         """
         Initialize the OpenRouter Dense Encoder.
@@ -84,13 +88,16 @@ class DenseEncoder:
         }
 
         # Initialize Redis cache (sync client for DenseEncoder)
-        self._redis = None
+        self._redis: Any = None
         self._use_cache = use_cache and REDIS_AVAILABLE
-        if self._use_cache:
+        if self._use_cache and sync_redis is not None:
             try:
                 from app.config import settings
 
-                self._redis = sync_redis.Redis(
+                redis_module = sync_redis
+                assert redis_module is not None
+
+                self._redis = redis_module.Redis(
                     host=settings.redis_host,
                     port=settings.redis_port,
                     password=settings.redis_password or None,
@@ -164,7 +171,10 @@ class DenseEncoder:
                 cache_key = self._get_cache_key(text)
                 cached_bytes = self._redis.get(cache_key)
                 if cached_bytes is not None:
-                    return json.loads(cached_bytes.decode())
+                    if isinstance(cached_bytes, bytes):
+                        return json.loads(cached_bytes.decode())
+                    if isinstance(cached_bytes, str):
+                        return json.loads(cached_bytes)
             except Exception as e:
                 # Fail-open: continue to API call if cache fails
                 import logging
@@ -326,7 +336,10 @@ class AsyncDenseEncoder:
     CACHE_EXPIRE = 86400 * 7  # 7 days
 
     def __init__(
-        self, model_name: str = None, api_key: str = None, use_cache: bool = True
+        self,
+        model_name: Optional[str] = None,
+        api_key: Optional[str] = None,
+        use_cache: bool = True,
     ):
         """
         Initialize the Async Dense Encoder.
@@ -349,7 +362,7 @@ class AsyncDenseEncoder:
         }
 
         # Redis cache (async) - initialized in init_cache()
-        self._redis = None
+        self._redis: Any = None
         self._use_cache = use_cache and REDIS_AVAILABLE
 
         print(f"Initialized Async OpenRouter encoder: {self.model_name}")
@@ -364,7 +377,9 @@ class AsyncDenseEncoder:
 
             self._redis = redis_manager.client
             if self._redis:
-                await self._redis.ping()
+                ping_result = self._redis.ping()
+                if isinstance(ping_result, Awaitable):
+                    await ping_result
                 print("  Cache: enabled (Redis async)")
         except Exception:
             # Fail-open: cache disabled if Redis unavailable
@@ -378,23 +393,26 @@ class AsyncDenseEncoder:
 
     async def _check_cache(
         self, texts: List[str]
-    ) -> Tuple[List[str], List[int], List[List[float]]]:
+    ) -> Tuple[List[str], List[int], List[Optional[List[float]]]]:
         """
         Check Redis cache for texts and return: uncached texts, their indices, cached embeddings.
         """
         if self._redis is None:
-            return texts, list(range(len(texts))), [None] * len(texts)
+            return texts, list(range(len(texts))), [None for _ in texts]
 
         uncached_texts = []
         uncached_indices = []
-        cached_embeddings = [None] * len(texts)
+        cached_embeddings: List[Optional[List[float]]] = [None for _ in texts]
 
         for i, text in enumerate(texts):
             try:
                 cache_key = self._get_cache_key(text)
                 cached_bytes = await self._redis.get(cache_key)
                 if cached_bytes is not None:
-                    cached_embeddings[i] = json.loads(cached_bytes.decode())
+                    if isinstance(cached_bytes, bytes):
+                        cached_embeddings[i] = json.loads(cached_bytes.decode())
+                    elif isinstance(cached_bytes, str):
+                        cached_embeddings[i] = json.loads(cached_bytes)
                 else:
                     uncached_texts.append(text)
                     uncached_indices.append(i)
@@ -444,6 +462,8 @@ class AsyncDenseEncoder:
                         await asyncio.sleep(wait_time)
                     else:
                         raise
+
+            raise RuntimeError("Async embedding request failed after retries")
 
     async def encode_batch_async(
         self,

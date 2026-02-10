@@ -543,7 +543,7 @@ class MultiAgentOrchestrator:
         ot_verses: List,
         nt_verses: List,
         apocrypha_verses: List,
-        collection_stats: Optional[dict[str, float]] = None,
+        collection_stats: Optional[dict[str, object]] = None,
         progress_callback: Optional[Callable[[str, str], None]] = None,
     ) -> MultiAgentAnswer:
         """
@@ -715,7 +715,11 @@ class MultiAgentOrchestrator:
         # === OBJECTIVE CONFIDENCE SCORING (two-phase sigmoid-calibrated) ===
         # Defensive fallback for collection_stats
         if collection_stats and collection_stats.get("all_rrf_scores"):
-            all_rrf_scores = collection_stats["all_rrf_scores"]
+            raw_scores = collection_stats["all_rrf_scores"]
+            if isinstance(raw_scores, list):
+                all_rrf_scores = [float(score) for score in raw_scores]
+            else:
+                all_rrf_scores = []
         else:
             logger.warning(
                 "collection_stats not provided or missing all_rrf_scores, computing from search results"
@@ -728,19 +732,33 @@ class MultiAgentOrchestrator:
                 reverse=True,
             )
 
-        num_queries = collection_stats.get("num_queries", 3) if collection_stats else 3
+        raw_num_queries = (
+            collection_stats.get("num_queries", 3) if collection_stats else 3
+        )
+        num_queries = (
+            int(raw_num_queries) if isinstance(raw_num_queries, (int, float)) else 3
+        )
 
         # Sum citations from ALL agent results
         all_citations = 0
         for agent_result_var in [ot_result, nt_result, apoc_result, quran_result]:
             all_citations += len(agent_result_var.get("citations", []))
 
-        total_verses_provided = (
+        raw_total_verses = (
             collection_stats.get("total_verses", 80) if collection_stats else 80
         )
-        collections_with_results = (
+        total_verses_provided = (
+            int(raw_total_verses) if isinstance(raw_total_verses, (int, float)) else 80
+        )
+
+        raw_collections_with_results = (
             collection_stats.get("collections_with_results", 4)
             if collection_stats
+            else 4
+        )
+        collections_with_results = (
+            int(raw_collections_with_results)
+            if isinstance(raw_collections_with_results, (int, float))
             else 4
         )
 

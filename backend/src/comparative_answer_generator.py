@@ -387,7 +387,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         quran_chunks: List,
         bible_semantic: List,
         bible_chunks: List,
-        collection_stats: Optional[dict[str, float]] = None,
+        collection_stats: Optional[dict[str, object]] = None,
         translator: str = "diyanet",
     ) -> ComparativeAnswer:
         """
@@ -434,10 +434,24 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
 
         # Compute objective confidence from collection stats
         if collection_stats:
-            all_rrf_scores = collection_stats.get("all_rrf_scores", [])
-            num_queries = collection_stats.get("num_queries", 1)
-            collections_with_results = collection_stats.get(
+            raw_scores = collection_stats.get("all_rrf_scores", [])
+            if isinstance(raw_scores, list):
+                all_rrf_scores = [float(score) for score in raw_scores]
+            else:
+                all_rrf_scores = []
+
+            raw_num_queries = collection_stats.get("num_queries", 1)
+            num_queries = (
+                int(raw_num_queries) if isinstance(raw_num_queries, (int, float)) else 1
+            )
+
+            raw_collections_with_results = collection_stats.get(
                 "collections_with_results", 4
+            )
+            collections_with_results = (
+                int(raw_collections_with_results)
+                if isinstance(raw_collections_with_results, (int, float))
+                else 4
             )
         else:
             # Fallback: build from search results
