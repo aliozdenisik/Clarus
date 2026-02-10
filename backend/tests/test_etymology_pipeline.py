@@ -27,7 +27,6 @@ except ModuleNotFoundError:
     ETYMOLOGY_PIPELINE_AVAILABLE = False
 
 DATABASE_DSN = "postgresql://postgres:postgres@localhost:54322/postgres"
-LANE_DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "lane_lexicon"
 DATABASE_URL = "postgresql://postgres:postgres@localhost:54322/postgres"
 
 
@@ -203,22 +202,18 @@ class TestMorphologicalForms:
 
 
 class TestLaneAdapter:
-    """Lane's Lexicon SQLite adapter tests (Issue #128 Task 2)."""
+    """Lane's Lexicon adapter tests against PostgreSQL (Issue #128 Task 2)."""
 
     def test_lane_adapter_opens_database(self) -> None:
-        """Adapter should initialize against the cloned Lane database."""
         from src.lane_lexicon import LaneLexiconAdapter
 
-        adapter = LaneLexiconAdapter(db_path=LANE_DATA_DIR)
-        assert adapter.db_file is not None
-        assert adapter.db_file.exists()
-        assert adapter.connection is not None
+        adapter = LaneLexiconAdapter(db_url=DATABASE_URL)
+        assert adapter._engine is not None
 
     def test_lane_lookup_known_root(self) -> None:
-        """Known Buckwalter root should return a meaningful English definition."""
         from src.lane_lexicon import LaneLexiconAdapter
 
-        adapter = LaneLexiconAdapter(db_path=LANE_DATA_DIR)
+        adapter = LaneLexiconAdapter(db_url=DATABASE_URL)
         entry = adapter.lookup_by_root("ktb")
 
         assert entry is not None
@@ -227,17 +222,15 @@ class TestLaneAdapter:
         assert len(entry.definition_en.strip()) > 10
 
     def test_lane_lookup_nonexistent_root(self) -> None:
-        """Non-existent root should return None gracefully."""
         from src.lane_lexicon import LaneLexiconAdapter
 
-        adapter = LaneLexiconAdapter(db_path=LANE_DATA_DIR)
+        adapter = LaneLexiconAdapter(db_url=DATABASE_URL)
         assert adapter.lookup_by_root("zzzzz") is None
 
     def test_lane_volume_extraction(self) -> None:
-        """Volume extraction should return a value in Lane's 1-8 range."""
         from src.lane_lexicon import LaneLexiconAdapter
 
-        adapter = LaneLexiconAdapter(db_path=LANE_DATA_DIR)
+        adapter = LaneLexiconAdapter(db_url=DATABASE_URL)
         entry = adapter.lookup_by_root("ktb")
 
         assert entry is not None
@@ -246,7 +239,6 @@ class TestLaneAdapter:
         assert adapter.get_volume(entry) == entry.volume
 
     def test_lane_adapter_missing_db(self, tmp_path: Path) -> None:
-        """Missing Lane DB directory should raise descriptive FileNotFoundError."""
         from src.lane_lexicon import LaneLexiconAdapter
 
         missing_dir = tmp_path / "lane_missing"
@@ -265,6 +257,7 @@ class TestEtymologyPipeline:
             lane_db_path=None,
             openrouter_api_key=None,
             dry_run=True,
+            use_lane=False,
         )
         result = pipeline.run()
 
@@ -279,6 +272,7 @@ class TestEtymologyPipeline:
             lane_db_path=None,
             openrouter_api_key=None,
             dry_run=False,
+            use_lane=False,
         )
 
         first = pipeline.run()
