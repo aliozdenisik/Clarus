@@ -1,6 +1,14 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
+import type React from "react";
+
+type MockProps = {
+  children?: React.ReactNode;
+  className?: string;
+  data?: Array<unknown>;
+  [key: string]: unknown;
+};
 
 // Mock next/navigation
 const mockPush = vi.fn();
@@ -29,12 +37,12 @@ vi.mock("sonner", () => ({
 // Mock framer-motion (CRITICAL — prevents animation issues)
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, layoutId, initial, animate, transition, whileHover, whileTap, ...props }: any) => <div {...props}>{children}</div>,
-    h1: ({ children, layoutId, initial, animate, transition, ...props }: any) => <h1 {...props}>{children}</h1>,
-    form: ({ children, layoutId, initial, animate, transition, ...props }: any) => <form {...props}>{children}</form>,
-    button: ({ children, layoutId, initial, animate, transition, whileHover, whileTap, ...props }: any) => <button {...props}>{children}</button>,
+    div: ({ children, ...props }: MockProps) => <div {...props}>{children}</div>,
+    h1: ({ children, ...props }: MockProps) => <h1 {...props}>{children}</h1>,
+    form: ({ children, ...props }: MockProps) => <form {...props}>{children}</form>,
+    button: ({ children, ...props }: MockProps) => <button {...props}>{children}</button>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock Lucide icons
@@ -56,12 +64,12 @@ vi.mock("lucide-react", () => ({
 
 // Mock GlowCard
 vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, className }: any) => <div className={className}>{children}</div>,
+  GlowCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
 }));
 
 // Mock Skeleton
 vi.mock("@/components/ui/skeleton", () => ({
-  Skeleton: ({ className }: any) => <div data-testid="skeleton" className={className} />,
+  Skeleton: ({ className }: MockProps) => <div data-testid="skeleton" className={className} />,
 }));
 
 // Mock design-system
@@ -75,8 +83,8 @@ vi.mock("@/lib/design-system", () => ({
 
 // Mock Recharts (SVG rendering doesn't work in jsdom)
 vi.mock("recharts", () => ({
-  ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>,
-  BarChart: ({ children, data }: any) => <div data-testid="bar-chart" data-count={data?.length}>{children}</div>,
+  ResponsiveContainer: ({ children }: MockProps) => <div data-testid="responsive-container">{children}</div>,
+  BarChart: ({ children, data }: MockProps) => <div data-testid="bar-chart" data-count={data?.length}>{children}</div>,
   Bar: () => <div data-testid="bar" />,
   XAxis: () => <div data-testid="x-axis" />,
   YAxis: () => <div data-testid="y-axis" />,
@@ -90,9 +98,9 @@ const mockGetSurahDetail = vi.fn();
 const mockListRoots = vi.fn();
 
 vi.mock("@/lib/api/sdk.gen", () => ({
-  searchKeywordApiSearchKeywordPost: (...args: any[]) => mockSearchKeyword(...args),
-  getSurahDetailApiMetadataQuranSurahsSurahIdGet: (...args: any[]) => mockGetSurahDetail(...args),
-  listRootsApiSearchKeywordRootsGet: (...args: any[]) => mockListRoots(...args),
+  searchKeywordApiSearchKeywordPost: (...args: unknown[]) => mockSearchKeyword(...args),
+  getSurahDetailApiMetadataQuranSurahsSurahIdGet: (...args: unknown[]) => mockGetSurahDetail(...args),
+  listRootsApiSearchKeywordRootsGet: (...args: unknown[]) => mockListRoots(...args),
 }));
 
 import KeywordSearchPage from "@/app/keyword-search/page";

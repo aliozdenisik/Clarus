@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { Menu, X, ChevronDown, LogOut, Settings, User, Book, BookOpen, ScrollText, FileText, Search as SearchIcon } from 'lucide-react';
+import { Menu, X, LogOut, Settings, User, Book, BookOpen, ScrollText, FileText, Search as SearchIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   NavigationMenu,

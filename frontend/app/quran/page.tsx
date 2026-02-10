@@ -54,8 +54,10 @@ export default function QuranPage() {
        try {
          const response = await getQuranSurahsApiMetadataQuranSurahsGet();
 
-        const data = response.data as any;
-        const surahList: ApiSurah[] = data.data?.surahs || data.surahs || data || [];
+         const data = response.data as { data?: { surahs?: ApiSurah[] }; surahs?: ApiSurah[] } | ApiSurah[] | undefined;
+         const surahList: ApiSurah[] = Array.isArray(data)
+           ? data
+           : data?.data?.surahs || data?.surahs || [];
         const mappedSurahs: Surah[] = surahList.map((s: ApiSurah) => ({
           id: s.id,
           name: s.name_arabic || s.name || '',
@@ -64,7 +66,7 @@ export default function QuranPage() {
           revelation_type: s.type || s.revelation_type || '',
         }));
         setSurahs(mappedSurahs);
-      } catch (error) {
+      } catch {
         toast.error("Failed to load surahs");
       } finally {
         setIsLoading(false);
@@ -238,7 +240,7 @@ export default function QuranPage() {
         
         {!isLoading && filteredSurahs.length === 0 && (
           <div className="py-20 text-center text-[var(--color-text-muted)]">
-            No surahs found matching "{filter}"
+            No surahs found matching &quot;{filter}&quot;
           </div>
         )}
       </div>

@@ -229,7 +229,7 @@ export const createSseClient = <TData = unknown>({
               });
 
               if (dataLines.length) {
-                yield data as any;
+                yield data as TData extends Record<string, unknown> ? TData[keyof TData] : TData;
               }
             }
           }

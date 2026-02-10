@@ -87,7 +87,7 @@ export default function NewTestamentPage() {
     if (user) {
       fetchBooks();
     }
-  }, [user]);
+  }, [user, log]);
 
   const handleLogout = async () => {
     await signOut();
@@ -220,7 +220,7 @@ export default function NewTestamentPage() {
 
         {!isLoading && filteredBooks.length === 0 && (
           <div className="text-center py-20 text-[var(--color-text-muted)]">
-            <p>No books found matching "{searchQuery}"</p>
+            <p>No books found matching &quot;{searchQuery}&quot;</p>
           </div>
         )}
       </div>

@@ -55,7 +55,7 @@ export function VerseLookupInput({
       } else {
         setError("Ayet bulunamadı. Lütfen formatı kontrol edin.");
       }
-    } catch (err) {
+    } catch {
       setError("Ayet bulunamadı. Lütfen formatı kontrol edin.");
     } finally {
       setIsLoading(false);

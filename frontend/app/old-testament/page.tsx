@@ -85,8 +85,8 @@ export default function OldTestamentPage() {
          const response = await getBibleBooksApiMetadataBibleBooksGet({
            query: { testament: "old_testament" },
          });
-        const data = response.data as any;
-        setBooks(data.data?.books || []);
+         const data = response.data as { data?: { books?: Book[] } } | undefined;
+         setBooks(data?.data?.books || []);
        } catch (error) {
          log.error("Failed to load books", { error });
          toast.error("Failed to load books");
@@ -231,7 +231,7 @@ export default function OldTestamentPage() {
 
         {!isLoading && filteredBooks.length === 0 && (
           <div className="text-center py-20 text-[var(--color-text-muted)]">
-            <p>No books found matching "{searchQuery}"</p>
+            <p>No books found matching &quot;{searchQuery}&quot;</p>
           </div>
         )}
       </div>

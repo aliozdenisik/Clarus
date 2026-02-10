@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState, useRef, useEffect, useLayoutEffect } from "react"
+import { useState, useRef, useLayoutEffect } from "react"
 import { cn } from "@/lib/utils"
 
 interface Tab {
@@ -47,18 +47,12 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
     const [activeStyle, setActiveStyle] = useState<IndicatorStyle>(DEFAULT_INDICATOR_STYLE)
     const tabRefs = useRef<(HTMLDivElement | null)[]>([])
 
-    // Sync activeIndex with activeTab prop
-    useEffect(() => {
-      if (activeTab) {
-        const idx = tabs.findIndex(t => t.id === activeTab)
-        if (idx >= 0 && idx !== activeIndex) {
-          setActiveIndex(idx)
-        }
-      }
-    }, [activeTab, tabs, activeIndex])
+    const controlledActiveIndex = activeTab
+      ? Math.max(0, tabs.findIndex((t) => t.id === activeTab))
+      : activeIndex
 
     useLayoutEffect(() => {
-      const activeElement = tabRefs.current[activeIndex]
+      const activeElement = tabRefs.current[controlledActiveIndex]
       const nextActiveStyle = readIndicatorStyle(activeElement)
 
       setActiveStyle((prevStyle) =>
@@ -79,7 +73,7 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
           ? prevStyle
           : nextHoverStyle
       )
-    }, [activeIndex, hoveredIndex, tabs])
+    }, [controlledActiveIndex, hoveredIndex, tabs])
 
     return (
       <div 
@@ -111,7 +105,7 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
                 ref={(el) => { tabRefs.current[index] = el }}
                 className={cn(
                   "px-3 py-2 cursor-pointer transition-colors duration-300 h-[30px]",
-                  index === activeIndex 
+                  index === controlledActiveIndex 
                     ? "text-[#0e0e10] dark:text-white" 
                     : "text-[#0e0f1199] dark:text-[#ffffff99]"
                 )}

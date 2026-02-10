@@ -48,11 +48,16 @@ describe('New Testament Browse Page', () => {
     global.fetch = vi.fn();
   });
 
-  it('fetches and displays NT books', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+  const createMockResponse = (data: unknown): Response =>
+    ({
       ok: true,
-      json: async () => ({ data: { books: mockBooks } }),
-    });
+      json: async () => data,
+    } as unknown as Response);
+
+  it('fetches and displays NT books', async () => {
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      createMockResponse({ data: { books: mockBooks } })
+    );
 
     render(<NewTestamentPage />);
 
@@ -73,10 +78,9 @@ describe('New Testament Browse Page', () => {
   });
 
   it('filters books by name', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: { books: mockBooks } }),
-    });
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      createMockResponse({ data: { books: mockBooks } })
+    );
 
     render(<NewTestamentPage />);
 
@@ -92,10 +96,9 @@ describe('New Testament Browse Page', () => {
   });
 
   it('navigates to search on book click', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: { books: mockBooks } }),
-    });
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      createMockResponse({ data: { books: mockBooks } })
+    );
 
     render(<NewTestamentPage />);
 
@@ -110,10 +113,9 @@ describe('New Testament Browse Page', () => {
 
   it('handles empty state or loading', async () => {
     // Test loading state if applicable, or empty result
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: { books: [] } }),
-    });
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      createMockResponse({ data: { books: [] } })
+    );
 
     render(<NewTestamentPage />);
     

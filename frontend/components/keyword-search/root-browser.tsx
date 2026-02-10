@@ -124,7 +124,7 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
 
         setRoots(dedupedRoots);
         setTotalCount(dedupedRoots.length);
-      } catch (err) {
+      } catch {
         toast.error("Failed to load roots");
       } finally {
         setIsLoading(false);

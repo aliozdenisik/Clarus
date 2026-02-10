@@ -20,7 +20,7 @@ import {
 } from './utils.gen';
 
 type ReqInit = Omit<RequestInit, 'body' | 'headers'> & {
-  body?: any;
+  body?: RequestInit['body'];
   headers: ReturnType<typeof mergeHeaders>;
 };
 
@@ -47,7 +47,7 @@ export const createClient = (config: Config = {}): Client => {
       ...options,
       fetch: options.fetch ?? _config.fetch ?? globalThis.fetch,
       headers: mergeHeaders(_config.headers, options.headers),
-      serializedBody: undefined,
+      serializedBody: undefined as string | undefined,
     };
 
     if (opts.security) {
@@ -62,7 +62,7 @@ export const createClient = (config: Config = {}): Client => {
     }
 
     if (opts.body !== undefined && opts.bodySerializer) {
-      opts.serializedBody = opts.bodySerializer(opts.body);
+      opts.serializedBody = opts.bodySerializer(opts.body) as string;
     }
 
     // remove Content-Type header if body is empty to avoid sending invalid requests
@@ -75,13 +75,12 @@ export const createClient = (config: Config = {}): Client => {
     return { opts, url };
   };
 
-  const request: Client['request'] = async (options) => {
-    // @ts-expect-error
+  const request = async (options: RequestOptions) => {
     const { opts, url } = await beforeRequest(options);
     const requestInit: ReqInit = {
       redirect: 'follow',
       ...opts,
-      body: getValidRequestBody(opts),
+      body: getValidRequestBody(opts) as RequestInit['body'],
     };
 
     let request = new Request(url, requestInit);
@@ -107,7 +106,7 @@ export const createClient = (config: Config = {}): Client => {
         if (fn) {
           finalError = (await fn(
             error,
-            undefined as any,
+            undefined as unknown as Response,
             request,
             opts,
           )) as unknown;
@@ -126,7 +125,7 @@ export const createClient = (config: Config = {}): Client => {
         : {
             error: finalError,
             request,
-            response: undefined as any,
+            response: undefined as unknown as Response,
           };
     }
 
@@ -151,7 +150,7 @@ export const createClient = (config: Config = {}): Client => {
         response.status === 204 ||
         response.headers.get('Content-Length') === '0'
       ) {
-        let emptyData: any;
+        let emptyData: unknown;
         switch (parseAs) {
           case 'arrayBuffer':
           case 'blob':
@@ -177,7 +176,7 @@ export const createClient = (config: Config = {}): Client => {
             };
       }
 
-      let data: any;
+      let data: unknown;
       switch (parseAs) {
         case 'arrayBuffer':
         case 'blob':

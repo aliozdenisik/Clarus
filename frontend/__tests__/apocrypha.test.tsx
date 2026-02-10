@@ -48,11 +48,16 @@ describe('Apocrypha Browse Page', () => {
     global.fetch = vi.fn();
   });
 
-  it('fetches and displays Apocrypha books', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+  const createMockResponse = (data: unknown): Response =>
+    ({
       ok: true,
-      json: async () => ({ data: { books: mockBooks } }),
-    });
+      json: async () => data,
+    } as unknown as Response);
+
+  it('fetches and displays Apocrypha books', async () => {
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      createMockResponse({ data: { books: mockBooks } })
+    );
 
     render(<ApocryphaPage />);
 
@@ -73,10 +78,9 @@ describe('Apocrypha Browse Page', () => {
   });
 
   it('filters books by name', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: { books: mockBooks } }),
-    });
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      createMockResponse({ data: { books: mockBooks } })
+    );
 
     render(<ApocryphaPage />);
 
@@ -92,10 +96,9 @@ describe('Apocrypha Browse Page', () => {
   });
 
   it('navigates to search on book click', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: { books: mockBooks } }),
-    });
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      createMockResponse({ data: { books: mockBooks } })
+    );
 
     render(<ApocryphaPage />);
 
@@ -109,10 +112,9 @@ describe('Apocrypha Browse Page', () => {
   });
 
   it('handles empty state or loading', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ data: { books: [] } }),
-    });
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      createMockResponse({ data: { books: [] } })
+    );
 
     render(<ApocryphaPage />);
     

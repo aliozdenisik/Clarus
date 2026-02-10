@@ -38,18 +38,20 @@ class MockEventSource {
 }
 
 // Track constructor calls
-let constructorCalls: Array<{ url: string; options?: any }> = [];
+let constructorCalls: Array<{ url: string; options?: { withCredentials?: boolean } }> = [];
 
 // Create a constructor wrapper
 const MockEventSourceConstructor = function(url: string, options?: { withCredentials?: boolean }) {
   constructorCalls.push({ url, options });
   return new MockEventSource(url, options);
-} as any;
+} as unknown as typeof EventSource;
 
 // Copy static properties
-MockEventSourceConstructor.CONNECTING = 0;
-MockEventSourceConstructor.OPEN = 1;
-MockEventSourceConstructor.CLOSED = 2;
+Object.defineProperties(MockEventSourceConstructor, {
+  CONNECTING: { value: 0 },
+  OPEN: { value: 1 },
+  CLOSED: { value: 2 },
+});
 
 global.EventSource = MockEventSourceConstructor;
 

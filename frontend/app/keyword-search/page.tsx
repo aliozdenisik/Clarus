@@ -29,10 +29,8 @@ import { stripGreekDiacritics } from "@/lib/utils/greek";
 import { RootBrowser } from "@/components/keyword-search/root-browser";
 import { Skeleton } from "@/components/ui/skeleton";
 import { searchKeywordApiSearchKeywordPost, getSurahDetailApiMetadataQuranSurahsSurahIdGet, getQuranSurahsApiMetadataQuranSurahsGet } from "@/lib/api/sdk.gen";
-import type { KeywordSearchResponse } from "@/lib/api/types.gen";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Tabs as VercelTabs, Tab } from "@/components/ui/vercel-tabs";
+import type { KeywordSearchResponse, VerseMatchItem } from "@/lib/api/types.gen";
+import { Tabs as VercelTabs } from "@/components/ui/vercel-tabs";
 import { LanguageTabs, type LanguageTab } from "@/components/keyword-search/language-tabs";
 import { BibleCategoryTabs, type BibleCategoryFilter } from "@/components/keyword-search/bible-category-tabs";
 import { AccuracyDisclaimer } from "@/components/keyword-search/accuracy-disclaimer";
@@ -75,6 +73,16 @@ interface BibleSearchResult {
   transliteration: string | null;
   word_transliterations: Record<string, string>;
 }
+
+type BibleVerseMatch = BibleSearchResult["verses"][number];
+
+const isQuranVerseMatch = (
+  verse: VerseMatchItem | BibleVerseMatch
+): verse is VerseMatchItem => "surah_id" in verse;
+
+const isBibleVerseMatch = (
+  verse: VerseMatchItem | BibleVerseMatch
+): verse is BibleVerseMatch => "book_id" in verse;
 
 function KeywordSearchContent() {
   const [query, setQuery] = useState("");
@@ -291,7 +299,7 @@ function KeywordSearchContent() {
     };
 
     fetchTranslations();
-  }, [searchResult?.query, searchResult?.root]);
+  }, [searchResult?.query, searchResult?.root, searchResult?.verses]);
 
   // Helper to get translation
   const getTranslation = useCallback(
@@ -627,40 +635,52 @@ function KeywordSearchContent() {
                           Verse Results
                         </h3>
                         {activeLanguage === "quran" ? (
-                          paginatedVerses.map((verse: any, i) => (
-                            <VerseCard
-                              key={`${verse.surah_id}-${verse.ayah_number}`}
-                              surahId={verse.surah_id}
-                              surahName={getSurahName(verse.surah_id, verse.surah_name)}
-                              ayahNumber={verse.ayah_number}
-                              textUthmani={verse.text_uthmani}
-                              textClean={verse.text_clean}
-                              matchedWords={verse.matched_words}
-                              turkishTranslation={getTranslation(
-                                verse.surah_id,
-                                verse.ayah_number
-                              )}
-                              isTranslationLoading={translationsLoading}
-                              index={i}
-                              language="arabic"
-                            />
-                          ))
+                          paginatedVerses.map((verse, i) => {
+                            if (!isQuranVerseMatch(verse)) {
+                              return null;
+                            }
+
+                            return (
+                              <VerseCard
+                                key={`${verse.surah_id}-${verse.ayah_number}`}
+                                surahId={verse.surah_id}
+                                surahName={getSurahName(verse.surah_id, verse.surah_name)}
+                                ayahNumber={verse.ayah_number}
+                                textUthmani={verse.text_uthmani}
+                                textClean={verse.text_clean}
+                                matchedWords={verse.matched_words}
+                                turkishTranslation={getTranslation(
+                                  verse.surah_id,
+                                  verse.ayah_number
+                                )}
+                                isTranslationLoading={translationsLoading}
+                                index={i}
+                                language="arabic"
+                              />
+                            );
+                          })
                         ) : (
-                          paginatedVerses.map((verse: any, i) => (
-                            <VerseCard
-                              key={`${verse.book_id}-${verse.chapter}-${verse.verse}`}
-                              surahId={verse.book_id}
-                              surahName={verse.book_name}
-                              ayahNumber={verse.verse}
-                              textUthmani={verse.text_original || ""}
-                              textClean={verse.text_original || ""}
-                              matchedWords={verse.matched_words}
-                              englishTranslation={verse.text_english}
-                              chapter={verse.chapter}
-                              index={i}
-                              language={activeLanguage === "hebrew_ot" ? "hebrew" : "greek"}
-                            />
-                          ))
+                          paginatedVerses.map((verse, i) => {
+                            if (!isBibleVerseMatch(verse)) {
+                              return null;
+                            }
+
+                            return (
+                              <VerseCard
+                                key={`${verse.book_id}-${verse.chapter}-${verse.verse}`}
+                                surahId={verse.book_id}
+                                surahName={verse.book_name}
+                                ayahNumber={verse.verse}
+                                textUthmani={verse.text_original || ""}
+                                textClean={verse.text_original || ""}
+                                matchedWords={verse.matched_words}
+                                englishTranslation={verse.text_english}
+                                chapter={verse.chapter}
+                                index={i}
+                                language={activeLanguage === "hebrew_ot" ? "hebrew" : "greek"}
+                              />
+                            );
+                          })
                         )}
                       </div>
 

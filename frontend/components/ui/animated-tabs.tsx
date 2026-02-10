@@ -7,7 +7,6 @@ import {
   Children,
   cloneElement,
   ReactElement,
-  useEffect,
   useState,
   useId,
   useCallback,
@@ -31,7 +30,7 @@ type AnimatedBackgroundProps = {
     | ReactElement<ChildProps>[]
     | ReactElement<ChildProps>;
   defaultValue?: string;
-  onValueChange?: (newActiveId: string | null) => void;
+  onValueChangeAction?: (newActiveId: string | null) => void;
   className?: string;
   transition?: Transition;
   enableHover?: boolean;
@@ -40,29 +39,23 @@ type AnimatedBackgroundProps = {
 export function AnimatedBackground({
   children,
   defaultValue,
-  onValueChange,
+  onValueChangeAction,
   className,
   transition = { type: "spring", bounce: 0.15, duration: 0.5 },
   enableHover = false,
 }: AnimatedBackgroundProps) {
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(defaultValue ?? null);
   const uniqueId = useId();
 
   const handleSetActiveId = useCallback(
     (id: string | null) => {
       setActiveId(id);
-      if (onValueChange) {
-        onValueChange(id);
+      if (onValueChangeAction) {
+        onValueChangeAction(id);
       }
     },
-    [onValueChange]
+    [onValueChangeAction]
   );
-
-  useEffect(() => {
-    if (defaultValue !== undefined) {
-      setActiveId(defaultValue);
-    }
-  }, [defaultValue]);
 
   return Children.map(children, (child, index) => {
     if (!isValidElement<ChildProps>(child)) return child;

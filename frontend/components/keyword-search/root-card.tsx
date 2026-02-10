@@ -12,6 +12,7 @@ interface RootCardProps {
 }
 
 export function RootCard({ root, rootSource, rootBuckwalter, strongNumber, language = "arabic" }: RootCardProps) {
+  void rootSource;
   const isHebrew = language === "hebrew";
   const isGreek = language === "greek";
 

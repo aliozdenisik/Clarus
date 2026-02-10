@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
+import type React from "react";
 
 // Mock SDK BEFORE imports
 vi.mock('@/lib/api/sdk.gen', () => ({
@@ -41,7 +42,7 @@ vi.mock("@/components/ui/glow-card", () => ({
 }));
 
 vi.mock("@/components/ui/button", () => ({
-  Button: ({ children, onClick, disabled, className, ...props }: any) => (
+  Button: ({ children, onClick, disabled, className, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
     <button onClick={onClick} disabled={disabled} className={className} {...props}>
       {children}
     </button>
@@ -59,9 +60,9 @@ vi.mock("sonner", () => ({
 // Mock Framer Motion
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+    div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+    AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
 const mockHistoryItems = [

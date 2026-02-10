@@ -107,7 +107,7 @@ describe('SearchPage Integration', () => {
   it('performs search with correct API endpoint for Quran', async () => {
     vi.mocked(searchQuranApiSearchQuranPost).mockResolvedValueOnce({
       data: { results: [] },
-    } as any);
+    } as never);
 
     render(<SearchPage />);
     

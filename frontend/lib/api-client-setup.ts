@@ -17,7 +17,7 @@ export function setupApiClient(): void {
     return;
   }
 
-  client.interceptors.request.use((request, _options) => {
+  client.interceptors.request.use((request) => {
     const correlationId = getCorrelationId();
 
     if (correlationId) {
@@ -35,7 +35,7 @@ export function setupApiClient(): void {
     return request;
   });
 
-  client.interceptors.response.use((response, request, _options) => {
+  client.interceptors.response.use((response, request) => {
     const correlationId = response.headers.get("X-Correlation-ID");
     const requestId = response.headers.get("X-Request-ID");
 
@@ -51,7 +51,7 @@ export function setupApiClient(): void {
     return response;
   });
 
-  client.interceptors.error.use((error, response, request, _options) => {
+  client.interceptors.error.use((error, response, request) => {
     const correlationId = response?.headers?.get("X-Correlation-ID");
     const requestId = response?.headers?.get("X-Request-ID");
 

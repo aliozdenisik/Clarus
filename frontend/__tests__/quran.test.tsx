@@ -50,7 +50,7 @@ describe("QuranPage", () => {
     vi.clearAllMocks();
     vi.mocked(getQuranSurahsApiMetadataQuranSurahsGet).mockResolvedValue({
       data: { data: { surahs: mockSurahs } },
-    } as any);
+    } as never);
   });
 
   it("renders the page title", async () => {

@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
-import { useSession, signOut } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth-client";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { AuroraSectionBackground } from "@/components/ui/aurora-background";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,7 +13,7 @@ import { ExternalLink, Search } from "lucide-react";
 import { SearchTabs, SearchSource } from "@/components/search/search-tabs";
 import { useSSE } from "@/lib/hooks/use-sse";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
-import { parseCitations, CitationPart } from "@/lib/utils/parse-citations";
+import { parseCitations } from "@/lib/utils/parse-citations";
 import { InlineCitation } from "@/components/compare/inline-citation";
 import { VerseDetail } from "@/components/search/verse-tooltip";
 import { SourceBadge, SourceType } from "@/components/compare/source-badge";
@@ -69,7 +69,6 @@ function SearchContent() {
   const [streamedAnswer, setStreamedAnswer] = useState("");
   const [verseDetails, setVerseDetails] = useState<Record<string, VerseDetail>>({});
   const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
-  const [openPopover, setOpenPopover] = useState<string | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [detectedLanguage, setDetectedLanguage] = useState<string | undefined>(undefined);
   const [selectedTranslator, setSelectedTranslator] = useState("diyanet");
@@ -191,13 +190,7 @@ function SearchContent() {
       }
       setIsSearching(false);
     }
-  }, [sseData.length]);
-
-  const handleLogout = async () => {
-    await signOut();
-    router.push("/sign-in");
-    toast.success("Logged out successfully");
-  };
+  }, [log, sseData, sseData.length]);
 
   const handleTabChange = (tab: SearchSource) => {
     setActiveTab(tab);
@@ -205,7 +198,6 @@ function SearchContent() {
     setStreamedAnswer("");
     setVerseDetails({});
     setHighlightedVerse(null);
-    setOpenPopover(null);
     resetKeywordStore();
     const params = new URLSearchParams();
     params.set("source", tab);
@@ -315,12 +307,12 @@ function SearchContent() {
       const data = await response.json();
       if (data.keywords && Array.isArray(data.keywords)) {
         const keywordSuggestions: KeywordSuggestion[] = data.keywords.map(
-          (kw: any) => ({
-            text: kw.text || kw,
-            language: kw.language || "unknown",
-            confidence: kw.confidence || 1.0,
+          (kw: { text?: string; language?: string; confidence?: number; source?: string } | string) => ({
+            text: typeof kw === "string" ? kw : kw.text || "",
+            language: typeof kw === "string" ? "unknown" : kw.language || "unknown",
+            confidence: typeof kw === "string" ? 1.0 : kw.confidence || 1.0,
             selected: true,
-            source: kw.source || corpus,
+            source: typeof kw === "string" ? corpus : kw.source || corpus,
           })
         );
         setKeywords(keywordSuggestions);
@@ -359,18 +351,6 @@ function SearchContent() {
     }
   };
 
-  const handleAdvancedModeToggle = (checked: boolean) => {
-    setAdvancedMode(checked);
-    const params = new URLSearchParams(window.location.search);
-    if (checked) {
-      params.set("advanced", "true");
-    } else {
-      params.delete("advanced");
-      resetKeywordStore();
-    }
-    router.push(`/search?${params.toString()}`);
-  };
-
    const performBatchSearch = useCallback(async (queryOverride?: string) => {
      const searchQuery = queryOverride ?? query;
      if (!searchQuery.trim()) return;
@@ -394,13 +374,17 @@ function SearchContent() {
 
        let response;
        if (activeTab === "quran") {
-         response = await searchQuranApiSearchQuranPost({ body: body as any });
+         response = await searchQuranApiSearchQuranPost({ body: body as never });
        } else {
          body = { ...body, testament: activeTab };
-         response = await searchBibleApiSearchBiblePost({ body: body as any });
+         response = await searchBibleApiSearchBiblePost({ body: body as never });
        }
 
-      const data = response.data as any;
+      const data = response.data as {
+        results: SearchResult[];
+        verse_details?: Record<string, VerseDetail>;
+        detected_language?: string;
+      };
       setResults(data.results);
 
       if (data.verse_details) {
@@ -412,7 +396,7 @@ function SearchContent() {
       }
 
       toast.success(`Found ${data.results.length} results`);
-    } catch (error) {
+    } catch {
       toast.error("Search failed. Please try again.");
      } finally {
        setIsSearching(false);
@@ -455,7 +439,7 @@ function SearchContent() {
          performBatchSearch(q);    // Pass q directly — state may not be updated yet
        }
      }
-   }, [searchParams, activeTab, enable_streaming, startStream, performBatchSearch, selectedLanguage]);
+   }, [searchParams, activeTab, enable_streaming, startStream, performBatchSearch, selectedLanguage, selectedTranslator]);
 
    const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -465,7 +449,6 @@ function SearchContent() {
     setStreamedAnswer("");
     setVerseDetails({});
     setHighlightedVerse(null);
-    setOpenPopover(null);
     hasHandledSSEError.current = false;
 
     // If keywords are selected, perform keyword-based search
