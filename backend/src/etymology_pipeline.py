@@ -1,22 +1,49 @@
-"""Etymology pipeline helpers for Quranic morphology extraction.
+"""Etymology pipeline helpers and ETL workflow for Quranic roots.
 
-This module extracts morphological form statistics from ``qm_words`` records
-and provides root-frequency snapshots for etymology table generation.
+This module provides:
+- morphology extraction helpers from ``qm_words``
+- root frequency extraction utilities
+- ``EtymologyPipeline`` for loading ``qm_root_etymologies``
 """
 
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import os
+import random
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 import asyncpg
+import requests
+from pybreaker import CircuitBreakerError
+from sqlalchemy import create_engine, text
+from tenacity import RetryError, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+
+from src.arabic_normalizer import arabic_to_buckwalter
+from src.circuit_breaker import llm_with_breaker
+from src.lane_lexicon import LaneLexiconAdapter
+
+if TYPE_CHECKING:
+    from src.lane_lexicon import LaneEntry
 
 logger = logging.getLogger(__name__)
 
-DATABASE_DSN = "postgresql://postgres:postgres@localhost:54322/postgres"
+DATABASE_DSN = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:54322/postgres")
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+TRANSLATION_MODEL = "google/gemini-2.5-flash"
+TRANSLATION_SYSTEM_PROMPT = (
+    "You are an Arabic-English-Turkish lexicography expert. "
+    "Translate the following Arabic root definition from English to Turkish. "
+    "Preserve academic terminology. Return JSON: "
+    '{"translation": "...", "confidence": 0.0-1.0}'
+)
+ETYMOLOGY_EXPORT_DIR = Path(__file__).resolve().parent.parent / "data" / "etymology"
 
 
 @dataclass
@@ -28,33 +55,49 @@ class RootInfo:
     frequency: int
 
 
+@dataclass
+class PipelineResult:
+    """Summary of ETL execution."""
+
+    success: bool
+    total_roots: int
+    inserted_rows: int
+    lane_matches: int
+    lane_high_confidence: int
+    lane_medium_confidence: int
+    corpus_only: int
+    forms_available: int
+    turkish_translations: int
+    low_confidence_translations: int
+
+
 # Arabic grammatical form patterns (awzan)
 FORM_PATTERNS: dict[str, dict[str, str]] = {
     # Verb forms (10 canonical patterns)
-    "form_I": {"arabic": "فَعَلَ", "name": "fa'ala", "type": "فعل ثلاثي مجرد"},  # noqa: RUF001, RUF100
-    "form_II": {"arabic": "فَعَّلَ", "name": "fa''ala", "type": "فعل ثلاثي مزيد"},  # noqa: RUF001, RUF100
-    "form_III": {"arabic": "فَاعَلَ", "name": "faa'ala", "type": "فعل ثلاثي مزيد"},  # noqa: RUF001, RUF100
-    "form_IV": {"arabic": "أَفْعَلَ", "name": "af'ala", "type": "فعل ثلاثي مزيد"},  # noqa: RUF001, RUF100
-    "form_V": {"arabic": "تَفَعَّلَ", "name": "tafa''ala", "type": "فعل ثلاثي مزيد"},  # noqa: RUF001, RUF100
-    "form_VI": {"arabic": "تَفَاعَلَ", "name": "tafaa'ala", "type": "فعل ثلاثي مزيد"},  # noqa: RUF001, RUF100
-    "form_VII": {"arabic": "اِنْفَعَلَ", "name": "infa'ala", "type": "فعل ثلاثي مزيد"},  # noqa: RUF001, RUF100
-    "form_VIII": {"arabic": "اِفْتَعَلَ", "name": "ifta'ala", "type": "فعل ثلاثي مزيد"},  # noqa: RUF001, RUF100
-    "form_IX": {"arabic": "اِفْعَلَّ", "name": "if'alla", "type": "فعل ثلاثي مزيد"},  # noqa: RUF001, RUF100
-    "form_X": {"arabic": "اِسْتَفْعَلَ", "name": "istaf'ala", "type": "فعل ثلاثي مزيد"},  # noqa: RUF001, RUF100
+    "form_I": {"arabic": "فَعَلَ", "name": "fa'ala", "type": "فعل ثلاثي مجرد"},
+    "form_II": {"arabic": "فَعَّلَ", "name": "fa''ala", "type": "فعل ثلاثي مزيد"},
+    "form_III": {"arabic": "فَاعَلَ", "name": "faa'ala", "type": "فعل ثلاثي مزيد"},
+    "form_IV": {"arabic": "أَفْعَلَ", "name": "af'ala", "type": "فعل ثلاثي مزيد"},
+    "form_V": {"arabic": "تَفَعَّلَ", "name": "tafa''ala", "type": "فعل ثلاثي مزيد"},
+    "form_VI": {"arabic": "تَفَاعَلَ", "name": "tafaa'ala", "type": "فعل ثلاثي مزيد"},
+    "form_VII": {"arabic": "اِنْفَعَلَ", "name": "infa'ala", "type": "فعل ثلاثي مزيد"},
+    "form_VIII": {"arabic": "اِفْتَعَلَ", "name": "ifta'ala", "type": "فعل ثلاثي مزيد"},
+    "form_IX": {"arabic": "اِفْعَلَّ", "name": "if'alla", "type": "فعل ثلاثي مزيد"},
+    "form_X": {"arabic": "اِسْتَفْعَلَ", "name": "istaf'ala", "type": "فعل ثلاثي مزيد"},
     # Nominal / derived patterns
-    "active_participle": {"arabic": "فَاعِل", "name": "faa'il", "type": "اسم فاعل"},  # noqa: RUF001, RUF100
-    "passive_participle": {"arabic": "مَفْعُول", "name": "maf'ul", "type": "اسم مفعول"},  # noqa: RUF001, RUF100
-    "verbal_noun_I": {"arabic": "فَعْل", "name": "fa'l", "type": "مصدر"},  # noqa: RUF001, RUF100
-    "verbal_noun_II": {"arabic": "تَفْعِيل", "name": "taf'il", "type": "مصدر"},  # noqa: RUF001, RUF100
-    "intensive": {"arabic": "فَعَّال", "name": "fa''aal", "type": "صيغة مبالغة"},  # noqa: RUF001, RUF100
-    "qualitative_adj": {"arabic": "فَعِيل", "name": "fa'il", "type": "صفة مشبهة"},  # noqa: RUF001, RUF100
-    "instrument": {"arabic": "مِفْعَال", "name": "mif'aal", "type": "اسم آلة"},  # noqa: RUF001, RUF100
-    "place_noun": {"arabic": "مَفْعِل", "name": "maf'il", "type": "اسم مكان"},  # noqa: RUF001, RUF100
-    "diminutive": {"arabic": "فُعَيْل", "name": "fu'ayl", "type": "تصغير"},  # noqa: RUF001, RUF100
-    "collective": {"arabic": "فُعُول", "name": "fu'uul", "type": "جمع تكسير"},  # noqa: RUF001, RUF100
+    "active_participle": {"arabic": "فَاعِل", "name": "faa'il", "type": "اسم فاعل"},
+    "passive_participle": {"arabic": "مَفْعُول", "name": "maf'ul", "type": "اسم مفعول"},
+    "verbal_noun_I": {"arabic": "فَعْل", "name": "fa'l", "type": "مصدر"},
+    "verbal_noun_II": {"arabic": "تَفْعِيل", "name": "taf'il", "type": "مصدر"},
+    "intensive": {"arabic": "فَعَّال", "name": "fa''aal", "type": "صيغة مبالغة"},
+    "qualitative_adj": {"arabic": "فَعِيل", "name": "fa'il", "type": "صفة مشبهة"},
+    "instrument": {"arabic": "مِفْعَال", "name": "mif'aal", "type": "اسم آلة"},
+    "place_noun": {"arabic": "مَفْعِل", "name": "maf'il", "type": "اسم مكان"},
+    "diminutive": {"arabic": "فُعَيْل", "name": "fu'ayl", "type": "تصغير"},
+    "collective": {"arabic": "فُعُول", "name": "fu'uul", "type": "جمع تكسير"},
     # Practical fallbacks from corpus tagging
-    "nominal_generic": {"arabic": "اِسْم", "name": "generic_noun", "type": "اسم"},  # noqa: RUF001, RUF100
-    "verb_generic": {"arabic": "فِعْل", "name": "generic_verb", "type": "فعل"},  # noqa: RUF001, RUF100
+    "nominal_generic": {"arabic": "اِسْم", "name": "generic_noun", "type": "اسم"},
+    "verb_generic": {"arabic": "فِعْل", "name": "generic_verb", "type": "فعل"},
 }
 
 _VF_TO_FORM: dict[str, str] = {
@@ -72,12 +115,6 @@ _VF_TO_FORM: dict[str, str] = {
 
 
 def _row_value(row: object, index: int, key: str) -> str:
-    try:
-        value = row[key]  # type: ignore[index]
-        return "" if value is None else str(value)
-    except Exception:
-        pass
-
     if isinstance(row, Mapping):
         value = row.get(key)
         return "" if value is None else str(value)
@@ -122,16 +159,7 @@ def _detect_form_pattern(pos_tag: str, tags: set[str], features: Mapping[str, st
 
 
 def extract_morphological_forms(root: str, words: list[object]) -> list[dict[str, object]]:
-    """Extract aggregated morphological forms for one Arabic root.
-
-    Args:
-        root: Arabic triliteral (or quadriliteral) root string.
-        words: ``qm_words`` rows as tuples or mappings in the shape
-            ``(token, token_clean, pos_tag, features)``.
-
-    Returns:
-        List of form dictionaries with category metadata and occurrence counts.
-    """
+    """Extract aggregated morphological forms for one Arabic root."""
     normalized_root = root.strip()
     if not normalized_root:
         return []
@@ -181,8 +209,8 @@ def extract_morphological_forms(root: str, words: list[object]) -> list[dict[str
     return result
 
 
-async def _fetch_root_frequency_rows() -> list[RootInfo]:
-    conn = await asyncpg.connect(DATABASE_DSN)
+async def _fetch_root_frequency_rows(database_dsn: str) -> list[RootInfo]:
+    conn = await asyncpg.connect(database_dsn)
     try:
         rows = await conn.fetch(
             """
@@ -205,10 +233,10 @@ async def _fetch_root_frequency_rows() -> list[RootInfo]:
         await conn.close()
 
 
-def extract_all_roots_with_frequency() -> list[RootInfo]:
+def extract_all_roots_with_frequency(database_dsn: str = DATABASE_DSN) -> list[RootInfo]:
     """Return all unique roots from ``qm_words`` with occurrence frequency."""
     try:
-        return asyncio.run(_fetch_root_frequency_rows())
+        return asyncio.run(_fetch_root_frequency_rows(database_dsn))
     except RuntimeError as exc:
         if "asyncio.run() cannot be called from a running event loop" not in str(exc):
             raise
@@ -216,6 +244,414 @@ def extract_all_roots_with_frequency() -> list[RootInfo]:
         logger.debug("Running loop detected; falling back to dedicated event loop")
         loop = asyncio.new_event_loop()
         try:
-            return loop.run_until_complete(_fetch_root_frequency_rows())
+            return loop.run_until_complete(_fetch_root_frequency_rows(database_dsn))
         finally:
             loop.close()
+
+
+class EtymologyPipeline:
+    """ETL pipeline: qm_words + Lane's Lexicon -> qm_root_etymologies.
+
+    Sources:
+      - Quranic Arabic Corpus v0.4 (University of Leeds, GNU GPL)
+      - Lane's Arabic-English Lexicon SQLite (GPL-3.0)
+    """
+
+    def __init__(
+        self,
+        db_url: str = DATABASE_DSN,
+        lane_db_path: Path | None = None,
+        openrouter_api_key: str | None = None,
+        batch_size: int = 100,
+        dry_run: bool = False,
+    ):
+        """Initialize pipeline."""
+        self.db_url = db_url
+        self._asyncpg_dsn = self._normalize_asyncpg_dsn(db_url)
+        self._sqlalchemy_dsn = self._normalize_sqlalchemy_dsn(db_url)
+        self.batch_size = batch_size
+        self.dry_run = dry_run
+        self.openrouter_api_key = openrouter_api_key
+        self.export_dir = ETYMOLOGY_EXPORT_DIR
+
+        self.lane_adapter: LaneLexiconAdapter | None = None
+        if lane_db_path is not None:
+            try:
+                self.lane_adapter = LaneLexiconAdapter(lane_db_path)
+            except FileNotFoundError:
+                logger.warning("Lane database missing at %s, running corpus-only mode", lane_db_path)
+
+        self._truncate_done = False
+
+    @staticmethod
+    def _normalize_asyncpg_dsn(db_url: str) -> str:
+        return db_url.replace("postgresql+asyncpg://", "postgresql://")
+
+    @staticmethod
+    def _normalize_sqlalchemy_dsn(db_url: str) -> str:
+        return db_url.replace("postgresql+asyncpg://", "postgresql://")
+
+    def run(self) -> PipelineResult:
+        """Run full ETL pipeline (synchronous)."""
+        roots = self._extract_roots()
+        processed_rows: list[dict[str, object]] = []
+
+        for root in roots:
+            lane_entry = self._match_lane(root)
+            forms = self._extract_forms(root.root)
+            confidence = self._assign_confidence(lane_entry)
+
+            root_buckwalter = root.root_buckwalter or arabic_to_buckwalter(root.root)
+            row: dict[str, object] = {
+                "root": root.root,
+                "root_buckwalter": root_buckwalter,
+                "definition_en": lane_entry.definition_en if lane_entry else None,
+                "definition_tr": None,
+                "semantic_field": None,
+                "morphological_forms": forms if forms else None,
+                "related_roots": None,
+                "quran_frequency": root.frequency,
+                "source": "lane" if lane_entry else "corpus_only",
+                "lane_match_type": lane_entry.match_type if lane_entry else None,
+                "lane_volume": lane_entry.volume if lane_entry else None,
+                "confidence": confidence,
+                "tr_translation_source": None,
+                "tr_translation_confidence": None,
+            }
+            processed_rows.append(row)
+
+        lane_rows = [row for row in processed_rows if row["source"] == "lane"]
+        translated_lane_rows = self._translate_batch(lane_rows)
+        translated_by_root = {row["root"]: row for row in translated_lane_rows}
+
+        final_rows: list[dict[str, object]] = []
+        for row in processed_rows:
+            translated = translated_by_root.get(str(row["root"]))
+            if translated is not None:
+                row["definition_tr"] = translated.get("definition_tr")
+                row["tr_translation_confidence"] = translated.get("tr_translation_confidence")
+                row["tr_translation_source"] = translated.get("tr_translation_source")
+            final_rows.append(row)
+
+        inserted_rows = 0
+        if not self.dry_run:
+            inserted_rows = self._insert_batch(final_rows)
+        else:
+            inserted_rows = len(final_rows)
+
+        self._export_validation(final_rows)
+
+        lane_matches = sum(1 for row in final_rows if row["source"] == "lane")
+        high_count = sum(1 for row in final_rows if row["confidence"] == "high")
+        medium_count = sum(1 for row in final_rows if row["confidence"] == "medium")
+        corpus_only_count = sum(1 for row in final_rows if row["source"] == "corpus_only")
+        forms_available = sum(1 for row in final_rows if row["morphological_forms"] is not None)
+        turkish_translations = sum(1 for row in final_rows if row["definition_tr"] is not None)
+        low_conf_translations = sum(
+            1
+            for row in final_rows
+            if isinstance(row["tr_translation_confidence"], float) and row["tr_translation_confidence"] < 0.80
+        )
+
+        total_roots = len(final_rows)
+        lane_pct = (lane_matches / total_roots * 100.0) if total_roots else 0.0
+        corpus_pct = (corpus_only_count / total_roots * 100.0) if total_roots else 0.0
+        forms_pct = (forms_available / total_roots * 100.0) if total_roots else 0.0
+        tr_pct = (turkish_translations / lane_matches * 100.0) if lane_matches else 0.0
+        low_conf_pct = (low_conf_translations / turkish_translations * 100.0) if turkish_translations else 0.0
+
+        logger.info("═══ Etymology Pipeline Complete ═══")
+        logger.info("Total roots: %s", total_roots)
+        logger.info(
+            "Lane matches: %s (%.1f%%) — high: %s, medium: %s", lane_matches, lane_pct, high_count, medium_count
+        )
+        logger.info("Corpus-only: %s (%.1f%%)", corpus_only_count, corpus_pct)
+        logger.info("Morphological forms: %s roots (%.1f%%)", forms_available, forms_pct)
+        logger.info("Turkish translations: %s (%.1f%% of Lane matches)", turkish_translations, tr_pct)
+        logger.info("Low-confidence translations: %s (%.1f%%)", low_conf_translations, low_conf_pct)
+
+        return PipelineResult(
+            success=True,
+            total_roots=total_roots,
+            inserted_rows=inserted_rows,
+            lane_matches=lane_matches,
+            lane_high_confidence=high_count,
+            lane_medium_confidence=medium_count,
+            corpus_only=corpus_only_count,
+            forms_available=forms_available,
+            turkish_translations=turkish_translations,
+            low_confidence_translations=low_conf_translations,
+        )
+
+    def _extract_roots(self) -> list[RootInfo]:
+        """Get all unique roots with frequency from qm_words."""
+        return extract_all_roots_with_frequency(self._asyncpg_dsn)
+
+    def _match_lane(self, root: RootInfo) -> LaneEntry | None:
+        """Match root against Lane's Lexicon."""
+        if self.lane_adapter is None:
+            return None
+
+        if root.root_buckwalter:
+            match = self.lane_adapter.lookup_by_root(root.root_buckwalter)
+            if match is not None:
+                return match
+
+        return self.lane_adapter.lookup_by_arabic(root.root)
+
+    def _extract_forms(self, root: str) -> list[dict[str, object]]:
+        """Extract morphological forms for a root."""
+        engine = create_engine(self._sqlalchemy_dsn, future=True)
+        try:
+            with engine.connect() as conn:
+                rows = (
+                    conn.execute(
+                        text(
+                            """
+                            SELECT token, token_clean, pos_tag, features
+                            FROM qm_words
+                            WHERE root = :root
+                            """
+                        ),
+                        {"root": root},
+                    )
+                    .mappings()
+                    .all()
+                )
+            return extract_morphological_forms(root, list(rows))
+        finally:
+            engine.dispose()
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=20),
+        retry=retry_if_exception_type((requests.exceptions.ConnectionError, requests.exceptions.Timeout)),
+        before_sleep=lambda rs: logger.info("Retrying translation request, attempt %d/3", rs.attempt_number),
+    )
+    def _translate_definition(self, definition_en: str) -> tuple[str | None, float | None]:
+        if not self.openrouter_api_key:
+            return None, None
+
+        headers = {
+            "Authorization": f"Bearer {self.openrouter_api_key}",
+            "Content-Type": "application/json",
+        }
+        messages = [
+            {"role": "system", "content": TRANSLATION_SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": definition_en,
+            },
+        ]
+
+        response = llm_with_breaker(
+            lambda: requests.post(
+                OPENROUTER_URL,
+                headers=headers,
+                json={
+                    "model": TRANSLATION_MODEL,
+                    "messages": messages,
+                    "response_format": {"type": "json_object"},
+                    "max_tokens": 600,
+                    "temperature": 0.1,
+                },
+                timeout=45,
+            )
+        )
+        response.raise_for_status()
+
+        response_json = response.json()
+        choices = response_json.get("choices", [])
+        if not choices:
+            return None, None
+
+        content = choices[0].get("message", {}).get("content", "")
+        if not content:
+            return None, None
+
+        payload = json.loads(content)
+        translation_raw = payload.get("translation")
+        confidence_raw = payload.get("confidence")
+
+        translation = str(translation_raw).strip() if translation_raw else None
+        confidence: float | None = None
+        if isinstance(confidence_raw, int | float):
+            confidence = max(0.0, min(1.0, float(confidence_raw)))
+
+        return translation, confidence
+
+    def _translate_batch(self, entries: list[dict[str, object]]) -> list[dict[str, object]]:
+        """Translate English definitions to Turkish via OpenRouter LLM."""
+        if not entries:
+            return []
+
+        translated_entries: list[dict[str, object]] = []
+        for start in range(0, len(entries), 10):
+            chunk = entries[start : start + 10]
+            for entry in chunk:
+                definition_en = entry.get("definition_en")
+                if not isinstance(definition_en, str) or not definition_en.strip():
+                    entry["definition_tr"] = None
+                    entry["tr_translation_confidence"] = None
+                    entry["tr_translation_source"] = None
+                    translated_entries.append(entry)
+                    continue
+
+                if not self.openrouter_api_key:
+                    entry["definition_tr"] = None
+                    entry["tr_translation_confidence"] = None
+                    entry["tr_translation_source"] = None
+                    translated_entries.append(entry)
+                    continue
+
+                try:
+                    translation, confidence = self._translate_definition(definition_en)
+                    entry["definition_tr"] = translation
+                    entry["tr_translation_confidence"] = confidence
+                    entry["tr_translation_source"] = "llm_gemini"
+                except requests.exceptions.HTTPError as exc:
+                    status_code = exc.response.status_code if exc.response is not None else None
+                    logger.warning("Translation HTTP error for root %s: %s", entry.get("root"), exc)
+                    entry["definition_tr"] = None
+                    entry["tr_translation_confidence"] = None
+                    entry["tr_translation_source"] = None
+                    if status_code == 401:
+                        logger.warning("OpenRouter API key rejected; disabling translation for remaining entries")
+                        self.openrouter_api_key = None
+                except CircuitBreakerError:
+                    logger.warning("Translation skipped due to open LLM circuit breaker")
+                    entry["definition_tr"] = None
+                    entry["tr_translation_confidence"] = None
+                    entry["tr_translation_source"] = None
+                except (RetryError, requests.exceptions.RequestException, json.JSONDecodeError) as exc:
+                    logger.warning("Translation failed for root %s: %s", entry.get("root"), exc)
+                    entry["definition_tr"] = None
+                    entry["tr_translation_confidence"] = None
+                    entry["tr_translation_source"] = None
+
+                translated_entries.append(entry)
+
+        return translated_entries
+
+    def _assign_confidence(self, lane_entry: LaneEntry | None) -> str:
+        """Assign confidence level based on Lane volume."""
+        if lane_entry is None:
+            return "low"
+        if lane_entry.volume is None:
+            return "low"
+        if 1 <= lane_entry.volume <= 5:
+            return "high"
+        if 6 <= lane_entry.volume <= 8:
+            return "medium"
+        return "low"
+
+    def _insert_batch(self, rows: list[dict[str, object]]) -> int:
+        """Batch insert into qm_root_etymologies. Returns count."""
+        if not rows:
+            return 0
+
+        engine = create_engine(self._sqlalchemy_dsn, future=True)
+        try:
+            inserted = 0
+            with engine.begin() as conn:
+                conn.execute(text("TRUNCATE TABLE qm_root_etymologies RESTART IDENTITY"))
+
+                for start in range(0, len(rows), self.batch_size):
+                    batch = rows[start : start + self.batch_size]
+                    prepared_batch: list[dict[str, object]] = []
+                    for row in batch:
+                        prepared_row = dict(row)
+                        morph_forms = prepared_row.get("morphological_forms")
+                        related_roots = prepared_row.get("related_roots")
+                        prepared_row["morphological_forms"] = (
+                            json.dumps(morph_forms, ensure_ascii=False) if morph_forms is not None else None
+                        )
+                        prepared_row["related_roots"] = (
+                            json.dumps(related_roots, ensure_ascii=False) if related_roots is not None else None
+                        )
+                        prepared_batch.append(prepared_row)
+
+                    conn.execute(
+                        text(
+                            """
+                            INSERT INTO qm_root_etymologies (
+                                root,
+                                root_buckwalter,
+                                definition_en,
+                                definition_tr,
+                                semantic_field,
+                                morphological_forms,
+                                related_roots,
+                                quran_frequency,
+                                source,
+                                lane_match_type,
+                                lane_volume,
+                                confidence,
+                                tr_translation_source,
+                                tr_translation_confidence
+                            ) VALUES (
+                                :root,
+                                :root_buckwalter,
+                                :definition_en,
+                                :definition_tr,
+                                :semantic_field,
+                                CAST(:morphological_forms AS JSON),
+                                CAST(:related_roots AS JSON),
+                                :quran_frequency,
+                                :source,
+                                :lane_match_type,
+                                :lane_volume,
+                                :confidence,
+                                :tr_translation_source,
+                                :tr_translation_confidence
+                            )
+                            """
+                        ),
+                        prepared_batch,
+                    )
+                    inserted += len(batch)
+            return inserted
+        finally:
+            engine.dispose()
+
+    def _export_validation(self, results: list[dict[str, object]]) -> None:
+        """Export validation JSON files to backend/data/etymology/."""
+        self.export_dir.mkdir(parents=True, exist_ok=True)
+
+        unmatched_roots = [
+            {
+                "root": row["root"],
+                "root_buckwalter": row["root_buckwalter"],
+                "quran_frequency": row["quran_frequency"],
+            }
+            for row in results
+            if row["source"] != "lane"
+        ]
+
+        low_conf_translations = [
+            {
+                "root": row["root"],
+                "definition_en": row["definition_en"],
+                "definition_tr": row["definition_tr"],
+                "tr_translation_confidence": row["tr_translation_confidence"],
+            }
+            for row in results
+            if isinstance(row["tr_translation_confidence"], float) and row["tr_translation_confidence"] < 0.80
+        ]
+
+        sample_size = min(50, len(results))
+        rng = random.Random(42)  # noqa: S311
+        spot_check_sample = rng.sample(results, sample_size) if sample_size > 0 else []
+
+        (self.export_dir / "lane_unmatched_roots.json").write_text(
+            json.dumps(unmatched_roots, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        (self.export_dir / "tr_low_confidence_translations.json").write_text(
+            json.dumps(low_conf_translations, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        (self.export_dir / "spot_check_sample.json").write_text(
+            json.dumps(spot_check_sample, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
