@@ -124,10 +124,14 @@ Looking for something to work on? Check out issues labeled:
 3. **Test your changes**
 
    ```bash
-   # Backend linting
+   # Backend linting and type checking
    cd backend
    ruff check .
    ruff format .
+   pyright
+   
+   # Backend tests
+   uv run pytest tests/ -v
 
    # Frontend linting and tests
    cd frontend

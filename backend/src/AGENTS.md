@@ -173,7 +173,27 @@ MultiAgentAnswer:
 
 ## TESTING
 
-**NOT pytest** - Uses custom accuracy benchmark:
+### Pytest Unit Tests
+```bash
+uv run pytest tests/ -v
+```
+
+**Configuration** (`pyproject.toml`):
+- Excludes benchmark/integration scripts (`run_*.py`, `*_verification_test.py`)
+- Excludes archived tests (`tests/archive/*`)
+- Focuses on unit tests for isolated module behavior
+
+**CI/CD**: Automated via `.github/workflows/backend-ci.yml`
+- Runs on push/PR to main when backend files change
+- Uses `uv` for reproducible dependency installs
+- Executes: Ruff lint, format check, Pyright type check, pytest tests
+- All quality checks continue-on-error (non-blocking)
+
+**Recent Fixes** (Issue #117):
+- Health endpoint tests updated for new `redis` field in response
+- Verse parser tests with Bible verse bounds validation
+
+### Accuracy Benchmarks
 ```bash
 python tests/run_retrieval_accuracy_test.py
 ```

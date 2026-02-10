@@ -101,10 +101,12 @@ frontend/
 | Modify API client | `lib/api/` | Regenerate, don't edit manually |
 | Add state | `lib/stores/` | Zustand pattern |
 | Add hook | `lib/hooks/` | Custom React hooks |
-| Add test | `__tests__/` | Vitest + RTL (21 test files) |
+| Add test | `__tests__/` | Vitest + RTL (21 test files, 228+ passing) |
 | i18n strings | `messages/` | en.json, tr.json |
-| Add utility | `lib/utils/` | Domain-specific utils |
-| Modify logging | `lib/logger.ts` | Structured logger |
+| Add utility | `lib/utils/` | Domain-specific utils (verse-url, parse-citations, etc.) |
+| Modify logging | `lib/logger.ts` | Structured logger (196 lines) |
+| Modify correlation | `lib/correlation.ts` | Correlation ID management (72 lines) |
+| Modify API setup | `lib/api-client-setup.ts` | API interceptors (79 lines) |
 | Modify auth | `lib/auth/auth-context.tsx` | Auth context provider |
 
 ## CONVENTIONS
@@ -289,6 +291,63 @@ Available Google Fonts for Arabic:
 - `Cairo` - Sans-serif
 - `Tajawal` - Modern sans-serif
 
+## PERFORMANCE PATTERNS
+
+### React Key Stability (Issue #94)
+**Problem**: Index-based keys (`key={i}`) cause reconciliation bugs when lists reorder.
+
+**Solution Patterns**:
+- **Domain ID keys**: `key={result.reference}` for unique data
+- **Composite keys**: `key={`${citation.reference}-${idx}`}` for duplicate values
+- **Namespaced skeleton keys**: `key="root-browser-skeleton-${i}"` for deterministic placeholders
+
+**Files Updated**: 53 files across search, compare, keyword-search, and shared UI components
+
+### SSE Single-Pass Aggregation (Issue #92, #104)
+**Problem**: Multiple `.filter().map().find()` passes over SSE data on every message.
+
+**Solution**: Single `.reduce()` pass + ref-based tracking:
+```typescript
+const sseProcessedCount = useRef(0);
+const newMessages = sseData.slice(sseProcessedCount.current);
+const streamState = newMessages.reduce((acc, msg) => {
+  // Aggregate tokens, verse_details, errors in one pass
+}, initialState);
+```
+
+**Benefit**: 4x reduction in array iterations
+
+### Zustand Selector-Based Subscriptions (Issue #90)
+**Problem**: Full store subscription causes re-renders when any field changes.
+
+**Solution**: Narrow selectors:
+```typescript
+// ✅ Subscribe only to used fields
+const advancedMode = useKeywordStore((s) => s.advancedMode);
+const keywords = useKeywordStore((s) => s.keywords);
+```
+
+**Benefit**: Re-renders only when subscribed fields change
+
+### React-Window Virtualization (Issue #91)
+**Problem**: Rendering 1,600+ roots causes layout thrashing.
+
+**Solution**: `react-window` `List` component renders only visible rows (~10 instead of 1,600)
+
+### Batched DOM Reads (Issue #91)
+**Pattern**: Use `useLayoutEffect` to batch geometry reads before paint
+- Tab indicator reads both active and hover geometry in one pass
+- Equality checks prevent state updates if geometry unchanged
+
+### Cached Bounds (Issue #91)
+**Pattern**: Cache `getBoundingClientRect()` on `mouseenter`, reuse during `mousemove`
+- Reduces DOM reads from ~60/sec to 1
+
+### Bundle Optimization (Issue #85)
+- **DevTools lazy-load**: `next/dynamic` with `ssr: false` (100-200KB savings)
+- **Direct date-fns imports**: Subpath imports for guaranteed tree-shaking (~40KB savings)
+- **Recharts code-split**: `next/dynamic` lazy-load (~50KB savings)
+
 ## NOTES
 
 - **API client**: Generated from `http://localhost:8000/openapi.json`
@@ -296,3 +355,5 @@ Available Google Fonts for Arabic:
 - **GlowCard**: Custom animated card component used throughout
 - **Script utilities**: Arabic, Hebrew, Greek text utils in `lib/utils/`
 - **Correlation IDs**: Request tracing via `lib/correlation.ts`
+- **Structured logging**: Use `logger.child()` not `console.log` (196 lines in `lib/logger.ts`)
+- **Test coverage**: 21 test files, 228+ passing tests
