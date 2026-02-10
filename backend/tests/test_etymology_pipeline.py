@@ -1,7 +1,10 @@
 """Tests for Quranic Arabic etymology table schema."""
 
+# pyright: reportMissingImports=false
+
 from collections.abc import AsyncGenerator
 from importlib import import_module
+from pathlib import Path
 from typing import Any
 
 import asyncpg
@@ -25,6 +28,7 @@ except ModuleNotFoundError:
     ETYMOLOGY_PIPELINE_AVAILABLE = False
 
 DATABASE_DSN = "postgresql://postgres:postgres@localhost:54322/postgres"
+LANE_DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "lane_lexicon"
 
 
 @pytest.fixture(scope="module")
@@ -196,3 +200,54 @@ class TestMorphologicalForms:
         assert len(roots) > 0
         assert all(root.root for root in roots)
         assert all(root.frequency > 0 for root in roots)
+
+
+class TestLaneAdapter:
+    """Lane's Lexicon SQLite adapter tests (Issue #128 Task 2)."""
+
+    def test_lane_adapter_opens_database(self) -> None:
+        """Adapter should initialize against the cloned Lane database."""
+        from src.lane_lexicon import LaneLexiconAdapter
+
+        adapter = LaneLexiconAdapter(LANE_DATA_DIR)
+        assert adapter.db_file.exists()
+        assert adapter.connection is not None
+
+    def test_lane_lookup_known_root(self) -> None:
+        """Known Buckwalter root should return a meaningful English definition."""
+        from src.lane_lexicon import LaneLexiconAdapter
+
+        adapter = LaneLexiconAdapter(LANE_DATA_DIR)
+        entry = adapter.lookup_by_root("ktb")
+
+        assert entry is not None
+        assert entry.root_buckwalter == "ktb"
+        assert entry.definition_en is not None
+        assert len(entry.definition_en.strip()) > 10
+
+    def test_lane_lookup_nonexistent_root(self) -> None:
+        """Non-existent root should return None gracefully."""
+        from src.lane_lexicon import LaneLexiconAdapter
+
+        adapter = LaneLexiconAdapter(LANE_DATA_DIR)
+        assert adapter.lookup_by_root("zzzzz") is None
+
+    def test_lane_volume_extraction(self) -> None:
+        """Volume extraction should return a value in Lane's 1-8 range."""
+        from src.lane_lexicon import LaneLexiconAdapter
+
+        adapter = LaneLexiconAdapter(LANE_DATA_DIR)
+        entry = adapter.lookup_by_root("ktb")
+
+        assert entry is not None
+        assert entry.volume is not None
+        assert 1 <= entry.volume <= 8
+        assert adapter.get_volume(entry) == entry.volume
+
+    def test_lane_adapter_missing_db(self, tmp_path: Path) -> None:
+        """Missing Lane DB directory should raise descriptive FileNotFoundError."""
+        from src.lane_lexicon import LaneLexiconAdapter
+
+        missing_dir = tmp_path / "lane_missing"
+        with pytest.raises(FileNotFoundError, match=r"Lane.*database"):
+            LaneLexiconAdapter(missing_dir)
