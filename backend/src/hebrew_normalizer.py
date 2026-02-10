@@ -5,7 +5,6 @@ processing. Handles nikud (vowel points) removal, transliteration, and
 OSHB lemma parsing for Bible keyword search.
 """
 
-import re
 import unicodedata
 from typing import Optional
 

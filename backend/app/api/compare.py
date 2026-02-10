@@ -1,38 +1,25 @@
 """Compare API routes for multi-scripture comparison."""
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Tuple, Any
-import sys
-import os
 import time as time_module
-from dotenv import load_dotenv
+from typing import Any, Dict, List, Optional, Tuple
 
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.auth import check_rate_limit
+from app.api.compare_helpers import strip_markdown_headers
+from app.auth.api_key_validator import get_current_user_flexible
+from app.db import get_db
 from app.logging_config import get_logger, log_performance
+from app.models import SearchHistory
+from app.schemas.common import TranslatorType, DEFAULT_TRANSLATOR
+from src.citation_sanitizer import sanitize_citations
+from src.comparative_rag import ComparativeRAG
+from src.query_translator import QueryTranslator, TranslationError
+from src.search import BibleSearchResult, SearchResult
 
 logger = get_logger(__name__)
-
-# Load .env before importing RAG modules
-env_path = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"
-)
-load_dotenv(env_path)
-
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
-
-from app.db import get_db
-from app.models import SearchHistory
-from app.auth.api_key_validator import get_current_user_flexible
-from app.api.auth import check_rate_limit
-from app.schemas.common import TranslatorType, DEFAULT_TRANSLATOR
-from src.comparative_rag import ComparativeRAG
-from src.search import SearchResult, BibleSearchResult
-from src.citation_sanitizer import sanitize_citations
-from src.query_translator import QueryTranslator, TranslationError
-from app.api.compare_helpers import strip_markdown_headers
 
 
 router = APIRouter()

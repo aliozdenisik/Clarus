@@ -13,7 +13,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from sqlalchemy import create_engine, text
 
 # Import Base and models so metadata is populated
-from app.db import Base
 from app.models import BMVerseMapping  # noqa: F401 — registers table on Base.metadata
 
 DATABASE_URL = "postgresql://postgres:postgres@localhost:54322/postgres"

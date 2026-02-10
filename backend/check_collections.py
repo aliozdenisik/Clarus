@@ -1,8 +1,10 @@
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent))
 
 from qdrant_client import QdrantClient
+
 
 def check_collections():
     try:
@@ -14,6 +16,7 @@ def check_collections():
             print(f"- {col.name}: {info.points_count} points, status: {info.status}")
     except Exception as e:
         print(f"Error accessing Qdrant: {e}")
+
 
 if __name__ == "__main__":
     check_collections()

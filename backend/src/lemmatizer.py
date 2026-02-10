@@ -33,13 +33,13 @@ def get_analyzer():
     """Zeyrek analyzer'ı lazy load et"""
     global _analyzer
     if _analyzer is None:
+        import sys
+        import io
+
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
         try:
             # Suppress all output during import
-            import sys
-            import io
-
-            old_stdout = sys.stdout
-            old_stderr = sys.stderr
             sys.stdout = io.StringIO()
             sys.stderr = io.StringIO()
 
@@ -49,7 +49,7 @@ def get_analyzer():
 
             # Disable debug mode if available
             if hasattr(_analyzer, "debug"):
-                _analyzer.debug = False
+                setattr(_analyzer, "debug", False)
 
             sys.stdout = old_stdout
             sys.stderr = old_stderr

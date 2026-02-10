@@ -95,7 +95,7 @@ class BaseSpecialistAgent:
     OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
     MODEL = "google/gemini-3-flash-preview"
 
-    def __init__(self, api_key: str = None):
+    def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
             raise ValueError("OpenRouter API key required")
@@ -488,8 +488,8 @@ class MultiAgentOrchestrator:
     4. Return 5-paragraph result
     """
 
-    def __init__(self, api_key: str = None, verbose: bool = True):
-        self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
+    def __init__(self, api_key: Optional[str] = None, verbose: bool = True):
+        self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY") or ""
         self.verbose = verbose
 
         # Initialize agents
@@ -543,7 +543,7 @@ class MultiAgentOrchestrator:
         ot_verses: List,
         nt_verses: List,
         apocrypha_verses: List,
-        collection_stats: dict = None,
+        collection_stats: Optional[dict[str, float]] = None,
         progress_callback: Optional[Callable[[str, str], None]] = None,
     ) -> MultiAgentAnswer:
         """

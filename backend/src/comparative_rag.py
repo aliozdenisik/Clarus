@@ -524,6 +524,7 @@ class ComparativeRAG:
         # Quran searches (one per keyword)
         if quran_vectors:
             searcher = self._get_quran_searcher()
+            assert quran_keywords is not None
             for i, vector in enumerate(quran_vectors):
 
                 def search_quran_keyword(v=vector, kw=quran_keywords[i]):
@@ -547,6 +548,8 @@ class ComparativeRAG:
         if bible_vectors:
             from src.search import BibleSearcher
 
+            assert bible_keywords is not None
+
             bible_searchers: List[Tuple[str, BibleSearcher]] = []
             if "ot" in active_keys:
                 bible_searchers.append(("ot", self._get_ot_searcher()))
@@ -556,11 +559,12 @@ class ComparativeRAG:
                 bible_searchers.append(("apocrypha", self._get_apocrypha_searcher()))
 
             for i, vector in enumerate(bible_vectors):
+                keyword = bible_keywords[i]
                 for collection_key, searcher in bible_searchers:
 
                     def make_search_task(
                         v=vector,
-                        kw=bible_keywords[i],  # type: ignore[index]
+                        kw=keyword,
                         s=searcher,
                         ck=collection_key,
                     ):
@@ -627,8 +631,6 @@ class ComparativeRAG:
 
                     # Apply boost for ≥2 keyword matches
                     if match_count >= 2:
-                        # Create a copy to avoid mutating original
-                        boosted_result = r
                         if hasattr(r, "score"):
                             original_score = r.score
                             boost_factor = 1 + (match_count * 0.15)
@@ -1114,7 +1116,7 @@ class ComparativeRAG:
         total_start = time.time()
 
         if self.verbose:
-            console.print(f"\n[bold blue]📚 Comparative Scripture Analysis[/bold blue]")
+            console.print("\n[bold blue]📚 Comparative Scripture Analysis[/bold blue]")
             console.print(f'[dim]Question: "{query}"[/dim]\n')
 
         # Steps 0-3: Translate, enhance, search and select top results
@@ -1240,7 +1242,7 @@ class ComparativeRAG:
 
             if self.verbose:
                 console.print(
-                    f"\n[bold blue]📚 Multi-Agent Comparative Scripture Analysis[/bold blue]"
+                    "\n[bold blue]📚 Multi-Agent Comparative Scripture Analysis[/bold blue]"
                 )
                 console.print(f'[dim]Question: "{query}"[/dim]\n')
 

@@ -27,11 +27,9 @@ Usage:
 import pybreaker
 import logging
 import sentry_sdk
+from pybreaker import CircuitBreakerError
 
 logger = logging.getLogger(__name__)
-
-# Re-export CircuitBreakerError for convenience
-from pybreaker import CircuitBreakerError
 
 qdrant_breaker = pybreaker.CircuitBreaker(fail_max=5, reset_timeout=60, name="qdrant")
 

@@ -267,7 +267,6 @@ def parse_morphgnt_book(
                 log.warning("Invalid bcv format: %s", bcv)
                 continue
 
-            bcv_book = int(bcv[0:2])
             chapter = int(bcv[2:4])
             verse = int(bcv[4:6])
 
@@ -706,7 +705,7 @@ def validate_and_summarize(conn) -> bool:
     )
     row = result.fetchone()
     if row:
-        print(f"\n  Sample Matt 1:1:")
+        print("\n  Sample Matt 1:1:")
         print(f"    Book: {row[0]}")
         print(f"    Greek: {row[3]}")
         print(f"    English: {row[4]}")
@@ -725,7 +724,7 @@ def validate_and_summarize(conn) -> bool:
     )
     rows = result.fetchall()
     if rows:
-        print(f"\n  Sample words from Matt 1:1:")
+        print("\n  Sample words from Matt 1:1:")
         for r in rows:
             print(
                 f"    {r[0]} | clean={r[1]} | lemma={r[2]} | root={r[3]} | "

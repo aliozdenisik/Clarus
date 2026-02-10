@@ -11,12 +11,13 @@ Optimizations:
 - Circuit breaker for API failures
 """
 
-from typing import List, Tuple
 import os
 import requests
 import hashlib
 import time
 import json
+from typing import List, Tuple
+
 from tqdm import tqdm
 
 import sentry_sdk
@@ -24,9 +25,9 @@ import sentry_sdk
 from src.circuit_breaker import embeddings_with_breaker, CircuitBreakerError
 
 # Optional imports for Redis caching
+sync_redis = None
 try:
     import redis as sync_redis
-    from redis import asyncio as aioredis
 
     REDIS_AVAILABLE = True
 except ImportError:
@@ -263,7 +264,7 @@ class DenseEncoder:
                     except (
                         requests.exceptions.Timeout,
                         requests.exceptions.ReadTimeout,
-                    ) as e:
+                    ):
                         if attempt < max_retries - 1:
                             wait_time = 2**attempt * 5  # 5s, 10s, 20s
                             print(

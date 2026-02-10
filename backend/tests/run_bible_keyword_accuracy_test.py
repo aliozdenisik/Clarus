@@ -126,11 +126,6 @@ async def run_single_test(search, test: TestCase) -> TestResult:
                 result.strong_number
             ) == normalize_strongs(test.strongs)
 
-        # Check 2: Expected book appears in book_distribution
-        book_match = any(
-            bc.book_name == test.expected_book for bc in result.book_distribution
-        )
-
         # Check 3: Expected verse appears in results
         verse_match = any(
             v.book_name == test.expected_book
@@ -362,7 +357,7 @@ def print_report(report: Dict):
 
     # Overall metrics
     summary = report["summary"]
-    console.print(f"[bold]Overall Results:[/bold]")
+    console.print("[bold]Overall Results:[/bold]")
     console.print(
         f"  Total Tests: {summary['total_tests']} | "
         f"[green]Passed: {summary['passed']}[/green] | "

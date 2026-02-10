@@ -461,7 +461,7 @@ def print_benchmark_results(results: List[BenchmarkResult]) -> None:
         1, sum(1 for r in results if not r.error)
     )
 
-    console.print(f"\n[bold]Summary:[/bold]")
+    console.print("\n[bold]Summary:[/bold]")
     console.print(f"  Total benchmarks: {total_count}")
     console.print(
         f"  Passed: [green]{passed_count}/{total_count}[/green] ({passed_count / total_count * 100:.0f}%)"
@@ -469,7 +469,7 @@ def print_benchmark_results(results: List[BenchmarkResult]) -> None:
     console.print(f"  Average response time: [cyan]{avg_time:.0f}ms[/cyan]")
 
     # Performance by category
-    console.print(f"\n[bold]Performance by Frequency Category:[/bold]")
+    console.print("\n[bold]Performance by Frequency Category:[/bold]")
     for category in ["low", "medium", "high", "very_high"]:
         cat_results = [r for r in results if r.frequency_category == category]
         if cat_results:
@@ -517,7 +517,7 @@ def print_regression_results(results: List[RegressionTestResult]) -> None:
     # Print full details for failed tests
     failed_tests = [r for r in results if not r.passed]
     if failed_tests:
-        console.print(f"\n[bold red]Failed Test Details:[/bold red]")
+        console.print("\n[bold red]Failed Test Details:[/bold red]")
         for r in failed_tests:
             console.print(f"\n[red]✗ {r.test_name}[/red]")
             if r.error:
@@ -528,7 +528,7 @@ def print_regression_results(results: List[RegressionTestResult]) -> None:
     # Summary
     passed_count = sum(1 for r in results if r.passed)
     total_count = len(results)
-    console.print(f"\n[bold]Regression Summary:[/bold]")
+    console.print("\n[bold]Regression Summary:[/bold]")
     console.print(
         f"  Passed: [green]{passed_count}/{total_count}[/green] ({passed_count / total_count * 100:.0f}%)"
     )
