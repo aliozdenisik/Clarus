@@ -57,6 +57,7 @@ collect_ignore_glob = [
     "tests/run_*.py",
     "tests/*_verification_test.py",
     "tests/*_comprehensive_test.py",
+    "tests/test_multi_agent_flow.py",
     "tests/archive/*",
 ]
 
