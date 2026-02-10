@@ -7,6 +7,7 @@ Gospels: Matthew, Mark, Luke, John
 """
 
 import sys
+import asyncio
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -81,7 +82,9 @@ def search_gospels_only(query: str, translation: str = "turhadi", top_k: int = 5
     )
 
     # Get results
-    results = rag.search_bible(query, translation=translation, top_k=top_k * 4)
+    results = asyncio.run(
+        rag.search_bible(query, translation=translation, top_k=top_k * 4)
+    )
 
     # Filter to Gospels only
     filtered_results = [r for r in results if r.book_name in GOSPELS]

@@ -1452,6 +1452,8 @@ def ultimate_search(
 
 
 if __name__ == "__main__":
+    import asyncio
+
     from dotenv import load_dotenv
     from app.logging_config import setup_logging, LoggingConfig
 
@@ -1471,8 +1473,6 @@ if __name__ == "__main__":
 
     logger.info("--- QURAN TESTS ---")
     for query in test_queries_quran:
-        import asyncio
-
         results = asyncio.run(rag.search_quran(query, top_k=3))
         logger.info(f"Query: {query}")
         for i, r in enumerate(results, 1):

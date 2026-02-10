@@ -43,6 +43,7 @@ from qdrant_client.models import (
     HnswConfigDiff,
     ScalarQuantization,
     ScalarQuantizationConfig,
+    ScalarType,
     PayloadSchemaType,
 )
 
@@ -114,7 +115,7 @@ def create_collection(
                 hnsw_config=HnswConfigDiff(m=16, ef_construct=200),
                 quantization_config=ScalarQuantization(
                     scalar=ScalarQuantizationConfig(
-                        type="int8", quantile=0.99, always_ram=True
+                        type=ScalarType.INT8, quantile=0.99, always_ram=True
                     )
                 ),
             )

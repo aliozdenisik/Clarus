@@ -18,6 +18,7 @@ Usage:
 """
 
 import argparse
+import importlib
 import sys
 from pathlib import Path
 from datetime import datetime, timezone
@@ -26,8 +27,6 @@ from typing import Optional
 # Ensure backend/ is on sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import psycopg2
-from psycopg2.extras import RealDictCursor
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
@@ -48,10 +47,19 @@ DATABASE_URL = "postgresql://postgres:postgres@localhost:54322/postgres"
 MIGRATED_USER_IDS = []
 
 
+def _load_psycopg2():
+    """Load psycopg2 modules dynamically to keep script optional."""
+    psycopg2_module = importlib.import_module("psycopg2")
+    extras_module = importlib.import_module("psycopg2.extras")
+    real_dict_cursor = getattr(extras_module, "RealDictCursor")
+    return psycopg2_module, real_dict_cursor
+
+
 def get_connection():
     """Create and return database connection."""
     try:
-        conn = psycopg2.connect(DATABASE_URL)
+        psycopg2_module, _ = _load_psycopg2()
+        conn = psycopg2_module.connect(DATABASE_URL)
         return conn
     except Exception as e:
         console.print(f"[red]❌ Failed to connect to database:[/red] {e}")
@@ -60,7 +68,8 @@ def get_connection():
 
 def fetch_legacy_users(conn):
     """Fetch all users from users_legacy table."""
-    with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+    _, real_dict_cursor = _load_psycopg2()
+    with conn.cursor(cursor_factory=real_dict_cursor) as cursor:
         cursor.execute("""
             SELECT 
                 id, 
@@ -76,6 +85,15 @@ def fetch_legacy_users(conn):
             ORDER BY id
         """)
         return cursor.fetchall()
+
+
+def _fetch_count(cursor, query: str) -> int:
+    """Execute a count query and return the integer result."""
+    cursor.execute(query)
+    row = cursor.fetchone()
+    if row is None:
+        raise RuntimeError(f"Count query returned no rows: {query}")
+    return int(row[0])
 
 
 def migrate_user(
@@ -373,14 +391,9 @@ def rollback_migration():
     try:
         with conn.cursor() as cursor:
             # Count records before deletion
-            cursor.execute("SELECT COUNT(*) FROM user_stats")
-            stats_count = cursor.fetchone()[0]
-
-            cursor.execute("SELECT COUNT(*) FROM account")
-            account_count = cursor.fetchone()[0]
-
-            cursor.execute('SELECT COUNT(*) FROM "user"')
-            user_count = cursor.fetchone()[0]
+            stats_count = _fetch_count(cursor, "SELECT COUNT(*) FROM user_stats")
+            account_count = _fetch_count(cursor, "SELECT COUNT(*) FROM account")
+            user_count = _fetch_count(cursor, 'SELECT COUNT(*) FROM "user"')
 
             console.print("\n[yellow]Records to delete:[/yellow]")
             console.print(f"  user_stats: {stats_count}")
@@ -423,18 +436,12 @@ def show_status():
     try:
         with conn.cursor() as cursor:
             # Legacy users count
-            cursor.execute("SELECT COUNT(*) FROM users_legacy")
-            legacy_count = cursor.fetchone()[0]
+            legacy_count = _fetch_count(cursor, "SELECT COUNT(*) FROM users_legacy")
 
             # Better Auth users count
-            cursor.execute('SELECT COUNT(*) FROM "user"')
-            user_count = cursor.fetchone()[0]
-
-            cursor.execute("SELECT COUNT(*) FROM account")
-            account_count = cursor.fetchone()[0]
-
-            cursor.execute("SELECT COUNT(*) FROM user_stats")
-            stats_count = cursor.fetchone()[0]
+            user_count = _fetch_count(cursor, 'SELECT COUNT(*) FROM "user"')
+            account_count = _fetch_count(cursor, "SELECT COUNT(*) FROM account")
+            stats_count = _fetch_count(cursor, "SELECT COUNT(*) FROM user_stats")
 
             # Create status table
             table = Table(

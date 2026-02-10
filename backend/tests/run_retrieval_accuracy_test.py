@@ -23,7 +23,7 @@ import time
 import re
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import List, Dict, Set, Tuple, Any
+from typing import Any, Dict, List, Optional, Set, Tuple
 from dotenv import load_dotenv
 
 # Load environment variables first
@@ -89,7 +89,7 @@ class TestResult:
     # Stage logs
     stages: List[StageLog] = field(default_factory=list)
     # Error tracking
-    error: str = None
+    error: Optional[str] = None
 
 
 # ============================================================================
@@ -148,7 +148,7 @@ def expand_expected_verses(expected: List[str], source: str) -> Set[str]:
     return all_verses
 
 
-def extract_verse_from_result(result, source: str) -> str:
+def extract_verse_from_result(result, source: str) -> Optional[str]:
     """Extract verse reference from a search result."""
     if source == "quran":
         surah_id = getattr(result, "surah_id", None)
@@ -395,7 +395,7 @@ class RAGWithStageLogging:
         stage4_start = time.time()
 
         try:
-            final_results = self.rag._rerank_results(question, search_results, top_k=10)
+            final_results = self.rag._get_top_results(search_results, top_k=10)
         except Exception:
             final_results = search_results[:10]
 
@@ -629,11 +629,11 @@ def compile_report(results: List[TestResult], metadata: Dict) -> Dict[str, Any]:
 
     # Calculate stage timing averages
     stage_timing = {
-        "query_translation_avg_ms": 0,
-        "query_enhancement_avg_ms": 0,
-        "multi_query_avg_ms": 0,
-        "search_avg_ms": 0,
-        "rerank_avg_ms": 0,
+        "query_translation_avg_ms": 0.0,
+        "query_enhancement_avg_ms": 0.0,
+        "multi_query_avg_ms": 0.0,
+        "search_avg_ms": 0.0,
+        "rerank_avg_ms": 0.0,
     }
 
     stage_times = {0: [], 1: [], 2: [], 3: [], 4: []}

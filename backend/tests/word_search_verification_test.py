@@ -242,6 +242,7 @@ class WordSearchVerificationTest:
                 try:
                     # Execute search
                     if source == "quran":
+                        assert self.quran_search is not None
                         search_result = await self.quran_search.search_by_root(
                             query=query,
                             page=1,
@@ -265,6 +266,7 @@ class WordSearchVerificationTest:
                         result.actual_root = search_result.root
                         result.actual_root_source = search_result.root_source
                     else:
+                        assert self.bible_search is not None
                         search_result = await self.bible_search.search(
                             query=query,
                             page=1,
