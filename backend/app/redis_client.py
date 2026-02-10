@@ -9,6 +9,7 @@ Provides:
 
 from redis import asyncio as aioredis
 from redis.asyncio.connection import ConnectionPool
+from collections.abc import Awaitable
 
 from app.config import settings
 from app.logging_config import get_logger
@@ -62,7 +63,9 @@ class RedisManager:
             self.client = aioredis.Redis(connection_pool=pool)
 
             # Test connection with ping
-            await self.client.ping()
+            ping_result = self.client.ping()
+            if isinstance(ping_result, Awaitable):
+                await ping_result
             logger.info("Redis connection established and verified")
 
         except Exception as e:
@@ -105,7 +108,9 @@ class RedisManager:
             return False
 
         try:
-            await self.client.ping()
+            ping_result = self.client.ping()
+            if isinstance(ping_result, Awaitable):
+                await ping_result
             return True
         except Exception:
             return False

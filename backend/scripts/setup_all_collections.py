@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402
+# This setup script adjusts sys.path before importing project modules.
 """
 Unified Collection Setup Script (Multi-Translator)
 
@@ -31,13 +33,6 @@ load_dotenv()
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich.progress import (
-    Progress,
-    SpinnerColumn,
-    TextColumn,
-    BarColumn,
-    TaskProgressColumn,
-)
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
     VectorParams,
@@ -49,14 +44,12 @@ from qdrant_client.models import (
     ScalarQuantization,
     ScalarQuantizationConfig,
     PayloadSchemaType,
-    SparseVector,
 )
 
-from src.data_loader import QuranDataLoader
-from src.bible_loader import BibleDataLoader, get_testament
+from src.bible_loader import BibleDataLoader
 from src.embeddings import AsyncDenseEncoder
 from src.tanzil_loader import TanzilLoader, VALID_TRANSLATORS
-from src.indexer import QuranIndexer, TurkishBibleIndexer
+from src.indexer import TurkishBibleIndexer
 
 console = Console()
 QDRANT_URL = "http://localhost:6333"
@@ -86,7 +79,7 @@ def delete_old_collections(
     if not to_delete:
         return 0
 
-    console.print(f"\n[yellow]Found old collections to delete:[/yellow]")
+    console.print("\n[yellow]Found old collections to delete:[/yellow]")
     for name in to_delete:
         console.print(f"  - {name}")
 
@@ -241,7 +234,7 @@ async def index_turkish_bible(client: QdrantClient) -> dict[str, int]:
         "bible_tr_nt": result["nt"],
     }
 
-    console.print(f"  [green]✓[/green] Indexed Turkish Bible:")
+    console.print("  [green]✓[/green] Indexed Turkish Bible:")
     console.print(f"    OT: {result['ot']} verses")
     console.print(f"    NT: {result['nt']} verses")
 

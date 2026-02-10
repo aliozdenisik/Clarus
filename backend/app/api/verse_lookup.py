@@ -75,10 +75,14 @@ async def fetch_quran_verses(
     """
     results = []
 
+    surah_id = parsed.surah_id
+    if surah_id is None:
+        raise ValueError("Surah ID is required for Quran references")
+
     # Get surah name from SURAH_NAME_MAP
     surah_name = None
     for name, info in SURAH_NAME_MAP.items():
-        if info["id"] == parsed.surah_id:
+        if info["id"] == surah_id:
             surah_name = name
             break
 
@@ -90,7 +94,7 @@ async def fetch_quran_verses(
         # Create filter for exact surah_id and verse_id match
         filter_condition = Filter(
             must=[
-                FieldCondition(key="surah_id", match=MatchValue(value=parsed.surah_id)),
+                FieldCondition(key="surah_id", match=MatchValue(value=surah_id)),
                 FieldCondition(key="verse_id", match=MatchValue(value=verse_id)),
             ]
         )
@@ -111,10 +115,10 @@ async def fetch_quran_verses(
                 if payload is not None:
                     results.append(
                         VerseResult(
-                            reference=f"{parsed.surah_id}:{verse_id}",
+                            reference=f"{surah_id}:{verse_id}",
                             text=payload.get("translation", ""),
                             source="quran",
-                            surah_id=parsed.surah_id,
+                            surah_id=surah_id,
                             surah_name=surah_name,
                             verse_id=verse_id,
                             arabic_text=payload.get("arabic_text"),
@@ -148,6 +152,11 @@ async def fetch_bible_verses(
     if testament is None:
         raise ValueError("Testament is required for Bible verses")
 
+    book_id = parsed.book_id
+    chapter = parsed.chapter
+    if book_id is None or chapter is None:
+        raise ValueError("Book ID and chapter are required for Bible references")
+
     collection_name = get_bible_collection(testament)
 
     # Determine source identifier (cast to Literal type)
@@ -168,8 +177,8 @@ async def fetch_bible_verses(
         # Create filter for exact book_id, chapter, and verse match
         filter_condition = Filter(
             must=[
-                FieldCondition(key="book_id", match=MatchValue(value=parsed.book_id)),
-                FieldCondition(key="chapter", match=MatchValue(value=parsed.chapter)),
+                FieldCondition(key="book_id", match=MatchValue(value=book_id)),
+                FieldCondition(key="chapter", match=MatchValue(value=chapter)),
                 FieldCondition(key="verse", match=MatchValue(value=verse_num)),
             ]
         )
@@ -190,12 +199,12 @@ async def fetch_bible_verses(
                 if payload is not None:
                     results.append(
                         VerseResult(
-                            reference=f"{parsed.book_name} {parsed.chapter}:{verse_num}",
+                            reference=f"{parsed.book_name} {chapter}:{verse_num}",
                             text=payload.get("text", ""),
                             source=source,
-                            book_id=parsed.book_id,
+                            book_id=book_id,
                             book_name=parsed.book_name,
-                            chapter=parsed.chapter,
+                            chapter=chapter,
                             verse=verse_num,
                             # Quran fields are None
                             surah_id=None,

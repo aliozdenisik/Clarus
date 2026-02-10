@@ -62,9 +62,11 @@ def _load_quran_data() -> list[dict]:
         quran_path = safe_path(DATA_DIR, "quran_tr.json")
         if os.path.exists(quran_path):
             with open(quran_path, "r", encoding="utf-8") as f:
-                _quran_cache = json.load(f)
+                loaded = json.load(f)
+                _quran_cache = loaded if isinstance(loaded, list) else []
         else:
             _quran_cache = []
+    assert _quran_cache is not None
     return _quran_cache
 
 
@@ -74,9 +76,11 @@ def _load_bible_data() -> dict:
         bible_path = safe_path(DATA_DIR, "bible_kjva.json")
         if os.path.exists(bible_path):
             with open(bible_path, "r", encoding="utf-8") as f:
-                _bible_cache = json.load(f)
+                loaded = json.load(f)
+                _bible_cache = loaded if isinstance(loaded, dict) else {"books": []}
         else:
             _bible_cache = {"books": []}
+    assert _bible_cache is not None
     return _bible_cache
 
 

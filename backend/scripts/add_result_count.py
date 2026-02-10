@@ -1,5 +1,8 @@
 """Add result_count column to search_history table."""
 
+# ruff: noqa: E402
+# This migration script adjusts sys.path before importing project modules.
+
 import asyncio
 import sys
 import os

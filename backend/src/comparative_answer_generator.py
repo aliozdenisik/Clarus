@@ -138,7 +138,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         },
     ]
 
-    def __init__(self, model: str = None, api_key: str = None):
+    def __init__(self, model: Optional[str] = None, api_key: Optional[str] = None):
         """Initialize Comparative Answer Generator with OpenRouter API"""
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
@@ -387,7 +387,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         quran_chunks: List,
         bible_semantic: List,
         bible_chunks: List,
-        collection_stats: dict = None,
+        collection_stats: Optional[dict[str, float]] = None,
         translator: str = "diyanet",
     ) -> ComparativeAnswer:
         """
@@ -436,7 +436,6 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         if collection_stats:
             all_rrf_scores = collection_stats.get("all_rrf_scores", [])
             num_queries = collection_stats.get("num_queries", 1)
-            total_verses_context = collection_stats.get("total_verses", 80)
             collections_with_results = collection_stats.get(
                 "collections_with_results", 4
             )

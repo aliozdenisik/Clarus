@@ -590,17 +590,20 @@ class QuranMorphologySearch:
                     )
                 )
 
+        safe_total_occurrences = int(total_occurrences or 0)
+        safe_total_verses = int(total_verses or 0)
+
         return MorphologySearchResult(
             query=query,
             root=root,
             root_source=source,
-            total_occurrences=total_occurrences,
+            total_occurrences=safe_total_occurrences,
             unique_words=unique_words,
             surah_distribution=surah_distribution,
             verses=verses,
             page=page,
             per_page=per_page,
-            total_verses=total_verses,
+            total_verses=safe_total_verses,
             root_buckwalter=root_buckwalter,
             word_transliterations=word_transliterations,
         )

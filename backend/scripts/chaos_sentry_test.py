@@ -103,7 +103,7 @@ def test_slow_query():
     print("TEST: Slow Query (35s)")
     print("=" * 60)
 
-    with sentry_sdk.start_transaction(op="test", name="chaos-slow-query") as txn:
+    with sentry_sdk.start_transaction(op="test", name="chaos-slow-query"):
         with sentry_sdk.start_span(
             op="rag.search", description="Simulated slow search"
         ):

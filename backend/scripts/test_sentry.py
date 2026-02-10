@@ -31,7 +31,6 @@ After running, check Sentry dashboard:
 import sys
 import os
 import argparse
-import time
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -83,9 +82,6 @@ def test_backend_error():
         from app.config import settings
 
         if not sentry_sdk.get_client():
-            from sentry_sdk.integrations.fastapi import FastApiIntegration
-            from sentry_sdk.integrations.starlette import StarletteIntegration
-
             sentry_sdk.init(
                 dsn=settings.sentry_dsn_backend,
                 environment=settings.sentry_environment,
@@ -117,9 +113,9 @@ def test_backend_error():
 
         return True
 
-     except ImportError:
-         print("❌ sentry_sdk not installed. Run: uv add sentry-sdk[fastapi]")
-         return False
+    except ImportError:
+        print("❌ sentry_sdk not installed. Run: uv add sentry-sdk[fastapi]")
+        return False
     except Exception as e:
         print(f"❌ Error: {e}")
         return False
@@ -137,6 +133,7 @@ def test_performance_spans():
     print("=" * 60)
 
     try:
+        import asyncio
         import sentry_sdk
         from src.ultimate_rag import UltimateRAG
 
@@ -160,7 +157,7 @@ def test_performance_spans():
             rag = UltimateRAG(verbose=False)
 
             # Run a simple search
-            results = rag.search_quran("sabır", top_k=3)
+            results = asyncio.run(rag.search_quran("sabır", top_k=3))
 
             transaction.set_data("result_count", len(results))
             print(f"   Search returned {len(results)} results")

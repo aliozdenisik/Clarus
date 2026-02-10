@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402
+# Benchmark script mutates sys.path before local imports.
 """
 E2E Benchmark: Retrieval + Generation
 Tests real queries from test_data.json through the full ComparativeRAG pipeline.
@@ -9,8 +11,7 @@ import sys
 import time
 import re
 from pathlib import Path
-from dataclasses import dataclass
-from typing import List, Dict, Set, Tuple
+from typing import List, Set, Tuple
 from dotenv import load_dotenv
 
 # Load environment variables first
@@ -20,7 +21,6 @@ load_dotenv()
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 
 console = Console()

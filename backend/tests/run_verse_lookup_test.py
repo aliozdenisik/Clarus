@@ -143,7 +143,6 @@ async def run_api_test(client: httpx.AsyncClient, test: TestCase) -> TestResult:
 
                         # Check source
                         expected_source = test.expected.get("source")
-                        actual_source = first_verse.get("source")
 
                         if expected_source == "quran":
                             # Verify surah_id and verses

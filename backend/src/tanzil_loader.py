@@ -278,7 +278,7 @@ if __name__ == "__main__":
         # Show sample verse
         if verses:
             sample = verses[0]
-            print(f"\nSample verse:")
+            print("\nSample verse:")
             print(f"  Surah: {sample['surah_name']} ({sample['surah_number']})")
             print(f"  Verse: {sample['verse_number']}")
             print(f"  Text: {sample['text'][:80]}...")

@@ -38,7 +38,6 @@ from rich.progress import (
     BarColumn,
     MofNCompleteColumn,
 )
-from rich import print as rprint
 
 console = Console()
 
@@ -383,7 +382,7 @@ def rollback_migration():
             cursor.execute('SELECT COUNT(*) FROM "user"')
             user_count = cursor.fetchone()[0]
 
-            console.print(f"\n[yellow]Records to delete:[/yellow]")
+            console.print("\n[yellow]Records to delete:[/yellow]")
             console.print(f"  user_stats: {stats_count}")
             console.print(f"  account: {account_count}")
             console.print(f"  user: {user_count}")
