@@ -12,6 +12,7 @@ Tests the Ultimate RAG Pipeline on the complete Bible including:
 """
 
 import sys
+import asyncio
 from pathlib import Path
 from typing import List, Dict
 from dataclasses import dataclass
@@ -249,7 +250,7 @@ def search_bible(query: str, translation: str = "kjva", top_k: int = 5):
         verbose=False,
     )
 
-    results = rag.search_bible(query, translation=translation, top_k=top_k)
+    results = asyncio.run(rag.search_bible(query, translation=translation, top_k=top_k))
     return results
 
 

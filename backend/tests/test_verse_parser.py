@@ -33,6 +33,12 @@ def get_test_cases(category: str) -> list[dict]:
     return [tc for tc in TEST_DATA["test_cases"] if tc["category"] == category]
 
 
+def assert_parsed(result: ParsedReference | ParseError) -> ParsedReference:
+    """Narrow parser result type to ParsedReference for tests."""
+    assert isinstance(result, ParsedReference)
+    return result
+
+
 class TestQuranSingleVerse:
     """Test Quran single verse parsing."""
 
@@ -218,7 +224,7 @@ class TestParsedReferenceFields:
 
     def test_quran_reference_has_correct_fields(self):
         """Quran reference should populate surah fields."""
-        result = parse_verse_reference("Bakara 183")
+        result = assert_parsed(parse_verse_reference("Bakara 183"))
         assert result.source == "quran"
         assert result.surah_id == 2
         assert result.surah_name == "Bakara"
@@ -231,7 +237,7 @@ class TestParsedReferenceFields:
 
     def test_bible_reference_has_correct_fields(self):
         """Bible reference should populate book fields."""
-        result = parse_verse_reference("Genesis 1:1")
+        result = assert_parsed(parse_verse_reference("Genesis 1:1"))
         assert result.source == "bible"
         assert result.book_id == 1
         assert result.book_name == "Genesis"
@@ -298,15 +304,15 @@ class TestTurkishNormalization:
     def test_turkish_chars_normalized(self):
         """Turkish special characters should be normalized."""
         # Fâtiha with circumflex should match Fatiha
-        result1 = parse_verse_reference("Fâtiha 1")
-        result2 = parse_verse_reference("Fatiha 1")
+        result1 = assert_parsed(parse_verse_reference("Fâtiha 1"))
+        result2 = assert_parsed(parse_verse_reference("Fatiha 1"))
         assert result1.surah_id == result2.surah_id == 1
 
     def test_case_insensitive_turkish(self):
         """Turkish names should be case-insensitive."""
-        result1 = parse_verse_reference("BAKARA 183")
-        result2 = parse_verse_reference("bakara 183")
-        result3 = parse_verse_reference("Bakara 183")
+        result1 = assert_parsed(parse_verse_reference("BAKARA 183"))
+        result2 = assert_parsed(parse_verse_reference("bakara 183"))
+        result3 = assert_parsed(parse_verse_reference("Bakara 183"))
         assert result1.surah_id == result2.surah_id == result3.surah_id == 2
 
 
@@ -315,18 +321,18 @@ class TestBibleBookNames:
 
     def test_numbered_books(self):
         """Books with numbers should parse correctly."""
-        result = parse_verse_reference("1 Samuel 1:1")
+        result = assert_parsed(parse_verse_reference("1 Samuel 1:1"))
         assert result.book_id == 9
         assert result.book_name == "1 Samuel"
 
     def test_multi_word_books(self):
         """Multi-word book names should parse correctly."""
-        result = parse_verse_reference("Song of Solomon 1:1")
+        result = assert_parsed(parse_verse_reference("Song of Solomon 1:1"))
         assert result.book_id == 22
         assert result.book_name == "Song of Solomon"
 
     def test_revelation_full_name(self):
         """Revelation of John should parse correctly."""
-        result = parse_verse_reference("Revelation of John 1:1")
+        result = assert_parsed(parse_verse_reference("Revelation of John 1:1"))
         assert result.book_id == 66
         assert result.book_name == "Revelation of John"

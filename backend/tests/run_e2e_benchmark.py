@@ -11,7 +11,7 @@ import sys
 import time
 import re
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import List, Optional, Set, Tuple
 from dotenv import load_dotenv
 
 # Load environment variables first
@@ -68,7 +68,7 @@ def expand_expected_verses(expected: List[str], source: str) -> Set[str]:
     return all_verses
 
 
-def extract_verse_from_result(result, source: str) -> str:
+def extract_verse_from_result(result, source: str) -> Optional[str]:
     """Extract verse reference from a search result object."""
     # Logic extracted from run_retrieval_accuracy_test.py
     if source == "quran":

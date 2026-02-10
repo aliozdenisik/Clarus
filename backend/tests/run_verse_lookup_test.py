@@ -398,7 +398,7 @@ async def run_regression_test() -> bool:
 
         # Test Quran search
         console.print("\nTesting Quran search: [cyan]sabir[/cyan]", end=" ")
-        quran_results = rag.search_quran("sabir", top_k=5)
+        quran_results = await rag.search_quran("sabir", top_k=5)
 
         if len(quran_results) > 0:
             console.print(f"[green]✓[/green] (found {len(quran_results)} results)")
@@ -408,7 +408,7 @@ async def run_regression_test() -> bool:
 
         # Test Bible search
         console.print("Testing Bible search: [cyan]love[/cyan]", end=" ")
-        bible_results = rag.search_bible("love", top_k=5)
+        bible_results = await rag.search_bible("love", top_k=5)
 
         if len(bible_results) > 0:
             console.print(f"[green]✓[/green] (found {len(bible_results)} results)")
