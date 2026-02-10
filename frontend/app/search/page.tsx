@@ -286,7 +286,7 @@ function SearchContent() {
     }
   }
 
-  const enhanceQuery = async (searchQuery: string) => {
+  const enhanceQuery = async (searchQuery: string): Promise<KeywordSuggestion[] | null> => {
     setIsEnhancing(true)
     try {
       const corpus = activeTab === "quran" ? "quran" : "bible"
@@ -318,17 +318,23 @@ function SearchContent() {
           })
         )
         setKeywords(keywordSuggestions)
+        return keywordSuggestions
       }
+
+      return []
     } catch (error) {
       log.error("Query enhancement failed", { error })
       toast.error("Failed to extract keywords")
+      return null
     } finally {
       setIsEnhancing(false)
     }
   }
 
-  const handleKeywordSearch = () => {
-    if (selectedKeywords.length === 0) {
+  const handleKeywordSearch = (keywordsOverride?: KeywordSuggestion[]) => {
+    const effectiveKeywords = keywordsOverride ?? selectedKeywords
+
+    if (effectiveKeywords.length === 0) {
       toast.error("Please select at least one keyword")
       return
     }
@@ -345,18 +351,20 @@ function SearchContent() {
         url += `&translator=${encodeURIComponent(selectedTranslator)}`
       }
       // Add keywords to URL
-      const keywordTexts = selectedKeywords.map((k) => k.text).join(",")
+      const keywordTexts = effectiveKeywords.map((k) => k.text).join(",")
       url += `&keywords=${encodeURIComponent(keywordTexts)}`
       startStream(url)
     } else {
-      performBatchSearch()
+      performBatchSearch(undefined, effectiveKeywords)
     }
   }
 
   const performBatchSearch = useCallback(
-    async (queryOverride?: string) => {
+    async (queryOverride?: string, keywordsOverride?: KeywordSuggestion[]) => {
       const searchQuery = queryOverride ?? query
       if (!searchQuery.trim()) return
+
+      const keywordsToUse = keywordsOverride ?? selectedKeywords
 
       setIsSearching(true)
       setResults([])
@@ -371,8 +379,8 @@ function SearchContent() {
           body.translator = selectedTranslator
         }
 
-        if (advancedMode && selectedKeywords.length > 0) {
-          body.keywords = selectedKeywords.map((k) => k.text)
+        if (advancedMode && keywordsToUse.length > 0) {
+          body.keywords = keywordsToUse.map((k) => k.text)
         }
 
         let response
@@ -473,9 +481,11 @@ function SearchContent() {
     // If advanced mode is ON and no keywords yet, enhance first
     // (This happens on first submit after toggling advanced mode ON)
     if (advancedMode && keywords.length === 0) {
-      await enhanceQuery(query)
-      toast.info("Keywords extracted. Adjust selection and search again.")
-      return
+      const extractedKeywords = await enhanceQuery(query)
+      if (extractedKeywords && extractedKeywords.length > 0) {
+        handleKeywordSearch(extractedKeywords)
+        return
+      }
     }
 
     // Normal search flow

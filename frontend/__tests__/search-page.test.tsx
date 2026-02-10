@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
-import { vi, describe, it, expect, beforeEach } from "vitest"
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import userEvent from "@testing-library/user-event"
 import { createElement } from "react"
 import type React from "react"
@@ -36,6 +36,7 @@ vi.mock("sonner", () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
+    info: vi.fn(),
   },
 }))
 
@@ -187,6 +188,10 @@ describe("SearchPage", () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    mockKeywordStoreState.advancedMode = false
+    mockKeywordStoreState.keywords = []
+    mockKeywordStoreState.selectedKeywords = []
+    mockKeywordStoreState.isLoading = false
 
     // Default auth state (Better Auth)
     vi.mocked(useSession).mockReturnValue({
@@ -221,6 +226,10 @@ describe("SearchPage", () => {
     vi.mocked(searchBibleApiSearchBiblePost).mockResolvedValue({
       data: { results: [] },
     } as never)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   it("renders search title and input", () => {
@@ -360,6 +369,107 @@ describe("SearchPage", () => {
     await waitFor(() => {
       expect(mockStartStream).toHaveBeenCalledWith(
         expect.stringContaining("/api/stream/search?q=test%20streaming&source=quran")
+      )
+    })
+  })
+
+  it("enhances then performs search in advanced mode without second submit", async () => {
+    mockKeywordStoreState.advancedMode = true
+
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        keywords: [
+          { text: "patience", language: "en", confidence: 0.92, source: "quran" },
+          { text: "prayer", language: "en", confidence: 0.89, source: "quran" },
+        ],
+      }),
+    })
+    vi.stubGlobal("fetch", mockFetch)
+
+    const { container } = render(<SearchPage />)
+
+    const input = screen.getByTestId("search-input")
+    fireEvent.change(input, { target: { value: "patience and prayer" } })
+    fireEvent.submit(container.querySelector("form")!)
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining("/api/search/enhance"),
+        expect.any(Object)
+      )
+    })
+
+    await waitFor(() => {
+      expect(searchQuranApiSearchQuranPost).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({
+            query: "patience and prayer",
+            keywords: ["patience", "prayer"],
+          }),
+        })
+      )
+    })
+  })
+
+  it("enhances then starts streaming search with extracted keywords in advanced mode", async () => {
+    mockKeywordStoreState.advancedMode = true
+    vi.mocked(usePreferencesStore).mockReturnValue({
+      enable_streaming: true,
+    } as never)
+
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        keywords: [
+          { text: "justice", language: "en", confidence: 0.95, source: "quran" },
+          { text: "mercy", language: "en", confidence: 0.91, source: "quran" },
+        ],
+      }),
+    })
+    vi.stubGlobal("fetch", mockFetch)
+
+    const { container } = render(<SearchPage />)
+
+    const input = screen.getByTestId("search-input")
+    fireEvent.change(input, { target: { value: "justice and mercy" } })
+    fireEvent.submit(container.querySelector("form")!)
+
+    await waitFor(() => {
+      expect(mockStartStream).toHaveBeenCalledWith(
+        expect.stringContaining("keywords=justice%2Cmercy")
+      )
+    })
+
+    expect(searchQuranApiSearchQuranPost).not.toHaveBeenCalled()
+  })
+
+  it("falls back to normal search when enhancement fails in advanced mode", async () => {
+    mockKeywordStoreState.advancedMode = true
+
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      json: vi.fn(),
+    })
+    vi.stubGlobal("fetch", mockFetch)
+
+    const { container } = render(<SearchPage />)
+
+    const input = screen.getByTestId("search-input")
+    fireEvent.change(input, { target: { value: "fallback query" } })
+    fireEvent.submit(container.querySelector("form")!)
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("Failed to extract keywords")
+    })
+
+    await waitFor(() => {
+      expect(searchQuranApiSearchQuranPost).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({
+            query: "fallback query",
+          }),
+        })
       )
     })
   })
