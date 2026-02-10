@@ -50,9 +50,17 @@ export default function QuranPage() {
   }, [user, authLoading, router])
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const fetchSurahs = async () => {
       try {
-        const response = await getQuranSurahsApiMetadataQuranSurahsGet()
+        const response = await getQuranSurahsApiMetadataQuranSurahsGet({
+          signal: controller.signal,
+        })
+
+        if (controller.signal.aborted) {
+          return
+        }
 
         const data = response.data as
           | { data?: { surahs?: ApiSurah[] }; surahs?: ApiSurah[] }
@@ -68,16 +76,34 @@ export default function QuranPage() {
           verse_count: s.total_verses || s.verse_count || 0,
           revelation_type: s.type || s.revelation_type || "",
         }))
+
+        if (controller.signal.aborted) {
+          return
+        }
+
         setSurahs(mappedSurahs)
-      } catch {
+      } catch (error) {
+        if (
+          (error instanceof DOMException && error.name === "AbortError") ||
+          (error instanceof Error && error.name === "AbortError")
+        ) {
+          return
+        }
+
         toast.error("Failed to load surahs")
       } finally {
-        setIsLoading(false)
+        if (!controller.signal.aborted) {
+          setIsLoading(false)
+        }
       }
     }
 
     if (user) {
       fetchSurahs()
+    }
+
+    return () => {
+      controller.abort()
     }
   }, [user])
 

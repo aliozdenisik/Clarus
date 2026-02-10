@@ -57,9 +57,11 @@ describe("Old Testament Browse Page", () => {
   it("fetches and displays OT books", async () => {
     render(<OldTestamentPage />)
 
-    expect(getBibleBooksApiMetadataBibleBooksGet).toHaveBeenCalledWith({
-      query: { testament: "old_testament" },
-    })
+    expect(getBibleBooksApiMetadataBibleBooksGet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        query: { testament: "old_testament" },
+      })
+    )
 
     await waitFor(() => {
       expect(screen.getByText("Genesis")).toBeInTheDocument()

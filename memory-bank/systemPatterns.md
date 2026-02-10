@@ -84,6 +84,39 @@
 - **Virtualized long root lists**: `frontend/components/keyword-search/root-browser.tsx` uses `react-window` `List` for root browsing to avoid rendering all root rows at once.
 - **Mousemove DOM-read caching**: `frontend/components/ui/magnetic-button.tsx` caches button bounds on `mouseenter` and reuses the cached rect during pointer movement.
 
+## Frontend Async Cancellation Pattern (Issue #88)
+
+Client-side async work uses explicit lifecycle cancellation to prevent stale state updates:
+
+```
+useEffect or callback starts request
+      │
+      ├─ create AbortController
+      ├─ pass signal to fetch / generated SDK call
+      ├─ on catch: AbortError -> return early
+      ├─ on finally: update loading state only if !signal.aborted
+      └─ cleanup: controller.abort()
+```
+
+SSE retry flow adds unmount-safe guards:
+
+```
+onerror -> schedule reconnect timeout
+      │
+      ├─ store timeout id in ref
+      ├─ check mounted + shouldReconnect flags before retry
+      └─ unmount cleanup clears timeout before closing EventSource
+```
+
+**Key files:**
+- `frontend/lib/hooks/use-sse.ts`
+- `frontend/app/search/page.tsx`
+- `frontend/app/compare/page.tsx`
+- `frontend/app/keyword-search/page.tsx`
+- `frontend/app/{quran,old-testament,new-testament,apocrypha}/page.tsx`
+- `frontend/app/bible/[bookNr]/page.tsx`
+- `frontend/app/quran/[surahId]/page.tsx`
+
 ## Data Flow
 
 ### CLI Search Flow

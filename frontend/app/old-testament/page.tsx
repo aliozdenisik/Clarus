@@ -79,23 +79,44 @@ export default function OldTestamentPage() {
   }, [user, authLoading, router])
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const fetchBooks = async () => {
       try {
         const response = await getBibleBooksApiMetadataBibleBooksGet({
           query: { testament: "old_testament" },
+          signal: controller.signal,
         })
+
+        if (controller.signal.aborted) {
+          return
+        }
+
         const data = response.data as { data?: { books?: Book[] } } | undefined
         setBooks(data?.data?.books || [])
       } catch (error) {
+        if (
+          (error instanceof DOMException && error.name === "AbortError") ||
+          (error instanceof Error && error.name === "AbortError")
+        ) {
+          return
+        }
+
         logger.error("Failed to load books", error, { component: "OldTestamentPage" })
         toast.error("Failed to load books")
       } finally {
-        setIsLoading(false)
+        if (!controller.signal.aborted) {
+          setIsLoading(false)
+        }
       }
     }
 
     if (user) {
       fetchBooks()
+    }
+
+    return () => {
+      controller.abort()
     }
   }, [user])
 

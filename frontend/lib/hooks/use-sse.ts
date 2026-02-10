@@ -63,12 +63,44 @@ export function useSSE(): UseSSEReturn {
   const eventSourceRef = useRef<EventSource | null>(null)
   const currentUrlRef = useRef<string | null>(null)
   const retryCountRef = useRef(0)
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isMountedRef = useRef(true)
+  const shouldReconnectRef = useRef(true)
   const startStreamInternalRef = useRef<((url: string) => void) | null>(null)
 
+  useEffect(() => {
+    isMountedRef.current = true
+
+    return () => {
+      isMountedRef.current = false
+      shouldReconnectRef.current = false
+
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+        reconnectTimeoutRef.current = null
+      }
+
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close()
+        eventSourceRef.current = null
+      }
+    }
+  }, [])
+
   const startStreamInternal = useCallback((url: string) => {
+    if (!isMountedRef.current) {
+      return
+    }
+
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current)
+      reconnectTimeoutRef.current = null
+    }
+
     // Clean up any existing connection
     if (eventSourceRef.current) {
       eventSourceRef.current.close()
+      eventSourceRef.current = null
     }
 
     // Store current URL for reconnection
@@ -87,6 +119,14 @@ export function useSSE(): UseSSEReturn {
        * Expected format: data: {"type": "token", "content": "..."}
        */
       eventSource.onmessage = (event: MessageEvent) => {
+        if (!isMountedRef.current) {
+          eventSource.close()
+          if (eventSourceRef.current === eventSource) {
+            eventSourceRef.current = null
+          }
+          return
+        }
+
         try {
           const message: SSEMessage = JSON.parse(event.data)
 
@@ -95,14 +135,24 @@ export function useSSE(): UseSSEReturn {
           // Close stream on completion
           if (message.type === "complete") {
             eventSource.close()
+            if (eventSourceRef.current === eventSource) {
+              eventSourceRef.current = null
+            }
             setIsStreaming(false)
           }
         } catch (parseError) {
+          if (!isMountedRef.current) {
+            return
+          }
+
           const errorMsg =
             parseError instanceof Error ? parseError.message : "Failed to parse message"
           Sentry.captureException(parseError, { tags: { source: "sse-parse" } })
           setError(errorMsg)
           eventSource.close()
+          if (eventSourceRef.current === eventSource) {
+            eventSourceRef.current = null
+          }
           setIsStreaming(false)
         }
       }
@@ -111,6 +161,10 @@ export function useSSE(): UseSSEReturn {
        * Handle connection open
        */
       eventSource.onopen = () => {
+        if (!isMountedRef.current) {
+          return
+        }
+
         setError(null)
         retryCountRef.current = 0
       }
@@ -121,6 +175,13 @@ export function useSSE(): UseSSEReturn {
       eventSource.onerror = (event: Event) => {
         const eventSource = event.target as EventSource
         eventSource.close()
+        if (eventSourceRef.current === eventSource) {
+          eventSourceRef.current = null
+        }
+
+        if (!isMountedRef.current || !shouldReconnectRef.current) {
+          return
+        }
 
         if (eventSource.readyState === EventSource.CLOSED) {
           // Check if we should retry
@@ -132,9 +193,15 @@ export function useSSE(): UseSSEReturn {
               description: `Reconnecting... (${retryCountRef.current + 1}/${MAX_RETRIES})`,
             })
 
-            setTimeout(() => {
+            reconnectTimeoutRef.current = setTimeout(() => {
+              reconnectTimeoutRef.current = null
+
+              if (!isMountedRef.current || !shouldReconnectRef.current || !currentUrlRef.current) {
+                return
+              }
+
               retryCountRef.current += 1
-              startStreamInternalRef.current?.(currentUrlRef.current!)
+              startStreamInternalRef.current?.(currentUrlRef.current)
             }, delay)
           } else {
             // Max retries reached - fall back to POST
@@ -150,6 +217,10 @@ export function useSSE(): UseSSEReturn {
         }
       }
     } catch (err) {
+      if (!isMountedRef.current) {
+        return
+      }
+
       const errorMsg = err instanceof Error ? err.message : "Failed to start stream"
       Sentry.captureException(err, { tags: { source: "sse-init" } })
       setError(errorMsg)
@@ -164,6 +235,17 @@ export function useSSE(): UseSSEReturn {
 
   const startStream = useCallback(
     (url: string) => {
+      if (!isMountedRef.current) {
+        return
+      }
+
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current)
+        reconnectTimeoutRef.current = null
+      }
+
+      shouldReconnectRef.current = true
+
       // Reset state for new stream
       setData([])
       setError(null)
@@ -176,11 +258,22 @@ export function useSSE(): UseSSEReturn {
   )
 
   const stopStream = useCallback(() => {
+    shouldReconnectRef.current = false
+    currentUrlRef.current = null
+
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current)
+      reconnectTimeoutRef.current = null
+    }
+
     if (eventSourceRef.current) {
       eventSourceRef.current.close()
       eventSourceRef.current = null
     }
-    setIsStreaming(false)
+
+    if (isMountedRef.current) {
+      setIsStreaming(false)
+    }
   }, [])
 
   return {

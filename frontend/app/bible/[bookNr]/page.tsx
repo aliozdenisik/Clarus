@@ -77,7 +77,7 @@ export default function BookDetailPage() {
 
   // Fetch book details + initial chapter in parallel (eliminates sequential waterfall)
   useEffect(() => {
-    let cancelled = false
+    const controller = new AbortController()
 
     const fetchInitialData = async () => {
       const chapterParam = searchParams.get("chapter")
@@ -87,17 +87,26 @@ export default function BookDetailPage() {
         const [bookRes, chapterRes] = await Promise.all([
           fetch(`${API_BASE}/api/metadata/bible/books/${bookNr}`, {
             credentials: "include",
+            signal: controller.signal,
           }),
           fetch(`${API_BASE}/api/metadata/bible/books/${bookNr}/chapters/${targetChapter}`, {
             credentials: "include",
+            signal: controller.signal,
           }),
         ])
 
-        if (cancelled) return
+        if (controller.signal.aborted) {
+          return
+        }
 
         if (!bookRes.ok) throw new Error("Failed to fetch book")
 
         const bookData = await bookRes.json()
+
+        if (controller.signal.aborted) {
+          return
+        }
+
         setBook(bookData.data?.book || null)
 
         if (bookData.data?.book?.chapters?.length > 0) {
@@ -106,12 +115,21 @@ export default function BookDetailPage() {
 
         if (chapterRes.ok) {
           const chapterData = await chapterRes.json()
-          if (!cancelled) setChapterContent(chapterData.data || null)
+          if (!controller.signal.aborted) {
+            setChapterContent(chapterData.data || null)
+          }
         }
-      } catch {
-        if (!cancelled) toast.error("Failed to load book")
+      } catch (error) {
+        if (
+          (error instanceof DOMException && error.name === "AbortError") ||
+          (error instanceof Error && error.name === "AbortError")
+        ) {
+          return
+        }
+
+        toast.error("Failed to load book")
       } finally {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setIsLoadingBook(false)
           setIsLoadingChapter(false)
         }
@@ -125,7 +143,7 @@ export default function BookDetailPage() {
     }
 
     return () => {
-      cancelled = true
+      controller.abort()
     }
   }, [user, bookNr, searchParams])
 
@@ -146,25 +164,39 @@ export default function BookDetailPage() {
       return
     }
 
-    let cancelled = false
+    const controller = new AbortController()
 
     const fetchChapter = async () => {
       setIsLoadingChapter(true)
       try {
         const response = await fetch(
           `${API_BASE}/api/metadata/bible/books/${bookNr}/chapters/${selectedChapter}`,
-          { credentials: "include" }
+          { credentials: "include", signal: controller.signal }
         )
 
-        if (cancelled) return
+        if (controller.signal.aborted) {
+          return
+        }
+
         if (!response.ok) throw new Error("Failed to fetch chapter")
 
         const data = await response.json()
-        if (!cancelled) setChapterContent(data.data || null)
-      } catch {
-        if (!cancelled) toast.error("Failed to load chapter")
+        if (!controller.signal.aborted) {
+          setChapterContent(data.data || null)
+        }
+      } catch (error) {
+        if (
+          (error instanceof DOMException && error.name === "AbortError") ||
+          (error instanceof Error && error.name === "AbortError")
+        ) {
+          return
+        }
+
+        toast.error("Failed to load chapter")
       } finally {
-        if (!cancelled) setIsLoadingChapter(false)
+        if (!controller.signal.aborted) {
+          setIsLoadingChapter(false)
+        }
       }
     }
 
@@ -173,7 +205,7 @@ export default function BookDetailPage() {
     }
 
     return () => {
-      cancelled = true
+      controller.abort()
     }
   }, [user, bookNr, selectedChapter, chapterContent?.chapter])
 

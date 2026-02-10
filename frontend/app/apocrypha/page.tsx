@@ -36,24 +36,50 @@ export default function ApocryphaPage() {
   }, [user, authLoading, router])
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const fetchBooks = async () => {
       try {
         const response = await fetch(`${API_BASE}/api/metadata/bible/books?testament=apocrypha`, {
           credentials: "include",
+          signal: controller.signal,
         })
+
+        if (controller.signal.aborted) {
+          return
+        }
+
         if (!response.ok) throw new Error("Failed to fetch books")
         const data = await response.json()
+
+        if (controller.signal.aborted) {
+          return
+        }
+
         setBooks(data.data?.books || [])
       } catch (error) {
+        if (
+          (error instanceof DOMException && error.name === "AbortError") ||
+          (error instanceof Error && error.name === "AbortError")
+        ) {
+          return
+        }
+
         logger.error("Failed to load books", error, { component: "ApocryphaPage" })
         toast.error("Failed to load books")
       } finally {
-        setIsLoading(false)
+        if (!controller.signal.aborted) {
+          setIsLoading(false)
+        }
       }
     }
 
     if (user) {
       fetchBooks()
+    }
+
+    return () => {
+      controller.abort()
     }
   }, [user])
 

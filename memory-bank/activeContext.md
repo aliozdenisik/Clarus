@@ -4,6 +4,43 @@
 
 **Date**: 2026-02-10
 
+## Issue #88: AbortController Lifecycle Guards — COMPLETED ✅
+
+**Date**: 2026-02-10
+**Branch**: `issue-88/abortcontroller-race`
+**PR**: [#127](https://github.com/aliozdenisik/Clarus/pull/127)
+
+Eliminated frontend race conditions from late async responses and SSE retries by adding unmount-safe cancellation and retry guards.
+
+### Implementation Summary
+
+- Added `AbortController` cancellation in search, compare, keyword-search, browse pages, and verse detail pages.
+- Added abort-aware error handling (`AbortError` early return) and guarded `finally` state updates.
+- Hardened `use-sse` retry lifecycle with mounted/reconnect refs and pending-timeout cleanup on unmount.
+- Updated `old-testament` test assertion to accept SDK call options containing `signal`.
+
+### Verification
+
+- `npx tsc --noEmit` ✅
+- `npm test -- --run __tests__/use-sse.test.tsx __tests__/search-page.test.tsx __tests__/compare-page.test.tsx __tests__/keyword-search-page.test.tsx __tests__/quran.test.tsx __tests__/old-testament.test.tsx __tests__/new-testament.test.tsx __tests__/apocrypha.test.tsx` ✅
+- `npm test -- --run` ✅ (19 files, 231 tests passed)
+- `npm run lint` ✅
+- `npm run build` ✅
+
+### Key files updated
+
+- `frontend/lib/hooks/use-sse.ts`
+- `frontend/app/search/page.tsx`
+- `frontend/app/compare/page.tsx`
+- `frontend/app/keyword-search/page.tsx`
+- `frontend/app/quran/page.tsx`
+- `frontend/app/old-testament/page.tsx`
+- `frontend/app/new-testament/page.tsx`
+- `frontend/app/apocrypha/page.tsx`
+- `frontend/app/bible/[bookNr]/page.tsx`
+- `frontend/app/quran/[surahId]/page.tsx`
+- `frontend/__tests__/old-testament.test.tsx`
+
 ## Comprehensive Pre-Commit Hooks — COMPLETED ✅
 
 **Date**: 2026-02-10
