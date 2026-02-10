@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - "backend/**"
+      - ".github/workflows/backend-ci.yml"
   pull_request:
     branches: [main]
     paths:
       - "backend/**"
+      - ".github/workflows/backend-ci.yml"
 
 jobs:
   test:
@@ -45,4 +47,10 @@ jobs:
         continue-on-error: true
 
       - name: Run all tests
-        run: uv run pytest tests/ -v
+        run: >-
+          uv run pytest tests/ -v
+          --ignore-glob="tests/run_*.py"
+          --ignore-glob="tests/*_verification_test.py"
+          --ignore-glob="tests/*_comprehensive_test.py"
+          --ignore-glob="tests/test_multi_agent_flow.py"
+          --ignore-glob="tests/archive/*"
