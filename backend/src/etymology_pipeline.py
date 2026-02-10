@@ -30,6 +30,8 @@ from src.circuit_breaker import llm_with_breaker
 from src.lane_lexicon import LaneLexiconAdapter
 
 if TYPE_CHECKING:
+    from sqlalchemy.engine import Connection
+
     from src.lane_lexicon import LaneEntry
 
 logger = logging.getLogger(__name__)
@@ -210,7 +212,8 @@ def extract_morphological_forms(root: str, words: list[object]) -> list[dict[str
 
 
 async def _fetch_root_frequency_rows(database_dsn: str) -> list[RootInfo]:
-    conn = await asyncpg.connect(database_dsn)
+    normalized_dsn = database_dsn.replace("postgresql+asyncpg://", "postgresql://")
+    conn = await asyncpg.connect(normalized_dsn)
     try:
         rows = await conn.fetch(
             """
@@ -269,10 +272,12 @@ class EtymologyPipeline:
         self.db_url = db_url
         self._asyncpg_dsn = self._normalize_asyncpg_dsn(db_url)
         self._sqlalchemy_dsn = self._normalize_sqlalchemy_dsn(db_url)
+        self._engine = create_engine(self._sqlalchemy_dsn, future=True)
         self.batch_size = batch_size
         self.dry_run = dry_run
         self.openrouter_api_key = openrouter_api_key
         self.export_dir = ETYMOLOGY_EXPORT_DIR
+        self._forms_connection: Connection | None = None
 
         self.lane_adapter: LaneLexiconAdapter | None = None
         if lane_db_path is not None:
@@ -293,95 +298,112 @@ class EtymologyPipeline:
 
     def run(self) -> PipelineResult:
         """Run full ETL pipeline (synchronous)."""
-        roots = self._extract_roots()
-        processed_rows: list[dict[str, object]] = []
+        try:
+            roots = self._extract_roots()
+            processed_rows: list[dict[str, object]] = []
 
-        for root in roots:
-            lane_entry = self._match_lane(root)
-            forms = self._extract_forms(root.root)
-            confidence = self._assign_confidence(lane_entry)
+            with self._engine.connect() as forms_connection:
+                self._forms_connection = forms_connection
 
-            root_buckwalter = root.root_buckwalter or arabic_to_buckwalter(root.root)
-            row: dict[str, object] = {
-                "root": root.root,
-                "root_buckwalter": root_buckwalter,
-                "definition_en": lane_entry.definition_en if lane_entry else None,
-                "definition_tr": None,
-                "semantic_field": None,
-                "morphological_forms": forms if forms else None,
-                "related_roots": None,
-                "quran_frequency": root.frequency,
-                "source": "lane" if lane_entry else "corpus_only",
-                "lane_match_type": lane_entry.match_type if lane_entry else None,
-                "lane_volume": lane_entry.volume if lane_entry else None,
-                "confidence": confidence,
-                "tr_translation_source": None,
-                "tr_translation_confidence": None,
-            }
-            processed_rows.append(row)
+                for root in roots:
+                    lane_entry = self._match_lane(root)
+                    forms = self._extract_forms(root.root)
+                    confidence = self._assign_confidence(lane_entry)
 
-        lane_rows = [row for row in processed_rows if row["source"] == "lane"]
-        translated_lane_rows = self._translate_batch(lane_rows)
-        translated_by_root = {row["root"]: row for row in translated_lane_rows}
+                    root_buckwalter = root.root_buckwalter or arabic_to_buckwalter(root.root)
+                    row: dict[str, object] = {
+                        "root": root.root,
+                        "root_buckwalter": root_buckwalter,
+                        "definition_en": lane_entry.definition_en if lane_entry else None,
+                        "definition_tr": None,
+                        "semantic_field": None,
+                        "morphological_forms": forms if forms else None,
+                        "related_roots": None,
+                        "quran_frequency": root.frequency,
+                        "source": "lane" if lane_entry else "corpus_only",
+                        "lane_match_type": lane_entry.match_type if lane_entry else None,
+                        "lane_volume": lane_entry.volume if lane_entry else None,
+                        "confidence": confidence,
+                        "tr_translation_source": None,
+                        "tr_translation_confidence": None,
+                    }
+                    processed_rows.append(row)
 
-        final_rows: list[dict[str, object]] = []
-        for row in processed_rows:
-            translated = translated_by_root.get(str(row["root"]))
-            if translated is not None:
-                row["definition_tr"] = translated.get("definition_tr")
-                row["tr_translation_confidence"] = translated.get("tr_translation_confidence")
-                row["tr_translation_source"] = translated.get("tr_translation_source")
-            final_rows.append(row)
+            self._forms_connection = None
 
-        inserted_rows = 0
-        if not self.dry_run:
-            inserted_rows = self._insert_batch(final_rows)
-        else:
-            inserted_rows = len(final_rows)
+            lane_rows = [row for row in processed_rows if row["source"] == "lane"]
+            translated_lane_rows = self._translate_batch(lane_rows)
+            translated_by_root = {row["root"]: row for row in translated_lane_rows}
 
-        self._export_validation(final_rows)
+            final_rows: list[dict[str, object]] = []
+            for row in processed_rows:
+                translated = translated_by_root.get(str(row["root"]))
+                if translated is not None:
+                    row["definition_tr"] = translated.get("definition_tr")
+                    row["tr_translation_confidence"] = translated.get("tr_translation_confidence")
+                    row["tr_translation_source"] = translated.get("tr_translation_source")
+                final_rows.append(row)
 
-        lane_matches = sum(1 for row in final_rows if row["source"] == "lane")
-        high_count = sum(1 for row in final_rows if row["confidence"] == "high")
-        medium_count = sum(1 for row in final_rows if row["confidence"] == "medium")
-        corpus_only_count = sum(1 for row in final_rows if row["source"] == "corpus_only")
-        forms_available = sum(1 for row in final_rows if row["morphological_forms"] is not None)
-        turkish_translations = sum(1 for row in final_rows if row["definition_tr"] is not None)
-        low_conf_translations = sum(
-            1
-            for row in final_rows
-            if isinstance(row["tr_translation_confidence"], float) and row["tr_translation_confidence"] < 0.80
-        )
+            inserted_rows = 0
+            if not self.dry_run:
+                inserted_rows = self._insert_batch(final_rows)
+            else:
+                inserted_rows = len(final_rows)
 
-        total_roots = len(final_rows)
-        lane_pct = (lane_matches / total_roots * 100.0) if total_roots else 0.0
-        corpus_pct = (corpus_only_count / total_roots * 100.0) if total_roots else 0.0
-        forms_pct = (forms_available / total_roots * 100.0) if total_roots else 0.0
-        tr_pct = (turkish_translations / lane_matches * 100.0) if lane_matches else 0.0
-        low_conf_pct = (low_conf_translations / turkish_translations * 100.0) if turkish_translations else 0.0
+            self._export_validation(final_rows)
 
-        logger.info("═══ Etymology Pipeline Complete ═══")
-        logger.info("Total roots: %s", total_roots)
-        logger.info(
-            "Lane matches: %s (%.1f%%) — high: %s, medium: %s", lane_matches, lane_pct, high_count, medium_count
-        )
-        logger.info("Corpus-only: %s (%.1f%%)", corpus_only_count, corpus_pct)
-        logger.info("Morphological forms: %s roots (%.1f%%)", forms_available, forms_pct)
-        logger.info("Turkish translations: %s (%.1f%% of Lane matches)", turkish_translations, tr_pct)
-        logger.info("Low-confidence translations: %s (%.1f%%)", low_conf_translations, low_conf_pct)
+            lane_matches = sum(1 for row in final_rows if row["source"] == "lane")
+            high_count = sum(1 for row in final_rows if row["confidence"] == "high")
+            medium_count = sum(1 for row in final_rows if row["confidence"] == "medium")
+            corpus_only_count = sum(1 for row in final_rows if row["source"] == "corpus_only")
+            forms_available = sum(1 for row in final_rows if row["morphological_forms"] is not None)
+            turkish_translations = sum(1 for row in final_rows if row["definition_tr"] is not None)
+            low_conf_translations = sum(
+                1
+                for row in final_rows
+                if isinstance(row["tr_translation_confidence"], float) and row["tr_translation_confidence"] < 0.80
+            )
 
-        return PipelineResult(
-            success=True,
-            total_roots=total_roots,
-            inserted_rows=inserted_rows,
-            lane_matches=lane_matches,
-            lane_high_confidence=high_count,
-            lane_medium_confidence=medium_count,
-            corpus_only=corpus_only_count,
-            forms_available=forms_available,
-            turkish_translations=turkish_translations,
-            low_confidence_translations=low_conf_translations,
-        )
+            total_roots = len(final_rows)
+            lane_pct = (lane_matches / total_roots * 100.0) if total_roots else 0.0
+            corpus_pct = (corpus_only_count / total_roots * 100.0) if total_roots else 0.0
+            forms_pct = (forms_available / total_roots * 100.0) if total_roots else 0.0
+            tr_pct = (turkish_translations / lane_matches * 100.0) if lane_matches else 0.0
+            low_conf_pct = (low_conf_translations / turkish_translations * 100.0) if turkish_translations else 0.0
+
+            logger.info("═══ Etymology Pipeline Complete ═══")
+            logger.info("Total roots: %s", total_roots)
+            logger.info(
+                "Lane matches: %s (%.1f%%) — high: %s, medium: %s",
+                lane_matches,
+                lane_pct,
+                high_count,
+                medium_count,
+            )
+            logger.info("Corpus-only: %s (%.1f%%)", corpus_only_count, corpus_pct)
+            logger.info("Morphological forms: %s roots (%.1f%%)", forms_available, forms_pct)
+            logger.info("Turkish translations: %s (%.1f%% of Lane matches)", turkish_translations, tr_pct)
+            logger.info("Low-confidence translations: %s (%.1f%%)", low_conf_translations, low_conf_pct)
+
+            return PipelineResult(
+                success=True,
+                total_roots=total_roots,
+                inserted_rows=inserted_rows,
+                lane_matches=lane_matches,
+                lane_high_confidence=high_count,
+                lane_medium_confidence=medium_count,
+                corpus_only=corpus_only_count,
+                forms_available=forms_available,
+                turkish_translations=turkish_translations,
+                low_confidence_translations=low_conf_translations,
+            )
+        finally:
+            self._forms_connection = None
+            self.close()
+
+    def close(self) -> None:
+        """Dispose shared SQLAlchemy engine."""
+        self._engine.dispose()
 
     def _extract_roots(self) -> list[RootInfo]:
         """Get all unique roots with frequency from qm_words."""
@@ -401,26 +423,39 @@ class EtymologyPipeline:
 
     def _extract_forms(self, root: str) -> list[dict[str, object]]:
         """Extract morphological forms for a root."""
-        engine = create_engine(self._sqlalchemy_dsn, future=True)
-        try:
-            with engine.connect() as conn:
-                rows = (
-                    conn.execute(
-                        text(
-                            """
-                            SELECT token, token_clean, pos_tag, features
-                            FROM qm_words
-                            WHERE root = :root
-                            """
-                        ),
-                        {"root": root},
-                    )
-                    .mappings()
-                    .all()
+        if self._forms_connection is not None:
+            rows = (
+                self._forms_connection.execute(
+                    text(
+                        """
+                        SELECT token, token_clean, pos_tag, features
+                        FROM qm_words
+                        WHERE root = :root
+                        """
+                    ),
+                    {"root": root},
                 )
+                .mappings()
+                .all()
+            )
             return extract_morphological_forms(root, list(rows))
-        finally:
-            engine.dispose()
+
+        with self._engine.connect() as conn:
+            rows = (
+                conn.execute(
+                    text(
+                        """
+                        SELECT token, token_clean, pos_tag, features
+                        FROM qm_words
+                        WHERE root = :root
+                        """
+                    ),
+                    {"root": root},
+                )
+                .mappings()
+                .all()
+            )
+        return extract_morphological_forms(root, list(rows))
 
     @retry(
         stop=stop_after_attempt(3),
@@ -550,69 +585,65 @@ class EtymologyPipeline:
         if not rows:
             return 0
 
-        engine = create_engine(self._sqlalchemy_dsn, future=True)
-        try:
-            inserted = 0
-            with engine.begin() as conn:
-                conn.execute(text("TRUNCATE TABLE qm_root_etymologies RESTART IDENTITY"))
+        inserted = 0
+        with self._engine.begin() as conn:
+            conn.execute(text("TRUNCATE TABLE qm_root_etymologies RESTART IDENTITY"))
 
-                for start in range(0, len(rows), self.batch_size):
-                    batch = rows[start : start + self.batch_size]
-                    prepared_batch: list[dict[str, object]] = []
-                    for row in batch:
-                        prepared_row = dict(row)
-                        morph_forms = prepared_row.get("morphological_forms")
-                        related_roots = prepared_row.get("related_roots")
-                        prepared_row["morphological_forms"] = (
-                            json.dumps(morph_forms, ensure_ascii=False) if morph_forms is not None else None
-                        )
-                        prepared_row["related_roots"] = (
-                            json.dumps(related_roots, ensure_ascii=False) if related_roots is not None else None
-                        )
-                        prepared_batch.append(prepared_row)
-
-                    conn.execute(
-                        text(
-                            """
-                            INSERT INTO qm_root_etymologies (
-                                root,
-                                root_buckwalter,
-                                definition_en,
-                                definition_tr,
-                                semantic_field,
-                                morphological_forms,
-                                related_roots,
-                                quran_frequency,
-                                source,
-                                lane_match_type,
-                                lane_volume,
-                                confidence,
-                                tr_translation_source,
-                                tr_translation_confidence
-                            ) VALUES (
-                                :root,
-                                :root_buckwalter,
-                                :definition_en,
-                                :definition_tr,
-                                :semantic_field,
-                                CAST(:morphological_forms AS JSON),
-                                CAST(:related_roots AS JSON),
-                                :quran_frequency,
-                                :source,
-                                :lane_match_type,
-                                :lane_volume,
-                                :confidence,
-                                :tr_translation_source,
-                                :tr_translation_confidence
-                            )
-                            """
-                        ),
-                        prepared_batch,
+            for start in range(0, len(rows), self.batch_size):
+                batch = rows[start : start + self.batch_size]
+                prepared_batch: list[dict[str, object]] = []
+                for row in batch:
+                    prepared_row = dict(row)
+                    morph_forms = prepared_row.get("morphological_forms")
+                    related_roots = prepared_row.get("related_roots")
+                    prepared_row["morphological_forms"] = (
+                        json.dumps(morph_forms, ensure_ascii=False) if morph_forms is not None else None
                     )
-                    inserted += len(batch)
-            return inserted
-        finally:
-            engine.dispose()
+                    prepared_row["related_roots"] = (
+                        json.dumps(related_roots, ensure_ascii=False) if related_roots is not None else None
+                    )
+                    prepared_batch.append(prepared_row)
+
+                conn.execute(
+                    text(
+                        """
+                        INSERT INTO qm_root_etymologies (
+                            root,
+                            root_buckwalter,
+                            definition_en,
+                            definition_tr,
+                            semantic_field,
+                            morphological_forms,
+                            related_roots,
+                            quran_frequency,
+                            source,
+                            lane_match_type,
+                            lane_volume,
+                            confidence,
+                            tr_translation_source,
+                            tr_translation_confidence
+                        ) VALUES (
+                            :root,
+                            :root_buckwalter,
+                            :definition_en,
+                            :definition_tr,
+                            :semantic_field,
+                            CAST(:morphological_forms AS JSON),
+                            CAST(:related_roots AS JSON),
+                            :quran_frequency,
+                            :source,
+                            :lane_match_type,
+                            :lane_volume,
+                            :confidence,
+                            :tr_translation_source,
+                            :tr_translation_confidence
+                        )
+                        """
+                    ),
+                    prepared_batch,
+                )
+                inserted += len(batch)
+        return inserted
 
     def _export_validation(self, results: list[dict[str, object]]) -> None:
         """Export validation JSON files to backend/data/etymology/."""
