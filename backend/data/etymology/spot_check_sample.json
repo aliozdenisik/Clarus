@@ -708,7 +708,7 @@
   {
     "root": "نهي",
     "root_buckwalter": "nhy",
-    "definition_en": "1 نَهَاهُ عَنْهُ ذ He forbade him it. -b2- لَاتُسْهَى وَلَا تُنْهَى : see art. سهى , in two places.",
+    "definition_en": null,
     "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
@@ -755,10 +755,10 @@
     ],
     "related_roots": null,
     "quran_frequency": 56,
-    "source": "lane",
-    "lane_match_type": "exact",
-    "lane_volume": 8,
-    "confidence": "medium",
+    "source": "corpus_only",
+    "lane_match_type": null,
+    "lane_volume": null,
+    "confidence": "low",
     "tr_translation_source": null,
     "tr_translation_confidence": null
   },
@@ -995,7 +995,7 @@
   {
     "root": "مري",
     "root_buckwalter": "mry",
-    "definition_en": "1 الرِّيحُ تَمْرِى السَّحَابَ ذ and The wind draws forth the clouds. (M, TA.) See an ex. in a verse cited voce عَزْلَآءُ .",
+    "definition_en": null,
     "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
@@ -1042,10 +1042,10 @@
     ],
     "related_roots": null,
     "quran_frequency": 20,
-    "source": "lane",
-    "lane_match_type": "exact",
-    "lane_volume": 8,
-    "confidence": "medium",
+    "source": "corpus_only",
+    "lane_match_type": null,
+    "lane_volume": null,
+    "confidence": "low",
     "tr_translation_source": null,
     "tr_translation_confidence": null
   },
@@ -1135,7 +1135,7 @@
   {
     "root": "رقي",
     "root_buckwalter": "rqy",
-    "definition_en": "1 رَقِىَ ذ , aor. يَرْقَى , inf. n. رُقِىٌّ (JK, K, TA, [but this inf. n. is omitted in the CK,]) and رَقْىٌ , (K, TA, [but this is omitted in my MS. copy of the K,]) He ascended, إِلَيْهِ [ to him, or it ]; as also , and : (K:) or he ascended a ladder, or a stair: (JK:) or رَقِيتُ فِيهِ , (S, Msb, in the Mgh رَقِىَ فيه ,) inf. n. رُقِىٌّ (S, Mgh, Msb) and رَقْىٌ ; (S, Msb;) and , (S, Mgh, * Msb,) and ; (Mgh, * Msb;) I ascended it; (S;) namely, a ladder, or a stair, (S, Mgh, Msb,) &c.: (Msb:) and رَقِيتُ الجَبَلَ (Msb,) and السَّطْحَ , (Mgh, Msb, TA,) the verb being thus trans. by itself, (Msb, TA,) without فِى (Mgh,) and likewise with فى , (TA,) I ascended, or mounted, upon the mountain, and upon the house-top: (Msb:) and is in like manner trans. without فى ; whence the saying, لَقَدِ ٱرْتَقَيْتَ صَعْبًا [ Thou hast indeed ascended a difficult place of ascent ]. (Mgh.) -b2- [Hence,] اِرْقَ عَلَى ظَلْعِكَ Ascend thou, and go, [ according to thy limping, or halting, i. e.] as far as thou art able to do so, and impose not upon thyself that which thou art not able to perform. (S, TA. [Some, instead of اِرْقَ , say اِرْقَأْ ; and some, اِرْقِ , from the verb mentioned in the next sentence; and some, ق : see 1 in art. رقأ ; and see also art. ظلع .]) -A2- رَقَاهُ , (JK, S, Mgh, Msb, K,) aor. يَرْقِى , (JK, Mgh, Msb,) inf. n. رُقْيَةٌ (JK, S, Mgh, K) and رَقْى (JK, Mgh, Msb, * K) and رُقِىٌّ (K,) He charmed him, syn. عَوَّذَهُ , (JK, Mgh, Msb,) by [ invoking ] God: (Msb:) and (Mgh) he puffed, or sputtered, upon his charm; syn. نَفَثَ فِى عُوذَتِهِ : (Mgh, K:) [it signifies he charmed him from, or against, such a thing; ( مِنْ كَذَا ;) and also he enchanted him, or fascinated him; by uttering a spell; or by tying knots in a thread, or string, and puffing, or sputtering, upon them; or by both these actions combined: see the last chap. but one of the Kur-án:] the epithet applied to the performer is [meaning Charming; &c.]; (S, Mgh, TA;) and [ A charmer; &c.; or one who habitually practises charming; &c.]: (JK, K, TA:) and the epithet applied to the person who is the object of the performance is [meaning Charmed; &c.]. (JK, TA.) In the saying اِرْقِ عَلَى رَأْسِى مِنَ الصُّدَاعِ , meaning Charm thou me ( عَوِّذْنِى [or rather charm thou my head against the headache ]), the verb is made trans. by means of على because it is as though it implied the meaning of اِقْرّأْ [i. e. “ recite thou ” a spell] and اُنْفُثْ [i. e. “ puff, ” or “ sputter, ” upon knots]. (Mgh.)",
+    "definition_en": null,
     "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
@@ -1174,10 +1174,10 @@
     ],
     "related_roots": null,
     "quran_frequency": 4,
-    "source": "lane",
-    "lane_match_type": "exact",
-    "lane_volume": 3,
-    "confidence": "high",
+    "source": "corpus_only",
+    "lane_match_type": null,
+    "lane_volume": null,
+    "confidence": "low",
     "tr_translation_source": null,
     "tr_translation_confidence": null
   },

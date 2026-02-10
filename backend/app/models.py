@@ -139,6 +139,31 @@ class QMRootEtymology(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class LaneLexiconEntry(Base):
+    __tablename__ = "lane_entries"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    root: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    broot: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    word: Mapped[str | None] = mapped_column(Text, nullable=True)
+    bword: Mapped[str | None] = mapped_column(Text, nullable=True)
+    xml: Mapped[str | None] = mapped_column(Text, nullable=True)
+    page: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    headword: Mapped[str | None] = mapped_column(Text, nullable=True)
+    itype: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
+
+class LaneLexiconRoot(Base):
+    __tablename__ = "lane_roots"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    word: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    bword: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    letter: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    bletter: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    page: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+
 # ---------------------------------------------------------------------------
 # Bible Morphology Tables (bm_*)
 # ---------------------------------------------------------------------------
