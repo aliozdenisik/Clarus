@@ -117,6 +117,28 @@ class QMWord(Base):
     ayah: Mapped["QMAyah"] = relationship(back_populates="words")
 
 
+class QMRootEtymology(Base):
+    __tablename__ = "qm_root_etymologies"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    root: Mapped[str] = mapped_column(String(20), nullable=False, unique=True, index=True)
+    root_buckwalter: Mapped[str] = mapped_column(String(20), nullable=False, unique=True, index=True)
+    definition_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    definition_tr: Mapped[str | None] = mapped_column(Text, nullable=True)
+    semantic_field: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    morphological_forms: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    related_roots: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    quran_frequency: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    source: Mapped[str] = mapped_column(String(50), nullable=False)
+    lane_match_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    lane_volume: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    confidence: Mapped[str] = mapped_column(String(20), nullable=False, default="low")
+    tr_translation_source: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    tr_translation_confidence: Mapped[float | None] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 # ---------------------------------------------------------------------------
 # Bible Morphology Tables (bm_*)
 # ---------------------------------------------------------------------------
