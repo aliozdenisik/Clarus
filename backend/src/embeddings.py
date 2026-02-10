@@ -11,7 +11,8 @@ Optimizations:
 - Circuit breaker for API failures
 """
 
-from typing import List, Tuple
+from collections.abc import Awaitable
+from typing import Any, List, Optional, Tuple
 import os
 import requests
 import hashlib
@@ -24,6 +25,7 @@ import sentry_sdk
 from src.circuit_breaker import embeddings_with_breaker, CircuitBreakerError
 
 # Optional imports for Redis caching
+sync_redis = None
 try:
     import redis as sync_redis
 
