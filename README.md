@@ -61,6 +61,35 @@ Each agent searches its own collection, generates commentary, and the Summary ag
 | **Bible OT** | Hebrew or transliteration (torah, chesed) | Strong's Concordance with Hebrew roots and b/v dual-indexing |
 | **Bible NT** | Greek or transliteration (agape, logos) | Strong's Concordance with Greek lemma mapping |
 
+### Etymology Database
+
+Clarus includes an Arabic root etymology database for all 1,651 Quranic roots, providing definitions, morphological analysis, and cross-references.
+
+| Field | Description | Source |
+|-------|-------------|--------|
+| **Root (Arabic)** | Original Arabic root | Quranic Arabic Corpus v0.4 |
+| **Root (Buckwalter)** | Latin transliteration | Quranic Arabic Corpus v0.4 |
+| **English Definition** | Lane's Lexicon definition | Lane's Arabic-English Lexicon (1863) |
+| **Turkish Definition** | Quranic context translation | LLM-generated (Gemini 2.5 Flash) |
+| **Morphological Forms** | Verb/noun pattern analysis | Extracted from qm_words |
+| **Quran Frequency** | Occurrence count in Quran | Quranic Arabic Corpus v0.4 |
+
+**Data Sources & Citations:**
+
+- **Quranic Arabic Corpus v0.4** — University of Leeds (GNU GPL)
+  - Dukes, K. & Habash, N. (2010). "Morphological Annotation of Quranic Arabic." *LREC 2010*.
+  - 77,429 words, 1,651 unique roots
+- **Lane's Arabic-English Lexicon** — Edward William Lane (1863), digitized by Perseus/Tufts University (GPL-3.0)
+  - 47,919 entries, 5,160 roots in PostgreSQL
+  - Matches 1,337 of 1,651 Quranic roots (81%)
+- **Turkish Translations** — Generated via Google Gemini 2.5 Flash (OpenRouter)
+  - ⚠️ LLM-generated, not manually verified by human scholars
+  - Confidence scores (0.0–1.0) included per translation
+  - Translations use Quranic/Islamic Turkish terminology
+  - 314 corpus-only roots receive LLM-generated definitions (no English source)
+
+> **Note:** The etymology data is GPL-licensed due to the source licenses of the Quranic Arabic Corpus and Lane's Lexicon.
+
 ### Multi-Agent System
 
 | Agent | Collection | Role |
