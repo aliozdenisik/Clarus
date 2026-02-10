@@ -3,6 +3,7 @@ import { jwt } from "better-auth/plugins"
 import { nextCookies } from "better-auth/next-js"
 import { Pool } from "pg"
 import bcrypt from "bcryptjs"
+import { API_BASE } from "@/lib/config"
 
 /**
  * Better Auth server instance configuration
@@ -61,7 +62,7 @@ export const auth = betterAuth({
   // Security: CORS protection
   trustedOrigins: [
     process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000", // Frontend dev server
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000", // Backend API server
+    API_BASE, // Backend API server
   ],
 
   // Base URL for redirects and callbacks
