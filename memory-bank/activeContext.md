@@ -2,7 +2,52 @@
 
 ## Current Work Focus
 
-**Date**: 2026-02-10
+**Date**: 2026-02-11
+
+## Issue #128: Arabic Root Etymology Database — COMPLETED ✅
+
+**Date**: 2026-02-11
+**Branch**: `issue-128-task1-qm-root-etymology`
+
+Built a PostgreSQL etymology database for all 1,651 Quranic Arabic roots with Lane's Lexicon integration, morphological analysis, and LLM-generated Turkish translations.
+
+### Implementation Summary
+
+**Database Schema:**
+- `QMRootEtymology` model with 17 columns (root, buckwalter, definition_en, definition_tr, morphological_forms, etc.)
+- `LaneLexiconEntry` + `LaneLexiconRoot` models for Lane's Lexicon data
+- Alembic migrations for all tables
+
+**ETL Pipeline** (`backend/src/etymology_pipeline.py`):
+- Extracts 1,651 unique roots from `qm_words` (77,429 words)
+- Matches against Lane's Lexicon in PostgreSQL (1,337/1,651 = 81% match rate)
+- Extracts morphological forms (22 Arabic patterns)
+- Translates definitions to Turkish via Gemini 2.5 Flash (parallel, 6 workers)
+- Robust JSON parsing with regex fallback for malformed LLM responses
+- Batch-tolerant circuit breaker (fail_max=20) for ETL workloads
+
+**Data Sources:**
+- Quranic Arabic Corpus v0.4 (University of Leeds, GNU GPL)
+- Lane's Arabic-English Lexicon (1863, Perseus/Tufts, GPL-3.0)
+- Turkish translations: LLM-generated (Gemini 2.5 Flash via OpenRouter)
+
+**Key Files:**
+- `backend/src/etymology_pipeline.py` — ETL pipeline with ThreadPoolExecutor
+- `backend/src/lane_lexicon.py` — Lane's Lexicon adapter (PostgreSQL primary, SQLite fallback)
+- `backend/app/models.py` — QMRootEtymology, LaneLexiconEntry, LaneLexiconRoot models
+- `backend/scripts/populate_etymologies.py` — CLI entry point
+- `backend/scripts/import_lane_lexicon.py` — Lane SQLite → PostgreSQL importer
+- `backend/tests/test_etymology_pipeline.py` — 19 tests
+
+### Commits (8):
+- `c9715d2` feat: QMRootEtymology model + Alembic migration
+- `002b3b4` feat: Lane's Lexicon SQLite adapter
+- `f703883` feat: morphological form parser (22 patterns)
+- `476e3f1` feat: etymology pipeline + CLI script
+- `0306ade` perf: reuse SQLAlchemy engine
+- `2f0bca9` feat: migrate Lane's Lexicon from SQLite to PostgreSQL
+- `bd780f4` fix: test fixes + cleanup
+- `b08d018` perf: parallelize LLM translations with ThreadPoolExecutor
 
 ## Issue #88: AbortController Lifecycle Guards — COMPLETED ✅
 

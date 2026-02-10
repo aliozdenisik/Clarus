@@ -22,6 +22,7 @@
 - [x] Semantic LLM Cache (60-80% API cost reduction)
 - [x] Sentry Observability Documentation (Backend & Frontend)
 - [x] Confidence Scoring Documentation (`docs/CONFIDENCE_SCORING.md`)
+- [x] Arabic root etymology database (Issue #128) — 1,651 roots, Lane's Lexicon, LLM Turkish translations
 
 ### Interfaces
 
@@ -61,6 +62,8 @@
 - [x] Null byte input sanitization (HTTP 500 → graceful 200)
 - [x] 48-vector security test suite passed (SQL injection, XSS, command injection, DoS, Unicode)
 - [x] Better Auth integration — JWKS validator, API key auth, user migration script
+- [x] Etymology ETL pipeline — parallel LLM translations, batch circuit breaker, robust JSON parsing
+- [x] Lane's Lexicon PostgreSQL integration — 47,919 entries, 5,160 roots
 
 ### Frontend (Next.js 15)
 
@@ -200,6 +203,7 @@
 | CLI | Complete | Rich formatting |
 | REST API | Complete | FastAPI + JWT |
 | Keyword Search | Complete | RFC-006: 77,429 words, 1,651 roots |
+| Etymology DB | Complete | 1,651 roots, Lane's Lexicon, Turkish translations |
 | Landing Page | Complete | Utilitarian luxury redesign, non-technical |
 | Frontend | Complete | Next.js 15 + Framer Motion |
 | Docker Setup | Complete | PostgreSQL + Qdrant |
