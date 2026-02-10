@@ -213,7 +213,7 @@ export function LuxuryQuoteCard({
           className="text-6xl font-serif leading-none mb-4 opacity-20"
           style={{ color: accentColor }}
         >
-          "
+          &quot;
         </div>
 
         {/* Quote text */}

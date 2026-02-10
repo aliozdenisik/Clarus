@@ -5,6 +5,7 @@ import {
   Calendar,
   Bell,
 } from "lucide-react";
+import Image from "next/image";
 
 import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
 
@@ -16,9 +17,11 @@ const features = [
     href: "/",
     cta: "Learn more",
     background: (
-      <img
+      <Image
         src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&h=400&fit=crop"
         alt="Abstract gradient background"
+        width={600}
+        height={400}
         className="absolute -right-20 -top-20 opacity-60 object-cover"
       />
     ),
@@ -31,9 +34,11 @@ const features = [
     href: "/",
     cta: "Learn more",
     background: (
-      <img
+      <Image
         src="https://images.unsplash.com/photo-1557683316-973673baf926?w=600&h=400&fit=crop"
         alt="Blue gradient background"
+        width={600}
+        height={400}
         className="absolute -right-20 -top-20 opacity-60 object-cover"
       />
     ),
@@ -46,9 +51,11 @@ const features = [
     href: "/",
     cta: "Learn more",
     background: (
-      <img
+      <Image
         src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=600&h=400&fit=crop"
         alt="Colorful gradient background"
+        width={600}
+        height={400}
         className="absolute -right-20 -top-20 opacity-60 object-cover"
       />
     ),
@@ -61,9 +68,11 @@ const features = [
     href: "/",
     cta: "Learn more",
     background: (
-      <img
+      <Image
         src="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=600&h=400&fit=crop"
         alt="Purple gradient background"
+        width={600}
+        height={400}
         className="absolute -right-20 -top-20 opacity-60 object-cover"
       />
     ),
@@ -77,9 +86,11 @@ const features = [
     href: "/",
     cta: "Learn more",
     background: (
-      <img
+      <Image
         src="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?w=600&h=400&fit=crop"
         alt="Neon gradient background"
+        width={600}
+        height={400}
         className="absolute -right-20 -top-20 opacity-60 object-cover"
       />
     ),

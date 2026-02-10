@@ -86,7 +86,7 @@ export const usePreferencesStore = create<PreferencesState>()(
        try {
          const response = await getPreferencesApiPreferencesGet();
 
-        const data = response.data as any as UserPreferences;
+        const data = response.data as unknown as UserPreferences;
         set({ ...data, isLoading: false, error: null });
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -109,10 +109,10 @@ export const usePreferencesStore = create<PreferencesState>()(
           };
 
           const response = await updatePreferencesApiPreferencesPut({
-            body: preferences as any,
+            body: preferences,
           });
 
-          const data = response.data as any as UserPreferences;
+          const data = response.data as unknown as UserPreferences;
           set({ ...data, isLoading: false, error: null });
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { GlowCard } from "@/components/ui/glow-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen, User, LogOut, ChevronDown } from "lucide-react";
+import { ArrowLeft, BookOpen, User, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -97,7 +97,7 @@ export default function BookDetailPage() {
         if (data.data?.book?.chapters?.length > 0 && !searchParams.get('chapter')) {
           setSelectedChapter(1);
         }
-      } catch (error) {
+      } catch {
         toast.error("Failed to load book");
       } finally {
         setIsLoadingBook(false);
@@ -129,7 +129,7 @@ export default function BookDetailPage() {
 
         const data = await response.json();
         setChapterContent(data.data || null);
-      } catch (error) {
+      } catch {
         toast.error("Failed to load chapter");
       } finally {
         setIsLoadingChapter(false);

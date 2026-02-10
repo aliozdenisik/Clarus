@@ -12,13 +12,14 @@ interface SwitchProps extends React.ComponentPropsWithoutRef<typeof SwitchPrimit
 }
 
 const Switch = React.forwardRef<
-  React.ElementRef<typeof SwitchPrimitive.Root>,
+  React.ComponentRef<typeof SwitchPrimitive.Root>,
   SwitchProps
 >(({ className, label, description, id, ...props }, ref) => {
   const [isChecked, setIsChecked] = React.useState(
     props?.checked ?? props?.defaultChecked ?? false
   );
-  const switchId = id || React.useId();
+  const generatedId = React.useId();
+  const switchId = id ?? generatedId;
 
   React.useEffect(() => {
     if (props?.checked !== undefined) {

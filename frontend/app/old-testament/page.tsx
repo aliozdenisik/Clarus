@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSession, signOut } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useLogger } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 import { getBibleBooksApiMetadataBibleBooksGet } from "@/lib/api/sdk.gen";
 
 interface Book {
@@ -71,7 +71,6 @@ export default function OldTestamentPage() {
    const { data: session, isPending: authLoading } = useSession();
    const user = session?.user;
    const router = useRouter();
-   const log = useLogger("OldTestamentPage");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -85,10 +84,10 @@ export default function OldTestamentPage() {
          const response = await getBibleBooksApiMetadataBibleBooksGet({
            query: { testament: "old_testament" },
          });
-        const data = response.data as any;
-        setBooks(data.data?.books || []);
+         const data = response.data as { data?: { books?: Book[] } } | undefined;
+         setBooks(data?.data?.books || []);
        } catch (error) {
-         log.error("Failed to load books", { error });
+         logger.error("Failed to load books", error, { component: "OldTestamentPage" });
          toast.error("Failed to load books");
        } finally {
         setIsLoading(false);
@@ -98,7 +97,7 @@ export default function OldTestamentPage() {
     if (user) {
       fetchBooks();
     }
-  }, [user, log]);
+  }, [user]);
 
   const handleLogout = async () => {
     await signOut();
@@ -231,7 +230,7 @@ export default function OldTestamentPage() {
 
         {!isLoading && filteredBooks.length === 0 && (
           <div className="text-center py-20 text-[var(--color-text-muted)]">
-            <p>No books found matching "{searchQuery}"</p>
+            <p>No books found matching &quot;{searchQuery}&quot;</p>
           </div>
         )}
       </div>

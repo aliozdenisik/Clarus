@@ -48,7 +48,7 @@ describe('Old Testament Browse Page', () => {
     vi.clearAllMocks();
     vi.mocked(getBibleBooksApiMetadataBibleBooksGet).mockResolvedValue({
       data: { data: { books: mockBooks } },
-    } as any);
+    } as never);
   });
 
   it('fetches and displays OT books', async () => {
@@ -97,7 +97,7 @@ describe('Old Testament Browse Page', () => {
   it('handles empty state or loading', async () => {
     vi.mocked(getBibleBooksApiMetadataBibleBooksGet).mockResolvedValueOnce({
       data: { data: { books: [] } },
-    } as any);
+    } as never);
 
     render(<OldTestamentPage />);
     

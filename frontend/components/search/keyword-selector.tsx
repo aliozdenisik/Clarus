@@ -21,6 +21,7 @@ export function KeywordSelector({
   isLoading,
   onSearch,
 }: KeywordSelectorProps) {
+  void onSearch;
   const [advancedMode, setAdvancedMode] = React.useState(false);
   const [selectedKeywords, setSelectedKeywords] = React.useState<KeywordSuggestion[]>(
     keywords.filter((k) => k.selected)

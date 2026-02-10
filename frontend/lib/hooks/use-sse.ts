@@ -15,14 +15,11 @@ interface SSEMessage {
   status?: string;
   message?: string;
   step?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  verse_details?: any;
+  verse_details?: unknown;
   token?: string;
   done?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  stats?: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data?: any;
+  stats?: unknown;
+  data?: unknown;
 }
 
 /**
