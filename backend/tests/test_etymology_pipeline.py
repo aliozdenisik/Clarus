@@ -1,7 +1,5 @@
 """Tests for Quranic Arabic etymology table schema."""
 
-# pyright: reportMissingImports=false
-
 from collections.abc import AsyncGenerator
 from importlib import import_module
 from pathlib import Path

@@ -12,7 +12,7 @@ from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-import asyncpg  # pyright: ignore[reportMissingImports]
+import asyncpg
 
 logger = logging.getLogger(__name__)
 
