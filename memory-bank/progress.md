@@ -108,6 +108,7 @@
 - [x] Better Auth UI — sign-in/sign-up pages, session management via useSession()
 - [x] **Issue #94 React key stability** (2026-02-09): Replaced index-based keys in dynamic lists and standardized deterministic skeleton keys across search/compare/history/browse/components
 - [x] **Issue #91 frontend perf hotspots** (2026-02-09): Batched vercel-tabs layout measurements, virtualized root-browser with react-window, cached magnetic-button bounds for mousemove
+- [x] **Issue #88 async lifecycle hardening** (2026-02-10): Added AbortController cancellation + AbortError guards across client request paths and unmount-safe SSE retry cleanup in `use-sse`
 
 ### CLI Commands
 
