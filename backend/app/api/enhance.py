@@ -1,32 +1,19 @@
 """REST API endpoint for query enhancement and keyword extraction."""
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
-import os
-import sys
 import time
-from dotenv import load_dotenv
+from typing import Any, Dict, Optional
 
+from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.api.auth import check_rate_limit
+from app.auth.api_key_validator import get_current_user_flexible
+from app.db import get_db
 from app.logging_config import get_logger, log_performance
+from src.query_enhancer import EnhanceResponse, KeywordSuggestion, QueryEnhancer
 
 logger = get_logger(__name__)
-
-# Add backend to path (same pattern as search.py)
-env_path = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"
-)
-load_dotenv(env_path)
-
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
-
-from app.auth.api_key_validator import get_current_user_flexible
-from app.api.auth import check_rate_limit
-from app.db import get_db
-from src.query_enhancer import QueryEnhancer, KeywordSuggestion, EnhanceResponse
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 

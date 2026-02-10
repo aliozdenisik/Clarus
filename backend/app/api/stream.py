@@ -2,45 +2,29 @@
 
 from fastapi import APIRouter, Depends, Query, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import AsyncGenerator, Literal
 import asyncio
 import json
 import logging
 import queue
-import sys
-import os
 import time
 import traceback
-from dotenv import load_dotenv
+from typing import Any, AsyncGenerator, Literal, Optional, cast
 
-logger = logging.getLogger(__name__)
+from sqlalchemy.ext.asyncio import AsyncSession
 
-# Load .env before importing RAG modules
-env_path = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"
-)
-load_dotenv(env_path)
-
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
-
-from typing import Optional
-
-from app.db import get_db
-from app.models import SearchHistory
 from app.api.auth import check_rate_limit
+from app.api.compare import extract_bible_verse_detail, extract_quran_verse_detail
 from app.api.compare_helpers import (
-    build_verse_details,
     build_paragraphs,
+    build_verse_details,
     strip_markdown_headers,
 )
-from app.api.compare import extract_quran_verse_detail, extract_bible_verse_detail
+from app.db import get_db
+from app.models import SearchHistory
 from app.schemas.common import TranslatorType, DEFAULT_TRANSLATOR
-from src.ultimate_rag import UltimateRAG
 from src.comparative_rag import ComparativeRAG
 from src.query_translator import QueryTranslator, TranslationError
+from src.ultimate_rag import UltimateRAG
 
 
 router = APIRouter()
@@ -168,7 +152,7 @@ async def stream_search(
 
             # Extract results and answer from ask_result
             results = ask_result.search_results
-            answer = ask_result.answer
+            answer_obj: Any = ask_result.answer
 
             # Send results count
             yield f"data: {json.dumps({'status': 'found', 'count': len(results)})}\n\n"
@@ -182,14 +166,14 @@ async def stream_search(
 
             # Stream the answer token by token
             # Handle both dict and AnswerResult dataclass responses
-            if hasattr(answer, "text"):
-                answer_text = answer.text
-            elif hasattr(answer, "answer"):
-                answer_text = answer.answer
-            elif isinstance(answer, dict):
-                answer_text = answer.get("answer", "") or answer.get("text", "")
+            if hasattr(answer_obj, "text"):
+                answer_text = getattr(answer_obj, "text")
+            elif hasattr(answer_obj, "answer"):
+                answer_text = getattr(answer_obj, "answer")
+            elif isinstance(answer_obj, dict):
+                answer_text = answer_obj.get("answer", "") or answer_obj.get("text", "")
             else:
-                answer_text = str(answer)
+                answer_text = str(answer_obj)
 
         except Exception as e:
             logger.error(f"[SSE /search] Error during ask: {e}")
@@ -233,10 +217,10 @@ async def stream_search(
 
             logger.info("[SSE /search] Finished streaming words, sending citations")
             # Send citations
-            if hasattr(answer, "citations"):
-                citations = answer.citations
-            elif isinstance(answer, dict):
-                citations = answer.get("citations", [])
+            if hasattr(answer_obj, "citations"):
+                citations = getattr(answer_obj, "citations")
+            elif isinstance(answer_obj, dict):
+                citations = answer_obj.get("citations", [])
             else:
                 citations = []
             yield f"data: {json.dumps({'citations': citations})}\n\n"
@@ -493,7 +477,9 @@ async def stream_compare(
             )
 
             # Build structured paragraphs (using shared helper)
-            paragraphs = build_paragraphs(result, as_dict=True)
+            paragraphs = cast(
+                list[dict[str, Any]], build_paragraphs(result, as_dict=True)
+            )
 
             # Determine detected language for response translation
             detected_language = language  # From query param (may be None)

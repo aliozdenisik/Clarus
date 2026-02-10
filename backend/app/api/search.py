@@ -1,38 +1,26 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
-import sys
-import os
 import time
-from dotenv import load_dotenv
+from typing import Any, Dict, Optional
 
-from app.logging_config import get_logger, log_performance
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-logger = get_logger(__name__)
-
-env_path = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"
-)
-load_dotenv(env_path)
-
-sys.path.insert(
-    0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
-
-from app.db import get_db
-from app.models import SearchHistory
-from app.auth.api_key_validator import get_current_user_flexible
 from app.api.auth import check_rate_limit
-from app.config import settings
-from app.schemas.common import QueryValidation, TranslatorType, DEFAULT_TRANSLATOR
-from src.ultimate_rag import UltimateRAG
 from app.api.compare import (
     VerseDetail,
-    extract_quran_verse_detail,
     extract_bible_verse_detail,
+    extract_quran_verse_detail,
 )
+from app.auth.api_key_validator import get_current_user_flexible
+from app.config import settings
+from app.db import get_db
+from app.logging_config import get_logger, log_performance
+from app.models import SearchHistory
+from app.schemas.common import DEFAULT_TRANSLATOR, QueryValidation, TranslatorType
+from src.ultimate_rag import UltimateRAG
+
+logger = get_logger(__name__)
 
 
 router = APIRouter()

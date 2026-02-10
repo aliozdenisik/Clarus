@@ -33,7 +33,6 @@ from .hebrew_normalizer import (
     normalize_user_hebrew_query,
 )
 from .greek_normalizer import (
-    normalize_greek,
     normalize_greek_transliteration_for_lookup,
     normalize_user_greek_query,
 )
@@ -1827,7 +1826,6 @@ def _strip_transliteration_diacritics(text: str) -> str:
 
 if __name__ == "__main__":
     import asyncio
-    import sys
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 

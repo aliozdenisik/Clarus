@@ -13,7 +13,7 @@ import requests
 import time
 import re
 import sentry_sdk
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 from tenacity import (
     retry,
@@ -215,7 +215,7 @@ Adım 3: JSON formatında ver.
         },
     ]
 
-    def __init__(self, model: str = None, api_key: str = None):
+    def __init__(self, model: Optional[str] = None, api_key: Optional[str] = None):
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
             raise ValueError("OpenRouter API key required.")
@@ -614,7 +614,7 @@ Adım 3: JSON formatında ver.
                 kw.selected = False
 
         logger.info(
-            f"Keyword extraction completed",
+            "Keyword extraction completed",
             extra={
                 "method": extraction_method,
                 "count": len(keywords),

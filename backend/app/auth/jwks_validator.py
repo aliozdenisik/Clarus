@@ -65,7 +65,7 @@ class JWKSValidator:
         self.fallback_cache: TTLCache = TTLCache(maxsize=cache_maxsize, ttl=cache_ttl)
 
         logger.info(
-            f"Initialized JWKS validator",
+            "Initialized JWKS validator",
             extra={
                 "jwks_url": jwks_url,
                 "issuer": issuer,

@@ -23,12 +23,13 @@ from qdrant_client.models import (
     HnswConfigDiff,
     ScalarQuantization,
     ScalarQuantizationConfig,
+    ScalarType,
     PayloadSchemaType,
 )
 
 from .data_loader import QuranChunk
 from .embeddings import DenseEncoder
-from .tanzil_loader import TanzilLoader, VALID_TRANSLATORS
+from .tanzil_loader import VALID_TRANSLATORS
 
 
 class QuranIndexer:
@@ -107,8 +108,8 @@ class QuranIndexer:
         print(
             f"Creating collection {self.collection_name} ({self.translator}) with dense dimension: {dense_dim}"
         )
-        print(f"  HNSW config: m=16, ef_construct=200")
-        print(f"  Quantization: Scalar int8 (75% RAM savings)")
+        print("  HNSW config: m=16, ef_construct=200")
+        print("  Quantization: Scalar int8 (75% RAM savings)")
 
         self.client.create_collection(
             collection_name=self.collection_name,
@@ -122,7 +123,7 @@ class QuranIndexer:
                     ),
                     quantization_config=ScalarQuantization(
                         scalar=ScalarQuantizationConfig(
-                            type="int8", quantile=0.99, always_ram=True
+                            type=ScalarType.INT8, quantile=0.99, always_ram=True
                         )
                     ),
                 )
@@ -244,7 +245,6 @@ class QuranIndexer:
         Returns:
             Number of indexed chunks
         """
-        import asyncio
         from .embeddings import AsyncDenseEncoder
 
         if not self._collection_exists:
@@ -404,8 +404,8 @@ class SemanticChunkIndexer:
         # Get dense vector dimension
         dense_dim = self.encoder.dense_dimension
         print(f"Creating semantic chunks collection with dense dimension: {dense_dim}")
-        print(f"  HNSW config: m=16, ef_construct=200")
-        print(f"  Quantization: Scalar int8 (75% RAM savings)")
+        print("  HNSW config: m=16, ef_construct=200")
+        print("  Quantization: Scalar int8 (75% RAM savings)")
 
         self.client.create_collection(
             collection_name=self.COLLECTION_NAME,
@@ -419,7 +419,7 @@ class SemanticChunkIndexer:
                     ),
                     quantization_config=ScalarQuantization(
                         scalar=ScalarQuantizationConfig(
-                            type="int8", quantile=0.99, always_ram=True
+                            type=ScalarType.INT8, quantile=0.99, always_ram=True
                         )
                     ),
                 )
@@ -569,7 +569,7 @@ class BibleSemanticChunkIndexer:
                     hnsw_config=HnswConfigDiff(m=16, ef_construct=200),
                     quantization_config=ScalarQuantization(
                         scalar=ScalarQuantizationConfig(
-                            type="int8", quantile=0.99, always_ram=True
+                            type=ScalarType.INT8, quantile=0.99, always_ram=True
                         )
                     ),
                 )
@@ -661,7 +661,6 @@ class BibleSemanticChunkIndexer:
         - max_concurrent=10: Parallel API calls for 2-3x speedup
         - upsert_batch_size=500: Bulk Qdrant inserts
         """
-        import asyncio
         from .embeddings import AsyncDenseEncoder
 
         if not self._collection_exists:
@@ -793,8 +792,8 @@ class TurkishBibleIndexer:
         print(
             f"Creating collection {collection_name} with dense dimension: {dense_dim}"
         )
-        print(f"  HNSW config: m=16, ef_construct=200")
-        print(f"  Quantization: Scalar int8 (75% RAM savings)")
+        print("  HNSW config: m=16, ef_construct=200")
+        print("  Quantization: Scalar int8 (75% RAM savings)")
 
         self.client.create_collection(
             collection_name=collection_name,
@@ -808,7 +807,7 @@ class TurkishBibleIndexer:
                     ),
                     quantization_config=ScalarQuantization(
                         scalar=ScalarQuantizationConfig(
-                            type="int8", quantile=0.99, always_ram=True
+                            type=ScalarType.INT8, quantile=0.99, always_ram=True
                         )
                     ),
                 )

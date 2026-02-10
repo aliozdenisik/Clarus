@@ -7,6 +7,7 @@ import uuid
 
 from app.logging_config import get_logger, set_user_id
 
+sentry_sdk = None
 try:
     import sentry_sdk
 
@@ -124,7 +125,11 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 },
             )
             # Don't capture rate limit errors in Sentry (expected behavior)
-            if SENTRY_AVAILABLE and not isinstance(e, RateLimitError):
+            if (
+                SENTRY_AVAILABLE
+                and sentry_sdk is not None
+                and not isinstance(e, RateLimitError)
+            ):
                 sentry_sdk.capture_exception(e)
             return create_error_response(
                 request_id=request_id,
@@ -146,7 +151,7 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
                 exc_info=True,
             )
             # Capture unhandled exceptions in Sentry with user context
-            if SENTRY_AVAILABLE:
+            if SENTRY_AVAILABLE and sentry_sdk is not None:
                 if hasattr(request.state, "user_id") and request.state.user_id:
                     sentry_sdk.set_user({"id": str(request.state.user_id)})
                 sentry_sdk.capture_exception(e)

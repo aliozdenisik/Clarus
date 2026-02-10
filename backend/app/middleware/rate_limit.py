@@ -26,6 +26,23 @@ return current
 """
 
 
+def _to_int(value: object) -> int:
+    """Convert Redis script results to int safely."""
+    if isinstance(value, bytes):
+        try:
+            return int(value.decode())
+        except ValueError:
+            return 0
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError:
+            return 0
+    if isinstance(value, int):
+        return value
+    return 0
+
+
 def get_rate_limit_headers(remaining: int, reset_at: datetime) -> dict[str, str]:
     """
     Generate rate limit headers for response.
@@ -171,10 +188,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
                 # Register and execute Lua script
                 script = redis_manager.client.register_script(RATE_LIMIT_SCRIPT)
-                current_count = await script(
+                current_count_raw = await script(
                     keys=[key],
                     args=[limit, ttl_seconds],
                 )
+                current_count = _to_int(current_count_raw)
 
                 if current_count > limit:
                     request_id = getattr(request.state, "request_id", "unknown")
@@ -217,10 +235,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             script = redis_manager.client.register_script(RATE_LIMIT_SCRIPT)
 
             # Execute Lua script atomically
-            current_count = await script(
+            current_count_raw = await script(
                 keys=[key],
                 args=[settings.rate_limit_per_day, ttl_seconds],
             )
+            current_count = _to_int(current_count_raw)
 
             # Calculate remaining
             remaining = max(0, settings.rate_limit_per_day - current_count)

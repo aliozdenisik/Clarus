@@ -19,8 +19,7 @@ Usage:
 
 import time
 from typing import List, Optional, Any
-from dataclasses import dataclass, field
-from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 
 from src.circuit_breaker import CircuitBreakerError
 from src.query_translator import QueryTranslator, TranslationError
@@ -622,7 +621,7 @@ class UltimateRAG:
                                 except Exception:
                                     pass
                     except Exception:
-                        self._log(f"   Warning: Quran semantic chunks error", "yellow")
+                        self._log("   Warning: Quran semantic chunks error", "yellow")
 
                 # Handle Bible Semantic Chunks
                 elif source.startswith("bible_"):
@@ -678,7 +677,7 @@ class UltimateRAG:
                                 except Exception:
                                     pass
                     except Exception:
-                        self._log(f"   Warning: Bible semantic chunks error", "yellow")
+                        self._log("   Warning: Bible semantic chunks error", "yellow")
 
             # Apply keyword coverage boost: results matching 2+ keywords get boosted
             boosted_results = []
@@ -847,7 +846,7 @@ class UltimateRAG:
                                 except Exception:
                                     pass
                     except Exception:
-                        self._log(f"   Warning: Quran semantic chunks error", "yellow")
+                        self._log("   Warning: Quran semantic chunks error", "yellow")
 
                 # Handle Bible Semantic Chunks
                 elif source.startswith("bible_"):
@@ -903,7 +902,7 @@ class UltimateRAG:
                                 except Exception:
                                     pass
                     except Exception:
-                        self._log(f"   Warning: Bible semantic chunks error", "yellow")
+                        self._log("   Warning: Bible semantic chunks error", "yellow")
 
             # Sort by RRF score and return top results
             sorted_results = sorted(
@@ -941,7 +940,7 @@ class UltimateRAG:
             )
             return merged_results
 
-    def _get_top_results(self, results: List, top_k: int = None) -> List:
+    def _get_top_results(self, results: List, top_k: Optional[int] = None) -> List:
         """
         Step 4: Return top results from Search (RRF)
 
@@ -960,8 +959,10 @@ class UltimateRAG:
         self,
         query: str,
         source: str = "quran_tr_diyanet",
-        top_k: int = None,
-        rerank_query: str = None,  # Optional: use different query for reranking
+        top_k: Optional[int] = None,
+        rerank_query: Optional[
+            str
+        ] = None,  # Optional: use different query for reranking
         detected_language: Optional[str] = None,
         keywords: Optional[List[str]] = None,  # Optional: per-keyword parallel search
     ) -> List:
@@ -1038,7 +1039,7 @@ class UltimateRAG:
         self,
         query: str,
         translator: str = "diyanet",
-        top_k: int = None,
+        top_k: Optional[int] = None,
         detected_language: Optional[str] = None,
     ) -> List:
         """
@@ -1091,10 +1092,10 @@ class UltimateRAG:
     def _search_all_bible_collections(
         self,
         query: str,
-        top_k: int = None,
-        rerank_query: str = None,
+        top_k: Optional[int] = None,
+        rerank_query: Optional[str] = None,
         detected_language: Optional[str] = None,
-        collections: List[str] = None,
+        collections: Optional[List[str]] = None,
     ) -> List:
         """
         Search Bible collections and merge with RRF fusion.
@@ -1191,8 +1192,8 @@ class UltimateRAG:
         self,
         query: str,
         translation: str = "kjva",
-        testament: str = None,
-        top_k: int = None,
+        testament: Optional[str] = None,
+        top_k: Optional[int] = None,
         detected_language: Optional[str] = None,
         language: str = "en",
     ) -> List:
@@ -1283,7 +1284,10 @@ class UltimateRAG:
     # ============= ANSWER GENERATION (RAG) =============
 
     async def ask(
-        self, query: str, source: str = "quran_tr_diyanet", top_k: int = None
+        self,
+        query: str,
+        source: str = "quran_tr_diyanet",
+        top_k: Optional[int] = None,
     ):
         """
         Full RAG Pipeline: Search + Generate Answer with Citations
@@ -1299,7 +1303,6 @@ class UltimateRAG:
         Returns:
             AskResult with answer (AnswerResult) and search_results
         """
-        from src.answer_generator import AnswerResult
 
         top_k = top_k or self.final_top_k
         total_start = time.perf_counter()
@@ -1354,7 +1357,7 @@ class UltimateRAG:
         self,
         query: str,
         translator: str = "diyanet",
-        top_k: int = None,
+        top_k: Optional[int] = None,
         detected_language: Optional[str] = None,
     ):
         """
@@ -1395,8 +1398,8 @@ class UltimateRAG:
         self,
         query: str,
         translation: str = "kjva",
-        testament: str = None,
-        top_k: int = None,
+        testament: Optional[str] = None,
+        top_k: Optional[int] = None,
         detected_language: Optional[str] = None,
     ):
         """
@@ -1443,7 +1446,9 @@ def ultimate_search(
         results = ultimate_search("Kur'an'da şefaat kavramı")
     """
     rag = UltimateRAG(verbose=True)
-    return rag.search(query, source=source, top_k=top_k)
+    import asyncio
+
+    return asyncio.run(rag.search(query, source=source, top_k=top_k))
 
 
 if __name__ == "__main__":
@@ -1466,7 +1471,9 @@ if __name__ == "__main__":
 
     logger.info("--- QURAN TESTS ---")
     for query in test_queries_quran:
-        results = rag.search_quran(query, top_k=3)
+        import asyncio
+
+        results = asyncio.run(rag.search_quran(query, top_k=3))
         logger.info(f"Query: {query}")
         for i, r in enumerate(results, 1):
             # Handle standard PointStruct or SemanticChunkSearchResult
@@ -1493,7 +1500,7 @@ if __name__ == "__main__":
         "God's love and mercy",
     ]
     for query in test_queries_bible:
-        results = rag.search_bible(query, top_k=3)
+        results = asyncio.run(rag.search_bible(query, top_k=3))
         logger.info(f"Query: {query}")
         for i, r in enumerate(results, 1):
             payload = getattr(r, "payload", {}) or {}

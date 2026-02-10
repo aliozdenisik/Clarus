@@ -550,7 +550,7 @@ def parse_oshb_book(
     unmapped_count = 0
 
     # Find the book div
-    book_div = root.find(f".//osis:div[@type='book']", NS)
+    book_div = root.find(".//osis:div[@type='book']", NS)
     if book_div is None:
         log.error("No book div found in %s", xml_path.name)
         return [], []
@@ -1070,7 +1070,7 @@ def validate_and_summarize(conn) -> bool:
     )
     row = result.fetchone()
     if row:
-        print(f"\n  Sample Gen 1:1:")
+        print("\n  Sample Gen 1:1:")
         print(f"    Book: {row[0]}")
         print(f"    Hebrew: {row[3]}")
         print(f"    English: {row[4]}")
@@ -1089,7 +1089,7 @@ def validate_and_summarize(conn) -> bool:
     )
     rows = result.fetchall()
     if rows:
-        print(f"\n  Sample words from Gen 1:1:")
+        print("\n  Sample words from Gen 1:1:")
         for r in rows:
             print(
                 f"    {r[0]} | clean={r[1]} | strong={r[2]} | root={r[3]} | "

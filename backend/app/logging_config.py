@@ -22,7 +22,9 @@ from contextvars import ContextVar
 # Context variables for request-scoped data
 request_id_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
 user_id_var: ContextVar[Optional[int]] = ContextVar("user_id", default=None)
-correlation_id_var: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)
+correlation_id_var: ContextVar[Optional[str]] = ContextVar(
+    "correlation_id", default=None
+)
 extra_context_var: ContextVar[dict] = ContextVar("extra_context", default={})
 
 
@@ -66,7 +68,9 @@ class JSONFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         # Base log entry
         log_entry: dict[str, Any] = {
-            "timestamp": datetime.now(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+            "timestamp": datetime.now(timezone.utc)
+            .isoformat(timespec="milliseconds")
+            .replace("+00:00", "Z"),
             "level": self.LEVEL_MAP.get(record.levelno, "UNKNOWN"),
             "logger": record.name,
             "message": record.getMessage(),
@@ -109,11 +113,28 @@ class JSONFormatter(logging.Formatter):
         # Add any extra attributes from the log record
         for key, value in record.__dict__.items():
             if key not in (
-                "name", "msg", "args", "created", "filename", "funcName",
-                "levelname", "levelno", "lineno", "module", "msecs",
-                "pathname", "process", "processName", "relativeCreated",
-                "stack_info", "exc_info", "exc_text", "thread", "threadName",
-                "message", "taskName"
+                "name",
+                "msg",
+                "args",
+                "created",
+                "filename",
+                "funcName",
+                "levelname",
+                "levelno",
+                "lineno",
+                "module",
+                "msecs",
+                "pathname",
+                "process",
+                "processName",
+                "relativeCreated",
+                "stack_info",
+                "exc_info",
+                "exc_text",
+                "thread",
+                "threadName",
+                "message",
+                "taskName",
             ):
                 try:
                     # Ensure value is JSON serializable
@@ -135,10 +156,10 @@ class ConsoleFormatter(logging.Formatter):
 
     # ANSI color codes
     COLORS = {
-        logging.DEBUG: "\033[36m",     # Cyan
-        logging.INFO: "\033[32m",      # Green
-        logging.WARNING: "\033[33m",   # Yellow
-        logging.ERROR: "\033[31m",     # Red
+        logging.DEBUG: "\033[36m",  # Cyan
+        logging.INFO: "\033[32m",  # Green
+        logging.WARNING: "\033[33m",  # Yellow
+        logging.ERROR: "\033[31m",  # Red
         logging.CRITICAL: "\033[35m",  # Magenta
     }
     RESET = "\033[0m"
@@ -254,6 +275,7 @@ def setup_logging(config: Optional[LoggingConfig] = None) -> None:
     # Optional file handler
     if config.file_path:
         from logging.handlers import RotatingFileHandler
+
         file_handler = RotatingFileHandler(
             config.file_path,
             maxBytes=10 * 1024 * 1024,  # 10MB

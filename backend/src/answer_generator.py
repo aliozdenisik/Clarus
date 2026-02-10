@@ -28,7 +28,7 @@ from tenacity import (
 )
 
 from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
-from src.confidence_scorer import ConfidenceScorer, ConfidenceBreakdown
+from src.confidence_scorer import ConfidenceScorer
 from app.logging_config import get_logger, log_performance
 
 logger = get_logger(__name__)
@@ -148,7 +148,7 @@ VERSES:
         },
     ]
 
-    def __init__(self, model: str = None, api_key: str = None):
+    def __init__(self, model: Optional[str] = None, api_key: Optional[str] = None):
         """Initialize Answer Generator with OpenRouter API"""
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
@@ -246,6 +246,7 @@ VERSES:
 
         return "\n".join(context_parts)
 
+    @staticmethod
     def _is_retryable_error(exception):
         """Check if exception is retryable (timeout, connection, or rate limit)"""
         if isinstance(
@@ -408,7 +409,7 @@ VERSES:
         search_results: List,
         source: str = "quran_tr_diyanet",
         max_context_results: int = 15,
-        score_stats: dict = None,
+        score_stats: Optional[dict[str, float]] = None,
     ) -> AnswerResult:
         """
         Generate a cited answer from search results.

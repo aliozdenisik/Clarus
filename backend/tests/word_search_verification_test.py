@@ -164,7 +164,6 @@ class WordSearchVerificationTest:
 
     async def run_all_tests(self, input_file: str, expected_file: Optional[str] = None):
         """Run all tests from input file."""
-        import time
 
         # Load test input
         with open(input_file, "r", encoding="utf-8") as f:
@@ -501,8 +500,8 @@ class WordSearchVerificationTest:
         # Summary
         report_lines.append("## Executive Summary")
         report_lines.append("")
-        report_lines.append(f"| Metric | Value |")
-        report_lines.append(f"|--------|-------|")
+        report_lines.append("| Metric | Value |")
+        report_lines.append("|--------|-------|")
         report_lines.append(
             f"| **Overall Pass Rate** | **{self.summary.overall_pass_rate:.1f}%** |"
         )
@@ -702,7 +701,7 @@ async def main():
         await runner.run_all_tests(
             str(input_file), str(expected_file) if expected_file.exists() else None
         )
-        report = runner.generate_report(str(test_dir))
+        runner.generate_report(str(test_dir))
 
         # Print summary
         print("\n" + "=" * 60)

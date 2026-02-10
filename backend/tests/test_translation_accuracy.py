@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# ruff: noqa: E402
+# Test helper mutates sys.path before local imports.
 """
 Translation Accuracy Test Suite — 40 Multilingual Query Pairs
 
