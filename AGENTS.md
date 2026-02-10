@@ -1,7 +1,7 @@
 # CLARUS - PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-02-06
-**Commit:** fa99c1c
+**Generated:** 2026-02-10
+**Commit:** 5d01c58
 **Branch:** main
 
 ## OVERVIEW
@@ -211,8 +211,34 @@ Circuit Breaker → External service resilience
 ```
 
 ### Testing Strategy
-- **Frontend**: Standard Vitest + RTL (`npm test`, 21 test files)
-- **Backend**: Custom `run_retrieval_accuracy_test.py` measuring F1 score against `test_data.json` ground truth
+- **Frontend**: Standard Vitest + RTL (`npm test`, 21 test files, 228+ passing tests)
+- **Backend**: Pytest unit tests (`uv run pytest tests/`) + custom accuracy benchmarks
+  - Pytest config excludes integration tests (run_*.py, *_verification_test.py)
+  - CI runs on every push/PR via `.github/workflows/backend-ci.yml`
+  - 5 previously excluded tests now fixed (health endpoint, verse bounds validation)
+- **Accuracy Benchmarks**: `run_retrieval_accuracy_test.py` measures F1 score against `test_data.json` ground truth
+
+### CI/CD Infrastructure
+- **Backend CI**: `.github/workflows/backend-ci.yml` runs on push/PR
+  - Lint with Ruff (`ruff check .`)
+  - Format check (`ruff format --check .`)
+  - Type check with Pyright (`pyright`)
+  - Run pytest tests (`uv run pytest tests/ -v`)
+  - All quality checks continue-on-error (non-blocking)
+- **Package Manager**: Uses `uv` (Astral's fast Python package manager) for reproducible installs
+- **Test Collection**: Filters exclude benchmark/integration scripts via `pyproject.toml`
+
+### Frontend Performance Patterns
+- **React Key Stability**: No index-based keys in dynamic lists (Issue #94)
+  - Use data identity keys (`key={result.reference}`)
+  - Composite keys for duplicates (`key={`${citation.reference}-${idx}`}`)
+  - Namespaced skeleton keys (`key="root-browser-skeleton-${i}"`)
+- **SSE Single-Pass Aggregation**: Process streaming messages once instead of multiple filter/map passes (Issue #92)
+- **Zustand Selector-Based Subscriptions**: Narrow subscriptions prevent unnecessary re-renders (Issue #90)
+- **React-Window Virtualization**: Render only visible rows for 1,600+ item lists (Issue #91)
+- **Batched DOM Reads**: useLayoutEffect batches tab indicator geometry reads (Issue #91)
+- **Cached Bounds**: Magnetic button caches getBoundingClientRect on mouseenter (Issue #91)
+- **Bundle Optimization**: DevTools lazy-loaded in dev only, direct date-fns imports, Recharts code-split
 
 ## COMMANDS
 
@@ -248,6 +274,7 @@ npm test                                # Run Vitest
 - **LLM costs**: ~$0.013/query with semantic cache (60-80% reduction)
 - **Port conflicts**: Qdrant on 6333, PostgreSQL on 54322, Redis on 6379, API on 8000, Frontend on 3000
 - **Redis**: Fail-open — app works without Redis (graceful degradation)
+- **Backend .env loading**: `.env` loaded before LLM stack init in `backend/app/config.py` (critical for API keys)
 - **Memory bank**: Always read `memory-bank/activeContext.md` before starting work
 
 ## CHILD AGENTS.md
