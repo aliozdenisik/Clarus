@@ -1,18 +1,16 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Optional
-from pathlib import Path
 import json
 import os
-import httpx
+from pathlib import Path
 
-from app.schemas.common import VALID_TRANSLATORS, DEFAULT_TRANSLATOR
+import httpx
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+
+from app.schemas.common import DEFAULT_TRANSLATOR, VALID_TRANSLATORS
 
 router = APIRouter()
 
-DATA_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data"
-)
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
 QDRANT_URL = "http://localhost:6333"
 
 
@@ -52,8 +50,8 @@ class MetadataResponse(BaseModel):
     data: dict
 
 
-_quran_cache: Optional[list[dict]] = None
-_bible_cache: Optional[dict] = None
+_quran_cache: list[dict] | None = None
+_bible_cache: dict | None = None
 
 
 def _load_quran_data() -> list[dict]:
@@ -61,7 +59,7 @@ def _load_quran_data() -> list[dict]:
     if _quran_cache is None:
         quran_path = safe_path(DATA_DIR, "quran_tr.json")
         if os.path.exists(quran_path):
-            with open(quran_path, "r", encoding="utf-8") as f:
+            with open(quran_path, encoding="utf-8") as f:
                 loaded = json.load(f)
                 _quran_cache = loaded if isinstance(loaded, list) else []
         else:
@@ -75,7 +73,7 @@ def _load_bible_data() -> dict:
     if _bible_cache is None:
         bible_path = safe_path(DATA_DIR, "bible_kjva.json")
         if os.path.exists(bible_path):
-            with open(bible_path, "r", encoding="utf-8") as f:
+            with open(bible_path, encoding="utf-8") as f:
                 loaded = json.load(f)
                 _bible_cache = loaded if isinstance(loaded, dict) else {"books": []}
         else:
@@ -110,9 +108,7 @@ async def get_collections():
             result = []
             for col in collections:
                 col_name = col.get("name", "")
-                info_response = await client.get(
-                    f"{QDRANT_URL}/collections/{col_name}", timeout=5.0
-                )
+                info_response = await client.get(f"{QDRANT_URL}/collections/{col_name}", timeout=5.0)
                 if info_response.status_code == 200:
                     col_data = info_response.json().get("result", {})
                     result.append(
@@ -123,9 +119,7 @@ async def get_collections():
                         )
                     )
 
-            return MetadataResponse(
-                data={"collections": [c.model_dump() for c in result]}
-            )
+            return MetadataResponse(data={"collections": [c.model_dump() for c in result]})
 
     except httpx.RequestError:
         raise HTTPException(status_code=503, detail="Qdrant connection failed")
@@ -179,7 +173,7 @@ async def get_surah_detail(surah_id: int):
 
 
 @router.get("/bible/books")
-async def get_bible_books(testament: Optional[str] = None):
+async def get_bible_books(testament: str | None = None):
     bible_data = _load_bible_data()
 
     books = []
@@ -211,9 +205,7 @@ async def get_bible_books(testament: Optional[str] = None):
 async def get_book_detail(book_nr: int):
     bible_data = _load_bible_data()
 
-    book = next(
-        (b for b in bible_data.get("books", []) if b.get("nr") == book_nr), None
-    )
+    book = next((b for b in bible_data.get("books", []) if b.get("nr") == book_nr), None)
     if not book:
         raise HTTPException(status_code=404, detail=f"Book {book_nr} not found")
 
@@ -242,15 +234,11 @@ async def get_book_detail(book_nr: int):
 async def get_chapter_verses(book_nr: int, chapter_nr: int):
     bible_data = _load_bible_data()
 
-    book = next(
-        (b for b in bible_data.get("books", []) if b.get("nr") == book_nr), None
-    )
+    book = next((b for b in bible_data.get("books", []) if b.get("nr") == book_nr), None)
     if not book:
         raise HTTPException(status_code=404, detail=f"Book {book_nr} not found")
 
-    chapter = next(
-        (c for c in book.get("chapters", []) if c.get("chapter") == chapter_nr), None
-    )
+    chapter = next((c for c in book.get("chapters", []) if c.get("chapter") == chapter_nr), None)
     if not chapter:
         raise HTTPException(status_code=404, detail=f"Chapter {chapter_nr} not found")
 
@@ -299,7 +287,7 @@ async def get_translators():
     """
     return MetadataResponse(
         data={
-            "translators": sorted(list(VALID_TRANSLATORS)),
+            "translators": sorted(VALID_TRANSLATORS),
             "default": DEFAULT_TRANSLATOR,
             "total": len(VALID_TRANSLATORS),
         }

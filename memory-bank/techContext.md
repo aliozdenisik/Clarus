@@ -809,4 +809,3 @@ User Input → is_arabic()?
 - `tashaphyne` — Arabic light stemmer (algorithmic fallback)
 - `pyarabic` — Arabic text normalization + Buckwalter transliteration
 - `psycopg2-binary` — PostgreSQL sync driver (for ETL scripts)
-

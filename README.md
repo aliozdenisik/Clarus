@@ -4,329 +4,527 @@
 
 **Maximum-accuracy RAG search engine for sacred texts**
 
-Comparative theological analysis across Quran and Bible with 5-agent LLM synthesis
+Comparative theological analysis across Quran and Bible with multi-agent LLM synthesis, morphological keyword search, and multilingual support.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Backend CI](https://github.com/aliozdenisik/Clarus/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/aliozdenisik/Clarus/actions/workflows/backend-ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&style=flat-square)](https://github.com/pre-commit/pre-commit)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776ab.svg?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000.svg?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688.svg?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Qdrant](https://img.shields.io/badge/Qdrant-DC382D.svg?style=flat-square&logo=qdrant&logoColor=white)](https://qdrant.tech)
+[![Redis](https://img.shields.io/badge/Redis-DC382D.svg?style=flat-square&logo=redis&logoColor=white)](https://redis.io)
 
-[Getting Started](#-getting-started) · [Features](#-features) · [Usage](#-usage) · [API Reference](#-api-reference) · [Architecture](#-architecture)
+[Features](#-features) · [Quick Start](#-quick-start) · [Architecture](#-architecture) · [Usage](#-usage) · [API](#-api-reference) · [Contributing](#-contributing)
 
 </div>
 
----
-
 ## Overview
 
-Clarus is a production-ready Retrieval-Augmented Generation (RAG) system designed for **maximum retrieval accuracy** on religious texts. It combines state-of-the-art hybrid search (dense + sparse vectors) with multi-agent LLM synthesis to provide scholarly-quality comparative analysis across the Quran and Bible.
+Clarus is a production-ready Retrieval-Augmented Generation (RAG) system for **maximum retrieval accuracy** on religious texts. It combines hybrid search (dense + sparse vectors) with multi-agent LLM synthesis to provide scholarly-quality comparative analysis across the Quran (8 Turkish translations) and Bible (English KJVA + Turkish).
 
-### Why Clarus?
+### Key Highlights
 
-- **Hybrid Search** — Combines semantic embeddings with BM25 keyword matching via Reciprocal Rank Fusion (RRF)
-- **Multi-Agent Synthesis** — 5 specialized agents provide perspectives from Quran, Old Testament, New Testament, and Apocrypha
-- **High Accuracy** — 80%+ recall on Quran, 100% recall on Bible with 96% confidence scores
-- **Production Ready** — FastAPI backend with JWT auth, rate limiting, and semantic caching
-
----
-
-## Architecture
-
-```
-Query → ENHANCE → MULTI-QUERY → PARALLEL SEARCH → RRF FUSION → MULTI-AGENT ANSWER
-                                       │
-         ┌─────────────────────────────┼─────────────────────────────┐
-         │                             │                             │
-    ┌────┴────┐    ┌─────────┐    ┌────┴────┐    ┌─────────────────┐
-    │  QURAN  │    │ BIBLE   │    │ BIBLE   │    │     BIBLE       │
-    │   (TR)  │    │   OT    │    │   NT    │    │   APOCRYPHA     │
-    │  6,236  │    │ 23,145  │    │  7,957  │    │     5,717       │
-    └─────────┘    └─────────┘    └─────────┘    └─────────────────┘
-```
-
-| Stage | Description | Technology |
-|-------|-------------|------------|
-| **Query Enhancement** | LLM expands and clarifies user query | Grok 4.1 Fast |
-| **Multi-Query Generation** | Creates 3-5 query variants for better recall | Grok 4.1 Fast |
-| **Parallel Search** | Hybrid search across 4 collections | OpenAI text-embedding-3-large + BM25 |
-| **RRF Fusion** | Combines results with k=60 | Reciprocal Rank Fusion |
-| **Multi-Agent Answer** | 5 specialized agents synthesize response | Gemini 2.5 Flash |
+- **Hybrid Search** — Dense embeddings (OpenAI text-embedding-3-large) + BM25 sparse vectors fused via Reciprocal Rank Fusion
+- **5-Agent Synthesis** — Specialized agents for Quran, OT, NT, and Apocrypha, unified by a Summary agent into cohesive essays
+- **Morphological Keyword Search** — Root-based Arabic (كتب) and Hebrew/Greek concordance with Strong's numbers
+- **Multilingual** — Query in 8 languages (TR, EN, ES, FR, IT, PT, AR, DE) with automatic detection and translation
+- **Production Ready** — Better Auth, Redis caching, rate limiting, SSE streaming, Sentry observability, pre-commit hooks
 
 ---
 
-## Features
+## ✨ Features
 
-### Core Capabilities
+### Search & Retrieval
 
-- **Hybrid Search** — Dense vectors (OpenAI text-embedding-3-large, 3072 dim) + Sparse vectors (BM25 via FastEmbed)
-- **Semantic Chunking** — Context-aware text segmentation preserving verse boundaries
-- **Query Enhancement** — LLM-powered query expansion for improved recall
-- **Multi-Query RAG** — Generates multiple query perspectives to maximize coverage
+| Feature | Description |
+|---------|-------------|
+| **Hybrid Search** | Dense vectors (3072-dim) + BM25 sparse vectors across all collections |
+| **Semantic Chunking** | Context-aware verse grouping that preserves scriptural boundaries |
+| **Query Enhancement** | LLM-powered query expansion with synonym and concept injection |
+| **Multi-Query RAG** | 3-5 query variants per request for maximum recall |
+| **RRF Fusion** | Reciprocal Rank Fusion (k=60) combining dense + sparse scores |
+
+### Multi-Agent Comparative Analysis
+
+```
+Query --> [QuranAgent, OTAgent, NTAgent, ApocryphaAgent] --> SummaryAgent --> Essay
+```
+
+Each agent searches its own collection, generates commentary, and the Summary agent synthesizes all perspectives into a structured 5-paragraph essay with inline citations.
+
+### Morphological Keyword Search
+
+| Scripture | Input | Approach |
+|-----------|-------|----------|
+| **Quran** | Arabic (كتب) or Buckwalter Latin (ktb) | Root extraction via PostgreSQL lookup (77K words, 1,651 roots) |
+| **Bible OT** | Hebrew or transliteration (torah, chesed) | Strong's Concordance with Hebrew roots and b/v dual-indexing |
+| **Bible NT** | Greek or transliteration (agape, logos) | Strong's Concordance with Greek lemma mapping |
 
 ### Multi-Agent System
 
 | Agent | Collection | Role |
 |-------|------------|------|
-| QuranAgent | `quran_tr` | Quran perspective and commentary |
+| QuranAgent | `quran_tr_*` | Quran perspective and commentary |
 | OldTestamentAgent | `bible_ot` | Old Testament (Torah, Prophets, Writings) |
 | NewTestamentAgent | `bible_nt` | New Testament (Gospels, Epistles) |
 | ApocryphaAgent | `bible_apocrypha` | Deuterocanonical texts |
-| SummaryAgent | — | Synthesizes all perspectives into cohesive essay |
+| SummaryAgent | -- | Synthesizes all perspectives into cohesive essay |
 
-### Production Features
+### Production Infrastructure
 
-- **Semantic Cache** — 95% similarity threshold, 7-day TTL, reduces API costs by 60-80%
-- **JWT Authentication** — Secure API access with Google OAuth support
-- **Rate Limiting** — 50 queries/day per user (configurable)
-- **SSE Streaming** — Token-by-token response streaming
+- **Authentication** — [Better Auth](https://www.better-auth.com/) with JWT + Google OAuth + API key support for CLI
+- **Caching** — Redis Stack 7.2 with semantic cache (theta=0.95), embedding cache, rate limiting, and fail-open resilience
+- **Streaming** — Server-Sent Events for token-by-token response delivery
+- **Observability** — Structured logging with correlation IDs, Sentry error tracking, performance spans
+- **Code Quality** — 11 pre-commit hooks (Ruff, ESLint, Prettier, Pyright, TypeScript, gitleaks, codespell)
+- **CI/CD** — GitHub Actions with lint, format, typecheck, and test gates
 
 ---
 
-## Getting Started
+## 🏗️ Architecture
+
+```
+                                 Clarus Architecture
+
+   ┌──────────────┐      ┌──────────────┐      ┌──────────────────────────────┐
+   │   Next.js 16 │      │   FastAPI    │      │        Data Stores           │
+   │   React 19   │─────>│   Python    │─────>│                              │
+   │   Port 3000  │ JWT  │   Port 8000  │      │  Qdrant (6333)  13 collections│
+   └──────────────┘      └──────┬───────┘      │  PostgreSQL (54322)          │
+                                │              │  Redis Stack (6379)          │
+                                v              └──────────────────────────────┘
+                     ┌──────────────────┐
+                     │   RAG Pipeline   │
+                     ├──────────────────┤
+                     │ 1. Query Enhance │──> Grok 4.1 Fast
+                     │ 2. Multi-Query   │──> 3-5 variants
+                     │ 3. Parallel      │──> 13 collections (dense + sparse)
+                     │    Search        │
+                     │ 4. RRF Fusion    │──> k=60
+                     │ 5. Multi-Agent   │──> 5 agents via Gemini 2.5 Flash
+                     └──────────────────┘
+```
+
+### Collections
+
+| Collection | Verses | Language | Source |
+|------------|--------|----------|--------|
+| `quran_tr_diyanet` | 6,236 | Turkish | Diyanet Isleri translation |
+| `quran_tr_yazir` | 6,236 | Turkish | Elmalili Hamdi Yazir |
+| `quran_tr_ates` | 6,236 | Turkish | Suleyman Ates |
+| `quran_tr_bulac` | 6,236 | Turkish | Ali Bulac |
+| `quran_tr_ozturk` | 6,236 | Turkish | Yasar Nuri Ozturk |
+| `quran_tr_vakfi` | 6,236 | Turkish | Diyanet Vakfi |
+| `quran_tr_yildirim` | 6,236 | Turkish | Suat Yildirim |
+| `quran_tr_yuksel` | 6,236 | Turkish | Edip Yuksel |
+| `bible_ot` | 23,145 | English | Old Testament (KJVA) |
+| `bible_nt` | 7,957 | English | New Testament (KJVA) |
+| `bible_apocrypha` | 5,717 | English | Apocrypha (KJVA) |
+| `bible_tr_ot` | 22,724 | Turkish | Old Testament (Turkish) |
+| `bible_tr_nt` | 7,458 | Turkish | New Testament (Turkish) |
+
+**Total:** ~123,000 indexed vectors across 13 collections
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Python 3.11+
-- Docker (for Qdrant)
-- OpenRouter API key
+| Requirement | Version | Purpose |
+|-------------|---------|---------|
+| Python | 3.11+ | Backend runtime |
+| Node.js | 18+ | Frontend runtime |
+| Docker | Latest | Qdrant, PostgreSQL, Redis |
+| [uv](https://docs.astral.sh/uv/) | Latest | Python package manager |
 
-### Installation
+### 1. Clone & Install
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/clarus.git
-cd clarus
+git clone https://github.com/aliozdenisik/Clarus.git
+cd Clarus
 
-# Install uv (if not present)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Install dependencies
+# Backend
 cd backend
 uv sync
+cd ..
+
+# Frontend
+cd frontend
+npm install
+cd ..
 ```
 
-### Configuration
+### 2. Configure Environment
 
-Create a `.env` file in the `backend/` directory:
+Create `backend/.env`:
 
 ```env
 # Required
 OPENROUTER_API_KEY=your-openrouter-key
 
-# Optional (for API usage)
+# Database (Docker defaults work out of the box)
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:54322/postgres
-JWT_SECRET_KEY=your-secret-key
+
+# Better Auth (for web UI authentication)
+BETTER_AUTH_JWKS_URL=http://localhost:3000/api/auth/jwks
+BETTER_AUTH_ISSUER=http://localhost:3000
 ```
 
-### Quick Start
+Create `frontend/.env.local`:
+
+```env
+BETTER_AUTH_DATABASE_URL=postgresql://postgres:postgres@localhost:54322/postgres
+BETTER_AUTH_SECRET=your-random-secret
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+
+# Optional: Google OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+```
+
+### 3. Start Infrastructure
 
 ```bash
-# Start Qdrant vector database
-docker run -p 6333:6333 qdrant/qdrant
+# Start PostgreSQL + Qdrant + Redis
+docker compose up -d
 
-# Index all collections (run once, ~2 minutes)
-python scripts/setup_all_collections.py
+# Index all collections (first time only, ~2 minutes)
+cd backend
+uv run python scripts/setup_all_collections.py
 
-# Verify installation
-python main.py info
+# Verify
+uv run python main.py info
 ```
+
+### 4. Run
+
+```bash
+# Option A: Full stack (API + Web UI)
+cd backend && uvicorn app.main:app --reload &
+cd frontend && npm run dev &
+
+# Option B: CLI only
+cd backend
+uv run python main.py search "sabir ve namaz"
+```
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Backend API | http://localhost:8000 |
+| API Docs (Swagger) | http://localhost:8000/docs |
+| Qdrant Dashboard | http://localhost:6333/dashboard |
+| Redis Insight | http://localhost:8001 |
 
 ---
 
-## Usage
+## 📖 Usage
 
-### CLI Commands
-
-#### Search
+### CLI
 
 ```bash
-# Quran search (Turkish)
-python main.py search "sabir ve namaz"
+cd backend
 
-# Bible search (English KJVA)
-python main.py search-bible "love your neighbor"
+# Search
+uv run python main.py search "sabir ve namaz"                    # Quran (default: Diyanet)
+uv run python main.py search --translator yazir "sabir"           # Quran (Yazir translation)
+uv run python main.py search-bible "love your neighbor"           # Bible (KJVA)
 
-# Semantic chunk search
-python main.py search-semantic "creation of Adam"
-```
+# Question & Answer
+uv run python main.py ask "Islam'da sabir nedir?"                 # Quran Q&A
+uv run python main.py ask-bible "What is love?"                   # Bible Q&A
 
-#### Question & Answer
+# Comparative Analysis
+uv run python main.py compare "The concept of forgiveness"        # Single essay
+uv run python main.py compare --multi-agent "The creation story"  # 5-agent analysis
 
-```bash
-# Ask Quran
-python main.py ask "What is patience in Islam?"
+# Morphological Keyword Search
+uv run python main.py keyword-search "كتب"                       # Arabic root
+uv run python main.py keyword-search "ktb"                        # Buckwalter Latin
+uv run python main.py bible-keyword-search "torah"                # Hebrew transliteration
+uv run python main.py bible-keyword-search "G2316"                # Greek Strong's number
 
-# Ask Bible
-python main.py ask-bible "What is love according to the Bible?"
-```
-
-#### Comparative Analysis
-
-```bash
-# Single essay mode (faster)
-python main.py compare "The concept of forgiveness"
-
-# Multi-agent mode (5-paragraph detailed analysis)
-python main.py compare --multi-agent "The creation story"
-```
-
-#### System Commands
-
-```bash
-python main.py info          # Collection statistics
-python main.py cache-info    # Cache statistics
-python main.py cache-clear   # Clear semantic cache
+# System
+uv run python main.py info                                        # Collection stats
+uv run python main.py cache-info                                  # Cache stats
+uv run python main.py cache-clear                                 # Clear cache
 ```
 
 ### Python API
 
 ```python
+import asyncio
 from src.ultimate_rag import UltimateRAG
 from src.comparative_rag import ComparativeRAG
 
-# Initialize RAG pipeline
-rag = UltimateRAG(enable_semantic_chunks=True)
+async def main():
+    # Search
+    rag = UltimateRAG(enable_semantic_chunks=True)
+    results = await rag.search_quran("intercession concept", top_k=5)
+    answer = await rag.ask_bible("What is forgiveness?")
 
-# Search
-results = rag.search_quran("intercession concept", top_k=5)
-results = rag.search_bible("forgiveness", translation="kjva")
+    # Comparative Analysis
+    comp = ComparativeRAG()
+    result = await comp.compare_multi_agent("Creation and the origin of humanity")
+    print(result["paragraphs"])
 
-# Question & Answer
-answer = rag.ask_quran("How to perform prayer?")
-answer = rag.ask_bible("How to love your neighbor?")
-
-# Comparative Analysis
-comp = ComparativeRAG()
-
-# Single essay
-essay = comp.compare("Creation and the origin of humanity")
-print(essay['essay'])
-
-# Multi-agent analysis
-result = comp.compare_multi_agent("Creation and the origin of humanity")
-print(result['paragraphs'])
+asyncio.run(main())
 ```
 
 ---
 
-## API Reference
+## 📡 API Reference
 
-### Starting the Server
+Full OpenAPI documentation is available at `/docs` when the server is running.
 
-```bash
-# Start infrastructure
-docker compose up -d  # PostgreSQL + Qdrant
+### Core Endpoints
 
-# Start FastAPI server
-uvicorn app.main:app --reload
-```
+| Endpoint | Method | Description | Auth |
+|----------|--------|-------------|------|
+| `/api/search/quran` | POST | Quran search with translator selection | Yes |
+| `/api/search/bible` | POST | Bible search (OT/NT/Apocrypha) | Yes |
+| `/api/compare/` | POST | Multi-agent comparative analysis | Yes |
+| `/api/stream/search` | GET | SSE streaming search | Yes |
+| `/api/stream/compare` | GET | SSE streaming compare | Yes |
+| `/api/search/keyword/` | POST | Quran morphological root search | -- |
+| `/api/search/keyword/roots` | GET | List all Arabic roots (paginated) | -- |
+| `/api/search/bible-keyword/` | POST | Bible morphological search | -- |
+| `/api/enhance/` | POST | Query enhancement preview | Yes |
 
-### Endpoints
+### Auth & User
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/auth/register` | POST | User registration |
-| `/api/auth/login` | POST | JWT authentication |
-| `/api/search/quran` | POST | Quran search |
-| `/api/search/bible` | POST | Bible search |
-| `/api/stream/search` | GET | SSE streaming search |
-| `/api/compare/` | POST | Multi-agent comparison |
-| `/docs` | GET | OpenAPI documentation |
+| `/api/auth/api-key` | POST | Generate CLI API key |
+| `/api/auth/me` | GET | Current user info |
+| `/api/auth/rate-limit` | GET | Rate limit status |
+
+### Metadata & Health
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/metadata/collections` | GET | Qdrant collection stats |
+| `/api/metadata/quran/surahs` | GET | All 114 surahs |
+| `/api/metadata/bible/books` | GET | All Bible books |
+| `/api/health` | GET | Health check (Qdrant, Redis, event loop) |
+| `/docs` | GET | OpenAPI / Swagger UI |
 
 ---
 
-## Collections
+## 🛠️ Tech Stack
 
-| Collection | Verses | Language | Source |
-|------------|--------|----------|--------|
-| `quran_tr` | 6,236 | Turkish | Quran |
-| `bible_ot` | 23,145 | English | Old Testament (KJVA) |
-| `bible_nt` | 7,957 | English | New Testament (KJVA) |
-| `bible_apocrypha` | 5,717 | English | Apocrypha (KJVA) |
-
-**Total:** 43,055 indexed verses
-
----
-
-## Tech Stack
+### Backend
 
 | Component | Technology |
 |-----------|------------|
-| **Dense Encoder** | OpenAI text-embedding-3-large (3072 dim) |
-| **Sparse Encoder** | Qdrant/BM25 via FastEmbed |
-| **Vector Database** | Qdrant (HNSW + Scalar Quantization) |
-| **LLM (Enhancement)** | Grok 4.1 Fast via OpenRouter |
-| **LLM (Generation)** | Gemini 2.5 Flash via OpenRouter |
-| **Fusion Algorithm** | Reciprocal Rank Fusion (k=60) |
-| **Semantic Cache** | Custom (θ=0.95, 7-day TTL) |
-| **Backend** | FastAPI + SQLAlchemy (async) |
-| **Authentication** | JWT + Google OAuth |
+| Framework | FastAPI (async) + SQLAlchemy 2.0 |
+| Runtime | Python 3.11+ with [uv](https://docs.astral.sh/uv/) |
+| Vector DB | Qdrant (HNSW + Scalar Quantization) |
+| Database | PostgreSQL 15 (Supabase) |
+| Cache | Redis Stack 7.2 (semantic cache, rate limiting, JWT blacklist) |
+| Dense Encoder | OpenAI text-embedding-3-large (3072-dim) |
+| Sparse Encoder | BM25 via FastEmbed |
+| LLM (Enhancement) | Grok 4.1 Fast via OpenRouter |
+| LLM (Generation) | Gemini 2.5 Flash via OpenRouter |
+| LLM (Translation) | Gemini 2.5 Flash Lite via OpenRouter |
+| Auth | Better Auth (JWT + Google OAuth + JWKS) |
+| Observability | Sentry + structured logging + correlation IDs |
+| Resilience | Circuit breakers (pybreaker) + tenacity retries |
+
+### Frontend
+
+| Component | Technology |
+|-----------|------------|
+| Framework | Next.js 16 (App Router) |
+| Runtime | React 19, TypeScript 5 |
+| Styling | Tailwind CSS 4 + Radix UI primitives |
+| Animation | Framer Motion 12 |
+| State | Zustand 5 + TanStack Query 5 + nuqs |
+| API Client | Generated via @hey-api/openapi-ts |
+| Auth UI | @daveyplate/better-auth-ui |
+| Testing | Vitest 4 + React Testing Library (228+ tests) |
+| E2E | Playwright |
+| Charts | Recharts 3 |
+| i18n | next-intl (EN, TR) |
+
+### Infrastructure
+
+| Component | Technology |
+|-----------|------------|
+| Containers | Docker Compose (PostgreSQL + Qdrant + Redis) |
+| CI | GitHub Actions (lint, format, typecheck, test) |
+| Pre-commit | 11 hooks (Ruff, ESLint, Prettier, gitleaks, codespell, etc.) |
+| Linting | Ruff (20 rule sets) + ESLint 9 |
+| Formatting | Ruff (Python) + Prettier (TypeScript) |
+| Type Checking | Pyright + TypeScript strict |
 
 ---
 
-## Performance
+## 📊 Performance
 
 | Metric | Value |
 |--------|-------|
-| Overall F1 Score | **57%+** |
 | Quran Recall | **80%+** |
 | Bible Recall | **100%** |
 | Confidence Score | **96%** |
-| Multi-Agent Latency | **~40s** |
-| Cost per Query | **~$0.013** (with cache) |
+| Multi-Agent Latency | ~40s |
+| Cost per Query | ~$0.013 (with semantic cache) |
+| Cache Hit Rate | 60-80% reduction in API costs |
+| Indexed Vectors | ~123,000 across 13 collections |
+| Morphology DB | 77,429 words, 1,651 roots |
 
 ---
 
-## Project Structure
+## 🧪 Testing
+
+### Frontend
+
+```bash
+cd frontend
+npm test                          # Vitest (228+ tests, 21 files)
+npm run test:e2e                  # Playwright E2E
+npx tsc --noEmit                  # Type check
+```
+
+### Backend
+
+```bash
+cd backend
+uv run pytest tests/ -v           # Unit tests
+uv run ruff check .               # Lint
+uv run ruff format --check .      # Format check
+uv run pyright                    # Type check
+```
+
+### Pre-commit Hooks
+
+```bash
+# Install (one-time)
+pre-commit install
+pre-commit install --hook-type pre-push
+
+# Run on all files
+pre-commit run --all-files
+```
+
+---
+
+## 📁 Project Structure
 
 ```
-clarus/
-├── backend/
-│   ├── main.py                 # CLI entrypoint
-│   ├── requirements.txt
-│   ├── app/                    # FastAPI application
-│   │   ├── main.py             # ASGI entrypoint
-│   │   ├── config.py           # Settings
-│   │   ├── auth/               # JWT + OAuth
-│   │   └── api/                # Route handlers
-│   ├── src/                    # RAG pipeline modules
-│   │   ├── ultimate_rag.py     # Main RAG pipeline
-│   │   ├── comparative_rag.py  # Comparative analysis
-│   │   ├── multi_agent_answer_generator.py
-│   │   ├── search.py           # Hybrid search
-│   │   ├── embeddings.py       # Dense + sparse encoders
+Clarus/
+├── backend/                        # Python FastAPI + RAG pipeline
+│   ├── main.py                     # CLI entrypoint (Rich formatting)
+│   ├── app/                        # FastAPI application
+│   │   ├── main.py                 # ASGI server
+│   │   ├── api/                    # Route handlers (13 endpoints)
+│   │   ├── auth/                   # JWKS validator + API key auth
+│   │   ├── middleware/             # CORS, rate limiting, correlation ID
+│   │   ├── schemas/                # Pydantic models
+│   │   └── config.py               # Settings
+│   ├── src/                        # RAG pipeline modules (29 files)
+│   │   ├── ultimate_rag.py         # Core RAG pipeline
+│   │   ├── comparative_rag.py      # 4-collection parallel search + RRF
+│   │   ├── multi_agent_answer_generator.py  # 5-agent system
+│   │   ├── search.py               # Qdrant hybrid search
+│   │   ├── quran_morphology.py     # Arabic root-based keyword search
+│   │   ├── bible_morphology.py     # Hebrew/Greek Strong's search
+│   │   ├── query_translator.py     # Multilingual translation (8 languages)
+│   │   ├── embeddings.py           # OpenAI + BM25 encoders
 │   │   └── ...
-│   ├── data/
-│   │   ├── quran_tr.json
-│   │   └── bible_kjva.json
-│   └── tests/
-├── frontend/                   # Next.js 15 (optional)
-├── docker-compose.yml
-└── memory-bank/                # Project documentation
+│   ├── data/                       # Source data (JSON, XML)
+│   ├── tests/                      # Pytest + accuracy benchmarks
+│   └── scripts/                    # Setup & migration scripts
+├── frontend/                       # Next.js 16 + React 19
+│   ├── app/                        # App Router pages (17 routes)
+│   ├── components/                 # UI components (60+ files)
+│   │   ├── ui/                     # Radix primitives (33 files)
+│   │   ├── compare/                # Comparative analysis UI
+│   │   ├── keyword-search/         # Morphological search UI (12 files)
+│   │   └── search/                 # Search components
+│   ├── lib/                        # API client, hooks, stores
+│   │   ├── api/                    # Generated TypeScript client
+│   │   ├── stores/                 # Zustand state management
+│   │   └── auth/                   # Better Auth integration
+│   └── __tests__/                  # Vitest + RTL (21 files, 228+ tests)
+├── docker-compose.yml              # PostgreSQL + Qdrant + Redis
+├── .pre-commit-config.yaml         # 11 hooks for code quality
+├── .github/workflows/              # CI pipelines
+└── memory-bank/                    # Project documentation
 ```
 
 ---
 
-## Contributing
+## 🔧 Environment Variables
 
-Contributions are welcome! Please read our contributing guidelines before submitting a PR.
+### Backend (`backend/.env`)
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `OPENROUTER_API_KEY` | Yes | -- | OpenRouter API key for LLM calls |
+| `DATABASE_URL` | Yes | -- | PostgreSQL connection string |
+| `BETTER_AUTH_JWKS_URL` | -- | `http://localhost:3000/api/auth/jwks` | Better Auth JWKS endpoint |
+| `BETTER_AUTH_ISSUER` | -- | `http://localhost:3000` | JWT issuer |
+| `REDIS_URL` | -- | `redis://localhost:6379` | Redis connection |
+| `RATE_LIMIT_PER_DAY` | -- | `50` | Queries per user per day |
+| `LOG_LEVEL` | -- | `INFO` | Logging level |
+| `LOG_FORMAT` | -- | `console` | `console` (dev) or `json` (prod) |
+| `SENTRY_DSN_BACKEND` | -- | -- | Sentry DSN for error tracking |
+
+### Frontend (`frontend/.env.local`)
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `BETTER_AUTH_DATABASE_URL` | Yes | -- | PostgreSQL for Better Auth |
+| `BETTER_AUTH_SECRET` | Yes | -- | Random secret for session signing |
+| `NEXT_PUBLIC_BETTER_AUTH_URL` | -- | `http://localhost:3000` | Better Auth base URL |
+| `GOOGLE_CLIENT_ID` | -- | -- | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | -- | -- | Google OAuth secret |
+| `NEXT_PUBLIC_SENTRY_DSN` | -- | -- | Sentry DSN for frontend |
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! This project uses strict code quality enforcement.
+
+### Setup
+
+```bash
+# Install pre-commit hooks (runs automatically on commit)
+pip install pre-commit
+pre-commit install
+pre-commit install --hook-type pre-push
+```
+
+### Workflow
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Make changes (pre-commit hooks enforce formatting and linting)
+4. Run tests (`cd frontend && npm test` and `cd backend && uv run pytest`)
+5. Push and open a Pull Request
+
+### Code Standards
+
+- **Python**: Ruff (20 rule sets), Pyright strict, async-first
+- **TypeScript**: ESLint 9, Prettier, strict `noEmit` type checking
+- **No `any`** in TypeScript, no `# type: ignore` in Python without justification
+- **Structured logging** only -- no `console.log` or `print()` in production code
 
 ---
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License -- see the [LICENSE](LICENSE) file for details.
 
 ---
 
 <div align="center">
+
+Built with Qdrant, FastAPI, Next.js, and OpenRouter
 
 **[Back to Top](#clarus)**
 

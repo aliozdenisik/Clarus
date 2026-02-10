@@ -17,16 +17,16 @@ import asyncio
 import json
 import re
 import sys
-from pathlib import Path
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from pathlib import Path
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 console = Console()
 
@@ -122,29 +122,19 @@ async def run_single_test(search, test: TestCase) -> TestResult:
         # Use normalized comparison to handle zero-padding differences
         strongs_match = True
         if test.strongs != "none":
-            strongs_match = normalize_strongs(
-                result.strong_number
-            ) == normalize_strongs(test.strongs)
+            strongs_match = normalize_strongs(result.strong_number) == normalize_strongs(test.strongs)
 
         # Check 3: Expected verse appears in results
         verse_match = any(
-            v.book_name == test.expected_book
-            and v.chapter == test.expected_chapter
-            and v.verse == test.expected_verse
+            v.book_name == test.expected_book and v.chapter == test.expected_chapter and v.verse == test.expected_verse
             for v in result.verses
         )
 
         # If Hebrew root search failed or returned wrong Strong's, try direct Strong's lookup
-        if test.strongs != "none" and (
-            not strongs_match or result.root_source == "not_found"
-        ):
+        if test.strongs != "none" and (not strongs_match or result.root_source == "not_found"):
             try:
-                fallback_result = await search.search(
-                    test.strongs, page=1, per_page=1000
-                )
-                if normalize_strongs(
-                    fallback_result.strong_number
-                ) == normalize_strongs(test.strongs):
+                fallback_result = await search.search(test.strongs, page=1, per_page=1000)
+                if normalize_strongs(fallback_result.strong_number) == normalize_strongs(test.strongs):
                     # Use fallback result if Strong's matches
                     result = fallback_result
                     strongs_match = True
@@ -194,7 +184,7 @@ async def run_single_test(search, test: TestCase) -> TestResult:
         )
 
 
-async def run_all_tests(test_data_path: Path) -> Dict[str, Any]:
+async def run_all_tests(test_data_path: Path) -> dict[str, Any]:
     """Run all tests and return comprehensive results."""
 
     console.print(
@@ -206,7 +196,7 @@ async def run_all_tests(test_data_path: Path) -> Dict[str, Any]:
     )
 
     # Load test data
-    with open(test_data_path, "r", encoding="utf-8") as f:
+    with open(test_data_path, encoding="utf-8") as f:
         data = json.load(f)
 
     tests = [
@@ -223,9 +213,7 @@ async def run_all_tests(test_data_path: Path) -> Dict[str, Any]:
         for t in data["tests"]
     ]
 
-    console.print(
-        f"\n[dim]Loaded {len(tests)} test cases from {test_data_path.name}[/dim]"
-    )
+    console.print(f"\n[dim]Loaded {len(tests)} test cases from {test_data_path.name}[/dim]")
     console.print("[dim]Initializing BibleMorphologySearch service...[/dim]\n")
 
     # Initialize search service
@@ -233,7 +221,7 @@ async def run_all_tests(test_data_path: Path) -> Dict[str, Any]:
 
     search = await BibleMorphologySearch.get_instance()
 
-    results: List[TestResult] = []
+    results: list[TestResult] = []
 
     console.print("=" * 80)
     console.print("[bold]TEST EXECUTION[/bold]")
@@ -272,9 +260,7 @@ async def run_all_tests(test_data_path: Path) -> Dict[str, Any]:
                         f"  [yellow]Strong's mismatch: expected {test.strongs}, got {result.found_strongs}[/yellow]"
                     )
                 if not result.found_in_results:
-                    console.print(
-                        f"  [yellow]Expected verse {test.expected_reference} not found in results[/yellow]"
-                    )
+                    console.print(f"  [yellow]Expected verse {test.expected_reference} not found in results[/yellow]")
 
         console.print()
 
@@ -284,7 +270,7 @@ async def run_all_tests(test_data_path: Path) -> Dict[str, Any]:
     return compile_report(results, data["metadata"])
 
 
-def compile_report(results: List[TestResult], metadata: Dict) -> Dict[str, Any]:
+def compile_report(results: list[TestResult], metadata: dict) -> dict[str, Any]:
     """Compile comprehensive test report."""
 
     # Separate by category
@@ -348,7 +334,7 @@ def compile_report(results: List[TestResult], metadata: Dict) -> Dict[str, Any]:
     return report
 
 
-def print_report(report: Dict):
+def print_report(report: dict):
     """Print formatted report to console."""
 
     console.print("\n" + "═" * 80)
@@ -368,9 +354,7 @@ def print_report(report: Dict):
     console.print()
 
     # By category table
-    category_table = Table(
-        title="Performance by Category", show_header=True, header_style="bold magenta"
-    )
+    category_table = Table(title="Performance by Category", show_header=True, header_style="bold magenta")
     category_table.add_column("Category", width=20)
     category_table.add_column("Count", width=8)
     category_table.add_column("Passed", width=8)
@@ -387,9 +371,7 @@ def print_report(report: Dict):
     console.print()
 
     # Detailed results table
-    detail_table = Table(
-        title="Detailed Results", show_header=True, header_style="bold magenta"
-    )
+    detail_table = Table(title="Detailed Results", show_header=True, header_style="bold magenta")
     detail_table.add_column("ID", width=8)
     detail_table.add_column("Category", width=15)
     detail_table.add_column("Root", width=10)
@@ -421,19 +403,13 @@ def print_report(report: Dict):
     if pass_rate == 1.0:
         console.print("[bold green]✅ PERFECT: All tests passed![/bold green]")
     elif pass_rate >= 0.9:
-        console.print(
-            "[bold green]✅ EXCELLENT: System performs very well![/bold green]"
-        )
+        console.print("[bold green]✅ EXCELLENT: System performs very well![/bold green]")
     elif pass_rate >= 0.8:
-        console.print(
-            "[bold yellow]⚠️ GOOD: System performs reasonably well[/bold yellow]"
-        )
+        console.print("[bold yellow]⚠️ GOOD: System performs reasonably well[/bold yellow]")
     elif pass_rate >= 0.7:
         console.print("[bold orange3]⚠️ FAIR: System needs improvement[/bold orange3]")
     else:
-        console.print(
-            "[bold red]❌ POOR: System needs significant improvement[/bold red]"
-        )
+        console.print("[bold red]❌ POOR: System needs significant improvement[/bold red]")
 
     console.print("═" * 80)
 

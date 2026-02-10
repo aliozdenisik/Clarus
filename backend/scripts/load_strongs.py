@@ -58,7 +58,7 @@ def load_strongs_data() -> list[dict]:
 
     # Load Hebrew
     log.info("Loading Hebrew Strong's data...")
-    with open(HEBREW_FILE, "r", encoding="utf-8") as f:
+    with open(HEBREW_FILE, encoding="utf-8") as f:
         hebrew_data = json.load(f)
 
     for number, entry in hebrew_data.items():
@@ -76,7 +76,7 @@ def load_strongs_data() -> list[dict]:
 
     # Load Greek
     log.info("Loading Greek Strong's data...")
-    with open(GREEK_FILE, "r", encoding="utf-8") as f:
+    with open(GREEK_FILE, encoding="utf-8") as f:
         greek_data = json.load(f)
 
     for number, entry in greek_data.items():
@@ -84,9 +84,7 @@ def load_strongs_data() -> list[dict]:
             {
                 "number": number,
                 "original_word": entry.get("lemma", ""),
-                "transliteration": entry.get(
-                    "translit", ""
-                ),  # Note: Greek uses "translit"
+                "transliteration": entry.get("translit", ""),  # Note: Greek uses "translit"
                 "definition": entry.get("strongs_def", ""),
                 "language": "greek",
             }
@@ -149,9 +147,7 @@ def validate_counts(conn) -> bool:
         log.info("✅ Total entries: %d", total_count)
 
     # Hebrew count
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_strongs WHERE language = 'hebrew'")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_strongs WHERE language = 'hebrew'"))
     hebrew_count = result.scalar()
     if hebrew_count != 8427:
         log.error("❌ Expected 8,427 Hebrew entries, got %d", hebrew_count)
@@ -160,9 +156,7 @@ def validate_counts(conn) -> bool:
         log.info("✅ Hebrew entries: %d", hebrew_count)
 
     # Greek count
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_strongs WHERE language = 'greek'")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_strongs WHERE language = 'greek'"))
     greek_count = result.scalar()
     if greek_count != 5523:
         log.error("❌ Expected 5,523 Greek entries, got %d", greek_count)
@@ -173,8 +167,7 @@ def validate_counts(conn) -> bool:
     # Sample: H7225 (Reshith - "beginning")
     result = conn.execute(
         text(
-            "SELECT number, original_word, transliteration, definition, language "
-            "FROM bm_strongs WHERE number = 'H7225'"
+            "SELECT number, original_word, transliteration, definition, language FROM bm_strongs WHERE number = 'H7225'"
         )
     )
     row = result.fetchone()
@@ -193,10 +186,7 @@ def validate_counts(conn) -> bool:
 
     # Sample: G26 (Agape - "love")
     result = conn.execute(
-        text(
-            "SELECT number, original_word, transliteration, definition, language "
-            "FROM bm_strongs WHERE number = 'G26'"
-        )
+        text("SELECT number, original_word, transliteration, definition, language FROM bm_strongs WHERE number = 'G26'")
     )
     row = result.fetchone()
     if row:

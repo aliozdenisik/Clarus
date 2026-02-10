@@ -205,7 +205,7 @@ def main() -> bool:
                 conn.execute(
                     text(
                         """
-						INSERT INTO bm_verse_mappings 
+						INSERT INTO bm_verse_mappings
 						(mt_reference, lxx_reference, mapping_type, notes)
 						VALUES (:mt_ref, :lxx_ref, :mapping_type, :notes)
 						"""
@@ -231,9 +231,7 @@ def main() -> bool:
 
             # Show sample
             result = conn.execute(
-                text(
-                    "SELECT mt_reference, lxx_reference, mapping_type FROM bm_verse_mappings LIMIT 5"
-                )
+                text("SELECT mt_reference, lxx_reference, mapping_type FROM bm_verse_mappings LIMIT 5")
             )
             print("\n📋 Sample mappings:")
             for row in result:

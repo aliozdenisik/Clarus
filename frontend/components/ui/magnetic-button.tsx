@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { motion } from "framer-motion";
-import { springPresets } from "@/lib/design-system";
-import { useRef, useState, MouseEvent } from "react";
-import { cn } from "@/lib/utils";
+import { motion } from "framer-motion"
+import { springPresets } from "@/lib/design-system"
+import { useRef, useState, MouseEvent } from "react"
+import { cn } from "@/lib/utils"
 
 interface MagneticButtonProps {
-  children: React.ReactNode;
-  className?: string;
-  onClick?: () => void;
-  disabled?: boolean;
-  type?: "button" | "submit" | "reset";
+  children: React.ReactNode
+  className?: string
+  onClick?: () => void
+  disabled?: boolean
+  type?: "button" | "submit" | "reset"
 }
 
 export function MagneticButton({
@@ -20,30 +20,30 @@ export function MagneticButton({
   disabled,
   type = "button",
 }: MagneticButtonProps) {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const rectRef = useRef<DOMRect | null>(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const rectRef = useRef<DOMRect | null>(null)
 
   const handleMouseEnter = (e: MouseEvent<HTMLButtonElement>) => {
-    rectRef.current = e.currentTarget.getBoundingClientRect();
-  };
+    rectRef.current = e.currentTarget.getBoundingClientRect()
+  }
 
   const handleMouseMove = (e: MouseEvent<HTMLButtonElement>) => {
-    const rect = rectRef.current ?? e.currentTarget.getBoundingClientRect();
+    const rect = rectRef.current ?? e.currentTarget.getBoundingClientRect()
     if (!rectRef.current) {
-      rectRef.current = rect;
+      rectRef.current = rect
     }
 
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const deltaX = (e.clientX - centerX) * 0.15;
-    const deltaY = (e.clientY - centerY) * 0.15;
-    setPosition({ x: deltaX, y: deltaY });
-  };
+    const centerX = rect.left + rect.width / 2
+    const centerY = rect.top + rect.height / 2
+    const deltaX = (e.clientX - centerX) * 0.15
+    const deltaY = (e.clientY - centerY) * 0.15
+    setPosition({ x: deltaX, y: deltaY })
+  }
 
   const handleMouseLeave = () => {
-    setPosition({ x: 0, y: 0 });
-    rectRef.current = null;
-  };
+    setPosition({ x: 0, y: 0 })
+    rectRef.current = null
+  }
 
   return (
     <motion.button
@@ -64,5 +64,5 @@ export function MagneticButton({
     >
       {children}
     </motion.button>
-  );
+  )
 }

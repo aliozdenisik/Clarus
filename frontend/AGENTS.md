@@ -90,36 +90,36 @@ frontend/
 
 ## WHERE TO LOOK
 
-| Task | Location | Notes |
-|------|----------|-------|
-| Add page | `app/[route]/page.tsx` | App Router convention |
-| Add UI primitive | `components/ui/` | Radix + Tailwind (33 files) |
-| Add compare component | `components/compare/` | 7 domain components |
-| Add keyword search component | `components/keyword-search/` | 12 domain components |
-| Add verse lookup component | `components/verse-lookup/` | 2 files |
-| Add search component | `components/search/` | 4 search-related components |
-| Modify API client | `lib/api/` | Regenerate, don't edit manually |
-| Add state | `lib/stores/` | Zustand pattern |
-| Add hook | `lib/hooks/` | Custom React hooks |
-| Add test | `__tests__/` | Vitest + RTL (21 test files, 228+ passing) |
-| i18n strings | `messages/` | en.json, tr.json |
-| Add utility | `lib/utils/` | Domain-specific utils (verse-url, parse-citations, etc.) |
-| Modify logging | `lib/logger.ts` | Structured logger (196 lines) |
-| Modify correlation | `lib/correlation.ts` | Correlation ID management (72 lines) |
-| Modify API setup | `lib/api-client-setup.ts` | API interceptors (79 lines) |
-| Modify auth | `lib/auth/auth-context.tsx` | Auth context provider |
+| Task                         | Location                     | Notes                                                    |
+| ---------------------------- | ---------------------------- | -------------------------------------------------------- |
+| Add page                     | `app/[route]/page.tsx`       | App Router convention                                    |
+| Add UI primitive             | `components/ui/`             | Radix + Tailwind (33 files)                              |
+| Add compare component        | `components/compare/`        | 7 domain components                                      |
+| Add keyword search component | `components/keyword-search/` | 12 domain components                                     |
+| Add verse lookup component   | `components/verse-lookup/`   | 2 files                                                  |
+| Add search component         | `components/search/`         | 4 search-related components                              |
+| Modify API client            | `lib/api/`                   | Regenerate, don't edit manually                          |
+| Add state                    | `lib/stores/`                | Zustand pattern                                          |
+| Add hook                     | `lib/hooks/`                 | Custom React hooks                                       |
+| Add test                     | `__tests__/`                 | Vitest + RTL (21 test files, 228+ passing)               |
+| i18n strings                 | `messages/`                  | en.json, tr.json                                         |
+| Add utility                  | `lib/utils/`                 | Domain-specific utils (verse-url, parse-citations, etc.) |
+| Modify logging               | `lib/logger.ts`              | Structured logger (196 lines)                            |
+| Modify correlation           | `lib/correlation.ts`         | Correlation ID management (72 lines)                     |
+| Modify API setup             | `lib/api-client-setup.ts`    | API interceptors (79 lines)                              |
+| Modify auth                  | `lib/auth/auth-context.tsx`  | Auth context provider                                    |
 
 ## CONVENTIONS
 
 ### State Management (Hybrid)
 
-| Type | Tool | Location |
-|------|------|----------|
-| User preferences | Zustand + persist | `lib/stores/preferences-store.ts` |
-| Keyword search state | Zustand | `lib/stores/keyword-store.ts` |
-| Server data | TanStack Query | `lib/api/@tanstack/` |
-| Auth session | React Context | `lib/auth/auth-context.tsx` |
-| URL state | nuqs | Page components |
+| Type                 | Tool              | Location                          |
+| -------------------- | ----------------- | --------------------------------- |
+| User preferences     | Zustand + persist | `lib/stores/preferences-store.ts` |
+| Keyword search state | Zustand           | `lib/stores/keyword-store.ts`     |
+| Server data          | TanStack Query    | `lib/api/@tanstack/`              |
+| Auth session         | React Context     | `lib/auth/auth-context.tsx`       |
+| URL state            | nuqs              | Page components                   |
 
 ### API Client
 
@@ -135,6 +135,7 @@ fetch('/api/search/quran', { ... });  // Avoid
 **Exception**: Auth endpoints and SSE streaming use raw `fetch` (circular dependency avoidance).
 
 **SDK Auth Configuration:**
+
 ```typescript
 // Global auth configured in lib/api/config.ts — called once in layout.tsx
 // All SDK functions auto-inject Authorization header
@@ -145,8 +146,8 @@ fetch('/api/search/quran', { ... });  // Avoid
 
 ```typescript
 // Use custom hook for EventSource
-import { useSSE } from '@/lib/hooks/use-sse';
-const { data, error, isConnected } = useSSE('/api/stream/search?q=...');
+import { useSSE } from "@/lib/hooks/use-sse"
+const { data, error, isConnected } = useSSE("/api/stream/search?q=...")
 ```
 
 ### Components
@@ -161,11 +162,11 @@ const { data, error, isConnected } = useSSE('/api/stream/search?q=...');
 
 ```typescript
 // DO: Use structured logger
-import { logger } from '@/lib/logger';
-logger.info('Search completed', { query, resultCount });
+import { logger } from "@/lib/logger"
+logger.info("Search completed", { query, resultCount })
 
 // DON'T: Use console.log
-console.log('Search completed');  // Forbidden
+console.log("Search completed") // Forbidden
 ```
 
 ### Correlation IDs
@@ -186,31 +187,33 @@ console.log('Search completed');  // Forbidden
 ## KEY COMPONENTS
 
 ### Compare Domain (`components/compare/`)
-| Component | Lines | Role |
-|-----------|-------|------|
-| `analysis-progress.tsx` | 209 | Multi-agent analysis progress indicator |
-| `collection-selector.tsx` | 109 | Collection selection for comparison |
-| `source-reference-card.tsx` | 105 | Verse card with source badge |
-| `citation-hover-card.tsx` | 98 | Citation tooltip on hover |
-| `inline-citation.tsx` | 53 | Clickable inline citation |
-| `filter-tabs.tsx` | 38 | Source filtering tabs |
-| `source-badge.tsx` | 35 | Colored source badge |
+
+| Component                   | Lines | Role                                    |
+| --------------------------- | ----- | --------------------------------------- |
+| `analysis-progress.tsx`     | 209   | Multi-agent analysis progress indicator |
+| `collection-selector.tsx`   | 109   | Collection selection for comparison     |
+| `source-reference-card.tsx` | 105   | Verse card with source badge            |
+| `citation-hover-card.tsx`   | 98    | Citation tooltip on hover               |
+| `inline-citation.tsx`       | 53    | Clickable inline citation               |
+| `filter-tabs.tsx`           | 38    | Source filtering tabs                   |
+| `source-badge.tsx`          | 35    | Colored source badge                    |
 
 ### Keyword Search Domain (`components/keyword-search/`)
-| Component | Lines | Role |
-|-----------|-------|------|
-| `root-browser.tsx` | 234 | Root morphology browser |
-| `verse-card.tsx` | 181 | Verse display card |
-| `surah-chart.tsx` | 169 | Surah/book distribution chart |
-| `accuracy-disclaimer.tsx` | 164 | Accuracy disclaimer modal |
-| `search-input.tsx` | 91 | Search input with transliteration |
-| `derived-words.tsx` | 77 | Derived words display |
-| `root-card.tsx` | 54 | Root information card |
-| `pagination.tsx` | 54 | Pagination controls |
-| `stats-bar.tsx` | 47 | Search statistics bar |
-| `bible-category-tabs.tsx` | 40 | Bible category tabs (OT/NT) |
-| `experimental-disclaimer.tsx` | 28 | Experimental feature disclaimer |
-| `language-tabs.tsx` | 26 | Language selection tabs |
+
+| Component                     | Lines | Role                              |
+| ----------------------------- | ----- | --------------------------------- |
+| `root-browser.tsx`            | 234   | Root morphology browser           |
+| `verse-card.tsx`              | 181   | Verse display card                |
+| `surah-chart.tsx`             | 169   | Surah/book distribution chart     |
+| `accuracy-disclaimer.tsx`     | 164   | Accuracy disclaimer modal         |
+| `search-input.tsx`            | 91    | Search input with transliteration |
+| `derived-words.tsx`           | 77    | Derived words display             |
+| `root-card.tsx`               | 54    | Root information card             |
+| `pagination.tsx`              | 54    | Pagination controls               |
+| `stats-bar.tsx`               | 47    | Search statistics bar             |
+| `bible-category-tabs.tsx`     | 40    | Bible category tabs (OT/NT)       |
+| `experimental-disclaimer.tsx` | 28    | Experimental feature disclaimer   |
+| `language-tabs.tsx`           | 26    | Language selection tabs           |
 
 ## TESTING
 
@@ -249,23 +252,25 @@ Arabic text uses **Amiri** font from Google Fonts (classic Naskh calligraphy sty
 ### Configuration
 
 **layout.tsx:**
+
 ```typescript
-import { Inter, Amiri } from "next/font/google";
+import { Inter, Amiri } from "next/font/google"
 
 const amiri = Amiri({
   subsets: ["arabic"],
   weight: ["400", "700"],
   variable: "--font-arabic",
   display: "swap",
-});
+})
 ```
 
 **globals.css:**
+
 ```css
 .font-arabic {
-  font-family: var(--font-arabic), 'Amiri', serif;
-  line-height: 2;        /* Extra space for diacritics */
-  direction: rtl;        /* Right-to-left */
+  font-family: var(--font-arabic), "Amiri", serif;
+  line-height: 2; /* Extra space for diacritics */
+  direction: rtl; /* Right-to-left */
   text-align: right;
 }
 ```
@@ -281,10 +286,12 @@ const amiri = Amiri({
 ### Changing Font
 
 To switch Arabic font, update only `layout.tsx`:
+
 1. Change import: `Amiri` → `Scheherazade_New`, `Noto_Naskh_Arabic`, etc.
 2. Update const name and reference in body className
 
 Available Google Fonts for Arabic:
+
 - `Amiri` - Classic calligraphy (current)
 - `Scheherazade_New` - Traditional Naskh
 - `Noto_Naskh_Arabic` - Clean, modern
@@ -294,9 +301,11 @@ Available Google Fonts for Arabic:
 ## PERFORMANCE PATTERNS
 
 ### React Key Stability (Issue #94)
+
 **Problem**: Index-based keys (`key={i}`) cause reconciliation bugs when lists reorder.
 
 **Solution Patterns**:
+
 - **Domain ID keys**: `key={result.reference}` for unique data
 - **Composite keys**: `key={`${citation.reference}-${idx}`}` for duplicate values
 - **Namespaced skeleton keys**: `key="root-browser-skeleton-${i}"` for deterministic placeholders
@@ -304,46 +313,56 @@ Available Google Fonts for Arabic:
 **Files Updated**: 53 files across search, compare, keyword-search, and shared UI components
 
 ### SSE Single-Pass Aggregation (Issue #92, #104)
+
 **Problem**: Multiple `.filter().map().find()` passes over SSE data on every message.
 
 **Solution**: Single `.reduce()` pass + ref-based tracking:
+
 ```typescript
-const sseProcessedCount = useRef(0);
-const newMessages = sseData.slice(sseProcessedCount.current);
+const sseProcessedCount = useRef(0)
+const newMessages = sseData.slice(sseProcessedCount.current)
 const streamState = newMessages.reduce((acc, msg) => {
   // Aggregate tokens, verse_details, errors in one pass
-}, initialState);
+}, initialState)
 ```
 
 **Benefit**: 4x reduction in array iterations
 
 ### Zustand Selector-Based Subscriptions (Issue #90)
+
 **Problem**: Full store subscription causes re-renders when any field changes.
 
 **Solution**: Narrow selectors:
+
 ```typescript
 // ✅ Subscribe only to used fields
-const advancedMode = useKeywordStore((s) => s.advancedMode);
-const keywords = useKeywordStore((s) => s.keywords);
+const advancedMode = useKeywordStore((s) => s.advancedMode)
+const keywords = useKeywordStore((s) => s.keywords)
 ```
 
 **Benefit**: Re-renders only when subscribed fields change
 
 ### React-Window Virtualization (Issue #91)
+
 **Problem**: Rendering 1,600+ roots causes layout thrashing.
 
 **Solution**: `react-window` `List` component renders only visible rows (~10 instead of 1,600)
 
 ### Batched DOM Reads (Issue #91)
+
 **Pattern**: Use `useLayoutEffect` to batch geometry reads before paint
+
 - Tab indicator reads both active and hover geometry in one pass
 - Equality checks prevent state updates if geometry unchanged
 
 ### Cached Bounds (Issue #91)
+
 **Pattern**: Cache `getBoundingClientRect()` on `mouseenter`, reuse during `mousemove`
+
 - Reduces DOM reads from ~60/sec to 1
 
 ### Bundle Optimization (Issue #85)
+
 - **DevTools lazy-load**: `next/dynamic` with `ssr: false` (100-200KB savings)
 - **Direct date-fns imports**: Subpath imports for guaranteed tree-shaking (~40KB savings)
 - **Recharts code-split**: `next/dynamic` lazy-load (~50KB savings)

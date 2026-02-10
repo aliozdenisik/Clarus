@@ -24,8 +24,8 @@ Industry references:
 """
 
 import math
-from dataclasses import dataclass, asdict
-from typing import List
+from dataclasses import asdict, dataclass
+
 from app.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -133,7 +133,7 @@ class ConfidenceScorer:
 
     def _compute_retrieval_confidence(
         self,
-        scores: List[float],
+        scores: list[float],
         actual_results: int,
         expected_results: int,
         collections_with_results: int,
@@ -157,9 +157,7 @@ class ConfidenceScorer:
             top_scores = sorted(scores[: min(5, len(scores))], reverse=True)
             median_idx = len(top_scores) // 2
             median_score = top_scores[median_idx]
-            score_quality = self._sigmoid(
-                median_score, self.RRF_MIDPOINT, self.RRF_STEEPNESS
-            )
+            score_quality = self._sigmoid(median_score, self.RRF_MIDPOINT, self.RRF_STEEPNESS)
         else:
             score_quality = 0.0
 
@@ -189,9 +187,7 @@ class ConfidenceScorer:
             result_coverage = 1.0
 
         # Combine Phase 1 signals
-        retrieval = (
-            0.60 * score_quality + 0.25 * score_separation + 0.15 * result_coverage
-        )
+        retrieval = 0.60 * score_quality + 0.25 * score_separation + 0.15 * result_coverage
 
         # Source breadth BONUS (additive, not penalty)
         # Only applies for multi-collection queries (compare mode)
@@ -231,9 +227,7 @@ class ConfidenceScorer:
         # How many citations per paragraph? Sigmoid around 70% of expected
         expected_density = self.EXPECTED_DENSITY.get(query_type, 3.0)
         actual_density = cited_count / max(num_paragraphs, 1)
-        citation_density = self._sigmoid(
-            actual_density, expected_density * 0.7, self.DENSITY_STEEPNESS
-        )
+        citation_density = self._sigmoid(actual_density, expected_density * 0.7, self.DENSITY_STEEPNESS)
 
         # Signal 2: Top-K Citation Rate (estimated)
         # Heuristic: assume citations come from top results first
@@ -242,9 +236,7 @@ class ConfidenceScorer:
         if top_k > 0:
             estimated_top_k_cited = min(cited_count, top_k)
             top_k_rate = estimated_top_k_cited / top_k
-            top_k_citation_rate = self._sigmoid(
-                top_k_rate, self.TOP_K_MIDPOINT, self.TOP_K_STEEPNESS
-            )
+            top_k_citation_rate = self._sigmoid(top_k_rate, self.TOP_K_MIDPOINT, self.TOP_K_STEEPNESS)
         else:
             top_k_citation_rate = 0.0
 
@@ -254,17 +246,13 @@ class ConfidenceScorer:
         answer_substance = min(answer_length_words / max(min_words, 1), 1.0)
 
         # Combine Phase 2 signals
-        answer_qual = (
-            0.50 * citation_density
-            + 0.35 * top_k_citation_rate
-            + 0.15 * answer_substance
-        )
+        answer_qual = 0.50 * citation_density + 0.35 * top_k_citation_rate + 0.15 * answer_substance
 
         return answer_qual, citation_density, top_k_citation_rate, answer_substance
 
     def compute(
         self,
-        scores: List[float],
+        scores: list[float],
         num_queries: int,
         cited_count: int,
         num_paragraphs: int,

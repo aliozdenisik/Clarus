@@ -48,26 +48,26 @@
 
 :root {
   /* Utilitarian Luxury - Color Palette */
-  --color-bg-app: #09090b;        /* Zinc-950 - Main background */
-  --color-bg-surface: #18181b;    /* Zinc-900 - Cards, panels */
-  --color-bg-elevated: #27272a;   /* Zinc-800 - Hover, active */
-  
+  --color-bg-app: #09090b; /* Zinc-950 - Main background */
+  --color-bg-surface: #18181b; /* Zinc-900 - Cards, panels */
+  --color-bg-elevated: #27272a; /* Zinc-800 - Hover, active */
+
   --color-border-subtle: #27272a; /* Zinc-800 - Passive borders */
-  --color-border-glow: #3f3f46;   /* Zinc-700 - Active, focus */
-  
-  --color-text-primary: #f4f4f5;  /* Zinc-100 - Headings */
+  --color-border-glow: #3f3f46; /* Zinc-700 - Active, focus */
+
+  --color-text-primary: #f4f4f5; /* Zinc-100 - Headings */
   --color-text-secondary: #a1a1aa; /* Zinc-400 - Body text */
-  --color-text-muted: #71717a;    /* Zinc-500 - Metadata */
-  
+  --color-text-muted: #71717a; /* Zinc-500 - Metadata */
+
   --color-accent-primary: #6366f1; /* Indigo-500 - CTA, accents */
   --color-accent-glow: rgba(99, 102, 241, 0.15); /* Indigo glow effect */
   --color-accent-secondary: #818cf8; /* Indigo-400 - Highlights */
-  --color-accent-hover: #818cf8;    /* Indigo-400 - Hover states */
-  
+  --color-accent-hover: #818cf8; /* Indigo-400 - Hover states */
+
   /* Additional background layers */
-  --color-bg-secondary: #111113;    /* Between app and surface */
-  --color-bg-tertiary: #1a1a1c;     /* For buttons/elevated */
-  
+  --color-bg-secondary: #111113; /* Between app and surface */
+  --color-bg-tertiary: #1a1a1c; /* For buttons/elevated */
+
   /* Glow effects */
   --color-glow-primary: rgba(99, 102, 241, 0.4);
   --color-glow-secondary: rgba(139, 92, 246, 0.3);
@@ -105,7 +105,7 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  
+
   /* 21st.dev design tokens */
   --ring-hsl: 240 5% 65%;
   --input-hsl: 240 3.7% 15.9%;
@@ -154,13 +154,18 @@
     @apply bg-background text-foreground;
     background-color: var(--color-bg-app);
     color: var(--color-text-primary);
-    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-feature-settings: 'cv05', 'cv08', 'ss01';
+    font-family:
+      "DM Sans",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    font-feature-settings: "cv05", "cv08", "ss01";
   }
-  
+
   /* Grain texture overlay for tactile quality */
   body::before {
-    content: '';
+    content: "";
     position: fixed;
     top: 0;
     left: 0;
@@ -175,44 +180,44 @@
 
 /* Arabic typography support - Scheherazade New font */
 .font-arabic {
-  font-family: var(--font-arabic), 'Scheherazade New', serif;
+  font-family: var(--font-arabic), "Scheherazade New", serif;
   /*
    * Fallback chain:
    * 1. var(--font-arabic) - Next.js optimized font (primary, fastest)
    * 2. 'Scheherazade New' - Direct name (if loaded via CDN fallback)
    * 3. serif - Browser default (last resort, will look broken)
    */
-  line-height: 2;        /* Extra space for diacritics (harakat) */
-  direction: rtl;        /* Right-to-left text direction */
-  text-align: right;     /* Align text to right edge */
+  line-height: 2; /* Extra space for diacritics (harakat) */
+  direction: rtl; /* Right-to-left text direction */
+  text-align: right; /* Align text to right edge */
 }
 
 /* Hebrew typography support - Noto Sans Hebrew font */
 .font-hebrew {
-  font-family: var(--font-hebrew), 'Noto Sans Hebrew', serif;
+  font-family: var(--font-hebrew), "Noto Sans Hebrew", serif;
   /*
    * Fallback chain:
    * 1. var(--font-hebrew) - Next.js optimized font (primary, fastest)
    * 2. 'Noto Sans Hebrew' - Direct name (if loaded via CDN fallback)
    * 3. serif - Browser default (last resort)
    */
-  line-height: 2;        /* Extra space for diacritics (nikud/cantillation) */
-  direction: rtl;        /* Right-to-left text direction */
-  text-align: right;     /* Align text to right edge */
+  line-height: 2; /* Extra space for diacritics (nikud/cantillation) */
+  direction: rtl; /* Right-to-left text direction */
+  text-align: right; /* Align text to right edge */
 }
 
 /* Greek typography support - Noto Serif Greek font */
 .font-greek {
-  font-family: var(--font-greek), 'Noto Serif', serif;
+  font-family: var(--font-greek), "Noto Serif", serif;
   /*
    * Fallback chain:
    * 1. var(--font-greek) - Next.js optimized font (primary, fastest)
    * 2. 'Noto Serif' - Direct name (if loaded via CDN fallback)
    * 3. serif - Browser default (last resort)
    */
-  line-height: 1.8;      /* Extra space for diacritics (polytonic accents) */
-  direction: ltr;        /* Left-to-right text direction */
-  text-align: left;      /* Align text to left edge */
+  line-height: 1.8; /* Extra space for diacritics (polytonic accents) */
+  direction: ltr; /* Left-to-right text direction */
+  text-align: left; /* Align text to left edge */
 }
 
 /* Database with REST API component animations */

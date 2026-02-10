@@ -12,23 +12,22 @@ Usage:
 """
 
 import logging
-from dataclasses import dataclass, field, asdict
-from typing import Optional
+from dataclasses import asdict, dataclass, field
 
+from sqlalchemy import text as sa_text
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
     AsyncSession,
     async_sessionmaker,
+    create_async_engine,
 )
-from sqlalchemy import text as sa_text
 
 from .arabic_normalizer import (
-    normalize_arabic,
-    is_arabic,
-    normalize_latin_query,
-    buckwalter_to_arabic,
-    strip_buckwalter_vowels,
     arabic_to_buckwalter,
+    buckwalter_to_arabic,
+    is_arabic,
+    normalize_arabic,
+    normalize_latin_query,
+    strip_buckwalter_vowels,
 )
 
 logger = logging.getLogger(__name__)
@@ -65,7 +64,7 @@ class MorphologySearchResult:
     """Complete result of a morphological root search."""
 
     query: str
-    root: Optional[str]
+    root: str | None
     root_source: str  # exact_match | prefix_stripped | algorithmic | buckwalter_exact | buckwalter_fuzzy | not_found
     total_occurrences: int = 0
     unique_words: list[str] = field(default_factory=list)
@@ -74,7 +73,7 @@ class MorphologySearchResult:
     page: int = 1
     per_page: int = 50
     total_verses: int = 0
-    root_buckwalter: Optional[str] = None
+    root_buckwalter: str | None = None
     word_transliterations: dict[str, str] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
@@ -138,9 +137,7 @@ class QuranMorphologySearch:
 
     def __init__(self, db_url: str) -> None:
         self._engine = create_async_engine(db_url, echo=False, pool_pre_ping=True)
-        self._session_maker = async_sessionmaker(
-            self._engine, class_=AsyncSession, expire_on_commit=False
-        )
+        self._session_maker = async_sessionmaker(self._engine, class_=AsyncSession, expire_on_commit=False)
 
     # ------------------------------------------------------------------
     # Public API
@@ -178,9 +175,7 @@ class QuranMorphologySearch:
                 per_page=per_page,
             )
 
-        return await self._search_root_in_db(
-            query, root, source, page, per_page, word_filter=word_filter
-        )
+        return await self._search_root_in_db(query, root, source, page, per_page, word_filter=word_filter)
 
     async def list_roots(self, page: int = 1, per_page: int = 50) -> dict:
         """List all available roots with occurrence counts, paginated."""
@@ -189,9 +184,7 @@ class QuranMorphologySearch:
 
         async with self._session_maker() as session:
             total_result = await session.execute(
-                sa_text(
-                    "SELECT COUNT(DISTINCT root) FROM qm_words WHERE root IS NOT NULL"
-                )
+                sa_text("SELECT COUNT(DISTINCT root) FROM qm_words WHERE root IS NOT NULL")
             )
             total = total_result.scalar()
 
@@ -225,7 +218,7 @@ class QuranMorphologySearch:
     # Root Finding
     # ------------------------------------------------------------------
 
-    async def _find_root(self, query: str) -> tuple[Optional[str], str]:
+    async def _find_root(self, query: str) -> tuple[str | None, str]:
         """Hybrid root extraction: special terms -> DB lookup -> prefix strip -> algorithmic (Arabic) or Buckwalter (Latin)."""
         # Step 0: Check well-known terms before any other processing.
         # Normalise the lookup key the same way each path would.
@@ -241,17 +234,14 @@ class QuranMorphologySearch:
             return await self._find_root_arabic(query)
         return await self._find_root_latin(query)
 
-    async def _find_root_arabic(self, query: str) -> tuple[Optional[str], str]:
+    async def _find_root_arabic(self, query: str) -> tuple[str | None, str]:
         """Arabic path: normalize -> exact match -> prefix strip -> Tashaphyne."""
         normalized = normalize_arabic(query)
 
         async with self._session_maker() as session:
             # Step 1: Exact match on token_clean
             result = await session.execute(
-                sa_text(
-                    "SELECT root FROM qm_words "
-                    "WHERE token_clean = :q AND root IS NOT NULL LIMIT 1"
-                ),
+                sa_text("SELECT root FROM qm_words WHERE token_clean = :q AND root IS NOT NULL LIMIT 1"),
                 {"q": normalized},
             )
             row = result.fetchone()
@@ -263,10 +253,7 @@ class QuranMorphologySearch:
                 if normalized.startswith(prefix) and len(normalized) > len(prefix):
                     remainder = normalized[len(prefix) :]
                     result = await session.execute(
-                        sa_text(
-                            "SELECT root FROM qm_words "
-                            "WHERE token_clean = :q AND root IS NOT NULL LIMIT 1"
-                        ),
+                        sa_text("SELECT root FROM qm_words WHERE token_clean = :q AND root IS NOT NULL LIMIT 1"),
                         {"q": remainder},
                     )
                     row = result.fetchone()
@@ -279,9 +266,9 @@ class QuranMorphologySearch:
             result = await session.execute(
                 sa_text(
                     """
-                    SELECT DISTINCT root FROM qm_words 
-                    WHERE REPLACE(REPLACE(REPLACE(root, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا') = :q 
-                    AND root IS NOT NULL 
+                    SELECT DISTINCT root FROM qm_words
+                    WHERE REPLACE(REPLACE(REPLACE(root, 'أ', 'ا'), 'إ', 'ا'), 'آ', 'ا') = :q
+                    AND root IS NOT NULL
                     LIMIT 1
                     """
                 ),
@@ -302,9 +289,7 @@ class QuranMorphologySearch:
                 # Verify this root exists in DB
                 async with self._session_maker() as session:
                     result = await session.execute(
-                        sa_text(
-                            "SELECT DISTINCT root FROM qm_words WHERE root = :q LIMIT 1"
-                        ),
+                        sa_text("SELECT DISTINCT root FROM qm_words WHERE root = :q LIMIT 1"),
                         {"q": algo_root},
                     )
                     row = result.fetchone()
@@ -316,7 +301,7 @@ class QuranMorphologySearch:
 
         return (None, "not_found")
 
-    async def _find_root_latin(self, query: str) -> tuple[Optional[str], str]:
+    async def _find_root_latin(self, query: str) -> tuple[str | None, str]:
         """Latin path: exact → vowel-strip → Arabic convert → fuzzy fallback.
 
         Handles both strict Buckwalter input ('ktb') and common romanizations
@@ -355,8 +340,7 @@ class QuranMorphologySearch:
                 # L2a: Exact match with vowel-stripped form
                 result = await session.execute(
                     sa_text(
-                        "SELECT DISTINCT root FROM qm_words "
-                        "WHERE root_buckwalter = :q AND root IS NOT NULL LIMIT 1"
+                        "SELECT DISTINCT root FROM qm_words WHERE root_buckwalter = :q AND root IS NOT NULL LIMIT 1"
                     ),
                     {"q": vowel_stripped},
                 )
@@ -517,8 +501,7 @@ class QuranMorphologySearch:
                 {"root": root},
             )
             surah_distribution = [
-                SurahCount(surah_id=r[0], surah_name=r[1], count=r[2])
-                for r in dist_result.fetchall()
+                SurahCount(surah_id=r[0], surah_name=r[1], count=r[2]) for r in dist_result.fetchall()
             ]
 
             # 4. Count total distinct verses containing this root
@@ -532,9 +515,7 @@ class QuranMorphologySearch:
             if word_filter:
                 count_sql += " AND w.token_clean = :word_filter"
                 count_params["word_filter"] = word_filter
-            total_verses_result = await session.execute(
-                sa_text(count_sql), count_params
-            )
+            total_verses_result = await session.execute(sa_text(count_sql), count_params)
             total_verses = total_verses_result.scalar()
 
             # 5. Verse results (paginated or all when per_page=0)

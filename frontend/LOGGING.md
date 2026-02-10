@@ -21,17 +21,17 @@ The frontend uses a singleton Logger service built on standard browser APIs:
 ## Quick Start
 
 ```typescript
-import { logger, useLogger } from '@/lib/logger';
+import { logger, useLogger } from "@/lib/logger"
 
 // Direct logger usage
-logger.info('User searched', { component: 'SearchPage', query: 'test' });
-logger.error('API failed', error, { component: 'ApiClient' });
+logger.info("User searched", { component: "SearchPage", query: "test" })
+logger.error("API failed", error, { component: "ApiClient" })
 
 // In React components (recommended)
 function SearchPage() {
-  const log = useLogger('SearchPage');
-  log.info('Page loaded');
-  log.error('Search failed', error, { query });
+  const log = useLogger("SearchPage")
+  log.info("Page loaded")
+  log.error("Search failed", error, { query })
 }
 ```
 
@@ -41,42 +41,42 @@ function SearchPage() {
 
 ### Log Levels
 
-| Level | Method | Use Case | Sentry |
-|-------|--------|----------|--------|
-| `DEBUG` | `logger.debug()` | Detailed diagnostic info | None |
-| `INFO` | `logger.info()` | Normal operational messages | None |
-| `WARN` | `logger.warn()` | Potential issues, degraded state | Breadcrumb |
+| Level   | Method           | Use Case                             | Sentry            |
+| ------- | ---------------- | ------------------------------------ | ----------------- |
+| `DEBUG` | `logger.debug()` | Detailed diagnostic info             | None              |
+| `INFO`  | `logger.info()`  | Normal operational messages          | None              |
+| `WARN`  | `logger.warn()`  | Potential issues, degraded state     | Breadcrumb        |
 | `ERROR` | `logger.error()` | Errors that prevent normal operation | Exception capture |
 
 ### Basic Logging
 
 ```typescript
-import { logger } from '@/lib/logger';
+import { logger } from "@/lib/logger"
 
 // Info - normal operations
-logger.info('User logged in', {
-  component: 'AuthProvider',
-  action: 'login',
-});
+logger.info("User logged in", {
+  component: "AuthProvider",
+  action: "login",
+})
 
 // Warning - potential issues
-logger.warn('API response slow', {
-  component: 'ApiClient',
+logger.warn("API response slow", {
+  component: "ApiClient",
   latency_ms: 5000,
-});
+})
 
 // Error - with Error object (automatically captured to Sentry)
-logger.error('Search failed', error, {
-  component: 'SearchPage',
-  action: 'search',
+logger.error("Search failed", error, {
+  component: "SearchPage",
+  action: "search",
   query: searchQuery,
-});
+})
 
 // Debug - only shown when LOG_LEVEL=debug
-logger.debug('Render cycle', {
-  component: 'ResultsList',
+logger.debug("Render cycle", {
+  component: "ResultsList",
   itemCount: results.length,
-});
+})
 ```
 
 ### Context Interface
@@ -85,9 +85,9 @@ Every log call accepts an optional `LogContext` object:
 
 ```typescript
 interface LogContext {
-  component?: string;    // Component or module name
-  action?: string;       // User action being performed
-  [key: string]: unknown; // Any additional context
+  component?: string // Component or module name
+  action?: string // User action being performed
+  [key: string]: unknown // Any additional context
 }
 ```
 
@@ -126,6 +126,7 @@ function SearchPage() {
 ```
 
 **Benefits:**
+
 - Component name automatically included in all logs
 - No need to repeat `component: 'SearchPage'` in every call
 - Cleaner, more readable code
@@ -135,31 +136,31 @@ function SearchPage() {
 For non-component code or when you need more control:
 
 ```typescript
-import { logger } from '@/lib/logger';
+import { logger } from "@/lib/logger"
 
 // In utility functions
 export async function fetchWithRetry(url: string) {
-  logger.debug('Fetch attempt', {
-    component: 'fetchWithRetry',
+  logger.debug("Fetch attempt", {
+    component: "fetchWithRetry",
     url,
-  });
+  })
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url)
     if (!response.ok) {
-      logger.warn('Fetch returned non-OK status', {
-        component: 'fetchWithRetry',
+      logger.warn("Fetch returned non-OK status", {
+        component: "fetchWithRetry",
         url,
         status: response.status,
-      });
+      })
     }
-    return response;
+    return response
   } catch (error) {
-    logger.error('Fetch failed', error, {
-      component: 'fetchWithRetry',
+    logger.error("Fetch failed", error, {
+      component: "fetchWithRetry",
       url,
-    });
-    throw error;
+    })
+    throw error
   }
 }
 ```
@@ -171,17 +172,18 @@ export async function fetchWithRetry(url: string) {
 ### Automatic Sentry Integration
 
 Errors logged with `logger.error()` are automatically:
+
 1. Output to console
 2. Added as Sentry breadcrumb
 3. Captured as Sentry exception (if Error object provided)
 
 ```typescript
 // This automatically goes to Sentry
-logger.error('Payment failed', error, {
-  component: 'CheckoutPage',
-  action: 'payment',
+logger.error("Payment failed", error, {
+  component: "CheckoutPage",
+  action: "payment",
   orderId: order.id,
-});
+})
 ```
 
 ### Error Boundaries
@@ -224,30 +226,30 @@ class ErrorBoundary extends Component<
 ### Try-Catch Pattern
 
 ```typescript
-const log = useLogger('ComparePage');
+const log = useLogger("ComparePage")
 
 const handleCompare = async (query: string) => {
-  log.info('Compare started', { action: 'compare', query });
+  log.info("Compare started", { action: "compare", query })
 
   try {
-    const results = await compareApi(query);
-    log.info('Compare completed', {
-      action: 'compare',
+    const results = await compareApi(query)
+    log.info("Compare completed", {
+      action: "compare",
       agents: results.length,
-    });
-    return results;
+    })
+    return results
   } catch (error) {
     // Error automatically sent to Sentry with context
-    log.error('Compare failed', error, {
-      action: 'compare',
+    log.error("Compare failed", error, {
+      action: "compare",
       query,
-    });
+    })
 
     // Show user-friendly message
-    toast.error('Comparison failed. Please try again.');
-    return null;
+    toast.error("Comparison failed. Please try again.")
+    return null
   }
-};
+}
 ```
 
 ---
@@ -259,33 +261,33 @@ Correlation IDs enable tracing a user action across frontend and backend logs.
 ### Starting a Correlation
 
 ```typescript
-import { logger } from '@/lib/logger';
+import { logger } from "@/lib/logger"
 
 function SearchPage() {
   const handleSearch = async (query: string) => {
     // Generate and set correlation ID for this user action
-    const correlationId = logger.generateCorrelationId();
+    const correlationId = logger.generateCorrelationId()
 
     // All subsequent logs include this correlation ID
-    logger.info('Search initiated', {
-      component: 'SearchPage',
-      action: 'search',
+    logger.info("Search initiated", {
+      component: "SearchPage",
+      action: "search",
       query,
-    });
+    })
 
     // Pass to API (backend will use it for its logs)
-    const response = await fetch('/api/search', {
-      method: 'POST',
+    const response = await fetch("/api/search", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'X-Correlation-ID': correlationId,  // Backend picks this up
+        "Content-Type": "application/json",
+        "X-Correlation-ID": correlationId, // Backend picks this up
       },
       body: JSON.stringify({ query }),
-    });
+    })
 
     // Clear when action completes
-    logger.clearCorrelationId();
-  };
+    logger.clearCorrelationId()
+  }
 }
 ```
 
@@ -293,45 +295,45 @@ function SearchPage() {
 
 ```typescript
 const handleStreamSearch = (query: string) => {
-  const correlationId = logger.generateCorrelationId();
+  const correlationId = logger.generateCorrelationId()
 
   // EventSource with correlation ID
-  const url = new URL('/api/stream/search', window.location.origin);
-  url.searchParams.set('query', query);
-  url.searchParams.set('correlation_id', correlationId);
+  const url = new URL("/api/stream/search", window.location.origin)
+  url.searchParams.set("query", query)
+  url.searchParams.set("correlation_id", correlationId)
 
-  const eventSource = new EventSource(url.toString());
+  const eventSource = new EventSource(url.toString())
 
   eventSource.onmessage = (event) => {
     // Logs automatically include correlation ID
-    logger.debug('SSE message received', {
-      component: 'SearchPage',
+    logger.debug("SSE message received", {
+      component: "SearchPage",
       messageType: event.data.type,
-    });
-  };
+    })
+  }
 
   eventSource.onerror = () => {
-    logger.warn('SSE connection error', {
-      component: 'SearchPage',
-      action: 'stream',
-    });
-    eventSource.close();
-    logger.clearCorrelationId();
-  };
-};
+    logger.warn("SSE connection error", {
+      component: "SearchPage",
+      action: "stream",
+    })
+    eventSource.close()
+    logger.clearCorrelationId()
+  }
+}
 ```
 
 ### Manual Correlation ID
 
 ```typescript
 // Set a specific correlation ID (e.g., from URL parameter)
-logger.setCorrelationId('existing-correlation-id');
+logger.setCorrelationId("existing-correlation-id")
 
 // Get current correlation ID
-const currentId = logger.correlationId;
+const currentId = logger.correlationId
 
 // Clear when done
-logger.clearCorrelationId();
+logger.clearCorrelationId()
 ```
 
 ---
@@ -341,28 +343,28 @@ logger.clearCorrelationId();
 Child loggers inherit context and add preset fields to all logs:
 
 ```typescript
-import { logger } from '@/lib/logger';
+import { logger } from "@/lib/logger"
 
 // Create child logger with preset context
 const searchLog = logger.child({
-  component: 'SearchModule',
-  feature: 'hybrid-search',
-});
+  component: "SearchModule",
+  feature: "hybrid-search",
+})
 
 // All calls include component and feature
-searchLog.info('Initializing');  // Has component: 'SearchModule', feature: 'hybrid-search'
-searchLog.debug('Cache check', { cacheKey: 'abc' });
-searchLog.error('Failed', error, { stage: 'embedding' });
+searchLog.info("Initializing") // Has component: 'SearchModule', feature: 'hybrid-search'
+searchLog.debug("Cache check", { cacheKey: "abc" })
+searchLog.error("Failed", error, { stage: "embedding" })
 ```
 
 ### Nested Child Loggers
 
 ```typescript
-const moduleLog = logger.child({ component: 'SearchModule' });
-const searcherLog = moduleLog.child({ submodule: 'QuranSearcher' });
+const moduleLog = logger.child({ component: "SearchModule" })
+const searcherLog = moduleLog.child({ submodule: "QuranSearcher" })
 
 // Logs include both component and submodule
-searcherLog.info('Search started');
+searcherLog.info("Search started")
 ```
 
 ---
@@ -374,30 +376,32 @@ searcherLog.info('Search started');
 For measuring operation latency:
 
 ```typescript
-import { logPerformance } from '@/lib/logger';
+import { logPerformance } from "@/lib/logger"
 
 async function searchWithTiming(query: string) {
   // Start timing
-  const endTiming = logPerformance('search', {
-    component: 'SearchPage',
-    action: 'search',
-  });
+  const endTiming = logPerformance("search", {
+    component: "SearchPage",
+    action: "search",
+  })
 
-  const results = await searchApi(query);
+  const results = await searchApi(query)
 
   // End timing and log
-  endTiming({ results: results.length });
+  endTiming({ results: results.length })
 
-  return results;
+  return results
 }
 ```
 
 **Output (Development):**
+
 ```
 [10:30:01] INFO [SearchPage] search completed {latency_ms=150.25, results=10}
 ```
 
 **Output (Production JSON):**
+
 ```json
 {
   "timestamp": "2024-01-15T10:30:01.500Z",
@@ -414,22 +418,22 @@ async function searchWithTiming(query: string) {
 ### Manual Performance Logging
 
 ```typescript
-const log = useLogger('ComparePage');
+const log = useLogger("ComparePage")
 
 const handleCompare = async (query: string) => {
-  const start = performance.now();
+  const start = performance.now()
 
-  const results = await compareApi(query);
+  const results = await compareApi(query)
 
-  const latencyMs = performance.now() - start;
-  log.info('Compare completed', {
-    action: 'compare',
+  const latencyMs = performance.now() - start
+  log.info("Compare completed", {
+    action: "compare",
     latency_ms: latencyMs,
     agents: results.length,
-  });
+  })
 
-  return results;
-};
+  return results
+}
 ```
 
 ---
@@ -438,9 +442,9 @@ const handleCompare = async (query: string) => {
 
 ### Environment Variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `NEXT_PUBLIC_LOG_LEVEL` | `info` | Minimum log level (`debug`, `info`, `warn`, `error`) |
+| Variable                | Default | Description                                          |
+| ----------------------- | ------- | ---------------------------------------------------- |
+| `NEXT_PUBLIC_LOG_LEVEL` | `info`  | Minimum log level (`debug`, `info`, `warn`, `error`) |
 
 ### Configuration in `frontend/.env.local`
 
@@ -455,13 +459,13 @@ NEXT_PUBLIC_LOG_LEVEL=warn
 ### Runtime Level Change
 
 ```typescript
-import { logger, LogLevel } from '@/lib/logger';
+import { logger, LogLevel } from "@/lib/logger"
 
 // Temporarily enable debug logs
-logger.setLevel(LogLevel.DEBUG);
+logger.setLevel(LogLevel.DEBUG)
 
 // Reset to default
-logger.setLevel(LogLevel.INFO);
+logger.setLevel(LogLevel.INFO)
 ```
 
 ---
@@ -550,61 +554,57 @@ export function SearchPage() {
 
 ```typescript
 // lib/api/client.ts
-import { logger } from '@/lib/logger';
+import { logger } from "@/lib/logger"
 
-const apiLog = logger.child({ component: 'ApiClient' });
+const apiLog = logger.child({ component: "ApiClient" })
 
-export async function apiRequest<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const correlationId = logger.correlationId || crypto.randomUUID();
+export async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const correlationId = logger.correlationId || crypto.randomUUID()
 
-  apiLog.debug('API request starting', {
-    action: 'request',
+  apiLog.debug("API request starting", {
+    action: "request",
     endpoint,
-    method: options.method || 'GET',
-  });
+    method: options.method || "GET",
+  })
 
-  const start = performance.now();
+  const start = performance.now()
 
   try {
     const response = await fetch(endpoint, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
-        'X-Correlation-ID': correlationId,
+        "Content-Type": "application/json",
+        "X-Correlation-ID": correlationId,
         ...options.headers,
       },
-    });
+    })
 
-    const latencyMs = performance.now() - start;
+    const latencyMs = performance.now() - start
 
     if (!response.ok) {
-      apiLog.warn('API returned error status', {
-        action: 'response',
+      apiLog.warn("API returned error status", {
+        action: "response",
         endpoint,
         status: response.status,
         latency_ms: latencyMs,
-      });
-      throw new ApiError(response.status, await response.text());
+      })
+      throw new ApiError(response.status, await response.text())
     }
 
-    apiLog.debug('API request completed', {
-      action: 'response',
+    apiLog.debug("API request completed", {
+      action: "response",
       endpoint,
       status: response.status,
       latency_ms: latencyMs,
-    });
+    })
 
-    return response.json();
-
+    return response.json()
   } catch (error) {
-    apiLog.error('API request failed', error, {
-      action: 'request',
+    apiLog.error("API request failed", error, {
+      action: "request",
       endpoint,
-    });
-    throw error;
+    })
+    throw error
   }
 }
 ```
@@ -613,51 +613,54 @@ export async function apiRequest<T>(
 
 ```typescript
 // lib/hooks/use-sse.ts
-import { useCallback, useState } from 'react';
-import { logger, useLogger } from '@/lib/logger';
+import { useCallback, useState } from "react"
+import { logger, useLogger } from "@/lib/logger"
 
 export function useSSE(endpoint: string) {
-  const [data, setData] = useState<unknown[]>([]);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const log = useLogger('useSSE');
+  const [data, setData] = useState<unknown[]>([])
+  const [isStreaming, setIsStreaming] = useState(false)
+  const log = useLogger("useSSE")
 
-  const startStream = useCallback((query: string) => {
-    const correlationId = logger.generateCorrelationId();
-    log.info('SSE stream starting', { action: 'connect', endpoint });
+  const startStream = useCallback(
+    (query: string) => {
+      const correlationId = logger.generateCorrelationId()
+      log.info("SSE stream starting", { action: "connect", endpoint })
 
-    const url = new URL(endpoint, window.location.origin);
-    url.searchParams.set('query', query);
-    url.searchParams.set('correlation_id', correlationId);
+      const url = new URL(endpoint, window.location.origin)
+      url.searchParams.set("query", query)
+      url.searchParams.set("correlation_id", correlationId)
 
-    const eventSource = new EventSource(url.toString());
-    setIsStreaming(true);
-    setData([]);
+      const eventSource = new EventSource(url.toString())
+      setIsStreaming(true)
+      setData([])
 
-    eventSource.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      log.debug('SSE message received', {
-        action: 'message',
-        type: message.type,
-      });
-      setData((prev) => [...prev, message]);
+      eventSource.onmessage = (event) => {
+        const message = JSON.parse(event.data)
+        log.debug("SSE message received", {
+          action: "message",
+          type: message.type,
+        })
+        setData((prev) => [...prev, message])
 
-      if (message.type === 'complete') {
-        log.info('SSE stream completed', { action: 'complete' });
-        eventSource.close();
-        setIsStreaming(false);
-        logger.clearCorrelationId();
+        if (message.type === "complete") {
+          log.info("SSE stream completed", { action: "complete" })
+          eventSource.close()
+          setIsStreaming(false)
+          logger.clearCorrelationId()
+        }
       }
-    };
 
-    eventSource.onerror = () => {
-      log.warn('SSE connection error', { action: 'error', endpoint });
-      eventSource.close();
-      setIsStreaming(false);
-      logger.clearCorrelationId();
-    };
-  }, [endpoint, log]);
+      eventSource.onerror = () => {
+        log.warn("SSE connection error", { action: "error", endpoint })
+        eventSource.close()
+        setIsStreaming(false)
+        logger.clearCorrelationId()
+      }
+    },
+    [endpoint, log]
+  )
 
-  return { data, isStreaming, startStream };
+  return { data, isStreaming, startStream }
 }
 ```
 
@@ -690,7 +693,7 @@ export function useSSE(endpoint: string) {
 Warnings automatically create Sentry breadcrumbs:
 
 ```typescript
-logger.warn('Cache miss', { component: 'SearchCache', key: 'abc' });
+logger.warn("Cache miss", { component: "SearchCache", key: "abc" })
 // Creates breadcrumb: { category: 'SearchCache', message: 'Cache miss', level: 'warning' }
 ```
 
@@ -699,11 +702,11 @@ logger.warn('Cache miss', { component: 'SearchCache', key: 'abc' });
 Errors with Error objects are captured:
 
 ```typescript
-logger.error('Search failed', error, {
-  component: 'SearchPage',
-  action: 'search',
-  query: 'test query',
-});
+logger.error("Search failed", error, {
+  component: "SearchPage",
+  action: "search",
+  query: "test query",
+})
 // Sentry receives:
 // - Exception with stack trace
 // - Tags: component=SearchPage, action=search
@@ -715,10 +718,10 @@ logger.error('Search failed', error, {
 Set Sentry user context separately (handled by auth provider):
 
 ```typescript
-import * as Sentry from '@sentry/nextjs';
+import * as Sentry from "@sentry/nextjs"
 
 // In auth provider
-Sentry.setUser({ id: user.id });
+Sentry.setUser({ id: user.id })
 ```
 
 ---
@@ -729,14 +732,14 @@ Sentry.setUser({ id: user.id });
 
 ```typescript
 // Bad: Using console.log directly
-console.log('Search started');
+console.log("Search started")
 
 // Bad: Missing component context
-logger.info('Something happened');  // Which component?
+logger.info("Something happened") // Which component?
 
 // Bad: Swallowing errors
 try {
-  await doSomething();
+  await doSomething()
 } catch (e) {
   // Silent failure!
 }
@@ -744,8 +747,8 @@ try {
 // Bad: Not using useLogger in components
 function MyComponent() {
   // Repeating component name in every call
-  logger.info('...', { component: 'MyComponent' });
-  logger.info('...', { component: 'MyComponent' });
+  logger.info("...", { component: "MyComponent" })
+  logger.info("...", { component: "MyComponent" })
 }
 ```
 
@@ -753,24 +756,24 @@ function MyComponent() {
 
 ```typescript
 // Good: Using logger with context
-logger.info('Search started', {
-  component: 'SearchPage',
-  action: 'search',
-});
+logger.info("Search started", {
+  component: "SearchPage",
+  action: "search",
+})
 
 // Good: Using useLogger in components
 function MyComponent() {
-  const log = useLogger('MyComponent');
-  log.info('Initialized');
-  log.info('Action performed');
+  const log = useLogger("MyComponent")
+  log.info("Initialized")
+  log.info("Action performed")
 }
 
 // Good: Logging and re-throwing errors
 try {
-  await doSomething();
+  await doSomething()
 } catch (error) {
-  log.error('Operation failed', error, { context: 'details' });
-  throw error;  // Or handle appropriately
+  log.error("Operation failed", error, { context: "details" })
+  throw error // Or handle appropriately
 }
 ```
 
@@ -789,24 +792,24 @@ enum LogLevel {
 
 // Log context
 interface LogContext {
-  component?: string;
-  action?: string;
-  [key: string]: unknown;
+  component?: string
+  action?: string
+  [key: string]: unknown
 }
 
 // Structured log entry
 interface LogEntry {
-  timestamp: string;
-  level: string;
-  message: string;
-  correlationId?: string;
-  component?: string;
-  action?: string;
-  context?: Record<string, unknown>;
+  timestamp: string
+  level: string
+  message: string
+  correlationId?: string
+  component?: string
+  action?: string
+  context?: Record<string, unknown>
   error?: {
-    name: string;
-    message: string;
-    stack?: string;
-  };
+    name: string
+    message: string
+    stack?: string
+  }
 }
 ```

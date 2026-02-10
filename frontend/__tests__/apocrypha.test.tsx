@@ -1,125 +1,126 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-import ApocryphaPage from '../app/apocrypha/page';
+import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { vi, describe, it, expect, beforeEach } from "vitest"
+import ApocryphaPage from "../app/apocrypha/page"
 
 // Mock GlowCard to avoid complex rendering in tests
-vi.mock('@/components/ui/glow-card', () => ({
-  GlowCard: ({ children, onClick }: { children: React.ReactNode, onClick?: () => void }) => (
+vi.mock("@/components/ui/glow-card", () => ({
+  GlowCard: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
     <div data-testid="glow-card" onClick={onClick}>
       {children}
     </div>
   ),
-}));
+}))
 
 // Mock Better Auth
-vi.mock('@/lib/auth-client', () => ({
-  useSession: () => ({ data: { user: { id: '1', name: 'Test User', email: 'test@example.com' } }, isPending: false }),
+vi.mock("@/lib/auth-client", () => ({
+  useSession: () => ({
+    data: { user: { id: "1", name: "Test User", email: "test@example.com" } },
+    isPending: false,
+  }),
   signIn: { email: vi.fn(), social: vi.fn() },
   signUp: { email: vi.fn() },
   signOut: vi.fn(),
   authClient: { token: vi.fn() },
-}));
+}))
 
 // Mock Sonner
-vi.mock('sonner', () => ({
+vi.mock("sonner", () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
   },
-}));
+}))
 
 // Mock Navigation
-const mockPush = vi.fn();
-vi.mock('next/navigation', () => ({
+const mockPush = vi.fn()
+vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: mockPush,
   }),
-}));
+}))
 
-describe('Apocrypha Browse Page', () => {
+describe("Apocrypha Browse Page", () => {
   const mockBooks = [
-    { nr: 1, name: 'Tobit', chapters_count: 14, testament: 'apocrypha' },
-    { nr: 2, name: 'Judith', chapters_count: 16, testament: 'apocrypha' },
-    { nr: 3, name: 'Wisdom', chapters_count: 19, testament: 'apocrypha' },
-  ];
+    { nr: 1, name: "Tobit", chapters_count: 14, testament: "apocrypha" },
+    { nr: 2, name: "Judith", chapters_count: 16, testament: "apocrypha" },
+    { nr: 3, name: "Wisdom", chapters_count: 19, testament: "apocrypha" },
+  ]
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    global.fetch = vi.fn();
-  });
+    vi.clearAllMocks()
+    global.fetch = vi.fn()
+  })
 
   const createMockResponse = (data: unknown): Response =>
     ({
       ok: true,
       json: async () => data,
-    } as unknown as Response);
+    }) as unknown as Response
 
-  it('fetches and displays Apocrypha books', async () => {
+  it("fetches and displays Apocrypha books", async () => {
     vi.mocked(global.fetch).mockResolvedValueOnce(
       createMockResponse({ data: { books: mockBooks } })
-    );
+    )
 
-    render(<ApocryphaPage />);
+    render(<ApocryphaPage />)
 
-     expect(global.fetch).toHaveBeenCalledWith(
-       expect.stringContaining('/api/metadata/bible/books?testament=apocrypha'),
-       expect.objectContaining({
-         credentials: 'include',
-       })
-     );
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining("/api/metadata/bible/books?testament=apocrypha"),
+      expect.objectContaining({
+        credentials: "include",
+      })
+    )
 
     await waitFor(() => {
-      expect(screen.getByText('Tobit')).toBeInTheDocument();
-      expect(screen.getByText('Judith')).toBeInTheDocument();
-      expect(screen.getByText('Wisdom')).toBeInTheDocument();
-    });
+      expect(screen.getByText("Tobit")).toBeInTheDocument()
+      expect(screen.getByText("Judith")).toBeInTheDocument()
+      expect(screen.getByText("Wisdom")).toBeInTheDocument()
+    })
 
-    expect(screen.getByText('14 chapters')).toBeInTheDocument();
-  });
+    expect(screen.getByText("14 chapters")).toBeInTheDocument()
+  })
 
-  it('filters books by name', async () => {
+  it("filters books by name", async () => {
     vi.mocked(global.fetch).mockResolvedValueOnce(
       createMockResponse({ data: { books: mockBooks } })
-    );
+    )
 
-    render(<ApocryphaPage />);
+    render(<ApocryphaPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Tobit')).toBeInTheDocument();
-    });
+      expect(screen.getByText("Tobit")).toBeInTheDocument()
+    })
 
-    const input = screen.getByPlaceholderText(/search book/i);
-    fireEvent.change(input, { target: { value: 'Judit' } });
+    const input = screen.getByPlaceholderText(/search book/i)
+    fireEvent.change(input, { target: { value: "Judit" } })
 
-    expect(screen.queryByText('Tobit')).not.toBeInTheDocument();
-    expect(screen.getByText('Judith')).toBeInTheDocument();
-  });
+    expect(screen.queryByText("Tobit")).not.toBeInTheDocument()
+    expect(screen.getByText("Judith")).toBeInTheDocument()
+  })
 
-  it('navigates to search on book click', async () => {
+  it("navigates to search on book click", async () => {
     vi.mocked(global.fetch).mockResolvedValueOnce(
       createMockResponse({ data: { books: mockBooks } })
-    );
+    )
 
-    render(<ApocryphaPage />);
+    render(<ApocryphaPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Tobit')).toBeInTheDocument();
-    });
+      expect(screen.getByText("Tobit")).toBeInTheDocument()
+    })
 
-    fireEvent.click(screen.getByText('Tobit'));
+    fireEvent.click(screen.getByText("Tobit"))
 
-    expect(mockPush).toHaveBeenCalledWith('/bible/1');
-  });
+    expect(mockPush).toHaveBeenCalledWith("/bible/1")
+  })
 
-  it('handles empty state or loading', async () => {
-    vi.mocked(global.fetch).mockResolvedValueOnce(
-      createMockResponse({ data: { books: [] } })
-    );
+  it("handles empty state or loading", async () => {
+    vi.mocked(global.fetch).mockResolvedValueOnce(createMockResponse({ data: { books: [] } }))
 
-    render(<ApocryphaPage />);
-    
+    render(<ApocryphaPage />)
+
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalled();
-    });
-  });
-});
+      expect(global.fetch).toHaveBeenCalled()
+    })
+  })
+})

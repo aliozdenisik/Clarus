@@ -13,9 +13,9 @@ Tests how queries flow through the 4 specialist agents:
 And how SummaryAgent synthesizes their outputs.
 """
 
+import json
 import sys
 import time
-import json
 from pathlib import Path
 
 # Add src to path
@@ -53,40 +53,30 @@ def test_multi_agent_flow():
     total_start = time.time()
 
     # Step 1: Run search_all to get raw search results
-    console.print(
-        "[yellow]Step 1: Running search_all() with 4 testament collections[/yellow]"
-    )
+    console.print("[yellow]Step 1: Running search_all() with 4 testament collections[/yellow]")
     search_start = time.time()
     search_result = rag.search_all(test_query)
     search_time = time.time() - search_start
 
     # Step 2: Show search results distribution
-    console.print(
-        "\n[yellow]Step 2: Search Results Distribution (Per Testament)[/yellow]"
-    )
+    console.print("\n[yellow]Step 2: Search Results Distribution (Per Testament)[/yellow]")
 
     search_table = Table(title="Search Results by Testament")
     search_table.add_column("Collection", style="cyan")
     search_table.add_column("Count", justify="right")
     search_table.add_column("Agent")
 
-    search_table.add_row(
-        "quran_tr_diyanet", str(len(search_result.quran)), "QuranAgent"
-    )
+    search_table.add_row("quran_tr_diyanet", str(len(search_result.quran)), "QuranAgent")
     search_table.add_row("bible_ot", str(len(search_result.ot)), "OldTestamentAgent")
     search_table.add_row("bible_nt", str(len(search_result.nt)), "NewTestamentAgent")
-    search_table.add_row(
-        "bible_apocrypha", str(len(search_result.apocrypha)), "ApocryphaAgent"
-    )
+    search_table.add_row("bible_apocrypha", str(len(search_result.apocrypha)), "ApocryphaAgent")
     search_table.add_row("TOTAL", str(search_result.total_verses), "-")
 
     console.print(search_table)
     console.print(f"Search completed in {search_time:.2f}s")
 
     # Step 3: Direct to agents (no more splitting needed!)
-    console.print(
-        "\n[yellow]Step 3: Results Ready for Agents (No Split Needed)[/yellow]"
-    )
+    console.print("\n[yellow]Step 3: Results Ready for Agents (No Split Needed)[/yellow]")
 
     split_table = Table(title="Verses Directly Available Per Agent")
     split_table.add_column("Agent", style="cyan")
@@ -95,17 +85,13 @@ def test_multi_agent_flow():
 
     split_table.add_row("OldTestamentAgent", "bible_ot", str(len(search_result.ot)))
     split_table.add_row("NewTestamentAgent", "bible_nt", str(len(search_result.nt)))
-    split_table.add_row(
-        "ApocryphaAgent", "bible_apocrypha", str(len(search_result.apocrypha))
-    )
+    split_table.add_row("ApocryphaAgent", "bible_apocrypha", str(len(search_result.apocrypha)))
     split_table.add_row("QuranAgent", "quran_tr_diyanet", str(len(search_result.quran)))
 
     console.print(split_table)
 
     # Step 4: Run multi-agent generation
-    console.print(
-        "\n[yellow]Step 4: Running 4 Specialist Agents + Summary Agent[/yellow]"
-    )
+    console.print("\n[yellow]Step 4: Running 4 Specialist Agents + Summary Agent[/yellow]")
     gen_start = time.time()
 
     answer = rag.multi_agent_generator.generate(

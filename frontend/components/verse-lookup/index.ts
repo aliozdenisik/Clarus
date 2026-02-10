@@ -1,1 +1,1 @@
-export { VerseLookupInput } from "./verse-lookup-input";
+export { VerseLookupInput } from "./verse-lookup-input"

@@ -1,27 +1,27 @@
-"use client";
+"use client"
 
-import { useEffect, useMemo, useState } from "react";
-import { motion, Variants } from "framer-motion";
+import { useEffect, useMemo, useState } from "react"
+import { motion, Variants } from "framer-motion"
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 interface TypewriterProps {
-  text: string | string[];
-  speed?: number;
-  initialDelay?: number;
-  waitTime?: number;
-  deleteSpeed?: number;
-  loop?: boolean;
-  className?: string;
-  showCursor?: boolean;
-  hideCursorOnType?: boolean;
-  cursorChar?: string | React.ReactNode;
+  text: string | string[]
+  speed?: number
+  initialDelay?: number
+  waitTime?: number
+  deleteSpeed?: number
+  loop?: boolean
+  className?: string
+  showCursor?: boolean
+  hideCursorOnType?: boolean
+  cursorChar?: string | React.ReactNode
   cursorAnimationVariants?: {
-    initial: Variants["initial"];
-    animate: Variants["animate"];
-  };
-  cursorClassName?: string;
-  onComplete?: () => void;
+    initial: Variants["initial"]
+    animate: Variants["animate"]
+  }
+  cursorClassName?: string
+  onComplete?: () => void
 }
 
 const Typewriter = ({
@@ -49,57 +49,57 @@ const Typewriter = ({
   },
   onComplete,
 }: TypewriterProps) => {
-  const [displayText, setDisplayText] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [currentTextIndex, setCurrentTextIndex] = useState(0);
+  const [displayText, setDisplayText] = useState("")
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [currentTextIndex, setCurrentTextIndex] = useState(0)
 
-  const texts = useMemo(() => (Array.isArray(text) ? text : [text]), [text]);
+  const texts = useMemo(() => (Array.isArray(text) ? text : [text]), [text])
 
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
+    let timeout: NodeJS.Timeout
 
-    const currentText = texts[currentTextIndex];
+    const currentText = texts[currentTextIndex]
 
     const startTyping = () => {
       if (isDeleting) {
         if (displayText === "") {
-          setIsDeleting(false);
+          setIsDeleting(false)
           if (currentTextIndex === texts.length - 1 && !loop) {
-            onComplete?.();
-            return;
+            onComplete?.()
+            return
           }
-          setCurrentTextIndex((prev) => (prev + 1) % texts.length);
-          setCurrentIndex(0);
-          timeout = setTimeout(() => {}, waitTime);
+          setCurrentTextIndex((prev) => (prev + 1) % texts.length)
+          setCurrentIndex(0)
+          timeout = setTimeout(() => {}, waitTime)
         } else {
           timeout = setTimeout(() => {
-            setDisplayText((prev) => prev.slice(0, -1));
-          }, deleteSpeed);
+            setDisplayText((prev) => prev.slice(0, -1))
+          }, deleteSpeed)
         }
       } else {
         if (currentIndex < currentText.length) {
           timeout = setTimeout(() => {
-            setDisplayText((prev) => prev + currentText[currentIndex]);
-            setCurrentIndex((prev) => prev + 1);
-          }, speed);
+            setDisplayText((prev) => prev + currentText[currentIndex])
+            setCurrentIndex((prev) => prev + 1)
+          }, speed)
         } else if (texts.length > 1) {
           timeout = setTimeout(() => {
-            setIsDeleting(true);
-          }, waitTime);
+            setIsDeleting(true)
+          }, waitTime)
         } else if (!loop) {
-          onComplete?.();
+          onComplete?.()
         }
       }
-    };
-
-    if (currentIndex === 0 && !isDeleting && displayText === "") {
-      timeout = setTimeout(startTyping, initialDelay);
-    } else {
-      startTyping();
     }
 
-    return () => clearTimeout(timeout);
+    if (currentIndex === 0 && !isDeleting && displayText === "") {
+      timeout = setTimeout(startTyping, initialDelay)
+    } else {
+      startTyping()
+    }
+
+    return () => clearTimeout(timeout)
   }, [
     currentIndex,
     displayText,
@@ -112,7 +112,7 @@ const Typewriter = ({
     loop,
     initialDelay,
     onComplete,
-  ]);
+  ])
 
   return (
     <span className={cn("inline whitespace-pre-wrap", className)}>
@@ -123,8 +123,7 @@ const Typewriter = ({
           className={cn(
             cursorClassName,
             "text-[var(--color-accent-primary)]",
-            hideCursorOnType &&
-              (currentIndex < texts[currentTextIndex].length || isDeleting)
+            hideCursorOnType && (currentIndex < texts[currentTextIndex].length || isDeleting)
               ? "opacity-0"
               : ""
           )}
@@ -135,65 +134,60 @@ const Typewriter = ({
         </motion.span>
       )}
     </span>
-  );
-};
+  )
+}
 
-export { Typewriter };
+export { Typewriter }
 
 // Streaming Text for AI responses - luxury feel
 interface StreamingTextProps {
-  text: string;
-  speed?: number;
-  className?: string;
-  onComplete?: () => void;
+  text: string
+  speed?: number
+  className?: string
+  onComplete?: () => void
 }
 
-export function StreamingText({
-  text,
-  speed = 20,
-  className,
-  onComplete,
-}: StreamingTextProps) {
-  const [displayedText, setDisplayedText] = useState("");
-  const [isComplete, setIsComplete] = useState(false);
+export function StreamingText({ text, speed = 20, className, onComplete }: StreamingTextProps) {
+  const [displayedText, setDisplayedText] = useState("")
+  const [isComplete, setIsComplete] = useState(false)
 
   useEffect(() => {
-    setDisplayedText("");
-    setIsComplete(false);
-    let index = 0;
+    setDisplayedText("")
+    setIsComplete(false)
+    let index = 0
 
     const interval = setInterval(() => {
       if (index < text.length) {
-        setDisplayedText(text.slice(0, index + 1));
-        index++;
+        setDisplayedText(text.slice(0, index + 1))
+        index++
       } else {
-        clearInterval(interval);
-        setIsComplete(true);
-        onComplete?.();
+        clearInterval(interval)
+        setIsComplete(true)
+        onComplete?.()
       }
-    }, speed);
+    }, speed)
 
-    return () => clearInterval(interval);
-  }, [text, speed, onComplete]);
+    return () => clearInterval(interval)
+  }, [text, speed, onComplete])
 
   return (
     <div className={cn("relative", className)}>
       <span className="whitespace-pre-wrap">{displayedText}</span>
       {!isComplete && (
         <motion.span
-          className="inline-block w-2 h-5 ml-0.5 bg-[var(--color-accent-primary)] rounded-sm"
+          className="ml-0.5 inline-block h-5 w-2 rounded-sm bg-[var(--color-accent-primary)]"
           animate={{ opacity: [1, 0.3, 1] }}
           transition={{ duration: 0.8, repeat: Infinity }}
         />
       )}
     </div>
-  );
+  )
 }
 
 // Typing Indicator for loading states
 interface TypingIndicatorProps {
-  className?: string;
-  dotClassName?: string;
+  className?: string
+  dotClassName?: string
 }
 
 export function TypingIndicator({ className, dotClassName }: TypingIndicatorProps) {
@@ -202,10 +196,7 @@ export function TypingIndicator({ className, dotClassName }: TypingIndicatorProp
       {[0, 1, 2].map((i) => (
         <motion.div
           key={`typing-dot-${i}`}
-          className={cn(
-            "w-2 h-2 rounded-full bg-[var(--color-accent-primary)]",
-            dotClassName
-          )}
+          className={cn("h-2 w-2 rounded-full bg-[var(--color-accent-primary)]", dotClassName)}
           animate={{
             y: [0, -6, 0],
             opacity: [0.5, 1, 0.5],
@@ -219,21 +210,21 @@ export function TypingIndicator({ className, dotClassName }: TypingIndicatorProp
         />
       ))}
     </div>
-  );
+  )
 }
 
 // Luxury AI Response Container
 interface AIResponseProps {
-  content: string;
-  isStreaming?: boolean;
-  className?: string;
+  content: string
+  isStreaming?: boolean
+  className?: string
 }
 
 export function AIResponse({ content, isStreaming = false, className }: AIResponseProps) {
   return (
     <div
       className={cn(
-        "relative p-6 rounded-2xl",
+        "relative rounded-2xl p-6",
         "bg-gradient-to-br from-[var(--color-bg-secondary)] to-[var(--color-bg-tertiary)]",
         "border border-white/5",
         "shadow-xl shadow-black/20",
@@ -241,17 +232,20 @@ export function AIResponse({ content, isStreaming = false, className }: AIRespon
       )}
     >
       {/* Subtle glow effect */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[var(--color-accent-primary)]/5 to-transparent pointer-events-none" />
+      <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-[var(--color-accent-primary)]/5 to-transparent" />
 
       <div className="relative">
         {isStreaming ? (
-          <StreamingText text={content} className="text-[var(--color-text-primary)] leading-relaxed" />
+          <StreamingText
+            text={content}
+            className="leading-relaxed text-[var(--color-text-primary)]"
+          />
         ) : (
-          <p className="text-[var(--color-text-primary)] leading-relaxed whitespace-pre-wrap">
+          <p className="leading-relaxed whitespace-pre-wrap text-[var(--color-text-primary)]">
             {content}
           </p>
         )}
       </div>
     </div>
-  );
+  )
 }

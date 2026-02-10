@@ -11,12 +11,12 @@ Run: python tests/word_search_comprehensive_test.py
 """
 
 import asyncio
-import httpx
 from dataclasses import dataclass
-from typing import Optional
+
+import httpx
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
+from rich.table import Table
 
 console = Console()
 API_BASE = "http://localhost:8000"
@@ -29,8 +29,8 @@ class TestCase:
     query: str
     description: str
     expected_min_occurrences: int = 1
-    expected_root_source: Optional[str] = None
-    language_filter: Optional[str] = None
+    expected_root_source: str | None = None
+    language_filter: str | None = None
 
 
 # =============================================================================
@@ -109,15 +109,9 @@ LATIN_TESTS = [
         50,
         language_filter="hebrew",
     ),
-    TestCase(
-        "LAT-04", "latin", "dabar", "Dabar (Hebrew Latin)", 50, language_filter="hebrew"
-    ),
-    TestCase(
-        "LAT-05", "latin", "torah", "Torah (Hebrew Latin)", 10, language_filter="hebrew"
-    ),
-    TestCase(
-        "LAT-06", "latin", "amen", "Amen (Hebrew Latin)", 1, language_filter="hebrew"
-    ),
+    TestCase("LAT-04", "latin", "dabar", "Dabar (Hebrew Latin)", 50, language_filter="hebrew"),
+    TestCase("LAT-05", "latin", "torah", "Torah (Hebrew Latin)", 10, language_filter="hebrew"),
+    TestCase("LAT-06", "latin", "amen", "Amen (Hebrew Latin)", 1, language_filter="hebrew"),
     TestCase(
         "LAT-07",
         "latin",
@@ -182,9 +176,7 @@ async def run_single_test(client: httpx.AsyncClient, test: TestCase) -> dict:
         if test.language_filter:
             payload["language_filter"] = test.language_filter
 
-        response = await client.post(
-            f"{API_BASE}/api/keyword-search/bible/", json=payload, timeout=30.0
-        )
+        response = await client.post(f"{API_BASE}/api/keyword-search/bible/", json=payload, timeout=30.0)
 
         if response.status_code != 200:
             return {
@@ -234,9 +226,7 @@ async def run_single_test(client: httpx.AsyncClient, test: TestCase) -> dict:
         }
 
 
-async def run_test_category(
-    client: httpx.AsyncClient, tests: list[TestCase], category_name: str
-) -> list[dict]:
+async def run_test_category(client: httpx.AsyncClient, tests: list[TestCase], category_name: str) -> list[dict]:
     """Run all tests in a category."""
     console.print(f"\n[bold cyan]Running {category_name} tests...[/bold cyan]")
     results = []
@@ -245,13 +235,7 @@ async def run_test_category(
         results.append(result)
 
         # Print progress
-        status_color = (
-            "green"
-            if result["status"] == "PASS"
-            else "red"
-            if result["status"] == "FAIL"
-            else "yellow"
-        )
+        status_color = "green" if result["status"] == "PASS" else "red" if result["status"] == "FAIL" else "yellow"
         console.print(
             f"  [{status_color}]{result['status']}[/{status_color}] {test.id}: {test.query} → {result.get('occurrences', 0)} occurrences ({result.get('root_source', 'N/A')})"
         )
@@ -271,20 +255,12 @@ def print_summary_table(results: list[dict], title: str):
     table.add_column("Status", style="bold")
 
     for r in results:
-        status_style = (
-            "green"
-            if r["status"] == "PASS"
-            else "red"
-            if r["status"] == "FAIL"
-            else "yellow"
-        )
+        status_style = "green" if r["status"] == "PASS" else "red" if r["status"] == "FAIL" else "yellow"
         root_source = r.get("root_source") or "N/A"
         table.add_row(
             r["id"],
             r["query"],
-            r["description"][:25] + "..."
-            if len(r["description"]) > 25
-            else r["description"],
+            r["description"][:25] + "..." if len(r["description"]) > 25 else r["description"],
             str(r.get("occurrences", "N/A")),
             str(r.get("expected_min", "N/A")),
             root_source[:15] if root_source else "N/A",
@@ -293,9 +269,7 @@ def print_summary_table(results: list[dict], title: str):
         table.add_row(
             r["id"],
             r["query"],
-            r["description"][:25] + "..."
-            if len(r["description"]) > 25
-            else r["description"],
+            r["description"][:25] + "..." if len(r["description"]) > 25 else r["description"],
             str(r.get("occurrences", "N/A")),
             str(r.get("expected_min", "N/A")),
             r.get("root_source", "N/A")[:15],
@@ -339,9 +313,7 @@ async def main():
         print_summary_table(greek_results, "Greek Test Results")
 
         # Run Latin tests
-        latin_results = await run_test_category(
-            client, LATIN_TESTS, "Latin Transliteration"
-        )
+        latin_results = await run_test_category(client, LATIN_TESTS, "Latin Transliteration")
         all_results.extend(latin_results)
         print_summary_table(latin_results, "Latin Transliteration Test Results")
 

@@ -13,9 +13,10 @@ Adds security headers to all API responses to protect against common web vulnera
 This middleware applies to all HTTP responses, including error responses.
 """
 
+import logging
+
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -53,9 +54,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
 
             # Strict-Transport-Security: Enforce HTTPS for 1 year, include subdomains
-            response.headers["Strict-Transport-Security"] = (
-                "max-age=31536000; includeSubDomains"
-            )
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
             # X-Content-Type-Options: Prevent MIME type sniffing
             response.headers["X-Content-Type-Options"] = "nosniff"
@@ -71,23 +70,19 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
             # Permissions-Policy: Restrict access to browser features
             # Deny: camera, microphone, geolocation
-            response.headers["Permissions-Policy"] = (
-                "camera=(), microphone=(), geolocation=()"
-            )
+            response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
 
             # Content-Security-Policy: Minimal policy for JSON API
             # - default-src 'self': Only allow resources from same origin
             # - frame-ancestors 'none': Prevent framing
-            response.headers["Content-Security-Policy"] = (
-                "default-src 'self'; frame-ancestors 'none'"
-            )
+            response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none'"
 
             return response
 
         except Exception as e:
             # Log security header errors but don't break the request
             logger.error(
-                f"Error adding security headers: {str(e)}",
+                f"Error adding security headers: {e!s}",
                 extra={"error_type": type(e).__name__},
             )
             raise

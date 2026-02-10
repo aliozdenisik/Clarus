@@ -25,24 +25,27 @@ Architecture:
 Output: 5 paragraphs (OT, NT, Apocrypha, Quran, Synthesis)
 """
 
-import os
+import contextlib
 import json
-import requests
+import os
 import time
-import sentry_sdk
-from typing import List, Dict, Any, Optional, Callable
-from dataclasses import dataclass, field
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
+from typing import Any
+
+import requests
+import sentry_sdk
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
-from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
-from src.confidence_scorer import ConfidenceScorer
 from app.logging_config import get_logger, log_performance
+from src.circuit_breaker import CircuitBreakerError, llm_with_breaker
+from src.confidence_scorer import ConfidenceScorer
 
 logger = get_logger(__name__)
 
@@ -57,25 +60,21 @@ class MultiAgentAnswer:
     quran_commentary: str  # Paragraph 4: Islamic perspective
     synthesis: str  # Paragraph 5: Comparative summary
 
-    citations: Dict[str, List[str]] = field(default_factory=dict)
+    citations: dict[str, list[str]] = field(default_factory=dict)
     confidence: float = 0.0
-    confidence_breakdown: Optional[dict] = None
+    confidence_breakdown: dict | None = None
     query: str = ""
-    verses_provided: Dict[str, int] = field(default_factory=dict)
+    verses_provided: dict[str, int] = field(default_factory=dict)
 
     def to_essay(self) -> str:
         """Format as complete essay with all 5 paragraphs"""
         sections = []
 
         if self.old_testament_commentary:
-            sections.append(
-                f"## Eski Ahit (Old Testament)\n\n{self.old_testament_commentary}"
-            )
+            sections.append(f"## Eski Ahit (Old Testament)\n\n{self.old_testament_commentary}")
 
         if self.new_testament_commentary:
-            sections.append(
-                f"## Yeni Ahit (New Testament)\n\n{self.new_testament_commentary}"
-            )
+            sections.append(f"## Yeni Ahit (New Testament)\n\n{self.new_testament_commentary}")
 
         if self.apocrypha_commentary:
             sections.append(f"## Apokrifa (Apocrypha)\n\n{self.apocrypha_commentary}")
@@ -95,7 +94,7 @@ class BaseSpecialistAgent:
     OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
     MODEL = "google/gemini-3-flash-preview"
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
             raise ValueError("OpenRouter API key required")
@@ -109,9 +108,7 @@ class BaseSpecialistAgent:
         """Extract reference string from search result"""
         if "quran" in source:
             surah_name = getattr(result, "surah_name", None)
-            verse = getattr(result, "verse_id", None) or getattr(
-                result, "verse_ids", None
-            )
+            verse = getattr(result, "verse_id", None) or getattr(result, "verse_ids", None)
 
             if surah_name is None and hasattr(result, "payload"):
                 payload = result.payload or {}
@@ -123,12 +120,8 @@ class BaseSpecialistAgent:
             return "Unknown"
         else:
             book = getattr(result, "book_name", None)
-            chapter = getattr(result, "chapter_number", None) or getattr(
-                result, "chapter", None
-            )
-            verse = getattr(result, "verse_number", None) or getattr(
-                result, "verse", None
-            )
+            chapter = getattr(result, "chapter_number", None) or getattr(result, "chapter", None)
+            verse = getattr(result, "verse_number", None) or getattr(result, "verse", None)
 
             if book is None and hasattr(result, "payload"):
                 payload = result.payload or {}
@@ -154,7 +147,7 @@ class BaseSpecialistAgent:
                     return str(payload[key])[:400]
         return ""
 
-    def _format_verses(self, results: List, source: str, max_results: int = 15) -> str:
+    def _format_verses(self, results: list, source: str, max_results: int = 15) -> str:
         """Format verses for LLM context"""
         lines = []
         for i, result in enumerate(results[:max_results], 1):
@@ -172,11 +165,9 @@ class BaseSpecialistAgent:
             "Retrying LLM call", extra={"attempt": rs.attempt_number, "max_attempts": 5}
         ),
     )
-    def _call_llm(self, messages: List[Dict], max_tokens: int = 1000) -> dict:
+    def _call_llm(self, messages: list[dict], max_tokens: int = 1000) -> dict:
         """Call OpenRouter API"""
-        with sentry_sdk.start_span(
-            op="llm.openrouter.agent", description="Agent LLM call"
-        ) as span:
+        with sentry_sdk.start_span(op="llm.openrouter.agent", description="Agent LLM call") as span:
             start_time = time.perf_counter()
             span.set_data("model", self.MODEL)
 
@@ -200,15 +191,11 @@ class BaseSpecialistAgent:
 
                 # Defensive parsing for LLM response
                 if "choices" not in response_json or not response_json["choices"]:
-                    logger.error(
-                        f"Invalid LLM response: missing 'choices'. Response: {response_json}"
-                    )
+                    logger.error(f"Invalid LLM response: missing 'choices'. Response: {response_json}")
                     raise ValueError("Invalid LLM response: missing 'choices' field")
 
                 choice = response_json["choices"][0]
-                if "message" not in choice or "content" not in choice.get(
-                    "message", {}
-                ):
+                if "message" not in choice or "content" not in choice.get("message", {}):
                     logger.error(f"Invalid LLM response structure: {choice}")
                     raise ValueError("Invalid LLM response: missing message content")
 
@@ -239,9 +226,7 @@ class BaseSpecialistAgent:
                 return {"commentary": "", "citations": [], "confidence": 0.0}
             except Exception as e:
                 # Other errors - don't retry
-                logger.error(
-                    "LLM call failed", extra={"error": str(e), "model": self.MODEL}
-                )
+                logger.error("LLM call failed", extra={"error": str(e), "model": self.MODEL})
                 span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {"commentary": "", "citations": [], "confidence": 0.0}
 
@@ -273,7 +258,7 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
     "confidence": 0.0
 }"""
 
-    def generate(self, query: str, verses: List) -> Dict[str, Any]:
+    def generate(self, query: str, verses: list) -> dict[str, Any]:
         """Generate OT commentary paragraph"""
         if not verses:
             return {"commentary": "", "citations": [], "confidence": 0.0}
@@ -316,7 +301,7 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
     "confidence": 0.0
 }"""
 
-    def generate(self, query: str, verses: List) -> Dict[str, Any]:
+    def generate(self, query: str, verses: list) -> dict[str, Any]:
         """Generate NT commentary paragraph"""
         if not verses:
             return {"commentary": "", "citations": [], "confidence": 0.0}
@@ -361,7 +346,7 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
     "confidence": 0.0
 }"""
 
-    def generate(self, query: str, verses: List) -> Dict[str, Any]:
+    def generate(self, query: str, verses: list) -> dict[str, Any]:
         """Generate Apocrypha commentary paragraph"""
         if not verses:
             return {"commentary": "", "citations": [], "confidence": 0.0}
@@ -404,7 +389,7 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
     "confidence": 0.0
 }"""
 
-    def generate(self, query: str, verses: List) -> Dict[str, Any]:
+    def generate(self, query: str, verses: list) -> dict[str, Any]:
         """Generate Quran commentary paragraph"""
         if not verses:
             return {"commentary": "", "citations": [], "confidence": 0.0}
@@ -448,7 +433,7 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
         nt_commentary: str,
         apocrypha_commentary: str,
         quran_commentary: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Generate synthesis paragraph from all 4 commentaries"""
         # Build context from available commentaries
         parts = []
@@ -488,7 +473,7 @@ class MultiAgentOrchestrator:
     4. Return 5-paragraph result
     """
 
-    def __init__(self, api_key: Optional[str] = None, verbose: bool = True):
+    def __init__(self, api_key: str | None = None, verbose: bool = True):
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY") or ""
         self.verbose = verbose
 
@@ -539,12 +524,12 @@ class MultiAgentOrchestrator:
     def generate(
         self,
         query: str,
-        quran_verses: List,
-        ot_verses: List,
-        nt_verses: List,
-        apocrypha_verses: List,
-        collection_stats: Optional[dict[str, object]] = None,
-        progress_callback: Optional[Callable[[str, str], None]] = None,
+        quran_verses: list,
+        ot_verses: list,
+        nt_verses: list,
+        apocrypha_verses: list,
+        collection_stats: dict[str, object] | None = None,
+        progress_callback: Callable[[str, str], None] | None = None,
     ) -> MultiAgentAnswer:
         """
         Generate 5-paragraph answer using multi-agent architecture.
@@ -563,10 +548,8 @@ class MultiAgentOrchestrator:
 
         def _emit(step_id: str, message: str):
             if progress_callback:
-                try:
+                with contextlib.suppress(Exception):
                     progress_callback(step_id, message)
-                except Exception:
-                    pass
 
         logger.info(
             "Multi-agent generation started",
@@ -609,27 +592,21 @@ class MultiAgentOrchestrator:
         def run_ot():
             import sentry_sdk
 
-            with sentry_sdk.start_span(
-                op="rag.agent.oldtestament", description="OT commentary"
-            ) as span:
+            with sentry_sdk.start_span(op="rag.agent.oldtestament", description="OT commentary") as span:
                 span.set_data("verse_count", len(ot_verses))
                 return ("ot", self.ot_agent.generate(query, ot_verses))
 
         def run_nt():
             import sentry_sdk
 
-            with sentry_sdk.start_span(
-                op="rag.agent.newtestament", description="NT commentary"
-            ) as span:
+            with sentry_sdk.start_span(op="rag.agent.newtestament", description="NT commentary") as span:
                 span.set_data("verse_count", len(nt_verses))
                 return ("nt", self.nt_agent.generate(query, nt_verses))
 
         def run_apocrypha():
             import sentry_sdk
 
-            with sentry_sdk.start_span(
-                op="rag.agent.apocrypha", description="Apocrypha commentary"
-            ) as span:
+            with sentry_sdk.start_span(op="rag.agent.apocrypha", description="Apocrypha commentary") as span:
                 span.set_data("verse_count", len(apocrypha_verses))
                 return (
                     "apocrypha",
@@ -639,9 +616,7 @@ class MultiAgentOrchestrator:
         def run_quran():
             import sentry_sdk
 
-            with sentry_sdk.start_span(
-                op="rag.agent.quran", description="Quran commentary"
-            ) as span:
+            with sentry_sdk.start_span(op="rag.agent.quran", description="Quran commentary") as span:
                 span.set_data("verse_count", len(quran_verses))
                 return ("quran", self.quran_agent.generate(query, quran_verses))
 
@@ -707,9 +682,7 @@ class MultiAgentOrchestrator:
         synthesis = summary_result.get("synthesis", "")
         _emit("summary_completed", "Comparative synthesis complete")
         summary_latency_ms = (time.perf_counter() - summary_start) * 1000
-        log_performance(
-            logger, "summary_agent", summary_latency_ms, synthesis_len=len(synthesis)
-        )
+        log_performance(logger, "summary_agent", summary_latency_ms, synthesis_len=len(synthesis))
 
         _emit("scoring_confidence", "Calculating confidence score...")
         # === OBJECTIVE CONFIDENCE SCORING (two-phase sigmoid-calibrated) ===
@@ -721,9 +694,7 @@ class MultiAgentOrchestrator:
             else:
                 all_rrf_scores = []
         else:
-            logger.warning(
-                "collection_stats not provided or missing all_rrf_scores, computing from search results"
-            )
+            logger.warning("collection_stats not provided or missing all_rrf_scores, computing from search results")
             all_rrf_scores = sorted(
                 [r.score for r in (quran_verses or [])]
                 + [r.score for r in (ot_verses or [])]
@@ -732,34 +703,20 @@ class MultiAgentOrchestrator:
                 reverse=True,
             )
 
-        raw_num_queries = (
-            collection_stats.get("num_queries", 3) if collection_stats else 3
-        )
-        num_queries = (
-            int(raw_num_queries) if isinstance(raw_num_queries, (int, float)) else 3
-        )
+        raw_num_queries = collection_stats.get("num_queries", 3) if collection_stats else 3
+        num_queries = int(raw_num_queries) if isinstance(raw_num_queries, int | float) else 3
 
         # Sum citations from ALL agent results
         all_citations = 0
         for agent_result_var in [ot_result, nt_result, apoc_result, quran_result]:
             all_citations += len(agent_result_var.get("citations", []))
 
-        raw_total_verses = (
-            collection_stats.get("total_verses", 80) if collection_stats else 80
-        )
-        total_verses_provided = (
-            int(raw_total_verses) if isinstance(raw_total_verses, (int, float)) else 80
-        )
+        raw_total_verses = collection_stats.get("total_verses", 80) if collection_stats else 80
+        total_verses_provided = int(raw_total_verses) if isinstance(raw_total_verses, int | float) else 80
 
-        raw_collections_with_results = (
-            collection_stats.get("collections_with_results", 4)
-            if collection_stats
-            else 4
-        )
+        raw_collections_with_results = collection_stats.get("collections_with_results", 4) if collection_stats else 4
         collections_with_results = (
-            int(raw_collections_with_results)
-            if isinstance(raw_collections_with_results, (int, float))
-            else 4
+            int(raw_collections_with_results) if isinstance(raw_collections_with_results, int | float) else 4
         )
 
         breakdown = self.confidence_scorer.compute(

@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
-import { Check, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils"
+import { motion } from "framer-motion"
+import { Check, Loader2 } from "lucide-react"
 
 /**
  * Pipeline phases — backend step IDs mapped to user-facing phases.
  * Multiple backend steps collapse into a single visible phase.
  */
 interface Phase {
-  id: string;
-  label: string;
+  id: string
+  label: string
   /** Backend step IDs that belong to this phase */
-  steps: string[];
+  steps: string[]
 }
 
 const PHASES: Phase[] = [
@@ -47,17 +47,17 @@ const PHASES: Phase[] = [
     label: "Finalizing",
     steps: ["scoring_confidence", "translating_response"],
   },
-];
+]
 
 interface ProgressEvent {
-  step: string;
-  message: string;
+  step: string
+  message: string
 }
 
 interface AnalysisProgressProps {
-  progressEvents: ProgressEvent[];
-  hasParagraphs: boolean;
-  className?: string;
+  progressEvents: ProgressEvent[]
+  hasParagraphs: boolean
+  className?: string
 }
 
 function getPhaseStatus(
@@ -65,14 +65,14 @@ function getPhaseStatus(
   seenSteps: Set<string>,
   latestPhaseId: string | null
 ): "pending" | "active" | "completed" {
-  const hasAny = phase.steps.some((s) => seenSteps.has(s));
-  const hasAll = phase.steps.every((s) => seenSteps.has(s));
+  const hasAny = phase.steps.some((s) => seenSteps.has(s))
+  const hasAll = phase.steps.every((s) => seenSteps.has(s))
 
-  if (!hasAny) return "pending";
-  if (hasAll && latestPhaseId !== phase.id) return "completed";
-  if (latestPhaseId === phase.id) return "active";
+  if (!hasAny) return "pending"
+  if (hasAll && latestPhaseId !== phase.id) return "completed"
+  if (latestPhaseId === phase.id) return "active"
   // Phase has some steps seen but is not the latest — completed
-  return "completed";
+  return "completed"
 }
 
 export function AnalysisProgress({
@@ -80,66 +80,64 @@ export function AnalysisProgress({
   hasParagraphs,
   className,
 }: AnalysisProgressProps) {
-  const seenSteps = new Set<string>();
-  let agentCompletedCount = 0;
-  let agentTotalCount = 0;
+  const seenSteps = new Set<string>()
+  let agentCompletedCount = 0
+  let agentTotalCount = 0
 
   for (const event of progressEvents) {
-    seenSteps.add(event.step);
+    seenSteps.add(event.step)
 
     if (event.step === "agent_completed") {
-      agentCompletedCount++;
-      const match = event.message.match(/\((\d+)\/(\d+)\)/);
-      if (match) agentTotalCount = parseInt(match[2], 10);
+      agentCompletedCount++
+      const match = event.message.match(/\((\d+)\/(\d+)\)/)
+      if (match) agentTotalCount = parseInt(match[2], 10)
     }
     if (event.step === "agents_starting") {
-      const match = event.message.match(/Running (\d+)/);
-      if (match) agentTotalCount = parseInt(match[1], 10);
+      const match = event.message.match(/Running (\d+)/)
+      if (match) agentTotalCount = parseInt(match[1], 10)
     }
   }
 
   // Determine which phase is currently active (last phase with any seen step)
-  let latestPhaseId: string | null = null;
+  let latestPhaseId: string | null = null
   for (const phase of PHASES) {
     if (phase.steps.some((s) => seenSteps.has(s))) {
-      latestPhaseId = phase.id;
+      latestPhaseId = phase.id
     }
   }
 
   if (hasParagraphs) {
-    latestPhaseId = null;
+    latestPhaseId = null
   }
 
   // Only show phases that are active/completed, plus the next pending one
   const visiblePhases = PHASES.filter((phase, idx) => {
-    const status = getPhaseStatus(phase, seenSteps, latestPhaseId);
-    if (status === "completed" || status === "active") return true;
+    const status = getPhaseStatus(phase, seenSteps, latestPhaseId)
+    if (status === "completed" || status === "active") return true
     // Show next pending if previous is done
     if (idx > 0) {
-      const prev = PHASES[idx - 1];
-      const prevStatus = getPhaseStatus(prev, seenSteps, latestPhaseId);
-      return prevStatus === "completed" || prevStatus === "active";
+      const prev = PHASES[idx - 1]
+      const prevStatus = getPhaseStatus(prev, seenSteps, latestPhaseId)
+      return prevStatus === "completed" || prevStatus === "active"
     }
-    return idx === 0;
-  });
+    return idx === 0
+  })
 
   return (
     <div className={cn("pl-1", className)}>
       {visiblePhases.map((phase, idx) => {
-        const status = hasParagraphs
-          ? "completed"
-          : getPhaseStatus(phase, seenSteps, latestPhaseId);
-        const isLast = idx === visiblePhases.length - 1;
+        const status = hasParagraphs ? "completed" : getPhaseStatus(phase, seenSteps, latestPhaseId)
+        const isLast = idx === visiblePhases.length - 1
 
         // Dynamic label for agents phase
-        let label = phase.label;
+        let label = phase.label
         if (phase.id === "agents" && agentTotalCount > 0) {
           if (status === "active" && agentCompletedCount > 0) {
-            label = `Running agents (${agentCompletedCount}/${agentTotalCount})`;
+            label = `Running agents (${agentCompletedCount}/${agentTotalCount})`
           } else if (status === "active") {
-            label = `Running ${agentTotalCount} agents`;
+            label = `Running ${agentTotalCount} agents`
           } else if (status === "completed") {
-            label = `${agentTotalCount} agents completed`;
+            label = `${agentTotalCount} agents completed`
           }
         }
 
@@ -154,23 +152,23 @@ export function AnalysisProgress({
             {/* Indicator column: icon + connector line */}
             <div className="flex flex-col items-center">
               {/* Icon */}
-              <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+              <div className="flex h-5 w-5 flex-shrink-0 items-center justify-center">
                 {status === "completed" ? (
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                    className="w-5 h-5 rounded-full bg-emerald-500/15 flex items-center justify-center"
+                    className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/15"
                   >
                     <Check className="h-3 w-3 text-emerald-400" strokeWidth={3} />
                   </motion.div>
                 ) : status === "active" ? (
-                  <div className="w-5 h-5 rounded-full bg-[var(--color-accent-primary)]/15 flex items-center justify-center">
-                    <Loader2 className="h-3 w-3 text-[var(--color-accent-primary)] animate-spin" />
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-accent-primary)]/15">
+                    <Loader2 className="h-3 w-3 animate-spin text-[var(--color-accent-primary)]" />
                   </div>
                 ) : (
-                  <div className="w-5 h-5 rounded-full border border-[var(--color-border-subtle)] flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-muted)] opacity-30" />
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full border border-[var(--color-border-subtle)]">
+                    <div className="h-1.5 w-1.5 rounded-full bg-[var(--color-text-muted)] opacity-30" />
                   </div>
                 )}
               </div>
@@ -179,10 +177,8 @@ export function AnalysisProgress({
               {!isLast && (
                 <div
                   className={cn(
-                    "w-px flex-1 min-h-[16px] my-0.5 transition-colors duration-300",
-                    status === "completed"
-                      ? "bg-emerald-500/30"
-                      : "bg-[var(--color-border-subtle)]"
+                    "my-0.5 min-h-[16px] w-px flex-1 transition-colors duration-300",
+                    status === "completed" ? "bg-emerald-500/30" : "bg-[var(--color-border-subtle)]"
                   )}
                 />
               )}
@@ -194,7 +190,7 @@ export function AnalysisProgress({
                 className={cn(
                   "text-[13px] leading-5 transition-colors duration-200",
                   status === "completed" && "text-[var(--color-text-muted)]",
-                  status === "active" && "text-[var(--color-text-primary)] font-medium",
+                  status === "active" && "font-medium text-[var(--color-text-primary)]",
                   status === "pending" && "text-[var(--color-text-muted)] opacity-40"
                 )}
               >
@@ -202,8 +198,8 @@ export function AnalysisProgress({
               </span>
             </div>
           </motion.div>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

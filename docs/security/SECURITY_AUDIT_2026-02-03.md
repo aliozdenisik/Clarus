@@ -122,7 +122,7 @@ Tokens are logged in:
 
 **Severity:** HIGH (Currently mitigated by integer conversion)  
 **CVSS Score:** 7.5  
-**Files:** 
+**Files:**
 - `/backend/src/quran_morphology.py` (Lines 567-571)
 - `/backend/src/bible_morphology.py` (Lines 997-1001)
 

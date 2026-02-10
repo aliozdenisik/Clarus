@@ -1,79 +1,82 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { springPresets } from "@/lib/design-system";
-import { GlowCard } from "@/components/ui/glow-card";
-import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
-import { Search, BookOpen, User, LogOut } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useSession, signOut } from "@/lib/auth-client";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { logger } from "@/lib/logger";
+import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
+import { springPresets } from "@/lib/design-system"
+import { GlowCard } from "@/components/ui/glow-card"
+import { Input } from "@/components/ui/input"
+import { useRouter } from "next/navigation"
+import { Search, BookOpen, User, LogOut } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useSession, signOut } from "@/lib/auth-client"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+import { logger } from "@/lib/logger"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 interface Book {
-  nr: number;
-  name: string;
-  chapters_count: number;
-  testament: string;
+  nr: number
+  name: string
+  chapters_count: number
+  testament: string
 }
 
 export default function ApocryphaPage() {
-   const [books, setBooks] = useState<Book[]>([]);
-   const [isLoading, setIsLoading] = useState(true);
-   const [searchQuery, setSearchQuery] = useState("");
-   const { data: session, isPending: authLoading } = useSession();
-   const user = session?.user;
-   const router = useRouter();
+  const [books, setBooks] = useState<Book[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
+  const { data: session, isPending: authLoading } = useSession()
+  const user = session?.user
+  const router = useRouter()
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/sign-in");
+      router.push("/sign-in")
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router])
 
-   useEffect(() => {
-     const fetchBooks = async () => {
-       try {
-         const response = await fetch(`${API_BASE_URL}/api/metadata/bible/books?testament=apocrypha`, {
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/metadata/bible/books?testament=apocrypha`,
+          {
             credentials: "include",
-         });
-        if (!response.ok) throw new Error("Failed to fetch books");
-       const data = await response.json();
-       setBooks(data.data?.books || []);
-       } catch (error) {
-         logger.error("Failed to load books", error, { component: "ApocryphaPage" });
-         toast.error("Failed to load books");
-       } finally {
-        setIsLoading(false);
+          }
+        )
+        if (!response.ok) throw new Error("Failed to fetch books")
+        const data = await response.json()
+        setBooks(data.data?.books || [])
+      } catch (error) {
+        logger.error("Failed to load books", error, { component: "ApocryphaPage" })
+        toast.error("Failed to load books")
+      } finally {
+        setIsLoading(false)
       }
-    };
+    }
 
     if (user) {
-      fetchBooks();
+      fetchBooks()
     }
-  }, [user]);
+  }, [user])
 
   const handleLogout = async () => {
-    await signOut();
-    router.push("/sign-in");
-    toast.success("Logged out successfully");
-  };
+    await signOut()
+    router.push("/sign-in")
+    toast.success("Logged out successfully")
+  }
 
   const filteredBooks = books.filter((book) =>
     book.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  )
 
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
         <div className="text-[var(--color-text-secondary)]">Loading...</div>
       </div>
-    );
+    )
   }
 
   return (
@@ -87,8 +90,8 @@ export default function ApocryphaPage() {
           className="mb-8 flex items-center justify-between"
         >
           <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
-             <User className="h-4 w-4" />
-             <span className="text-sm">{user?.name || user?.email}</span>
+            <User className="h-4 w-4" />
+            <span className="text-sm">{user?.name || user?.email}</span>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -118,34 +121,31 @@ export default function ApocryphaPage() {
           transition={springPresets.fluid}
           className="mb-8"
         >
-          <h1 className="mb-2 text-3xl font-bold text-[var(--color-text-primary)] flex items-center gap-3">
+          <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-[var(--color-text-primary)]">
             <BookOpen className="h-8 w-8 text-[var(--color-accent-primary)]" />
             Apocrypha
           </h1>
-          <p className="text-[var(--color-text-secondary)]">
-            Browse the books of the Apocrypha
-          </p>
+          <p className="text-[var(--color-text-secondary)]">Browse the books of the Apocrypha</p>
         </motion.div>
-
 
         {/* Search */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="mb-8 max-w-md relative"
+          className="relative mb-8 max-w-md"
         >
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-muted)]" />
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
           <Input
             placeholder="Search book..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-[var(--color-bg-surface)] border-[var(--color-border-subtle)]"
+            className="border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] pl-10"
           />
         </motion.div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {isLoading
             ? [...Array(12)].map((_, i) => (
                 <Skeleton key={`apocrypha-skeleton-${i}`} className="h-32 w-full rounded-xl" />
@@ -162,18 +162,16 @@ export default function ApocryphaPage() {
                   onClick={() => router.push(`/bible/${book.nr}`)}
                   className="cursor-pointer"
                 >
-                  <GlowCard
-                    className="h-full hover:border-[var(--color-accent-glow)] transition-colors group"
-                  >
-                    <div className="flex flex-col h-full justify-between">
-                        <div>
-                        <h3 className="text-xl font-bold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent-primary)] transition-colors">
+                  <GlowCard className="group h-full transition-colors hover:border-[var(--color-accent-glow)]">
+                    <div className="flex h-full flex-col justify-between">
+                      <div>
+                        <h3 className="text-xl font-bold text-[var(--color-text-primary)] transition-colors group-hover:text-[var(--color-accent-primary)]">
                           {book.name}
                         </h3>
                       </div>
-                      <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)] flex items-center justify-between text-xs text-[var(--color-text-muted)]">
+                      <div className="mt-4 flex items-center justify-between border-t border-[var(--color-border-subtle)] pt-4 text-xs text-[var(--color-text-muted)]">
                         <span>{book.chapters_count} chapters</span>
-                        <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[var(--color-accent-primary)] font-medium">
+                        <span className="font-medium text-[var(--color-accent-primary)] opacity-0 transition-opacity group-hover:opacity-100">
                           Read &rarr;
                         </span>
                       </div>
@@ -184,11 +182,11 @@ export default function ApocryphaPage() {
         </div>
 
         {!isLoading && filteredBooks.length === 0 && (
-          <div className="text-center py-20 text-[var(--color-text-muted)]">
+          <div className="py-20 text-center text-[var(--color-text-muted)]">
             <p>No books found matching &quot;{searchQuery}&quot;</p>
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }

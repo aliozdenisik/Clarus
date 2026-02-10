@@ -1,13 +1,7 @@
-import {
-  FileText,
-  Search,
-  Globe,
-  Calendar,
-  Bell,
-} from "lucide-react";
-import Image from "next/image";
+import { FileText, Search, Globe, Calendar, Bell } from "lucide-react"
+import Image from "next/image"
 
-import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
+import { BentoCard, BentoGrid } from "@/components/ui/bento-grid"
 
 const features = [
   {
@@ -22,7 +16,7 @@ const features = [
         alt="Abstract gradient background"
         width={600}
         height={400}
-        className="absolute -right-20 -top-20 opacity-60 object-cover"
+        className="absolute -top-20 -right-20 object-cover opacity-60"
       />
     ),
     className: "lg:row-start-1 lg:row-end-4 lg:col-start-2 lg:col-end-3",
@@ -39,7 +33,7 @@ const features = [
         alt="Blue gradient background"
         width={600}
         height={400}
-        className="absolute -right-20 -top-20 opacity-60 object-cover"
+        className="absolute -top-20 -right-20 object-cover opacity-60"
       />
     ),
     className: "lg:col-start-1 lg:col-end-2 lg:row-start-1 lg:row-end-3",
@@ -56,7 +50,7 @@ const features = [
         alt="Colorful gradient background"
         width={600}
         height={400}
-        className="absolute -right-20 -top-20 opacity-60 object-cover"
+        className="absolute -top-20 -right-20 object-cover opacity-60"
       />
     ),
     className: "lg:col-start-1 lg:col-end-2 lg:row-start-3 lg:row-end-4",
@@ -73,7 +67,7 @@ const features = [
         alt="Purple gradient background"
         width={600}
         height={400}
-        className="absolute -right-20 -top-20 opacity-60 object-cover"
+        className="absolute -top-20 -right-20 object-cover opacity-60"
       />
     ),
     className: "lg:col-start-3 lg:col-end-3 lg:row-start-1 lg:row-end-2",
@@ -81,8 +75,7 @@ const features = [
   {
     Icon: Bell,
     name: "Notifications",
-    description:
-      "Get notified when someone shares a file or mentions you in a comment.",
+    description: "Get notified when someone shares a file or mentions you in a comment.",
     href: "/",
     cta: "Learn more",
     background: (
@@ -91,12 +84,12 @@ const features = [
         alt="Neon gradient background"
         width={600}
         height={400}
-        className="absolute -right-20 -top-20 opacity-60 object-cover"
+        className="absolute -top-20 -right-20 object-cover opacity-60"
       />
     ),
     className: "lg:col-start-3 lg:col-end-3 lg:row-start-2 lg:row-end-4",
   },
-];
+]
 
 export function BentoDemo() {
   return (
@@ -105,7 +98,7 @@ export function BentoDemo() {
         <BentoCard key={feature.name} {...feature} />
       ))}
     </BentoGrid>
-  );
+  )
 }
 
-export { BentoDemo as default };
+export { BentoDemo as default }

@@ -18,16 +18,15 @@ import logging
 import os
 import time
 from dataclasses import dataclass
-from typing import Optional, Set
 
 import requests
 import sentry_sdk
 from pybreaker import CircuitBreakerError
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
 from src.circuit_breaker import llm_with_breaker
@@ -43,7 +42,7 @@ OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 TURKISH_CHARS: str = "ğüşıöçĞÜŞİÖÇ"
 
-SUPPORTED_LANGUAGES: Set[str] = {"en", "tr", "es", "fr", "it", "pt", "ar", "de"}
+SUPPORTED_LANGUAGES: set[str] = {"en", "tr", "es", "fr", "it", "pt", "ar", "de"}
 
 CORPUS_LANGUAGES: dict[str, str] = {
     "quran": "tr",
@@ -153,9 +152,9 @@ class TranslationError(Exception):
     def __init__(
         self,
         message: str,
-        source_lang: Optional[str] = None,
-        target_lang: Optional[str] = None,
-        original_text: Optional[str] = None,
+        source_lang: str | None = None,
+        target_lang: str | None = None,
+        original_text: str | None = None,
     ) -> None:
         super().__init__(message)
         self.source_lang = source_lang
@@ -203,12 +202,11 @@ class QueryTranslator:
         ValueError: If no API key is available.
     """
 
-    def __init__(self, api_key: Optional[str] = None) -> None:
+    def __init__(self, api_key: str | None = None) -> None:
         self.api_key: str = api_key or os.environ.get("OPENROUTER_API_KEY", "")
         if not self.api_key:
             raise ValueError(
-                "OpenRouter API key required. Set OPENROUTER_API_KEY environment "
-                "variable or pass api_key parameter."
+                "OpenRouter API key required. Set OPENROUTER_API_KEY environment variable or pass api_key parameter."
             )
         self._headers: dict[str, str] = {
             "Authorization": f"Bearer {self.api_key}",
@@ -223,7 +221,7 @@ class QueryTranslator:
     def translate_query(
         self,
         query: str,
-        corpus: Optional[str] = None,
+        corpus: str | None = None,
     ) -> TranslationResult:
         """Detect the language of *query* and optionally translate it.
 
@@ -250,14 +248,9 @@ class QueryTranslator:
         query = query.strip()
 
         if corpus is not None and corpus not in CORPUS_LANGUAGES:
-            raise ValueError(
-                f"Invalid corpus '{corpus}'. "
-                f"Supported: {sorted(CORPUS_LANGUAGES.keys())}"
-            )
+            raise ValueError(f"Invalid corpus '{corpus}'. Supported: {sorted(CORPUS_LANGUAGES.keys())}")
 
-        target_lang: Optional[str] = (
-            CORPUS_LANGUAGES[corpus] if corpus is not None else None
-        )
+        target_lang: str | None = CORPUS_LANGUAGES[corpus] if corpus is not None else None
 
         # --- Heuristic pre-filters (skip LLM) ----------------------------
         if corpus is not None:
@@ -300,10 +293,7 @@ class QueryTranslator:
 
         # Extra reminder when citations must be preserved
         if preserve_citations:
-            system_prompt += (
-                "\n\nREMINDER: Preserve ALL citation references in square "
-                "brackets exactly as they appear."
-            )
+            system_prompt += "\n\nREMINDER: Preserve ALL citation references in square brackets exactly as they appear."
 
         return self._call_llm_text(
             prompt=text,
@@ -319,7 +309,7 @@ class QueryTranslator:
     def _heuristic_detect(
         query: str,
         corpus: str,
-    ) -> Optional[TranslationResult]:
+    ) -> TranslationResult | None:
         """Return a ``TranslationResult`` without calling the LLM when the
         language is obvious, or ``None`` if the LLM is needed.
         """
@@ -327,9 +317,7 @@ class QueryTranslator:
 
         # Turkish chars + quran corpus → already Turkish
         if target_lang == "tr" and any(ch in query for ch in TURKISH_CHARS):
-            logger.debug(
-                "Heuristic: Turkish characters detected for Quran corpus — skipping LLM."
-            )
+            logger.debug("Heuristic: Turkish characters detected for Quran corpus — skipping LLM.")
             return TranslationResult(
                 detected_language="tr",
                 translated_query=query,
@@ -338,9 +326,7 @@ class QueryTranslator:
 
         # Pure ASCII + bible corpus → already English
         if target_lang == "en" and query.isascii():
-            logger.debug(
-                "Heuristic: Pure ASCII detected for Bible corpus — skipping LLM."
-            )
+            logger.debug("Heuristic: Pure ASCII detected for Bible corpus — skipping LLM.")
             return TranslationResult(
                 detected_language="en",
                 translated_query=query,
@@ -357,9 +343,7 @@ class QueryTranslator:
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=2, min=2, max=30),
         retry=retry_if_exception_type(requests.exceptions.RequestException),
-        before_sleep=lambda rs: logger.info(
-            "Retrying translation LLM call, attempt %d/3", rs.attempt_number
-        ),
+        before_sleep=lambda rs: logger.info("Retrying translation LLM call, attempt %d/3", rs.attempt_number),
     )
     def _call_llm_json(
         self,
@@ -418,9 +402,7 @@ class QueryTranslator:
                         original_text=prompt,
                     )
 
-                content: str = (
-                    response_json["choices"][0].get("message", {}).get("content", "")
-                )
+                content: str = response_json["choices"][0].get("message", {}).get("content", "")
                 if not content:
                     raise TranslationError(
                         "Empty content in LLM response.",
@@ -508,9 +490,7 @@ class QueryTranslator:
                         original_text=prompt[:200],
                     )
 
-                content: str = (
-                    response_json["choices"][0].get("message", {}).get("content", "")
-                )
+                content: str = response_json["choices"][0].get("message", {}).get("content", "")
                 if not content:
                     raise TranslationError(
                         "Empty content in response translation.",
@@ -536,8 +516,8 @@ class QueryTranslator:
     def _llm_detect_and_translate(
         self,
         query: str,
-        target_lang: Optional[str],
-        corpus: Optional[str],
+        target_lang: str | None,
+        corpus: str | None,
     ) -> TranslationResult:
         """Use the LLM to detect language and optionally translate.
 
@@ -584,8 +564,7 @@ class QueryTranslator:
 
         except (json.JSONDecodeError, KeyError, TypeError) as exc:
             logger.warning(
-                "Failed to parse translation LLM response (%s) — "
-                "falling back to corpus language.",
+                "Failed to parse translation LLM response (%s) — falling back to corpus language.",
                 exc,
             )
             return self._fallback_result(query, target_lang)
@@ -605,7 +584,7 @@ class QueryTranslator:
     @staticmethod
     def _fallback_result(
         query: str,
-        target_lang: Optional[str],
+        target_lang: str | None,
     ) -> TranslationResult:
         """Return a safe fallback when LLM parsing fails.
 
@@ -613,9 +592,7 @@ class QueryTranslator:
         unchanged.
         """
         fallback_lang = target_lang if target_lang else "en"
-        logger.info(
-            "Fallback: assuming query is '%s', returning unchanged.", fallback_lang
-        )
+        logger.info("Fallback: assuming query is '%s', returning unchanged.", fallback_lang)
         return TranslationResult(
             detected_language=fallback_lang,
             translated_query=query,

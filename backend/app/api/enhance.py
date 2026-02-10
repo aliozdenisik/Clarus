@@ -1,9 +1,9 @@
 """REST API endpoint for query enhancement and keyword extraction."""
 
-from fastapi import APIRouter, Depends, HTTPException
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 
 router = APIRouter()
 
-_enhancer_instance: Optional[QueryEnhancer] = None
+_enhancer_instance: QueryEnhancer | None = None
 
 
 def get_enhancer() -> QueryEnhancer:
@@ -35,7 +35,7 @@ class EnhanceRequest(BaseModel):
 @router.post("/enhance", response_model=EnhanceResponse)
 async def enhance_query(
     request: EnhanceRequest,
-    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
+    current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
     """Extract structured keywords from a search query.

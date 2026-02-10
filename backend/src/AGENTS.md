@@ -230,7 +230,7 @@ We use a **Two-Phase Sigmoid-Calibrated** system (see `docs/CONFIDENCE_SCORING.m
 - `Substance`: Word count validation
 
 **Fusion**:
-geometric_mean(retrieval^0.6, answer^0.4) blended with arithmetic mean, then final sigmoid calibration. 
+geometric_mean(retrieval^0.6, answer^0.4) blended with arithmetic mean, then final sigmoid calibration.
 Range: **40-95%** (Structural ceiling of 72% removed).
 
 **Removed Signals**:

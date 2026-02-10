@@ -290,7 +290,7 @@ Aşağıdaki metinlerin tamamı keyword search PostgreSQL tablosuna (`bm_books �
 Mevcut `bm_books` tablosuna `category` sütunu eklenerek metin kategorisi izlenecektir:
 
 ```sql
-ALTER TABLE bm_books ADD COLUMN category VARCHAR(20) 
+ALTER TABLE bm_books ADD COLUMN category VARCHAR(20)
   CHECK (category IN ('ot', 'nt', 'apocrypha', 'pseudepigrapha', 'gnostic', 'apostolic_fathers'));
 ```
 

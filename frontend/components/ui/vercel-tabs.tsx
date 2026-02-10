@@ -38,7 +38,7 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
     const [activeIndex, setActiveIndex] = useState(() => {
       if (activeTab) {
-        const idx = tabs.findIndex(t => t.id === activeTab)
+        const idx = tabs.findIndex((t) => t.id === activeTab)
         return idx >= 0 ? idx : 0
       }
       return 0
@@ -48,7 +48,10 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
     const tabRefs = useRef<(HTMLDivElement | null)[]>([])
 
     const controlledActiveIndex = activeTab
-      ? Math.max(0, tabs.findIndex((t) => t.id === activeTab))
+      ? Math.max(
+          0,
+          tabs.findIndex((t) => t.id === activeTab)
+        )
       : activeIndex
 
     useLayoutEffect(() => {
@@ -76,15 +79,11 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
     }, [controlledActiveIndex, hoveredIndex, tabs])
 
     return (
-      <div 
-        ref={ref} 
-        className={cn("relative", className)} 
-        {...props}
-      >
+      <div ref={ref} className={cn("relative", className)} {...props}>
         <div className="relative">
           {/* Hover Highlight */}
           <div
-            className="absolute h-[30px] transition-all duration-300 ease-out bg-[#0e0f1114] dark:bg-[#ffffff1a] rounded-[6px] flex items-center"
+            className="absolute flex h-[30px] items-center rounded-[6px] bg-[#0e0f1114] transition-all duration-300 ease-out dark:bg-[#ffffff1a]"
             style={{
               ...hoverStyle,
               opacity: hoveredIndex !== null ? 1 : 0,
@@ -93,20 +92,22 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
 
           {/* Active Indicator */}
           <div
-            className="absolute bottom-[-6px] h-[2px] bg-[#0e0f11] dark:bg-white transition-all duration-300 ease-out"
+            className="absolute bottom-[-6px] h-[2px] bg-[#0e0f11] transition-all duration-300 ease-out dark:bg-white"
             style={activeStyle}
           />
 
           {/* Tabs */}
-          <div className="relative flex space-x-[6px] items-center">
+          <div className="relative flex items-center space-x-[6px]">
             {tabs.map((tab, index) => (
               <div
                 key={tab.id}
-                ref={(el) => { tabRefs.current[index] = el }}
+                ref={(el) => {
+                  tabRefs.current[index] = el
+                }}
                 className={cn(
-                  "px-3 py-2 cursor-pointer transition-colors duration-300 h-[30px]",
-                  index === controlledActiveIndex 
-                    ? "text-[#0e0e10] dark:text-white" 
+                  "h-[30px] cursor-pointer px-3 py-2 transition-colors duration-300",
+                  index === controlledActiveIndex
+                    ? "text-[#0e0e10] dark:text-white"
                     : "text-[#0e0f1199] dark:text-[#ffffff99]"
                 )}
                 onMouseEnter={() => setHoveredIndex(index)}
@@ -116,7 +117,7 @@ const Tabs = React.forwardRef<HTMLDivElement, TabsProps>(
                   onTabChange?.(tab.id)
                 }}
               >
-                <div className="text-sm font-medium leading-5 whitespace-nowrap flex items-center justify-center h-full">
+                <div className="flex h-full items-center justify-center text-sm leading-5 font-medium whitespace-nowrap">
                   {tab.label}
                 </div>
               </div>

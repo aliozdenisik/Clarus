@@ -2,7 +2,57 @@
 
 ## Current Work Focus
 
-**Date**: 2026-02-09
+**Date**: 2026-02-10
+
+## Comprehensive Pre-Commit Hooks — COMPLETED ✅
+
+**Date**: 2026-02-10
+**Branch**: `feat/comprehensive-pre-commit-hooks`
+**PR**: [#122](https://github.com/aliozdenisik/Clarus/pull/122)
+
+Implemented industry-standard pre-commit hooks to prevent the recurring tech debt accumulation that required massive cleanup in issues #113-116 (282 ESLint warnings, 167 Pyright warnings, Ruff violations).
+
+### Implementation Summary
+
+**Pre-commit Config** (`.pre-commit-config.yaml` — 115 lines, 11 hooks):
+- **File Quality**: trailing-whitespace, end-of-file-fixer, check-yaml, check-json, check-toml, check-merge-conflict, check-added-large-files (1MB), check-ast, debug-statements, check-case-conflict, mixed-line-ending, no-commit-to-branch (main/master)
+- **Secret Detection**: gitleaks with custom `.gitleaks.toml` (OpenRouter + Google OAuth patterns)
+- **Typo Detection**: codespell with Turkish/Arabic/Hebrew false-positive allowlist
+- **Backend Linting**: ruff lint (20 rule sets) + ruff format (pre-commit stage)
+- **Backend Types**: pyright (pre-push stage — slow)
+- **Frontend Linting**: ESLint `--max-warnings=0` (pre-commit stage)
+- **Frontend Formatting**: Prettier `--check` (pre-commit stage)
+- **Frontend Types**: tsc `--noEmit` (pre-push stage — slow)
+
+**Ruff Config** (`backend/pyproject.toml`):
+- 20 rule sets: E, W, F, I, N, UP, S, B, A, C4, DTZ, T20, SIM, TCH, ASYNC, PERF, PIE, PGH, RUF
+- 35 targeted ignores for project-specific patterns (Unicode text, FastAPI Depends, CLI print, async data loaders)
+- Per-file-ignores for tests/, scripts/, __init__.py, main.py
+- Started with 1,363 violations → all resolved
+
+**Frontend Tooling**:
+- `.prettierrc.json` created (semi:false, singleQuote:false, tabWidth:2, tailwindcss plugin)
+- `.prettierignore` created (excludes generated API client, .next, out)
+- `eslint.config.mjs` updated with eslint-config-prettier as last config
+- `package.json` updated with format/format:check scripts + 3 new devDependencies
+
+**CI Hardening**:
+- `.github/workflows/backend-ci.yml` — removed `continue-on-error: true` from lint/format/typecheck (now blocking)
+
+**Code Fixes**:
+- Fixed UP038 isinstance modernization (tuple → union syntax) in 3 files
+- Fixed mixed line endings in Turkish Quran XML and morphology data files
+- Codespell allowlist for Turkish/Hebrew/Greek domain terms (sme, shema, sizin, vai, etc.)
+
+**Files Deleted** (cleanup):
+- `.secrets.baseline` (replaced by gitleaks)
+- `.pre-commit-config.yaml.backup`
+- `test_precommit.py`, `scripts/setup-pre-commit.sh` (research artifacts)
+- `PRE_COMMIT_PLAN.md`, `PRE_COMMIT_SETUP.md`, `SECURITY-PRECOMMIT-RESEARCH.md`
+
+**Verification**: All 17 pre-commit hooks pass on full repo (`pre-commit run --all-files` ✅)
+
+---
 
 ## Issue #91: Frontend Performance Hotspots — COMPLETED ✅
 
@@ -1325,7 +1375,7 @@ class CompareResponse:
 
 **Assessment**: Vulnerability is in `json_format.ParseDict()`. Clarus uses protobuf only for internal gRPC (qdrant-client) and ONNX inference (fastembed) - neither accepts untrusted JSON input. No exposed attack surface.
 
-**Tracking**: 
+**Tracking**:
 - PR: https://github.com/protocolbuffers/protobuf/pull/25239
 - Comment added to `backend/requirements.txt`
 

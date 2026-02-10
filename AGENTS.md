@@ -189,14 +189,14 @@ Each agent searches its collection, generates commentary. Summary agent synthesi
 
 ### Hybrid Search Pipeline
 ```
-Query → LLM Enhancement → Multi-Query (3-5 variants) → 
-       Parallel Search (4 collections, dense+sparse) → 
+Query → LLM Enhancement → Multi-Query (3-5 variants) →
+       Parallel Search (4 collections, dense+sparse) →
        RRF Fusion (k=60) → Rerank → Answer
 ```
 
 ### Morphological Keyword Search
 ```
-Arabic Input (كتب) or Buckwalter (ktb) → Root Extraction → 
+Arabic Input (كتب) or Buckwalter (ktb) → Root Extraction →
        Derived Words → Verse Lookup → Surah Distribution
 Hebrew/Greek Input → Strongs Number Mapping → Cross-reference
 ```

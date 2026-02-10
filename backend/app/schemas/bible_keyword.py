@@ -1,7 +1,6 @@
 """Pydantic schemas for Bible morphological keyword search API."""
 
 from pydantic import BaseModel, Field
-from typing import Optional
 
 
 class BibleKeywordSearchRequest(BaseModel):
@@ -18,20 +17,20 @@ class BibleKeywordSearchRequest(BaseModel):
         le=10000,
         description="Results per page. 0 = return all verses (no pagination)",
     )
-    language_filter: Optional[str] = Field(
+    language_filter: str | None = Field(
         default=None,
         description="Filter by language: 'hebrew', 'aramaic', or None for all",
     )
-    word_filter: Optional[str] = Field(
+    word_filter: str | None = Field(
         default=None,
         max_length=100,
         description="Filter verses to only those containing this specific word form",
     )
-    testament_filter: Optional[str] = Field(
+    testament_filter: str | None = Field(
         default=None,
         description="Filter by testament: 'ot', 'nt', 'apocrypha', or None for all",
     )
-    category_filter: Optional[str] = Field(
+    category_filter: str | None = Field(
         default=None,
         description="Filter by category: 'ot', 'nt', 'apocrypha', 'pseudepigrapha', 'gnostic', 'apostolic_fathers', or None for all",
     )
@@ -48,8 +47,8 @@ class BibleVerseMatchItem(BaseModel):
     book_name: str
     chapter: int
     verse: int
-    text_original: Optional[str]
-    text_english: Optional[str]
+    text_original: str | None
+    text_english: str | None
     matched_words: list[str]
     reference: str
 
@@ -66,22 +65,22 @@ class PaginationInfo(BaseModel):
 class BibleKeywordSearchResponse(BaseModel):
     success: bool = True
     query: str
-    root: Optional[str] = None
+    root: str | None = None
     root_source: str
-    strong_number: Optional[str] = None
+    strong_number: str | None = None
     total_occurrences: int = 0
     unique_words: list[str] = Field(default_factory=list)
     book_distribution: list[BookDistItem] = Field(default_factory=list)
     verses: list[BibleVerseMatchItem] = Field(default_factory=list)
     pagination: PaginationInfo
-    transliteration: Optional[str] = None
+    transliteration: str | None = None
     word_transliterations: dict[str, str] = Field(default_factory=dict)
 
 
 class BibleRootListItem(BaseModel):
-    strong_number: Optional[str]
-    original_word: Optional[str]
-    transliteration: Optional[str]
+    strong_number: str | None
+    original_word: str | None
+    transliteration: str | None
     count: int
 
 
@@ -112,9 +111,9 @@ class CrossReferenceWord(BaseModel):
 class CrossReferenceResponse(BaseModel):
     success: bool = True
     strongs_number: str
-    definition: Optional[str] = None
-    original_word: Optional[str] = None
-    transliteration: Optional[str] = None
+    definition: str | None = None
+    original_word: str | None = None
+    transliteration: str | None = None
     hebrew_words: list[CrossReferenceWord] = Field(default_factory=list)
     greek_words: list[CrossReferenceWord] = Field(default_factory=list)
     total_occurrences: int = 0

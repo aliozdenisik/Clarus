@@ -48,9 +48,7 @@ def normalize_turkish(text: str, remove_punctuation: bool = False) -> str:
 
     if remove_punctuation:
         # Remove apostrophes and common punctuation
-        result = (
-            result.replace("'", "").replace("'", "").replace(";", " ").replace(",", " ")
-        )
+        result = result.replace("'", "").replace("'", "").replace(";", " ").replace(",", " ")
 
     return result
 
@@ -86,7 +84,7 @@ def generate_i_variants(word: str) -> set:
     variants = set()
     for combo in product(["i", "ı"], repeat=len(positions)):
         new_word = list(word_lower)
-        for pos, char in zip(positions, combo):
+        for pos, char in zip(positions, combo, strict=False):
             new_word[pos] = char
         variants.add("".join(new_word))
 

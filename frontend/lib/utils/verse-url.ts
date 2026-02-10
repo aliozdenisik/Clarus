@@ -90,124 +90,124 @@ const BIBLE_BOOK_NR: Record<string, number> = {
   "Prayer of Manasses": 79,
   "1 Maccabees": 80,
   "2 Maccabees": 81,
-};
+}
 
 const QURAN_SURAH_ID: Record<string, number> = {
-  "Fatiha": 1,
-  "Bakara": 2,
+  Fatiha: 1,
+  Bakara: 2,
   "Ali Imran": 3,
-  "Nisa": 4,
-  "Maide": 5,
+  Nisa: 4,
+  Maide: 5,
   "En'am": 6,
   "A'raf": 7,
-  "Enfal": 8,
-  "Tevbe": 9,
-  "Yunus": 10,
-  "Hud": 11,
-  "Yusuf": 12,
+  Enfal: 8,
+  Tevbe: 9,
+  Yunus: 10,
+  Hud: 11,
+  Yusuf: 12,
   "Ra'd": 13,
-  "Ibrahim": 14,
-  "Hicr": 15,
-  "Nahl": 16,
-  "Isra": 17,
-  "Kehf": 18,
-  "Meryem": 19,
-  "Taha": 20,
-  "Enbiya": 21,
-  "Hac": 22,
+  Ibrahim: 14,
+  Hicr: 15,
+  Nahl: 16,
+  Isra: 17,
+  Kehf: 18,
+  Meryem: 19,
+  Taha: 20,
+  Enbiya: 21,
+  Hac: 22,
   "Mu'minun": 23,
-  "Nur": 24,
-  "Furkan": 25,
-  "Suara": 26,
-  "Neml": 27,
-  "Kasas": 28,
-  "Ankebut": 29,
-  "Rum": 30,
-  "Lokman": 31,
-  "Secde": 32,
-  "Ahzab": 33,
+  Nur: 24,
+  Furkan: 25,
+  Suara: 26,
+  Neml: 27,
+  Kasas: 28,
+  Ankebut: 29,
+  Rum: 30,
+  Lokman: 31,
+  Secde: 32,
+  Ahzab: 33,
   "Sebe'": 34,
-  "Fatir": 35,
-  "Yasin": 36,
-  "Saffat": 37,
-  "Sad": 38,
-  "Zumer": 39,
+  Fatir: 35,
+  Yasin: 36,
+  Saffat: 37,
+  Sad: 38,
+  Zumer: 39,
   "Mu'min": 40,
-  "Fussilet": 41,
-  "Sura": 42,
-  "Zuhruf": 43,
-  "Duhan": 44,
-  "Casiye": 45,
-  "Ahkaf": 46,
-  "Muhammed": 47,
-  "Fetih": 48,
-  "Hucurat": 49,
-  "Kaf": 50,
-  "Zariyat": 51,
-  "Tur": 52,
-  "Necm": 53,
-  "Kamer": 54,
-  "Rahman": 55,
-  "Vakia": 56,
-  "Hadid": 57,
-  "Mucadele": 58,
-  "Hasr": 59,
-  "Mumtehine": 60,
-  "Saf": 61,
-  "Cuma": 62,
-  "Munafikun": 63,
-  "Tegabun": 64,
-  "Talak": 65,
-  "Tahrim": 66,
-  "Mulk": 67,
-  "Kalem": 68,
-  "Hakka": 69,
-  "Mearic": 70,
-  "Nuh": 71,
-  "Cin": 72,
-  "Muzzemmil": 73,
-  "Muddessir": 74,
-  "Kiyamet": 75,
-  "Insan": 76,
-  "Murselat": 77,
-  "Nebe": 78,
-  "Naziat": 79,
-  "Abese": 80,
-  "Tekvir": 81,
-  "Infitar": 82,
-  "Mutaffifin": 83,
-  "Insikak": 84,
-  "Buruc": 85,
-  "Tarik": 86,
+  Fussilet: 41,
+  Sura: 42,
+  Zuhruf: 43,
+  Duhan: 44,
+  Casiye: 45,
+  Ahkaf: 46,
+  Muhammed: 47,
+  Fetih: 48,
+  Hucurat: 49,
+  Kaf: 50,
+  Zariyat: 51,
+  Tur: 52,
+  Necm: 53,
+  Kamer: 54,
+  Rahman: 55,
+  Vakia: 56,
+  Hadid: 57,
+  Mucadele: 58,
+  Hasr: 59,
+  Mumtehine: 60,
+  Saf: 61,
+  Cuma: 62,
+  Munafikun: 63,
+  Tegabun: 64,
+  Talak: 65,
+  Tahrim: 66,
+  Mulk: 67,
+  Kalem: 68,
+  Hakka: 69,
+  Mearic: 70,
+  Nuh: 71,
+  Cin: 72,
+  Muzzemmil: 73,
+  Muddessir: 74,
+  Kiyamet: 75,
+  Insan: 76,
+  Murselat: 77,
+  Nebe: 78,
+  Naziat: 79,
+  Abese: 80,
+  Tekvir: 81,
+  Infitar: 82,
+  Mutaffifin: 83,
+  Insikak: 84,
+  Buruc: 85,
+  Tarik: 86,
   "A'la": 87,
-  "Gasiye": 88,
-  "Fecr": 89,
-  "Beled": 90,
-  "Sems": 91,
-  "Leyl": 92,
-  "Duha": 93,
-  "Insirah": 94,
-  "Tin": 95,
-  "Alak": 96,
-  "Kadir": 97,
-  "Beyyine": 98,
-  "Zilzal": 99,
-  "Adiyat": 100,
-  "Karia": 101,
-  "Tekasur": 102,
-  "Asr": 103,
-  "Humeze": 104,
-  "Fil": 105,
-  "Kureys": 106,
-  "Maun": 107,
-  "Kevser": 108,
-  "Kafirun": 109,
-  "Nasr": 110,
-  "Tebbet": 111,
-  "Ihlas": 112,
-  "Felak": 113,
-  "Nas": 114,
-};
+  Gasiye: 88,
+  Fecr: 89,
+  Beled: 90,
+  Sems: 91,
+  Leyl: 92,
+  Duha: 93,
+  Insirah: 94,
+  Tin: 95,
+  Alak: 96,
+  Kadir: 97,
+  Beyyine: 98,
+  Zilzal: 99,
+  Adiyat: 100,
+  Karia: 101,
+  Tekasur: 102,
+  Asr: 103,
+  Humeze: 104,
+  Fil: 105,
+  Kureys: 106,
+  Maun: 107,
+  Kevser: 108,
+  Kafirun: 109,
+  Nasr: 110,
+  Tebbet: 111,
+  Ihlas: 112,
+  Felak: 113,
+  Nas: 114,
+}
 
 function stripDiacritics(value: string): string {
   return value
@@ -223,26 +223,26 @@ function stripDiacritics(value: string): string {
     .replace(/[ğĞ]/g, "g")
     .replace(/[ıI]/g, "i")
     .replace(/[İ]/g, "i")
-    .replace(/[']/g, "'");
+    .replace(/[']/g, "'")
 }
 
 const QURAN_NORMALIZED: Array<[string, number]> = Object.entries(QURAN_SURAH_ID).map(
   ([name, id]) => [stripDiacritics(name).toLowerCase(), id]
-);
+)
 
 function lookupBibleBookNr(bookName: string): number | null {
-  return BIBLE_BOOK_NR[bookName] ?? null;
+  return BIBLE_BOOK_NR[bookName] ?? null
 }
 
 function lookupQuranSurahId(surahName: string): number | null {
-  const exactMatch = QURAN_SURAH_ID[surahName];
+  const exactMatch = QURAN_SURAH_ID[surahName]
   if (exactMatch !== undefined) {
-    return exactMatch;
+    return exactMatch
   }
 
-  const normalizedName = stripDiacritics(surahName).toLowerCase();
-  const normalizedMatch = QURAN_NORMALIZED.find(([name]) => name === normalizedName);
-  return normalizedMatch ? normalizedMatch[1] : null;
+  const normalizedName = stripDiacritics(surahName).toLowerCase()
+  const normalizedMatch = QURAN_NORMALIZED.find(([name]) => name === normalizedName)
+  return normalizedMatch ? normalizedMatch[1] : null
 }
 
 /**
@@ -254,23 +254,23 @@ function lookupQuranSurahId(surahName: string): number | null {
  * buildUrlFromReference("Bakara:153") -> "/quran/2?verse=153"
  */
 export function buildUrlFromReference(reference: string): string | null {
-  const bibleMatch = reference.match(/^(.+)\s+(\d+):(\d+)$/);
+  const bibleMatch = reference.match(/^(.+)\s+(\d+):(\d+)$/)
   if (bibleMatch) {
-    const [, bookName, chapter, verse] = bibleMatch;
-    const bookNr = lookupBibleBookNr(bookName);
+    const [, bookName, chapter, verse] = bibleMatch
+    const bookNr = lookupBibleBookNr(bookName)
     if (bookNr !== null) {
-      return `/bible/${bookNr}?chapter=${chapter}&verse=${verse}`;
+      return `/bible/${bookNr}?chapter=${chapter}&verse=${verse}`
     }
   }
 
-  const quranMatch = reference.match(/^(.+):(\d+)$/);
+  const quranMatch = reference.match(/^(.+):(\d+)$/)
   if (quranMatch) {
-    const [, surahName, verse] = quranMatch;
-    const surahId = lookupQuranSurahId(surahName);
+    const [, surahName, verse] = quranMatch
+    const surahId = lookupQuranSurahId(surahName)
     if (surahId !== null) {
-      return `/quran/${surahId}?verse=${verse}`;
+      return `/quran/${surahId}?verse=${verse}`
     }
   }
 
-  return null;
+  return null
 }

@@ -33,7 +33,7 @@
 **Repository:** https://github.com/tyler-slc/pseudepigrapha
 **License:** MIT
 **Format:** JSON
-**Contents:** 
+**Contents:**
 - CAVT.json - Comprehensive catalog of pseudepigrapha with multilingual names
 - References to scholarly works
 - Version information and manuscript details
@@ -60,7 +60,7 @@
 **Repository:** https://github.com/ETCBC/dss
 **License:** MIT
 **Format:** Text-Fabric (TF) format + Jupyter notebooks
-**Contents:** 
+**Contents:**
 - Biblical DSS (Hebrew Bible fragments)
 - Non-biblical DSS texts
 - Linguistic annotations and morphological data
@@ -94,7 +94,7 @@
 **Repository:** https://github.com/conradbm/nag_hammadi
 **License:** Unspecified
 **Format:** Jupyter Notebooks + data files
-**Contents:** 
+**Contents:**
 - Scraped Nag Hammadi texts
 - NLP analysis
 - Comparison with canonical Bible
@@ -116,7 +116,7 @@
 **Repository:** https://github.com/OpenGreekAndLatin/csel-dev
 **License:** Public Domain (machine-corrected)
 **Format:** EpiDoc XML (TEI-compliant)
-**Contents:** 
+**Contents:**
 - Latin Church Fathers texts
 - 50+ volumes of CSEL collection
 - Scholarly apparatus
@@ -157,7 +157,7 @@
 ### 1. Early Christian Writings Catalog
 **Website:** https://www.earlychristianwritings.com
 **Format:** HTML + downloadable CD
-**Contents:** 
+**Contents:**
 - New Testament (canonical)
 - Apocrypha (50+ texts)
 - Gnostic texts (30+ texts)
@@ -294,7 +294,7 @@
 - Eastern religions
 - Mythology
 - Esoteric texts
-**Download:** 
+**Download:**
 - Online browsing: Free
 - ISTA Flash Drive 9.0: ~1,700 books (commercial)
 - Individual text downloads: Available
@@ -303,7 +303,7 @@
 ### 2. Early Christian Writings
 **Website:** https://www.earlychristianwritings.com
 **Format:** HTML + CD
-**Contents:** 
+**Contents:**
 - 200+ early Christian texts
 - Dated chronologically (30-400 AD)
 - Scholarly commentary
@@ -407,7 +407,7 @@ curl -s https://sacred-texts.com/[path] > output.html
 
 ### Data Pipeline:
 ```
-GitHub Repos (JSON/XML) 
+GitHub Repos (JSON/XML)
   ↓
 Parse & normalize format
   ↓
@@ -428,4 +428,3 @@ Qdrant indexing
 - Web-based collections require scraping or manual download
 - Text-Fabric format (DSS) requires Python ecosystem but provides rich annotations
 - OSIS format is Bible-standard and widely supported
-

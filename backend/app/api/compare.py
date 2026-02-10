@@ -1,9 +1,9 @@
 """Compare API routes for multi-scripture comparison."""
 
-from fastapi import APIRouter, Depends, HTTPException
 import time as time_module
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,7 +13,7 @@ from app.auth.api_key_validator import get_current_user_flexible
 from app.db import get_db
 from app.logging_config import get_logger, log_performance
 from app.models import SearchHistory
-from app.schemas.common import TranslatorType, DEFAULT_TRANSLATOR
+from app.schemas.common import DEFAULT_TRANSLATOR, TranslatorType
 from src.citation_sanitizer import sanitize_citations
 from src.comparative_rag import ComparativeRAG
 from src.query_translator import QueryTranslator, TranslationError
@@ -24,7 +24,7 @@ logger = get_logger(__name__)
 
 router = APIRouter()
 
-_comparative_rag: Optional[ComparativeRAG] = None
+_comparative_rag: ComparativeRAG | None = None
 
 
 def get_comparative_rag() -> ComparativeRAG:
@@ -40,30 +40,30 @@ class CompareRequest(BaseModel):
 
     topic: str
     use_multi_agent: bool = True
-    collections: List[str] = Field(
+    collections: list[str] = Field(
         default=["quran_tr_diyanet", "bible_ot", "bible_nt", "bible_apocrypha"],
         description="Collections to search and compare. Minimum 2 required.",
     )
-    language: Optional[str] = Field(
+    language: str | None = Field(
         None,
         pattern=r"^(en|tr|es|fr|it|pt|ar|de)$",
         description="Response language (auto-detect if omitted)",
     )
-    translator: Optional[TranslatorType] = Field(
+    translator: TranslatorType | None = Field(
         default=DEFAULT_TRANSLATOR,
         description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
     )
-    quran_keywords: Optional[List[str]] = Field(
+    quran_keywords: list[str] | None = Field(
         None,
         description="Optional Turkish keywords for Quran per-keyword search",
     )
-    bible_keywords: Optional[List[str]] = Field(
+    bible_keywords: list[str] | None = Field(
         None,
         description="Optional English keywords for Bible per-keyword search",
     )
 
     @classmethod
-    def validate_collections(cls, v: List[str]) -> List[str]:
+    def validate_collections(cls, v: list[str]) -> list[str]:
         """Validate collections list."""
         # Valid collections: all quran_tr_* translators + bible collections
         valid_collections = {
@@ -96,7 +96,7 @@ class ParagraphData(BaseModel):
 
     title: str
     content: str
-    citations: List[str]
+    citations: list[str]
 
 
 class VerseDetail(BaseModel):
@@ -109,9 +109,7 @@ class VerseDetail(BaseModel):
     chapter: int  # Chapter/Surah number
     verse: int  # Verse number
     source: str  # Collection: 'quran_tr', 'bible_ot', 'bible_nt', 'bible_apocrypha'
-    translation: (
-        str  # "Diyanet Isleri Baskanligi" or "King James Version with Apocrypha"
-    )
+    translation: str  # "Diyanet Isleri Baskanligi" or "King James Version with Apocrypha"
     book_nr: int | None = None  # Bible book number (None for Quran)
 
     # Quran-specific fields (optional for backward compatibility)
@@ -127,23 +125,23 @@ class CompareResponse(BaseModel):
     # Full formatted essay (markdown)
     essay: str
     # Individual paragraphs for structured display
-    paragraphs: List[ParagraphData]
+    paragraphs: list[ParagraphData]
     # All citations grouped by source
-    citations: Dict[str, List[str]]
+    citations: dict[str, list[str]]
     # Statistics
     confidence: float
-    confidence_breakdown: Optional[dict] = None
+    confidence_breakdown: dict | None = None
     total_verses: int
     total_citations: int
     latency_ms: int
     # Rich verse metadata for citations
-    verse_details: Optional[Dict[str, VerseDetail]] = None
+    verse_details: dict[str, VerseDetail] | None = None
     # Language metadata (for multilingual support)
-    detected_language: Optional[str] = None
-    response_language: Optional[str] = None
+    detected_language: str | None = None
+    response_language: str | None = None
 
 
-def extract_quran_verse_detail(result: SearchResult) -> Tuple[str, VerseDetail]:
+def extract_quran_verse_detail(result: SearchResult) -> tuple[str, VerseDetail]:
     """Extract citation reference and verse detail from a Quran SearchResult."""
     # Citation format: "SurahName:VerseId" e.g., "Bakara:153" (NO BRACKETS!)
     reference = f"{result.surah_name}:{result.verse_id}"
@@ -161,9 +159,7 @@ def extract_quran_verse_detail(result: SearchResult) -> Tuple[str, VerseDetail]:
     )
 
 
-def extract_bible_verse_detail(
-    result: BibleSearchResult, source: str
-) -> Tuple[str, VerseDetail]:
+def extract_bible_verse_detail(result: BibleSearchResult, source: str) -> tuple[str, VerseDetail]:
     """Extract citation reference and verse detail from a Bible BibleSearchResult."""
     # Citation format: "BookName Chapter:Verse" e.g., "Genesis 1:1" (NO BRACKETS!)
     reference = f"{result.book_name} {result.chapter}:{result.verse}"
@@ -182,7 +178,7 @@ def extract_bible_verse_detail(
 @router.post("/", response_model=CompareResponse)
 async def compare_scriptures(
     request: CompareRequest,
-    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
+    current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -229,9 +225,7 @@ async def compare_scriptures(
         }
         collections = [c for c in request.collections if c in valid_collections]
         if len(collections) < 2:
-            raise HTTPException(
-                status_code=400, detail="At least 2 collections required for comparison"
-            )
+            raise HTTPException(status_code=400, detail="At least 2 collections required for comparison")
 
         logger.info(
             "Compare with filtered collections",
@@ -249,7 +243,7 @@ async def compare_scriptures(
         )
 
         # Step 2: Build verse_details from search results (only for selected collections)
-        verse_details: Dict[str, VerseDetail] = {}
+        verse_details: dict[str, VerseDetail] = {}
 
         # Check if any Quran translator collection is selected
         has_quran = any(c.startswith("quran_tr_") for c in collections)
@@ -287,21 +281,15 @@ async def compare_scriptures(
         )
 
         # Sanitize agent output (defense-in-depth against malformed citations)
-        result.old_testament_commentary = sanitize_citations(
-            result.old_testament_commentary
-        )
-        result.new_testament_commentary = sanitize_citations(
-            result.new_testament_commentary
-        )
+        result.old_testament_commentary = sanitize_citations(result.old_testament_commentary)
+        result.new_testament_commentary = sanitize_citations(result.new_testament_commentary)
         result.apocrypha_commentary = sanitize_citations(result.apocrypha_commentary)
         result.quran_commentary = sanitize_citations(result.quran_commentary)
         result.synthesis = sanitize_citations(result.synthesis)
 
         # Sanitize citations dict values
         for source_key, citation_list in result.citations.items():
-            result.citations[source_key] = [
-                sanitize_citations(c) for c in citation_list
-            ]
+            result.citations[source_key] = [sanitize_citations(c) for c in citation_list]
 
         # Build structured paragraphs from MultiAgentAnswer
         paragraphs = []
@@ -380,9 +368,7 @@ async def compare_scriptures(
 
         # Response translation: translate essay + paragraphs for non-Turkish/English users
         # Use request.language if provided, otherwise auto-detect from search_result
-        detected_language = request.language or search_result.search_stats.get(
-            "detected_language"
-        )
+        detected_language = request.language or search_result.search_stats.get("detected_language")
         essay_text = result.to_essay()
         response_language = "tr"  # Default: essay is in Turkish
 
@@ -442,20 +428,14 @@ async def compare_scriptures(
         result.essay = sanitize_citations(result.essay)
 
         # Sanitize references
-        result.quran_references = [
-            sanitize_citations(r) for r in result.quran_references
-        ]
-        result.bible_references = [
-            sanitize_citations(r) for r in result.bible_references
-        ]
+        result.quran_references = [sanitize_citations(r) for r in result.quran_references]
+        result.bible_references = [sanitize_citations(r) for r in result.bible_references]
         result.all_references = [sanitize_citations(r) for r in result.all_references]
 
         latency_ms = int((time_module.perf_counter() - start_time) * 1000)
 
         total_citations_count = len(result.all_references)
-        verses_count = (
-            result.verses_provided if hasattr(result, "verses_provided") else 80
-        )
+        verses_count = result.verses_provided if hasattr(result, "verses_provided") else 80
 
         # Log performance for single-agent mode
         log_performance(

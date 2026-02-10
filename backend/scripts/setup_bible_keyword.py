@@ -168,7 +168,7 @@ def load_kjva_english() -> dict[tuple[str, int, int], str]:
         log.warning("KJVA file not found: %s — English text will be empty", KJVA_FILE)
         return {}
 
-    with open(KJVA_FILE, "r", encoding="utf-8") as f:
+    with open(KJVA_FILE, encoding="utf-8") as f:
         data = json.load(f)
 
     kjva_map: dict[tuple[str, int, int], str] = {}
@@ -211,10 +211,7 @@ def get_scrollmapper_category(filename: str) -> str:
     fn = filename.lower()
 
     # Apostolic Fathers
-    if any(
-        x in fn
-        for x in ["didache", "hermas", "clement", "barnabas", "polycarp", "ignatius"]
-    ):
+    if any(x in fn for x in ["didache", "hermas", "clement", "barnabas", "polycarp", "ignatius"]):
         return "apostolic_fathers"
 
     # Gnostic texts
@@ -321,11 +318,7 @@ def load_scrollmapper(conn, data_dir: Path) -> None:
 
     # 1. Delete existing Scrollmapper data (idempotent)
     log.info("Cleaning up existing Scrollmapper data (book_id >= 100)...")
-    conn.execute(
-        text(
-            "DELETE FROM bm_words WHERE verse_id IN (SELECT id FROM bm_verses WHERE book_id >= 100)"
-        )
-    )
+    conn.execute(text("DELETE FROM bm_words WHERE verse_id IN (SELECT id FROM bm_verses WHERE book_id >= 100)"))
     conn.execute(text("DELETE FROM bm_verses WHERE book_id >= 100"))
     conn.execute(text("DELETE FROM bm_books WHERE id >= 100"))
     log.info("Cleaned up existing Scrollmapper entries")
@@ -337,7 +330,7 @@ def load_scrollmapper(conn, data_dir: Path) -> None:
 
     for json_file in json_files:
         try:
-            with open(json_file, "r", encoding="utf-8") as f:
+            with open(json_file, encoding="utf-8") as f:
                 data = json.load(f)
 
             books = data.get("books", [])
@@ -400,9 +393,7 @@ def load_scrollmapper(conn, data_dir: Path) -> None:
                                 "verse": v_num,
                                 "text_original": None,  # No original language text
                                 "text_english": v_text if v_text else None,
-                                "reference": v_name
-                                if v_name
-                                else f"{book_name} {ch_num}:{v_num}",
+                                "reference": v_name if v_name else f"{book_name} {ch_num}:{v_num}",
                             }
                         )
 
@@ -471,9 +462,7 @@ def load_strongs_cache(conn) -> dict[str, str]:
     Returns:
         Dict mapping Strong's number (e.g., "H7225") -> original_word (Hebrew lemma)
     """
-    result = conn.execute(
-        text("SELECT number, original_word FROM bm_strongs WHERE language = 'hebrew'")
-    )
+    result = conn.execute(text("SELECT number, original_word FROM bm_strongs WHERE language = 'hebrew'"))
     cache: dict[str, str] = {}
     for row in result:
         if row[1]:  # original_word not null
@@ -620,11 +609,7 @@ def parse_oshb_book(
                         elif strong_number:
                             # Try without zero-padding variations
                             # e.g., H0430 might be stored as H430
-                            alt_key = (
-                                "H" + str(int(strong_number[1:]))
-                                if strong_number.startswith("H")
-                                else None
-                            )
+                            alt_key = "H" + str(int(strong_number[1:])) if strong_number.startswith("H") else None
                             if alt_key and alt_key in strongs_cache:
                                 lemma_word = strongs_cache[alt_key]
                                 root_word = lemma_word
@@ -638,9 +623,7 @@ def parse_oshb_book(
                         root_word = word_clean
 
                     # Transliteration
-                    transliteration = (
-                        transliterate_hebrew(word_clean) if word_clean else None
-                    )
+                    transliteration = transliterate_hebrew(word_clean) if word_clean else None
 
                     # Language detection from morph tag
                     language = "aramaic" if morph_attr.startswith("A") else "hebrew"
@@ -852,9 +835,7 @@ def insert_verses(
 
 def _build_verse_id_map(conn) -> dict[tuple[int, int, int], int]:
     """Build mapping of (book_id, chapter, verse) -> verse_db_id."""
-    result = conn.execute(
-        text("SELECT id, book_id, chapter, verse FROM bm_verses ORDER BY id")
-    )
+    result = conn.execute(text("SELECT id, book_id, chapter, verse FROM bm_verses ORDER BY id"))
     verse_map: dict[tuple[int, int, int], int] = {}
     for row in result:
         verse_map[(row[1], row[2], row[3])] = row[0]
@@ -976,9 +957,7 @@ def validate_and_summarize(conn) -> bool:
     ot_book_count = result.scalar()
     log.info("Books (OT): %d", ot_book_count)
 
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_books WHERE testament = 'apocrypha'")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_books WHERE testament = 'apocrypha'"))
     apocrypha_book_count = result.scalar()
     log.info("Books (Apocrypha/Scrollmapper): %d", apocrypha_book_count)
 
@@ -993,51 +972,35 @@ def validate_and_summarize(conn) -> bool:
     log.info("Words: %d", word_count)
 
     # Hebrew vs Aramaic
-    result = conn.execute(
-        text(
-            "SELECT language, COUNT(*) FROM bm_words GROUP BY language ORDER BY language"
-        )
-    )
+    result = conn.execute(text("SELECT language, COUNT(*) FROM bm_words GROUP BY language ORDER BY language"))
     lang_counts = {row[0]: row[1] for row in result}
     for lang, cnt in lang_counts.items():
         log.info("  %s words: %d", lang, cnt)
 
     # Words with/without Strong's
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_words WHERE strong_number IS NOT NULL")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_words WHERE strong_number IS NOT NULL"))
     with_strongs = result.scalar()
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_words WHERE strong_number IS NULL")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_words WHERE strong_number IS NULL"))
     without_strongs = result.scalar()
     log.info("Words with Strong's: %d, without: %d", with_strongs, without_strongs)
 
     # Unique roots
-    result = conn.execute(
-        text("SELECT COUNT(DISTINCT root) FROM bm_words WHERE root IS NOT NULL")
-    )
+    result = conn.execute(text("SELECT COUNT(DISTINCT root) FROM bm_words WHERE root IS NOT NULL"))
     unique_roots = result.scalar()
     log.info("Unique roots: %d", unique_roots)
 
     # Top 10 most common roots
     result = conn.execute(
         text(
-            "SELECT root, COUNT(*) AS cnt FROM bm_words "
-            "WHERE root IS NOT NULL "
-            "GROUP BY root ORDER BY cnt DESC LIMIT 10"
+            "SELECT root, COUNT(*) AS cnt FROM bm_words WHERE root IS NOT NULL GROUP BY root ORDER BY cnt DESC LIMIT 10"
         )
     )
     top_roots = [(row[0], row[1]) for row in result]
 
     # English text coverage
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_verses WHERE text_english IS NOT NULL")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_verses WHERE text_english IS NOT NULL"))
     english_count = result.scalar()
-    result = conn.execute(
-        text("SELECT COUNT(*) FROM bm_verses WHERE text_english IS NULL")
-    )
+    result = conn.execute(text("SELECT COUNT(*) FROM bm_verses WHERE text_english IS NULL"))
     no_english = result.scalar()
 
     # Print summary
@@ -1202,9 +1165,7 @@ def main() -> bool:
             log.info("Parsing OSHB XML files...")
             for order, abbrev in books_to_process:
                 xml_path = OSHB_DIR / f"{abbrev}.xml"
-                verse_rows, word_rows = parse_oshb_book(
-                    xml_path, order, abbrev, strongs_cache
-                )
+                verse_rows, word_rows = parse_oshb_book(xml_path, order, abbrev, strongs_cache)
                 all_verse_rows.extend(verse_rows)
                 all_word_rows.extend(word_rows)
 

@@ -7,29 +7,19 @@ export {
   AnimatedFilterTabs,
   SegmentedControl,
   type FilterType,
-} from "./animated-tabs";
+} from "./animated-tabs"
 
 // Text Animations
-export { TextRotate, LuxuryQuote, type TextRotateRef } from "./text-rotate";
+export { TextRotate, LuxuryQuote, type TextRotateRef } from "./text-rotate"
 
 // Typewriter & Streaming
-export {
-  Typewriter,
-  StreamingText,
-  TypingIndicator,
-  AIResponse,
-} from "./typewriter";
+export { Typewriter, StreamingText, TypingIndicator, AIResponse } from "./typewriter"
 
 // Premium Buttons
-export {
-  GlowingButton,
-  ShinyButton,
-  CosmicGlowButton,
-  MagneticButton,
-} from "./glowing-button";
+export { GlowingButton, ShinyButton, CosmicGlowButton, MagneticButton } from "./glowing-button"
 
 // Hero Sections
-export { HeroSection, MinimalHero } from "./hero-section";
+export { HeroSection, MinimalHero } from "./hero-section"
 
 // Decorative Elements
 export {
@@ -39,4 +29,4 @@ export {
   NoiseTexture,
   LuxuryCard,
   LuxuryQuoteCard,
-} from "./dot-pattern";
+} from "./dot-pattern"
