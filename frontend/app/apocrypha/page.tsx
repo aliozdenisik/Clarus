@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSession, signOut } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useLogger } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -29,7 +29,6 @@ export default function ApocryphaPage() {
    const { data: session, isPending: authLoading } = useSession();
    const user = session?.user;
    const router = useRouter();
-   const log = useLogger("ApocryphaPage");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -44,10 +43,10 @@ export default function ApocryphaPage() {
             credentials: "include",
          });
         if (!response.ok) throw new Error("Failed to fetch books");
-        const data = await response.json();
-        setBooks(data.data?.books || []);
+       const data = await response.json();
+       setBooks(data.data?.books || []);
        } catch (error) {
-         log.error("Failed to load books", { error });
+         logger.error("Failed to load books", error, { component: "ApocryphaPage" });
          toast.error("Failed to load books");
        } finally {
         setIsLoading(false);
@@ -57,7 +56,7 @@ export default function ApocryphaPage() {
     if (user) {
       fetchBooks();
     }
-  }, [user, log]);
+  }, [user]);
 
   const handleLogout = async () => {
     await signOut();
