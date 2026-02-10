@@ -44,7 +44,7 @@ TRANSLATION_SYSTEM_PROMPT = (
     "You are a Quranic Arabic lexicography expert specializing in classical Arabic roots. "
     "Translate the following Lane's Arabic-English Lexicon definition to Turkish. "
     "This definition describes a Quranic Arabic root — preserve Islamic and Quranic terminology "
-    "(e.g., 'tövbe' for repentance, 'namaz' for prayer, 'sadaka' for charity). "
+    "(e.g., 'tövbe' for repentance, 'salat' for prayer, 'sadaka' for charity). "
     "Use academic Turkish suitable for a Quran concordance. Return JSON: "
     '{"translation": "...", "confidence": 0.0-1.0}'
 )
@@ -52,7 +52,7 @@ CORPUS_DEFINITION_PROMPT = (
     "You are a Quranic Arabic lexicography expert. "
     "Given an Arabic root and its Quran frequency, provide a concise Turkish definition "
     "of the root's primary meaning in Quranic context. "
-    "Use Islamic and Quranic terminology (e.g., 'tövbe', 'namaz', 'sadaka'). "
+    "Use Islamic and Quranic terminology (e.g., 'tövbe', 'salat', 'sadaka'). "
     "Use academic Turkish suitable for a Quran concordance. Return JSON: "
     '{"translation": "...", "confidence": 0.0-1.0}'
 )
