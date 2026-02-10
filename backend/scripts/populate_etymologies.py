@@ -10,7 +10,6 @@ Data Sources:
 
 Usage:
   uv run python scripts/populate_etymologies.py
-  uv run python scripts/populate_etymologies.py --lane-db data/lane_lexicon/
   uv run python scripts/populate_etymologies.py --dry-run
   uv run python scripts/populate_etymologies.py --corpus-only
 """
@@ -49,16 +48,17 @@ def main() -> int:
     parser.add_argument(
         "--lane-db",
         type=Path,
-        default=Path("data/lane_lexicon"),
-        help="Path to Lane's Lexicon SQLite",
+        default=None,
+        help="Path to Lane's Lexicon SQLite (fallback if PostgreSQL lane_entries is empty)",
     )
     parser.add_argument("--dry-run", action="store_true", help="Run without inserting")
     parser.add_argument("--corpus-only", action="store_true", help="Skip Lane matching")
     parser.add_argument("--batch-size", type=int, default=100, help="Insert batch size")
     args = parser.parse_args()
 
-    lane_path = None if args.corpus_only else args.lane_db
-    api_key = os.environ.get("OPENROUTER_API_KEY") if not args.corpus_only else None
+    use_lane = not args.corpus_only
+    lane_path = args.lane_db if use_lane else None
+    api_key = os.environ.get("OPENROUTER_API_KEY") if use_lane else None
 
     pipeline = EtymologyPipeline(
         db_url=DATABASE_URL,
@@ -66,6 +66,7 @@ def main() -> int:
         openrouter_api_key=api_key,
         batch_size=args.batch_size,
         dry_run=args.dry_run,
+        use_lane=use_lane,
     )
     result = pipeline.run()
 
