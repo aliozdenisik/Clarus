@@ -10,8 +10,7 @@ import { GlowCard } from "@/components/ui/glow-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { ArrowLeft, User, LogOut } from "lucide-react"
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+import { API_BASE } from "@/lib/config"
 
 interface Verse {
   id: number
@@ -76,7 +75,7 @@ export default function SurahDetailPage() {
   useEffect(() => {
     const fetchSurah = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/metadata/quran/surahs/${surahId}`, {
+        const response = await fetch(`${API_BASE}/api/metadata/quran/surahs/${surahId}`, {
           credentials: "include",
         })
 

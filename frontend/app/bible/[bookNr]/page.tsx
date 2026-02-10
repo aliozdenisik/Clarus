@@ -11,8 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { ArrowLeft, BookOpen, User, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+import { API_BASE } from "@/lib/config"
 
 interface ChapterSummary {
   chapter: number
@@ -86,10 +85,10 @@ export default function BookDetailPage() {
 
       try {
         const [bookRes, chapterRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/metadata/bible/books/${bookNr}`, {
+          fetch(`${API_BASE}/api/metadata/bible/books/${bookNr}`, {
             credentials: "include",
           }),
-          fetch(`${API_BASE_URL}/api/metadata/bible/books/${bookNr}/chapters/${targetChapter}`, {
+          fetch(`${API_BASE}/api/metadata/bible/books/${bookNr}/chapters/${targetChapter}`, {
             credentials: "include",
           }),
         ])
@@ -153,7 +152,7 @@ export default function BookDetailPage() {
       setIsLoadingChapter(true)
       try {
         const response = await fetch(
-          `${API_BASE_URL}/api/metadata/bible/books/${bookNr}/chapters/${selectedChapter}`,
+          `${API_BASE}/api/metadata/bible/books/${bookNr}/chapters/${selectedChapter}`,
           { credentials: "include" }
         )
 
