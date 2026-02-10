@@ -14,20 +14,22 @@ import logging
 import os
 import random
 import re
+import threading
 from collections import Counter
 from collections.abc import Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import asyncpg
+import pybreaker
 import requests
 from pybreaker import CircuitBreakerError
 from sqlalchemy import create_engine, text
-from tenacity import RetryError, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import RetryError, retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from src.arabic_normalizer import arabic_to_buckwalter
-from src.circuit_breaker import llm_with_breaker
 from src.lane_lexicon import LaneLexiconAdapter
 
 if TYPE_CHECKING:
@@ -59,6 +61,16 @@ CORPUS_DEFINITION_PROMPT = (
 _TRANSLATION_RE = re.compile(r'"translation"\s*:\s*"((?:[^"\\]|\\.)*)"', re.DOTALL)
 _CONFIDENCE_RE = re.compile(r'"confidence"\s*:\s*([\d.]+)')
 ETYMOLOGY_EXPORT_DIR = Path(__file__).resolve().parent.parent / "data" / "etymology"
+
+_etl_breaker = pybreaker.CircuitBreaker(fail_max=20, reset_timeout=60, name="etl_translation")
+
+
+def _is_retryable_translation_error(exc: BaseException) -> bool:
+    if isinstance(exc, requests.exceptions.ConnectionError | requests.exceptions.Timeout):
+        return True
+    if isinstance(exc, requests.exceptions.HTTPError):
+        return exc.response is not None and exc.response.status_code == 429
+    return False
 
 
 @dataclass
@@ -324,10 +336,15 @@ class EtymologyPipeline:
             roots = self._extract_roots()
             processed_rows: list[dict[str, object]] = []
 
+            total_root_count = len(roots)
+            logger.info("Processing %d roots (Lane match + form extraction)...", total_root_count)
+
             with self._engine.connect() as forms_connection:
                 self._forms_connection = forms_connection
 
-                for root in roots:
+                for root_idx, root in enumerate(roots):
+                    if root_idx % 200 == 0:
+                        logger.info("Root %d/%d ...", root_idx, total_root_count)
                     lane_entry = self._match_lane(root)
                     forms = self._extract_forms(root.root)
                     confidence = self._assign_confidence(lane_entry)
@@ -520,7 +537,7 @@ class EtymologyPipeline:
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=20),
-        retry=retry_if_exception_type((requests.exceptions.ConnectionError, requests.exceptions.Timeout)),
+        retry=retry_if_exception(_is_retryable_translation_error),
         before_sleep=lambda rs: logger.info("Retrying translation request, attempt %d/3", rs.attempt_number),
     )
     def _translate_definition(
@@ -544,7 +561,7 @@ class EtymologyPipeline:
             },
         ]
 
-        response = llm_with_breaker(
+        response = _etl_breaker.call(
             lambda: requests.post(
                 OPENROUTER_URL,
                 headers=headers,
@@ -573,39 +590,67 @@ class EtymologyPipeline:
 
     def _translate_batch(self, entries: list[dict[str, object]]) -> list[dict[str, object]]:
         """Translate English definitions to Turkish via OpenRouter LLM."""
-        if not entries:
+        total_entries = len(entries)
+        if not total_entries:
             return []
 
-        translated_entries: list[dict[str, object]] = []
-        for start in range(0, len(entries), 10):
-            chunk = entries[start : start + 10]
-            for entry in chunk:
+        logger.info("Translating %d entries to Turkish (parallel)...", total_entries)
+        cancel_event = threading.Event()
+        progress_lock = threading.Lock()
+        done_count = 0
+
+        workers_env = os.getenv("ETYMOLOGY_TRANSLATION_WORKERS", "6")
+        try:
+            workers = max(1, int(workers_env))
+        except ValueError:
+            workers = 6
+
+        def clear_translation_fields(entry: dict[str, object]) -> None:
+            entry["definition_tr"] = None
+            entry["tr_translation_confidence"] = None
+            entry["tr_translation_source"] = None
+
+        def translate_one(entry: dict[str, object]) -> dict[str, object]:
+            nonlocal done_count
+            try:
+                if cancel_event.is_set():
+                    clear_translation_fields(entry)
+                    return entry
+
                 definition_en = entry.get("definition_en")
                 if not isinstance(definition_en, str) or not definition_en.strip():
                     root = str(entry.get("root", ""))
                     freq = entry.get("quran_frequency", 0)
-                    if root and self.openrouter_api_key:
+                    if root and self.openrouter_api_key and not cancel_event.is_set():
                         prompt_text = f"Arabic root: {root}, Quran frequency: {freq}"
-                        translation, confidence = self._translate_definition(
-                            prompt_text,
-                            system_prompt=CORPUS_DEFINITION_PROMPT,
-                        )
-                        entry["definition_tr"] = translation
-                        entry["tr_translation_confidence"] = confidence
-                        entry["tr_translation_source"] = "llm_generated"
+                        try:
+                            translation, confidence = self._translate_definition(
+                                prompt_text,
+                                system_prompt=CORPUS_DEFINITION_PROMPT,
+                            )
+                            entry["definition_tr"] = translation
+                            entry["tr_translation_confidence"] = confidence
+                            entry["tr_translation_source"] = "llm_generated"
+                        except requests.exceptions.HTTPError as exc:
+                            logger.warning("Translation HTTP error for root %s: %s", entry.get("root"), exc)
+                            if exc.response is not None and exc.response.status_code == 401:
+                                logger.warning("OpenRouter API key rejected; aborting remaining translations")
+                                cancel_event.set()
+                            clear_translation_fields(entry)
+                        except CircuitBreakerError:
+                            logger.warning("Translation aborted due to open ETL translation circuit breaker")
+                            cancel_event.set()
+                            clear_translation_fields(entry)
+                        except (RetryError, requests.exceptions.RequestException, json.JSONDecodeError) as exc:
+                            logger.warning("Translation failed for root %s: %s", entry.get("root"), exc)
+                            clear_translation_fields(entry)
                     else:
-                        entry["definition_tr"] = None
-                        entry["tr_translation_confidence"] = None
-                        entry["tr_translation_source"] = None
-                    translated_entries.append(entry)
-                    continue
+                        clear_translation_fields(entry)
+                    return entry
 
-                if not self.openrouter_api_key:
-                    entry["definition_tr"] = None
-                    entry["tr_translation_confidence"] = None
-                    entry["tr_translation_source"] = None
-                    translated_entries.append(entry)
-                    continue
+                if not self.openrouter_api_key or cancel_event.is_set():
+                    clear_translation_fields(entry)
+                    return entry
 
                 try:
                     translation, confidence = self._translate_definition(definition_en)
@@ -613,28 +658,40 @@ class EtymologyPipeline:
                     entry["tr_translation_confidence"] = confidence
                     entry["tr_translation_source"] = "llm_gemini"
                 except requests.exceptions.HTTPError as exc:
-                    status_code = exc.response.status_code if exc.response is not None else None
                     logger.warning("Translation HTTP error for root %s: %s", entry.get("root"), exc)
-                    entry["definition_tr"] = None
-                    entry["tr_translation_confidence"] = None
-                    entry["tr_translation_source"] = None
-                    if status_code == 401:
-                        logger.warning("OpenRouter API key rejected; disabling translation for remaining entries")
-                        self.openrouter_api_key = None
+                    if exc.response is not None and exc.response.status_code == 401:
+                        logger.warning("OpenRouter API key rejected; aborting remaining translations")
+                        cancel_event.set()
+                    clear_translation_fields(entry)
                 except CircuitBreakerError:
-                    logger.warning("Translation skipped due to open LLM circuit breaker")
-                    entry["definition_tr"] = None
-                    entry["tr_translation_confidence"] = None
-                    entry["tr_translation_source"] = None
+                    logger.warning("Translation aborted due to open ETL translation circuit breaker")
+                    cancel_event.set()
+                    clear_translation_fields(entry)
                 except (RetryError, requests.exceptions.RequestException, json.JSONDecodeError) as exc:
                     logger.warning("Translation failed for root %s: %s", entry.get("root"), exc)
-                    entry["definition_tr"] = None
-                    entry["tr_translation_confidence"] = None
-                    entry["tr_translation_source"] = None
+                    clear_translation_fields(entry)
 
-                translated_entries.append(entry)
+                return entry
+            finally:
+                with progress_lock:
+                    done_count += 1
+                    if done_count % 50 == 0:
+                        logger.info("Translation %d/%d ...", done_count, total_entries)
 
-        return translated_entries
+        results: list[dict[str, object] | None] = [None] * total_entries
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            futures = {executor.submit(translate_one, entry): idx for idx, entry in enumerate(entries)}
+            for future in as_completed(futures):
+                idx = futures[future]
+                try:
+                    results[idx] = future.result()
+                except Exception as exc:
+                    logger.warning("Unexpected translation failure at index %d: %s", idx, exc)
+                    failed_entry = entries[idx]
+                    clear_translation_fields(failed_entry)
+                    results[idx] = failed_entry
+
+        return [entry for entry in results if entry is not None]
 
     def _assign_confidence(self, lane_entry: LaneEntry | None) -> str:
         """Assign confidence level based on Lane volume."""
