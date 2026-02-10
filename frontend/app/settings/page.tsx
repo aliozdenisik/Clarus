@@ -66,7 +66,7 @@ export default function SettingsPage() {
       setIsSaving(true);
       await savePreferences();
       toast.success("Preferences saved successfully");
-    } catch (error) {
+    } catch {
       toast.error("Failed to save preferences");
     } finally {
       setIsSaving(false);
@@ -91,7 +91,7 @@ export default function SettingsPage() {
 
       reset();
       toast.success("Preferences reset to defaults");
-    } catch (error) {
+    } catch {
       toast.error("Failed to reset preferences");
     } finally {
       setIsResetting(false);

@@ -233,6 +233,7 @@ export function MagneticButton({
   disabled,
   type = "button",
 }: MagneticButtonProps) {
+  void magneticStrength;
   return (
     <motion.button
       type={type}

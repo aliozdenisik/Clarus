@@ -139,15 +139,15 @@ export default function NavbarDemoPage() {
             <div className="space-y-3 text-muted-foreground">
               <p><strong>Desktop (≥1024px):</strong></p>
               <ul className="list-disc list-inside ml-4 space-y-1">
-                <li>Hover over "Scripture" or "Features" to see dropdown menus</li>
+                <li>Hover over &quot;Scripture&quot; or &quot;Features&quot; to see dropdown menus</li>
                 <li>Click on menu items to navigate</li>
-                <li>Click "Sign In" or "Register" buttons</li>
+                <li>Click &quot;Sign In&quot; or &quot;Register&quot; buttons</li>
               </ul>
               
               <p className="pt-2"><strong>Mobile (&lt;1024px):</strong></p>
               <ul className="list-disc list-inside ml-4 space-y-1">
                 <li>Click hamburger menu icon (three lines)</li>
-                <li>Expand "Scripture" or "Features" accordion sections</li>
+                <li>Expand &quot;Scripture&quot; or &quot;Features&quot; accordion sections</li>
                 <li>Scroll to see mobile extra links (About, Contact, etc.)</li>
                 <li>Click authentication buttons at bottom</li>
               </ul>

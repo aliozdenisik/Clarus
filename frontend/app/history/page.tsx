@@ -150,7 +150,7 @@ export default function HistoryPage() {
           pages: body.pagination.total_pages,
         });
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to load history");
     } finally {
       setIsLoading(false);
@@ -183,7 +183,7 @@ export default function HistoryPage() {
       } else if (items.length === 1) {
         fetchHistory(1);
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete item");
     }
   };
@@ -198,7 +198,7 @@ export default function HistoryPage() {
       setItems([]);
       setPagination(null);
       toast.success("History cleared");
-    } catch (error) {
+    } catch {
       toast.error("Failed to clear history");
     } finally {
       setIsClearing(false);

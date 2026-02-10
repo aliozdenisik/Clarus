@@ -307,7 +307,7 @@ export function LuxuryQuote({
           className="text-center"
         >
           <blockquote className="text-xl md:text-2xl lg:text-3xl font-light text-[var(--color-text-primary)] leading-relaxed italic">
-            "{quotes[currentIndex].text}"
+            &quot;{quotes[currentIndex].text}&quot;
           </blockquote>
           <motion.div
             className="mt-4 flex items-center justify-center gap-2"

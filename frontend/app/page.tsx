@@ -2,10 +2,9 @@
 
 import { motion } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
-import { MagneticButton } from "@/components/ui/magnetic-button";
-import { TextRotate, LuxuryQuote } from "@/components/ui/text-rotate";
+import { LuxuryQuote } from "@/components/ui/text-rotate";
 
-import { DotPattern, RadialGradient, GridPattern } from "@/components/ui/dot-pattern";
+import { DotPattern, RadialGradient } from "@/components/ui/dot-pattern";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import {
@@ -358,7 +357,7 @@ export default function HomePage() {
             transition={{ ...springPresets.gentle, duration: 1 }}
           >
             <BentoGrid className="md:grid-cols-3">
-              {features.map((feature, index) => (
+              {features.map((feature) => (
                 <BentoCard
                   key={feature.title}
                   name={feature.title}

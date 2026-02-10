@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { springPresets } from "@/lib/design-system";
-import { useSession, signOut } from "@/lib/auth-client";
+import { useSession } from "@/lib/auth-client";
 
 import { GlowCard } from "@/components/ui/glow-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
 import { AnimatedFilterTabs, FilterType } from "@/components/ui/animated-tabs";
-import { TypingIndicator, AIResponse } from "@/components/ui/typewriter";
+import { TypingIndicator } from "@/components/ui/typewriter";
 import { DotPattern } from "@/components/ui/dot-pattern";
 import { AuroraSectionBackground } from "@/components/ui/aurora-background";
 
@@ -33,6 +33,7 @@ import { TranslatorSelector } from "@/components/search/translator-selector";
 import { CollectionSelector } from "@/components/compare/collection-selector";
 import { AnalysisProgress } from "@/components/compare/analysis-progress";
 import type { KeywordSuggestion } from "@/lib/stores/keyword-store";
+import type { CompareRequest } from "@/lib/api/types.gen";
 import { compareScripturesApiComparePost } from "@/lib/api/sdk.gen";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -52,6 +53,7 @@ interface CompareResult {
   total_verses: number;
   total_citations: number;
   latency_ms: number;
+  detected_language?: string | null;
   verse_details?: Record<string, {
     text: string;
     book_name: string;
@@ -62,6 +64,12 @@ interface CompareResult {
     book_nr?: number;  // Bible book number (null for Quran)
   }>;
 }
+
+type CompareRequestPayload = CompareRequest & {
+  translator?: string;
+  quran_keywords?: string[];
+  bible_keywords?: string[];
+};
 
 const FILTER_TO_SOURCE: Record<string, string[]> = {
   'all': ['quran_tr', 'bible_ot', 'bible_nt', 'bible_apocrypha'],
@@ -127,12 +135,6 @@ function CompareContent() {
       router.push("/sign-in");
     }
   }, [user, authLoading, router]);
-
-  const handleLogout = async () => {
-    await signOut();
-    router.push("/sign-in");
-    toast.success("Logged out successfully");
-  };
 
   const toggleParagraph = (index: number) => {
     setExpandedParagraphs((prev) => {
@@ -226,7 +228,7 @@ function CompareContent() {
     if (!result?.verse_details) return [];
     const entries = Object.entries(result.verse_details);
     if (activeFilter === 'all') return entries;
-    return entries.filter(([_, verse]) => 
+    return entries.filter(([, verse]) => 
       FILTER_TO_SOURCE[activeFilter].includes(verse.source)
     );
   }, [result?.verse_details, activeFilter]);
@@ -284,10 +286,10 @@ function CompareContent() {
     return data.keywords || [];
   };
 
-  const performBatchCompare = async (topicToCompare: string) => {
+  const performBatchCompare = useCallback(async (topicToCompare: string) => {
     setIsLoading(true);
     try {
-      const requestBody: any = {
+      const requestBody: CompareRequestPayload = {
         topic: topicToCompare,
         use_multi_agent: true,
         collections: selectedCollections,
@@ -315,7 +317,7 @@ function CompareContent() {
         body: requestBody,
       });
 
-      const data = response.data as any;
+      const data = response.data as CompareResult;
       setResult(data);
       if (data.detected_language) {
         setDetectedLanguage(data.detected_language);
@@ -323,12 +325,12 @@ function CompareContent() {
       toast.success(
         `Analysis complete in ${(data.latency_ms / 1000).toFixed(1)}s`
       );
-    } catch (error) {
+    } catch {
       toast.error("Analysis failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
-   };
+   }, [selectedCollections, selectedLanguage, selectedTranslator, advancedMode, quranKeywords, bibleKeywords]);
 
   // Auto-execute comparison from URL q param (history re-run)
   useEffect(() => {
@@ -350,14 +352,14 @@ function CompareContent() {
           }
           url += `&translator=${encodeURIComponent(selectedTranslator)}`;
           startStream(url);
-        } catch (err) {
+        } catch {
           performBatchCompare(q);    // Fallback to batch
         }
       } else {
         performBatchCompare(q);      // q passed directly as topicToCompare parameter
       }
     }
-  }, [searchParams, enable_streaming, startStream, performBatchCompare, selectedLanguage]);
+  }, [searchParams, enable_streaming, startStream, performBatchCompare, selectedCollections, selectedLanguage, selectedTranslator]);
 
   const sseProcessedCount = useRef(0);
 
@@ -374,17 +376,19 @@ function CompareContent() {
     // Check for complete message in new messages
     const completeMsg = newMessages.findLast((m) => m.type === "complete");
     if (completeMsg?.result) {
-      setResult(completeMsg.result as CompareResult);
-      if ((completeMsg.result as any).detected_language) {
-        setDetectedLanguage((completeMsg.result as any).detected_language);
+      const completeResult = completeMsg.result as CompareResult;
+      setResult(completeResult);
+      if (completeResult.detected_language) {
+        setDetectedLanguage(completeResult.detected_language);
       }
       setIsLoading(false);
       return;
     }
 
     // Handle verse_details from streaming (sent before text)
-    const verseDetailsMsg = newMessages.findLast((m: any) => m.verse_details);
-    if (verseDetailsMsg?.verse_details) {
+    const verseDetailsMsg = newMessages.findLast((m) => m.verse_details);
+    const verseDetails = verseDetailsMsg?.verse_details as CompareResult["verse_details"] | undefined;
+    if (verseDetails) {
       setResult((prev) => {
         const base = prev || {
           topic,
@@ -398,14 +402,22 @@ function CompareContent() {
         };
         return {
           ...base,
-          verse_details: verseDetailsMsg.verse_details,
+          verse_details: verseDetails,
         };
       });
     }
 
     // Extract stats from new SSE messages
-    const statsMsg = newMessages.findLast((m: any) => m.type === "stats");
-    if (statsMsg?.data) {
+    const statsMsg = newMessages.findLast((m) => m.type === "stats");
+    const statsData = statsMsg?.data as
+      | {
+          confidence?: number;
+          latency_ms?: number;
+          total_verses?: number;
+          total_citations?: number;
+        }
+      | undefined;
+    if (statsData) {
       setResult((prev) => {
         const base = prev || {
           topic,
@@ -419,10 +431,10 @@ function CompareContent() {
         };
         return {
           ...base,
-          confidence: statsMsg.data.confidence || base.confidence,
-          latency_ms: statsMsg.data.latency_ms || base.latency_ms,
-          total_verses: statsMsg.data.total_verses || base.total_verses,
-          total_citations: statsMsg.data.total_citations || base.total_citations,
+          confidence: statsData.confidence ?? base.confidence,
+          latency_ms: statsData.latency_ms ?? base.latency_ms,
+          total_verses: statsData.total_verses ?? base.total_verses,
+          total_citations: statsData.total_citations ?? base.total_citations,
         };
       });
     }
@@ -476,7 +488,7 @@ function CompareContent() {
       });
       setIsLoading(false);
     }
-  }, [sseData.length, topic]);
+  }, [sseData, sseData.length, topic]);
 
   // Handle SSE Errors
   useEffect(() => {
@@ -536,7 +548,7 @@ function CompareContent() {
         // User will click "Analyze" again after selecting keywords
         setIsLoading(false);
         return;
-      } catch (error) {
+      } catch {
         toast.error("Keyword extraction failed. Proceeding with normal search.");
         setIsExtractingKeywords(false);
         // Fall through to normal compare
@@ -554,7 +566,7 @@ function CompareContent() {
         }
         url += `&translator=${encodeURIComponent(selectedTranslator)}`;
         startStream(url);
-      } catch (err) {
+      } catch {
         // Fallback
         performBatchCompare(topic);
       }
@@ -1066,8 +1078,8 @@ function CompareContent() {
                            <p className="text-[var(--color-text-muted)] text-center py-8">
                              Bu kategori icin sonuc bulunamadi.
                              {activeFilter !== 'all' && (
-                               <span> Tum sonuclari gormek icin "Tumu" sekmesine tiklayin.</span>
-                             )}
+                                <span> Tum sonuclari gormek icin &quot;Tumu&quot; sekmesine tiklayin.</span>
+                              )}
                            </p>
                          )}
                        </div>

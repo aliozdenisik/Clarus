@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { GlowCard } from "@/components/ui/glow-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { ArrowLeft, BookOpen, User, LogOut } from "lucide-react";
+import { ArrowLeft, User, LogOut } from "lucide-react";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -89,7 +89,7 @@ export default function SurahDetailPage() {
 
         const data = await response.json();
         setSurah(data.data?.surah || null);
-      } catch (error) {
+      } catch {
         toast.error("Failed to load surah");
       } finally {
         setIsLoading(false);

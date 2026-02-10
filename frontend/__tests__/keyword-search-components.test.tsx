@@ -1,15 +1,23 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { vi, describe, it, expect, beforeEach } from "vitest";
+import { vi, describe, it, expect } from "vitest";
+import type React from "react";
+
+type MockProps = {
+  children?: React.ReactNode;
+  className?: string;
+  data?: Array<unknown>;
+  [key: string]: unknown;
+};
 
 // Mock framer-motion (CRITICAL — prevents animation issues)
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, layoutId, initial, animate, transition, whileHover, whileTap, ...props }: any) => <div {...props}>{children}</div>,
-    h1: ({ children, layoutId, initial, animate, transition, ...props }: any) => <h1 {...props}>{children}</h1>,
-    form: ({ children, layoutId, initial, animate, transition, ...props }: any) => <form {...props}>{children}</form>,
-    button: ({ children, layoutId, initial, animate, transition, whileHover, whileTap, ...props }: any) => <button {...props}>{children}</button>,
+    div: ({ children, ...props }: MockProps) => <div {...props}>{children}</div>,
+    h1: ({ children, ...props }: MockProps) => <h1 {...props}>{children}</h1>,
+    form: ({ children, ...props }: MockProps) => <form {...props}>{children}</form>,
+    button: ({ children, ...props }: MockProps) => <button {...props}>{children}</button>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }));
 
 // Mock Lucide icons
@@ -27,12 +35,12 @@ vi.mock("lucide-react", () => ({
 
 // Mock GlowCard
 vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, className }: any) => <div className={className}>{children}</div>,
+  GlowCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
 }));
 
 // Mock Skeleton
 vi.mock("@/components/ui/skeleton", () => ({
-  Skeleton: ({ className }: any) => <div data-testid="skeleton" className={className} />,
+  Skeleton: ({ className }: MockProps) => <div data-testid="skeleton" className={className} />,
 }));
 
 // Mock design-system
@@ -46,8 +54,8 @@ vi.mock("@/lib/design-system", () => ({
 
 // Mock Recharts (SVG rendering doesn't work in jsdom)
 vi.mock("recharts", () => ({
-  ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>,
-  BarChart: ({ children, data }: any) => <div data-testid="bar-chart" data-count={data?.length}>{children}</div>,
+  ResponsiveContainer: ({ children }: MockProps) => <div data-testid="responsive-container">{children}</div>,
+  BarChart: ({ children, data }: MockProps) => <div data-testid="bar-chart" data-count={data?.length}>{children}</div>,
   Bar: () => <div data-testid="bar" />,
   XAxis: () => <div data-testid="x-axis" />,
   YAxis: () => <div data-testid="y-axis" />,

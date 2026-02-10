@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import userEvent from "@testing-library/user-event";
+import { createElement } from "react";
+import type React from "react";
 import ComparePage from "@/app/compare/page";
 import { useSSE } from "@/lib/hooks/use-sse";
 import { usePreferencesStore } from "@/lib/stores/preferences-store";
@@ -47,25 +48,30 @@ vi.mock("@/lib/api/sdk.gen", () => ({
   compareScripturesApiComparePost: vi.fn(),
 }));
 
+type MockProps = {
+  children?: React.ReactNode;
+  className?: string;
+  [key: string]: unknown;
+};
+
 // Mock framer-motion to avoid animation issues in tests
 vi.mock("framer-motion", () => {
   const createMotionProxy = () => new Proxy({}, {
-    get: (_target: any, prop: string) => {
-      return ({ children, layoutId, initial, animate, transition, whileHover, whileTap, exit, variants, whileInView, viewport, ...props }: any) => {
-        const Tag = prop as any;
-        return <Tag {...props}>{children}</Tag>;
+    get: (_target: object, prop: string) => {
+      return ({ children, ...props }: MockProps) => {
+        return createElement(prop, props as Record<string, unknown>, children);
       };
     }
   });
   return {
     motion: createMotionProxy(),
-    AnimatePresence: ({ children }: any) => <>{children}</>,
+    AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   };
 });
 
 // Mock components that might be complex or unnecessary to render fully
 vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, className }: any) => <div className={className}>{children}</div>,
+  GlowCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
 }));
 
 // Mock DotPattern + AuroraSectionBackground
@@ -74,12 +80,12 @@ vi.mock("@/components/ui/dot-pattern", () => ({
   RadialGradient: () => null,
 }));
 vi.mock("@/components/ui/aurora-background", () => ({
-  AuroraSectionBackground: ({ children, className }: any) => <div className={className}>{children}</div>,
+  AuroraSectionBackground: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
 }));
 
 // Mock Skeleton
 vi.mock("@/components/ui/skeleton", () => ({
-  Skeleton: ({ className }: any) => <div data-testid="skeleton" className={className} />,
+  Skeleton: ({ className }: MockProps) => <div data-testid="skeleton" className={className} />,
 }));
 
 // Mock design-system
@@ -103,15 +109,15 @@ vi.mock("lucide-react", () => ({
 
 // Mock compare components
 vi.mock("@/components/compare/source-reference-card", () => ({
-  SourceReferenceCard: ({ reference, verse }: any) => (
+  SourceReferenceCard: ({ reference }: { reference: string }) => (
     <div data-testid="source-reference-card">{reference}</div>
   ),
 }));
 vi.mock("@/components/compare/inline-citation", () => ({
-  InlineCitation: ({ children }: any) => <span>{children}</span>,
+  InlineCitation: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
 }));
 vi.mock("@/components/compare/collection-selector", () => ({
-  CollectionSelector: ({ value, onChange }: any) => (
+  CollectionSelector: () => (
     <div data-testid="collection-selector">Collections</div>
   ),
 }));
@@ -121,7 +127,7 @@ vi.mock("@/components/compare/analysis-progress", () => ({
 
 // Mock animated tabs — receives counts prop, not filters array
 vi.mock("@/components/ui/animated-tabs", () => ({
-  AnimatedFilterTabs: ({ activeFilter, onFilterChange, counts }: any) => {
+  AnimatedFilterTabs: ({ onFilterChange }: { onFilterChange: (value: string) => void }) => {
     const filters = [
       { id: "all", label: "All Sources" },
       { id: "quran", label: "Quran" },
@@ -131,7 +137,7 @@ vi.mock("@/components/ui/animated-tabs", () => ({
     ];
     return (
       <div data-testid="filter-tabs">
-        {filters.map((f: any) => (
+        {filters.map((f) => (
           <button key={f.id} role="tab" onClick={() => onFilterChange(f.id)}>
             {f.label}
           </button>
@@ -145,18 +151,18 @@ vi.mock("@/components/ui/animated-tabs", () => ({
 // Mock typewriter
 vi.mock("@/components/ui/typewriter", () => ({
   TypingIndicator: () => <div data-testid="typing-indicator" />,
-  AIResponse: ({ children }: any) => <div>{children}</div>,
+  AIResponse: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }));
 
 // Mock citation parser — parseBareReferences receives (citationParts[], citations[])
 // and must return strings (which get rendered via typeof === 'string' check)
 vi.mock("@/lib/utils/parse-citations", () => ({
   parseCitations: (text: string) => [{ type: "text" as const, content: text }],
-  parseBareReferences: (parts: any[]) => {
+  parseBareReferences: (parts: Array<string | { content?: string }>) => {
     // The compare page checks typeof part === 'string' to decide how to render
     // Return plain strings so the content shows up
     if (Array.isArray(parts)) {
-      return parts.map((p: any) => typeof p === 'string' ? p : p.content || '');
+      return parts.map((p) => typeof p === 'string' ? p : p.content || '');
     }
     return [String(parts)];
   },
@@ -247,13 +253,16 @@ const mockCompareResult = {
   }
 };
 
+const createMockResponse = (data: unknown): Response =>
+  ({
+    ok: true,
+    json: async () => data,
+  } as unknown as Response);
+
 describe("ComparePage", () => {
    beforeEach(() => {
       vi.clearAllMocks();
-      (global.fetch as any).mockResolvedValue({
-        ok: true,
-        json: async () => mockCompareResult,
-      });
+      vi.mocked(global.fetch).mockResolvedValue(createMockResponse(mockCompareResult));
 
       // Default mock implementations
       vi.mocked(useSSE).mockReturnValue({
@@ -269,7 +278,7 @@ describe("ComparePage", () => {
       });
 
       // Default useSearchParams mock (no params)
-      vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams() as any);
+      vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams() as unknown as ReturnType<typeof useSearchParams>);
     });
 
   it("renders the page title and description", () => {
@@ -413,7 +422,7 @@ describe("ComparePage", () => {
   it("handles batch compare fallback if streaming is disabled", async () => {
     vi.mocked(usePreferencesStore).mockReturnValue({
       enable_streaming: false,
-    } as any);
+    } as never);
 
     vi.mocked(compareScripturesApiComparePost).mockResolvedValueOnce({
       data: {
@@ -423,7 +432,7 @@ describe("ComparePage", () => {
         ],
         citations: {},
       },
-    } as any);
+    } as never);
 
     const { container } = render(<ComparePage />);
     const input = screen.getByTestId("compare-topic-input");
@@ -466,7 +475,8 @@ describe("ComparePage", () => {
    });
 
    it("auto-executes comparison when q param is present", async () => {
-     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("q=creation") as any);
+     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("q=creation") as unknown as ReturnType<typeof useSearchParams>);
+ 
      
      render(<ComparePage />);
      
@@ -478,7 +488,7 @@ describe("ComparePage", () => {
    });
 
    it("does not auto-execute when q param is empty", async () => {
-     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("q=") as any);
+     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("q=") as unknown as ReturnType<typeof useSearchParams>);
      
      render(<ComparePage />);
      
@@ -489,7 +499,7 @@ describe("ComparePage", () => {
    });
 
    it("does not auto-execute when q param is absent", async () => {
-     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("") as any);
+     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("") as unknown as ReturnType<typeof useSearchParams>);
      
      render(<ComparePage />);
      
@@ -499,4 +509,3 @@ describe("ComparePage", () => {
      });
    });
 });
-

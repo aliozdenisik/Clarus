@@ -1,6 +1,8 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
+import { createElement } from "react";
+import type React from "react";
 import SearchPage from "../app/search/page";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSSE } from "@/lib/hooks/use-sse";
@@ -42,19 +44,24 @@ vi.mock("@/lib/api/sdk.gen", () => ({
   searchBibleApiSearchBiblePost: vi.fn(),
 }));
 
+type MockProps = {
+  children?: React.ReactNode;
+  className?: string;
+  [key: string]: unknown;
+};
+
 // Mock framer-motion to avoid animation issues in tests
 vi.mock("framer-motion", () => {
   const createMotionProxy = () => new Proxy({}, {
-    get: (_target: any, prop: string) => {
-      return ({ children, layoutId, initial, animate, transition, whileHover, whileTap, exit, variants, whileInView, viewport, ...props }: any) => {
-        const Tag = prop as any;
-        return <Tag {...props}>{children}</Tag>;
+    get: (_target: object, prop: string) => {
+      return ({ children, ...props }: MockProps) => {
+        return createElement(prop, props as Record<string, unknown>, children);
       };
     }
   });
   return {
     motion: createMotionProxy(),
-    AnimatePresence: ({ children }: any) => <>{children}</>,
+    AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
   };
 });
 
@@ -69,7 +76,7 @@ vi.mock("lucide-react", () => ({
 
 // Mock GlowCard
 vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, className }: any) => <div className={className}>{children}</div>,
+  GlowCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
 }));
 
 // Mock DotPattern + AuroraSectionBackground
@@ -78,12 +85,12 @@ vi.mock("@/components/ui/dot-pattern", () => ({
   RadialGradient: () => null,
 }));
 vi.mock("@/components/ui/aurora-background", () => ({
-  AuroraSectionBackground: ({ children, className }: any) => <div className={className}>{children}</div>,
+  AuroraSectionBackground: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
 }));
 
 // Mock Skeleton
 vi.mock("@/components/ui/skeleton", () => ({
-  Skeleton: ({ className }: any) => <div data-testid="skeleton" className={className} />,
+  Skeleton: ({ className }: MockProps) => <div data-testid="skeleton" className={className} />,
 }));
 
 // Mock design-system
@@ -97,10 +104,10 @@ vi.mock("@/lib/design-system", () => ({
 
 // Mock compare components
 vi.mock("@/components/compare/inline-citation", () => ({
-  InlineCitation: ({ children }: any) => <span>{children}</span>,
+  InlineCitation: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
 }));
 vi.mock("@/components/compare/source-badge", () => ({
-  SourceBadge: ({ source }: any) => <span data-testid="source-badge">{source}</span>,
+  SourceBadge: ({ source }: { source: string }) => <span data-testid="source-badge">{source}</span>,
   SourceType: {},
 }));
 
@@ -179,11 +186,11 @@ describe("SearchPage", () => {
     vi.mocked(useSession).mockReturnValue({
       data: { user: { id: "1", name: "Test User", email: "test@example.com" } },
       isPending: false,
-    } as any);
+    } as never);
 
     // Default router state
-    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as any);
-    vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams() as any);
+    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as never);
+    vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams() as unknown as ReturnType<typeof useSearchParams>);
 
     // Default SSE state
     vi.mocked(useSSE).mockReturnValue({
@@ -192,20 +199,20 @@ describe("SearchPage", () => {
       error: null,
       startStream: mockStartStream,
       stopStream: vi.fn(),
-    } as any);
+    } as never);
 
     // Default preferences
     vi.mocked(usePreferencesStore).mockReturnValue({
       enable_streaming: false,
-    } as any);
+    } as never);
 
     // Default SDK mock
     vi.mocked(searchQuranApiSearchQuranPost).mockResolvedValue({
       data: { results: [] },
-    } as any);
+    } as never);
     vi.mocked(searchBibleApiSearchBiblePost).mockResolvedValue({
       data: { results: [] },
-    } as any);
+    } as never);
   });
 
   it("renders search title and input", () => {
@@ -220,7 +227,7 @@ describe("SearchPage", () => {
      ];
      vi.mocked(searchQuranApiSearchQuranPost).mockResolvedValueOnce({
        data: { results: mockResults },
-     } as any);
+     } as never);
 
      const { container } = render(<SearchPage />);
      
@@ -251,10 +258,10 @@ describe("SearchPage", () => {
    });
 
   it("displays loading state during search", async () => {
-    let resolvePromise: any;
-    vi.mocked(searchQuranApiSearchQuranPost).mockReturnValue(new Promise(resolve => {
+    let resolvePromise: ((value: unknown) => void) | undefined;
+    vi.mocked(searchQuranApiSearchQuranPost).mockReturnValue(new Promise((resolve) => {
       resolvePromise = resolve;
-    }) as any);
+    }) as never);
 
     const { container } = render(<SearchPage />);
     
@@ -266,7 +273,7 @@ describe("SearchPage", () => {
       expect(screen.getByTestId("search-submit-button")).toHaveTextContent("Searching...");
     });
     
-    resolvePromise({ data: { results: [] } });
+    resolvePromise?.({ data: { results: [] } });
   });
 
   it("shows toast with results count on search success", async () => {
@@ -276,7 +283,7 @@ describe("SearchPage", () => {
     ];
     vi.mocked(searchQuranApiSearchQuranPost).mockResolvedValueOnce({
       data: { results: mockResults },
-    } as any);
+    } as never);
 
     const { container } = render(<SearchPage />);
     
@@ -292,7 +299,7 @@ describe("SearchPage", () => {
   it("shows empty state when no results are found", async () => {
     vi.mocked(searchQuranApiSearchQuranPost).mockResolvedValueOnce({
       data: { results: [] },
-    } as any);
+    } as never);
 
     const { container } = render(<SearchPage />);
     
@@ -321,7 +328,7 @@ describe("SearchPage", () => {
     vi.mocked(useSession).mockReturnValue({
       data: null,
       isPending: false,
-    } as any);
+    } as never);
 
     render(<SearchPage />);
     
@@ -333,7 +340,7 @@ describe("SearchPage", () => {
     it("uses SSE when streaming is enabled", async () => {
       vi.mocked(usePreferencesStore).mockReturnValue({
         enable_streaming: true,
-      } as any);
+      } as never);
 
       const { container } = render(<SearchPage />);
       
@@ -349,7 +356,7 @@ describe("SearchPage", () => {
     });
 
    it("auto-executes search when q param is present", async () => {
-     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("source=quran&q=sabir") as any);
+     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("source=quran&q=sabir") as unknown as ReturnType<typeof useSearchParams>);
      
      render(<SearchPage />);
      
@@ -365,7 +372,7 @@ describe("SearchPage", () => {
    });
 
    it("does not auto-execute when q param is empty", async () => {
-     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("q=") as any);
+     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("q=") as unknown as ReturnType<typeof useSearchParams>);
      
      render(<SearchPage />);
      
@@ -376,7 +383,7 @@ describe("SearchPage", () => {
    });
 
    it("does not auto-execute when q param is absent", async () => {
-     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("") as any);
+     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("") as unknown as ReturnType<typeof useSearchParams>);
      
      render(<SearchPage />);
      
@@ -387,7 +394,7 @@ describe("SearchPage", () => {
    });
 
    it("sets correct source tab from URL param before auto-search", async () => {
-     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("source=nt&q=love") as any);
+     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("source=nt&q=love") as unknown as ReturnType<typeof useSearchParams>);
      
      render(<SearchPage />);
      

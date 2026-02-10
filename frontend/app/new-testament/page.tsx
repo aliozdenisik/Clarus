@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSession, signOut } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useLogger } from "@/lib/logger";
+import { logger } from "@/lib/logger";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -59,7 +59,6 @@ export default function NewTestamentPage() {
    const { data: session, isPending: authLoading } = useSession();
    const user = session?.user;
    const router = useRouter();
-   const log = useLogger("NewTestamentPage");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -77,7 +76,7 @@ export default function NewTestamentPage() {
         const data = await response.json();
         setBooks(data.data?.books || []);
        } catch (error) {
-         log.error("Failed to load books", { error });
+         logger.error("Failed to load books", error, { component: "NewTestamentPage" });
          toast.error("Failed to load books");
        } finally {
         setIsLoading(false);
@@ -220,7 +219,7 @@ export default function NewTestamentPage() {
 
         {!isLoading && filteredBooks.length === 0 && (
           <div className="text-center py-20 text-[var(--color-text-muted)]">
-            <p>No books found matching "{searchQuery}"</p>
+            <p>No books found matching &quot;{searchQuery}&quot;</p>
           </div>
         )}
       </div>

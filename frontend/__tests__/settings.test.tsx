@@ -32,6 +32,12 @@ describe('SettingsPage', () => {
   const mockFetchPreferences = vi.fn();
   const mockReset = vi.fn();
 
+  const createMockResponse = (data: unknown): Response =>
+    ({
+      ok: true,
+      json: async () => data,
+    } as unknown as Response);
+
   const defaultPreferences = {
     theme: 'system' as const,
     language: 'tr' as const,
@@ -65,7 +71,7 @@ describe('SettingsPage', () => {
       data: { user: { id: '1', email: 'test@example.com', name: 'Test User', createdAt: new Date('2023-01-01') } },
       isPending: false,
       error: null,
-    } as any);
+    } as never);
 
     // Mock Store
     // We need to mock the selector behavior if the component uses selectors,
@@ -115,10 +121,9 @@ describe('SettingsPage', () => {
   });
 
   it('calls DELETE api and reset when Reset button is clicked', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ success: true }),
-    });
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      createMockResponse({ success: true })
+    );
 
     render(<SettingsPage />);
     

@@ -5,6 +5,31 @@ const nextConfig: NextConfig = {
   // Add empty turbopack config to silence Turbopack/webpack conflict warning
   // Next.js 16 uses Turbopack by default, but Sentry SDK adds webpack config internally
   turbopack: {},
+
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "www.shadcnblocks.com",
+        pathname: "/images/**",
+      },
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "svgl.app",
+        pathname: "/library/**",
+      },
+      {
+        protocol: "https",
+        hostname: "i.pravatar.cc",
+        pathname: "/**",
+      },
+    ],
+  },
   
   // Tree-shake lucide-react imports (Turbopack-compatible)
   // Automatically converts: import { Search } from 'lucide-react'

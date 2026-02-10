@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { ChevronLeft, Github, Twitter } from "lucide-react"
+import Image from "next/image"
+import { ChevronLeft } from "lucide-react"
 import { motion } from "framer-motion"
 import { useTheme } from "next-themes"
 
@@ -48,9 +49,11 @@ const Button: React.FC<ButtonProps> = ({ children, className, ...props }) => (
 
 const Logo: React.FC = () => (
   <div className="mb-6 flex justify-center">
-    <img
+    <Image
       src="https://svgl.app/library/tailwindcss.svg"
       alt="Logoipsum"
+      width={32}
+      height={32}
       className="h-8 w-8"
     />
     <span className="ml-2 text-xl font-bold">TailwindCSS</span>
@@ -61,7 +64,7 @@ const Header: React.FC = () => (
   <div className="mb-6 text-center">
     <h1 className="text-2xl font-semibold">Sign in to your account</h1>
     <p className="mt-2 text-zinc-500 dark:text-zinc-400">
-      Don't have an account?{" "}
+      Don&apos;t have an account?{" "}
       <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">
         Create one.
       </a>
@@ -72,8 +75,8 @@ const Header: React.FC = () => (
 const SocialButtons: React.FC = () => (
   <div className="mb-6 space-y-3">
     <div className="grid grid-cols-2 gap-3">
-      <SocialButton icon={<Twitter size={20} />} />
-      <SocialButton icon={<Github size={20} />} />
+      <SocialButton icon={<span className="text-xs font-semibold">X</span>} />
+      <SocialButton icon={<span className="text-xs font-semibold">GH</span>} />
       <SocialButton fullWidth>Sign in with SSO</SocialButton>
     </div>
   </div>
