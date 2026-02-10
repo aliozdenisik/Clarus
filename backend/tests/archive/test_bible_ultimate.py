@@ -389,7 +389,7 @@ async def run_tests():
 
             try:
                 # Run search - Turkish query will be translated to English
-                search_results = rag.search_bible(
+                search_results = await rag.search_bible(
                     test.query, translation="kjva", top_k=5
                 )
 

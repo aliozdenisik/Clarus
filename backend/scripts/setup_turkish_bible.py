@@ -19,14 +19,19 @@ Usage:
 """
 
 import argparse
+import importlib
 import logging
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from lxml import etree
 from sqlalchemy import create_engine, text
+
+try:
+    etree = importlib.import_module("lxml.etree")
+except ModuleNotFoundError:
+    import xml.etree.ElementTree as etree
 
 # ---------------------------------------------------------------------------
 # Configuration

@@ -464,11 +464,12 @@ VERSES:
         # Compute objective confidence (two-phase sigmoid-calibrated)
         rrf_scores = [r.score for r in search_results]
         rrf_scores.sort(reverse=True)
+        num_queries = int(score_stats.get("num_queries", 1)) if score_stats else 1
 
         answer_text = llm_result.get("answer", "")
         breakdown = self.confidence_scorer.compute(
             scores=rrf_scores,
-            num_queries=score_stats.get("num_queries", 1) if score_stats else 1,
+            num_queries=num_queries,
             cited_count=len(citations),
             num_paragraphs=self.confidence_scorer.count_paragraphs(answer_text),
             total_results=len(search_results),

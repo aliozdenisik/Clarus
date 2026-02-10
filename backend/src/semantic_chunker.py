@@ -284,10 +284,11 @@ class SemanticVerseChunker:
         elif threshold_type == "gradient":
             # Find positions where similarity drops sharply
             # Use gradient (rate of change) to detect boundaries
-            gradients = np.gradient(similarities_array)
+            gradient_values = np.gradient(similarities_array)
+            gradients = gradient_values
             # Threshold on negative gradients (drops in similarity)
             grad_threshold = float(
-                np.percentile(gradients, threshold if threshold <= 100 else 10)
+                np.percentile(gradient_values, threshold if threshold <= 100 else 10)
             )
             computed_threshold = None  # We'll use gradient-based detection
             print(f"Gradient-based detection: threshold={grad_threshold:.4f}")
@@ -351,6 +352,9 @@ class SemanticVerseChunker:
         Returns:
             Adjusted boundary list
         """
+        assert self._similarities is not None
+        similarities_array = self._similarities
+
         adjusted = [0]
 
         for i in range(1, len(boundaries)):
@@ -369,7 +373,7 @@ class SemanticVerseChunker:
                     search_end = min(start_idx + self.max_chunk_size, current_boundary)
 
                     if search_end - 1 > search_start:
-                        local_sims = self._similarities[search_start : search_end - 1]
+                        local_sims = similarities_array[search_start : search_end - 1]
                         min_sim_idx = np.argmin(local_sims) + search_start + 1
                         adjusted.append(min_sim_idx)
                         start_idx = min_sim_idx

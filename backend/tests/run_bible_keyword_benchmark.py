@@ -17,11 +17,12 @@ Usage:
 
 import asyncio
 import json
+import subprocess
 import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -63,7 +64,7 @@ class BenchmarkResult:
     response_time_ms: float
     target_time_ms: float
     passed: bool
-    error: str = None
+    error: Optional[str] = None
 
 
 @dataclass
@@ -74,7 +75,7 @@ class RegressionTestResult:
     description: str
     passed: bool
     details: str = ""
-    error: str = None
+    error: Optional[str] = None
 
 
 # ============================================================================
@@ -244,8 +245,6 @@ async def test_index_usage() -> RegressionTestResult:
 async def test_quran_keyword_search() -> RegressionTestResult:
     """Verify Quran keyword search still works (regression test)."""
     try:
-        import subprocess
-
         # Run Quran keyword search CLI command
         result = subprocess.run(
             ["python", "main.py", "keyword-search", "كتب"],
@@ -305,8 +304,6 @@ async def test_quran_keyword_search() -> RegressionTestResult:
 async def test_frontend_tests() -> RegressionTestResult:
     """Verify frontend tests still pass."""
     try:
-        import subprocess
-
         frontend_dir = Path(__file__).parent.parent.parent / "frontend"
 
         if not frontend_dir.exists():
