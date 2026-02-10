@@ -351,6 +351,7 @@ function CompareContent() {
       setIsLoading(true)
       setResult(null)
       setExpandedParagraphs(new Set())
+      lastHandledSseError.current = null
 
       if (enable_streaming) {
         try {
@@ -545,6 +546,7 @@ function CompareContent() {
     setIsLoading(true)
     setResult(null)
     setExpandedParagraphs(new Set())
+    lastHandledSseError.current = null
 
     // If advanced mode is ON, extract keywords first
     if (advancedMode) {
