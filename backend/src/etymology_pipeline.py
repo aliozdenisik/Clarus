@@ -41,15 +41,19 @@ DATABASE_DSN = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localho
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 TRANSLATION_MODEL = "google/gemini-2.5-flash"
 TRANSLATION_SYSTEM_PROMPT = (
-    "You are an Arabic-English-Turkish lexicography expert. "
-    "Translate the following Arabic root definition from English to Turkish. "
-    "Preserve academic terminology. Return JSON: "
+    "You are a Quranic Arabic lexicography expert specializing in classical Arabic roots. "
+    "Translate the following Lane's Arabic-English Lexicon definition to Turkish. "
+    "This definition describes a Quranic Arabic root — preserve Islamic and Quranic terminology "
+    "(e.g., 'tövbe' for repentance, 'namaz' for prayer, 'sadaka' for charity). "
+    "Use academic Turkish suitable for a Quran concordance. Return JSON: "
     '{"translation": "...", "confidence": 0.0-1.0}'
 )
 CORPUS_DEFINITION_PROMPT = (
     "You are a Quranic Arabic lexicography expert. "
     "Given an Arabic root and its Quran frequency, provide a concise Turkish definition "
-    "of the root's primary meaning in Quranic context. Return JSON: "
+    "of the root's primary meaning in Quranic context. "
+    "Use Islamic and Quranic terminology (e.g., 'tövbe', 'namaz', 'sadaka'). "
+    "Use academic Turkish suitable for a Quran concordance. Return JSON: "
     '{"translation": "...", "confidence": 0.0-1.0}'
 )
 _TRANSLATION_RE = re.compile(r'"translation"\s*:\s*"((?:[^"\\]|\\.)*)"', re.DOTALL)
