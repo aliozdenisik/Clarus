@@ -4,12 +4,13 @@
 
 **Date**: 2026-02-10
 
-## Comprehensive Pre-Commit Hooks — IN PROGRESS 🚧
+## Comprehensive Pre-Commit Hooks — COMPLETED ✅
 
 **Date**: 2026-02-10
 **Branch**: `feat/comprehensive-pre-commit-hooks`
+**PR**: [#122](https://github.com/aliozdenisik/Clarus/pull/122)
 
-Implementing industry-standard pre-commit hooks to prevent the recurring tech debt accumulation that required massive cleanup in issues #113-116 (282 ESLint warnings, 167 Pyright warnings, Ruff violations).
+Implemented industry-standard pre-commit hooks to prevent the recurring tech debt accumulation that required massive cleanup in issues #113-116 (282 ESLint warnings, 167 Pyright warnings, Ruff violations).
 
 ### Implementation Summary
 
@@ -20,7 +21,7 @@ Implementing industry-standard pre-commit hooks to prevent the recurring tech de
 - **Backend Linting**: ruff lint (20 rule sets) + ruff format (pre-commit stage)
 - **Backend Types**: pyright (pre-push stage — slow)
 - **Frontend Linting**: ESLint `--max-warnings=0` (pre-commit stage)
-- **Frontend Formatting**: Prettier with tailwindcss plugin + cache (pre-commit stage)
+- **Frontend Formatting**: Prettier `--check` (pre-commit stage)
 - **Frontend Types**: tsc `--noEmit` (pre-push stage — slow)
 
 **Ruff Config** (`backend/pyproject.toml`):
@@ -38,16 +39,18 @@ Implementing industry-standard pre-commit hooks to prevent the recurring tech de
 **CI Hardening**:
 - `.github/workflows/backend-ci.yml` — removed `continue-on-error: true` from lint/format/typecheck (now blocking)
 
+**Code Fixes**:
+- Fixed UP038 isinstance modernization (tuple → union syntax) in 3 files
+- Fixed mixed line endings in Turkish Quran XML and morphology data files
+- Codespell allowlist for Turkish/Hebrew/Greek domain terms (sme, shema, sizin, vai, etc.)
+
 **Files Deleted** (cleanup):
 - `.secrets.baseline` (replaced by gitleaks)
 - `.pre-commit-config.yaml.backup`
 - `test_precommit.py`, `scripts/setup-pre-commit.sh` (research artifacts)
 - `PRE_COMMIT_PLAN.md`, `PRE_COMMIT_SETUP.md`, `SECURITY-PRECOMMIT-RESEARCH.md`
 
-**Remaining**:
-- Fix UP038 ruff rule (6 instances) or add to ignore list
-- Re-stage prettier auto-formatted files
-- Commit, push, create PR
+**Verification**: All 17 pre-commit hooks pass on full repo (`pre-commit run --all-files` ✅)
 
 ---
 
