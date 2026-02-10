@@ -25,8 +25,7 @@ import { useKeywordStore, KeywordSuggestion } from "@/lib/stores/keyword-store"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { searchQuranApiSearchQuranPost, searchBibleApiSearchBiblePost } from "@/lib/api/sdk.gen"
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+import { API_BASE } from "@/lib/config"
 
 interface SearchResult {
   source: string
@@ -319,7 +318,7 @@ function SearchContent() {
     try {
       const corpus = activeTab === "quran" ? "quran" : "bible"
 
-      const response = await fetch(`${API_BASE_URL}/api/search/enhance`, {
+      const response = await fetch(`${API_BASE}/api/search/enhance`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -385,7 +384,7 @@ function SearchContent() {
     // Perform search with selected keywords
     if (enable_streaming) {
       setIsSearching(true)
-      let url = `${API_BASE_URL}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`
+      let url = `${API_BASE}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`
       if (selectedLanguage) {
         url += `&language=${encodeURIComponent(selectedLanguage)}`
       }
@@ -514,7 +513,7 @@ function SearchContent() {
 
       if (enable_streaming) {
         setIsSearching(true)
-        let url = `${API_BASE_URL}/api/stream/search?q=${encodeURIComponent(q)}&source=${activeTab}`
+        let url = `${API_BASE}/api/stream/search?q=${encodeURIComponent(q)}&source=${activeTab}`
         if (selectedLanguage) {
           url += `&language=${encodeURIComponent(selectedLanguage)}`
         }
@@ -566,7 +565,7 @@ function SearchContent() {
     // Normal search flow
     if (enable_streaming) {
       setIsSearching(true)
-      let url = `${API_BASE_URL}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`
+      let url = `${API_BASE}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`
       if (selectedLanguage) {
         url += `&language=${encodeURIComponent(selectedLanguage)}`
       }

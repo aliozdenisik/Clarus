@@ -43,8 +43,7 @@ import {
 } from "@/components/keyword-search/bible-category-tabs"
 import { AccuracyDisclaimer } from "@/components/keyword-search/accuracy-disclaimer"
 import { ExperimentalDisclaimer } from "@/components/keyword-search/experimental-disclaimer"
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+import { API_BASE } from "@/lib/config"
 
 type TabType = "results" | "browser"
 
@@ -233,7 +232,7 @@ function KeywordSearchContent() {
             requestBody.category_filter = bibleCategoryFilter
           }
 
-          const res = await fetch(`${API_BASE_URL}/api/keyword-search/bible/`, {
+          const res = await fetch(`${API_BASE}/api/keyword-search/bible/`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             signal: controller.signal,
