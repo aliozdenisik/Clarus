@@ -23,6 +23,7 @@ Usage:
 """
 
 import argparse
+import importlib
 import json
 import logging
 import sys
@@ -31,8 +32,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from lxml import etree
 from sqlalchemy import create_engine, text
+
+try:
+    etree = importlib.import_module("lxml.etree")
+except ModuleNotFoundError:
+    import xml.etree.ElementTree as etree
 
 from src.hebrew_normalizer import (
     normalize_hebrew,
@@ -578,11 +583,10 @@ def parse_oshb_book(
             position = 0
 
             for child in verse_el:
-                tag = (
-                    etree.QName(child.tag).localname
-                    if isinstance(child.tag, str)
-                    else ""
-                )
+                if isinstance(child.tag, str):
+                    tag = child.tag.rsplit("}", 1)[-1]
+                else:
+                    tag = ""
 
                 if tag == "w":
                     position += 1
