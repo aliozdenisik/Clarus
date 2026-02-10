@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import { Tabs, Tab } from "@/components/ui/vercel-tabs";
-import { cn } from "@/lib/utils";
-import { AnimatePresence, motion, Transition } from "framer-motion";
+import { Tabs, Tab } from "@/components/ui/vercel-tabs"
+import { cn } from "@/lib/utils"
+import { AnimatePresence, motion, Transition } from "framer-motion"
 import {
   Children,
   cloneElement,
@@ -11,30 +11,28 @@ import {
   useId,
   useCallback,
   isValidElement,
-} from "react";
+} from "react"
 
 interface ChildProps {
-  "data-id": string;
-  className?: string;
-  children?: React.ReactNode;
-  key?: React.Key;
-  "aria-selected"?: boolean;
-  "data-checked"?: string;
-  onClick?: () => void;
-  onMouseEnter?: () => void;
-  onMouseLeave?: () => void;
+  "data-id": string
+  className?: string
+  children?: React.ReactNode
+  key?: React.Key
+  "aria-selected"?: boolean
+  "data-checked"?: string
+  onClick?: () => void
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }
 
 type AnimatedBackgroundProps = {
-  children:
-    | ReactElement<ChildProps>[]
-    | ReactElement<ChildProps>;
-  defaultValue?: string;
-  onValueChangeAction?: (newActiveId: string | null) => void;
-  className?: string;
-  transition?: Transition;
-  enableHover?: boolean;
-};
+  children: ReactElement<ChildProps>[] | ReactElement<ChildProps>
+  defaultValue?: string
+  onValueChangeAction?: (newActiveId: string | null) => void
+  className?: string
+  transition?: Transition
+  enableHover?: boolean
+}
 
 export function AnimatedBackground({
   children,
@@ -44,25 +42,25 @@ export function AnimatedBackground({
   transition = { type: "spring", bounce: 0.15, duration: 0.5 },
   enableHover = false,
 }: AnimatedBackgroundProps) {
-  const [activeId, setActiveId] = useState<string | null>(defaultValue ?? null);
-  const uniqueId = useId();
+  const [activeId, setActiveId] = useState<string | null>(defaultValue ?? null)
+  const uniqueId = useId()
 
   const handleSetActiveId = useCallback(
     (id: string | null) => {
-      setActiveId(id);
+      setActiveId(id)
       if (onValueChangeAction) {
-        onValueChangeAction(id);
+        onValueChangeAction(id)
       }
     },
     [onValueChangeAction]
-  );
+  )
 
   return Children.map(children, (child, index) => {
-    if (!isValidElement<ChildProps>(child)) return child;
-    
-    const id = child.props["data-id"];
-    const childClassName = child.props.className;
-    const childContent = child.props.children;
+    if (!isValidElement<ChildProps>(child)) return child
+
+    const id = child.props["data-id"]
+    const childClassName = child.props.className
+    const childContent = child.props.children
 
     const interactionProps = enableHover
       ? {
@@ -71,7 +69,7 @@ export function AnimatedBackground({
         }
       : {
           onClick: () => handleSetActiveId(id),
-        };
+        }
 
     const newProps: ChildProps = {
       "data-id": id,
@@ -80,8 +78,8 @@ export function AnimatedBackground({
       "aria-selected": activeId === id,
       "data-checked": activeId === id ? "true" : "false",
       ...interactionProps,
-    };
-    
+    }
+
     return cloneElement(
       child,
       newProps,
@@ -100,17 +98,17 @@ export function AnimatedBackground({
         </AnimatePresence>
         <span className="z-10">{childContent}</span>
       </>
-    );
-  });
+    )
+  })
 }
 
 // Premium Filter Tabs with Vercel-style underline
-export type FilterType = "all" | "quran" | "old_testament" | "new_testament" | "apocrypha";
+export type FilterType = "all" | "quran" | "old_testament" | "new_testament" | "apocrypha"
 
 interface AnimatedFilterTabsProps {
-  activeFilter: FilterType;
-  onFilterChange: (filter: FilterType) => void;
-  counts?: Partial<Record<FilterType, number>>;
+  activeFilter: FilterType
+  onFilterChange: (filter: FilterType) => void
+  counts?: Partial<Record<FilterType, number>>
 }
 
 const FILTER_LABELS: Record<FilterType, string> = {
@@ -119,9 +117,9 @@ const FILTER_LABELS: Record<FilterType, string> = {
   old_testament: "Old Testament",
   new_testament: "New Testament",
   apocrypha: "Apocrypha",
-};
+}
 
-const FILTERS: FilterType[] = ["all", "quran", "old_testament", "new_testament", "apocrypha"];
+const FILTERS: FilterType[] = ["all", "quran", "old_testament", "new_testament", "apocrypha"]
 
 export function AnimatedFilterTabs({
   activeFilter,
@@ -129,15 +127,15 @@ export function AnimatedFilterTabs({
   counts,
 }: AnimatedFilterTabsProps) {
   // Only show tabs for sources that have results (count > 0), plus "all"
-  const tabs: Tab[] = FILTERS
-    .filter((filter) => filter === "all" || (counts && (counts[filter] ?? 0) > 0))
-    .map((filter) => ({
-      id: filter,
-      label: FILTER_LABELS[filter],
-    }));
+  const tabs: Tab[] = FILTERS.filter(
+    (filter) => filter === "all" || (counts && (counts[filter] ?? 0) > 0)
+  ).map((filter) => ({
+    id: filter,
+    label: FILTER_LABELS[filter],
+  }))
 
   // If active filter was removed (no results for that source), reset to "all"
-  const effectiveFilter = tabs.some((t) => t.id === activeFilter) ? activeFilter : "all";
+  const effectiveFilter = tabs.some((t) => t.id === activeFilter) ? activeFilter : "all"
 
   return (
     <Tabs
@@ -145,15 +143,15 @@ export function AnimatedFilterTabs({
       activeTab={effectiveFilter}
       onTabChange={(tabId) => onFilterChange(tabId as FilterType)}
     />
-  );
+  )
 }
 
 // Segmented Control variant using Vercel tabs
 interface SegmentedControlProps<T extends string> {
-  value: T;
-  onChange: (value: T) => void;
-  options: { value: T; label: string }[];
-  className?: string;
+  value: T
+  onChange: (value: T) => void
+  options: { value: T; label: string }[]
+  className?: string
 }
 
 export function SegmentedControl<T extends string>({
@@ -165,7 +163,7 @@ export function SegmentedControl<T extends string>({
   const tabs: Tab[] = options.map((opt) => ({
     id: opt.value,
     label: opt.label,
-  }));
+  }))
 
   return (
     <Tabs
@@ -174,5 +172,5 @@ export function SegmentedControl<T extends string>({
       onTabChange={(tabId) => onChange(tabId as T)}
       className={className}
     />
-  );
+  )
 }

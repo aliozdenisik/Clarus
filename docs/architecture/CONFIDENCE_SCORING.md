@@ -40,7 +40,7 @@ This phase analyzes the raw search results before the LLM even sees them.
 ### 1. Score Quality (`RRF_MIDPOINT`)
 - **Metric:** Median RRF score of the top 5 results.
 - **Why:** We use the median (not mean) to be robust against outliers. We use RRF scores (not cosine similarity) because they combine dense and sparse rankings.
-- **Tuning:** `RRF_MIDPOINT` is set to `0.012`. 
+- **Tuning:** `RRF_MIDPOINT` is set to `0.012`.
   - If RRF scores > 0.012, this signal approaches 1.0.
   - If RRF scores < 0.012, it drops rapidly.
 

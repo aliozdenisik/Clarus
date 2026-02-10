@@ -1,53 +1,53 @@
-"use client";
+"use client"
 
-import * as Popover from "@radix-ui/react-popover";
-import { SourceBadge, SourceType } from "@/components/compare/source-badge";
-import { Button } from "@/components/ui/button";
-import { ExternalLink } from "lucide-react";
+import * as Popover from "@radix-ui/react-popover"
+import { SourceBadge, SourceType } from "@/components/compare/source-badge"
+import { Button } from "@/components/ui/button"
+import { ExternalLink } from "lucide-react"
 
 export interface VerseDetail {
-  text: string;
-  book_name?: string;
-  chapter?: number;
-  verse?: number;
-  source: string;
-  translation?: string;
-  book_nr?: number;
-  surah_id?: number;
-  surah_name?: string;
-  verse_id?: number;
+  text: string
+  book_name?: string
+  chapter?: number
+  verse?: number
+  source: string
+  translation?: string
+  book_nr?: number
+  surah_id?: number
+  surah_name?: string
+  verse_id?: number
 }
 
 interface VerseTooltipProps {
-  reference: string;
-  verseDetail?: VerseDetail;
-  children: React.ReactNode;
-  onNavigate?: (reference: string) => void;
-  isOpen?: boolean;
-  onOpenChange?: (open: boolean) => void;
+  reference: string
+  verseDetail?: VerseDetail
+  children: React.ReactNode
+  onNavigate?: (reference: string) => void
+  isOpen?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 function mapSourceToType(source: string): SourceType {
   switch (source) {
     case "quran":
-      return "quran";
+      return "quran"
     case "bible_ot":
     case "old_testament":
-      return "old_testament";
+      return "old_testament"
     case "bible_nt":
     case "new_testament":
-      return "new_testament";
+      return "new_testament"
     case "bible_apocrypha":
     case "apocrypha":
-      return "apocrypha";
+      return "apocrypha"
     default:
-      return "quran";
+      return "quran"
   }
 }
 
 function truncateText(text: string, maxLength: number = 200): string {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength).trim() + "...";
+  if (text.length <= maxLength) return text
+  return text.slice(0, maxLength).trim() + "..."
 }
 
 export function VerseTooltip({
@@ -59,18 +59,18 @@ export function VerseTooltip({
   onOpenChange,
 }: VerseTooltipProps) {
   if (!verseDetail) {
-    return <>{children}</>;
+    return <>{children}</>
   }
 
-  const sourceType = mapSourceToType(verseDetail.source);
-  const displayText = truncateText(verseDetail.text);
+  const sourceType = mapSourceToType(verseDetail.source)
+  const displayText = truncateText(verseDetail.text)
 
   return (
     <Popover.Root open={isOpen} onOpenChange={onOpenChange}>
       <Popover.Trigger asChild>{children}</Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
-          className="z-50 w-80 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)] p-4 shadow-xl backdrop-blur-sm animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
+          className="animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 z-50 w-80 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)] p-4 shadow-xl backdrop-blur-sm"
           sideOffset={8}
           align="start"
         >
@@ -87,9 +87,7 @@ export function VerseTooltip({
             </p>
 
             {verseDetail.translation && (
-              <p className="text-xs text-[var(--color-text-muted)]">
-                {verseDetail.translation}
-              </p>
+              <p className="text-xs text-[var(--color-text-muted)]">{verseDetail.translation}</p>
             )}
 
             {onNavigate && (
@@ -109,5 +107,5 @@ export function VerseTooltip({
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
-  );
+  )
 }

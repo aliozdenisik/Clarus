@@ -1,42 +1,34 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
-import { GlowCard } from "@/components/ui/glow-card";
-import { springPresets } from "@/lib/design-system";
+import { useState } from "react"
+import { motion } from "framer-motion"
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts"
+import { GlowCard } from "@/components/ui/glow-card"
+import { springPresets } from "@/lib/design-system"
 
 interface SurahChartProps {
   data: Array<{
-    surah_id: number;
-    surah_name: string;
-    count: number;
-  }>;
-  language: "quran" | "hebrew_ot" | "greek_nt";
+    surah_id: number
+    surah_name: string
+    count: number
+  }>
+  language: "quran" | "hebrew_ot" | "greek_nt"
 }
 
 interface CustomYAxisTickProps {
-  x?: number;
-  y?: number;
-  payload?: { value: string };
+  x?: number
+  y?: number
+  payload?: { value: string }
 }
 
 interface CustomTooltipProps {
-  active?: boolean;
+  active?: boolean
   payload?: Array<{
     payload: {
-      surah_name: string;
-      count: number;
-    };
-  }>;
+      surah_name: string
+      count: number
+    }
+  }>
 }
 
 function CustomYAxisTick({ x, y, payload }: CustomYAxisTickProps) {
@@ -53,29 +45,27 @@ function CustomYAxisTick({ x, y, payload }: CustomYAxisTickProps) {
     >
       {payload?.value}
     </text>
-  );
+  )
 }
 
 function CustomTooltip({ active, payload }: CustomTooltipProps) {
-  if (!active || !payload?.length) return null;
-  const data = payload[0].payload;
+  if (!active || !payload?.length) return null
+  const data = payload[0].payload
   return (
     <div className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 shadow-xl">
-      <p className="text-sm text-zinc-100">
-        {data.surah_name}
-      </p>
+      <p className="text-sm text-zinc-100">{data.surah_name}</p>
       <p className="text-xs text-zinc-400">{data.count} occurrences</p>
     </div>
-  );
+  )
 }
 
-const xAxisTickStyle = { fill: "#a1a1aa", fontSize: 12 };
-const axisLineStyle = { stroke: "#3f3f46" };
-const tooltipCursorStyle = { fill: "rgba(99, 102, 241, 0.1)" };
-const barRadius: [number, number, number, number] = [0, 4, 4, 0];
+const xAxisTickStyle = { fill: "#a1a1aa", fontSize: 12 }
+const axisLineStyle = { stroke: "#3f3f46" }
+const tooltipCursorStyle = { fill: "rgba(99, 102, 241, 0.1)" }
+const barRadius: [number, number, number, number] = [0, 4, 4, 0]
 
 export function SurahChart({ data, language }: SurahChartProps) {
-  const [showAll, setShowAll] = useState(false);
+  const [showAll, setShowAll] = useState(false)
 
   // Empty state
   if (!data || data.length === 0) {
@@ -86,35 +76,31 @@ export function SurahChart({ data, language }: SurahChartProps) {
         transition={springPresets.snappy}
       >
         <GlowCard>
-          <p className="text-center text-sm text-[var(--color-text-muted)] py-8">
+          <p className="py-8 text-center text-sm text-[var(--color-text-muted)]">
             {language === "quran" ? "No surah distribution data" : "No book distribution data"}
           </p>
         </GlowCard>
       </motion.div>
-    );
+    )
   }
 
   // Sort data by count descending
-  const sortedData = [...data].sort((a, b) => b.count - a.count);
+  const sortedData = [...data].sort((a, b) => b.count - a.count)
 
   // Show max 20 initially
-  const displayData = showAll ? sortedData : sortedData.slice(0, 20);
-  const barHeight = 36;
-  const chartHeight = displayData.length * barHeight + 40;
+  const displayData = showAll ? sortedData : sortedData.slice(0, 20)
+  const barHeight = 36
+  const chartHeight = displayData.length * barHeight + 40
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={springPresets.snappy}
-    >
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={springPresets.snappy}>
       <GlowCard>
         {/* Section Header */}
-        <div className="space-y-4 mb-6">
-          <div className="text-center text-[var(--color-text-muted)] text-xs tracking-widest">
+        <div className="mb-6 space-y-4">
+          <div className="text-center text-xs tracking-widest text-[var(--color-text-muted)]">
             ◆
           </div>
-          <h3 className="text-lg font-medium text-[var(--color-text-primary)] text-center">
+          <h3 className="text-center text-lg font-medium text-[var(--color-text-primary)]">
             {language === "quran" ? "Surah Distribution" : "Book Distribution"}
           </h3>
         </div>
@@ -132,11 +118,7 @@ export function SurahChart({ data, language }: SurahChartProps) {
               horizontal={true}
               vertical={false}
             />
-            <XAxis
-              type="number"
-              tick={xAxisTickStyle}
-              axisLine={axisLineStyle}
-            />
+            <XAxis type="number" tick={xAxisTickStyle} axisLine={axisLineStyle} />
             <YAxis
               type="category"
               dataKey="surah_name"
@@ -144,10 +126,7 @@ export function SurahChart({ data, language }: SurahChartProps) {
               width={90}
               axisLine={axisLineStyle}
             />
-            <Tooltip
-              content={<CustomTooltip />}
-              cursor={tooltipCursorStyle}
-            />
+            <Tooltip content={<CustomTooltip />} cursor={tooltipCursorStyle} />
             <Bar
               dataKey="count"
               fill="#6366f1"
@@ -170,5 +149,5 @@ export function SurahChart({ data, language }: SurahChartProps) {
         )}
       </GlowCard>
     </motion.div>
-  );
+  )
 }

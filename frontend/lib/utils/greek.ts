@@ -6,9 +6,9 @@
  *  - U+1F00–U+1FFF (Greek extended - precomposed characters with diacritics)
  * Normalizes to NFD (decomposed form) first, then strips combining marks.
  */
-const GREEK_DIACRITICS_RE = /[\u0300-\u036F]/g;
+const GREEK_DIACRITICS_RE = /[\u0300-\u036F]/g
 
 export function stripGreekDiacritics(text: string): string {
   // Normalize to NFD (decomposed form) to separate base characters from diacritics
-  return text.normalize("NFD").replace(GREEK_DIACRITICS_RE, "");
+  return text.normalize("NFD").replace(GREEK_DIACRITICS_RE, "")
 }

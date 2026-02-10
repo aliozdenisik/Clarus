@@ -1,543 +1,556 @@
-"use client";
+"use client"
 
-import { useState, useEffect, Suspense, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { springPresets } from "@/lib/design-system";
-import { useSession } from "@/lib/auth-client";
-import { DotPattern } from "@/components/ui/dot-pattern";
-import { AuroraSectionBackground } from "@/components/ui/aurora-background";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { useRouter, useSearchParams } from "next/navigation";
-import { ExternalLink, Search } from "lucide-react";
-import { SearchTabs, SearchSource } from "@/components/search/search-tabs";
-import { useSSE } from "@/lib/hooks/use-sse";
-import { usePreferencesStore } from "@/lib/stores/preferences-store";
-import { parseCitations } from "@/lib/utils/parse-citations";
-import { InlineCitation } from "@/components/compare/inline-citation";
-import { VerseDetail } from "@/components/search/verse-tooltip";
-import { SourceBadge, SourceType } from "@/components/compare/source-badge";
-import { useLogger } from "@/lib/logger";
-import { LanguageSelector } from "@/components/search/language-selector";
-import { TranslatorSelector } from "@/components/search/translator-selector";
-import { KeywordSelector } from "@/components/search/keyword-selector";
-import { useKeywordStore, KeywordSuggestion } from "@/lib/stores/keyword-store";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import {
-  searchQuranApiSearchQuranPost,
-  searchBibleApiSearchBiblePost,
-} from "@/lib/api/sdk.gen";
+import { useState, useEffect, Suspense, useRef, useCallback } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { springPresets } from "@/lib/design-system"
+import { useSession } from "@/lib/auth-client"
+import { DotPattern } from "@/components/ui/dot-pattern"
+import { AuroraSectionBackground } from "@/components/ui/aurora-background"
+import { Skeleton } from "@/components/ui/skeleton"
+import { toast } from "sonner"
+import { useRouter, useSearchParams } from "next/navigation"
+import { ExternalLink, Search } from "lucide-react"
+import { SearchTabs, SearchSource } from "@/components/search/search-tabs"
+import { useSSE } from "@/lib/hooks/use-sse"
+import { usePreferencesStore } from "@/lib/stores/preferences-store"
+import { parseCitations } from "@/lib/utils/parse-citations"
+import { InlineCitation } from "@/components/compare/inline-citation"
+import { VerseDetail } from "@/components/search/verse-tooltip"
+import { SourceBadge, SourceType } from "@/components/compare/source-badge"
+import { useLogger } from "@/lib/logger"
+import { LanguageSelector } from "@/components/search/language-selector"
+import { TranslatorSelector } from "@/components/search/translator-selector"
+import { KeywordSelector } from "@/components/search/keyword-selector"
+import { useKeywordStore, KeywordSuggestion } from "@/lib/stores/keyword-store"
+import { cn } from "@/lib/utils"
+import { Input } from "@/components/ui/input"
+import { searchQuranApiSearchQuranPost, searchBibleApiSearchBiblePost } from "@/lib/api/sdk.gen"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 interface SearchResult {
-  source: string;
-  reference: string;
-  text: string;
-  score: number;
+  source: string
+  reference: string
+  text: string
+  score: number
 }
 
 interface SearchCompletePayload {
-  results?: SearchResult[];
-  detected_language?: string;
+  results?: SearchResult[]
+  detected_language?: string
 }
 
 interface SearchSSEMessage {
-  type?: string;
-  content?: string;
-  verse_details?: Record<string, VerseDetail>;
-  error?: string;
-  message?: string;
-  result?: SearchCompletePayload;
-  detected_language?: string;
+  type?: string
+  content?: string
+  verse_details?: Record<string, VerseDetail>
+  error?: string
+  message?: string
+  result?: SearchCompletePayload
+  detected_language?: string
 }
 
 interface SearchSSEAggregate {
-  tokens: string;
-  verseDetails?: Record<string, VerseDetail>;
-  error?: string;
-  noResultsMessage?: string;
-  completeMessage?: SearchSSEMessage;
+  tokens: string
+  verseDetails?: Record<string, VerseDetail>
+  error?: string
+  noResultsMessage?: string
+  completeMessage?: SearchSSEMessage
 }
 
 function SearchContent() {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [activeTab, setActiveTab] = useState<SearchSource>("quran");
-  const [streamedAnswer, setStreamedAnswer] = useState("");
-  const [verseDetails, setVerseDetails] = useState<Record<string, VerseDetail>>({});
-  const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null);
-  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
-  const [detectedLanguage, setDetectedLanguage] = useState<string | undefined>(undefined);
-  const [selectedTranslator, setSelectedTranslator] = useState("diyanet");
-  const [isEnhancing, setIsEnhancing] = useState(false);
-   const resultsContainerRef = useRef<HTMLDivElement>(null);
-   const hasHandledSSEError = useRef(false);
-   const hasAutoExecuted = useRef(false);
+  const [query, setQuery] = useState("")
+  const [results, setResults] = useState<SearchResult[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [activeTab, setActiveTab] = useState<SearchSource>("quran")
+  const [streamedAnswer, setStreamedAnswer] = useState("")
+  const [verseDetails, setVerseDetails] = useState<Record<string, VerseDetail>>({})
+  const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null)
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null)
+  const [detectedLanguage, setDetectedLanguage] = useState<string | undefined>(undefined)
+  const [selectedTranslator, setSelectedTranslator] = useState("diyanet")
+  const [isEnhancing, setIsEnhancing] = useState(false)
+  const resultsContainerRef = useRef<HTMLDivElement>(null)
+  const hasHandledSSEError = useRef(false)
+  const hasAutoExecuted = useRef(false)
 
   // Zustand selectors — subscribe only to used fields, not the entire store
-  const advancedMode = useKeywordStore((s) => s.advancedMode);
-  const keywords = useKeywordStore((s) => s.keywords);
-  const selectedKeywords = useKeywordStore((s) => s.selectedKeywords);
-  const setAdvancedMode = useKeywordStore((s) => s.setAdvancedMode);
-  const setKeywords = useKeywordStore((s) => s.setKeywords);
-  const resetKeywordStore = useKeywordStore((s) => s.reset);
+  const advancedMode = useKeywordStore((s) => s.advancedMode)
+  const keywords = useKeywordStore((s) => s.keywords)
+  const selectedKeywords = useKeywordStore((s) => s.selectedKeywords)
+  const setAdvancedMode = useKeywordStore((s) => s.setAdvancedMode)
+  const setKeywords = useKeywordStore((s) => s.setKeywords)
+  const resetKeywordStore = useKeywordStore((s) => s.reset)
 
-  const log = useLogger("SearchPage");
-  const { data: session, isPending } = useSession();
-  const user = session?.user;
-  const isLoading = isPending;
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const log = useLogger("SearchPage")
+  const { data: session, isPending } = useSession()
+  const user = session?.user
+  const isLoading = isPending
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
-  const { data: sseData, isStreaming, error: sseError, startStream } = useSSE();
-  const { enable_streaming } = usePreferencesStore();
+  const { data: sseData, isStreaming, error: sseError, startStream } = useSSE()
+  const { enable_streaming } = usePreferencesStore()
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push("/sign-in");
+      router.push("/sign-in")
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router])
 
-   useEffect(() => {
-     const source = searchParams?.get("source") as SearchSource;
-     if (source && ["quran", "ot", "nt", "apocrypha"].includes(source)) {
-       setActiveTab(source);
-     }
+  useEffect(() => {
+    const source = searchParams?.get("source") as SearchSource
+    if (source && ["quran", "ot", "nt", "apocrypha"].includes(source)) {
+      setActiveTab(source)
+    }
 
-     const advanced = searchParams?.get("advanced");
-     if (advanced === "true") {
-      setAdvancedMode(true);
-      }
-    }, [searchParams, setAdvancedMode]);
+    const advanced = searchParams?.get("advanced")
+    if (advanced === "true") {
+      setAdvancedMode(true)
+    }
+  }, [searchParams, setAdvancedMode])
 
-  const sseProcessedCount = useRef(0);
+  const sseProcessedCount = useRef(0)
 
   useEffect(() => {
     if (sseData.length === 0) {
-      sseProcessedCount.current = 0;
-      return;
+      sseProcessedCount.current = 0
+      return
     }
 
-    const newMessages = sseData.slice(sseProcessedCount.current);
-    sseProcessedCount.current = sseData.length;
+    const newMessages = sseData.slice(sseProcessedCount.current)
+    sseProcessedCount.current = sseData.length
 
     const streamState = newMessages.reduce<SearchSSEAggregate>(
       (acc, rawMessage) => {
-        const message = rawMessage as SearchSSEMessage;
+        const message = rawMessage as SearchSSEMessage
 
         if (message.type === "token") {
-          acc.tokens += message.content ?? "";
+          acc.tokens += message.content ?? ""
         }
 
         if (!acc.verseDetails && message.verse_details) {
-          acc.verseDetails = message.verse_details;
+          acc.verseDetails = message.verse_details
         }
 
         if (!acc.error && message.error) {
-          acc.error = message.error;
+          acc.error = message.error
         }
 
         if (!acc.noResultsMessage && message.type === "no_results") {
-          acc.noResultsMessage = message.message || "No results found for your query.";
+          acc.noResultsMessage = message.message || "No results found for your query."
         }
 
         if (!acc.completeMessage && message.type === "complete") {
-          acc.completeMessage = message;
+          acc.completeMessage = message
         }
 
-        return acc;
+        return acc
       },
       {
         tokens: "",
       }
-    );
+    )
 
     if (streamState.tokens) {
-      setStreamedAnswer((previousTokens) => previousTokens + streamState.tokens);
+      setStreamedAnswer((previousTokens) => previousTokens + streamState.tokens)
     }
 
     if (streamState.verseDetails) {
-      setVerseDetails(streamState.verseDetails);
+      setVerseDetails(streamState.verseDetails)
     }
 
     if (streamState.error) {
-      log.error("SSE server error", { error: streamState.error });
+      log.error("SSE server error", { error: streamState.error })
     }
 
     if (streamState.noResultsMessage) {
-      setStreamedAnswer("");
-      setIsSearching(false);
-      toast.info(streamState.noResultsMessage);
+      setStreamedAnswer("")
+      setIsSearching(false)
+      toast.info(streamState.noResultsMessage)
     }
 
-    const completeMsg = streamState.completeMessage;
+    const completeMsg = streamState.completeMessage
     if (completeMsg) {
-      const completeResult = completeMsg.result;
+      const completeResult = completeMsg.result
       if (completeResult?.results) {
-        setResults(completeResult.results);
+        setResults(completeResult.results)
 
         if (completeResult.results.length === 0) {
-          setStreamedAnswer("");
+          setStreamedAnswer("")
         }
       }
 
-      const detectedLanguage = completeResult?.detected_language || completeMsg.detected_language;
+      const detectedLanguage = completeResult?.detected_language || completeMsg.detected_language
       if (detectedLanguage) {
-        setDetectedLanguage(detectedLanguage);
+        setDetectedLanguage(detectedLanguage)
       }
-      setIsSearching(false);
+      setIsSearching(false)
     }
-  }, [log, sseData, sseData.length]);
+  }, [log, sseData, sseData.length])
 
   const handleTabChange = (tab: SearchSource) => {
-    setActiveTab(tab);
-    setResults([]);
-    setStreamedAnswer("");
-    setVerseDetails({});
-    setHighlightedVerse(null);
-    resetKeywordStore();
-    const params = new URLSearchParams();
-    params.set("source", tab);
+    setActiveTab(tab)
+    setResults([])
+    setStreamedAnswer("")
+    setVerseDetails({})
+    setHighlightedVerse(null)
+    resetKeywordStore()
+    const params = new URLSearchParams()
+    params.set("source", tab)
     if (advancedMode) {
-      params.set("advanced", "true");
+      params.set("advanced", "true")
     }
-    router.push(`/search?${params.toString()}`);
-  };
+    router.push(`/search?${params.toString()}`)
+  }
 
   const mapSourceToType = useCallback((source: string): SourceType => {
     switch (source) {
       case "quran":
-        return "quran";
+        return "quran"
       case "bible_ot":
       case "ot":
-        return "old_testament";
+        return "old_testament"
       case "bible_nt":
       case "nt":
-        return "new_testament";
+        return "new_testament"
       case "bible_apocrypha":
       case "apocrypha":
-        return "apocrypha";
+        return "apocrypha"
       default:
-        return "quran";
+        return "quran"
     }
-  }, []);
+  }, [])
 
   const scrollToVerse = useCallback((reference: string) => {
-    const element = document.querySelector(`[data-verse-id="${reference}"]`);
+    const element = document.querySelector(`[data-verse-id="${reference}"]`)
     if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
-      setHighlightedVerse(reference);
-      setTimeout(() => setHighlightedVerse(null), 2000);
+      element.scrollIntoView({ behavior: "smooth", block: "center" })
+      setHighlightedVerse(reference)
+      setTimeout(() => setHighlightedVerse(null), 2000)
     }
-  }, []);
+  }, [])
 
-  const navigateToVerse = useCallback((reference: string) => {
-    const verse = verseDetails[reference];
-    if (!verse) {
-      log.warn("No verse details for reference, falling back to scroll", {
-        action: "navigateToVerse",
-        reference,
-      });
-      scrollToVerse(reference);
-      return;
-    }
+  const navigateToVerse = useCallback(
+    (reference: string) => {
+      const verse = verseDetails[reference]
+      if (!verse) {
+        log.warn("No verse details for reference, falling back to scroll", {
+          action: "navigateToVerse",
+          reference,
+        })
+        scrollToVerse(reference)
+        return
+      }
 
-    let url = "";
-    if (verse.source === "quran_tr" || verse.source === "quran") {
-      const surahId = verse.surah_id || verse.chapter;
-      const verseId = verse.verse_id || verse.verse;
-      url = `/quran/${surahId}?verse=${verseId}`;
-    } else if (verse.source.startsWith("bible_")) {
-      const bookNr = verse.book_nr || 1;
-      url = `/bible/${bookNr}?chapter=${verse.chapter}&verse=${verse.verse}`;
-    } else {
-      log.warn("Unknown source format, falling back to scroll", {
-        action: "navigateToVerse",
-        reference,
-        source: verse.source,
-      });
-      scrollToVerse(reference);
-      return;
-    }
+      let url = ""
+      if (verse.source === "quran_tr" || verse.source === "quran") {
+        const surahId = verse.surah_id || verse.chapter
+        const verseId = verse.verse_id || verse.verse
+        url = `/quran/${surahId}?verse=${verseId}`
+      } else if (verse.source.startsWith("bible_")) {
+        const bookNr = verse.book_nr || 1
+        url = `/bible/${bookNr}?chapter=${verse.chapter}&verse=${verse.verse}`
+      } else {
+        log.warn("Unknown source format, falling back to scroll", {
+          action: "navigateToVerse",
+          reference,
+          source: verse.source,
+        })
+        scrollToVerse(reference)
+        return
+      }
 
-    window.open(url, "_blank");
-  }, [verseDetails, scrollToVerse, log]);
+      window.open(url, "_blank")
+    },
+    [verseDetails, scrollToVerse, log]
+  )
 
   /** Strip redundant metadata prefix like "[38:29] Sâd (Sad) - Score: 0.060 " from verse text */
   const extractVerseText = (text: string): string => {
-    return text.replace(/^\[[\d:]+\]\s+.*?-\s*Score:\s*[\d.]+\s*/, "");
-  };
+    return text.replace(/^\[[\d:]+\]\s+.*?-\s*Score:\s*[\d.]+\s*/, "")
+  }
 
   const getPlaceholder = () => {
     switch (activeTab) {
       case "quran":
-        return "Search Quran...";
+        return "Search Quran..."
       case "ot":
-        return "Search Old Testament...";
+        return "Search Old Testament..."
       case "nt":
-        return "Search New Testament...";
+        return "Search New Testament..."
       case "apocrypha":
-        return "Search Apocrypha...";
+        return "Search Apocrypha..."
       default:
-        return "Search...";
+        return "Search..."
     }
-  };
+  }
 
   const enhanceQuery = async (searchQuery: string) => {
-    setIsEnhancing(true);
+    setIsEnhancing(true)
     try {
-      const corpus = activeTab === "quran" ? "quran" : "bible";
+      const corpus = activeTab === "quran" ? "quran" : "bible"
 
-       const response = await fetch(`${API_BASE_URL}/api/search/enhance`, {
-         method: "POST",
-         headers: {
-           "Content-Type": "application/json",
-         },
-         credentials: "include",
-         body: JSON.stringify({ query: searchQuery, corpus }),
-       });
+      const response = await fetch(`${API_BASE_URL}/api/search/enhance`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ query: searchQuery, corpus }),
+      })
 
       if (!response.ok) {
-        throw new Error("Enhancement failed");
+        throw new Error("Enhancement failed")
       }
 
-      const data = await response.json();
+      const data = await response.json()
       if (data.keywords && Array.isArray(data.keywords)) {
         const keywordSuggestions: KeywordSuggestion[] = data.keywords.map(
-          (kw: { text?: string; language?: string; confidence?: number; source?: string } | string) => ({
+          (
+            kw: { text?: string; language?: string; confidence?: number; source?: string } | string
+          ) => ({
             text: typeof kw === "string" ? kw : kw.text || "",
             language: typeof kw === "string" ? "unknown" : kw.language || "unknown",
             confidence: typeof kw === "string" ? 1.0 : kw.confidence || 1.0,
             selected: true,
             source: typeof kw === "string" ? corpus : kw.source || corpus,
           })
-        );
-        setKeywords(keywordSuggestions);
+        )
+        setKeywords(keywordSuggestions)
       }
     } catch (error) {
-      log.error("Query enhancement failed", { error });
-      toast.error("Failed to extract keywords");
+      log.error("Query enhancement failed", { error })
+      toast.error("Failed to extract keywords")
     } finally {
-      setIsEnhancing(false);
+      setIsEnhancing(false)
     }
-  };
+  }
 
   const handleKeywordSearch = () => {
     if (selectedKeywords.length === 0) {
-      toast.error("Please select at least one keyword");
-      return;
+      toast.error("Please select at least one keyword")
+      return
     }
 
-     // Perform search with selected keywords
-     if (enable_streaming) {
-       setIsSearching(true);
-       let url = `${API_BASE_URL}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`;
+    // Perform search with selected keywords
+    if (enable_streaming) {
+      setIsSearching(true)
+      let url = `${API_BASE_URL}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`
       if (selectedLanguage) {
-        url += `&language=${encodeURIComponent(selectedLanguage)}`;
+        url += `&language=${encodeURIComponent(selectedLanguage)}`
       }
       // Add translator if searching Quran
       if (activeTab === "quran") {
-        url += `&translator=${encodeURIComponent(selectedTranslator)}`;
+        url += `&translator=${encodeURIComponent(selectedTranslator)}`
       }
       // Add keywords to URL
-      const keywordTexts = selectedKeywords.map((k) => k.text).join(",");
-      url += `&keywords=${encodeURIComponent(keywordTexts)}`;
-      startStream(url);
+      const keywordTexts = selectedKeywords.map((k) => k.text).join(",")
+      url += `&keywords=${encodeURIComponent(keywordTexts)}`
+      startStream(url)
     } else {
-      performBatchSearch();
+      performBatchSearch()
     }
-  };
+  }
 
-   const performBatchSearch = useCallback(async (queryOverride?: string) => {
-     const searchQuery = queryOverride ?? query;
-     if (!searchQuery.trim()) return;
+  const performBatchSearch = useCallback(
+    async (queryOverride?: string) => {
+      const searchQuery = queryOverride ?? query
+      if (!searchQuery.trim()) return
 
-     setIsSearching(true);
-     setResults([]);
+      setIsSearching(true)
+      setResults([])
 
-       try {
-        let body: Record<string, unknown> = { query: searchQuery, mode: "semantic", top_k: 10 };
-       if (selectedLanguage) {
-         body.language = selectedLanguage;
-       }
+      try {
+        let body: Record<string, unknown> = { query: searchQuery, mode: "semantic", top_k: 10 }
+        if (selectedLanguage) {
+          body.language = selectedLanguage
+        }
 
-       if (activeTab === "quran") {
-         body.translator = selectedTranslator;
-       }
+        if (activeTab === "quran") {
+          body.translator = selectedTranslator
+        }
 
-       if (advancedMode && selectedKeywords.length > 0) {
-         body.keywords = selectedKeywords.map((k) => k.text);
-       }
+        if (advancedMode && selectedKeywords.length > 0) {
+          body.keywords = selectedKeywords.map((k) => k.text)
+        }
 
-       let response;
-       if (activeTab === "quran") {
-         response = await searchQuranApiSearchQuranPost({ body: body as never });
-       } else {
-         body = { ...body, testament: activeTab };
-         response = await searchBibleApiSearchBiblePost({ body: body as never });
-       }
+        let response
+        if (activeTab === "quran") {
+          response = await searchQuranApiSearchQuranPost({ body: body as never })
+        } else {
+          body = { ...body, testament: activeTab }
+          response = await searchBibleApiSearchBiblePost({ body: body as never })
+        }
 
-      const data = response.data as {
-        results: SearchResult[];
-        verse_details?: Record<string, VerseDetail>;
-        detected_language?: string;
-      };
-      setResults(data.results);
+        const data = response.data as {
+          results: SearchResult[]
+          verse_details?: Record<string, VerseDetail>
+          detected_language?: string
+        }
+        setResults(data.results)
 
-      if (data.verse_details) {
-        setVerseDetails(data.verse_details);
+        if (data.verse_details) {
+          setVerseDetails(data.verse_details)
+        }
+
+        if (data.detected_language) {
+          setDetectedLanguage(data.detected_language)
+        }
+
+        toast.success(`Found ${data.results.length} results`)
+      } catch {
+        toast.error("Search failed. Please try again.")
+      } finally {
+        setIsSearching(false)
       }
-
-      if (data.detected_language) {
-        setDetectedLanguage(data.detected_language);
-      }
-
-      toast.success(`Found ${data.results.length} results`);
-    } catch {
-      toast.error("Search failed. Please try again.");
-     } finally {
-       setIsSearching(false);
-     }
-   }, [query, activeTab, selectedLanguage, selectedTranslator, advancedMode, selectedKeywords]);
+    },
+    [query, activeTab, selectedLanguage, selectedTranslator, advancedMode, selectedKeywords]
+  )
 
   useEffect(() => {
     if (sseError && !hasHandledSSEError.current) {
-      hasHandledSSEError.current = true;
-      toast.error("Streaming failed. Switching to standard search.");
-      performBatchSearch();
+      hasHandledSSEError.current = true
+      toast.error("Streaming failed. Switching to standard search.")
+      performBatchSearch()
     }
-   }, [sseError, performBatchSearch]);
+  }, [sseError, performBatchSearch])
 
-   // Auto-execute search from URL q param (history re-run)
-   useEffect(() => {
-     const q = searchParams?.get("q");
-     if (q && q.trim() && !hasAutoExecuted.current) {
-       hasAutoExecuted.current = true;
-       setQuery(q);          // Populate input field for display
+  // Auto-execute search from URL q param (history re-run)
+  useEffect(() => {
+    const q = searchParams?.get("q")
+    if (q && q.trim() && !hasAutoExecuted.current) {
+      hasAutoExecuted.current = true
+      setQuery(q) // Populate input field for display
 
-       // Reset state for fresh search
-       setResults([]);
-       setStreamedAnswer("");
-       setVerseDetails({});
-       hasHandledSSEError.current = false;
+      // Reset state for fresh search
+      setResults([])
+      setStreamedAnswer("")
+      setVerseDetails({})
+      hasHandledSSEError.current = false
 
-        if (enable_streaming) {
-          setIsSearching(true);
-          let url = `${API_BASE_URL}/api/stream/search?q=${encodeURIComponent(q)}&source=${activeTab}`;
-         if (selectedLanguage) {
-           url += `&language=${encodeURIComponent(selectedLanguage)}`;
-         }
-         // Add translator if searching Quran
-         if (activeTab === "quran") {
-           url += `&translator=${encodeURIComponent(selectedTranslator)}`;
-         }
-         startStream(url);
-       } else {
-         performBatchSearch(q);    // Pass q directly — state may not be updated yet
-       }
-     }
-   }, [searchParams, activeTab, enable_streaming, startStream, performBatchSearch, selectedLanguage, selectedTranslator]);
+      if (enable_streaming) {
+        setIsSearching(true)
+        let url = `${API_BASE_URL}/api/stream/search?q=${encodeURIComponent(q)}&source=${activeTab}`
+        if (selectedLanguage) {
+          url += `&language=${encodeURIComponent(selectedLanguage)}`
+        }
+        // Add translator if searching Quran
+        if (activeTab === "quran") {
+          url += `&translator=${encodeURIComponent(selectedTranslator)}`
+        }
+        startStream(url)
+      } else {
+        performBatchSearch(q) // Pass q directly — state may not be updated yet
+      }
+    }
+  }, [
+    searchParams,
+    activeTab,
+    enable_streaming,
+    startStream,
+    performBatchSearch,
+    selectedLanguage,
+    selectedTranslator,
+  ])
 
-   const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!query.trim()) return
 
-    setResults([]);
-    setStreamedAnswer("");
-    setVerseDetails({});
-    setHighlightedVerse(null);
-    hasHandledSSEError.current = false;
+    setResults([])
+    setStreamedAnswer("")
+    setVerseDetails({})
+    setHighlightedVerse(null)
+    hasHandledSSEError.current = false
 
     // If keywords are selected, perform keyword-based search
     if (selectedKeywords.length > 0) {
-      handleKeywordSearch();
-      return;
+      handleKeywordSearch()
+      return
     }
 
     // If advanced mode is ON and no keywords yet, enhance first
     // (This happens on first submit after toggling advanced mode ON)
     if (advancedMode && keywords.length === 0) {
-      await enhanceQuery(query);
-      toast.info("Keywords extracted. Adjust selection and search again.");
-      return;
+      await enhanceQuery(query)
+      toast.info("Keywords extracted. Adjust selection and search again.")
+      return
     }
 
-     // Normal search flow
-     if (enable_streaming) {
-       setIsSearching(true);
-       let url = `${API_BASE_URL}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`;
+    // Normal search flow
+    if (enable_streaming) {
+      setIsSearching(true)
+      let url = `${API_BASE_URL}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`
       if (selectedLanguage) {
-        url += `&language=${encodeURIComponent(selectedLanguage)}`;
+        url += `&language=${encodeURIComponent(selectedLanguage)}`
       }
       // Add translator if searching Quran
       if (activeTab === "quran") {
-        url += `&translator=${encodeURIComponent(selectedTranslator)}`;
+        url += `&translator=${encodeURIComponent(selectedTranslator)}`
       }
-      startStream(url);
+      startStream(url)
     } else {
-      performBatchSearch();
+      performBatchSearch()
     }
-  };
+  }
 
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
-        <div className="text-[var(--color-text-muted)] text-sm tracking-wide">Loading...</div>
+        <div className="text-sm tracking-wide text-[var(--color-text-muted)]">Loading...</div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="relative min-h-screen bg-[var(--color-bg-app)] overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden bg-[var(--color-bg-app)]">
       {/* Subtle ambient texture */}
-      <div className="fixed inset-0 pointer-events-none">
+      <div className="pointer-events-none fixed inset-0">
         <DotPattern width={40} height={40} cr={0.4} className="opacity-[0.015]" />
       </div>
 
       {/* Search Hero */}
-      <AuroraSectionBackground className="pt-20 pb-12 px-6">
+      <AuroraSectionBackground className="px-6 pt-20 pb-12">
         <div className="mx-auto max-w-3xl">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...springPresets.fluid, duration: 0.6 }}
-            className="text-center mb-10"
+            className="mb-10 text-center"
           >
             {/* Decorative badge */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1, duration: 0.4 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-6"
+              className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 backdrop-blur-sm"
             >
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500" />
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-500" />
               </span>
-              <span className="text-xs font-medium text-[var(--color-text-secondary)] tracking-wide">
+              <span className="text-xs font-medium tracking-wide text-[var(--color-text-secondary)]">
                 AI-Powered Semantic Search
               </span>
             </motion.div>
 
             {/* Title */}
-            <h1 className="text-4xl md:text-5xl font-bold text-[var(--color-text-primary)] mb-4 tracking-tight">
+            <h1 className="mb-4 text-4xl font-bold tracking-tight text-[var(--color-text-primary)] md:text-5xl">
               <span className="bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">
                 Search
               </span>
             </h1>
-            
+
             {/* Subtitle with dynamic verse count */}
-            <p className="text-base md:text-lg text-[var(--color-text-muted)] max-w-md mx-auto leading-relaxed">
+            <p className="mx-auto max-w-md text-base leading-relaxed text-[var(--color-text-muted)] md:text-lg">
               Explore sacred texts with semantic search across{" "}
-              <motion.span 
+              <motion.span
                 key={activeTab}
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className="text-[var(--color-text-secondary)] font-medium inline-block"
+                className="inline-block font-medium text-[var(--color-text-secondary)]"
               >
                 {activeTab === "quran" && "6,236 verses"}
                 {activeTab === "ot" && "23,145 verses"}
@@ -557,31 +570,35 @@ function SearchContent() {
 
             {/* Search form with glass effect */}
             <form onSubmit={handleSearch} className="relative mb-6 w-full max-w-2xl">
-              <div className="relative flex gap-2 items-center justify-center">
-                <div className="relative flex-1 group">
+              <div className="relative flex items-center justify-center gap-2">
+                <div className="group relative flex-1">
                   {/* Glow effect on focus */}
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500/20 via-violet-500/20 to-indigo-500/20 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity duration-300" />
-                  
-                  <Input 
+                  <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-r from-indigo-500/20 via-violet-500/20 to-indigo-500/20 opacity-0 blur transition-opacity duration-300 group-focus-within:opacity-100" />
+
+                  <Input
                     id="search-input"
                     type="search"
                     data-testid="search-input"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder={getPlaceholder()}
-                    className="relative peer pe-24 ps-12 h-12 bg-[var(--color-bg-surface)]/80 backdrop-blur-sm border-white/10 hover:border-white/20 focus:border-indigo-500/50 transition-colors text-base"
+                    className="peer relative h-12 border-white/10 bg-[var(--color-bg-surface)]/80 ps-12 pe-24 text-base backdrop-blur-sm transition-colors hover:border-white/20 focus:border-indigo-500/50"
                   />
-                  <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-4 text-muted-foreground/60 peer-disabled:opacity-50">
+                  <div className="text-muted-foreground/60 pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-4 peer-disabled:opacity-50">
                     <Search size={20} strokeWidth={1.5} />
                   </div>
                   <button
                     type="submit"
                     data-testid="search-submit-button"
                     disabled={(isSearching && !isStreaming) || !query.trim() || isEnhancing}
-                    className="absolute inset-y-0 end-1.5 flex h-[calc(100%-12px)] my-auto items-center justify-center rounded-lg px-4 text-sm font-medium bg-gradient-to-r from-indigo-500 to-violet-500 text-white transition-all hover:from-indigo-600 hover:to-violet-600 focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 shadow-lg shadow-indigo-500/25"
+                    className="focus-visible:outline-ring/70 absolute inset-y-0 end-1.5 my-auto flex h-[calc(100%-12px)] items-center justify-center rounded-lg bg-gradient-to-r from-indigo-500 to-violet-500 px-4 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:from-indigo-600 hover:to-violet-600 focus:z-10 focus-visible:outline focus-visible:outline-2 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="Submit search"
                   >
-                    {isEnhancing ? "Extracting..." : isSearching || isStreaming ? "Searching..." : "Search"}
+                    {isEnhancing
+                      ? "Extracting..."
+                      : isSearching || isStreaming
+                        ? "Searching..."
+                        : "Search"}
                   </button>
                 </div>
                 <LanguageSelector
@@ -590,10 +607,7 @@ function SearchContent() {
                   detectedLanguage={detectedLanguage}
                 />
                 {activeTab === "quran" && (
-                  <TranslatorSelector
-                    value={selectedTranslator}
-                    onChange={setSelectedTranslator}
-                  />
+                  <TranslatorSelector value={selectedTranslator} onChange={setSelectedTranslator} />
                 )}
               </div>
             </form>
@@ -608,35 +622,37 @@ function SearchContent() {
                       ...k,
                       selected: selected.some((s) => s.text === k.text),
                     }))
-                  );
+                  )
                 }}
                 isLoading={isEnhancing}
                 onSearch={handleKeywordSearch}
               />
-              
+
               {/* Action buttons */}
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 {/* Extract keywords button - shown when no keywords and query exists */}
                 {keywords.length === 0 && query.trim() && (
                   <button
                     type="button"
                     onClick={() => enhanceQuery(query)}
                     disabled={isEnhancing}
-                    className="text-xs text-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)]/80 transition-colors disabled:opacity-50"
+                    className="text-xs text-[var(--color-accent-primary)] transition-colors hover:text-[var(--color-accent-primary)]/80 disabled:opacity-50"
                   >
-                    {isEnhancing ? "Extracting keywords..." : "Extract keywords for advanced search"}
+                    {isEnhancing
+                      ? "Extracting keywords..."
+                      : "Extract keywords for advanced search"}
                   </button>
                 )}
-                
+
                 {/* Clear keywords button - shown when keywords exist */}
                 {keywords.length > 0 && (
                   <button
                     type="button"
                     onClick={() => {
-                      resetKeywordStore();
-                      toast.info("Switched to normal search");
+                      resetKeywordStore()
+                      toast.info("Switched to normal search")
                     }}
-                    className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors ml-auto"
+                    className="ml-auto text-xs text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-secondary)]"
                   >
                     Clear keywords & use normal search
                   </button>
@@ -647,157 +663,167 @@ function SearchContent() {
         </div>
       </AuroraSectionBackground>
 
-       {/* Content */}
-       <div className="relative px-6 pb-16">
-         <div className="mx-auto max-w-3xl">
-           {/* AI Answer Section - Outside Suspense (renders immediately) */}
-           <AnimatePresence>
-             {streamedAnswer && (
-               <motion.div
-                 initial={{ opacity: 0, y: 8 }}
-                 animate={{ opacity: 1, y: 0 }}
-                 exit={{ opacity: 0, y: -8 }}
-                 className="mb-12"
-               >
-                 <div className="relative pl-5 border-l border-[var(--color-accent-primary)]/40 py-1">
-                   <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--color-text-muted)] mb-3 block">
-                     AI Interpretation
-                   </span>
-                    <div className="text-[var(--color-text-secondary)] leading-[1.75] text-[15px]">
-                      {(() => {
-                        let partCursor = 0;
+      {/* Content */}
+      <div className="relative px-6 pb-16">
+        <div className="mx-auto max-w-3xl">
+          {/* AI Answer Section - Outside Suspense (renders immediately) */}
+          <AnimatePresence>
+            {streamedAnswer && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="mb-12"
+              >
+                <div className="relative border-l border-[var(--color-accent-primary)]/40 py-1 pl-5">
+                  <span className="mb-3 block text-[10px] font-medium tracking-wider text-[var(--color-text-muted)] uppercase">
+                    AI Interpretation
+                  </span>
+                  <div className="text-[15px] leading-[1.75] text-[var(--color-text-secondary)]">
+                    {(() => {
+                      let partCursor = 0
 
-                        return parseCitations(streamedAnswer).map((part) => {
-                          if (typeof part === "string") {
-                            const key = `text-${partCursor}`;
-                            partCursor += part.length;
-                            return <span key={key}>{part}</span>;
-                          }
+                      return parseCitations(streamedAnswer).map((part) => {
+                        if (typeof part === "string") {
+                          const key = `text-${partCursor}`
+                          partCursor += part.length
+                          return <span key={key}>{part}</span>
+                        }
 
-                          const verse = verseDetails[part.reference];
-                          const key = `citation-${part.reference}-${partCursor}`;
-                          partCursor += part.reference.length;
+                        const verse = verseDetails[part.reference]
+                        const key = `citation-${part.reference}-${partCursor}`
+                        partCursor += part.reference.length
 
-                          return (
-                            <InlineCitation
-                              key={key}
-                              reference={part.reference}
-                              verseDetail={verse}
-                              onNavigate={navigateToVerse}
-                            />
-                          );
-                        });
-                      })()}
-                    </div>
-                 </div>
-               </motion.div>
-             )}
-           </AnimatePresence>
-
-           {/* Results Section - Inside Suspense (progressive loading) */}
-           <Suspense
-             fallback={
-               <div className="space-y-3">
-                  {[...Array(3)].map((_, i) => (
-                    <Skeleton key={`search-suspense-skeleton-${i}`} className="h-24 w-full rounded-lg" />
-                  ))}
+                        return (
+                          <InlineCitation
+                            key={key}
+                            reference={part.reference}
+                            verseDetail={verse}
+                            onNavigate={navigateToVerse}
+                          />
+                        )
+                      })
+                    })()}
+                  </div>
                 </div>
-              }
-           >
-             {/* Loading skeletons - no answer yet */}
-             {isSearching && !results.length && !streamedAnswer && (
-               <div className="space-y-3">
-                  {[...Array(3)].map((_, i) => (
-                    <Skeleton key={`search-loading-skeleton-${i}`} className="h-24 w-full rounded-lg" />
-                  ))}
-                </div>
-              )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-             {/* Loading skeletons - answer streaming, waiting for sources */}
-             {isSearching && !results.length && streamedAnswer && (
-               <div className="space-y-3">
-                 <div className="h-px bg-[var(--color-border-subtle)] mb-6" />
-                 <p className="text-xs text-[var(--color-text-muted)] tracking-wide uppercase mb-4">
-                   Retrieving sources...
-                 </p>
-                  {[...Array(3)].map((_, i) => (
-                    <Skeleton key={`search-source-skeleton-${i}`} className="h-24 w-full rounded-lg" />
-                  ))}
-                </div>
-              )}
-
-             {/* Divider between AI answer and results */}
-             {results.length > 0 && streamedAnswer && (
-               <div className="h-px bg-[var(--color-border-subtle)] mb-8" />
-             )}
-
-             {/* Results */}
-             <div ref={resultsContainerRef}>
-                <AnimatePresence mode="popLayout">
-                  {(() => {
-                    const seenResultKeys = new Map<string, number>();
-
-                    return results.map((result, i) => {
-                      const baseKey = `${result.source}-${result.reference}`;
-                      const occurrence = (seenResultKeys.get(baseKey) ?? 0) + 1;
-                      seenResultKeys.set(baseKey, occurrence);
-                      const resultKey = `${baseKey}-${occurrence}`;
-
-                      return (
-                        <motion.div
-                          key={resultKey}
-                          data-verse-id={result.reference}
-                          initial={{ opacity: 0, y: 12 }}
-                          animate={{
-                            opacity: 1,
-                            y: 0,
-                          }}
-                          exit={{ opacity: 0, scale: 0.98 }}
-                          transition={{ ...springPresets.snappy, delay: i * 0.03 }}
-                          className="mb-3"
-                        >
-                          <div
-                            className={cn(
-                              "p-4 rounded-lg bg-[var(--color-bg-surface)] border border-[var(--color-border-subtle)] hover:border-[var(--color-border-glow)] transition-colors duration-200",
-                              highlightedVerse === result.reference && "border-[var(--color-accent-primary)]/40"
-                            )}
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-3">
-                                <span className="text-sm font-medium text-[var(--color-accent-primary)]">
-                                  {result.reference || "Unknown Reference"}
-                                </span>
-                                <SourceBadge source={mapSourceToType(result.source)} />
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <span className="text-[11px] text-[var(--color-text-muted)] tabular-nums font-mono">
-                                  {(result.score * 100).toFixed(1)}%
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => navigateToVerse(result.reference)}
-                                  aria-label="Go to verse"
-                                  className="text-[var(--color-text-muted)] hover:text-[var(--color-accent-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]/50 rounded transition-colors duration-200"
-                                >
-                                  <ExternalLink className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </div>
-                            <p className="text-[var(--color-text-secondary)] leading-[1.7] text-[15px]">
-                              {extractVerseText(result.text)}
-                            </p>
-                          </div>
-                        </motion.div>
-                      );
-                    });
-                  })()}
-                </AnimatePresence>
+          {/* Results Section - Inside Suspense (progressive loading) */}
+          <Suspense
+            fallback={
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton
+                    key={`search-suspense-skeleton-${i}`}
+                    className="h-24 w-full rounded-lg"
+                  />
+                ))}
               </div>
-            </Suspense>
-          </div>
-       </div>
+            }
+          >
+            {/* Loading skeletons - no answer yet */}
+            {isSearching && !results.length && !streamedAnswer && (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton
+                    key={`search-loading-skeleton-${i}`}
+                    className="h-24 w-full rounded-lg"
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Loading skeletons - answer streaming, waiting for sources */}
+            {isSearching && !results.length && streamedAnswer && (
+              <div className="space-y-3">
+                <div className="mb-6 h-px bg-[var(--color-border-subtle)]" />
+                <p className="mb-4 text-xs tracking-wide text-[var(--color-text-muted)] uppercase">
+                  Retrieving sources...
+                </p>
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton
+                    key={`search-source-skeleton-${i}`}
+                    className="h-24 w-full rounded-lg"
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Divider between AI answer and results */}
+            {results.length > 0 && streamedAnswer && (
+              <div className="mb-8 h-px bg-[var(--color-border-subtle)]" />
+            )}
+
+            {/* Results */}
+            <div ref={resultsContainerRef}>
+              <AnimatePresence mode="popLayout">
+                {(() => {
+                  const seenResultKeys = new Map<string, number>()
+
+                  return results.map((result, i) => {
+                    const baseKey = `${result.source}-${result.reference}`
+                    const occurrence = (seenResultKeys.get(baseKey) ?? 0) + 1
+                    seenResultKeys.set(baseKey, occurrence)
+                    const resultKey = `${baseKey}-${occurrence}`
+
+                    return (
+                      <motion.div
+                        key={resultKey}
+                        data-verse-id={result.reference}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{
+                          opacity: 1,
+                          y: 0,
+                        }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        transition={{ ...springPresets.snappy, delay: i * 0.03 }}
+                        className="mb-3"
+                      >
+                        <div
+                          className={cn(
+                            "rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 transition-colors duration-200 hover:border-[var(--color-border-glow)]",
+                            highlightedVerse === result.reference &&
+                              "border-[var(--color-accent-primary)]/40"
+                          )}
+                        >
+                          <div className="mb-3 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm font-medium text-[var(--color-accent-primary)]">
+                                {result.reference || "Unknown Reference"}
+                              </span>
+                              <SourceBadge source={mapSourceToType(result.source)} />
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="font-mono text-[11px] text-[var(--color-text-muted)] tabular-nums">
+                                {(result.score * 100).toFixed(1)}%
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => navigateToVerse(result.reference)}
+                                aria-label="Go to verse"
+                                className="rounded text-[var(--color-text-muted)] transition-colors duration-200 hover:text-[var(--color-accent-primary)] focus:ring-2 focus:ring-[var(--color-accent-primary)]/50 focus:outline-none"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                          <p className="text-[15px] leading-[1.7] text-[var(--color-text-secondary)]">
+                            {extractVerseText(result.text)}
+                          </p>
+                        </div>
+                      </motion.div>
+                    )
+                  })
+                })()}
+              </AnimatePresence>
+            </div>
+          </Suspense>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
 
 export default function SearchPage() {
@@ -805,11 +831,11 @@ export default function SearchPage() {
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
-          <div className="text-[var(--color-text-muted)] text-sm tracking-wide">Loading...</div>
+          <div className="text-sm tracking-wide text-[var(--color-text-muted)]">Loading...</div>
         </div>
       }
     >
       <SearchContent />
     </Suspense>
-  );
+  )
 }

@@ -1,10 +1,11 @@
 """Redis-based rate limiting middleware."""
 
+import logging
+from datetime import datetime, timedelta
+
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from datetime import datetime, timedelta
-import logging
 
 from app.config import settings
 
@@ -76,9 +77,7 @@ async def get_user_rate_limit_info(user_id: int) -> dict:
 
         # Calculate reset time (next UTC midnight)
         now = datetime.utcnow()
-        tomorrow = (now + timedelta(days=1)).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
 
         # If Redis unavailable, return safe defaults
         if redis_manager.client is None:
@@ -107,9 +106,7 @@ async def get_user_rate_limit_info(user_id: int) -> dict:
         logger.warning(f"Failed to get rate limit info: {e}")
         # Fail-open: return safe defaults
         now = datetime.utcnow()
-        tomorrow = (now + timedelta(days=1)).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
         return {
             "limit": settings.rate_limit_per_day,
             "used": 0,
@@ -220,9 +217,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
             # REGULAR ENDPOINTS: Per-day rate limiting
             # Calculate reset time (next UTC midnight)
-            tomorrow = (now + timedelta(days=1)).replace(
-                hour=0, minute=0, second=0, microsecond=0
-            )
+            tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
 
             # Build Redis key: ratelimit:{user_id}:{date}
             today = now.strftime("%Y-%m-%d")

@@ -1,24 +1,24 @@
-"use client";
+"use client"
 
-import { Tabs, Tab } from "@/components/ui/vercel-tabs";
+import { Tabs, Tab } from "@/components/ui/vercel-tabs"
 
-export type FilterType = 'all' | 'quran' | 'old_testament' | 'new_testament' | 'apocrypha';
+export type FilterType = "all" | "quran" | "old_testament" | "new_testament" | "apocrypha"
 
 interface FilterTabsProps {
-  activeFilter: FilterType;
-  onFilterChange: (filter: FilterType) => void;
-  counts: Partial<Record<FilterType, number>>;
+  activeFilter: FilterType
+  onFilterChange: (filter: FilterType) => void
+  counts: Partial<Record<FilterType, number>>
 }
 
 const FILTER_LABELS: Record<FilterType, string> = {
-  all: 'All',
-  quran: 'Quran',
-  old_testament: 'Old Testament',
-  new_testament: 'New Testament',
-  apocrypha: 'Apocrypha'
-};
+  all: "All",
+  quran: "Quran",
+  old_testament: "Old Testament",
+  new_testament: "New Testament",
+  apocrypha: "Apocrypha",
+}
 
-const FILTERS: FilterType[] = ['all', 'quran', 'old_testament', 'new_testament', 'apocrypha'];
+const FILTERS: FilterType[] = ["all", "quran", "old_testament", "new_testament", "apocrypha"]
 
 export function FilterTabs({ activeFilter, onFilterChange, counts }: FilterTabsProps) {
   // Build tabs with counts
@@ -26,7 +26,7 @@ export function FilterTabs({ activeFilter, onFilterChange, counts }: FilterTabsP
     id: filter,
     label: FILTER_LABELS[filter],
     count: counts[filter],
-  }));
+  }))
 
   return (
     <Tabs
@@ -34,5 +34,5 @@ export function FilterTabs({ activeFilter, onFilterChange, counts }: FilterTabsP
       activeTab={activeFilter}
       onTabChange={(tabId) => onFilterChange(tabId as FilterType)}
     />
-  );
+  )
 }

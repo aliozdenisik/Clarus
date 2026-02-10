@@ -1,15 +1,15 @@
-"use client";
-import Link from "next/link";
-import Image from "next/image";
+"use client"
+import Link from "next/link"
+import Image from "next/image"
 
-import { Icons } from "@/components/ui/icons";
-import { Button } from "@/components/ui/button";
+import { Icons } from "@/components/ui/icons"
+import { Button } from "@/components/ui/button"
 
 function Footer() {
   return (
-    <footer className="py-12 px-4 md:px-6 bg-background border-t border-border/40">
+    <footer className="bg-background border-border/40 border-t px-4 py-12 md:px-6">
       <div className="container mx-auto">
-        <div className="flex flex-col md:flex-row justify-between">
+        <div className="flex flex-col justify-between md:flex-row">
           <div className="mb-8 md:mb-0">
             <Link href="/" className="flex items-center gap-3">
               <Image
@@ -22,24 +22,24 @@ function Footer() {
               <h2 className="text-lg font-bold">Clarus</h2>
             </Link>
 
-            <p className="dark:text-gray-300 mt-4 max-w-xs">
+            <p className="mt-4 max-w-xs dark:text-gray-300">
               Maximum-accuracy RAG search for sacred texts with AI-powered comparative analysis.
             </p>
             <div className="mt-4">
               <Link href="https://github.com/aliozdenisik/Clarus">
                 <Button variant="secondary">
                   Star on GitHub
-                  <Icons.gitHub className="ml-1 w-4 h-4" />
+                  <Icons.gitHub className="ml-1 h-4 w-4" />
                 </Button>
               </Link>
             </div>
-            <p className="text-sm dark:text-gray-400 mt-5">
+            <p className="mt-5 text-sm dark:text-gray-400">
               © {new Date().getFullYear()} Clarus. All rights reserved.
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-3">
             <div>
-              <h3 className="font-semibold mb-4">Pages</h3>
+              <h3 className="mb-4 font-semibold">Pages</h3>
               <ul className="space-y-2">
                 <li>
                   <Link
@@ -84,7 +84,7 @@ function Footer() {
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-4">Scriptures</h3>
+              <h3 className="mb-4 font-semibold">Scriptures</h3>
               <ul className="space-y-2">
                 <li>
                   <Link
@@ -121,7 +121,7 @@ function Footer() {
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-4">Links</h3>
+              <h3 className="mb-4 font-semibold">Links</h3>
               <ul className="space-y-2">
                 <li>
                   <Link
@@ -143,14 +143,14 @@ function Footer() {
             </div>
           </div>
         </div>
-        <div className="w-full flex mt-8 items-center justify-center">
-          <h1 className="text-center text-3xl md:text-5xl lg:text-[10rem] font-bold bg-clip-text text-transparent bg-gradient-to-b from-neutral-700 to-neutral-900 dark:from-neutral-400 dark:to-neutral-700 select-none">
+        <div className="mt-8 flex w-full items-center justify-center">
+          <h1 className="bg-gradient-to-b from-neutral-700 to-neutral-900 bg-clip-text text-center text-3xl font-bold text-transparent select-none md:text-5xl lg:text-[10rem] dark:from-neutral-400 dark:to-neutral-700">
             Clarus
           </h1>
         </div>
       </div>
     </footer>
-  );
+  )
 }
 
-export { Footer };
+export { Footer }

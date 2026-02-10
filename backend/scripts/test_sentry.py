@@ -28,18 +28,16 @@ After running, check Sentry dashboard:
     - Performance: Transactions should show span breakdown
 """
 
-import sys
-import os
 import argparse
+import os
+import sys
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dotenv import load_dotenv
 
-load_dotenv(
-    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
-)
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
 
 
 def check_sentry_config():
@@ -53,9 +51,7 @@ def check_sentry_config():
 
     if not settings.sentry_dsn_backend:
         print("❌ SENTRY_DSN_BACKEND is not configured")
-        print(
-            "   Add to backend/.env: SENTRY_DSN_BACKEND=https://xxx@sentry.io/project"
-        )
+        print("   Add to backend/.env: SENTRY_DSN_BACKEND=https://xxx@sentry.io/project")
         return False
 
     print(f"✅ Sentry configured for environment: {settings.sentry_environment}")
@@ -134,11 +130,12 @@ def test_performance_spans():
 
     try:
         import asyncio
+
         import sentry_sdk
-        from src.ultimate_rag import UltimateRAG
 
         # Initialize Sentry with tracing
         from app.config import settings
+        from src.ultimate_rag import UltimateRAG
 
         if not sentry_sdk.get_client():
             sentry_sdk.init(
@@ -151,9 +148,7 @@ def test_performance_spans():
         # Start a transaction for the test
         print("\n📤 Running search query with performance tracing...")
 
-        with sentry_sdk.start_transaction(
-            op="test", name="sentry-test-search"
-        ) as transaction:
+        with sentry_sdk.start_transaction(op="test", name="sentry-test-search") as transaction:
             rag = UltimateRAG(verbose=False)
 
             # Run a simple search
@@ -199,12 +194,8 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
-    parser.add_argument(
-        "--backend", action="store_true", help="Test backend error capture (Task 4)"
-    )
-    parser.add_argument(
-        "--spans", action="store_true", help="Test performance spans (Task 6)"
-    )
+    parser.add_argument("--backend", action="store_true", help="Test backend error capture (Task 4)")
+    parser.add_argument("--spans", action="store_true", help="Test performance spans (Task 6)")
     parser.add_argument("--all", action="store_true", help="Run all tests")
 
     args = parser.parse_args()

@@ -1,218 +1,215 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { springPresets } from "@/lib/design-system";
-import { useSession, signOut } from "@/lib/auth-client";
-import { Button } from "@/components/ui/button";
-import { GlowCard } from "@/components/ui/glow-card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { ArrowLeft, BookOpen, User, LogOut } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
+import { motion, AnimatePresence } from "framer-motion"
+import { springPresets } from "@/lib/design-system"
+import { useSession, signOut } from "@/lib/auth-client"
+import { Button } from "@/components/ui/button"
+import { GlowCard } from "@/components/ui/glow-card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { toast } from "sonner"
+import { ArrowLeft, BookOpen, User, LogOut } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
 interface ChapterSummary {
-  chapter: number;
-  verses_count: number;
+  chapter: number
+  verses_count: number
 }
 
 interface BookDetail {
-  nr: number;
-  name: string;
-  testament: string;
-  chapters: ChapterSummary[];
+  nr: number
+  name: string
+  testament: string
+  chapters: ChapterSummary[]
 }
 
 interface Verse {
-  verse: number;
-  text: string;
+  verse: number
+  text: string
 }
 
 interface ChapterContent {
-  book_name: string;
-  chapter: number;
-  verses: Verse[];
+  book_name: string
+  chapter: number
+  verses: Verse[]
 }
 
 export default function BookDetailPage() {
-  const params = useParams();
-  const bookNr = params.bookNr as string;
-  const searchParams = useSearchParams();
-  const [book, setBook] = useState<BookDetail | null>(null);
-  const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
-  const [chapterContent, setChapterContent] = useState<ChapterContent | null>(null);
-  const [isLoadingBook, setIsLoadingBook] = useState(true);
-  const [isLoadingChapter, setIsLoadingChapter] = useState(false);
-  const [highlightedVerse, setHighlightedVerse] = useState<number | null>(null);
-  const { data: session, isPending: authLoading } = useSession();
-  const user = session?.user;
-  const router = useRouter();
+  const params = useParams()
+  const bookNr = params.bookNr as string
+  const searchParams = useSearchParams()
+  const [book, setBook] = useState<BookDetail | null>(null)
+  const [selectedChapter, setSelectedChapter] = useState<number | null>(null)
+  const [chapterContent, setChapterContent] = useState<ChapterContent | null>(null)
+  const [isLoadingBook, setIsLoadingBook] = useState(true)
+  const [isLoadingChapter, setIsLoadingChapter] = useState(false)
+  const [highlightedVerse, setHighlightedVerse] = useState<number | null>(null)
+  const { data: session, isPending: authLoading } = useSession()
+  const user = session?.user
+  const router = useRouter()
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/sign-in");
+      router.push("/sign-in")
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router])
 
   // Read URL params on mount
   useEffect(() => {
-    const chapterParam = searchParams.get('chapter');
-    const verseParam = searchParams.get('verse');
-    
+    const chapterParam = searchParams.get("chapter")
+    const verseParam = searchParams.get("verse")
+
     if (chapterParam) {
-      const chapterNum = parseInt(chapterParam, 10);
+      const chapterNum = parseInt(chapterParam, 10)
       if (!isNaN(chapterNum)) {
-        setSelectedChapter(chapterNum);
+        setSelectedChapter(chapterNum)
       }
     }
     if (verseParam) {
-      const verseNum = parseInt(verseParam, 10);
+      const verseNum = parseInt(verseParam, 10)
       if (!isNaN(verseNum)) {
-        setHighlightedVerse(verseNum);
+        setHighlightedVerse(verseNum)
       }
     }
-  }, [searchParams]);
+  }, [searchParams])
 
-   // Fetch book details
-   useEffect(() => {
-     const fetchBook = async () => {
-       try {
-         const response = await fetch(
-           `${API_BASE_URL}/api/metadata/bible/books/${bookNr}`,
-           {
-             credentials: "include",
-           }
-         );
+  // Fetch book details
+  useEffect(() => {
+    const fetchBook = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/metadata/bible/books/${bookNr}`, {
+          credentials: "include",
+        })
 
         if (!response.ok) {
-          throw new Error("Failed to fetch book");
+          throw new Error("Failed to fetch book")
         }
 
-        const data = await response.json();
-        setBook(data.data?.book || null);
+        const data = await response.json()
+        setBook(data.data?.book || null)
         // Auto-select chapter 1 only if no chapter param in URL
-        if (data.data?.book?.chapters?.length > 0 && !searchParams.get('chapter')) {
-          setSelectedChapter(1);
+        if (data.data?.book?.chapters?.length > 0 && !searchParams.get("chapter")) {
+          setSelectedChapter(1)
         }
       } catch {
-        toast.error("Failed to load book");
+        toast.error("Failed to load book")
       } finally {
-        setIsLoadingBook(false);
+        setIsLoadingBook(false)
       }
-    };
+    }
 
     if (user && bookNr) {
-      fetchBook();
+      fetchBook()
     }
-  }, [user, bookNr, searchParams]);
+  }, [user, bookNr, searchParams])
 
-   // Fetch chapter content when selected
-   useEffect(() => {
-     const fetchChapter = async () => {
-       if (!selectedChapter) return;
-       
-       setIsLoadingChapter(true);
-       try {
-         const response = await fetch(
-           `${API_BASE_URL}/api/metadata/bible/books/${bookNr}/chapters/${selectedChapter}`,
-           {
-             credentials: "include",
-           }
-         );
+  // Fetch chapter content when selected
+  useEffect(() => {
+    const fetchChapter = async () => {
+      if (!selectedChapter) return
+
+      setIsLoadingChapter(true)
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/metadata/bible/books/${bookNr}/chapters/${selectedChapter}`,
+          {
+            credentials: "include",
+          }
+        )
 
         if (!response.ok) {
-          throw new Error("Failed to fetch chapter");
+          throw new Error("Failed to fetch chapter")
         }
 
-        const data = await response.json();
-        setChapterContent(data.data || null);
+        const data = await response.json()
+        setChapterContent(data.data || null)
       } catch {
-        toast.error("Failed to load chapter");
+        toast.error("Failed to load chapter")
       } finally {
-        setIsLoadingChapter(false);
+        setIsLoadingChapter(false)
       }
-    };
+    }
 
     if (user && selectedChapter) {
-      fetchChapter();
+      fetchChapter()
     }
-  }, [user, bookNr, selectedChapter]);
+  }, [user, bookNr, selectedChapter])
 
   // Scroll to verse when chapter content loads and highlightedVerse is set.
   // Uses polling because AnimatePresence mode="wait" delays DOM mounting
   // until the loading skeleton's exit animation completes (~300-600ms).
   useEffect(() => {
-    if (!highlightedVerse || !chapterContent) return;
+    if (!highlightedVerse || !chapterContent) return
 
-    let cancelled = false;
+    let cancelled = false
 
     const tryScroll = () => {
-      const element = document.querySelector(`[data-verse-id="${highlightedVerse}"]`);
-      if (!element) return false;
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const element = document.querySelector(`[data-verse-id="${highlightedVerse}"]`)
+      if (!element) return false
+      element.scrollIntoView({ behavior: "smooth", block: "center" })
       setTimeout(() => {
-        if (!cancelled) setHighlightedVerse(null);
-      }, 2000);
-      return true;
-    };
+        if (!cancelled) setHighlightedVerse(null)
+      }, 2000)
+      return true
+    }
 
-    let attempts = 0;
+    let attempts = 0
     const interval = setInterval(() => {
       if (cancelled || tryScroll() || ++attempts >= 15) {
-        clearInterval(interval);
+        clearInterval(interval)
       }
-    }, 100);
+    }, 100)
 
     return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [highlightedVerse, chapterContent]);
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [highlightedVerse, chapterContent])
 
   const handleLogout = async () => {
-    await signOut();
-    router.push("/sign-in");
-    toast.success("Logged out successfully");
-  };
+    await signOut()
+    router.push("/sign-in")
+    toast.success("Logged out successfully")
+  }
 
   const getBackRoute = () => {
-    if (!book) return "/old-testament";
+    if (!book) return "/old-testament"
     switch (book.testament) {
       case "old_testament":
-        return "/old-testament";
+        return "/old-testament"
       case "new_testament":
-        return "/new-testament";
+        return "/new-testament"
       case "apocrypha":
-        return "/apocrypha";
+        return "/apocrypha"
       default:
-        return "/old-testament";
+        return "/old-testament"
     }
-  };
+  }
 
   const getTestamentLabel = () => {
-    if (!book) return "";
+    if (!book) return ""
     switch (book.testament) {
       case "old_testament":
-        return "Old Testament";
+        return "Old Testament"
       case "new_testament":
-        return "New Testament";
+        return "New Testament"
       case "apocrypha":
-        return "Apocrypha";
+        return "Apocrypha"
       default:
-        return "";
+        return ""
     }
-  };
+  }
 
   if (authLoading || isLoadingBook) {
     return (
       <div className="min-h-screen bg-[var(--color-bg-app)] p-8">
         <div className="mx-auto max-w-4xl">
-          <Skeleton className="h-12 w-64 mb-4" />
-          <Skeleton className="h-6 w-48 mb-8" />
-          <Skeleton className="h-12 w-full mb-4" />
+          <Skeleton className="mb-4 h-12 w-64" />
+          <Skeleton className="mb-8 h-6 w-48" />
+          <Skeleton className="mb-4 h-12 w-full" />
           <div className="space-y-4">
             {[...Array(10)].map((_, i) => (
               <Skeleton key={`book-detail-page-skeleton-${i}`} className="h-20 w-full" />
@@ -220,18 +217,18 @@ export default function BookDetailPage() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   if (!book) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg-app)] p-8 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)] p-8">
         <div className="text-center">
-          <p className="text-[var(--color-text-muted)] mb-4">Book not found</p>
+          <p className="mb-4 text-[var(--color-text-muted)]">Book not found</p>
           <Button onClick={() => router.push("/old-testament")}>Back to Books</Button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -277,11 +274,9 @@ export default function BookDetailPage() {
           transition={springPresets.fluid}
           className="mb-8"
         >
-          <div className="flex items-center gap-3 mb-2">
+          <div className="mb-2 flex items-center gap-3">
             <BookOpen className="h-8 w-8 text-[var(--color-accent-primary)]" />
-            <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
-              {book.name}
-            </h1>
+            <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">{book.name}</h1>
           </div>
           <p className="text-[var(--color-text-muted)]">
             {getTestamentLabel()} • {book.chapters.length} chapters
@@ -295,13 +290,13 @@ export default function BookDetailPage() {
           transition={{ delay: 0.1 }}
           className="mb-6"
         >
-          <p className="text-sm text-[var(--color-text-muted)] mb-3">Select Chapter</p>
+          <p className="mb-3 text-sm text-[var(--color-text-muted)]">Select Chapter</p>
           <div className="flex flex-wrap gap-2">
             {book.chapters.map((ch) => (
               <button
                 key={ch.chapter}
                 onClick={() => setSelectedChapter(ch.chapter)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                   selectedChapter === ch.chapter
                     ? "bg-[var(--color-accent-primary)] text-white"
                     : "bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)]"
@@ -336,21 +331,21 @@ export default function BookDetailPage() {
               transition={springPresets.fluid}
             >
               <GlowCard className="p-6">
-                <h3 className="text-lg font-bold text-[var(--color-text-primary)] mb-4">
+                <h3 className="mb-4 text-lg font-bold text-[var(--color-text-primary)]">
                   Chapter {chapterContent.chapter}
                 </h3>
                 <div className="space-y-3">
                   {chapterContent.verses.map((verse) => (
-                    <p 
-                      key={verse.verse} 
+                    <p
+                      key={verse.verse}
                       data-verse-id={verse.verse}
                       className={cn(
-                        "text-[var(--color-text-primary)] leading-relaxed",
-                        highlightedVerse === verse.verse && 
-                          "ring-2 ring-[var(--color-accent-primary)] shadow-lg shadow-[var(--color-accent-primary)]/20 rounded-lg p-2 transition-all duration-500"
+                        "leading-relaxed text-[var(--color-text-primary)]",
+                        highlightedVerse === verse.verse &&
+                          "rounded-lg p-2 shadow-[var(--color-accent-primary)]/20 shadow-lg ring-2 ring-[var(--color-accent-primary)] transition-all duration-500"
                       )}
                     >
-                      <span className="text-sm font-bold text-[var(--color-accent-primary)] mr-2">
+                      <span className="mr-2 text-sm font-bold text-[var(--color-accent-primary)]">
                         {verse.verse}
                       </span>
                       {verse.text}
@@ -364,7 +359,7 @@ export default function BookDetailPage() {
               key="empty"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-center py-12 text-[var(--color-text-muted)]"
+              className="py-12 text-center text-[var(--color-text-muted)]"
             >
               Select a chapter to start reading
             </motion.div>
@@ -372,5 +367,5 @@ export default function BookDetailPage() {
         </AnimatePresence>
       </div>
     </div>
-  );
+  )
 }

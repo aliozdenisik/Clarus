@@ -11,21 +11,21 @@ Tests the Ultimate RAG Pipeline on the complete Bible including:
 30 complex search phrases with expected book references.
 """
 
-import sys
 import asyncio
-from pathlib import Path
-from typing import List, Dict
+import sys
 from dataclasses import dataclass
+from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()
 sys.path.insert(0, str(Path(__file__).parent))
 
+from qdrant_client import QdrantClient
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from qdrant_client import QdrantClient
+from rich.table import Table
 
 console = Console()
 
@@ -35,7 +35,7 @@ class TestQuery:
     """Represents a test query with expected results"""
 
     query: str
-    expected_books: List[str]  # Expected book names
+    expected_books: list[str]  # Expected book names
     testament: str  # "OT" or "NT"
     reference_hint: str  # Human-readable reference hint
 
@@ -254,7 +254,7 @@ def search_bible(query: str, translation: str = "kjva", top_k: int = 5):
     return results
 
 
-def evaluate_query(test_query: TestQuery, results, top_k: int = 5) -> Dict:
+def evaluate_query(test_query: TestQuery, results, top_k: int = 5) -> dict:
     """
     Evaluate a single query result against expected books.
     """
@@ -278,7 +278,7 @@ def evaluate_query(test_query: TestQuery, results, top_k: int = 5) -> Dict:
     }
 
 
-def display_results(test_query: TestQuery, results, evaluation: Dict):
+def display_results(test_query: TestQuery, results, evaluation: dict):
     """Display search results in a formatted table."""
     # Status indicator
     if evaluation["book_match"]:
@@ -289,9 +289,7 @@ def display_results(test_query: TestQuery, results, evaluation: Dict):
         status = "[bold red]❌ FAIL[/bold red]"
 
     console.print(f"\n{status} [cyan]Query:[/cyan] {test_query.query}")
-    console.print(
-        f"[dim]Expected: {', '.join(test_query.expected_books)} ({test_query.reference_hint})[/dim]"
-    )
+    console.print(f"[dim]Expected: {', '.join(test_query.expected_books)} ({test_query.reference_hint})[/dim]")
 
     if not results:
         console.print("[yellow]No results found.[/yellow]")
@@ -309,9 +307,7 @@ def display_results(test_query: TestQuery, results, evaluation: Dict):
         ref = f"{r.chapter}:{r.verse}"
         score = f"{r.score:.3f}"
         text = r.text[:60] + "..." if len(r.text) > 60 else r.text
-        book_style = (
-            "green bold" if r.book_name in test_query.expected_books else "white"
-        )
+        book_style = "green bold" if r.book_name in test_query.expected_books else "white"
         table.add_row(
             str(i),
             f"[{book_style}]{r.book_name}[/{book_style}]",
@@ -342,9 +338,7 @@ def run_test_suite(translation: str = "turhadi", verbose: bool = True):
         collection_name = f"bible_{translation}"
         if collection_name not in collections:
             console.print(f"[red][ERROR] {collection_name} collection not found![/red]")
-            console.print(
-                "[yellow]Please run: python main.py index-bible --translation kjva[/yellow]"
-            )
+            console.print("[yellow]Please run: python main.py index-bible --translation kjva[/yellow]")
             return 1
     except Exception as e:
         console.print(f"[red][ERROR] Cannot connect to Qdrant: {e}[/red]")
@@ -374,9 +368,7 @@ def run_test_suite(translation: str = "turhadi", verbose: bool = True):
             )
 
             try:
-                results = search_bible(
-                    test_query.query, translation=translation, top_k=5
-                )
+                results = search_bible(test_query.query, translation=translation, top_k=5)
                 evaluation = evaluate_query(test_query, results)
 
                 if verbose:
@@ -402,17 +394,13 @@ def run_test_suite(translation: str = "turhadi", verbose: bool = True):
 
             except Exception as e:
                 console.print(f"[red]Error testing '{test_query.query}': {e}[/red]")
-                results_summary["failed"].append(
-                    {"query": test_query.query, "error": str(e)}
-                )
+                results_summary["failed"].append({"query": test_query.query, "error": str(e)})
 
             progress.advance(task)
 
     # Summary
     console.print("\n")
-    summary_table = Table(
-        title="📊 Test Results Summary", show_header=True, header_style="bold cyan"
-    )
+    summary_table = Table(title="📊 Test Results Summary", show_header=True, header_style="bold cyan")
     summary_table.add_column("Metric", style="white")
     summary_table.add_column("Value", style="green", justify="right")
     summary_table.add_column("Percentage", style="yellow", justify="right")
@@ -450,9 +438,7 @@ def run_test_suite(translation: str = "turhadi", verbose: bool = True):
                 console.print(f"  • {fail['query']}: [red]{fail['error']}[/red]")
             else:
                 console.print(f"  • {fail['query']}")
-                console.print(
-                    f"    Expected: {fail['expected']}, Got: {fail['got'][:3]}"
-                )
+                console.print(f"    Expected: {fail['expected']}, Got: {fail['got'][:3]}")
 
     return 0 if results_summary["book_match"] >= total * 0.7 else 1
 
@@ -512,22 +498,16 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Complete Bible Test Suite")
-    parser.add_argument(
-        "--interactive", "-i", action="store_true", help="Interactive search mode"
-    )
+    parser.add_argument("--interactive", "-i", action="store_true", help="Interactive search mode")
     parser.add_argument("--query", "-q", type=str, help="Single query to test")
     parser.add_argument("--limit", "-l", type=int, default=5, help="Number of results")
-    parser.add_argument(
-        "--translation", "-t", type=str, default="turhadi", help="Bible translation"
-    )
+    parser.add_argument("--translation", "-t", type=str, default="turhadi", help="Bible translation")
     parser.add_argument("--quiet", action="store_true", help="Only show summary")
 
     args = parser.parse_args()
 
     if args.query:
-        results = search_bible(
-            args.query, translation=args.translation, top_k=args.limit
-        )
+        results = search_bible(args.query, translation=args.translation, top_k=args.limit)
         if results:
             for i, r in enumerate(results, 1):
                 console.print(

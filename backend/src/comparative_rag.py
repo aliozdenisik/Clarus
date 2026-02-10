@@ -28,16 +28,20 @@ Usage:
     print(result.essay)
 """
 
-import time
 import logging
-from typing import List, Optional, Dict, Tuple, Callable
-from dataclasses import dataclass, field
+import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
 from rich.console import Console
 
 from src.circuit_breaker import CircuitBreakerError
-from src.query_translator import QueryTranslator, TranslationResult, TranslationError
-from src.query_translator import CORPUS_LANGUAGES
+from src.query_translator import CORPUS_LANGUAGES, QueryTranslator, TranslationError, TranslationResult
+
+if TYPE_CHECKING:
+    from src.search import BibleSearcher
 
 console = Console()
 logger = logging.getLogger(__name__)
@@ -47,11 +51,11 @@ logger = logging.getLogger(__name__)
 class ComparativeScriptureResult:
     """Combined results from all scripture searches - 80 verses total (20 per testament)"""
 
-    quran: List = field(default_factory=list)  # 20 from Quran
-    ot: List = field(default_factory=list)  # 20 from Old Testament
-    nt: List = field(default_factory=list)  # 20 from New Testament
-    apocrypha: List = field(default_factory=list)  # 20 from Apocrypha
-    search_stats: Dict = field(default_factory=dict)  # Timing, counts per source
+    quran: list = field(default_factory=list)  # 20 from Quran
+    ot: list = field(default_factory=list)  # 20 from Old Testament
+    nt: list = field(default_factory=list)  # 20 from New Testament
+    apocrypha: list = field(default_factory=list)  # 20 from Apocrypha
+    search_stats: dict = field(default_factory=dict)  # Timing, counts per source
 
     @property
     def total_verses(self) -> int:
@@ -100,7 +104,7 @@ class ComparativeRAG:
         # Per-collection result statistics for confidence scoring
         self._last_collection_stats: dict = {}
         # Detected user language from last query (for response translation)
-        self._last_detected_language: Optional[str] = None
+        self._last_detected_language: str | None = None
 
     @property
     def enhancer(self):
@@ -130,9 +134,7 @@ class ComparativeRAG:
 
             self._answer_generator = ComparativeAnswerGenerator()
             if self.verbose:
-                console.print(
-                    "[dim]Loaded ComparativeAnswerGenerator (Gemini 2.5 Flash)[/dim]"
-                )
+                console.print("[dim]Loaded ComparativeAnswerGenerator (Gemini 2.5 Flash)[/dim]")
         return self._answer_generator
 
     def _get_quran_searcher(self):
@@ -148,9 +150,7 @@ class ComparativeRAG:
         if self._ot_searcher is None:
             from src.search import BibleSearcher
 
-            self._ot_searcher = BibleSearcher(
-                testament="ot", qdrant_url=self.qdrant_url
-            )
+            self._ot_searcher = BibleSearcher(testament="ot", qdrant_url=self.qdrant_url)
         return self._ot_searcher
 
     def _get_nt_searcher(self):
@@ -158,9 +158,7 @@ class ComparativeRAG:
         if self._nt_searcher is None:
             from src.search import BibleSearcher
 
-            self._nt_searcher = BibleSearcher(
-                testament="nt", qdrant_url=self.qdrant_url
-            )
+            self._nt_searcher = BibleSearcher(testament="nt", qdrant_url=self.qdrant_url)
         return self._nt_searcher
 
     def _get_apocrypha_searcher(self):
@@ -168,9 +166,7 @@ class ComparativeRAG:
         if self._apocrypha_searcher is None:
             from src.search import BibleSearcher
 
-            self._apocrypha_searcher = BibleSearcher(
-                testament="apocrypha", qdrant_url=self.qdrant_url
-            )
+            self._apocrypha_searcher = BibleSearcher(testament="apocrypha", qdrant_url=self.qdrant_url)
         return self._apocrypha_searcher
 
     def _log(self, message: str, style: str = "dim"):
@@ -180,7 +176,7 @@ class ComparativeRAG:
 
     # ==================== MULTI-QUERY SUPPORT ====================
 
-    def _rrf_fusion(self, results_list: List[List], k: int = 60) -> List:
+    def _rrf_fusion(self, results_list: list[list], k: int = 60) -> list:
         """
         Reciprocal Rank Fusion - combine multiple ranked result lists.
 
@@ -199,11 +195,7 @@ class ComparativeRAG:
         for results in results_list:
             for rank, result in enumerate(results, 1):
                 # Get unique ID
-                rid = (
-                    getattr(result, "id", None)
-                    or getattr(result, "chunk_id", None)
-                    or id(result)
-                )
+                rid = getattr(result, "id", None) or getattr(result, "chunk_id", None) or id(result)
                 rrf_contribution = 1 / (k + rank)
 
                 if rid in rrf_scores:
@@ -219,7 +211,7 @@ class ComparativeRAG:
         sorted_results = sorted(rrf_scores.values(), key=lambda x: x[1], reverse=True)
         return [item[0] for item in sorted_results]
 
-    def _generate_multi_queries(self, query: str, corpus: str, n: int = 3) -> List[str]:
+    def _generate_multi_queries(self, query: str, corpus: str, n: int = 3) -> list[str]:
         """
         Generate multiple query variations for a corpus.
 
@@ -234,12 +226,8 @@ class ComparativeRAG:
         try:
             # Run enhance + multi-query in PARALLEL
             with ThreadPoolExecutor(max_workers=2) as executor:
-                enhance_future = executor.submit(
-                    self.enhancer.expand_query, query, corpus
-                )
-                multi_future = executor.submit(
-                    self.enhancer.generate_multi_query, query, n, corpus
-                )
+                enhance_future = executor.submit(self.enhancer.expand_query, query, corpus)
+                multi_future = executor.submit(self.enhancer.generate_multi_query, query, n, corpus)
 
                 enhanced = enhance_future.result()
                 multi = multi_future.result()
@@ -260,9 +248,7 @@ class ComparativeRAG:
 
         return unique[:5]  # Max 5 queries
 
-    def _search_quadrant_multi_query(
-        self, queries: List[str], searcher, limit_per_query: int = 30
-    ) -> List:
+    def _search_quadrant_multi_query(self, queries: list[str], searcher, limit_per_query: int = 30) -> list:
         """
         Execute multiple queries on a single searcher and merge with RRF.
 
@@ -277,9 +263,7 @@ class ComparativeRAG:
 
             self._dense_encoder = DenseEncoder()
 
-        vectors = self._dense_encoder.encode_batch(
-            queries, batch_size=len(queries), show_progress=False
-        )
+        vectors = self._dense_encoder.encode_batch(queries, batch_size=len(queries), show_progress=False)
 
         def search_with_vector(vector):
             try:
@@ -307,11 +291,11 @@ class ComparativeRAG:
 
     def _search_all_multi_query(
         self,
-        quran_queries: List[str],
-        bible_queries: List[str],
+        quran_queries: list[str],
+        bible_queries: list[str],
         pool_size: int = 20,
-        collections: Optional[List[str]] = None,
-    ) -> Tuple[List, List, List, List]:
+        collections: list[str] | None = None,
+    ) -> tuple[list, list, list, list]:
         """
         Step 2 (Multi-Query Version): Execute testament searches with multi-query + RRF.
 
@@ -352,9 +336,7 @@ class ComparativeRAG:
             "bible_tr_ot": "ot",
             "bible_tr_nt": "nt",
         }
-        active_keys = [
-            collection_to_key[c] for c in collections if c in collection_to_key
-        ]
+        active_keys = [collection_to_key[c] for c in collections if c in collection_to_key]
 
         with sentry_sdk.start_span(
             op="rag.parallel_search",
@@ -365,9 +347,7 @@ class ComparativeRAG:
             span.set_data("quran_query_count", len(quran_queries))
             span.set_data("bible_query_count", len(bible_queries))
 
-            self._log(
-                f"🔍 Step 2: Multi-Query Search ({len(quran_queries)}q×{len(active_keys)} collections)..."
-            )
+            self._log(f"🔍 Step 2: Multi-Query Search ({len(quran_queries)}q×{len(active_keys)} collections)...")
             start = time.time()
 
             results = {"quran": [], "ot": [], "nt": [], "apocrypha": []}
@@ -376,36 +356,28 @@ class ComparativeRAG:
                 searcher = self._get_quran_searcher()
                 return (
                     "quran",
-                    self._search_quadrant_multi_query(
-                        quran_queries, searcher, limit_per_query=30
-                    )[:pool_size],
+                    self._search_quadrant_multi_query(quran_queries, searcher, limit_per_query=30)[:pool_size],
                 )
 
             def search_ot():
                 searcher = self._get_ot_searcher()
                 return (
                     "ot",
-                    self._search_quadrant_multi_query(
-                        bible_queries, searcher, limit_per_query=30
-                    )[:pool_size],
+                    self._search_quadrant_multi_query(bible_queries, searcher, limit_per_query=30)[:pool_size],
                 )
 
             def search_nt():
                 searcher = self._get_nt_searcher()
                 return (
                     "nt",
-                    self._search_quadrant_multi_query(
-                        bible_queries, searcher, limit_per_query=30
-                    )[:pool_size],
+                    self._search_quadrant_multi_query(bible_queries, searcher, limit_per_query=30)[:pool_size],
                 )
 
             def search_apocrypha():
                 searcher = self._get_apocrypha_searcher()
                 return (
                     "apocrypha",
-                    self._search_quadrant_multi_query(
-                        bible_queries, searcher, limit_per_query=30
-                    )[:pool_size],
+                    self._search_quadrant_multi_query(bible_queries, searcher, limit_per_query=30)[:pool_size],
                 )
 
             # Map keys to search functions
@@ -443,11 +415,11 @@ class ComparativeRAG:
 
     def _search_per_keyword_multi_collection(
         self,
-        quran_keywords: Optional[List[str]] = None,
-        bible_keywords: Optional[List[str]] = None,
+        quran_keywords: list[str] | None = None,
+        bible_keywords: list[str] | None = None,
         limit_per_keyword: int = 10,
-        collections: Optional[List[str]] = None,
-    ) -> Dict[str, List]:
+        collections: list[str] | None = None,
+    ) -> dict[str, list]:
         """
         Per-keyword multi-collection search with RRF fusion and keyword coverage boost.
 
@@ -489,9 +461,7 @@ class ComparativeRAG:
             "bible_tr_nt": "nt",
         }
         if collections is not None:
-            active_keys = set(
-                collection_to_key[c] for c in collections if c in collection_to_key
-            )
+            active_keys = {collection_to_key[c] for c in collections if c in collection_to_key}
         else:
             active_keys = {"quran", "ot", "nt", "apocrypha"}
 
@@ -535,9 +505,7 @@ class ComparativeRAG:
                             searcher.search_with_vector(v, limit=limit_per_keyword),
                         )
                     except CircuitBreakerError:
-                        logger.warning(
-                            "Qdrant unavailable (circuit breaker open), returning empty results"
-                        )
+                        logger.warning("Qdrant unavailable (circuit breaker open), returning empty results")
                         return ("quran", kw, [])
                     except Exception:
                         return ("quran", kw, [])
@@ -546,11 +514,9 @@ class ComparativeRAG:
 
         # Bible searches (each keyword searches only active Bible collections)
         if bible_vectors:
-            from src.search import BibleSearcher
-
             assert bible_keywords is not None
 
-            bible_searchers: List[Tuple[str, BibleSearcher]] = []
+            bible_searchers: list[tuple[str, BibleSearcher]] = []
             if "ot" in active_keys:
                 bible_searchers.append(("ot", self._get_ot_searcher()))
             if "nt" in active_keys:
@@ -575,9 +541,7 @@ class ComparativeRAG:
                                 s.search_with_vector(v, limit=limit_per_keyword),
                             )
                         except CircuitBreakerError:
-                            logger.warning(
-                                "Qdrant unavailable (circuit breaker open), returning empty results"
-                            )
+                            logger.warning("Qdrant unavailable (circuit breaker open), returning empty results")
                             return (ck, kw, [])
                         except Exception:
                             return (ck, kw, [])
@@ -585,9 +549,7 @@ class ComparativeRAG:
                     search_tasks.append(make_search_task)
 
         # Execute all searches in parallel
-        self._log(
-            f"🔍 Executing {len(search_tasks)} per-keyword searches in parallel..."
-        )
+        self._log(f"🔍 Executing {len(search_tasks)} per-keyword searches in parallel...")
         keyword_results = {
             "quran": [],
             "ot": [],
@@ -612,21 +574,13 @@ class ComparativeRAG:
                 result_keyword_matches = {}
                 for result_list in keyword_results[collection_key]:
                     for r in result_list:
-                        rid = (
-                            getattr(r, "id", None)
-                            or getattr(r, "chunk_id", None)
-                            or id(r)
-                        )
-                        result_keyword_matches[rid] = (
-                            result_keyword_matches.get(rid, 0) + 1
-                        )
+                        rid = getattr(r, "id", None) or getattr(r, "chunk_id", None) or id(r)
+                        result_keyword_matches[rid] = result_keyword_matches.get(rid, 0) + 1
 
                 # Boost scores for results matching multiple keywords
                 boosted = []
                 for r in fused:
-                    rid = (
-                        getattr(r, "id", None) or getattr(r, "chunk_id", None) or id(r)
-                    )
+                    rid = getattr(r, "id", None) or getattr(r, "chunk_id", None) or id(r)
                     match_count = result_keyword_matches.get(rid, 1)
 
                     # Apply boost for ≥2 keyword matches
@@ -653,7 +607,7 @@ class ComparativeRAG:
 
         return results
 
-    def _translate_query_parallel(self, query: str) -> Tuple[str, str, str]:
+    def _translate_query_parallel(self, query: str) -> tuple[str, str, str]:
         """
         Step 0: Translate query for both corpora in parallel.
 
@@ -714,9 +668,7 @@ class ComparativeRAG:
             logger.error("Translation failed in comparative pipeline", exc_info=True)
             raise
 
-    def _enhance_query_parallel(
-        self, quran_query: str, bible_query: str
-    ) -> Tuple[str, str]:
+    def _enhance_query_parallel(self, quran_query: str, bible_query: str) -> tuple[str, str]:
         """
         Step 1: Enhance pre-translated queries for both scriptures in parallel.
 
@@ -750,9 +702,7 @@ class ComparativeRAG:
 
         return quran_enhanced, bible_enhanced
 
-    def _search_single(
-        self, searcher, query: str, limit: int, search_name: str
-    ) -> List:
+    def _search_single(self, searcher, query: str, limit: int, search_name: str) -> list:
         """Execute a single search"""
         try:
             results = searcher.search(query, mode="semantic", limit=limit)
@@ -770,10 +720,10 @@ class ComparativeRAG:
     def search_all(
         self,
         query: str,
-        collections: Optional[List[str]] = None,
-        progress_callback: Optional[Callable[[str, str], None]] = None,
-        quran_keywords: Optional[List[str]] = None,
-        bible_keywords: Optional[List[str]] = None,
+        collections: list[str] | None = None,
+        progress_callback: Callable[[str, str], None] | None = None,
+        quran_keywords: list[str] | None = None,
+        bible_keywords: list[str] | None = None,
         translator: str = "diyanet",
     ) -> ComparativeScriptureResult:
         """
@@ -823,16 +773,12 @@ class ComparativeRAG:
         mode_label = "Multi-Query" if self.enable_multi_query else "Single-Query"
 
         if self.verbose:
-            console.print(
-                f"\n[bold blue]🔄 Comparative Search Pipeline ({mode_label})[/bold blue]"
-            )
+            console.print(f"\n[bold blue]🔄 Comparative Search Pipeline ({mode_label})[/bold blue]")
             console.print(f'[dim]Query: "{query}"[/dim]\n')
 
         # ===== Step 0: Translate query for both corpora =====
         _emit("translating_query", "Translating query for Quran (TR) and Bible (EN)...")
-        quran_translated, bible_translated, detected_language = (
-            self._translate_query_parallel(query)
-        )
+        quran_translated, bible_translated, detected_language = self._translate_query_parallel(query)
         _emit(
             "query_translated",
             f'Query translated — Quran: "{quran_translated[:60]}" / Bible: "{bible_translated[:60]}"',
@@ -840,22 +786,16 @@ class ComparativeRAG:
 
         if self.enable_multi_query:
             # ===== MULTI-QUERY PATH (5 queries + RRF) =====
-            _emit(
-                "generating_queries", "Enhancing & generating multi-query variants..."
-            )
+            _emit("generating_queries", "Enhancing & generating multi-query variants...")
             self._log("⚡ Step 1: Generating Multi-Queries...")
             start = time.time()
 
             # Generate query variations in parallel (using translated queries)
             def gen_quran():
-                return self._generate_multi_queries(
-                    quran_translated, corpus="quran", n=3
-                )
+                return self._generate_multi_queries(quran_translated, corpus="quran", n=3)
 
             def gen_bible():
-                return self._generate_multi_queries(
-                    bible_translated, corpus="bible", n=3
-                )
+                return self._generate_multi_queries(bible_translated, corpus="bible", n=3)
 
             with ThreadPoolExecutor(max_workers=2) as executor:
                 quran_future = executor.submit(gen_quran)
@@ -864,9 +804,7 @@ class ComparativeRAG:
                 bible_queries = bible_future.result()
 
             duration = (time.time() - start) * 1000
-            self._log(
-                f"   Quran: {len(quran_queries)} queries, Bible: {len(bible_queries)} queries"
-            )
+            self._log(f"   Quran: {len(quran_queries)} queries, Bible: {len(bible_queries)} queries")
             self._log(f"   Generated in {duration:.0f}ms")
             _emit(
                 "queries_generated",
@@ -879,10 +817,8 @@ class ComparativeRAG:
                 "searching_vectors",
                 f"Searching {len(collections)} collections ({total_queries} queries)...",
             )
-            quran_results, ot_results, nt_results, apocrypha_results = (
-                self._search_all_multi_query(
-                    quran_queries, bible_queries, pool_size=20, collections=collections
-                )
+            quran_results, ot_results, nt_results, apocrypha_results = self._search_all_multi_query(
+                quran_queries, bible_queries, pool_size=20, collections=collections
             )
 
             # Compute per-collection statistics for confidence scoring
@@ -892,9 +828,7 @@ class ComparativeRAG:
                 "nt": len(nt_results),
                 "apocrypha": len(apocrypha_results),
             }
-            collections_with_results = sum(
-                1 for v in collection_results.values() if v > 0
-            )
+            collections_with_results = sum(1 for v in collection_results.values() if v > 0)
             total_verses = sum(collection_results.values())
 
             all_rrf_scores = sorted(
@@ -925,9 +859,7 @@ class ComparativeRAG:
             # ===== SINGLE-QUERY PATH =====
             # Step 1: Parallel query enhancement (using translated queries)
             _emit("generating_queries", "Enhancing query for search...")
-            quran_query, bible_query = self._enhance_query_parallel(
-                quran_translated, bible_translated
-            )
+            quran_query, bible_query = self._enhance_query_parallel(quran_translated, bible_translated)
             _emit("queries_generated", "Query enhanced for Quran and Bible corpora")
 
             # Map collection names to internal keys
@@ -946,39 +878,27 @@ class ComparativeRAG:
                 "bible_tr_ot": "ot",
                 "bible_tr_nt": "nt",
             }
-            active_keys = [
-                collection_to_key[c] for c in collections if c in collection_to_key
-            ]
+            active_keys = [collection_to_key[c] for c in collections if c in collection_to_key]
 
             # Step 2: Parallel testament searches (only active collections)
             _emit(
                 "searching_vectors",
                 f"Searching {len(active_keys)} collections...",
             )
-            self._log(
-                f"🔍 Step 2: Parallel Testament Searches ({len(active_keys)} collections)..."
-            )
+            self._log(f"🔍 Step 2: Parallel Testament Searches ({len(active_keys)} collections)...")
             start = time.time()
 
             def search_quran():
-                return self._get_quran_searcher().search(
-                    quran_query, mode="semantic", limit=20
-                )
+                return self._get_quran_searcher().search(quran_query, mode="semantic", limit=20)
 
             def search_ot():
-                return self._get_ot_searcher().search(
-                    bible_query, mode="semantic", limit=20
-                )
+                return self._get_ot_searcher().search(bible_query, mode="semantic", limit=20)
 
             def search_nt():
-                return self._get_nt_searcher().search(
-                    bible_query, mode="semantic", limit=20
-                )
+                return self._get_nt_searcher().search(bible_query, mode="semantic", limit=20)
 
             def search_apocrypha():
-                return self._get_apocrypha_searcher().search(
-                    bible_query, mode="semantic", limit=20
-                )
+                return self._get_apocrypha_searcher().search(bible_query, mode="semantic", limit=20)
 
             # Map keys to search functions
             search_funcs = {
@@ -990,9 +910,7 @@ class ComparativeRAG:
 
             # Only search active collections
             with ThreadPoolExecutor(max_workers=len(active_keys)) as executor:
-                futures = {
-                    executor.submit(search_funcs[key]): key for key in active_keys
-                }
+                futures = {executor.submit(search_funcs[key]): key for key in active_keys}
                 results = {"quran": [], "ot": [], "nt": [], "apocrypha": []}
                 for future in as_completed(futures):
                     key = futures[future]
@@ -1010,9 +928,7 @@ class ComparativeRAG:
                 "nt": len(nt_results),
                 "apocrypha": len(apocrypha_results),
             }
-            collections_with_results = sum(
-                1 for v in collection_results.values() if v > 0
-            )
+            collections_with_results = sum(1 for v in collection_results.values() if v > 0)
             total_verses = sum(collection_results.values())
 
             all_rrf_scores = sorted(
@@ -1057,21 +973,17 @@ class ComparativeRAG:
 
             # Merge keyword results with normal results using RRF fusion
             if keyword_results["quran"]:
-                quran_results = self._rrf_fusion(
-                    [quran_results, keyword_results["quran"]], k=60
-                )[: self.verses_per_search]
+                quran_results = self._rrf_fusion([quran_results, keyword_results["quran"]], k=60)[
+                    : self.verses_per_search
+                ]
             if keyword_results["ot"]:
-                ot_results = self._rrf_fusion(
-                    [ot_results, keyword_results["ot"]], k=60
-                )[: self.verses_per_search]
+                ot_results = self._rrf_fusion([ot_results, keyword_results["ot"]], k=60)[: self.verses_per_search]
             if keyword_results["nt"]:
-                nt_results = self._rrf_fusion(
-                    [nt_results, keyword_results["nt"]], k=60
-                )[: self.verses_per_search]
+                nt_results = self._rrf_fusion([nt_results, keyword_results["nt"]], k=60)[: self.verses_per_search]
             if keyword_results["apocrypha"]:
-                apocrypha_results = self._rrf_fusion(
-                    [apocrypha_results, keyword_results["apocrypha"]], k=60
-                )[: self.verses_per_search]
+                apocrypha_results = self._rrf_fusion([apocrypha_results, keyword_results["apocrypha"]], k=60)[
+                    : self.verses_per_search
+                ]
 
             _emit(
                 "keywords_merged",
@@ -1123,9 +1035,7 @@ class ComparativeRAG:
         search_result = self.search_all(query, translator=translator)
 
         # Store detected language for response translation (Task 5)
-        self._last_detected_language = search_result.search_stats.get(
-            "detected_language"
-        )
+        self._last_detected_language = search_result.search_stats.get("detected_language")
 
         # Step 4: Generate comparative essay
         # Combine testament results for the answer generator
@@ -1151,9 +1061,7 @@ class ComparativeRAG:
 
         if self.verbose:
             self._log(f"   Essay generated in {essay_duration:.0f}ms")
-            console.print(
-                f"\n[green]✨ Analysis complete in {total_duration:.0f}ms[/green]"
-            )
+            console.print(f"\n[green]✨ Analysis complete in {total_duration:.0f}ms[/green]")
             console.print(
                 f"[dim]  {search_result.total_verses} verses → {len(answer.all_references)} citations → confidence: {answer.confidence:.0%}[/dim]\n"
             )
@@ -1162,7 +1070,7 @@ class ComparativeRAG:
 
     # ==================== MULTI-AGENT SUPPORT ====================
 
-    def _split_bible_by_testament(self, results: List) -> Tuple[List, List, List]:
+    def _split_bible_by_testament(self, results: list) -> tuple[list, list, list]:
         """
         Split Bible results into Old Testament, New Testament, and Apocrypha.
 
@@ -1196,24 +1104,19 @@ class ComparativeRAG:
     @property
     def multi_agent_generator(self):
         """Lazy load Multi-Agent Answer Generator"""
-        if (
-            not hasattr(self, "_multi_agent_generator")
-            or self._multi_agent_generator is None
-        ):
+        if not hasattr(self, "_multi_agent_generator") or self._multi_agent_generator is None:
             from src.multi_agent_answer_generator import MultiAgentOrchestrator
 
             self._multi_agent_generator = MultiAgentOrchestrator(verbose=self.verbose)
             if self.verbose:
-                console.print(
-                    "[dim]Loaded MultiAgentOrchestrator (4 specialists + summary)[/dim]"
-                )
+                console.print("[dim]Loaded MultiAgentOrchestrator (4 specialists + summary)[/dim]")
         return self._multi_agent_generator
 
     def compare_multi_agent(
         self,
         query: str,
-        quran_keywords: Optional[List[str]] = None,
-        bible_keywords: Optional[List[str]] = None,
+        quran_keywords: list[str] | None = None,
+        bible_keywords: list[str] | None = None,
         translator: str = "diyanet",
     ):
         """
@@ -1233,17 +1136,13 @@ class ComparativeRAG:
         """
         import sentry_sdk
 
-        with sentry_sdk.start_span(
-            op="rag.compare", description="Multi-agent comparison"
-        ) as span:
+        with sentry_sdk.start_span(op="rag.compare", description="Multi-agent comparison") as span:
             span.set_data("query", query[:50])  # Truncate for privacy
 
             total_start = time.time()
 
             if self.verbose:
-                console.print(
-                    "\n[bold blue]📚 Multi-Agent Comparative Scripture Analysis[/bold blue]"
-                )
+                console.print("\n[bold blue]📚 Multi-Agent Comparative Scripture Analysis[/bold blue]")
                 console.print(f'[dim]Question: "{query}"[/dim]\n')
 
             # Steps 0-2: Translate, search all 4 collections (pre-separated by testament)
@@ -1255,9 +1154,7 @@ class ComparativeRAG:
             )
 
             # Store detected language for response translation (Task 5)
-            self._last_detected_language = search_result.search_stats.get(
-                "detected_language"
-            )
+            self._last_detected_language = search_result.search_stats.get("detected_language")
 
             # Results are now directly available per testament - no splitting needed!
             quran_verses = search_result.quran
@@ -1295,17 +1192,11 @@ class ComparativeRAG:
 
             gen_duration = (time.time() - gen_start) * 1000
             total_duration = (time.time() - total_start) * 1000
-            sentry_sdk.set_measurement(
-                "rag.compare.total_latency_ms", total_duration, "millisecond"
-            )
+            sentry_sdk.set_measurement("rag.compare.total_latency_ms", total_duration, "millisecond")
 
             if self.verbose:
-                self._log(
-                    f"   Multi-agent generation completed in {gen_duration:.0f}ms"
-                )
-                console.print(
-                    f"\n[green]✨ Multi-Agent Analysis complete in {total_duration:.0f}ms[/green]"
-                )
+                self._log(f"   Multi-agent generation completed in {gen_duration:.0f}ms")
+                console.print(f"\n[green]✨ Multi-Agent Analysis complete in {total_duration:.0f}ms[/green]")
                 total_citations = sum(len(c) for c in answer.citations.values())
                 console.print(
                     f"[dim]  {search_result.total_verses} verses → 5 paragraphs → "

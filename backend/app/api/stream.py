@@ -1,15 +1,17 @@
 """SSE Streaming API routes for real-time LLM responses."""
 
-from fastapi import APIRouter, Depends, Query, HTTPException, Request
-from fastapi.responses import StreamingResponse
 import asyncio
 import json
 import logging
 import queue
 import time
 import traceback
-from typing import Any, AsyncGenerator, Literal, Optional, cast
+from collections.abc import AsyncGenerator
+from datetime import UTC
+from typing import Any, Literal, cast
 
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import check_rate_limit
@@ -21,11 +23,10 @@ from app.api.compare_helpers import (
 )
 from app.db import get_db
 from app.models import SearchHistory
-from app.schemas.common import TranslatorType, DEFAULT_TRANSLATOR
+from app.schemas.common import DEFAULT_TRANSLATOR, TranslatorType
 from src.comparative_rag import ComparativeRAG
 from src.query_translator import QueryTranslator, TranslationError
 from src.ultimate_rag import UltimateRAG
-
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -49,11 +50,13 @@ async def get_current_user_from_sse(db: AsyncSession, request: Request):
     Raises:
         HTTPException 401: No valid session cookie or session expired
     """
+    from datetime import datetime
+
     from fastapi import HTTPException
-    from app.models import BetterAuthSession
     from sqlalchemy import select
-    from datetime import datetime, timezone
+
     from app.auth.api_key_validator import _resolve_user_by_id
+    from app.models import BetterAuthSession
 
     cookie_token = (
         request.cookies.get("better_auth.session_token")
@@ -68,21 +71,15 @@ async def get_current_user_from_sse(db: AsyncSession, request: Request):
 
     # Better Auth cookie format: <token>.<hmac-signature> (URL-encoded)
     # The DB stores only the raw token without the signature.
-    raw_token = (
-        unquote(cookie_token).rsplit(".", 1)[0]
-        if "." in unquote(cookie_token)
-        else unquote(cookie_token)
-    )
+    raw_token = unquote(cookie_token).rsplit(".", 1)[0] if "." in unquote(cookie_token) else unquote(cookie_token)
 
-    session_result = await db.execute(
-        select(BetterAuthSession).where(BetterAuthSession.token == raw_token)
-    )
+    session_result = await db.execute(select(BetterAuthSession).where(BetterAuthSession.token == raw_token))
     session = session_result.scalar_one_or_none()
 
     if not session:
         raise HTTPException(status_code=401, detail="Invalid session")
 
-    if session.expires_at.replace(tzinfo=timezone.utc) <= datetime.now(timezone.utc):
+    if session.expires_at.replace(tzinfo=UTC) <= datetime.now(UTC):
         raise HTTPException(status_code=401, detail="Session expired")
 
     logger.debug("SSE auth: Authenticated via session cookie")
@@ -96,10 +93,8 @@ async def stream_search(
     source: Literal["quran", "ot", "nt", "apocrypha"] = Query(
         default="quran", description="Source collection: quran, ot, nt, or apocrypha"
     ),
-    language: Optional[str] = Query(
-        None, description="Detected user language (ISO 639-1)"
-    ),
-    translator: Optional[TranslatorType] = Query(
+    language: str | None = Query(None, description="Detected user language (ISO 639-1)"),
+    translator: TranslatorType | None = Query(
         default=DEFAULT_TRANSLATOR,
         description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
     ),
@@ -135,18 +130,12 @@ async def stream_search(
         # Perform ask (which includes search + answer generation)
         # This eliminates the duplicate search call
         try:
-            logger.info(
-                "[SSE /search] Starting ask call (search + answer generation)..."
-            )
+            logger.info("[SSE /search] Starting ask call (search + answer generation)...")
             quran_translator = translator or DEFAULT_TRANSLATOR
             if source == "quran":
-                ask_result = await rag.ask_quran(
-                    q, translator=quran_translator, top_k=10
-                )
+                ask_result = await rag.ask_quran(q, translator=quran_translator, top_k=10)
             elif source in ["ot", "nt", "apocrypha"]:
-                ask_result = await rag.ask_bible(
-                    q, translation="kjva", testament=source, top_k=10
-                )
+                ask_result = await rag.ask_bible(q, translation="kjva", testament=source, top_k=10)
             else:
                 ask_result = await rag.ask_bible(q, top_k=10)
 
@@ -167,9 +156,9 @@ async def stream_search(
             # Stream the answer token by token
             # Handle both dict and AnswerResult dataclass responses
             if hasattr(answer_obj, "text"):
-                answer_text = getattr(answer_obj, "text")
+                answer_text = answer_obj.text
             elif hasattr(answer_obj, "answer"):
-                answer_text = getattr(answer_obj, "answer")
+                answer_text = answer_obj.answer
             elif isinstance(answer_obj, dict):
                 answer_text = answer_obj.get("answer", "") or answer_obj.get("text", "")
             else:
@@ -208,17 +197,15 @@ async def stream_search(
 
             words = answer_text.split()
 
-            logger.info(
-                f"[SSE /search] LLM returned answer, streaming {len(words)} words"
-            )
-            for i, word in enumerate(words):
+            logger.info(f"[SSE /search] LLM returned answer, streaming {len(words)} words")
+            for _i, word in enumerate(words):
                 yield f"data: {json.dumps({'type': 'token', 'content': word + ' '})}\n\n"
                 await asyncio.sleep(0.03)  # 30ms per word
 
             logger.info("[SSE /search] Finished streaming words, sending citations")
             # Send citations
             if hasattr(answer_obj, "citations"):
-                citations = getattr(answer_obj, "citations")
+                citations = answer_obj.citations
             elif isinstance(answer_obj, dict):
                 citations = answer_obj.get("citations", [])
             else:
@@ -233,22 +220,14 @@ async def stream_search(
                 # Determine source and build reference string
                 if source == "quran":
                     # Quran result: use surah_name:verse_id format
-                    ref_str = (
-                        f"{r.surah_name}:{r.verse_id}"
-                        if hasattr(r, "surah_name")
-                        else ""
-                    )
+                    ref_str = f"{r.surah_name}:{r.verse_id}" if hasattr(r, "surah_name") else ""
                     ref, detail = extract_quran_verse_detail(r)
                     if ref not in verse_details:
                         verse_details[ref] = detail.model_dump()
                     result_source = "quran"
                 else:
                     # Bible result: use book_name chapter:verse format
-                    ref_str = (
-                        f"{r.book_name} {r.chapter}:{r.verse}"
-                        if hasattr(r, "book_name")
-                        else ""
-                    )
+                    ref_str = f"{r.book_name} {r.chapter}:{r.verse}" if hasattr(r, "book_name") else ""
                     # Map source to bible_ot, bible_nt, or bible_apocrypha
                     if source == "ot":
                         bible_source = "bible_ot"
@@ -301,10 +280,8 @@ async def stream_compare(
         "quran_tr,bible_ot,bible_nt,bible_apocrypha",
         description="Comma-separated list of collections to search (minimum 2)",
     ),
-    language: Optional[str] = Query(
-        None, description="Detected user language (ISO 639-1)"
-    ),
-    translator: Optional[TranslatorType] = Query(
+    language: str | None = Query(None, description="Detected user language (ISO 639-1)"),
+    translator: TranslatorType | None = Query(
         default=DEFAULT_TRANSLATOR,
         description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
     ),
@@ -335,9 +312,7 @@ async def stream_compare(
         "bible_tr_ot",
         "bible_tr_nt",
     }
-    collection_list = [
-        c.strip() for c in collections.split(",") if c.strip() in valid_collections
-    ]
+    collection_list = [c.strip() for c in collections.split(",") if c.strip() in valid_collections]
     if len(collection_list) < 2:
         raise HTTPException(
             status_code=400,
@@ -472,14 +447,10 @@ async def stream_compare(
             ):
                 yield event
             result = _thread_result["value"]
-            logger.info(
-                f"[COMPARE] multi_agent_generator completed, result type: {type(result)}"
-            )
+            logger.info(f"[COMPARE] multi_agent_generator completed, result type: {type(result)}")
 
             # Build structured paragraphs (using shared helper)
-            paragraphs = cast(
-                list[dict[str, Any]], build_paragraphs(result, as_dict=True)
-            )
+            paragraphs = cast("list[dict[str, Any]]", build_paragraphs(result, as_dict=True))
 
             # Determine detected language for response translation
             detected_language = language  # From query param (may be None)
@@ -520,16 +491,12 @@ async def stream_compare(
                         # Graceful degradation: send untranslated paragraph
                 yield f"data: {json.dumps({'type': 'paragraph', 'data': para})}\n\n"
                 yield ": heartbeat\n\n"
-                logger.info(
-                    f"[COMPARE] Sent paragraph {idx}/{len(paragraphs)}: {para['title']}"
-                )
+                logger.info(f"[COMPARE] Sent paragraph {idx}/{len(paragraphs)}: {para['title']}")
                 await asyncio.sleep(0.1)  # Small delay for UI smoothness
 
             # Calculate and send complete statistics
             total_citations = sum(len(refs) for refs in result.citations.values())
-            total_verses = sum(
-                result.verses_provided.values()
-            )  # Align with batch endpoint
+            total_verses = sum(result.verses_provided.values())  # Align with batch endpoint
             latency_ms = int((time.time() - start_time) * 1000)
 
             stats_data = {
@@ -540,9 +507,7 @@ async def stream_compare(
                 "total_citations": total_citations,
             }
             yield f"data: {json.dumps({'type': 'stats', 'data': stats_data})}\n\n"
-            logger.info(
-                f"[COMPARE] Sent stats: {total_verses} verses, {total_citations} citations, {latency_ms}ms"
-            )
+            logger.info(f"[COMPARE] Sent stats: {total_verses} verses, {total_citations} citations, {latency_ms}ms")
 
             logger.info("[COMPARE] Streaming completed successfully")
 

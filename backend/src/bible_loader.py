@@ -6,10 +6,11 @@ Supports English translations: KJV and KJVA (King James Version with Apocrypha).
 """
 
 import json
-import requests
-from pathlib import Path
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+import requests
 from tqdm import tqdm
 
 
@@ -26,7 +27,7 @@ class BibleChunk:
     text: str
     testament: str  # "OT" (Old Testament) or "NT" (New Testament)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "translation": self.translation,
@@ -97,18 +98,16 @@ class BibleDataLoader:
         },
     }
 
-    def __init__(self, translation: str = "kjva", data_dir: Optional[Path] = None):
+    def __init__(self, translation: str = "kjva", data_dir: Path | None = None):
         if translation not in self.TRANSLATIONS:
             available = ", ".join(self.TRANSLATIONS.keys())
-            raise ValueError(
-                f"Unknown translation: {translation}. Available: {available}"
-            )
+            raise ValueError(f"Unknown translation: {translation}. Available: {available}")
 
         self.translation = translation
         self.data_dir = data_dir or Path("data")
         self.data_dir.mkdir(exist_ok=True)
         self.cache_path = self.data_dir / f"bible_{translation}.json"
-        self._data: Optional[Dict] = None
+        self._data: dict | None = None
 
     def download_data(self, force: bool = False) -> Path:
         """Download Bible translation from getBible API"""
@@ -128,7 +127,7 @@ class BibleDataLoader:
         print(f"Downloaded and cached to: {self.cache_path}")
         return self.cache_path
 
-    def load_data(self) -> Dict:
+    def load_data(self) -> dict:
         """Load Bible data from cache or download"""
         if self._data is not None:
             return self._data
@@ -136,20 +135,20 @@ class BibleDataLoader:
         if not self.cache_path.exists():
             self.download_data()
 
-        with open(self.cache_path, "r", encoding="utf-8") as f:
+        with open(self.cache_path, encoding="utf-8") as f:
             loaded = json.load(f)
             self._data = loaded if isinstance(loaded, dict) else {}
 
         assert self._data is not None
         return self._data
 
-    def create_chunks(self, show_progress: bool = True) -> List[BibleChunk]:
+    def create_chunks(self, show_progress: bool = True) -> list[BibleChunk]:
         """
         Create verse-based chunks for indexing.
         Each verse becomes a separate searchable chunk.
         """
         data = self.load_data()
-        chunks: List[BibleChunk] = []
+        chunks: list[BibleChunk] = []
 
         # getBible API structure: data contains books, each book contains chapters
         books = data.get("books", data)  # Handle both formats
@@ -159,9 +158,7 @@ class BibleDataLoader:
         else:
             book_list = books
 
-        iterator = (
-            tqdm(book_list, desc="Creating chunks") if show_progress else book_list
-        )
+        iterator = tqdm(book_list, desc="Creating chunks") if show_progress else book_list
 
         for book in iterator:
             book_id = book.get("nr", book.get("book_nr", 0))
@@ -206,7 +203,7 @@ class BibleDataLoader:
 
         return chunks
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get statistics about the loaded data"""
         data = self.load_data()
 
@@ -259,8 +256,7 @@ class BibleDataLoader:
             "apocrypha_books": apocrypha_books,
             "total_chapters": total_chapters,
             "total_verses": total_verses,
-            "has_apocrypha": translation_info.get("has_apocrypha", False)
-            or apocrypha_books > 0,
+            "has_apocrypha": translation_info.get("has_apocrypha", False) or apocrypha_books > 0,
         }
 
 

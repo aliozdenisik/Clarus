@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   DropdownMenu,
@@ -6,8 +6,8 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
 
 export const TRANSLATORS = [
   { key: "diyanet", label: "Diyanet İşleri", shortLabel: "Diyanet" },
@@ -18,33 +18,30 @@ export const TRANSLATORS = [
   { key: "vakfi", label: "Türk Vakfı", shortLabel: "Vakfı" },
   { key: "yildirim", label: "Suat Yıldırım", shortLabel: "Yıldırım" },
   { key: "yuksel", label: "Edip Yüksel", shortLabel: "Yüksel" },
-] as const;
+] as const
 
 interface TranslatorSelectorProps {
-  value: string;
-  onChange: (translator: string) => void;
+  value: string
+  onChange: (translator: string) => void
 }
 
-export function TranslatorSelector({
-  value,
-  onChange,
-}: TranslatorSelectorProps) {
+export function TranslatorSelector({ value, onChange }: TranslatorSelectorProps) {
   // Display logic for badge text
   const getBadgeText = () => {
-    const selected = TRANSLATORS.find((t) => t.key === value);
-    return `Translator: ${selected?.shortLabel ?? "Diyanet"}`;
-  };
+    const selected = TRANSLATORS.find((t) => t.key === value)
+    return `Translator: ${selected?.shortLabel ?? "Diyanet"}`
+  }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           className={cn(
-            "shrink-0 h-11 px-3 rounded-lg text-sm font-medium",
+            "h-11 shrink-0 rounded-lg px-3 text-sm font-medium",
             "bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)]",
             "border border-[var(--color-border-subtle)]",
-            "hover:border-[var(--color-border-glow)] transition-colors duration-200",
-            "focus:outline-none focus:ring-1 focus:ring-[var(--color-accent-primary)]/20 focus:border-[var(--color-accent-primary)]"
+            "transition-colors duration-200 hover:border-[var(--color-border-glow)]",
+            "focus:border-[var(--color-accent-primary)] focus:ring-1 focus:ring-[var(--color-accent-primary)]/20 focus:outline-none"
           )}
         >
           {getBadgeText()}
@@ -54,9 +51,9 @@ export function TranslatorSelector({
         <DropdownMenuRadioGroup value={value} onValueChange={onChange}>
           {TRANSLATORS.map((translator) => (
             <DropdownMenuRadioItem key={translator.key} value={translator.key}>
-              <span className="flex items-center justify-between w-full">
+              <span className="flex w-full items-center justify-between">
                 <span className="font-medium">{translator.label}</span>
-                <span className="text-[var(--color-text-muted)] text-xs ml-3 font-normal">
+                <span className="ml-3 text-xs font-normal text-[var(--color-text-muted)]">
                   {translator.shortLabel.toUpperCase()}
                 </span>
               </span>
@@ -65,5 +62,5 @@ export function TranslatorSelector({
         </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

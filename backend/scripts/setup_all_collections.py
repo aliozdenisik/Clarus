@@ -18,8 +18,8 @@ Usage:
     ./venv/bin/python scripts/setup_all_collections.py --yes  # Skip confirmation prompts
 """
 
-import sys
 import asyncio
+import sys
 import time
 from pathlib import Path
 
@@ -30,27 +30,27 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
-    VectorParams,
     Distance,
-    PointStruct,
-    SparseVectorParams,
-    SparseIndexParams,
     HnswConfigDiff,
+    PayloadSchemaType,
+    PointStruct,
     ScalarQuantization,
     ScalarQuantizationConfig,
     ScalarType,
-    PayloadSchemaType,
+    SparseIndexParams,
+    SparseVectorParams,
+    VectorParams,
 )
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
 
 from src.bible_loader import BibleDataLoader
 from src.embeddings import AsyncDenseEncoder
-from src.tanzil_loader import TanzilLoader, VALID_TRANSLATORS
 from src.indexer import TurkishBibleIndexer
+from src.tanzil_loader import VALID_TRANSLATORS, TanzilLoader
 
 console = Console()
 QDRANT_URL = "http://localhost:6333"
@@ -70,9 +70,7 @@ TESTAMENT_COLLECTIONS = {
 }
 
 
-def delete_old_collections(
-    client: QdrantClient, skip_confirmation: bool = False
-) -> int:
+def delete_old_collections(client: QdrantClient, skip_confirmation: bool = False) -> int:
     """Delete old single-translator collections with confirmation."""
     existing = [c.name for c in client.get_collections().collections]
     to_delete = [name for name in OLD_COLLECTIONS if name in existing]
@@ -114,31 +112,23 @@ def create_collection(
                 distance=Distance.COSINE,
                 hnsw_config=HnswConfigDiff(m=16, ef_construct=200),
                 quantization_config=ScalarQuantization(
-                    scalar=ScalarQuantizationConfig(
-                        type=ScalarType.INT8, quantile=0.99, always_ram=True
-                    )
+                    scalar=ScalarQuantizationConfig(type=ScalarType.INT8, quantile=0.99, always_ram=True)
                 ),
             )
         },
-        sparse_vectors_config={
-            "sparse": SparseVectorParams(index=SparseIndexParams(on_disk=False))
-        },
+        sparse_vectors_config={"sparse": SparseVectorParams(index=SparseIndexParams(on_disk=False))},
     )
 
     # Create payload indexes
     for field, schema in payload_indexes:
-        client.create_payload_index(
-            collection_name=name, field_name=field, field_schema=schema
-        )
+        client.create_payload_index(collection_name=name, field_name=field, field_schema=schema)
 
 
 async def index_quran_translators(
     client: QdrantClient, encoder: AsyncDenseEncoder, translators: list[str]
 ) -> dict[str, int]:
     """Index all specified Quran translators."""
-    console.print(
-        f"\n[bold blue]📖 Indexing Quran ({len(translators)} translators)[/bold blue]"
-    )
+    console.print(f"\n[bold blue]📖 Indexing Quran ({len(translators)} translators)[/bold blue]")
 
     loader = TanzilLoader()
     counts = {}
@@ -192,9 +182,7 @@ async def index_quran_translators(
         # Encode and index
         texts = [chunk.translation for chunk in chunks]
         console.print("    Encoding verses...")
-        dense_vectors = await encoder.encode_batch_async(
-            texts, batch_size=256, max_concurrent=10, show_progress=True
-        )
+        dense_vectors = await encoder.encode_batch_async(texts, batch_size=256, max_concurrent=10, show_progress=True)
 
         # Upload to Qdrant
         console.print("    Uploading to Qdrant...")
@@ -242,9 +230,7 @@ async def index_turkish_bible(client: QdrantClient) -> dict[str, int]:
     return counts
 
 
-async def index_english_bible(
-    client: QdrantClient, encoder: AsyncDenseEncoder
-) -> dict[str, int]:
+async def index_english_bible(client: QdrantClient, encoder: AsyncDenseEncoder) -> dict[str, int]:
     """Index English Bible verses into testament-specific collections."""
     console.print("\n[bold yellow]📜 Indexing English Bible (KJVA)[/bold yellow]")
 
@@ -287,9 +273,7 @@ async def index_english_bible(
 
         console.print(f"\n  [bold]Encoding {testament}...[/bold]")
         texts = [chunk.text for chunk in t_chunks]
-        dense_vectors = await encoder.encode_batch_async(
-            texts, batch_size=256, max_concurrent=10, show_progress=True
-        )
+        dense_vectors = await encoder.encode_batch_async(texts, batch_size=256, max_concurrent=10, show_progress=True)
 
         # Upload
         batch_size = 500
@@ -312,9 +296,7 @@ async def index_english_bible(
             total += len(points)
 
         counts[collection_name] = total
-        console.print(
-            f"  [green]✓[/green] Indexed [bold]{total}[/bold] verses to {collection_name}"
-        )
+        console.print(f"  [green]✓[/green] Indexed [bold]{total}[/bold] verses to {collection_name}")
 
     return counts
 
@@ -324,17 +306,13 @@ async def main():
 
     parser = argparse.ArgumentParser(description="Setup all Qdrant collections")
     parser.add_argument("--skip-quran", action="store_true", help="Skip Quran indexing")
-    parser.add_argument(
-        "--skip-bible", action="store_true", help="Skip all Bible indexing"
-    )
+    parser.add_argument("--skip-bible", action="store_true", help="Skip all Bible indexing")
     parser.add_argument(
         "--skip-english-bible",
         action="store_true",
         help="Skip English Bible (keep Turkish)",
     )
-    parser.add_argument(
-        "--skip-turkish-bible", action="store_true", help="Skip Turkish Bible"
-    )
+    parser.add_argument("--skip-turkish-bible", action="store_true", help="Skip Turkish Bible")
     parser.add_argument(
         "--translator",
         type=str,
@@ -342,12 +320,8 @@ async def main():
         choices=list(VALID_TRANSLATORS),
         help="Index only one specific Quran translator",
     )
-    parser.add_argument(
-        "--no-flush", action="store_true", help="Skip Redis cache flush"
-    )
-    parser.add_argument(
-        "--yes", "-y", action="store_true", help="Skip confirmation prompts"
-    )
+    parser.add_argument("--no-flush", action="store_true", help="Skip Redis cache flush")
+    parser.add_argument("--yes", "-y", action="store_true", help="Skip confirmation prompts")
     args = parser.parse_args()
 
     console.print(
@@ -403,9 +377,7 @@ async def main():
             r.flushall()
             console.print("  [green]✓[/green] Redis cache flushed")
         except Exception as e:
-            console.print(
-                f"  [yellow]⚠[/yellow] Redis flush failed (non-critical): {e}"
-            )
+            console.print(f"  [yellow]⚠[/yellow] Redis flush failed (non-critical): {e}")
 
     # Summary
     elapsed = time.time() - start_time
@@ -418,12 +390,8 @@ async def main():
 
     # Sort results by type
     quran_collections = {k: v for k, v in results.items() if k.startswith("quran_tr_")}
-    turkish_bible_collections = {
-        k: v for k, v in results.items() if k.startswith("bible_tr_")
-    }
-    english_bible_collections = {
-        k: v for k, v in results.items() if k in TESTAMENT_COLLECTIONS.values()
-    }
+    turkish_bible_collections = {k: v for k, v in results.items() if k.startswith("bible_tr_")}
+    english_bible_collections = {k: v for k, v in results.items() if k in TESTAMENT_COLLECTIONS.values()}
 
     # Add Quran collections
     for name, count in sorted(quran_collections.items()):

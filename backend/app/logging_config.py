@@ -11,20 +11,18 @@ Industry-standard logging with:
 Uses ONLY standard Python logging - no external libraries.
 """
 
-import logging
 import json
+import logging
 import sys
-from datetime import datetime, timezone
-from typing import Optional, Any
-from dataclasses import dataclass
 from contextvars import ContextVar
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import Any
 
 # Context variables for request-scoped data
-request_id_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
-user_id_var: ContextVar[Optional[int]] = ContextVar("user_id", default=None)
-correlation_id_var: ContextVar[Optional[str]] = ContextVar(
-    "correlation_id", default=None
-)
+request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
+user_id_var: ContextVar[int | None] = ContextVar("user_id", default=None)
+correlation_id_var: ContextVar[str | None] = ContextVar("correlation_id", default=None)
 extra_context_var: ContextVar[dict] = ContextVar("extra_context", default={})
 
 
@@ -34,7 +32,7 @@ class LoggingConfig:
 
     level: str = "INFO"
     format: str = "console"  # "console" or "json"
-    file_path: Optional[str] = None
+    file_path: str | None = None
     include_timestamp: bool = True
     include_module: bool = True
 
@@ -68,9 +66,7 @@ class JSONFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         # Base log entry
         log_entry: dict[str, Any] = {
-            "timestamp": datetime.now(timezone.utc)
-            .isoformat(timespec="milliseconds")
-            .replace("+00:00", "Z"),
+            "timestamp": datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
             "level": self.LEVEL_MAP.get(record.levelno, "UNKNOWN"),
             "logger": record.name,
             "message": record.getMessage(),
@@ -238,7 +234,7 @@ class RequestContextFilter(logging.Filter):
         return True
 
 
-def setup_logging(config: Optional[LoggingConfig] = None) -> None:
+def setup_logging(config: LoggingConfig | None = None) -> None:
     """
     Configure application-wide logging.
 
@@ -295,9 +291,7 @@ def setup_logging(config: Optional[LoggingConfig] = None) -> None:
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
 
     # Log startup
-    root_logger.info(
-        f"Logging configured: level={config.level}, format={config.format}"
-    )
+    root_logger.info(f"Logging configured: level={config.level}, format={config.format}")
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -328,9 +322,9 @@ class LogContext:
 
     def __init__(
         self,
-        request_id: Optional[str] = None,
-        correlation_id: Optional[str] = None,
-        user_id: Optional[int] = None,
+        request_id: str | None = None,
+        correlation_id: str | None = None,
+        user_id: int | None = None,
         **extra: Any,
     ):
         self.request_id = request_id

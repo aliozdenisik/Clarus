@@ -1,5 +1,5 @@
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -25,7 +25,7 @@ logger = get_logger(__name__)
 
 router = APIRouter()
 
-_rag_instance: Optional[UltimateRAG] = None
+_rag_instance: UltimateRAG | None = None
 
 
 def get_rag() -> UltimateRAG:
@@ -39,12 +39,12 @@ class SearchRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=500)
     mode: str = Field(default="semantic", pattern="^(semantic|keyword)$")
     top_k: int = Field(default=10, ge=1, le=50)
-    language: Optional[str] = Field(
+    language: str | None = Field(
         None,
         pattern=r"^(en|tr|es|fr|it|pt|ar|de)$",
         description="Response language (auto-detect if omitted)",
     )
-    translator: Optional[TranslatorType] = Field(
+    translator: TranslatorType | None = Field(
         default=DEFAULT_TRANSLATOR,
         description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
     )
@@ -62,10 +62,8 @@ class SearchResponse(BaseModel):
     query: str
     results: list[VerseResult]
     total: int
-    verse_details: Optional[Dict[str, VerseDetail]] = (
-        None  # NEW: Rich verse metadata for citations
-    )
-    detected_language: Optional[str] = None
+    verse_details: dict[str, VerseDetail] | None = None  # NEW: Rich verse metadata for citations
+    detected_language: str | None = None
 
 
 class HistoryItem(BaseModel):
@@ -73,7 +71,7 @@ class HistoryItem(BaseModel):
     query: str
     search_type: str
     created_at: str
-    result_count: Optional[int] = None
+    result_count: int | None = None
 
 
 def _sanitize_query(query: str) -> str:
@@ -101,7 +99,7 @@ def _validate_query(query: str) -> str:
 @router.post("/quran", response_model=SearchResponse)
 async def search_quran(
     request: SearchRequest,
-    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
+    current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
     start = time.perf_counter()
@@ -123,12 +121,10 @@ async def search_quran(
     validated_query = _validate_query(request.query)
 
     rag = get_rag()
-    results = await rag.search_quran(
-        validated_query, translator=translator, top_k=request.top_k
-    )
+    results = await rag.search_quran(validated_query, translator=translator, top_k=request.top_k)
 
     # Build verse_details dict for citation navigation
-    verse_details: Dict[str, VerseDetail] = {}
+    verse_details: dict[str, VerseDetail] = {}
     for r in results:
         ref, detail = extract_quran_verse_detail(r)
         if ref not in verse_details:  # Deduplicate
@@ -167,16 +163,15 @@ async def search_quran(
         results=verses,
         total=len(verses),
         verse_details=verse_details,  # NEW: Include verse metadata
-        detected_language=request.language
-        or "tr",  # Use provided language or default to Turkish (Quran corpus)
+        detected_language=request.language or "tr",  # Use provided language or default to Turkish (Quran corpus)
     )
 
 
 @router.post("/bible", response_model=SearchResponse)
 async def search_bible(
     request: SearchRequest,
-    testament: Optional[str] = Query(None, pattern="^(ot|nt|apocrypha)$"),
-    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
+    testament: str | None = Query(None, pattern="^(ot|nt|apocrypha)$"),
+    current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
     start = time.perf_counter()
@@ -196,12 +191,10 @@ async def search_bible(
     validated_query = _validate_query(request.query)
 
     rag = get_rag()
-    results = await rag.search_bible(
-        validated_query, testament=testament, top_k=request.top_k
-    )
+    results = await rag.search_bible(validated_query, testament=testament, top_k=request.top_k)
 
     # Build verse_details dict for citation navigation
-    verse_details: Dict[str, VerseDetail] = {}
+    verse_details: dict[str, VerseDetail] = {}
     for r in results:
         # Determine source collection from testament parameter or result attributes
         if testament == "ot":
@@ -244,17 +237,14 @@ async def search_bible(
     ]
 
     latency_ms = (time.perf_counter() - start) * 1000
-    log_performance(
-        logger, "search_bible", latency_ms, collection=collection, results=len(results)
-    )
+    log_performance(logger, "search_bible", latency_ms, collection=collection, results=len(results))
 
     return SearchResponse(
         query=validated_query,
         results=verses,
         total=len(verses),
         verse_details=verse_details,  # NEW: Include verse metadata
-        detected_language=request.language
-        or "en",  # Use provided language or default to English (Bible corpus)
+        detected_language=request.language or "en",  # Use provided language or default to English (Bible corpus)
     )
 
 
@@ -262,28 +252,22 @@ async def search_bible(
 async def get_search_history(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
-    search_type: Optional[str] = Query(None),
-    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
+    search_type: str | None = Query(None),
+    current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
-    base_query = select(SearchHistory).where(
-        SearchHistory.user_id == current_user["id"]
-    )
+    base_query = select(SearchHistory).where(SearchHistory.user_id == current_user["id"])
 
     if search_type:
         base_query = base_query.where(SearchHistory.search_type.contains(search_type))
 
     total_result = await db.execute(
-        select(func.count(SearchHistory.id)).where(
-            SearchHistory.user_id == current_user["id"]
-        )
+        select(func.count(SearchHistory.id)).where(SearchHistory.user_id == current_user["id"])
     )
     total_items = total_result.scalar() or 0
 
     offset = (page - 1) * limit
-    result = await db.execute(
-        base_query.order_by(SearchHistory.created_at.desc()).offset(offset).limit(limit)
-    )
+    result = await db.execute(base_query.order_by(SearchHistory.created_at.desc()).offset(offset).limit(limit))
     history = result.scalars().all()
 
     items = [
@@ -316,13 +300,11 @@ async def get_search_history(
 @router.delete("/history/{history_id}")
 async def delete_history_item(
     history_id: int,
-    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
+    current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(SearchHistory)
-        .where(SearchHistory.id == history_id)
-        .where(SearchHistory.user_id == current_user["id"])
+        select(SearchHistory).where(SearchHistory.id == history_id).where(SearchHistory.user_id == current_user["id"])
     )
     history_item = result.scalar_one_or_none()
 
@@ -337,14 +319,12 @@ async def delete_history_item(
 
 @router.delete("/history")
 async def clear_history(
-    current_user: Dict[str, Any] = Depends(get_current_user_flexible),
+    current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
 ):
     from sqlalchemy import delete
 
-    await db.execute(
-        delete(SearchHistory).where(SearchHistory.user_id == current_user["id"])
-    )
+    await db.execute(delete(SearchHistory).where(SearchHistory.user_id == current_user["id"]))
     await db.commit()
 
     return {"success": True, "message": "Tum gecmis temizlendi"}

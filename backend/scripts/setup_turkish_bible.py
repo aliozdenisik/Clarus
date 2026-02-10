@@ -213,9 +213,7 @@ def parse_turkish_bible(xml_path: Path) -> dict[str, str]:
 # ---------------------------------------------------------------------------
 
 
-def update_turkish_text(
-    conn, turkish_verses: dict[str, str], dry_run: bool = False
-) -> tuple[int, int]:
+def update_turkish_text(conn, turkish_verses: dict[str, str], dry_run: bool = False) -> tuple[int, int]:
     """Update bm_verses.text_turkish for matching verses.
 
     Args:
@@ -245,9 +243,7 @@ def update_turkish_text(
         else:
             not_found.append(ref)
 
-    log.info(
-        "Matched %d verses, %d not found in bm_verses", len(updates), len(not_found)
-    )
+    log.info("Matched %d verses, %d not found in bm_verses", len(updates), len(not_found))
 
     if not_found and len(not_found) <= 20:
         log.info("Not found references: %s", not_found[:20])
@@ -262,10 +258,7 @@ def update_turkish_text(
         batch = updates[i : i + BATCH_SIZE]
         for row in batch:
             conn.execute(
-                text(
-                    "UPDATE bm_verses SET text_turkish = :text_turkish "
-                    "WHERE reference = :reference"
-                ),
+                text("UPDATE bm_verses SET text_turkish = :text_turkish WHERE reference = :reference"),
                 row,
             )
         updated += len(batch)
@@ -284,9 +277,7 @@ def update_turkish_text(
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Load Turkish Bible text into bm_verses.text_turkish"
-    )
+    parser = argparse.ArgumentParser(description="Load Turkish Bible text into bm_verses.text_turkish")
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -334,9 +325,7 @@ def main():
     if not args.dry_run:
         # Verify
         with engine.connect() as conn:
-            result = conn.execute(
-                text("SELECT COUNT(*) FROM bm_verses WHERE text_turkish IS NOT NULL")
-            )
+            result = conn.execute(text("SELECT COUNT(*) FROM bm_verses WHERE text_turkish IS NOT NULL"))
             turkish_count = result.scalar()
             log.info("Verification: %d verses now have Turkish text", turkish_count)
 

@@ -1,4 +1,4 @@
-import { client } from './client.gen';
+import { client } from "./client.gen"
 
 /**
  * Configure the generated API client with cookie-based authentication.
@@ -14,6 +14,6 @@ import { client } from './client.gen';
 export function configureApiClient() {
   client.setConfig({
     // Send cookies with every request (Better Auth session cookie)
-    credentials: 'include',
-  });
+    credentials: "include",
+  })
 }

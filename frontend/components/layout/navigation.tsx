@@ -1,10 +1,21 @@
-'use client';
+"use client"
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
-import { Menu, X, LogOut, Settings, User, Book, BookOpen, ScrollText, FileText, Search as SearchIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { useState } from "react"
+import {
+  Menu,
+  X,
+  LogOut,
+  Settings,
+  User,
+  Book,
+  BookOpen,
+  ScrollText,
+  FileText,
+  Search as SearchIcon,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -12,7 +23,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu';
+} from "@/components/ui/navigation-menu"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,34 +31,37 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useSession, signOut } from '@/lib/auth-client';
-import { motion, AnimatePresence } from 'framer-motion';
+} from "@/components/ui/dropdown-menu"
+import { useSession, signOut } from "@/lib/auth-client"
+import { motion, AnimatePresence } from "framer-motion"
 
 export default function Navigation() {
-  const pathname = usePathname();
-  const { data: session } = useSession();
-  const user = session?.user;
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname()
+  const { data: session } = useSession()
+  const user = session?.user
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const isActive = (path: string) => pathname === path;
+  const isActive = (path: string) => pathname === path
 
   const handleLogout = async () => {
-    await signOut();
-  };
+    await signOut()
+  }
 
   // Don't show navigation on login/register pages
-  if (pathname === '/login' || pathname === '/register' || pathname === '/') {
-    return null;
+  if (pathname === "/login" || pathname === "/register" || pathname === "/") {
+    return null
   }
 
   return (
-    <nav className="border-b border-white/10 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
+    <nav className="sticky top-0 z-50 border-b border-white/10 bg-black/50 backdrop-blur-xl">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold text-white hover:text-purple-400 transition-colors">
+            <Link
+              href="/"
+              className="text-xl font-bold text-white transition-colors hover:text-purple-400"
+            >
               Clarus
             </Link>
           </div>
@@ -58,7 +72,7 @@ export default function Navigation() {
               <NavigationMenuList>
                 {/* Search Dropdown */}
                 <NavigationMenuItem className="text-muted-foreground">
-                  <NavigationMenuTrigger className="text-gray-300 hover:text-white bg-transparent hover:bg-white/5 data-[state=open]:bg-white/5">
+                  <NavigationMenuTrigger className="bg-transparent text-gray-300 hover:bg-white/5 hover:text-white data-[state=open]:bg-white/5">
                     Search
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -66,12 +80,12 @@ export default function Navigation() {
                       <NavigationMenuLink asChild>
                         <Link
                           href="/search"
-                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                          className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
                         >
                           <Book className="size-5 shrink-0" />
                           <div>
                             <div className="text-sm font-semibold">Quran Search</div>
-                            <p className="text-sm leading-snug text-muted-foreground">
+                            <p className="text-muted-foreground text-sm leading-snug">
                               Semantic search across Turkish Quran translation
                             </p>
                           </div>
@@ -80,12 +94,12 @@ export default function Navigation() {
                       <NavigationMenuLink asChild>
                         <Link
                           href="/search?source=ot"
-                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                          className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
                         >
                           <BookOpen className="size-5 shrink-0" />
                           <div>
                             <div className="text-sm font-semibold">Old Testament Search</div>
-                            <p className="text-sm leading-snug text-muted-foreground">
+                            <p className="text-muted-foreground text-sm leading-snug">
                               Search through 39 books of the Old Testament
                             </p>
                           </div>
@@ -94,12 +108,12 @@ export default function Navigation() {
                       <NavigationMenuLink asChild>
                         <Link
                           href="/search?source=nt"
-                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                          className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
                         >
                           <ScrollText className="size-5 shrink-0" />
                           <div>
                             <div className="text-sm font-semibold">New Testament Search</div>
-                            <p className="text-sm leading-snug text-muted-foreground">
+                            <p className="text-muted-foreground text-sm leading-snug">
                               Search the Gospels, Acts, and Epistles
                             </p>
                           </div>
@@ -108,12 +122,12 @@ export default function Navigation() {
                       <NavigationMenuLink asChild>
                         <Link
                           href="/search?source=apocrypha"
-                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                          className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
                         >
                           <FileText className="size-5 shrink-0" />
                           <div>
                             <div className="text-sm font-semibold">Apocrypha Search</div>
-                            <p className="text-sm leading-snug text-muted-foreground">
+                            <p className="text-muted-foreground text-sm leading-snug">
                               Explore deuterocanonical texts and writings
                             </p>
                           </div>
@@ -122,12 +136,12 @@ export default function Navigation() {
                       <NavigationMenuLink asChild>
                         <Link
                           href="/keyword-search"
-                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                          className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
                         >
                           <SearchIcon className="size-5 shrink-0" />
                           <div>
                             <div className="text-sm font-semibold">Word Search</div>
-                            <p className="text-sm leading-snug text-muted-foreground">
+                            <p className="text-muted-foreground text-sm leading-snug">
                               Morphological keyword search with roots
                             </p>
                           </div>
@@ -139,7 +153,7 @@ export default function Navigation() {
 
                 {/* Browse Dropdown */}
                 <NavigationMenuItem className="text-muted-foreground">
-                  <NavigationMenuTrigger className="text-gray-300 hover:text-white bg-transparent hover:bg-white/5 data-[state=open]:bg-white/5">
+                  <NavigationMenuTrigger className="bg-transparent text-gray-300 hover:bg-white/5 hover:text-white data-[state=open]:bg-white/5">
                     Browse
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -147,12 +161,12 @@ export default function Navigation() {
                       <NavigationMenuLink asChild>
                         <Link
                           href="/quran"
-                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                          className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
                         >
                           <Book className="size-5 shrink-0" />
                           <div>
                             <div className="text-sm font-semibold">Quran</div>
-                            <p className="text-sm leading-snug text-muted-foreground">
+                            <p className="text-muted-foreground text-sm leading-snug">
                               Browse all 114 Surahs with translations
                             </p>
                           </div>
@@ -161,12 +175,12 @@ export default function Navigation() {
                       <NavigationMenuLink asChild>
                         <Link
                           href="/old-testament"
-                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                          className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
                         >
                           <BookOpen className="size-5 shrink-0" />
                           <div>
                             <div className="text-sm font-semibold">Old Testament</div>
-                            <p className="text-sm leading-snug text-muted-foreground">
+                            <p className="text-muted-foreground text-sm leading-snug">
                               39 books from Genesis to Malachi
                             </p>
                           </div>
@@ -175,12 +189,12 @@ export default function Navigation() {
                       <NavigationMenuLink asChild>
                         <Link
                           href="/new-testament"
-                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                          className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
                         >
                           <ScrollText className="size-5 shrink-0" />
                           <div>
                             <div className="text-sm font-semibold">New Testament</div>
-                            <p className="text-sm leading-snug text-muted-foreground">
+                            <p className="text-muted-foreground text-sm leading-snug">
                               27 books including Gospels and Epistles
                             </p>
                           </div>
@@ -189,12 +203,12 @@ export default function Navigation() {
                       <NavigationMenuLink asChild>
                         <Link
                           href="/apocrypha"
-                          className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground"
+                          className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
                         >
                           <FileText className="size-5 shrink-0" />
                           <div>
                             <div className="text-sm font-semibold">Apocrypha</div>
-                            <p className="text-sm leading-snug text-muted-foreground">
+                            <p className="text-muted-foreground text-sm leading-snug">
                               14 deuterocanonical books and texts
                             </p>
                           </div>
@@ -207,8 +221,8 @@ export default function Navigation() {
                 {/* Word Search Link */}
                 <Link
                   href="/keyword-search"
-                  className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
-                    isActive('/keyword-search') ? 'text-purple-400' : 'text-gray-300'
+                  className={`group hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors ${
+                    isActive("/keyword-search") ? "text-purple-400" : "text-gray-300"
                   }`}
                 >
                   Word Search
@@ -217,8 +231,8 @@ export default function Navigation() {
                 {/* Compare Link */}
                 <Link
                   href="/compare"
-                  className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
-                    isActive('/compare') ? 'text-purple-400' : 'text-gray-300'
+                  className={`group hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors ${
+                    isActive("/compare") ? "text-purple-400" : "text-gray-300"
                   }`}
                 >
                   Compare
@@ -227,8 +241,8 @@ export default function Navigation() {
                 {/* History Link */}
                 <Link
                   href="/history"
-                  className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${
-                    isActive('/history') ? 'text-purple-400' : 'text-gray-300'
+                  className={`group hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors ${
+                    isActive("/history") ? "text-purple-400" : "text-gray-300"
                   }`}
                 >
                   History
@@ -294,51 +308,51 @@ export default function Navigation() {
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden border-t border-white/10"
+            className="border-t border-white/10 md:hidden"
           >
-            <div className="space-y-1 px-4 pb-3 pt-2">
+            <div className="space-y-1 px-4 pt-2 pb-3">
               {/* Search Section */}
               <div className="space-y-1">
-                <p className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <p className="px-3 py-2 text-xs font-semibold tracking-wider text-gray-400 uppercase">
                   Search
                 </p>
                 <Link
                   href="/search"
-                  className="block px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white rounded-md"
+                  className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Quran Search
                 </Link>
                 <Link
                   href="/search?source=ot"
-                  className="block px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white rounded-md"
+                  className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Old Testament Search
                 </Link>
                 <Link
                   href="/search?source=nt"
-                  className="block px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white rounded-md"
+                  className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   New Testament Search
                 </Link>
                 <Link
                   href="/search?source=apocrypha"
-                  className="block px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white rounded-md"
+                  className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Apocrypha Search
                 </Link>
                 <Link
                   href="/keyword-search"
-                  className={`block px-3 py-2 text-base rounded-md ${
-                    isActive('/keyword-search')
-                      ? 'bg-purple-500/20 text-purple-400'
-                      : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                  className={`block rounded-md px-3 py-2 text-base ${
+                    isActive("/keyword-search")
+                      ? "bg-purple-500/20 text-purple-400"
+                      : "text-gray-300 hover:bg-white/5 hover:text-white"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -348,33 +362,33 @@ export default function Navigation() {
 
               {/* Browse Section */}
               <div className="space-y-1 pt-2">
-                <p className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <p className="px-3 py-2 text-xs font-semibold tracking-wider text-gray-400 uppercase">
                   Browse
                 </p>
                 <Link
                   href="/quran"
-                  className="block px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white rounded-md"
+                  className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Quran (114 Surahs)
                 </Link>
                 <Link
                   href="/old-testament"
-                  className="block px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white rounded-md"
+                  className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Old Testament (39 Books)
                 </Link>
                 <Link
                   href="/new-testament"
-                  className="block px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white rounded-md"
+                  className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   New Testament (27 Books)
                 </Link>
                 <Link
                   href="/apocrypha"
-                  className="block px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white rounded-md"
+                  className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Apocrypha (14 Books)
@@ -385,10 +399,10 @@ export default function Navigation() {
               <div className="space-y-1 pt-2">
                 <Link
                   href="/compare"
-                  className={`block px-3 py-2 text-base rounded-md ${
-                    isActive('/compare')
-                      ? 'bg-purple-500/20 text-purple-400'
-                      : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                  className={`block rounded-md px-3 py-2 text-base ${
+                    isActive("/compare")
+                      ? "bg-purple-500/20 text-purple-400"
+                      : "text-gray-300 hover:bg-white/5 hover:text-white"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -396,10 +410,10 @@ export default function Navigation() {
                 </Link>
                 <Link
                   href="/history"
-                  className={`block px-3 py-2 text-base rounded-md ${
-                    isActive('/history')
-                      ? 'bg-purple-500/20 text-purple-400'
-                      : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                  className={`block rounded-md px-3 py-2 text-base ${
+                    isActive("/history")
+                      ? "bg-purple-500/20 text-purple-400"
+                      : "text-gray-300 hover:bg-white/5 hover:text-white"
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -409,27 +423,27 @@ export default function Navigation() {
 
               {/* User Section */}
               {user && (
-                <div className="space-y-1 pt-2 border-t border-white/10 mt-2">
+                <div className="mt-2 space-y-1 border-t border-white/10 pt-2">
                   <div className="px-3 py-2">
                     <p className="text-sm font-medium text-white">{user.name}</p>
                     <p className="text-xs text-gray-500">{user.email}</p>
                   </div>
                   <Link
                     href="/settings"
-                    className="block px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white rounded-md"
+                    className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <Settings className="inline mr-2 h-4 w-4" />
+                    <Settings className="mr-2 inline h-4 w-4" />
                     Settings
                   </Link>
                   <button
                     onClick={() => {
-                      handleLogout();
-                      setMobileMenuOpen(false);
+                      handleLogout()
+                      setMobileMenuOpen(false)
                     }}
-                    className="w-full text-left px-3 py-2 text-base text-red-400 hover:bg-red-500/10 rounded-md"
+                    className="w-full rounded-md px-3 py-2 text-left text-base text-red-400 hover:bg-red-500/10"
                   >
-                    <LogOut className="inline mr-2 h-4 w-4" />
+                    <LogOut className="mr-2 inline h-4 w-4" />
                     Logout
                   </button>
                 </div>
@@ -439,5 +453,5 @@ export default function Navigation() {
         )}
       </AnimatePresence>
     </nav>
-  );
+  )
 }

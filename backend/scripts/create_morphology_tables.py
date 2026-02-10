@@ -14,7 +14,7 @@ from sqlalchemy import create_engine, text
 
 # Import Base and models so metadata is populated
 from app.db import Base
-from app.models import QMSurah, QMAyah, QMWord  # noqa: F401 — registers tables on Base.metadata
+from app.models import QMAyah, QMSurah, QMWord  # noqa: F401 — registers tables on Base.metadata
 
 DATABASE_URL = "postgresql://postgres:postgres@localhost:54322/postgres"
 
@@ -47,11 +47,7 @@ def main() -> bool:
             print("✅ Dropped existing qm_* tables (if any)")
 
         # 3. Create tables via SQLAlchemy metadata (filtered to qm_* only)
-        qm_table_objects = [
-            table
-            for table in Base.metadata.sorted_tables
-            if table.name.startswith("qm_")
-        ]
+        qm_table_objects = [table for table in Base.metadata.sorted_tables if table.name.startswith("qm_")]
         Base.metadata.create_all(engine, tables=qm_table_objects)
         print("✅ Created qm_surahs, qm_ayahs, qm_words tables")
 
@@ -66,8 +62,7 @@ def main() -> bool:
             # Check tables exist
             result = conn.execute(
                 text(
-                    "SELECT table_name FROM information_schema.tables "
-                    "WHERE table_name LIKE 'qm_%' ORDER BY table_name"
+                    "SELECT table_name FROM information_schema.tables WHERE table_name LIKE 'qm_%' ORDER BY table_name"
                 )
             )
             tables = [row[0] for row in result]
@@ -79,10 +74,7 @@ def main() -> bool:
 
             # Check indexes
             result = conn.execute(
-                text(
-                    "SELECT indexname FROM pg_indexes "
-                    "WHERE tablename LIKE 'qm_%' ORDER BY indexname"
-                )
+                text("SELECT indexname FROM pg_indexes WHERE tablename LIKE 'qm_%' ORDER BY indexname")
             )
             indexes = [row[0] for row in result]
             print(f"📋 Indexes found ({len(indexes)}): {indexes}")
@@ -96,12 +88,10 @@ def main() -> bool:
             )
             gin_indexes = [(row[0], row[1]) for row in result]
             print(f"📋 GIN trigram indexes ({len(gin_indexes)}):")
-            for name, defn in gin_indexes:
+            for name, _defn in gin_indexes:
                 print(f"   - {name}")
 
-        print(
-            "\n✅ Migration complete. All 3 qm_* tables and indexes created successfully."
-        )
+        print("\n✅ Migration complete. All 3 qm_* tables and indexes created successfully.")
         return True
 
     except Exception as e:

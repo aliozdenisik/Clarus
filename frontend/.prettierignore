@@ -1,0 +1,8 @@
+.next/
+out/
+node_modules/
+lib/api/types.gen.ts
+lib/api/sdk.gen.ts
+lib/api/client.gen.ts
+lib/api/client/
+lib/api/core/

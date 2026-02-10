@@ -575,9 +575,7 @@ def parse_verse_reference(input_str: str) -> ParsedReference | ParseError:
     )
 
 
-def _parse_quran_numeric(
-    input_str: str, match: re.Match
-) -> ParsedReference | ParseError:
+def _parse_quran_numeric(input_str: str, match: re.Match) -> ParsedReference | ParseError:
     """Parse Quran numeric format: 2:183 or 2:183-185."""
     surah_num = int(match.group(1))
     verse_start = int(match.group(2))
@@ -593,7 +591,7 @@ def _parse_quran_numeric(
 
     # Get surah info by ID
     surah_info = None
-    for name, info in SURAH_NAME_MAP.items():
+    for info in SURAH_NAME_MAP.values():
         if info["id"] == surah_num:
             surah_info = info
             break
@@ -647,9 +645,7 @@ def _parse_quran_numeric(
     )
 
 
-def _parse_quran_numeric_multi(
-    input_str: str, match: re.Match
-) -> ParsedReference | ParseError:
+def _parse_quran_numeric_multi(input_str: str, match: re.Match) -> ParsedReference | ParseError:
     """Parse Quran numeric multiple format: 2:183,185,190."""
     surah_num = int(match.group(1))
     verse_list_str = match.group(2)
@@ -664,7 +660,7 @@ def _parse_quran_numeric_multi(
 
     # Get surah info by ID
     surah_info = None
-    for name, info in SURAH_NAME_MAP.items():
+    for info in SURAH_NAME_MAP.values():
         if info["id"] == surah_num:
             surah_info = info
             break
@@ -716,9 +712,7 @@ def _parse_quran_numeric_multi(
     )
 
 
-def _parse_quran_turkish(
-    input_str: str, match: re.Match
-) -> ParsedReference | ParseError:
+def _parse_quran_turkish(input_str: str, match: re.Match) -> ParsedReference | ParseError:
     """Parse Quran Turkish format: Bakara 183, Bakara 183-185, or Bakara 1,3,5."""
     surah_name = match.group(1).strip()
     verse_spec = match.group(2).strip()

@@ -9,23 +9,22 @@ Optimizations:
 - Payload indexes for fast filtered searches
 """
 
-from typing import List, Optional, Dict
 from pathlib import Path
-from tqdm import tqdm
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
-    VectorParams,
-    SparseVectorParams,
-    SparseIndexParams,
     Distance,
-    PointStruct,
     HnswConfigDiff,
+    PayloadSchemaType,
+    PointStruct,
     ScalarQuantization,
     ScalarQuantizationConfig,
     ScalarType,
-    PayloadSchemaType,
+    SparseIndexParams,
+    SparseVectorParams,
+    VectorParams,
 )
+from tqdm import tqdm
 
 from .data_loader import QuranChunk
 from .embeddings import DenseEncoder
@@ -50,7 +49,7 @@ class QuranIndexer:
         translator: str = "diyanet",
         qdrant_url: str = "http://localhost:6333",
         in_memory: bool = False,
-        encoder: Optional[DenseEncoder] = None,
+        encoder: DenseEncoder | None = None,
     ):
         """
         Initialize QuranIndexer for a specific translator.
@@ -67,8 +66,7 @@ class QuranIndexer:
         """
         if translator not in VALID_TRANSLATORS:
             raise ValueError(
-                f"Invalid translator: {translator}\n"
-                f"Valid translators: {', '.join(sorted(VALID_TRANSLATORS))}"
+                f"Invalid translator: {translator}\nValid translators: {', '.join(sorted(VALID_TRANSLATORS))}"
             )
 
         self.translator = translator
@@ -105,9 +103,7 @@ class QuranIndexer:
 
         # Get dense vector dimension
         dense_dim = self.encoder.dense_dimension
-        print(
-            f"Creating collection {self.collection_name} ({self.translator}) with dense dimension: {dense_dim}"
-        )
+        print(f"Creating collection {self.collection_name} ({self.translator}) with dense dimension: {dense_dim}")
         print("  HNSW config: m=16, ef_construct=200")
         print("  Quantization: Scalar int8 (75% RAM savings)")
 
@@ -122,15 +118,11 @@ class QuranIndexer:
                         ef_construct=200,
                     ),
                     quantization_config=ScalarQuantization(
-                        scalar=ScalarQuantizationConfig(
-                            type=ScalarType.INT8, quantile=0.99, always_ram=True
-                        )
+                        scalar=ScalarQuantizationConfig(type=ScalarType.INT8, quantile=0.99, always_ram=True)
                     ),
                 )
             },
-            sparse_vectors_config={
-                "sparse": SparseVectorParams(index=SparseIndexParams(on_disk=False))
-            },
+            sparse_vectors_config={"sparse": SparseVectorParams(index=SparseIndexParams(on_disk=False))},
         )
 
         # Create payload indexes for fast filtered search
@@ -157,7 +149,7 @@ class QuranIndexer:
 
     def index_chunks(
         self,
-        chunks: List[QuranChunk],
+        chunks: list[QuranChunk],
         batch_size: int = 100,
         show_progress: bool = True,
     ) -> int:
@@ -180,9 +172,7 @@ class QuranIndexer:
 
         # Encode all texts (returns only dense vectors)
         print(f"Encoding {len(texts)} chunks...")
-        dense_vectors = self.encoder.encode_batch(
-            texts, batch_size=batch_size, show_progress=show_progress
-        )
+        dense_vectors = self.encoder.encode_batch(texts, batch_size=batch_size, show_progress=show_progress)
 
         # Create points in batches
         print("Indexing to Qdrant...")
@@ -221,7 +211,7 @@ class QuranIndexer:
 
     async def index_chunks_async(
         self,
-        chunks: List[QuranChunk],
+        chunks: list[QuranChunk],
         batch_size: int = 256,  # Optimized for OpenRouter API
         max_concurrent_embeddings: int = 10,  # OpenRouter has no rate limits with credits
         upsert_batch_size: int = 500,  # Qdrant upsert batch size (larger = faster)
@@ -372,7 +362,7 @@ class SemanticChunkIndexer:
         self,
         qdrant_url: str = "http://localhost:6333",
         in_memory: bool = False,
-        encoder: Optional[DenseEncoder] = None,
+        encoder: DenseEncoder | None = None,
     ):
         if in_memory:
             self.client = QdrantClient(location=":memory:")
@@ -418,15 +408,11 @@ class SemanticChunkIndexer:
                         ef_construct=200,
                     ),
                     quantization_config=ScalarQuantization(
-                        scalar=ScalarQuantizationConfig(
-                            type=ScalarType.INT8, quantile=0.99, always_ram=True
-                        )
+                        scalar=ScalarQuantizationConfig(type=ScalarType.INT8, quantile=0.99, always_ram=True)
                     ),
                 )
             },
-            sparse_vectors_config={
-                "sparse": SparseVectorParams(index=SparseIndexParams(on_disk=False))
-            },
+            sparse_vectors_config={"sparse": SparseVectorParams(index=SparseIndexParams(on_disk=False))},
         )
 
         # Create payload indexes for fast filtered search
@@ -476,17 +462,13 @@ class SemanticChunkIndexer:
 
         # Encode all texts (returns only dense vectors)
         print(f"Encoding {len(texts)} semantic chunks...")
-        dense_vectors = self.encoder.encode_batch(
-            texts, batch_size=batch_size, show_progress=show_progress
-        )
+        dense_vectors = self.encoder.encode_batch(texts, batch_size=batch_size, show_progress=show_progress)
 
         # Create points in batches
         print("Indexing to Qdrant...")
         total_indexed = 0
 
-        for i in tqdm(
-            range(0, len(chunks), batch_size), desc="Indexing semantic chunks"
-        ):
+        for i in tqdm(range(0, len(chunks), batch_size), desc="Indexing semantic chunks"):
             batch_chunks = chunks[i : i + batch_size]
             batch_dense = dense_vectors[i : i + batch_size]
 
@@ -529,7 +511,7 @@ class BibleSemanticChunkIndexer:
         translation: str = "kjva",
         qdrant_url: str = "http://localhost:6333",
         in_memory: bool = False,
-        encoder: Optional[DenseEncoder] = None,
+        encoder: DenseEncoder | None = None,
     ):
         self.translation = translation
         self.collection_name = f"bible_{translation}_semantic_chunks"
@@ -568,15 +550,11 @@ class BibleSemanticChunkIndexer:
                     distance=Distance.COSINE,
                     hnsw_config=HnswConfigDiff(m=16, ef_construct=200),
                     quantization_config=ScalarQuantization(
-                        scalar=ScalarQuantizationConfig(
-                            type=ScalarType.INT8, quantile=0.99, always_ram=True
-                        )
+                        scalar=ScalarQuantizationConfig(type=ScalarType.INT8, quantile=0.99, always_ram=True)
                     ),
                 )
             },
-            sparse_vectors_config={
-                "sparse": SparseVectorParams(index=SparseIndexParams(on_disk=False))
-            },
+            sparse_vectors_config={"sparse": SparseVectorParams(index=SparseIndexParams(on_disk=False))},
         )
 
         # Create payload indexes
@@ -616,17 +594,13 @@ class BibleSemanticChunkIndexer:
 
         # Encode all texts (returns only dense vectors)
         print(f"Encoding {len(texts)} semantic chunks...")
-        dense_vectors = self.encoder.encode_batch(
-            texts, batch_size=batch_size, show_progress=show_progress
-        )
+        dense_vectors = self.encoder.encode_batch(texts, batch_size=batch_size, show_progress=show_progress)
 
         # Create points in batches
         print("Indexing to Qdrant...")
         total_indexed = 0
 
-        for i in tqdm(
-            range(0, len(chunks), batch_size), desc="Indexing semantic chunks"
-        ):
+        for i in tqdm(range(0, len(chunks), batch_size), desc="Indexing semantic chunks"):
             batch_chunks = chunks[i : i + batch_size]
             batch_dense = dense_vectors[i : i + batch_size]
 
@@ -733,8 +707,8 @@ class TurkishBibleIndexer:
         self,
         qdrant_url: str = "http://localhost:6333",
         in_memory: bool = False,
-        encoder: Optional[DenseEncoder] = None,
-        osis_file_path: Optional[str] = None,
+        encoder: DenseEncoder | None = None,
+        osis_file_path: str | None = None,
     ):
         """
         Initialize Turkish Bible indexer.
@@ -789,9 +763,7 @@ class TurkishBibleIndexer:
 
         # Get dense vector dimension
         dense_dim = self.encoder.dense_dimension
-        print(
-            f"Creating collection {collection_name} with dense dimension: {dense_dim}"
-        )
+        print(f"Creating collection {collection_name} with dense dimension: {dense_dim}")
         print("  HNSW config: m=16, ef_construct=200")
         print("  Quantization: Scalar int8 (75% RAM savings)")
 
@@ -806,15 +778,11 @@ class TurkishBibleIndexer:
                         ef_construct=200,
                     ),
                     quantization_config=ScalarQuantization(
-                        scalar=ScalarQuantizationConfig(
-                            type=ScalarType.INT8, quantile=0.99, always_ram=True
-                        )
+                        scalar=ScalarQuantizationConfig(type=ScalarType.INT8, quantile=0.99, always_ram=True)
                     ),
                 )
             },
-            sparse_vectors_config={
-                "sparse": SparseVectorParams(index=SparseIndexParams(on_disk=False))
-            },
+            sparse_vectors_config={"sparse": SparseVectorParams(index=SparseIndexParams(on_disk=False))},
         )
 
         # Create payload indexes for fast filtered search
@@ -846,7 +814,7 @@ class TurkishBibleIndexer:
     def _index_verses(
         self,
         collection_name: str,
-        verses: List[Dict],
+        verses: list[dict],
         batch_size: int = 100,
         show_progress: bool = True,
     ) -> int:
@@ -867,9 +835,7 @@ class TurkishBibleIndexer:
 
         # Encode all texts (returns only dense vectors)
         print(f"Encoding {len(texts)} verses...")
-        dense_vectors = self.encoder.encode_batch(
-            texts, batch_size=batch_size, show_progress=show_progress
-        )
+        dense_vectors = self.encoder.encode_batch(texts, batch_size=batch_size, show_progress=show_progress)
 
         # Create points in batches
         print(f"Indexing to Qdrant (collection: {collection_name})...")
@@ -954,7 +920,7 @@ class TurkishBibleIndexer:
         # Index verses
         return self._index_verses(collection_name, nt_verses)
 
-    def index_all(self, recreate: bool = False) -> Dict[str, int]:
+    def index_all(self, recreate: bool = False) -> dict[str, int]:
         """
         Index both Old and New Testament.
 

@@ -6,7 +6,6 @@ OSHB lemma parsing for Bible keyword search.
 """
 
 import unicodedata
-from typing import Optional
 
 
 def remove_hebrew_nikud(text: str) -> str:
@@ -33,9 +32,8 @@ def remove_hebrew_nikud(text: str) -> str:
     for char in text:
         code = ord(char)
         # Skip nikud ranges except Maqaf (U+05BE)
-        if (0x0591 <= code <= 0x05BD) or (0x05BF <= code <= 0x05C7):
-            if code != 0x05BE:  # Preserve Maqaf
-                continue
+        if ((0x0591 <= code <= 0x05BD) or (0x05BF <= code <= 0x05C7)) and code != 0x05BE:  # Preserve Maqaf
+            continue
         result += char
     return result
 
@@ -176,7 +174,7 @@ def detect_script(text: str) -> str:
     return "latin"
 
 
-def strip_hebrew_prefixes(lemma: str) -> tuple[list[str], Optional[str]]:
+def strip_hebrew_prefixes(lemma: str) -> tuple[list[str], str | None]:
     """Extract Hebrew prefixes and Strong's number from OSHB lemma.
 
     OSHB lemmas use '/' as separator between prefixes and the Strong's number.
@@ -268,8 +266,8 @@ def normalize_transliteration_for_lookup(text: str) -> str:
         >>> normalize_transliteration_for_lookup("shâmaʻ")
         'shama'
     """
-    import unicodedata
     import re
+    import unicodedata
 
     # Step 0: Pre-NFD replacements for characters that would be incorrectly decomposed
     # ç (c-cedilla) → s (for chesed: chêçêd → chesed)

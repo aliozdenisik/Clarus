@@ -468,15 +468,12 @@ if __name__ == "__main__":
                     failed += 1
                     all_passed = False
                     console.print(
-                        f"[red]✗ {func_name}({input_val!r})[/red]"
-                        f"\n  Expected: {expected!r}\n  Got: {result!r}"
+                        f"[red]✗ {func_name}({input_val!r})[/red]\n  Expected: {expected!r}\n  Got: {result!r}"
                     )
             except Exception as e:
                 failed += 1
                 all_passed = False
-                console.print(
-                    f"[red]✗ {func_name}({input_val!r}) raised {type(e).__name__}: {e}[/red]"
-                )
+                console.print(f"[red]✗ {func_name}({input_val!r}) raised {type(e).__name__}: {e}[/red]")
 
         results.append((func_name, passed, failed))
 
@@ -497,9 +494,7 @@ if __name__ == "__main__":
     # Print overall result
     total_passed = sum(p for _, p, _ in results)
     total_failed = sum(f for _, _, f in results)
-    console.print(
-        f"\n[bold]TOTAL: {total_passed}/{total_passed + total_failed} tests pass[/bold]"
-    )
+    console.print(f"\n[bold]TOTAL: {total_passed}/{total_passed + total_failed} tests pass[/bold]")
 
     if all_passed:
         console.print("[green]✓ ALL TESTS PASSED[/green]")

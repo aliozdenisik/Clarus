@@ -1,0 +1,22 @@
+[extend]
+useDefault = true
+
+[[rules]]
+id = "openrouter-api-key"
+description = "OpenRouter API Key"
+regex = '''sk-or-v1-[a-zA-Z0-9]{48,}'''
+keywords = ["openrouter", "sk-or-v1"]
+
+[[rules]]
+id = "google-oauth-secret"
+description = "Google OAuth Client Secret"
+regex = '''GOCSPX-[a-zA-Z0-9_-]{20,}'''
+keywords = ["gocspx", "google"]
+
+[allowlist]
+paths = [
+    '''\.env\.example''',
+    '''\.env\.sample''',
+    '''memory-bank/''',
+    '''SECURITY-PRECOMMIT-RESEARCH\.md''',
+]

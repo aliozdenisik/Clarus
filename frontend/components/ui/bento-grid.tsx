@@ -1,16 +1,16 @@
-import { ReactNode } from "react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, type LucideIcon } from "lucide-react";
+import { ReactNode } from "react"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { ArrowRight, type LucideIcon } from "lucide-react"
 
 interface BentoGridProps {
-  children: ReactNode;
-  className?: string;
+  children: ReactNode
+  className?: string
 }
 
 /**
  * BentoGrid - Responsive grid container for BentoCard components
- * 
+ *
  * Default: 1 column mobile, 3 columns on md+
  * Add `auto-rows-[22rem]` to className for fixed row heights
  * Add `lg:grid-rows-3` for explicit row control
@@ -18,29 +18,26 @@ interface BentoGridProps {
 export const BentoGrid = ({ children, className }: BentoGridProps) => {
   return (
     <div
-      className={cn(
-        "grid w-full auto-rows-[22rem] grid-cols-1 md:grid-cols-3 gap-4",
-        className
-      )}
+      className={cn("grid w-full auto-rows-[22rem] grid-cols-1 gap-4 md:grid-cols-3", className)}
     >
       {children}
     </div>
-  );
-};
+  )
+}
 
 interface BentoCardProps {
-  name: string;
-  className?: string;
-  background: ReactNode;
-  Icon: LucideIcon;
-  description: string;
-  href: string;
-  cta: string;
+  name: string
+  className?: string
+  background: ReactNode
+  Icon: LucideIcon
+  description: string
+  href: string
+  cta: string
 }
 
 /**
  * BentoCard - Feature card with hover animations
- * 
+ *
  * Hover effects:
  * - Content shifts up (-translate-y-10)
  * - Icon scales down (scale-75)
@@ -58,11 +55,11 @@ export const BentoCard = ({
 }: BentoCardProps) => (
   <div
     className={cn(
-      "group relative col-span-3 md:col-span-1 flex flex-col justify-between overflow-hidden rounded-xl",
+      "group relative col-span-3 flex flex-col justify-between overflow-hidden rounded-xl md:col-span-1",
       // Project theme styling
-      "bg-[var(--color-bg-surface)]/40 backdrop-blur-sm border border-[var(--color-border-subtle)]",
+      "border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/40 backdrop-blur-sm",
       // Hover state with glow border
-      "transform-gpu hover:border-[var(--color-border-glow)] transition-all duration-500",
+      "transform-gpu transition-all duration-500 hover:border-[var(--color-border-glow)]",
       className
     )}
   >
@@ -82,12 +79,8 @@ export const BentoCard = ({
           "transition-all duration-300 ease-in-out group-hover:scale-75"
         )}
       />
-      <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">
-        {name}
-      </h3>
-      <p className="max-w-lg text-[var(--color-text-secondary)]">
-        {description}
-      </p>
+      <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">{name}</h3>
+      <p className="max-w-lg text-[var(--color-text-secondary)]">{description}</p>
     </div>
 
     {/* CTA button - reveals on hover */}
@@ -113,4 +106,4 @@ export const BentoCard = ({
       )}
     />
   </div>
-);
+)

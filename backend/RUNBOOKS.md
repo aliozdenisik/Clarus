@@ -24,7 +24,7 @@ Operational procedures for responding to Sentry alerts.
 1. **Check error details in Sentry**
    - Open Sentry → Issues → Filter by time
    - Identify error type and stack trace
-   
+
 2. **Check service health**
    ```bash
    # Check API health
@@ -76,7 +76,7 @@ Operational procedures for responding to Sentry alerts.
 ### Resolution Steps
 1. **Identify slow transactions in Sentry**
    - Sentry → Performance → Identify the slow endpoints (usually `/api/compare/` or `/api/stream/search`).
-   
+
 2. **Check Resource Usage**
    ```bash
    docker stats

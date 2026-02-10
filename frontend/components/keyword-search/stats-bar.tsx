@@ -1,19 +1,19 @@
-"use client";
+"use client"
 
-import { motion } from "framer-motion";
-import { springPresets } from "@/lib/design-system";
-import { GlowCard } from "@/components/ui/glow-card";
+import { motion } from "framer-motion"
+import { springPresets } from "@/lib/design-system"
+import { GlowCard } from "@/components/ui/glow-card"
 
 interface StatsBarProps {
-  totalOccurrences: number;
-  uniqueWords: number;
-  surahCount: number;
-  language: "quran" | "hebrew_ot" | "greek_nt";
+  totalOccurrences: number
+  uniqueWords: number
+  surahCount: number
+  language: "quran" | "hebrew_ot" | "greek_nt"
 }
 
 interface StatItem {
-  label: string;
-  value: number;
+  label: string
+  value: number
 }
 
 export function StatsBar({ totalOccurrences, uniqueWords, surahCount, language }: StatsBarProps) {
@@ -21,7 +21,7 @@ export function StatsBar({ totalOccurrences, uniqueWords, surahCount, language }
     { label: "Total Occurrences", value: totalOccurrences },
     { label: "Unique Words", value: uniqueWords },
     { label: language === "quran" ? "Surahs" : "Books", value: surahCount },
-  ];
+  ]
 
   return (
     <div className="grid grid-cols-3 gap-4">
@@ -33,15 +33,11 @@ export function StatsBar({ totalOccurrences, uniqueWords, surahCount, language }
           transition={{ ...springPresets.snappy, delay: index * 0.1 }}
         >
           <GlowCard className="flex flex-col items-center justify-center p-6">
-            <div className="text-3xl font-bold text-[var(--color-text-primary)]">
-              {stat.value}
-            </div>
-            <div className="text-xs text-[var(--color-text-muted)] mt-1">
-              {stat.label}
-            </div>
+            <div className="text-3xl font-bold text-[var(--color-text-primary)]">{stat.value}</div>
+            <div className="mt-1 text-xs text-[var(--color-text-muted)]">{stat.label}</div>
           </GlowCard>
         </motion.div>
       ))}
     </div>
-  );
+  )
 }

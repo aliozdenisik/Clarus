@@ -6,18 +6,19 @@ Test the Ultimate RAG Pipeline on the Gospels (İnciller) only.
 Gospels: Matthew, Mark, Luke, John
 """
 
-import sys
 import asyncio
+import sys
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()
 sys.path.insert(0, str(Path(__file__).parent))
 
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
 from qdrant_client import QdrantClient
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
 
 console = Console()
 
@@ -82,9 +83,7 @@ def search_gospels_only(query: str, translation: str = "turhadi", top_k: int = 5
     )
 
     # Get results
-    results = asyncio.run(
-        rag.search_bible(query, translation=translation, top_k=top_k * 4)
-    )
+    results = asyncio.run(rag.search_bible(query, translation=translation, top_k=top_k * 4))
 
     # Filter to Gospels only
     filtered_results = [r for r in results if r.book_name in GOSPELS]
@@ -134,9 +133,7 @@ def run_test_suite():
         collections = [c.name for c in client.get_collections().collections]
         if "bible_turhadi" not in collections:
             console.print("[red][ERROR] bible_turhadi collection not found![/red]")
-            console.print(
-                "[yellow]Please run: python main.py index-bible --translation turhadi[/yellow]"
-            )
+            console.print("[yellow]Please run: python main.py index-bible --translation turhadi[/yellow]")
             return 1
     except Exception as e:
         console.print(f"[red][ERROR] Cannot connect to Qdrant: {e}[/red]")
@@ -147,16 +144,14 @@ def run_test_suite():
 
     import json
 
-    data = json.load(open("data/bible_turhadi.json", "r", encoding="utf-8"))
+    data = json.load(open("data/bible_turhadi.json", encoding="utf-8"))
     books = data.get("books", [])
 
     gospel_stats = {}
     total_verses = 0
     for book in books:
         if book.get("name") in GOSPELS:
-            verse_count = sum(
-                len(ch.get("verses", [])) for ch in book.get("chapters", [])
-            )
+            verse_count = sum(len(ch.get("verses", [])) for ch in book.get("chapters", []))
             gospel_stats[book.get("name")] = {
                 "chapters": len(book.get("chapters", [])),
                 "verses": verse_count,
@@ -181,9 +176,7 @@ def run_test_suite():
     console.print(stats_table)
 
     # Run test queries
-    console.print(
-        f"\n[bold blue]🧪 Running {len(TEST_QUERIES)} Test Queries[/bold blue]"
-    )
+    console.print(f"\n[bold blue]🧪 Running {len(TEST_QUERIES)} Test Queries[/bold blue]")
 
     successful = 0
     failed = 0
@@ -257,9 +250,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Test RAG on Gospels (İnciller)")
-    parser.add_argument(
-        "--interactive", "-i", action="store_true", help="Interactive search mode"
-    )
+    parser.add_argument("--interactive", "-i", action="store_true", help="Interactive search mode")
     parser.add_argument("--query", "-q", type=str, help="Single query to test")
     parser.add_argument("--limit", "-l", type=int, default=5, help="Number of results")
 

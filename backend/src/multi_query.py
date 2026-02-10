@@ -5,8 +5,6 @@ Stub module — planned feature. Referenced by:
   - QuranSearcher.parallel_keyword_search (search.py)
 """
 
-from typing import List
-
 
 class MultiQueryGenerator:
     """Generates multiple query variations for improved recall.
@@ -14,8 +12,7 @@ class MultiQueryGenerator:
     Not yet implemented.
     """
 
-    def generate(self, query: str, n: int = 3) -> List[str]:
+    def generate(self, query: str, n: int = 3) -> list[str]:
         raise NotImplementedError(
-            "MultiQueryGenerator is not yet implemented. "
-            "Use UltimateRAG multi-query pipeline instead."
+            "MultiQueryGenerator is not yet implemented. Use UltimateRAG multi-query pipeline instead."
         )

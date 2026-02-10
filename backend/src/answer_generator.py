@@ -13,23 +13,23 @@ Usage:
     print(answer.citations)  # ['Bakara 45', 'Bakara 153']
 """
 
-import os
 import json
-import requests
+import os
 import time
-import sentry_sdk
-from typing import List, Optional
 from dataclasses import dataclass
+
+import requests
+import sentry_sdk
 from tenacity import (
     retry,
+    retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
-    retry_if_exception_type,
 )
 
-from src.circuit_breaker import llm_with_breaker, CircuitBreakerError
-from src.confidence_scorer import ConfidenceScorer
 from app.logging_config import get_logger, log_performance
+from src.circuit_breaker import CircuitBreakerError, llm_with_breaker
+from src.confidence_scorer import ConfidenceScorer
 
 logger = get_logger(__name__)
 
@@ -39,12 +39,12 @@ class AnswerResult:
     """Structured answer result with citations"""
 
     text: str  # Full answer text with inline citations
-    citations: List[str]  # List of cited references
+    citations: list[str]  # List of cited references
     confidence: float  # 0.0 - 1.0 confidence score
     source: str  # quran_tr, bible_kjva, etc.
     query: str  # Original query
     context_used: int  # Number of verses used as context
-    confidence_breakdown: Optional[dict] = None  # Detailed confidence signals
+    confidence_breakdown: dict | None = None  # Detailed confidence signals
 
 
 class AnswerGenerator:
@@ -148,13 +148,11 @@ VERSES:
         },
     ]
 
-    def __init__(self, model: Optional[str] = None, api_key: Optional[str] = None):
+    def __init__(self, model: str | None = None, api_key: str | None = None):
         """Initialize Answer Generator with OpenRouter API"""
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
-            raise ValueError(
-                "OpenRouter API key required. Set OPENROUTER_API_KEY environment variable."
-            )
+            raise ValueError("OpenRouter API key required. Set OPENROUTER_API_KEY environment variable.")
         self.model = model or self.MODEL
         self._headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -168,9 +166,7 @@ VERSES:
         # Try to get from object attributes first
         if "quran" in source:
             surah = getattr(result, "surah_id", None)
-            verse = getattr(result, "verse_id", None) or getattr(
-                result, "verse_ids", None
-            )
+            verse = getattr(result, "verse_id", None) or getattr(result, "verse_ids", None)
 
             # Fallback to payload
             if surah is None and hasattr(result, "payload"):
@@ -190,12 +186,8 @@ VERSES:
         else:
             # Bible format
             book = getattr(result, "book_name", None)
-            chapter = getattr(result, "chapter_number", None) or getattr(
-                result, "chapter", None
-            )
-            verse = getattr(result, "verse_number", None) or getattr(
-                result, "verse", None
-            )
+            chapter = getattr(result, "chapter_number", None) or getattr(result, "chapter", None)
+            verse = getattr(result, "verse_number", None) or getattr(result, "verse", None)
 
             # Fallback to payload
             if book is None and hasattr(result, "payload"):
@@ -233,7 +225,7 @@ VERSES:
 
         return ""
 
-    def _format_context(self, results: List, source: str, max_results: int = 15) -> str:
+    def _format_context(self, results: list, source: str, max_results: int = 15) -> str:
         """Format search results as numbered, cited context for LLM"""
         context_parts = []
 
@@ -251,13 +243,11 @@ VERSES:
         """Check if exception is retryable (timeout, connection, or rate limit)"""
         if isinstance(
             exception,
-            (requests.exceptions.Timeout, requests.exceptions.ConnectionError),
+            requests.exceptions.Timeout | requests.exceptions.ConnectionError,
         ):
             return True
         if isinstance(exception, requests.exceptions.HTTPError):
-            return (
-                exception.response is not None and exception.response.status_code == 429
-            )
+            return exception.response is not None and exception.response.status_code == 429
         return False
 
     @retry(
@@ -270,9 +260,7 @@ VERSES:
     )
     def _call_llm(self, query: str, context: str, source: str) -> dict:
         """Call OpenRouter API for answer generation"""
-        with sentry_sdk.start_span(
-            op="llm.openrouter.answer", description="Answer generation LLM call"
-        ) as span:
+        with sentry_sdk.start_span(op="llm.openrouter.answer", description="Answer generation LLM call") as span:
             start_time = time.perf_counter()
             span.set_data("model", self.model)
             span.set_data("source", source)
@@ -320,15 +308,11 @@ VERSES:
 
                 # Defensive parsing for LLM response
                 if "choices" not in response_json or not response_json["choices"]:
-                    logger.error(
-                        f"Invalid LLM response: missing 'choices'. Response: {response_json}"
-                    )
+                    logger.error(f"Invalid LLM response: missing 'choices'. Response: {response_json}")
                     raise ValueError("Invalid LLM response: missing 'choices' field")
 
                 choice = response_json["choices"][0]
-                if "message" not in choice or "content" not in choice.get(
-                    "message", {}
-                ):
+                if "message" not in choice or "content" not in choice.get("message", {}):
                     logger.error(f"Invalid LLM response structure: {choice}")
                     raise ValueError("Invalid LLM response: missing message content")
 
@@ -344,9 +328,7 @@ VERSES:
                 sentry_sdk.set_measurement("llm.tokens.output", output_tokens, "none")
 
                 # Simple cost estimate (OpenRouter typical pricing)
-                estimated_cost = (
-                    input_tokens * 0.15 + output_tokens * 0.60
-                ) / 1_000_000
+                estimated_cost = (input_tokens * 0.15 + output_tokens * 0.60) / 1_000_000
                 sentry_sdk.set_measurement("llm.cost.estimated", estimated_cost, "none")
 
                 span.set_data("input_tokens", input_tokens)
@@ -381,9 +363,7 @@ VERSES:
                 raise
             except requests.exceptions.RequestException as e:
                 # Other HTTP errors - don't retry
-                logger.error(
-                    "API request failed", extra={"error": str(e), "model": self.model}
-                )
+                logger.error("API request failed", extra={"error": str(e), "model": self.model})
                 span.set_data("latency_ms", (time.perf_counter() - start_time) * 1000)
                 return {
                     "answer": "Cevap üretilemedi.",
@@ -406,10 +386,10 @@ VERSES:
     def generate_answer(
         self,
         query: str,
-        search_results: List,
+        search_results: list,
         source: str = "quran_tr_diyanet",
         max_context_results: int = 15,
-        score_stats: Optional[dict[str, float]] = None,
+        score_stats: dict[str, float] | None = None,
     ) -> AnswerResult:
         """
         Generate a cited answer from search results.
@@ -433,9 +413,7 @@ VERSES:
         )
 
         if not search_results:
-            logger.warning(
-                "No search results for answer generation", extra={"source": source}
-            )
+            logger.warning("No search results for answer generation", extra={"source": source})
             return AnswerResult(
                 text="Verilen kaynaklarda bu soruyla ilgili bilgi bulunamadı.",
                 citations=[],

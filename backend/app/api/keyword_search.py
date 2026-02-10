@@ -1,7 +1,7 @@
 """REST API endpoints for Quran morphological keyword search."""
 
 import logging
-from typing import Optional
+
 from fastapi import APIRouter, Query
 
 from app.config import settings
@@ -9,10 +9,10 @@ from app.schemas.keyword_search import (
     KeywordSearchRequest,
     KeywordSearchResponse,
     PaginationInfo,
-    SurahDistItem,
-    VerseMatchItem,
     RootListItem,
     RootListResponse,
+    SurahDistItem,
+    VerseMatchItem,
 )
 from src.quran_morphology import QuranMorphologySearch
 
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # Lazy singleton
-_search_instance: Optional[QuranMorphologySearch] = None
+_search_instance: QuranMorphologySearch | None = None
 
 
 def get_morphology_search() -> QuranMorphologySearch:
@@ -55,9 +55,7 @@ async def search_keyword(request: KeywordSearchRequest):
         total_occurrences=result.total_occurrences,
         unique_words=result.unique_words,
         surah_distribution=[
-            SurahDistItem(
-                surah_id=sd.surah_id, surah_name=sd.surah_name, count=sd.count
-            )
+            SurahDistItem(surah_id=sd.surah_id, surah_name=sd.surah_name, count=sd.count)
             for sd in result.surah_distribution
         ],
         verses=[
@@ -122,9 +120,7 @@ async def get_root_info(
         total_occurrences=result.total_occurrences,
         unique_words=result.unique_words,
         surah_distribution=[
-            SurahDistItem(
-                surah_id=sd.surah_id, surah_name=sd.surah_name, count=sd.count
-            )
+            SurahDistItem(surah_id=sd.surah_id, surah_name=sd.surah_name, count=sd.count)
             for sd in result.surah_distribution
         ],
         verses=[

@@ -1,41 +1,41 @@
-import * as Sentry from "@sentry/nextjs";
+import * as Sentry from "@sentry/nextjs"
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
   environment: process.env.NODE_ENV,
   // NO replay integration - explicitly excluded
-  
+
   // Filter out expected EventSource reconnection errors (SSE compatibility)
   beforeSend(event, hint) {
-    const error = hint.originalException;
+    const error = hint.originalException
     if (error instanceof Error) {
       // EventSource reconnection errors are EXPECTED behavior
-      if (error.message?.includes('EventSource') || 
-          error.message?.includes('EventSource connection') ||
-          error.message?.includes('net::ERR_') ||
-          error.message?.includes('NetworkError') ||
-          error.message?.includes('network connection was lost') ||
-          (error.message?.includes('Failed to fetch') && 
-           event.request?.url?.includes('/stream'))) {
-        return null; // Don't send to Sentry
+      if (
+        error.message?.includes("EventSource") ||
+        error.message?.includes("EventSource connection") ||
+        error.message?.includes("net::ERR_") ||
+        error.message?.includes("NetworkError") ||
+        error.message?.includes("network connection was lost") ||
+        (error.message?.includes("Failed to fetch") && event.request?.url?.includes("/stream"))
+      ) {
+        return null // Don't send to Sentry
       }
       // Filter benign browser warnings
-      if (error.message?.includes('ResizeObserver loop')) {
-        return null;
+      if (error.message?.includes("ResizeObserver loop")) {
+        return null
       }
     }
-    return event;
+    return event
   },
-  
+
   // Adjust transaction handling for long-running SSE streams
   beforeSendTransaction(event) {
-    if (event.transaction?.includes('/compare') || 
-        event.transaction?.includes('/stream')) {
+    if (event.transaction?.includes("/compare") || event.transaction?.includes("/stream")) {
       if (event.contexts?.trace) {
-        event.contexts.trace.op = 'sse.stream';
+        event.contexts.trace.op = "sse.stream"
       }
     }
-    return event;
+    return event
   },
-});
+})

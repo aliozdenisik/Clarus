@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import { cn } from "@/lib/utils";
-import React, { ReactNode } from "react";
-import { motion } from "framer-motion";
+import { cn } from "@/lib/utils"
+import React, { ReactNode } from "react"
+import { motion } from "framer-motion"
 
 interface AuroraBackgroundProps extends React.HTMLProps<HTMLDivElement> {
-  children: ReactNode;
-  showRadialGradient?: boolean;
-  intensity?: "subtle" | "normal" | "intense";
+  children: ReactNode
+  showRadialGradient?: boolean
+  intensity?: "subtle" | "normal" | "intense"
 }
 
 export function AuroraBackground({
@@ -21,7 +21,7 @@ export function AuroraBackground({
     subtle: "opacity-30",
     normal: "opacity-50",
     intense: "opacity-70",
-  };
+  }
 
   return (
     <div
@@ -51,13 +51,15 @@ export function AuroraBackground({
             "[background-size:300%_200%]",
             "blur-[100px]"
           )}
-          style={{
-            "--color-aurora-1": "rgba(59, 130, 246, 0.3)",
-            "--color-aurora-2": "rgba(99, 102, 241, 0.25)",
-            "--color-aurora-3": "rgba(139, 92, 246, 0.2)",
-            "--color-aurora-4": "rgba(168, 85, 247, 0.25)",
-            "--color-aurora-5": "rgba(79, 70, 229, 0.3)",
-          } as React.CSSProperties}
+          style={
+            {
+              "--color-aurora-1": "rgba(59, 130, 246, 0.3)",
+              "--color-aurora-2": "rgba(99, 102, 241, 0.25)",
+              "--color-aurora-3": "rgba(139, 92, 246, 0.2)",
+              "--color-aurora-4": "rgba(168, 85, 247, 0.25)",
+              "--color-aurora-5": "rgba(79, 70, 229, 0.3)",
+            } as React.CSSProperties
+          }
         />
       </div>
 
@@ -72,7 +74,7 @@ export function AuroraBackground({
           repeat: Infinity,
           ease: "easeInOut",
         }}
-        className="absolute top-1/4 left-1/4 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"
+        className="pointer-events-none absolute top-1/4 left-1/4 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl"
       />
       <motion.div
         animate={{
@@ -85,7 +87,7 @@ export function AuroraBackground({
           ease: "easeInOut",
           delay: 1,
         }}
-        className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-violet-500/8 rounded-full blur-3xl pointer-events-none"
+        className="pointer-events-none absolute right-1/4 bottom-1/4 h-80 w-80 rounded-full bg-violet-500/8 blur-3xl"
       />
       <motion.div
         animate={{
@@ -98,7 +100,7 @@ export function AuroraBackground({
           ease: "easeInOut",
           delay: 2,
         }}
-        className="absolute top-1/3 right-1/3 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"
+        className="pointer-events-none absolute top-1/3 right-1/3 h-48 w-48 rounded-full bg-blue-500/10 blur-3xl"
       />
 
       {/* Radial gradient for depth */}
@@ -109,7 +111,7 @@ export function AuroraBackground({
       {/* Content */}
       <div className="relative z-10 w-full">{children}</div>
     </div>
-  );
+  )
 }
 
 // Compact version for page sections (not full screen)
@@ -119,10 +121,7 @@ export function AuroraSectionBackground({
   ...props
 }: Omit<AuroraBackgroundProps, "showRadialGradient">) {
   return (
-    <div
-      className={cn("relative overflow-hidden", className)}
-      {...props}
-    >
+    <div className={cn("relative overflow-hidden", className)} {...props}>
       {/* Subtle aurora glow */}
       <motion.div
         animate={{
@@ -133,20 +132,20 @@ export function AuroraSectionBackground({
           repeat: Infinity,
           ease: "easeInOut",
         }}
-        className="absolute inset-0 pointer-events-none"
+        className="pointer-events-none absolute inset-0"
       >
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-b from-indigo-500/15 via-violet-500/10 to-transparent blur-3xl" />
+        <div className="absolute top-0 left-1/2 h-[300px] w-[600px] -translate-x-1/2 bg-gradient-to-b from-indigo-500/15 via-violet-500/10 to-transparent blur-3xl" />
       </motion.div>
 
       {/* Subtle side glows */}
-      <div className="absolute top-0 left-0 w-1/3 h-full bg-gradient-to-r from-blue-500/5 to-transparent pointer-events-none" />
-      <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-purple-500/5 to-transparent pointer-events-none" />
+      <div className="pointer-events-none absolute top-0 left-0 h-full w-1/3 bg-gradient-to-r from-blue-500/5 to-transparent" />
+      <div className="pointer-events-none absolute top-0 right-0 h-full w-1/3 bg-gradient-to-l from-purple-500/5 to-transparent" />
 
       {/* Edge fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[var(--color-bg-app)] to-transparent pointer-events-none" />
+      <div className="pointer-events-none absolute right-0 bottom-0 left-0 h-32 bg-gradient-to-t from-[var(--color-bg-app)] to-transparent" />
 
       {/* Content */}
       <div className="relative z-10">{children}</div>
     </div>
-  );
+  )
 }

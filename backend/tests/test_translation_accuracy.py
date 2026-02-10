@@ -25,8 +25,7 @@ Usage:
 import json
 import sys
 from pathlib import Path
-from typing import List, Tuple
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -39,7 +38,6 @@ console = Console()
 
 # Import after path setup
 from src.query_translator import QueryTranslator
-
 
 # ============================================================================
 # MOCK HELPERS
@@ -80,7 +78,7 @@ def mock_llm_json_response(
 # Each tuple: (query, corpus, expected_lang, expected_query, expected_was_translated, needs_llm)
 # needs_llm: False = heuristic should handle (mock NOT called), True = mock IS called
 
-HEURISTIC_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
+HEURISTIC_TESTS: list[tuple[str, str, str, str, bool, bool]] = [
     # Category 1: Heuristic Pre-Filter (8 tests)
     # Turkish chars + quran → skip LLM
     ("sabır ve namaz", "quran_tr_diyanet", "tr", "sabır ve namaz", False, False),
@@ -101,7 +99,7 @@ HEURISTIC_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
     ("grace and mercy", "bible_nt", "en", "grace and mercy", False, False),
 ]
 
-EN_TO_TR_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
+EN_TO_TR_TESTS: list[tuple[str, str, str, str, bool, bool]] = [
     # Category 2: English → Turkish Translation (8 tests)
     # ASCII + quran → no heuristic (quran heuristic checks Turkish chars, not ASCII)
     ("patience in Islam", "quran_tr_diyanet", "en", "İslam'da sabır", True, True),
@@ -142,7 +140,7 @@ EN_TO_TR_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
     ),
 ]
 
-SPANISH_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
+SPANISH_TESTS: list[tuple[str, str, str, str, bool, bool]] = [
     # Category 3: Spanish → Corpus Language (6 tests)
     # Non-ASCII Spanish chars bypass heuristic
     (
@@ -164,7 +162,7 @@ SPANISH_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
     ("la oración en el Islam", "quran", "es", "İslam'da dua", True, True),
 ]
 
-FRENCH_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
+FRENCH_TESTS: list[tuple[str, str, str, str, bool, bool]] = [
     # Category 4: French → Corpus Language (5 tests)
     # "patience dans l'Islam" is pure ASCII → quran → no Turkish chars → LLM needed
     ("patience dans l'Islam", "quran", "fr", "İslam'da sabır", True, True),
@@ -178,7 +176,7 @@ FRENCH_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
     ("les prophètes bibliques", "bible_nt", "fr", "biblical prophets", True, True),
 ]
 
-ARABIC_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
+ARABIC_TESTS: list[tuple[str, str, str, str, bool, bool]] = [
     # Category 5: Arabic → Corpus Language (5 tests)
     # Arabic chars are non-ASCII → LLM needed
     ("الصبر في الإسلام", "quran", "ar", "İslam'da sabır", True, True),
@@ -188,7 +186,7 @@ ARABIC_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
     ("الأنبياء والرسل", "quran", "ar", "peygamberler ve resuller", True, True),
 ]
 
-GERMAN_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
+GERMAN_TESTS: list[tuple[str, str, str, str, bool, bool]] = [
     # Category 6: German → Corpus Language (4 tests)
     # "Geduld im Islam" is pure ASCII → quran → no Turkish chars → LLM needed
     ("Geduld im Islam", "quran", "de", "İslam'da sabır", True, True),
@@ -207,7 +205,7 @@ GERMAN_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
     ),
 ]
 
-EDGE_CASE_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
+EDGE_CASE_TESTS: list[tuple[str, str, str, str, bool, bool]] = [
     # Category 7: Edge Cases (4 tests)
     # "What does sabır mean?" has "ı" (non-ASCII) + bible → heuristic doesn't fire → LLM needed
     ("What does sabır mean?", "bible", "en", "What does sabır mean?", False, True),
@@ -234,11 +232,11 @@ EDGE_CASE_TESTS: List[Tuple[str, str, str, str, bool, bool]] = [
 
 def run_category_tests(
     category_name: str,
-    tests: List[Tuple[str, str, str, str, bool, bool]],
-) -> List[bool]:
+    tests: list[tuple[str, str, str, str, bool, bool]],
+) -> list[bool]:
     """Run a category of tests and return list of pass/fail booleans."""
     console.print(f"\n[bold cyan]{category_name}[/bold cyan]")
-    results: List[bool] = []
+    results: list[bool] = []
 
     for (
         query,
@@ -285,13 +283,9 @@ def _run_single_test(
 
             # Verify LLM call expectation
             if needs_llm:
-                assert mock_breaker.called, (
-                    f"LLM should have been called for '{query}' + {corpus}"
-                )
+                assert mock_breaker.called, f"LLM should have been called for '{query}' + {corpus}"
             else:
-                assert not mock_breaker.called, (
-                    f"LLM should NOT have been called for '{query}' + {corpus}"
-                )
+                assert not mock_breaker.called, f"LLM should NOT have been called for '{query}' + {corpus}"
 
             # Verify result fields
             assert result.detected_language == expected_lang, (
@@ -306,13 +300,9 @@ def _run_single_test(
 
             # Format output
             if expected_was_translated:
-                console.print(
-                    f'  [green]✅ PASS[/green]: "{query}" + {corpus} → "{expected_query}"'
-                )
+                console.print(f'  [green]✅ PASS[/green]: "{query}" + {corpus} → "{expected_query}"')
             else:
-                console.print(
-                    f'  [green]✅ PASS[/green]: "{query}" + {corpus} → {expected_lang}, no translation'
-                )
+                console.print(f'  [green]✅ PASS[/green]: "{query}" + {corpus} → {expected_lang}, no translation')
             return True
 
     except Exception as e:
@@ -337,49 +327,35 @@ def run_all_tests() -> None:
 
     # Mock sentry_sdk to avoid initialization issues
     with patch("src.query_translator.sentry_sdk"):
-        category_results: List[Tuple[str, List[bool]]] = []
+        category_results: list[tuple[str, list[bool]]] = []
 
         # Category 1: Heuristic Pre-Filter (8 tests)
-        results = run_category_tests(
-            "Category 1: Heuristic Pre-Filter (8 tests)", HEURISTIC_TESTS
-        )
+        results = run_category_tests("Category 1: Heuristic Pre-Filter (8 tests)", HEURISTIC_TESTS)
         category_results.append(("Turkish (heuristic)", results[:4]))
         category_results.append(("English (heuristic)", results[4:]))
 
         # Category 2: English → Turkish (8 tests)
-        results = run_category_tests(
-            "Category 2: English → Turkish (8 tests)", EN_TO_TR_TESTS
-        )
+        results = run_category_tests("Category 2: English → Turkish (8 tests)", EN_TO_TR_TESTS)
         category_results.append(("English → Turkish", results))
 
         # Category 3: Spanish (6 tests)
-        results = run_category_tests(
-            "Category 3: Spanish → Corpus Language (6 tests)", SPANISH_TESTS
-        )
+        results = run_category_tests("Category 3: Spanish → Corpus Language (6 tests)", SPANISH_TESTS)
         category_results.append(("Spanish", results))
 
         # Category 4: French (5 tests)
-        results = run_category_tests(
-            "Category 4: French → Corpus Language (5 tests)", FRENCH_TESTS
-        )
+        results = run_category_tests("Category 4: French → Corpus Language (5 tests)", FRENCH_TESTS)
         category_results.append(("French", results))
 
         # Category 5: Arabic (5 tests)
-        results = run_category_tests(
-            "Category 5: Arabic → Corpus Language (5 tests)", ARABIC_TESTS
-        )
+        results = run_category_tests("Category 5: Arabic → Corpus Language (5 tests)", ARABIC_TESTS)
         category_results.append(("Arabic", results))
 
         # Category 6: German (4 tests)
-        results = run_category_tests(
-            "Category 6: German → Corpus Language (4 tests)", GERMAN_TESTS
-        )
+        results = run_category_tests("Category 6: German → Corpus Language (4 tests)", GERMAN_TESTS)
         category_results.append(("German", results))
 
         # Category 7: Edge Cases (4 tests)
-        results = run_category_tests(
-            "Category 7: Edge Cases (4 tests)", EDGE_CASE_TESTS
-        )
+        results = run_category_tests("Category 7: Edge Cases (4 tests)", EDGE_CASE_TESTS)
         category_results.append(("Edge Cases", results))
 
     # ── Summary ──────────────────────────────────────────────────────────
@@ -388,8 +364,7 @@ def run_all_tests() -> None:
 
     console.print("\n" + "═" * 60)
     console.print(
-        f"[bold cyan]SUMMARY: {total_passed}/{total_tests} passed "
-        f"({total_passed * 100 // total_tests}%)[/bold cyan]"
+        f"[bold cyan]SUMMARY: {total_passed}/{total_tests} passed ({total_passed * 100 // total_tests}%)[/bold cyan]"
     )
     console.print("═" * 60)
 

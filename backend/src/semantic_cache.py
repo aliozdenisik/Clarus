@@ -6,7 +6,6 @@ Stub module — planned feature. Referenced by CLI commands:
 """
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -27,12 +26,10 @@ class SemanticCache:
     """
 
     def __init__(self, qdrant_url: str = "localhost:6333") -> None:
-        raise NotImplementedError(
-            "SemanticCache is not yet implemented. Use llm_cache.py for basic caching."
-        )
+        raise NotImplementedError("SemanticCache is not yet implemented. Use llm_cache.py for basic caching.")
 
     def get_stats(self) -> CacheStats:
         raise NotImplementedError
 
-    def clear(self, older_than_hours: Optional[float] = None) -> int:
+    def clear(self, older_than_hours: float | None = None) -> int:
         raise NotImplementedError

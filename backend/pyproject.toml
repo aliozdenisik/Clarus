@@ -63,3 +63,96 @@ collect_ignore_glob = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+[tool.bandit]
+exclude_dirs = ["/tests", "/.venv", "/postgres_data", "/qdrant_data", "/__pycache__"]
+skips = ["B101"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    # Core
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    # Import
+    "I",      # isort
+    # Naming
+    "N",      # pep8-naming
+    # Modernization
+    "UP",     # pyupgrade
+    # Security (replaces standalone bandit)
+    "S",      # flake8-bandit
+    # Bugs
+    "B",      # flake8-bugbear
+    # Built-ins
+    "A",      # flake8-builtins
+    # Comprehensions
+    "C4",     # flake8-comprehensions
+    # Datetime
+    "DTZ",    # flake8-datetimez
+    # Print
+    "T20",    # flake8-print
+    # Simplify
+    "SIM",    # flake8-simplify
+    # Type checking
+    "TCH",    # flake8-type-checking
+    # Async
+    "ASYNC",  # flake8-async
+    # Performance
+    "PERF",   # perflint
+    # Misc
+    "PIE",    # flake8-pie
+    "PGH",    # pygrep-hooks
+    "RUF",    # Ruff-specific
+]
+
+ignore = [
+    "E501",    # Line too long (formatter handles)
+    "S101",    # assert (tests need it — per-file-ignores handles)
+    "S104",    # Possible binding to all interfaces (dev servers)
+    "S108",    # Probable insecure /tmp usage (false positives)
+    "B008",    # Function call in default arg (FastAPI Depends pattern)
+    "UP007",   # Use X | Y for union (Python 3.9 compat)
+    "RUF001",  # Ambiguous Unicode — project handles Arabic/Hebrew/Greek text
+    "RUF002",  # Ambiguous Unicode docstring — same reason
+    "RUF003",  # Ambiguous Unicode comment — same reason
+    "RUF012",  # Mutable class variables (Pydantic models)
+    "DTZ003",  # datetime.utcnow() — widespread, migrate separately
+    "DTZ005",  # datetime.now() without tz — migrate separately
+    "B904",    # raise from — migrate separately
+    "SIM108",  # Use ternary — style preference
+    "N813",    # camelCase imported as lowercase — third-party naming
+    "N806",    # Variable in function should be lowercase — false positives
+    "S314",    # xml.etree — safe for trusted data in this project
+    "S310",    # urllib audit — URL parsing, not user input
+    "T201",    # print() — CLI tool uses Rich console + print extensively
+    "S608",    # SQL injection via f-string — SQLAlchemy text() patterns
+    "S110",    # try-except-pass — intentional error suppression
+    "S324",    # MD5/SHA1 — used for hashing, not security
+    "ASYNC230", # open() in async — sync file I/O in data loaders
+    "ASYNC221", # sync HTTP call in async — wrapped by aiohttp
+
+    "PERF401", # list comprehension — style preference, migrate separately
+    "SIM105",  # contextlib.suppress — style preference
+    "SIM102",  # collapsible-if — readability preference
+    "SIM115",  # open-file-with-context-handler — data loader patterns
+    "B023",    # function-uses-loop-variable — false positive in closures
+    "B039",    # mutable-contextvar-default — false positive
+    "PGH003",  # blanket-type-ignore — legacy type: ignore comments
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]
+"tests/**/*.py" = ["S101", "S105", "S106", "S311", "S603", "S607", "PLR2004", "T20", "ASYNC"]
+"scripts/**/*.py" = ["T20", "S603", "S607", "B007"]
+"main.py" = ["T20"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "src"]
+
+[tool.ruff.lint.flake8-type-checking]
+strict = true

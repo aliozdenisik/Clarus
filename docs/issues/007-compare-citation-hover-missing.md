@@ -57,9 +57,9 @@ Clicking an in-text citation should:
   isOpen={openPopover === part.reference}
   onOpenChange={(open) => setOpenPopover(open ? part.reference : null)}
 >
-  <InlineCitation 
-    reference={part.reference} 
-    onClick={() => navigateToVerse(part.reference)} 
+  <InlineCitation
+    reference={part.reference}
+    onClick={() => navigateToVerse(part.reference)}
   />
 </VerseTooltip>
 ```

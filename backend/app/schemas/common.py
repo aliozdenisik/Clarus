@@ -1,9 +1,10 @@
 """Common schemas for standardized API responses."""
 
 import html
-from pydantic import BaseModel, Field, ConfigDict
-from typing import TypeVar, Generic, Optional, Literal
 from datetime import datetime
+from typing import Generic, Literal, TypeVar
+
+from pydantic import BaseModel, ConfigDict, Field
 
 T = TypeVar("T")
 
@@ -21,17 +22,15 @@ VALID_TRANSLATORS = {
 DEFAULT_TRANSLATOR = "diyanet"
 
 # Type alias for translator validation
-TranslatorType = Literal[
-    "diyanet", "yazir", "ates", "bulac", "ozturk", "vakfi", "yildirim", "yuksel"
-]
+TranslatorType = Literal["diyanet", "yazir", "ates", "bulac", "ozturk", "vakfi", "yildirim", "yuksel"]
 
 
 class ErrorDetail(BaseModel):
     """Detailed error information."""
 
-    field: Optional[str] = Field(None, description="Field that caused the error")
+    field: str | None = Field(None, description="Field that caused the error")
     message: str = Field(..., description="Human-readable error message")
-    code: Optional[str] = Field(None, description="Machine-readable error code")
+    code: str | None = Field(None, description="Machine-readable error code")
 
 
 class ErrorResponse(BaseModel):
@@ -59,9 +58,7 @@ class ErrorResponse(BaseModel):
                 "error": {
                     "code": "VALIDATION_ERROR",
                     "message": "Query is too long",
-                    "details": [
-                        {"field": "query", "message": "Max 500 characters allowed"}
-                    ],
+                    "details": [{"field": "query", "message": "Max 500 characters allowed"}],
                 },
                 "request_id": "req_abc123",
                 "timestamp": "2026-01-24T10:30:00Z",
@@ -71,10 +68,8 @@ class ErrorResponse(BaseModel):
 
     success: bool = Field(default=False, description="Always false for errors")
     error: dict = Field(..., description="Error information")
-    request_id: Optional[str] = Field(None, description="Request ID for tracing")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Error timestamp"
-    )
+    request_id: str | None = Field(None, description="Request ID for tracing")
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Error timestamp")
 
 
 class SuccessResponse(BaseModel, Generic[T]):
@@ -90,7 +85,7 @@ class SuccessResponse(BaseModel, Generic[T]):
 
     success: bool = Field(default=True, description="Always true for success")
     data: T = Field(..., description="Response data")
-    request_id: Optional[str] = Field(None, description="Request ID for tracing")
+    request_id: str | None = Field(None, description="Request ID for tracing")
 
 
 class PaginationParams(BaseModel):
@@ -137,7 +132,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
     success: bool = Field(default=True)
     data: list[T] = Field(..., description="List of items")
     pagination: PaginationMeta = Field(..., description="Pagination metadata")
-    request_id: Optional[str] = Field(None, description="Request ID for tracing")
+    request_id: str | None = Field(None, description="Request ID for tracing")
 
     @classmethod
     def create(
@@ -146,7 +141,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
         page: int,
         limit: int,
         total_items: int,
-        request_id: Optional[str] = None,
+        request_id: str | None = None,
     ) -> "PaginatedResponse[T]":
         """Factory method to create paginated response."""
         total_pages = (total_items + limit - 1) // limit if limit > 0 else 0
@@ -167,9 +162,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
 class QueryValidation(BaseModel):
     """Validated query input with sanitization."""
 
-    query: str = Field(
-        ..., min_length=1, max_length=500, description="Search query (1-500 characters)"
-    )
+    query: str = Field(..., min_length=1, max_length=500, description="Search query (1-500 characters)")
 
     @classmethod
     def sanitize(cls, query: str) -> str:

@@ -8,7 +8,7 @@ All transformations are idempotent (applying twice yields same result).
 """
 
 import re
-from typing import Any, Dict
+from typing import Any
 
 
 def sanitize_citations(text: str) -> str:
@@ -76,7 +76,7 @@ def sanitize_citations(text: str) -> str:
     return result
 
 
-def sanitize_agent_result(result: Dict[str, Any]) -> Dict[str, Any]:
+def sanitize_agent_result(result: dict[str, Any]) -> dict[str, Any]:
     """
     Apply citation sanitizer to agent result dictionary.
 

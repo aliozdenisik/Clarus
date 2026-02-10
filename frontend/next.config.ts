@@ -1,5 +1,5 @@
-import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
+import type { NextConfig } from "next"
+import { withSentryConfig } from "@sentry/nextjs"
 
 const nextConfig: NextConfig = {
   // Add empty turbopack config to silence Turbopack/webpack conflict warning
@@ -30,14 +30,14 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  
+
   // Tree-shake lucide-react imports (Turbopack-compatible)
   // Automatically converts: import { Search } from 'lucide-react'
   // Into direct imports for smaller bundle size
   experimental: {
-    optimizePackageImports: ['lucide-react'],
+    optimizePackageImports: ["lucide-react"],
   },
-};
+}
 
 export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG || "your-org-slug",
@@ -45,8 +45,8 @@ export default withSentryConfig(nextConfig, {
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: !process.env.CI,
   tunnelRoute: "/monitoring",
-  
+
   sourcemaps: {
     deleteSourcemapsAfterUpload: true,
   },
-});
+})

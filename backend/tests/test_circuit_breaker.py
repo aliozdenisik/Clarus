@@ -9,21 +9,24 @@ Tests cover:
 - State transitions (closed → open → half-open → closed)
 """
 
-import pytest
 import sys
+
 import pybreaker
+import pytest
 
 # Add backend to path for imports
 sys.path.insert(0, "/home/freyja/qdrant/backend")
 
+import contextlib
+
 from src.circuit_breaker import (
-    qdrant_breaker,
-    llm_breaker,
-    embeddings_breaker,
-    qdrant_with_breaker,
-    llm_with_breaker,
-    embeddings_with_breaker,
     CircuitBreakerError,
+    embeddings_breaker,
+    embeddings_with_breaker,
+    llm_breaker,
+    llm_with_breaker,
+    qdrant_breaker,
+    qdrant_with_breaker,
 )
 
 
@@ -106,10 +109,8 @@ class TestQdrantWithBreakerWrapper:
         """Circuit should open after 5 consecutive failures."""
         # Trigger 5 failures
         for _ in range(5):
-            try:
+            with contextlib.suppress(ZeroDivisionError, CircuitBreakerError):
                 qdrant_with_breaker(lambda: 1 / 0)
-            except (ZeroDivisionError, CircuitBreakerError):
-                pass
 
         # 6th call should raise CircuitBreakerError
         with pytest.raises(CircuitBreakerError):
@@ -119,10 +120,8 @@ class TestQdrantWithBreakerWrapper:
         """Circuit should remain open after opening."""
         # Trigger 5 failures
         for _ in range(5):
-            try:
+            with contextlib.suppress(ZeroDivisionError, CircuitBreakerError):
                 qdrant_with_breaker(lambda: 1 / 0)
-            except (ZeroDivisionError, CircuitBreakerError):
-                pass
 
         # Multiple calls should all raise CircuitBreakerError
         for _ in range(3):
@@ -133,10 +132,8 @@ class TestQdrantWithBreakerWrapper:
         """Successful call should reset failure counter."""
         # Trigger 3 failures
         for _ in range(3):
-            try:
+            with contextlib.suppress(ZeroDivisionError):
                 qdrant_with_breaker(lambda: 1 / 0)
-            except ZeroDivisionError:
-                pass
 
         # Successful call should reset counter
         result = qdrant_with_breaker(lambda: "success")
@@ -144,10 +141,8 @@ class TestQdrantWithBreakerWrapper:
 
         # Should need 5 more failures to open
         for _ in range(5):
-            try:
+            with contextlib.suppress(ZeroDivisionError, CircuitBreakerError):
                 qdrant_with_breaker(lambda: 1 / 0)
-            except (ZeroDivisionError, CircuitBreakerError):
-                pass
 
         # Now circuit should be open
         with pytest.raises(CircuitBreakerError):
@@ -174,10 +169,8 @@ class TestLLMWithBreakerWrapper:
         """Circuit should open after 3 consecutive failures (lower threshold)."""
         # Trigger 3 failures
         for _ in range(3):
-            try:
+            with contextlib.suppress(ZeroDivisionError, CircuitBreakerError):
                 llm_with_breaker(lambda: 1 / 0)
-            except (ZeroDivisionError, CircuitBreakerError):
-                pass
 
         # 4th call should raise CircuitBreakerError
         with pytest.raises(CircuitBreakerError):
@@ -210,10 +203,8 @@ class TestEmbeddingsWithBreakerWrapper:
         """Circuit should open after 10 consecutive failures (higher threshold)."""
         # Trigger 10 failures
         for _ in range(10):
-            try:
+            with contextlib.suppress(ZeroDivisionError, CircuitBreakerError):
                 embeddings_with_breaker(lambda: 1 / 0)
-            except (ZeroDivisionError, CircuitBreakerError):
-                pass
 
         # 11th call should raise CircuitBreakerError
         with pytest.raises(CircuitBreakerError):
@@ -250,23 +241,17 @@ class TestCircuitBreakerStateTransitions:
     def test_state_transitions_closed_to_open(self):
         """Circuit should transition from closed to open after threshold."""
         # Closed: calls go through
-        try:
+        with contextlib.suppress(ZeroDivisionError):
             qdrant_with_breaker(lambda: 1 / 0)
-        except ZeroDivisionError:
-            pass
 
         # Still closed after 1 failure - can still make calls
-        try:
+        with contextlib.suppress(ZeroDivisionError):
             qdrant_with_breaker(lambda: 1 / 0)
-        except ZeroDivisionError:
-            pass
 
         # Trigger remaining failures (3 more to reach 5)
         for _ in range(3):
-            try:
+            with contextlib.suppress(ZeroDivisionError, CircuitBreakerError):
                 qdrant_with_breaker(lambda: 1 / 0)
-            except (ZeroDivisionError, CircuitBreakerError):
-                pass
 
         # Now open: calls blocked
         with pytest.raises(CircuitBreakerError):
@@ -276,10 +261,8 @@ class TestCircuitBreakerStateTransitions:
         """CircuitBreakerError should be raised when circuit is open."""
         # Open the circuit
         for _ in range(5):
-            try:
+            with contextlib.suppress(ZeroDivisionError, CircuitBreakerError):
                 qdrant_with_breaker(lambda: 1 / 0)
-            except (ZeroDivisionError, CircuitBreakerError):
-                pass
 
         # Verify CircuitBreakerError is raised
         with pytest.raises(CircuitBreakerError) as exc_info:
@@ -307,10 +290,8 @@ class TestCircuitBreakerReset:
         """Manual reset should close the circuit."""
         # Open the circuit
         for _ in range(5):
-            try:
+            with contextlib.suppress(ZeroDivisionError, CircuitBreakerError):
                 qdrant_with_breaker(lambda: 1 / 0)
-            except (ZeroDivisionError, CircuitBreakerError):
-                pass
 
         # Verify circuit is open
         with pytest.raises(CircuitBreakerError):
@@ -327,20 +308,16 @@ class TestCircuitBreakerReset:
         """Reset should clear the failure counter."""
         # Trigger 3 failures
         for _ in range(3):
-            try:
+            with contextlib.suppress(ZeroDivisionError):
                 qdrant_with_breaker(lambda: 1 / 0)
-            except ZeroDivisionError:
-                pass
 
         # Reset
         qdrant_breaker.close()
 
         # Should need 5 failures again to open
         for _ in range(5):
-            try:
+            with contextlib.suppress(ZeroDivisionError, CircuitBreakerError):
                 qdrant_with_breaker(lambda: 1 / 0)
-            except (ZeroDivisionError, CircuitBreakerError):
-                pass
 
         # Now circuit should be open
         with pytest.raises(CircuitBreakerError):
@@ -361,10 +338,8 @@ class TestCircuitBreakerWithDifferentExceptions:
     def test_counts_value_error(self):
         """ValueError should count as a failure."""
         for _ in range(5):
-            try:
+            with contextlib.suppress(ValueError, CircuitBreakerError):
                 qdrant_with_breaker(lambda: int("not a number"))
-            except (ValueError, CircuitBreakerError):
-                pass
 
         with pytest.raises(CircuitBreakerError):
             qdrant_with_breaker(lambda: "blocked")
@@ -376,10 +351,8 @@ class TestCircuitBreakerWithDifferentExceptions:
             raise RuntimeError("test")
 
         for _ in range(5):
-            try:
+            with contextlib.suppress(RuntimeError, CircuitBreakerError):
                 qdrant_with_breaker(raise_runtime_error)
-            except (RuntimeError, CircuitBreakerError):
-                pass
 
         with pytest.raises(CircuitBreakerError):
             qdrant_with_breaker(lambda: "blocked")
@@ -391,10 +364,8 @@ class TestCircuitBreakerWithDifferentExceptions:
             return "string" + 123  # type: ignore
 
         for _ in range(5):
-            try:
+            with contextlib.suppress(TypeError, CircuitBreakerError):
                 qdrant_with_breaker(raise_type_error)
-            except (TypeError, CircuitBreakerError):
-                pass
 
         with pytest.raises(CircuitBreakerError):
             qdrant_with_breaker(lambda: "blocked")
@@ -464,10 +435,8 @@ class TestCircuitBreakerIndependence:
         """Qdrant breaker opening should not affect LLM breaker."""
         # Open qdrant breaker
         for _ in range(5):
-            try:
+            with contextlib.suppress(ZeroDivisionError, CircuitBreakerError):
                 qdrant_with_breaker(lambda: 1 / 0)
-            except (ZeroDivisionError, CircuitBreakerError):
-                pass
 
         # Qdrant should be open
         with pytest.raises(CircuitBreakerError):
@@ -481,10 +450,8 @@ class TestCircuitBreakerIndependence:
         """LLM breaker opening should not affect embeddings breaker."""
         # Open llm breaker
         for _ in range(3):
-            try:
+            with contextlib.suppress(ZeroDivisionError, CircuitBreakerError):
                 llm_with_breaker(lambda: 1 / 0)
-            except (ZeroDivisionError, CircuitBreakerError):
-                pass
 
         # LLM should be open
         with pytest.raises(CircuitBreakerError):
@@ -498,22 +465,16 @@ class TestCircuitBreakerIndependence:
         """All breakers should be able to open independently."""
         # Open all breakers
         for _ in range(5):
-            try:
+            with contextlib.suppress(ZeroDivisionError, CircuitBreakerError):
                 qdrant_with_breaker(lambda: 1 / 0)
-            except (ZeroDivisionError, CircuitBreakerError):
-                pass
 
         for _ in range(3):
-            try:
+            with contextlib.suppress(ZeroDivisionError, CircuitBreakerError):
                 llm_with_breaker(lambda: 1 / 0)
-            except (ZeroDivisionError, CircuitBreakerError):
-                pass
 
         for _ in range(10):
-            try:
+            with contextlib.suppress(ZeroDivisionError, CircuitBreakerError):
                 embeddings_with_breaker(lambda: 1 / 0)
-            except (ZeroDivisionError, CircuitBreakerError):
-                pass
 
         # All should raise CircuitBreakerError
         with pytest.raises(CircuitBreakerError):

@@ -5,11 +5,10 @@ Loads Turkish Bible from OSIS XML format and prepares data for indexing.
 Supports separation into Old Testament (OT) and New Testament (NT) collections.
 """
 
+import logging
+import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import List, Dict, Tuple
-import re
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -141,7 +140,7 @@ class OsisLoader:
         if not self.file_path.exists():
             raise FileNotFoundError(f"OSIS file not found: {file_path}")
 
-    def load(self) -> Tuple[List[Dict], List[Dict]]:
+    def load(self) -> tuple[list[dict], list[dict]]:
         """
         Load and parse OSIS XML file.
 
@@ -181,7 +180,7 @@ class OsisLoader:
                 logger.warning(f"Skipping unknown book: {book_id}")
                 continue
 
-            book_num, book_name, testament = OSIS_BOOK_MAP[book_id]
+            _book_num, book_name, testament = OSIS_BOOK_MAP[book_id]
 
             # Find all verses in this book
             verses = book_elem.findall(".//osis:verse", namespace)
@@ -291,8 +290,8 @@ if __name__ == "__main__":
         print(f"{'=' * 60}")
 
         # Check for OT/NT overlap
-        ot_books = set(v["book"] for v in ot_verses)
-        nt_books = set(v["book"] for v in nt_verses)
+        ot_books = {v["book"] for v in ot_verses}
+        nt_books = {v["book"] for v in nt_verses}
 
         print(f"OT Books ({len(ot_books)}): {', '.join(sorted(ot_books))}")
         print(f"NT Books ({len(nt_books)}): {', '.join(sorted(nt_books))}")

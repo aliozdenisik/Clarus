@@ -151,7 +151,7 @@ import unicodedata
 
 def remove_greek_accents(text: str) -> str:
     """Strip Greek accents and diacritical marks.
-    
+
     Removes combining diacritical marks (category 'Mn' - Mark, Nonspacing)
     while preserving base Greek letters.
     """
@@ -174,7 +174,7 @@ remove_greek_accents("ζωή")        # → "ζωη"
 ```python
 def transliterate_greek(text: str) -> str:
     """Convert Greek text to ALA-LC standard romanization.
-    
+
     Mapping (ALA-LC standard):
     - α→a, β→b, γ→g, δ→d, ε→e, ζ→z, η→ē, θ→th, ι→i, κ→k
     - λ→l, μ→m, ν→n, ξ→x, ο→o, π→p, ρ→r, σ/ς→s, τ→t, υ→y
@@ -182,7 +182,7 @@ def transliterate_greek(text: str) -> str:
     """
     # First remove accents
     text = remove_greek_accents(text)
-    
+
     # ALA-LC standard mapping
     mapping = {
         # Lowercase vowels
@@ -239,7 +239,7 @@ def transliterate_greek(text: str) -> str:
         "Χ": "Ch",
         "Ψ": "Ps",
     }
-    
+
     result = ""
     i = 0
     while i < len(text):
@@ -250,7 +250,7 @@ def transliterate_greek(text: str) -> str:
                 result += mapping[two_char]
                 i += 2
                 continue
-        
+
         # Single character mapping
         char = text[i]
         if char in mapping:
@@ -258,7 +258,7 @@ def transliterate_greek(text: str) -> str:
         else:
             result += char
         i += 1
-    
+
     return result
 
 # Examples
@@ -275,13 +275,13 @@ transliterate_greek("αγαπη")       # → "agapē"
 ```python
 def reverse_transliterate_greek(text: str) -> str:
     """Convert Latin transliteration back to Greek.
-    
+
     Handles scholarly transliterations (reverse of ALA-LC standard).
     Multi-character sequences processed first (th→θ, ph→φ, ch→χ, ps→ψ),
     then single characters. Final sigma (ς) used at word boundaries.
     """
     text = text.lower()
-    
+
     # Multi-character sequences first (order matters: longer first)
     multi_char_mapping = {
         "th": "θ",
@@ -289,7 +289,7 @@ def reverse_transliterate_greek(text: str) -> str:
         "ch": "χ",
         "ps": "ψ",
     }
-    
+
     # Single character mapping
     single_char_mapping = {
         # Vowels
@@ -318,7 +318,7 @@ def reverse_transliterate_greek(text: str) -> str:
         "c": "κ",  # 'c' often used for kappa
         "h": "η",  # standalone 'h' could be eta
     }
-    
+
     result = ""
     i = 0
     while i < len(text):
@@ -329,7 +329,7 @@ def reverse_transliterate_greek(text: str) -> str:
                 result += multi_char_mapping[two_char]
                 i += 2
                 continue
-        
+
         # Single character mapping
         char = text[i]
         if char == "s":
@@ -342,7 +342,7 @@ def reverse_transliterate_greek(text: str) -> str:
             # Keep non-mapped characters as-is
             result += char
         i += 1
-    
+
     return result
 
 # Examples
@@ -479,24 +479,24 @@ from betacode.conv import beta_to_uni, uni_to_beta
 class GreekProcessor:
     def __init__(self):
         self.trans = GreekTransliteration()
-    
+
     def normalize(self, text: str) -> str:
         """Remove accents and diacritics."""
         nfd = unicodedata.normalize("NFD", text)
         return "".join(c for c in nfd if unicodedata.category(c) != "Mn")
-    
+
     def transliterate(self, text: str) -> str:
         """Convert Greek to Latin."""
         return self.trans.transliterate(text)
-    
+
     def from_betacode(self, text: str) -> str:
         """Convert Beta Code to Unicode Greek."""
         return beta_to_uni(text)
-    
+
     def to_betacode(self, text: str) -> str:
         """Convert Unicode Greek to Beta Code."""
         return uni_to_beta(text)
-    
+
     def process_verse(self, greek_text: str) -> dict:
         """Full processing pipeline."""
         return {
@@ -668,4 +668,3 @@ for greek, expected_latin in test_cases:
     result = transliterate_greek(greek)
     assert result == expected_latin, f"Failed: {greek} → {result} (expected {expected_latin})"
 ```
-

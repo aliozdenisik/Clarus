@@ -2,26 +2,26 @@
  * API Client Setup with Correlation ID Interceptors.
  */
 
-import { client } from "./api/client.gen";
-import { getCorrelationId } from "./correlation";
-import { logger } from "./logger";
-import { configureApiClient } from "./api/config";
+import { client } from "./api/client.gen"
+import { getCorrelationId } from "./correlation"
+import { logger } from "./logger"
+import { configureApiClient } from "./api/config"
 
-let isSetupComplete = false;
+let isSetupComplete = false
 
 /**
  * Configure API client interceptors once.
  */
 export function setupApiClient(): void {
   if (isSetupComplete) {
-    return;
+    return
   }
 
   client.interceptors.request.use((request) => {
-    const correlationId = getCorrelationId();
+    const correlationId = getCorrelationId()
 
     if (correlationId) {
-      request.headers.set("X-Correlation-ID", correlationId);
+      request.headers.set("X-Correlation-ID", correlationId)
     }
 
     logger.debug("API request initiated", {
@@ -30,14 +30,14 @@ export function setupApiClient(): void {
       method: request.method,
       url: request.url,
       hasCorrelation: Boolean(correlationId),
-    });
+    })
 
-    return request;
-  });
+    return request
+  })
 
   client.interceptors.response.use((response, request) => {
-    const correlationId = response.headers.get("X-Correlation-ID");
-    const requestId = response.headers.get("X-Request-ID");
+    const correlationId = response.headers.get("X-Correlation-ID")
+    const requestId = response.headers.get("X-Request-ID")
 
     logger.debug("API response received", {
       component: "ApiClient",
@@ -46,14 +46,14 @@ export function setupApiClient(): void {
       url: request.url,
       correlationId,
       requestId,
-    });
+    })
 
-    return response;
-  });
+    return response
+  })
 
   client.interceptors.error.use((error, response, request) => {
-    const correlationId = response?.headers?.get("X-Correlation-ID");
-    const requestId = response?.headers?.get("X-Request-ID");
+    const correlationId = response?.headers?.get("X-Correlation-ID")
+    const requestId = response?.headers?.get("X-Request-ID")
 
     logger.error("API request failed", error as Error, {
       component: "ApiClient",
@@ -62,17 +62,17 @@ export function setupApiClient(): void {
       url: request?.url,
       correlationId,
       requestId,
-    });
+    })
 
-    return error;
-  });
+    return error
+  })
 
-  isSetupComplete = true;
+  isSetupComplete = true
   logger.info("API client interceptors configured", {
     component: "ApiClient",
     action: "setup",
-  });
+  })
 }
 
-configureApiClient();
-setupApiClient();
+configureApiClient()
+setupApiClient()

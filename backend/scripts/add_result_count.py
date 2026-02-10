@@ -4,8 +4,8 @@
 # This migration script adjusts sys.path before importing project modules.
 
 import asyncio
-import sys
 import os
+import sys
 from pathlib import Path
 
 # Ensure backend/ is on sys.path (project convention from compare.py:22-24)
@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(Path(__file__).parent.parent, ".env"))
 
 from sqlalchemy import text
+
 from app.db import engine
 
 
@@ -24,10 +25,7 @@ async def migrate() -> bool:
     async with engine.begin() as conn:
         # 1. Verify table exists
         table_check = await conn.execute(
-            text(
-                "SELECT EXISTS (SELECT FROM information_schema.tables "
-                "WHERE table_name='search_history')"
-            )
+            text("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name='search_history')")
         )
         if not table_check.scalar():
             print("❌ ERROR: search_history table does not exist. Run init_db() first.")
@@ -46,9 +44,7 @@ async def migrate() -> bool:
 
         # 3. Add column
         try:
-            await conn.execute(
-                text("ALTER TABLE search_history ADD COLUMN result_count INTEGER")
-            )
+            await conn.execute(text("ALTER TABLE search_history ADD COLUMN result_count INTEGER"))
             print("✅ Added result_count column to search_history")
             return True
         except Exception as e:

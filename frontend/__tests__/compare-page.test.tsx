@@ -1,32 +1,35 @@
-import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
-import { vi, describe, it, expect, beforeEach } from "vitest";
-import { createElement } from "react";
-import type React from "react";
-import ComparePage from "@/app/compare/page";
-import { useSSE } from "@/lib/hooks/use-sse";
-import { usePreferencesStore } from "@/lib/stores/preferences-store";
-import { useSearchParams } from "next/navigation";
-import { compareScripturesApiComparePost } from "@/lib/api/sdk.gen";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react"
+import { vi, describe, it, expect, beforeEach } from "vitest"
+import { createElement } from "react"
+import type React from "react"
+import ComparePage from "@/app/compare/page"
+import { useSSE } from "@/lib/hooks/use-sse"
+import { usePreferencesStore } from "@/lib/stores/preferences-store"
+import { useSearchParams } from "next/navigation"
+import { compareScripturesApiComparePost } from "@/lib/api/sdk.gen"
 
 // Mock imports
-const mockPush = vi.fn();
+const mockPush = vi.fn()
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: mockPush,
   }),
   useSearchParams: vi.fn(),
-}));
+}))
 
 vi.mock("@/lib/auth-client", () => ({
-  useSession: () => ({ data: { user: { id: '1', name: 'Test User', email: 'test@example.com' } }, isPending: false }),
+  useSession: () => ({
+    data: { user: { id: "1", name: "Test User", email: "test@example.com" } },
+    isPending: false,
+  }),
   signIn: { email: vi.fn(), social: vi.fn() },
   signUp: { email: vi.fn() },
   signOut: vi.fn(),
   authClient: { token: vi.fn() },
-}));
+}))
 
-const mockStartStream = vi.fn();
-const mockStopStream = vi.fn();
+const mockStartStream = vi.fn()
+const mockStopStream = vi.fn()
 
 vi.mock("@/lib/hooks/use-sse", () => ({
   useSSE: vi.fn(() => ({
@@ -36,57 +39,63 @@ vi.mock("@/lib/hooks/use-sse", () => ({
     startStream: mockStartStream,
     stopStream: mockStopStream,
   })),
-}));
+}))
 
 vi.mock("@/lib/stores/preferences-store", () => ({
   usePreferencesStore: vi.fn(() => ({
     enable_streaming: true,
   })),
-}));
+}))
 
 vi.mock("@/lib/api/sdk.gen", () => ({
   compareScripturesApiComparePost: vi.fn(),
-}));
+}))
 
 type MockProps = {
-  children?: React.ReactNode;
-  className?: string;
-  [key: string]: unknown;
-};
+  children?: React.ReactNode
+  className?: string
+  [key: string]: unknown
+}
 
 // Mock framer-motion to avoid animation issues in tests
 vi.mock("framer-motion", () => {
-  const createMotionProxy = () => new Proxy({}, {
-    get: (_target: object, prop: string) => {
-      return ({ children, ...props }: MockProps) => {
-        return createElement(prop, props as Record<string, unknown>, children);
-      };
-    }
-  });
+  const createMotionProxy = () =>
+    new Proxy(
+      {},
+      {
+        get: (_target: object, prop: string) => {
+          return ({ children, ...props }: MockProps) => {
+            return createElement(prop, props as Record<string, unknown>, children)
+          }
+        },
+      }
+    )
   return {
     motion: createMotionProxy(),
     AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
-  };
-});
+  }
+})
 
 // Mock components that might be complex or unnecessary to render fully
 vi.mock("@/components/ui/glow-card", () => ({
   GlowCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
-}));
+}))
 
 // Mock DotPattern + AuroraSectionBackground
 vi.mock("@/components/ui/dot-pattern", () => ({
   DotPattern: () => null,
   RadialGradient: () => null,
-}));
+}))
 vi.mock("@/components/ui/aurora-background", () => ({
-  AuroraSectionBackground: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
-}));
+  AuroraSectionBackground: ({ children, className }: MockProps) => (
+    <div className={className}>{children}</div>
+  ),
+}))
 
 // Mock Skeleton
 vi.mock("@/components/ui/skeleton", () => ({
   Skeleton: ({ className }: MockProps) => <div data-testid="skeleton" className={className} />,
-}));
+}))
 
 // Mock design-system
 vi.mock("@/lib/design-system", () => ({
@@ -95,7 +104,7 @@ vi.mock("@/lib/design-system", () => ({
     fluid: { type: "spring", stiffness: 170, damping: 26 },
     gentle: { type: "spring", stiffness: 120, damping: 14 },
   },
-}));
+}))
 
 // Mock Lucide icons
 vi.mock("lucide-react", () => ({
@@ -105,25 +114,23 @@ vi.mock("lucide-react", () => ({
   ChevronUp: () => <div data-testid="chevron-up-icon" />,
   Quote: () => <div data-testid="quote-icon" />,
   Search: () => <div data-testid="search-icon" />,
-}));
+}))
 
 // Mock compare components
 vi.mock("@/components/compare/source-reference-card", () => ({
   SourceReferenceCard: ({ reference }: { reference: string }) => (
     <div data-testid="source-reference-card">{reference}</div>
   ),
-}));
+}))
 vi.mock("@/components/compare/inline-citation", () => ({
   InlineCitation: ({ children }: { children?: React.ReactNode }) => <span>{children}</span>,
-}));
+}))
 vi.mock("@/components/compare/collection-selector", () => ({
-  CollectionSelector: () => (
-    <div data-testid="collection-selector">Collections</div>
-  ),
-}));
+  CollectionSelector: () => <div data-testid="collection-selector">Collections</div>,
+}))
 vi.mock("@/components/compare/analysis-progress", () => ({
   AnalysisProgress: () => <div data-testid="analysis-progress">Progress</div>,
-}));
+}))
 
 // Mock animated tabs — receives counts prop, not filters array
 vi.mock("@/components/ui/animated-tabs", () => ({
@@ -134,7 +141,7 @@ vi.mock("@/components/ui/animated-tabs", () => ({
       { id: "old_testament", label: "Old Testament" },
       { id: "new_testament", label: "New Testament" },
       { id: "apocrypha", label: "Apocrypha" },
-    ];
+    ]
     return (
       <div data-testid="filter-tabs">
         {filters.map((f) => (
@@ -143,16 +150,16 @@ vi.mock("@/components/ui/animated-tabs", () => ({
           </button>
         ))}
       </div>
-    );
+    )
   },
   FilterType: {},
-}));
+}))
 
 // Mock typewriter
 vi.mock("@/components/ui/typewriter", () => ({
   TypingIndicator: () => <div data-testid="typing-indicator" />,
   AIResponse: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-}));
+}))
 
 // Mock citation parser — parseBareReferences receives (citationParts[], citations[])
 // and must return strings (which get rendered via typeof === 'string' check)
@@ -162,13 +169,13 @@ vi.mock("@/lib/utils/parse-citations", () => ({
     // The compare page checks typeof part === 'string' to decide how to render
     // Return plain strings so the content shows up
     if (Array.isArray(parts)) {
-      return parts.map((p) => typeof p === 'string' ? p : p.content || '');
+      return parts.map((p) => (typeof p === "string" ? p : p.content || ""))
     }
-    return [String(parts)];
+    return [String(parts)]
   },
   stripMarkdownHeaders: (text: string) => text,
   CitationPart: {},
-}));
+}))
 
 // Mock logger
 vi.mock("@/lib/logger", () => ({
@@ -184,18 +191,18 @@ vi.mock("@/lib/logger", () => ({
     error: vi.fn(),
     debug: vi.fn(),
   },
-}));
+}))
 
 // Mock search components
 vi.mock("@/components/search/language-selector", () => ({
   LanguageSelector: () => null,
-}));
+}))
 
 // Mock keyword store type import
 vi.mock("@/lib/stores/keyword-store", () => ({
   useKeywordStore: vi.fn(),
   KeywordSuggestion: {},
-}));
+}))
 
 // Mock sonner
 vi.mock("sonner", () => ({
@@ -204,10 +211,10 @@ vi.mock("sonner", () => ({
     error: vi.fn(),
     info: vi.fn(),
   },
-}));
+}))
 
 // Mock fetch
-global.fetch = vi.fn();
+global.fetch = vi.fn()
 
 const mockCompareResult = {
   topic: "patience",
@@ -216,17 +223,17 @@ const mockCompareResult = {
     {
       title: "Quran Perspective",
       content: "The Quran says [quran:2:153].",
-      citations: ["quran:2:153"]
+      citations: ["quran:2:153"],
     },
     {
       title: "Bible Perspective",
       content: "The Bible says [bible:1:1:1].",
-      citations: ["bible:1:1:1"]
-    }
+      citations: ["bible:1:1:1"],
+    },
   ],
   citations: {
     quran_tr: ["quran:2:153"],
-    bible_ot: ["bible:1:1:1"]
+    bible_ot: ["bible:1:1:1"],
   },
   confidence: 0.9,
   total_verses: 2,
@@ -239,7 +246,7 @@ const mockCompareResult = {
       chapter: 2,
       verse: 153,
       source: "quran_tr",
-      translation: "Turkish"
+      translation: "Turkish",
     },
     "bible:1:1:1": {
       text: "In the beginning God created the heaven and the earth.",
@@ -248,66 +255,68 @@ const mockCompareResult = {
       verse: 1,
       source: "bible_ot",
       translation: "KJVA",
-      book_nr: 1
-    }
-  }
-};
+      book_nr: 1,
+    },
+  },
+}
 
 const createMockResponse = (data: unknown): Response =>
   ({
     ok: true,
     json: async () => data,
-  } as unknown as Response);
+  }) as unknown as Response
 
 describe("ComparePage", () => {
-   beforeEach(() => {
-      vi.clearAllMocks();
-      vi.mocked(global.fetch).mockResolvedValue(createMockResponse(mockCompareResult));
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(global.fetch).mockResolvedValue(createMockResponse(mockCompareResult))
 
-      // Default mock implementations
-      vi.mocked(useSSE).mockReturnValue({
-        data: [],
-        isStreaming: false,
-        error: null,
-        startStream: mockStartStream,
-        stopStream: mockStopStream,
-      });
+    // Default mock implementations
+    vi.mocked(useSSE).mockReturnValue({
+      data: [],
+      isStreaming: false,
+      error: null,
+      startStream: mockStartStream,
+      stopStream: mockStopStream,
+    })
 
-      vi.mocked(usePreferencesStore).mockReturnValue({
-        enable_streaming: true,
-      });
+    vi.mocked(usePreferencesStore).mockReturnValue({
+      enable_streaming: true,
+    })
 
-      // Default useSearchParams mock (no params)
-      vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams() as unknown as ReturnType<typeof useSearchParams>);
-    });
+    // Default useSearchParams mock (no params)
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams() as unknown as ReturnType<typeof useSearchParams>
+    )
+  })
 
   it("renders the page title and description", () => {
-    render(<ComparePage />);
-    expect(screen.getByRole("heading", { name: /^compare$/i, level: 1 })).toBeInTheDocument();
-    expect(screen.getByText(/Comparative analysis across/)).toBeInTheDocument();
-  });
+    render(<ComparePage />)
+    expect(screen.getByRole("heading", { name: /^compare$/i, level: 1 })).toBeInTheDocument()
+    expect(screen.getByText(/Comparative analysis across/)).toBeInTheDocument()
+  })
 
   it("renders search input and analyze button", () => {
-    render(<ComparePage />);
-    expect(screen.getByPlaceholderText(/Enter a topic/)).toBeInTheDocument();
-    expect(screen.getByTestId("compare-analyze-button")).toBeInTheDocument();
-  });
+    render(<ComparePage />)
+    expect(screen.getByPlaceholderText(/Enter a topic/)).toBeInTheDocument()
+    expect(screen.getByTestId("compare-analyze-button")).toBeInTheDocument()
+  })
 
-   it("starts streaming when form is submitted and streaming is enabled", async () => {
-     const { container } = render(<ComparePage />);
-     const input = screen.getByTestId("compare-topic-input");
+  it("starts streaming when form is submitted and streaming is enabled", async () => {
+    const { container } = render(<ComparePage />)
+    const input = screen.getByTestId("compare-topic-input")
 
-     fireEvent.change(input, { target: { value: "patience" } });
-     fireEvent.submit(container.querySelector("form")!);
+    fireEvent.change(input, { target: { value: "patience" } })
+    fireEvent.submit(container.querySelector("form")!)
 
-     await waitFor(() => {
-       expect(mockStartStream).toHaveBeenCalled();
-     });
-     
-     const callUrl = mockStartStream.mock.calls[0][0];
-     expect(callUrl).toContain("topic=patience");
-     expect(callUrl).not.toContain("token=");
-   });
+    await waitFor(() => {
+      expect(mockStartStream).toHaveBeenCalled()
+    })
+
+    const callUrl = mockStartStream.mock.calls[0][0]
+    expect(callUrl).toContain("topic=patience")
+    expect(callUrl).not.toContain("token=")
+  })
 
   it("shows loading state when isStreaming is true", () => {
     vi.mocked(useSSE).mockReturnValue({
@@ -316,16 +325,16 @@ describe("ComparePage", () => {
       error: null,
       startStream: mockStartStream,
       stopStream: mockStopStream,
-    });
+    })
 
-    render(<ComparePage />);
-    expect(screen.getByText(/Initializing multi-agent analysis/)).toBeInTheDocument();
-  });
+    render(<ComparePage />)
+    expect(screen.getByText(/Initializing multi-agent analysis/)).toBeInTheDocument()
+  })
 
   it("displays results when SSE data is received", async () => {
     // Initial render
-    const { rerender } = render(<ComparePage />);
-    
+    const { rerender } = render(<ComparePage />)
+
     // Simulate receiving "complete" message
     vi.mocked(useSSE).mockReturnValue({
       data: [{ type: "complete", result: mockCompareResult }],
@@ -333,17 +342,17 @@ describe("ComparePage", () => {
       error: null,
       startStream: mockStartStream,
       stopStream: mockStopStream,
-    });
+    })
 
-    rerender(<ComparePage />);
+    rerender(<ComparePage />)
 
     await waitFor(() => {
-      expect(screen.getByText("Analysis Complete")).toBeInTheDocument();
-      expect(screen.getByText("Quran Perspective")).toBeInTheDocument();
-      expect(screen.getByText("Bible Perspective")).toBeInTheDocument();
-      expect(screen.getByText("90% confidence")).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByText("Analysis Complete")).toBeInTheDocument()
+      expect(screen.getByText("Quran Perspective")).toBeInTheDocument()
+      expect(screen.getByText("Bible Perspective")).toBeInTheDocument()
+      expect(screen.getByText("90% confidence")).toBeInTheDocument()
+    })
+  })
 
   it("toggles paragraph expansion", async () => {
     vi.mocked(useSSE).mockReturnValue({
@@ -352,34 +361,34 @@ describe("ComparePage", () => {
       error: null,
       startStream: mockStartStream,
       stopStream: mockStopStream,
-    });
+    })
 
-    render(<ComparePage />);
+    render(<ComparePage />)
 
     // Wait for result to render
     await waitFor(() => {
-      expect(screen.getByText("Quran Perspective")).toBeInTheDocument();
-    });
+      expect(screen.getByText("Quran Perspective")).toBeInTheDocument()
+    })
 
     // "complete" path does NOT auto-expand paragraphs — content starts collapsed
-    expect(screen.queryByText(/The Quran says/)).not.toBeInTheDocument();
-    
+    expect(screen.queryByText(/The Quran says/)).not.toBeInTheDocument()
+
     // Click the expand button (which wraps the title)
-    fireEvent.click(screen.getByText("Quran Perspective").closest("button")!);
+    fireEvent.click(screen.getByText("Quran Perspective").closest("button")!)
 
     // Content should now be visible
     await waitFor(() => {
-      expect(screen.getByText(/The Quran says/)).toBeInTheDocument();
-    });
-    
+      expect(screen.getByText(/The Quran says/)).toBeInTheDocument()
+    })
+
     // Re-query and click again to collapse (DOM may have changed after re-render)
-    fireEvent.click(screen.getByText("Quran Perspective").closest("button")!);
+    fireEvent.click(screen.getByText("Quran Perspective").closest("button")!)
 
     // Content should be hidden after collapse
     await waitFor(() => {
-      expect(screen.queryByText(/The Quran says/)).not.toBeInTheDocument();
-    });
-  });
+      expect(screen.queryByText(/The Quran says/)).not.toBeInTheDocument()
+    })
+  })
 
   it("filters source references when filter tabs are clicked", async () => {
     vi.mocked(useSSE).mockReturnValue({
@@ -388,41 +397,41 @@ describe("ComparePage", () => {
       error: null,
       startStream: mockStartStream,
       stopStream: mockStopStream,
-    });
+    })
 
-    const { rerender } = render(<ComparePage />);
+    const { rerender } = render(<ComparePage />)
 
     await waitFor(() => {
-      expect(screen.getByText("Kaynak Referanslari")).toBeInTheDocument();
-    });
+      expect(screen.getByText("Kaynak Referanslari")).toBeInTheDocument()
+    })
 
     // Get the verse references section
-    const referencesSection = screen.getByTestId("verse-references-section");
-    
+    const referencesSection = screen.getByTestId("verse-references-section")
+
     // Check both references are present initially (All Sources filter is active by default)
-    const allCards = within(referencesSection).getAllByTestId("source-reference-card");
-    expect(allCards).toHaveLength(2);
+    const allCards = within(referencesSection).getAllByTestId("source-reference-card")
+    expect(allCards).toHaveLength(2)
 
     // Click on Quran filter tab — our mock renders buttons with role="tab"
-    const quranTab = screen.getByRole("tab", { name: /^Quran$/i });
-    fireEvent.click(quranTab);
+    const quranTab = screen.getByRole("tab", { name: /^Quran$/i })
+    fireEvent.click(quranTab)
 
     // Re-render to ensure state update is applied
-    rerender(<ComparePage />);
+    rerender(<ComparePage />)
 
     // After filtering, only Quran reference should be visible
     await waitFor(() => {
-      const section = screen.getByTestId("verse-references-section");
-      const filteredCards = within(section).getAllByTestId("source-reference-card");
-      expect(filteredCards).toHaveLength(1);
-      expect(within(section).getByText("quran:2:153")).toBeInTheDocument();
-    });
-  });
+      const section = screen.getByTestId("verse-references-section")
+      const filteredCards = within(section).getAllByTestId("source-reference-card")
+      expect(filteredCards).toHaveLength(1)
+      expect(within(section).getByText("quran:2:153")).toBeInTheDocument()
+    })
+  })
 
   it("handles batch compare fallback if streaming is disabled", async () => {
     vi.mocked(usePreferencesStore).mockReturnValue({
       enable_streaming: false,
-    } as never);
+    } as never)
 
     vi.mocked(compareScripturesApiComparePost).mockResolvedValueOnce({
       data: {
@@ -432,13 +441,13 @@ describe("ComparePage", () => {
         ],
         citations: {},
       },
-    } as never);
+    } as never)
 
-    const { container } = render(<ComparePage />);
-    const input = screen.getByTestId("compare-topic-input");
+    const { container } = render(<ComparePage />)
+    const input = screen.getByTestId("compare-topic-input")
 
-    fireEvent.change(input, { target: { value: "faith" } });
-    fireEvent.submit(container.querySelector("form")!);
+    fireEvent.change(input, { target: { value: "faith" } })
+    fireEvent.submit(container.querySelector("form")!)
 
     await waitFor(() => {
       expect(compareScripturesApiComparePost).toHaveBeenCalledWith(
@@ -447,65 +456,70 @@ describe("ComparePage", () => {
             topic: "faith",
           }),
         })
-      );
-    });
+      )
+    })
 
     await waitFor(() => {
-      expect(screen.getByText("Analysis Complete")).toBeInTheDocument();
-    });
-  });
+      expect(screen.getByText("Analysis Complete")).toBeInTheDocument()
+    })
+  })
 
-   it("displays error message when streaming fails", async () => {
-     const { rerender } = render(<ComparePage />);
+  it("displays error message when streaming fails", async () => {
+    const { rerender } = render(<ComparePage />)
 
-     // Simulate SSE error
-     vi.mocked(useSSE).mockReturnValue({
-       data: [],
-       isStreaming: false,
-       error: "Connection lost",
-       startStream: mockStartStream,
-       stopStream: mockStopStream,
-     });
+    // Simulate SSE error
+    vi.mocked(useSSE).mockReturnValue({
+      data: [],
+      isStreaming: false,
+      error: "Connection lost",
+      startStream: mockStartStream,
+      stopStream: mockStopStream,
+    })
 
-     rerender(<ComparePage />);
+    rerender(<ComparePage />)
 
-     await waitFor(() => {
-       expect(compareScripturesApiComparePost).toHaveBeenCalled();
-     });
-   });
+    await waitFor(() => {
+      expect(compareScripturesApiComparePost).toHaveBeenCalled()
+    })
+  })
 
-   it("auto-executes comparison when q param is present", async () => {
-     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("q=creation") as unknown as ReturnType<typeof useSearchParams>);
- 
-     
-     render(<ComparePage />);
-     
-     await waitFor(() => {
-       expect(mockStartStream).toHaveBeenCalled();
-       const callUrl = mockStartStream.mock.calls[0][0];
-       expect(callUrl).toContain("topic=creation");
-     });
-   });
+  it("auto-executes comparison when q param is present", async () => {
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams("q=creation") as unknown as ReturnType<typeof useSearchParams>
+    )
 
-   it("does not auto-execute when q param is empty", async () => {
-     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("q=") as unknown as ReturnType<typeof useSearchParams>);
-     
-     render(<ComparePage />);
-     
-     await waitFor(() => {
-       expect(mockStartStream).not.toHaveBeenCalled();
-       expect(global.fetch).not.toHaveBeenCalled();
-     });
-   });
+    render(<ComparePage />)
 
-   it("does not auto-execute when q param is absent", async () => {
-     vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams("") as unknown as ReturnType<typeof useSearchParams>);
-     
-     render(<ComparePage />);
-     
-     await waitFor(() => {
-       expect(mockStartStream).not.toHaveBeenCalled();
-       expect(global.fetch).not.toHaveBeenCalled();
-     });
-   });
-});
+    await waitFor(() => {
+      expect(mockStartStream).toHaveBeenCalled()
+      const callUrl = mockStartStream.mock.calls[0][0]
+      expect(callUrl).toContain("topic=creation")
+    })
+  })
+
+  it("does not auto-execute when q param is empty", async () => {
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams("q=") as unknown as ReturnType<typeof useSearchParams>
+    )
+
+    render(<ComparePage />)
+
+    await waitFor(() => {
+      expect(mockStartStream).not.toHaveBeenCalled()
+      expect(global.fetch).not.toHaveBeenCalled()
+    })
+  })
+
+  it("does not auto-execute when q param is absent", async () => {
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams("") as unknown as ReturnType<typeof useSearchParams>
+    )
+
+    render(<ComparePage />)
+
+    await waitFor(() => {
+      expect(mockStartStream).not.toHaveBeenCalled()
+      expect(global.fetch).not.toHaveBeenCalled()
+    })
+  })
+})

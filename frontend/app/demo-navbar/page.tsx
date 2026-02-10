@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import { Navbar1 } from "@/components/ui/navbar";
-import { Book, Sunset, Trees, Zap } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Navbar1 } from "@/components/ui/navbar"
+import { Book, Sunset, Trees, Zap } from "lucide-react"
+import { useEffect, useState } from "react"
 
 const demoData = {
   logo: {
@@ -95,37 +95,37 @@ const demoData = {
     login: { text: "Sign In", url: "/sign-in" },
     signup: { text: "Register", url: "/sign-up" },
   },
-};
+}
 
 export default function NavbarDemoPage() {
-  const [viewportWidth, setViewportWidth] = useState<string>("");
+  const [viewportWidth, setViewportWidth] = useState<string>("")
 
   useEffect(() => {
     const updateWidth = () => {
-      setViewportWidth(`${window.innerWidth}px`);
-    };
+      setViewportWidth(`${window.innerWidth}px`)
+    }
 
-    updateWidth();
-    window.addEventListener("resize", updateWidth);
-    return () => window.removeEventListener("resize", updateWidth);
-  }, []);
+    updateWidth()
+    window.addEventListener("resize", updateWidth)
+    return () => window.removeEventListener("resize", updateWidth)
+  }, [])
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background min-h-screen">
       <Navbar1 {...demoData} />
-      
+
       <main className="container py-12">
-        <div className="max-w-3xl mx-auto space-y-8">
+        <div className="mx-auto max-w-3xl space-y-8">
           <div>
-            <h1 className="text-4xl font-bold mb-4">Navbar Component Demo</h1>
+            <h1 className="mb-4 text-4xl font-bold">Navbar Component Demo</h1>
             <p className="text-muted-foreground text-lg">
               This page demonstrates the Navbar1 component with Clarus-specific configuration.
             </p>
           </div>
 
-          <div className="space-y-4 border rounded-lg p-6">
+          <div className="space-y-4 rounded-lg border p-6">
             <h2 className="text-2xl font-semibold">Features Demonstrated</h2>
-            <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+            <ul className="text-muted-foreground list-inside list-disc space-y-2">
               <li>Desktop navigation with dropdown menus</li>
               <li>Mobile-responsive hamburger menu</li>
               <li>Nested menu items with icons and descriptions</li>
@@ -134,18 +134,24 @@ export default function NavbarDemoPage() {
             </ul>
           </div>
 
-          <div className="space-y-4 border rounded-lg p-6">
+          <div className="space-y-4 rounded-lg border p-6">
             <h2 className="text-2xl font-semibold">Testing Instructions</h2>
-            <div className="space-y-3 text-muted-foreground">
-              <p><strong>Desktop (≥1024px):</strong></p>
-              <ul className="list-disc list-inside ml-4 space-y-1">
-                <li>Hover over &quot;Scripture&quot; or &quot;Features&quot; to see dropdown menus</li>
+            <div className="text-muted-foreground space-y-3">
+              <p>
+                <strong>Desktop (≥1024px):</strong>
+              </p>
+              <ul className="ml-4 list-inside list-disc space-y-1">
+                <li>
+                  Hover over &quot;Scripture&quot; or &quot;Features&quot; to see dropdown menus
+                </li>
                 <li>Click on menu items to navigate</li>
                 <li>Click &quot;Sign In&quot; or &quot;Register&quot; buttons</li>
               </ul>
-              
-              <p className="pt-2"><strong>Mobile (&lt;1024px):</strong></p>
-              <ul className="list-disc list-inside ml-4 space-y-1">
+
+              <p className="pt-2">
+                <strong>Mobile (&lt;1024px):</strong>
+              </p>
+              <ul className="ml-4 list-inside list-disc space-y-1">
                 <li>Click hamburger menu icon (three lines)</li>
                 <li>Expand &quot;Scripture&quot; or &quot;Features&quot; accordion sections</li>
                 <li>Scroll to see mobile extra links (About, Contact, etc.)</li>
@@ -154,18 +160,20 @@ export default function NavbarDemoPage() {
             </div>
           </div>
 
-          <div className="space-y-4 border rounded-lg p-6 bg-muted/50">
+          <div className="bg-muted/50 space-y-4 rounded-lg border p-6">
             <h2 className="text-2xl font-semibold">Responsive Breakpoint</h2>
             <p className="text-muted-foreground">
-              The navbar switches between desktop and mobile views at <code className="bg-background px-2 py-1 rounded">1024px</code> width.
-              Resize your browser window to see the transition.
+              The navbar switches between desktop and mobile views at{" "}
+              <code className="bg-background rounded px-2 py-1">1024px</code> width. Resize your
+              browser window to see the transition.
             </p>
-            <p className="text-sm text-muted-foreground">
-              Current viewport width: <span className="font-mono">{viewportWidth || "Calculating..."}</span>
+            <p className="text-muted-foreground text-sm">
+              Current viewport width:{" "}
+              <span className="font-mono">{viewportWidth || "Calculating..."}</span>
             </p>
           </div>
         </div>
       </main>
     </div>
-  );
+  )
 }

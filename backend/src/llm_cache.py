@@ -17,8 +17,9 @@ Cost Impact: 60-80% reduction in LLM API calls for typical workloads.
 import hashlib
 import json
 import logging
+from typing import TYPE_CHECKING, Any
+
 import numpy as np
-from typing import Optional, Dict, Any, List, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from redis import asyncio as aioredis
@@ -117,7 +118,7 @@ class SemanticLLMCache:
         """Generate unique cache key (MD5 hash)."""
         return hashlib.md5(f"{operation}:{query}".encode()).hexdigest()
 
-    def _cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
+    def _cosine_similarity(self, vec1: list[float], vec2: list[float]) -> float:
         """Compute cosine similarity between two vectors."""
         a = np.array(vec1)
         b = np.array(vec2)
@@ -130,9 +131,7 @@ class SemanticLLMCache:
 
         return float(np.dot(a, b) / (norm_a * norm_b))
 
-    async def _find_similar_key(
-        self, query_embedding: List[float], operation: str
-    ) -> Optional[Tuple[str, float]]:
+    async def _find_similar_key(self, query_embedding: list[float], operation: str) -> tuple[str, float] | None:
         """
         Find the most similar cached query via semantic search.
 
@@ -161,11 +160,7 @@ class SemanticLLMCache:
             for md5_bytes, embedding_json_bytes in stored_embeddings.items():
                 try:
                     # Decode bytes to string
-                    md5 = (
-                        md5_bytes.decode()
-                        if isinstance(md5_bytes, bytes)
-                        else md5_bytes
-                    )
+                    md5 = md5_bytes.decode() if isinstance(md5_bytes, bytes) else md5_bytes
                     embedding_json = (
                         embedding_json_bytes.decode()
                         if isinstance(embedding_json_bytes, bytes)
@@ -176,9 +171,7 @@ class SemanticLLMCache:
                     stored_embedding = json.loads(embedding_json)
 
                     # Compute similarity
-                    similarity = self._cosine_similarity(
-                        query_embedding, stored_embedding
-                    )
+                    similarity = self._cosine_similarity(query_embedding, stored_embedding)
 
                     if similarity > best_similarity and similarity >= self.threshold:
                         best_similarity = similarity
@@ -196,9 +189,7 @@ class SemanticLLMCache:
             logger.warning(f"Semantic search failed: {e}")
             return None
 
-    async def get(
-        self, query: str, operation: str, skip_semantic: bool = False
-    ) -> Optional[Any]:
+    async def get(self, query: str, operation: str, skip_semantic: bool = False) -> Any | None:
         """
         Get cached response for query.
 
@@ -229,11 +220,7 @@ class SemanticLLMCache:
                 self.stats["exact_hits"] += 1
 
                 # Decode and deserialize
-                cached_json = (
-                    cached_bytes.decode()
-                    if isinstance(cached_bytes, bytes)
-                    else cached_bytes
-                )
+                cached_json = cached_bytes.decode() if isinstance(cached_bytes, bytes) else cached_bytes
                 cached = json.loads(cached_json)
 
                 logger.info(
@@ -264,11 +251,7 @@ class SemanticLLMCache:
                     self.stats["semantic_hits"] += 1
 
                     # Decode and deserialize
-                    cached_json = (
-                        cached_bytes.decode()
-                        if isinstance(cached_bytes, bytes)
-                        else cached_bytes
-                    )
+                    cached_json = cached_bytes.decode() if isinstance(cached_bytes, bytes) else cached_bytes
                     cached = json.loads(cached_json)
 
                     logger.info(
@@ -292,8 +275,8 @@ class SemanticLLMCache:
         query: str,
         operation: str,
         response: Any,
-        embedding: Optional[List[float]] = None,
-        source_language: Optional[str] = None,
+        embedding: list[float] | None = None,
+        source_language: str | None = None,
     ):
         """
         Cache LLM response with optional embedding for semantic matching.
@@ -347,9 +330,7 @@ class SemanticLLMCache:
             # Delete all llm_cache:* keys
             cursor = 0
             while True:
-                cursor, keys = await self._redis.scan(
-                    cursor=cursor, match="llm_cache:*", count=100
-                )
+                cursor, keys = await self._redis.scan(cursor=cursor, match="llm_cache:*", count=100)
                 if keys:
                     await self._redis.delete(*keys)
                 if cursor == 0:
@@ -358,9 +339,7 @@ class SemanticLLMCache:
             # Delete all llm_cache_idx:* keys
             cursor = 0
             while True:
-                cursor, keys = await self._redis.scan(
-                    cursor=cursor, match="llm_cache_idx:*", count=100
-                )
+                cursor, keys = await self._redis.scan(cursor=cursor, match="llm_cache_idx:*", count=100)
                 if keys:
                     await self._redis.delete(*keys)
                 if cursor == 0:
@@ -374,7 +353,7 @@ class SemanticLLMCache:
         except Exception as e:
             logger.warning(f"Failed to clear cache: {e}")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         total = self.stats["hits"] + self.stats["misses"]
         hit_rate = self.stats["hits"] / total if total > 0 else 0.0
@@ -383,13 +362,9 @@ class SemanticLLMCache:
             **self.stats,
             "total_requests": total,
             "hit_rate": hit_rate,
-            "semantic_hit_ratio": (
-                self.stats["semantic_hits"] / self.stats["hits"]
-                if self.stats["hits"] > 0
-                else 0.0
-            ),
+            "semantic_hit_ratio": (self.stats["semantic_hits"] / self.stats["hits"] if self.stats["hits"] > 0 else 0.0),
         }
 
 
 # Global cache instance (lazy initialization)
-_global_cache: Optional[SemanticLLMCache] = None
+_global_cache: SemanticLLMCache | None = None
