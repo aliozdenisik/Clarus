@@ -49,7 +49,7 @@ def get_analyzer():
 
             # Disable debug mode if available
             if hasattr(_analyzer, "debug"):
-                _analyzer.debug = False
+                _analyzer.debug = False  # pyright: ignore[reportAttributeAccessIssue]
 
             sys.stdout = old_stdout
             sys.stderr = old_stderr

@@ -204,12 +204,10 @@ async def stream_search(
 
             logger.info("[SSE /search] Finished streaming words, sending citations")
             # Send citations
-            if hasattr(answer_obj, "citations"):
-                citations = answer_obj.citations
-            elif isinstance(answer_obj, dict):
+            if isinstance(answer_obj, dict):
                 citations = answer_obj.get("citations", [])
             else:
-                citations = []
+                citations = getattr(answer_obj, "citations", [])
             yield f"data: {json.dumps({'citations': citations})}\n\n"
 
             # Build verse_details and results_data from search results
