@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
@@ -76,67 +76,107 @@ export default function BookDetailPage() {
     }
   }, [searchParams])
 
-  // Fetch book details
+  // Fetch book details + initial chapter in parallel (eliminates sequential waterfall)
   useEffect(() => {
-    const fetchBook = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/metadata/bible/books/${bookNr}`, {
-          credentials: "include",
-        })
+    let cancelled = false
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch book")
+    const fetchInitialData = async () => {
+      const chapterParam = searchParams.get("chapter")
+      const targetChapter = chapterParam ? Number(chapterParam) : 1
+
+      try {
+        const [bookRes, chapterRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/metadata/bible/books/${bookNr}`, {
+            credentials: "include",
+          }),
+          fetch(`${API_BASE_URL}/api/metadata/bible/books/${bookNr}/chapters/${targetChapter}`, {
+            credentials: "include",
+          }),
+        ])
+
+        if (cancelled) return
+
+        if (!bookRes.ok) throw new Error("Failed to fetch book")
+
+        const bookData = await bookRes.json()
+        setBook(bookData.data?.book || null)
+
+        if (bookData.data?.book?.chapters?.length > 0) {
+          setSelectedChapter(targetChapter)
         }
 
-        const data = await response.json()
-        setBook(data.data?.book || null)
-        // Auto-select chapter 1 only if no chapter param in URL
-        if (data.data?.book?.chapters?.length > 0 && !searchParams.get("chapter")) {
-          setSelectedChapter(1)
+        if (chapterRes.ok) {
+          const chapterData = await chapterRes.json()
+          if (!cancelled) setChapterContent(chapterData.data || null)
         }
       } catch {
-        toast.error("Failed to load book")
+        if (!cancelled) toast.error("Failed to load book")
       } finally {
-        setIsLoadingBook(false)
+        if (!cancelled) {
+          setIsLoadingBook(false)
+          setIsLoadingChapter(false)
+        }
       }
     }
 
     if (user && bookNr) {
-      fetchBook()
+      setIsLoadingBook(true)
+      setIsLoadingChapter(true)
+      fetchInitialData()
+    }
+
+    return () => {
+      cancelled = true
     }
   }, [user, bookNr, searchParams])
 
-  // Fetch chapter content when selected
-  useEffect(() => {
-    const fetchChapter = async () => {
-      if (!selectedChapter) return
+  // Fetch chapter content when user switches chapters (after initial load)
+  const initialChapterRef = useRef<number | null>(null)
 
+  useEffect(() => {
+    // Skip fetch if this is the initial chapter (already fetched in parallel above)
+    if (selectedChapter === null) return
+    if (initialChapterRef.current === null) {
+      initialChapterRef.current = selectedChapter
+      return
+    }
+    if (
+      selectedChapter === initialChapterRef.current &&
+      chapterContent?.chapter === selectedChapter
+    ) {
+      return
+    }
+
+    let cancelled = false
+
+    const fetchChapter = async () => {
       setIsLoadingChapter(true)
       try {
         const response = await fetch(
           `${API_BASE_URL}/api/metadata/bible/books/${bookNr}/chapters/${selectedChapter}`,
-          {
-            credentials: "include",
-          }
+          { credentials: "include" }
         )
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch chapter")
-        }
+        if (cancelled) return
+        if (!response.ok) throw new Error("Failed to fetch chapter")
 
         const data = await response.json()
-        setChapterContent(data.data || null)
+        if (!cancelled) setChapterContent(data.data || null)
       } catch {
-        toast.error("Failed to load chapter")
+        if (!cancelled) toast.error("Failed to load chapter")
       } finally {
-        setIsLoadingChapter(false)
+        if (!cancelled) setIsLoadingChapter(false)
       }
     }
 
     if (user && selectedChapter) {
       fetchChapter()
     }
-  }, [user, bookNr, selectedChapter])
+
+    return () => {
+      cancelled = true
+    }
+  }, [user, bookNr, selectedChapter, chapterContent?.chapter])
 
   // Scroll to verse when chapter content loads and highlightedVerse is set.
   // Uses polling because AnimatePresence mode="wait" delays DOM mounting
