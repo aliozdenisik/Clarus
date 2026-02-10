@@ -209,7 +209,8 @@ class TestLaneAdapter:
         """Adapter should initialize against the cloned Lane database."""
         from src.lane_lexicon import LaneLexiconAdapter
 
-        adapter = LaneLexiconAdapter(LANE_DATA_DIR)
+        adapter = LaneLexiconAdapter(db_path=LANE_DATA_DIR)
+        assert adapter.db_file is not None
         assert adapter.db_file.exists()
         assert adapter.connection is not None
 
@@ -217,7 +218,7 @@ class TestLaneAdapter:
         """Known Buckwalter root should return a meaningful English definition."""
         from src.lane_lexicon import LaneLexiconAdapter
 
-        adapter = LaneLexiconAdapter(LANE_DATA_DIR)
+        adapter = LaneLexiconAdapter(db_path=LANE_DATA_DIR)
         entry = adapter.lookup_by_root("ktb")
 
         assert entry is not None
@@ -229,14 +230,14 @@ class TestLaneAdapter:
         """Non-existent root should return None gracefully."""
         from src.lane_lexicon import LaneLexiconAdapter
 
-        adapter = LaneLexiconAdapter(LANE_DATA_DIR)
+        adapter = LaneLexiconAdapter(db_path=LANE_DATA_DIR)
         assert adapter.lookup_by_root("zzzzz") is None
 
     def test_lane_volume_extraction(self) -> None:
         """Volume extraction should return a value in Lane's 1-8 range."""
         from src.lane_lexicon import LaneLexiconAdapter
 
-        adapter = LaneLexiconAdapter(LANE_DATA_DIR)
+        adapter = LaneLexiconAdapter(db_path=LANE_DATA_DIR)
         entry = adapter.lookup_by_root("ktb")
 
         assert entry is not None
@@ -250,7 +251,7 @@ class TestLaneAdapter:
 
         missing_dir = tmp_path / "lane_missing"
         with pytest.raises(FileNotFoundError, match=r"Lane.*database"):
-            LaneLexiconAdapter(missing_dir)
+            LaneLexiconAdapter(db_path=missing_dir)
 
 
 @pytest.mark.skipif(not ETYMOLOGY_PIPELINE_AVAILABLE, reason="Task 3 etymology pipeline module not yet available")
@@ -329,6 +330,7 @@ class TestEtymologyPipeline:
         assert result.total_roots >= 1500
 
     def test_pipeline_handles_lane_missing(self, tmp_path: Path) -> None:
+        """When SQLite path is missing, pipeline falls back to PostgreSQL lane_entries."""
         pipeline_cls = etymology_pipeline.EtymologyPipeline
         missing_lane_dir = tmp_path / "does-not-exist"
         pipeline = pipeline_cls(
@@ -340,4 +342,5 @@ class TestEtymologyPipeline:
         result = pipeline.run()
 
         assert result.success is True
-        assert result.lane_matches == 0
+        # Lane data is in PostgreSQL, so matches are found even without SQLite
+        assert result.lane_matches > 0

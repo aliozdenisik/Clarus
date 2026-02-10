@@ -282,9 +282,15 @@ class EtymologyPipeline:
         self.lane_adapter: LaneLexiconAdapter | None = None
         if lane_db_path is not None:
             try:
-                self.lane_adapter = LaneLexiconAdapter(lane_db_path)
-            except FileNotFoundError:
-                logger.warning("Lane database missing at %s, running corpus-only mode", lane_db_path)
+                self.lane_adapter = LaneLexiconAdapter(db_url=self._sqlalchemy_dsn)
+                logger.info("Using Lane lexicon from PostgreSQL lane_entries")
+            except Exception as exc:
+                logger.warning("Lane PostgreSQL unavailable (%s), falling back to SQLite", exc)
+                try:
+                    self.lane_adapter = LaneLexiconAdapter(db_path=lane_db_path)
+                    logger.info("Using Lane lexicon from SQLite at %s", lane_db_path)
+                except FileNotFoundError:
+                    logger.warning("Lane database missing at %s, running corpus-only mode", lane_db_path)
 
         self._truncate_done = False
 

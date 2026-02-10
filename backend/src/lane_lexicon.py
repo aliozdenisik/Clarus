@@ -13,14 +13,18 @@ import logging
 import re
 import sqlite3
 import unicodedata
+from collections.abc import Mapping
 from dataclasses import dataclass
 from difflib import SequenceMatcher
+from pathlib import Path
 from typing import TYPE_CHECKING
+
+from sqlalchemy import create_engine, text
 
 from src.arabic_normalizer import arabic_to_buckwalter, buckwalter_to_arabic, normalize_arabic
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    from sqlalchemy.engine import Engine
 
 logger = logging.getLogger(__name__)
 
@@ -54,19 +58,30 @@ class LaneLexiconAdapter:
     a `.sqlite` / `.db` file.
     """
 
-    def __init__(self, db_path: Path):
-        """Open Lane's Lexicon SQLite database.
+    def __init__(self, db_url: str | None = None, db_path: Path | None = None):
+        if db_path is None and isinstance(db_url, Path):
+            db_path = db_url
+            db_url = None
 
-        Args:
-            db_path: Path to a SQLite file or directory containing one.
+        self.db_file: Path | None = None
+        self.connection: sqlite3.Connection | None = None
+        self._engine: Engine | None = None
 
-        Raises:
-            FileNotFoundError: If no Lane SQLite database is found.
-        """
-        self.db_file = self._discover_db_file(db_path)
-        self.connection = sqlite3.connect(str(self.db_file))
-        self.connection.row_factory = sqlite3.Row
+        if db_url:
+            normalized_url = self._normalize_sqlalchemy_dsn(db_url)
+            self._engine = create_engine(normalized_url, future=True)
+        elif db_path is not None:
+            self.db_file = self._discover_db_file(db_path)
+            self.connection = sqlite3.connect(str(self.db_file))
+            self.connection.row_factory = sqlite3.Row
+        else:
+            raise ValueError("Either db_url or db_path must be provided")
+
         self._max_page = self._fetch_max_page()
+
+    @staticmethod
+    def _normalize_sqlalchemy_dsn(db_url: str) -> str:
+        return db_url.replace("postgresql+asyncpg://", "postgresql://")
 
     @staticmethod
     def _discover_db_file(db_path: Path) -> Path:
@@ -84,7 +99,13 @@ class LaneLexiconAdapter:
         raise FileNotFoundError(f"Lane lexicon database file not found under: {db_path}")
 
     def _fetch_max_page(self) -> int:
-        row = self.connection.execute("SELECT MAX(page) AS max_page FROM entry").fetchone()
+        if self._engine is not None:
+            with self._engine.connect() as conn:
+                row = conn.execute(text("SELECT MAX(page) AS max_page FROM lane_entries")).mappings().first()
+        else:
+            assert self.connection is not None
+            row = self.connection.execute("SELECT MAX(page) AS max_page FROM entry").fetchone()
+
         if row is None or row["max_page"] is None:
             return 0
         return int(row["max_page"])
@@ -103,11 +124,27 @@ class LaneLexiconAdapter:
         text = _WS_RE.sub(" ", text).strip()
         return text
 
-    def _build_entry(self, row: sqlite3.Row, match_type: str) -> LaneEntry:
-        root_buckwalter = row["broot"] or ""
-        root_arabic = row["root"]
-        definition_en = self._xml_to_text(row["xml"] or "")
-        volume = self._volume_from_page(row["page"])
+    @staticmethod
+    def _coerce_row(row: object) -> dict[str, object]:
+        if isinstance(row, sqlite3.Row):
+            return {key: row[key] for key in row.keys()}  # noqa: SIM118
+        if isinstance(row, Mapping):
+            return {str(key): value for key, value in row.items()}
+        raise TypeError(f"Unsupported row type: {type(row)!r}")
+
+    @staticmethod
+    def _coerce_page(page: object) -> int | None:
+        if page is None:
+            return None
+        if isinstance(page, int | float | str):
+            return int(page)
+        return None
+
+    def _build_entry(self, row: Mapping[str, object], match_type: str) -> LaneEntry:
+        root_buckwalter = str(row["broot"] or "")
+        root_arabic = str(row["root"]) if row["root"] is not None else None
+        definition_en = self._xml_to_text(str(row["xml"] or ""))
+        volume = self._volume_from_page(self._coerce_page(row["page"]))
         return LaneEntry(
             root_buckwalter=root_buckwalter,
             root_arabic=root_arabic,
@@ -125,8 +162,29 @@ class LaneLexiconAdapter:
         volume = ((page_int - 1) * 8) // self._max_page + 1
         return min(max(volume, 1), 8)
 
-    def _query_exact_buckwalter(self, root_buckwalter: str) -> sqlite3.Row | None:
-        return self.connection.execute(
+    def _query_exact_buckwalter(self, root_buckwalter: str) -> Mapping[str, object] | None:
+        if self._engine is not None:
+            with self._engine.connect() as conn:
+                row = (
+                    conn.execute(
+                        text(
+                            """
+                            SELECT root, broot, xml, page
+                            FROM lane_entries
+                            WHERE broot = :broot
+                            ORDER BY LENGTH(xml) DESC
+                            LIMIT 1
+                            """
+                        ),
+                        {"broot": root_buckwalter},
+                    )
+                    .mappings()
+                    .first()
+                )
+                return self._coerce_row(row) if row is not None else None
+
+        assert self.connection is not None
+        row = self.connection.execute(
             """
             SELECT root, broot, xml, page
             FROM entry
@@ -136,9 +194,31 @@ class LaneLexiconAdapter:
             """,
             (root_buckwalter,),
         ).fetchone()
+        return self._coerce_row(row) if row is not None else None
 
-    def _query_exact_arabic(self, root_arabic: str) -> sqlite3.Row | None:
-        return self.connection.execute(
+    def _query_exact_arabic(self, root_arabic: str) -> Mapping[str, object] | None:
+        if self._engine is not None:
+            with self._engine.connect() as conn:
+                row = (
+                    conn.execute(
+                        text(
+                            """
+                            SELECT root, broot, xml, page
+                            FROM lane_entries
+                            WHERE root = :root
+                            ORDER BY LENGTH(xml) DESC
+                            LIMIT 1
+                            """
+                        ),
+                        {"root": root_arabic},
+                    )
+                    .mappings()
+                    .first()
+                )
+                return self._coerce_row(row) if row is not None else None
+
+        assert self.connection is not None
+        row = self.connection.execute(
             """
             SELECT root, broot, xml, page
             FROM entry
@@ -148,19 +228,42 @@ class LaneLexiconAdapter:
             """,
             (root_arabic,),
         ).fetchone()
+        return self._coerce_row(row) if row is not None else None
 
-    def _query_fuzzy(self, root_buckwalter: str) -> sqlite3.Row | None:
+    def _query_fuzzy(self, root_buckwalter: str) -> Mapping[str, object] | None:
         prefix = f"{root_buckwalter}%"
         contains = f"%{root_buckwalter}%"
-        candidates = self.connection.execute(
-            """
-            SELECT root, broot, xml, page
-            FROM entry
-            WHERE broot LIKE ? OR broot LIKE ?
-            LIMIT 50
-            """,
-            (prefix, contains),
-        ).fetchall()
+        if self._engine is not None:
+            with self._engine.connect() as conn:
+                rows = (
+                    conn.execute(
+                        text(
+                            """
+                            SELECT root, broot, xml, page
+                            FROM lane_entries
+                            WHERE broot LIKE :prefix OR broot LIKE :contains
+                            LIMIT 50
+                            """
+                        ),
+                        {"prefix": prefix, "contains": contains},
+                    )
+                    .mappings()
+                    .all()
+                )
+                candidates = [self._coerce_row(row) for row in rows]
+        else:
+            assert self.connection is not None
+            rows = self.connection.execute(
+                """
+                SELECT root, broot, xml, page
+                FROM entry
+                WHERE broot LIKE ? OR broot LIKE ?
+                LIMIT 50
+                """,
+                (prefix, contains),
+            ).fetchall()
+            candidates = [self._coerce_row(row) for row in rows]
+
         if not candidates:
             return None
 

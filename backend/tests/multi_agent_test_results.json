@@ -16,65 +16,65 @@
   "agent_output": {
     "old_testament": {
       "has_commentary": true,
-      "commentary_length": 683,
+      "commentary_length": 635,
       "citations": [
-        "Proverbs 14:29",
-        "Proverbs 16:32",
-        "Ecclesiastes 7:8",
         "Lamentations 3:26",
+        "Ecclesiastes 7:8",
+        "Proverbs 16:32",
+        "Isaiah 40:31",
         "Psalms 27:14",
-        "Proverbs 25:15",
-        "Ecclesiastes 10:4"
+        "Psalms 37:7"
       ]
     },
     "new_testament": {
       "has_commentary": true,
-      "commentary_length": 594,
+      "commentary_length": 668,
       "citations": [
         "James 1:3",
         "James 1:4",
+        "Hebrews 10:36",
         "James 5:7",
         "James 5:8",
-        "James 5:10",
-        "Hebrews 6:15",
-        "Hebrews 10:36",
+        "James 5:11",
         "Romans 5:4",
         "Luke 21:19",
-        "Revelation 14:12"
+        "Colossians 1:11",
+        "Revelation 14:12",
+        "James 1:12"
       ]
     },
     "apocrypha": {
       "has_commentary": true,
-      "commentary_length": 710,
+      "commentary_length": 696,
       "citations": [
+        "Sirach 2:4",
         "Sirach 1:23",
         "Sirach 18:11",
         "Sirach 2:2",
-        "Sirach 2:14",
         "Baruch 4:25"
       ]
     },
     "quran": {
       "has_commentary": true,
-      "commentary_length": 823,
+      "commentary_length": 778,
       "citations": [
         "Bakara:153",
-        "Nahl:127",
-        "Âl-i İmrân:186",
+        "Al-i İmran:186",
         "Beled:17",
-        "İnsân:24",
-        "Şûrâ:43",
-        "İnsân:12",
-        "Müddessir:7",
-        "Enfâl:46"
+        "Al-i İmran:146",
+        "İnsan:12",
+        "Nahl:96",
+        "Ahkaf:35",
+        "Yunus:109",
+        "Al-i İmran:200"
       ]
     }
   },
-  "synthesis_length": 710,
-  "confidence": 0.95,
+  "synthesis_length": 730,
+  "confidence": 0.9272,
   "timing": {
-    "search_time_s": 65.3272316455841,
-    "generation_time_s": 40.59821343421936,
-    "total_time_s": 105.92884492874146
+    "search_time_s": 20.15260672569275,
+    "generation_time_s": 18.689051151275635,
+    "total_time_s": 38.84515428543091
   }
 }
