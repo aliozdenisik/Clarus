@@ -11,13 +11,13 @@ Optimizations:
 - Circuit breaker for API failures
 """
 
-from collections.abc import Awaitable
-from typing import Any, List, Optional, Tuple
 import os
 import requests
 import hashlib
 import time
 import json
+from typing import List, Tuple
+
 from tqdm import tqdm
 
 import sentry_sdk
