@@ -9,6 +9,8 @@ from typing import Any
 import asyncpg
 import pytest
 
+etymology_pipeline: Any
+
 try:
     etymology_pipeline = import_module("src.etymology_pipeline")
     FORM_PATTERNS = etymology_pipeline.FORM_PATTERNS
@@ -16,6 +18,7 @@ try:
     extract_morphological_forms = etymology_pipeline.extract_morphological_forms
     ETYMOLOGY_PIPELINE_AVAILABLE = True
 except ModuleNotFoundError:
+    etymology_pipeline = None
     FORM_PATTERNS = {}
 
     def extract_all_roots_with_frequency() -> list[Any]:
@@ -28,6 +31,43 @@ except ModuleNotFoundError:
 
 DATABASE_DSN = "postgresql://postgres:postgres@localhost:54322/postgres"
 DATABASE_URL = "postgresql://postgres:postgres@localhost:54322/postgres"
+
+
+@pytest.mark.skipif(not ETYMOLOGY_PIPELINE_AVAILABLE, reason="Task 3 etymology pipeline module not yet available")
+class TestTranslationThrottleUtilities:
+    def test_parse_retry_after_seconds(self) -> None:
+        assert etymology_pipeline is not None
+        assert etymology_pipeline._parse_retry_after_seconds("5") == 5.0
+        assert etymology_pipeline._parse_retry_after_seconds("0.5") == 0.5
+        assert etymology_pipeline._parse_retry_after_seconds(None) is None
+        assert etymology_pipeline._parse_retry_after_seconds("invalid") is None
+        assert etymology_pipeline._parse_retry_after_seconds("0") is None
+
+    def test_parse_positive_int_env_fallback(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        assert etymology_pipeline is not None
+        monkeypatch.setenv("ETYMOLOGY_TRANSLATION_WORKERS", "invalid")
+        assert etymology_pipeline._parse_positive_int_env("ETYMOLOGY_TRANSLATION_WORKERS", 20) == 20
+
+        monkeypatch.setenv("ETYMOLOGY_TRANSLATION_WORKERS", "0")
+        assert etymology_pipeline._parse_positive_int_env("ETYMOLOGY_TRANSLATION_WORKERS", 20) == 20
+
+        monkeypatch.setenv("ETYMOLOGY_TRANSLATION_WORKERS", "12")
+        assert etymology_pipeline._parse_positive_int_env("ETYMOLOGY_TRANSLATION_WORKERS", 20) == 12
+
+    def test_translation_throttle_caps_backoff(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        assert etymology_pipeline is not None
+
+        now = [100.0]
+        sleeps: list[float] = []
+
+        monkeypatch.setattr(etymology_pipeline.time, "monotonic", lambda: now[0])
+        monkeypatch.setattr(etymology_pipeline.time, "sleep", lambda seconds: sleeps.append(seconds))
+
+        throttle = etymology_pipeline.TranslationThrottle(max_backoff_seconds=30.0)
+        throttle.apply_backoff(120.0, reason="unit-test")
+        throttle.wait_if_needed()
+
+        assert sleeps == [30.0]
 
 
 @pytest.fixture(scope="module")

@@ -15,6 +15,7 @@ import os
 import random
 import re
 import threading
+import time
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -42,6 +43,10 @@ logger = logging.getLogger(__name__)
 DATABASE_DSN = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:54322/postgres")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 TRANSLATION_MODEL = "google/gemini-2.5-flash"
+DEFAULT_TRANSLATION_WORKERS = 20
+DEFAULT_TRANSLATION_TIMEOUT_SECONDS = 20.0
+DEFAULT_TRANSLATION_RATE_LIMIT_BACKOFF_SECONDS = 5.0
+MAX_TRANSLATION_RATE_LIMIT_BACKOFF_SECONDS = 60.0
 TRANSLATION_SYSTEM_PROMPT = (
     "You are a Quranic Arabic lexicography expert specializing in classical Arabic roots. "
     "Translate the following Lane's Arabic-English Lexicon definition to Turkish. "
@@ -63,6 +68,108 @@ _CONFIDENCE_RE = re.compile(r'"confidence"\s*:\s*([\d.]+)')
 ETYMOLOGY_EXPORT_DIR = Path(__file__).resolve().parent.parent / "data" / "etymology"
 
 _etl_breaker = pybreaker.CircuitBreaker(fail_max=20, reset_timeout=60, name="etl_translation")
+
+
+def _parse_positive_int_env(env_name: str, default: int) -> int:
+    value = os.getenv(env_name)
+    if value is None:
+        return default
+
+    try:
+        parsed = int(value)
+    except ValueError:
+        logger.warning("Invalid %s=%r; using default %d", env_name, value, default)
+        return default
+
+    if parsed < 1:
+        logger.warning("Invalid %s=%r; using default %d", env_name, value, default)
+        return default
+
+    return parsed
+
+
+def _parse_positive_float_env(env_name: str, default: float) -> float:
+    value = os.getenv(env_name)
+    if value is None:
+        return default
+
+    try:
+        parsed = float(value)
+    except ValueError:
+        logger.warning("Invalid %s=%r; using default %.2f", env_name, value, default)
+        return default
+
+    if parsed <= 0:
+        logger.warning("Invalid %s=%r; using default %.2f", env_name, value, default)
+        return default
+
+    return parsed
+
+
+def _parse_retry_after_seconds(value: str | None) -> float | None:
+    if not value:
+        return None
+
+    try:
+        parsed = float(value)
+    except ValueError:
+        return None
+
+    if parsed <= 0:
+        return None
+
+    return parsed
+
+
+def _format_duration(seconds: float | None) -> str:
+    if seconds is None or seconds < 0:
+        return "n/a"
+
+    total_seconds = round(seconds)
+    if total_seconds < 60:
+        return f"{total_seconds}s"
+
+    minutes, remainder_seconds = divmod(total_seconds, 60)
+    if minutes < 60:
+        return f"{minutes}m {remainder_seconds:02d}s"
+
+    hours, remainder_minutes = divmod(minutes, 60)
+    return f"{hours}h {remainder_minutes:02d}m"
+
+
+class TranslationThrottle:
+    """Shared backoff gate for translation workers."""
+
+    def __init__(self, max_backoff_seconds: float):
+        self._max_backoff_seconds = max(1.0, max_backoff_seconds)
+        self._lock = threading.Lock()
+        self._sleep_until = 0.0
+
+    def wait_if_needed(self) -> None:
+        with self._lock:
+            remaining = self._sleep_until - time.monotonic()
+
+        if remaining > 0:
+            time.sleep(remaining)
+
+    def apply_backoff(self, seconds: float, *, reason: str) -> None:
+        capped_seconds = max(0.0, min(seconds, self._max_backoff_seconds))
+        if capped_seconds <= 0:
+            return
+
+        with self._lock:
+            now = time.monotonic()
+            target = now + capped_seconds
+            should_update = target > self._sleep_until
+            if should_update:
+                self._sleep_until = target
+
+        if should_update:
+            logger.warning(
+                "Applied translation backoff for %.1fs (%s)",
+                capped_seconds,
+                reason,
+            )
 
 
 def _is_retryable_translation_error(exc: BaseException) -> bool:
@@ -303,6 +410,23 @@ class EtymologyPipeline:
         self.batch_size = batch_size
         self.dry_run = dry_run
         self.openrouter_api_key = openrouter_api_key
+        self.translation_timeout_seconds = _parse_positive_float_env(
+            "ETYMOLOGY_TRANSLATION_TIMEOUT_SECONDS",
+            DEFAULT_TRANSLATION_TIMEOUT_SECONDS,
+        )
+        self.translation_rate_limit_backoff_seconds = _parse_positive_float_env(
+            "ETYMOLOGY_TRANSLATION_RATE_LIMIT_BACKOFF_SECONDS",
+            DEFAULT_TRANSLATION_RATE_LIMIT_BACKOFF_SECONDS,
+        )
+        configured_max_backoff = _parse_positive_float_env(
+            "ETYMOLOGY_TRANSLATION_MAX_BACKOFF_SECONDS",
+            MAX_TRANSLATION_RATE_LIMIT_BACKOFF_SECONDS,
+        )
+        self.translation_max_backoff_seconds = max(
+            self.translation_rate_limit_backoff_seconds,
+            configured_max_backoff,
+        )
+        self._translation_throttle = TranslationThrottle(self.translation_max_backoff_seconds)
         self.export_dir = ETYMOLOGY_EXPORT_DIR
         self._forms_connection: Connection | None = None
 
@@ -536,7 +660,7 @@ class EtymologyPipeline:
 
     @retry(
         stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=20),
+        wait=wait_exponential(multiplier=0.5, min=1, max=10),
         retry=retry_if_exception(_is_retryable_translation_error),
         before_sleep=lambda rs: logger.info("Retrying translation request, attempt %d/3", rs.attempt_number),
     )
@@ -561,6 +685,8 @@ class EtymologyPipeline:
             },
         ]
 
+        self._translation_throttle.wait_if_needed()
+
         response = _etl_breaker.call(
             lambda: requests.post(
                 OPENROUTER_URL,
@@ -572,9 +698,17 @@ class EtymologyPipeline:
                     "max_tokens": 600,
                     "temperature": 0.1,
                 },
-                timeout=45,
+                timeout=self.translation_timeout_seconds,
             )
         )
+
+        if response.status_code == 429:
+            retry_after_seconds = _parse_retry_after_seconds(response.headers.get("Retry-After"))
+            self._translation_throttle.apply_backoff(
+                retry_after_seconds or self.translation_rate_limit_backoff_seconds,
+                reason="openrouter-429",
+            )
+
         response.raise_for_status()
 
         response_json = response.json()
@@ -598,17 +732,31 @@ class EtymologyPipeline:
         cancel_event = threading.Event()
         progress_lock = threading.Lock()
         done_count = 0
+        batch_started_at = time.monotonic()
+        workers = _parse_positive_int_env("ETYMOLOGY_TRANSLATION_WORKERS", DEFAULT_TRANSLATION_WORKERS)
 
-        workers_env = os.getenv("ETYMOLOGY_TRANSLATION_WORKERS", "6")
-        try:
-            workers = max(1, int(workers_env))
-        except ValueError:
-            workers = 6
+        logger.info(
+            "Translation settings: workers=%d timeout=%.1fs retry_backoff=%.1fs",
+            workers,
+            self.translation_timeout_seconds,
+            self.translation_rate_limit_backoff_seconds,
+        )
 
         def clear_translation_fields(entry: dict[str, object]) -> None:
             entry["definition_tr"] = None
             entry["tr_translation_confidence"] = None
             entry["tr_translation_source"] = None
+
+        def register_rate_limit_backoff(error: requests.exceptions.HTTPError) -> None:
+            response = error.response
+            if response is None or response.status_code != 429:
+                return
+
+            retry_after_seconds = _parse_retry_after_seconds(response.headers.get("Retry-After"))
+            self._translation_throttle.apply_backoff(
+                retry_after_seconds or self.translation_rate_limit_backoff_seconds,
+                reason="openrouter-429-http-error",
+            )
 
         def translate_one(entry: dict[str, object]) -> dict[str, object]:
             nonlocal done_count
@@ -632,6 +780,7 @@ class EtymologyPipeline:
                             entry["tr_translation_confidence"] = confidence
                             entry["tr_translation_source"] = "llm_generated"
                         except requests.exceptions.HTTPError as exc:
+                            register_rate_limit_backoff(exc)
                             logger.warning("Translation HTTP error for root %s: %s", entry.get("root"), exc)
                             if exc.response is not None and exc.response.status_code == 401:
                                 logger.warning("OpenRouter API key rejected; aborting remaining translations")
@@ -641,7 +790,13 @@ class EtymologyPipeline:
                             logger.warning("Translation aborted due to open ETL translation circuit breaker")
                             cancel_event.set()
                             clear_translation_fields(entry)
-                        except (RetryError, requests.exceptions.RequestException, json.JSONDecodeError) as exc:
+                        except RetryError as exc:
+                            last_exception = exc.last_attempt.exception() if exc.last_attempt else None
+                            if isinstance(last_exception, requests.exceptions.HTTPError):
+                                register_rate_limit_backoff(last_exception)
+                            logger.warning("Translation failed for root %s: %s", entry.get("root"), exc)
+                            clear_translation_fields(entry)
+                        except (requests.exceptions.RequestException, json.JSONDecodeError) as exc:
                             logger.warning("Translation failed for root %s: %s", entry.get("root"), exc)
                             clear_translation_fields(entry)
                     else:
@@ -658,6 +813,7 @@ class EtymologyPipeline:
                     entry["tr_translation_confidence"] = confidence
                     entry["tr_translation_source"] = "llm_gemini"
                 except requests.exceptions.HTTPError as exc:
+                    register_rate_limit_backoff(exc)
                     logger.warning("Translation HTTP error for root %s: %s", entry.get("root"), exc)
                     if exc.response is not None and exc.response.status_code == 401:
                         logger.warning("OpenRouter API key rejected; aborting remaining translations")
@@ -667,7 +823,13 @@ class EtymologyPipeline:
                     logger.warning("Translation aborted due to open ETL translation circuit breaker")
                     cancel_event.set()
                     clear_translation_fields(entry)
-                except (RetryError, requests.exceptions.RequestException, json.JSONDecodeError) as exc:
+                except RetryError as exc:
+                    last_exception = exc.last_attempt.exception() if exc.last_attempt else None
+                    if isinstance(last_exception, requests.exceptions.HTTPError):
+                        register_rate_limit_backoff(last_exception)
+                    logger.warning("Translation failed for root %s: %s", entry.get("root"), exc)
+                    clear_translation_fields(entry)
+                except (requests.exceptions.RequestException, json.JSONDecodeError) as exc:
                     logger.warning("Translation failed for root %s: %s", entry.get("root"), exc)
                     clear_translation_fields(entry)
 
@@ -675,8 +837,19 @@ class EtymologyPipeline:
             finally:
                 with progress_lock:
                     done_count += 1
-                    if done_count % 50 == 0:
-                        logger.info("Translation %d/%d ...", done_count, total_entries)
+                    if done_count % 50 == 0 or done_count == total_entries:
+                        elapsed_seconds = time.monotonic() - batch_started_at
+                        translation_rate = (done_count / elapsed_seconds) if elapsed_seconds > 0 else 0.0
+                        remaining_entries = total_entries - done_count
+                        eta_seconds = (remaining_entries / translation_rate) if translation_rate > 0 else None
+                        logger.info(
+                            "Translation %d/%d (rate=%.2f items/s, elapsed=%s, eta=%s)",
+                            done_count,
+                            total_entries,
+                            translation_rate,
+                            _format_duration(elapsed_seconds),
+                            _format_duration(eta_seconds),
+                        )
 
         results: list[dict[str, object] | None] = [None] * total_entries
         with ThreadPoolExecutor(max_workers=workers) as executor:
