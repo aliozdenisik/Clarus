@@ -125,6 +125,8 @@ class QMRootEtymology(Base):
     root_buckwalter: Mapped[str] = mapped_column(String(20), nullable=False, unique=True, index=True)
     definition_en: Mapped[str | None] = mapped_column(Text, nullable=True)
     definition_tr: Mapped[str | None] = mapped_column(Text, nullable=True)
+    summary_tr: Mapped[str | None] = mapped_column(Text, nullable=True)
+    summary_en: Mapped[str | None] = mapped_column(Text, nullable=True)
     semantic_field: Mapped[str | None] = mapped_column(String(100), nullable=True)
     morphological_forms: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     related_roots: Mapped[dict | None] = mapped_column(JSON, nullable=True)
