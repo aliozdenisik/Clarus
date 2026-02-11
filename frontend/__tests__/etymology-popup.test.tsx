@@ -31,21 +31,13 @@ vi.mock("@/components/ui/skeleton", () => ({
 }))
 
 vi.mock("@/components/ui/popover", () => ({
-  Popover: ({ children, open }: { children: React.ReactNode; open?: boolean }) =>
-    open ? <>{children}</> : null,
+  Popover: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   PopoverTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   PopoverContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }))
 
 vi.mock("@/components/ui/button", () => ({
   Button: ({ children, ...props }: MockProps) => <button {...props}>{children}</button>,
-}))
-
-vi.mock("@/components/ui/popover", () => ({
-  Popover: ({ children, open }: { children: React.ReactNode; open?: boolean }) =>
-    open ? <>{children}</> : null,
-  PopoverTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  PopoverContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }))
 
 vi.mock("next/link", () => ({
