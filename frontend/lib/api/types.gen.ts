@@ -815,6 +815,18 @@ export type RootEtymologyResponse = {
      */
     definition_tr?: string | null;
     /**
+     * Summary Tr
+     *
+     * Plain Turkish summary (LLM-generated, ≤200 chars)
+     */
+    summary_tr?: string | null;
+    /**
+     * Summary En
+     *
+     * Plain English summary (LLM-generated, ≤200 chars)
+     */
+    summary_en?: string | null;
+    /**
      * Semantic Field
      *
      * Semantic category (e.g., 'writing', 'faith')
@@ -1399,6 +1411,18 @@ export type RootEtymologyResponseWritable = {
      * Turkish translation (LLM-generated)
      */
     definition_tr?: string | null;
+    /**
+     * Summary Tr
+     *
+     * Plain Turkish summary (LLM-generated, ≤200 chars)
+     */
+    summary_tr?: string | null;
+    /**
+     * Summary En
+     *
+     * Plain English summary (LLM-generated, ≤200 chars)
+     */
+    summary_en?: string | null;
     /**
      * Semantic Field
      *
