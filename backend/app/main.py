@@ -18,6 +18,7 @@ from app.api import (
     search,
     stream,
     verse_lookup,
+    verse_translations,
     verse_words,
 )
 from app.config import settings
@@ -258,6 +259,7 @@ app.include_router(compare.router, prefix="/api/compare", tags=["compare"])
 app.include_router(stream.router, prefix="/api/stream", tags=["stream"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 app.include_router(metadata.router, prefix="/api/metadata", tags=["metadata"])
+app.include_router(verse_translations.router, prefix="/api/metadata", tags=["metadata"])
 app.include_router(preferences.router, prefix="/api/preferences", tags=["preferences"])
 app.include_router(keyword_search.router, prefix="/api/search/keyword", tags=["keyword"])
 app.include_router(
