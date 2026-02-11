@@ -246,12 +246,23 @@ function lookupQuranSurahId(surahName: string): number | null {
 }
 
 /**
+ * Build a direct verse detail page URL.
+ *
+ * @example
+ * buildVerseDetailUrl(2, 255) -> "/quran/2/255"
+ * buildVerseDetailUrl(1, 1) -> "/quran/1/1"
+ */
+export function buildVerseDetailUrl(surahId: number, verseId: number): string {
+  return `/quran/${surahId}/${verseId}`
+}
+
+/**
  * Parse a citation reference string and return a verse page URL.
  * Returns null if the reference cannot be resolved.
  *
  * @example
  * buildUrlFromReference("1 Corinthians 15:46") -> "/bible/46?chapter=15&verse=46"
- * buildUrlFromReference("Bakara:153") -> "/quran/2?verse=153"
+ * buildUrlFromReference("Bakara:153") -> "/quran/2/255"
  */
 export function buildUrlFromReference(reference: string): string | null {
   const bibleMatch = reference.match(/^(.+)\s+(\d+):(\d+)$/)
@@ -268,7 +279,7 @@ export function buildUrlFromReference(reference: string): string | null {
     const [, surahName, verse] = quranMatch
     const surahId = lookupQuranSurahId(surahName)
     if (surahId !== null) {
-      return `/quran/${surahId}?verse=${verse}`
+      return buildVerseDetailUrl(surahId, parseInt(verse, 10))
     }
   }
 

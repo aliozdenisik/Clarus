@@ -43,7 +43,7 @@ export function VerseLookupInput({
 
         // Navigate to appropriate page based on source
         if (verse.source === "quran" && verse.surah_id) {
-          router.push(`/quran/${verse.surah_id}?verse=${verse.verse_id}`)
+          router.push(`/quran/${verse.surah_id}/${verse.verse_id}`)
         } else if (verse.book_id) {
           router.push(`/bible/${verse.book_id}?chapter=${verse.chapter}&verse=${verse.verse}`)
         }

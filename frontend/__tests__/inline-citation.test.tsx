@@ -107,7 +107,7 @@ describe("InlineCitation", () => {
       render(<InlineCitation reference="Bakara:153" onNavigate={vi.fn()} />)
 
       await userEvent.click(screen.getByRole("button"))
-      expect(openSpy).toHaveBeenCalledWith("/quran/2?verse=153", "_blank")
+      expect(openSpy).toHaveBeenCalledWith("/quran/2/153", "_blank")
       openSpy.mockRestore()
     })
   })
