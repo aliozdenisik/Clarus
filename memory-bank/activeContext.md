@@ -7,9 +7,10 @@
 ## Issue #128: Arabic Root Etymology Database — COMPLETED ✅
 
 **Date**: 2026-02-11
-**Branch**: `issue-128-task1-qm-root-etymology`
+**Branch**: `feat/etymology-tr-backfill`
+**PR**: [#131](https://github.com/aliozdenisik/Clarus/pull/131)
 
-Built a PostgreSQL etymology database for all 1,651 Quranic Arabic roots with Lane's Lexicon integration, morphological analysis, and LLM-generated Turkish translations.
+Built a PostgreSQL etymology database for all 1,651 Quranic Arabic roots with Lane's Lexicon integration, morphological analysis, and LLM-generated Turkish translations. **100% Turkish translation coverage achieved.**
 
 ### Implementation Summary
 
@@ -26,28 +27,43 @@ Built a PostgreSQL etymology database for all 1,651 Quranic Arabic roots with La
 - Robust JSON parsing with regex fallback for malformed LLM responses
 - Batch-tolerant circuit breaker (fail_max=20) for ETL workloads
 
+**Turkish Translation Backfill** (`backend/scripts/backfill_translations.py`):
+- Idempotent script — only translates rows with NULL/empty `definition_tr`
+- Fixed token truncation bug: long Lane definitions (>1,500 chars) use summarization prompt
+- Fixed JSON parsing: `json.loads()` first, regex fallback for malformed responses
+- `max_tokens=1200` for long definitions, `timeout=45s`
+- 20 parallel workers with rate-limit backoff and retry logic
+- Result: **1,651/1,651 (100%) Turkish translations** (was 205/1,651 = 12.4%)
+
 **Data Sources:**
 - Quranic Arabic Corpus v0.4 (University of Leeds, GNU GPL)
 - Lane's Arabic-English Lexicon (1863, Perseus/Tufts, GPL-3.0)
 - Turkish translations: LLM-generated (Gemini 2.5 Flash via OpenRouter)
+
+**Acceptance Criteria (All PASS ✅):**
+
+| Metric | Value | Target | Status |
+|--------|-------|--------|--------|
+| Root (Arabic) | 1651/1651 | 100% | ✅ |
+| Root (Buckwalter) | 1651/1651 | 100% | ✅ |
+| English definition | 1337/1651 (81%) | ≥80% | ✅ |
+| Turkish translation | 1651/1651 (100%) | ≥95% | ✅ |
+| Quran frequency | 1651/1651 | 100% | ✅ |
+| Morphological forms | 1651/1651 | ≥80% | ✅ |
+| Lane Lexicon match | 1337/1651 (81%) | ≥70% | ✅ |
+
+**Test Results:**
+- 233/233 pytest tests pass (zero regressions)
+- Ruff lint: ✅, Ruff format: ✅
 
 **Key Files:**
 - `backend/src/etymology_pipeline.py` — ETL pipeline with ThreadPoolExecutor
 - `backend/src/lane_lexicon.py` — Lane's Lexicon adapter (PostgreSQL primary, SQLite fallback)
 - `backend/app/models.py` — QMRootEtymology, LaneLexiconEntry, LaneLexiconRoot models
 - `backend/scripts/populate_etymologies.py` — CLI entry point
+- `backend/scripts/backfill_translations.py` — Idempotent TR translation backfill
 - `backend/scripts/import_lane_lexicon.py` — Lane SQLite → PostgreSQL importer
-- `backend/tests/test_etymology_pipeline.py` — 19 tests
-
-### Commits (8):
-- `c9715d2` feat: QMRootEtymology model + Alembic migration
-- `002b3b4` feat: Lane's Lexicon SQLite adapter
-- `f703883` feat: morphological form parser (22 patterns)
-- `476e3f1` feat: etymology pipeline + CLI script
-- `0306ade` perf: reuse SQLAlchemy engine
-- `2f0bca9` feat: migrate Lane's Lexicon from SQLite to PostgreSQL
-- `bd780f4` fix: test fixes + cleanup
-- `b08d018` perf: parallelize LLM translations with ThreadPoolExecutor
+- `backend/tests/test_etymology_pipeline.py` — 22 tests
 
 ## Issue #88: AbortController Lifecycle Guards — COMPLETED ✅
 
