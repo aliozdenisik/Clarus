@@ -57,6 +57,7 @@ export default function RootLayout({
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
         className={`${dmSans.variable} ${dmSerif.variable} ${amiri.variable} ${notoSansHebrew.variable} ${notoSerifGreek.variable} antialiased`}
+        suppressHydrationWarning
       >
         <Providers>
           <Navigation />
