@@ -707,7 +707,7 @@ function KeywordSearchContent() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={springPresets.fluid}
-                          className="lg:sticky lg:top-20 lg:w-80 lg:shrink-0"
+                          className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:w-80 lg:shrink-0 lg:overflow-y-auto"
                           data-testid="root-card-panel"
                         >
                           <div className="space-y-6">
@@ -790,7 +790,7 @@ function KeywordSearchContent() {
                               ◆
                             </div>
                             <h3 className="text-center text-lg font-medium text-[var(--color-text-primary)]">
-                              Verse Results
+                              Ayet Sonuçları
                             </h3>
                             {activeLanguage === "quran"
                               ? paginatedVerses.map((verse, i) => {

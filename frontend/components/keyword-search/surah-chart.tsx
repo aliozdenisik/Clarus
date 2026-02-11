@@ -54,7 +54,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
   return (
     <div className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 shadow-xl">
       <p className="text-sm text-zinc-100">{data.surah_name}</p>
-      <p className="text-xs text-zinc-400">{data.count} occurrences</p>
+      <p className="text-xs text-zinc-400">{data.count} kullanım</p>
     </div>
   )
 }
@@ -144,7 +144,7 @@ export function SurahChart({ data, language }: SurahChartProps) {
             onClick={() => setShowAll(true)}
             className="mt-4 w-full text-center text-sm text-[var(--color-accent-primary)] hover:underline"
           >
-            Show all {sortedData.length} {language === "quran" ? "surahs" : "books"}
+            Tümünü göster ({sortedData.length} {language === "quran" ? "sure" : "kitap"})
           </button>
         )}
       </GlowCard>

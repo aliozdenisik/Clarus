@@ -185,11 +185,11 @@ export function RichRootCard({
                   className="rounded border border-indigo-500/30 bg-indigo-500/20 px-2 py-0.5 text-xs text-indigo-300"
                   data-testid="root-frequency"
                 >
-                  {data.quran_frequency} occurrences
+                  {data.quran_frequency} kullanım
                 </span>
               )}
               <span className={cn("rounded border px-2 py-0.5 text-xs", sourceColor)}>
-                {data.source === "lane" ? "Lane's Lexicon" : "Corpus"}
+                {data.source === "lane" ? "Lane's Lexicon" : "Korpus"}
               </span>
               <span
                 className={cn("rounded border px-2 py-0.5 text-xs capitalize", confidenceColor)}
@@ -202,7 +202,7 @@ export function RichRootCard({
           {data.definition_tr && (
             <div className="space-y-2" data-testid="root-definition-tr">
               <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-                Turkish Definition
+                Türkçe Tanım
               </h4>
               <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
                 {data.definition_tr}
@@ -213,7 +213,7 @@ export function RichRootCard({
           {data.definition_en && (
             <div className="space-y-2" data-testid="root-definition-en">
               <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-                English Definition
+                İngilizce Tanım
               </h4>
               <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
                 {data.definition_en}
@@ -233,7 +233,7 @@ export function RichRootCard({
             <div className="space-y-3" data-testid="morphological-forms">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-                  Morphological Forms
+                  Morfolojik Formlar
                 </h4>
                 {hasMoreForms && (
                   <motion.button
@@ -244,12 +244,12 @@ export function RichRootCard({
                     {showAllForms ? (
                       <>
                         <ChevronDown className="h-3 w-3" />
-                        Show less
+                        Daha az göster
                       </>
                     ) : (
                       <>
                         <ChevronRight className="h-3 w-3" />
-                        Show all ({morphologicalForms.length})
+                        Tümünü göster ({morphologicalForms.length})
                       </>
                     )}
                   </motion.button>
