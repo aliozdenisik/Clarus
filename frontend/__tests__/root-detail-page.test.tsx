@@ -46,13 +46,10 @@ vi.mock("framer-motion", () => ({
 
 vi.mock("lucide-react", () => ({
   ArrowLeft: () => <div data-testid="arrow-left-icon" />,
-  BookOpen: () => <div data-testid="book-open-icon" />,
-  ChevronDown: () => <div data-testid="chevron-down-icon" />,
-  ChevronRight: () => <div data-testid="chevron-right-icon" />,
 }))
 
 vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
+  GlowCard: ({ children, className, ...rest }: MockProps) => <div className={className} {...rest}>{children}</div>,
 }))
 
 vi.mock("@/components/ui/skeleton", () => ({
@@ -128,27 +125,30 @@ describe("RootDetailPage", () => {
     expect(screen.getByText("high")).toBeInTheDocument()
   })
 
-  it("renders Turkish labels in summary and definition sections", async () => {
+  it("renders Turkish and English definition sections without summary", async () => {
     render(<RootDetailPage />)
 
     await waitFor(() => {
-      expect(screen.getByText("Özet")).toBeInTheDocument()
+      expect(screen.getByText("Türkçe Çeviri")).toBeInTheDocument()
     })
 
-    expect(screen.getByText("Tam Türkçe Çeviri")).toBeInTheDocument()
     expect(screen.getByText("Orijinal Lane's Lexicon")).toBeInTheDocument()
     expect(screen.getByText(/Morfolojik Formlar/)).toBeInTheDocument()
+    // Summary section should NOT be present on this page
+    expect(screen.queryByText("Özet")).not.toBeInTheDocument()
   })
 
-  it("renders summary section when summary_tr and summary_en are present", async () => {
+  it("renders both definitions as flat open sections (no collapsible)", async () => {
     render(<RootDetailPage />)
 
     await waitFor(() => {
-      expect(screen.getByText("Özet")).toBeInTheDocument()
+      expect(screen.getByTestId("definition-tr-section")).toBeInTheDocument()
     })
 
-    expect(screen.getByText("Yazı ve kayıt kavramları ile ilgili kök.")).toBeInTheDocument()
-    expect(screen.getByText("Root related to writing and recording concepts.")).toBeInTheDocument()
+    expect(screen.getByTestId("definition-en-section")).toBeInTheDocument()
+    // Lane's definition text should be visible without clicking (no collapsible)
+    expect(screen.getByText("To write, to inscribe. Lane's Lexicon definition goes here...")).toBeInTheDocument()
+    expect(screen.getByText("Yazmak, kaydetmek. Türkçe açıklama...")).toBeInTheDocument()
   })
 
   it("renders error message when root not found (404)", async () => {
@@ -194,7 +194,7 @@ describe("RootDetailPage", () => {
     render(<RootDetailPage />)
 
     await waitFor(() => {
-      expect(screen.getByText("Tam Türkçe Çeviri")).toBeInTheDocument()
+      expect(screen.getByText("Türkçe Çeviri")).toBeInTheDocument()
     })
 
     expect(screen.getByText("Orijinal Lane's Lexicon")).toBeInTheDocument()

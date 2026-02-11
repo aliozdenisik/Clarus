@@ -57,12 +57,13 @@ LANE_SYSTEM_PROMPT = (
 )
 
 LANE_LONG_SYSTEM_PROMPT = (
-    "You are a Quranic Arabic lexicography expert. "
-    "The following is a LONG Lane's Lexicon definition for a Quranic Arabic root. "
-    "Summarize it into a CONCISE Turkish definition (max 2-3 paragraphs). "
-    "Cover: (1) primary meanings, (2) Quranic usage, (3) key derived forms. "
-    "Preserve Islamic terminology (tövbe, salat, sadaka etc.). "
-    "Use academic Turkish. Keep it SHORT. Return JSON: "
+    "You are a Quranic Arabic lexicography expert specializing in classical Arabic roots. "
+    "Translate the following Lane's Arabic-English Lexicon definition to Turkish COMPLETELY. "
+    "This is a LONG definition — translate ALL meanings, usages, citations and examples faithfully. "
+    "Do NOT summarize or shorten. Provide a FULL, comprehensive Turkish translation. "
+    "Preserve Islamic and Quranic terminology (e.g., 'tövbe' for repentance, 'salat' for prayer). "
+    "Preserve Lane's scholarly references (S, K, TA, Msb etc.) as-is. "
+    "Use academic Turkish suitable for a Quran concordance. Return JSON: "
     '{"translation": "...", "confidence": 0.0-1.0}'
 )
 

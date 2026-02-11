@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { ArrowLeft, BookOpen, ChevronDown, ChevronRight } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { springPresets } from "@/lib/design-system"
 import { GlowCard } from "@/components/ui/glow-card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -57,7 +57,6 @@ export default function RootDetailPage() {
   const [data, setData] = useState<EtymologyData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [showLane, setShowLane] = useState(false)
   const controllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
@@ -204,40 +203,17 @@ export default function RootDetailPage() {
         </GlowCard>
       </motion.div>
 
-      {(data.summary_tr || data.summary_en) && (
+      {data.definition_tr && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...springPresets.fluid, delay: 0.1 }}
         >
-          <GlowCard className="space-y-3 p-6" data-testid="summary-section">
-            <h2 className="flex items-center gap-2 text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-              <BookOpen className="h-4 w-4" />
-              Özet
-            </h2>
-            {data.summary_tr && (
-              <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                {data.summary_tr}
-              </p>
-            )}
-            {data.summary_en && (
-              <p className="text-sm leading-relaxed text-zinc-500 italic">{data.summary_en}</p>
-            )}
-          </GlowCard>
-        </motion.div>
-      )}
-
-      {data.definition_tr && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...springPresets.fluid, delay: 0.2 }}
-        >
           <GlowCard className="space-y-3 p-6" data-testid="definition-tr-section">
             <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-              Tam Türkçe Çeviri
+              Türkçe Çeviri
             </h2>
-            <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
+            <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--color-text-secondary)]">
               {data.definition_tr}
             </p>
           </GlowCard>
@@ -248,31 +224,15 @@ export default function RootDetailPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ ...springPresets.fluid, delay: 0.3 }}
+          transition={{ ...springPresets.fluid, delay: 0.2 }}
         >
           <GlowCard className="space-y-3 p-6" data-testid="definition-en-section">
-            <button
-              onClick={() => setShowLane(!showLane)}
-              className="flex w-full items-center justify-between"
-            >
-              <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-                Orijinal Lane&apos;s Lexicon
-              </h2>
-              {showLane ? (
-                <ChevronDown className="h-4 w-4 text-zinc-500" />
-              ) : (
-                <ChevronRight className="h-4 w-4 text-zinc-500" />
-              )}
-            </button>
-            {showLane && (
-              <motion.p
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="text-sm leading-relaxed text-zinc-500"
-              >
-                {data.definition_en}
-              </motion.p>
-            )}
+            <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
+              Orijinal Lane&apos;s Lexicon
+            </h2>
+            <p className="whitespace-pre-line text-sm leading-relaxed text-zinc-500">
+              {data.definition_en}
+            </p>
           </GlowCard>
         </motion.div>
       )}
@@ -281,7 +241,7 @@ export default function RootDetailPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ ...springPresets.fluid, delay: 0.4 }}
+          transition={{ ...springPresets.fluid, delay: 0.3 }}
         >
           <GlowCard className="space-y-4 p-6" data-testid="morphological-section">
             <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
@@ -332,7 +292,7 @@ export default function RootDetailPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ ...springPresets.fluid, delay: 0.5 }}
+          transition={{ ...springPresets.fluid, delay: 0.4 }}
         >
           <GlowCard className="space-y-4 p-6" data-testid="related-roots-section">
             <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
