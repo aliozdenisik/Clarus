@@ -18,9 +18,9 @@ interface StatItem {
 
 export function StatsBar({ totalOccurrences, uniqueWords, surahCount, language }: StatsBarProps) {
   const stats: StatItem[] = [
-    { label: "Total Occurrences", value: totalOccurrences },
-    { label: "Unique Words", value: uniqueWords },
-    { label: language === "quran" ? "Surahs" : "Books", value: surahCount },
+    { label: "Toplam Kullanım", value: totalOccurrences },
+    { label: "Benzersiz Kelime", value: uniqueWords },
+    { label: language === "quran" ? "Sure" : "Kitap", value: surahCount },
   ]
 
   return (
