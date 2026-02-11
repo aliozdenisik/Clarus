@@ -120,12 +120,16 @@ vi.mock("recharts", () => ({
 const mockSearchKeyword = vi.fn()
 const mockGetSurahDetail = vi.fn()
 const mockListRoots = vi.fn()
+const mockGetEtymology = vi.fn()
+const mockGetQuranSurahs = vi.fn()
 
 vi.mock("@/lib/api/sdk.gen", () => ({
   searchKeywordApiSearchKeywordPost: (...args: unknown[]) => mockSearchKeyword(...args),
   getSurahDetailApiMetadataQuranSurahsSurahIdGet: (...args: unknown[]) =>
     mockGetSurahDetail(...args),
   listRootsApiSearchKeywordRootsGet: (...args: unknown[]) => mockListRoots(...args),
+  getEtymologyApiEtymologyRootGet: (...args: unknown[]) => mockGetEtymology(...args),
+  getQuranSurahsApiMetadataQuranSurahsGet: (...args: unknown[]) => mockGetQuranSurahs(...args),
 }))
 
 import KeywordSearchPage from "@/app/keyword-search/page"
