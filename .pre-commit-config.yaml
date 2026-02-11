@@ -81,24 +81,24 @@ repos:
   # ===== FRONTEND: ESLint =====
   - repo: local
     hooks:
-      - id: eslint-frontend
-        name: eslint (frontend)
-        entry: bash -c 'cd frontend && npx eslint --fix --max-warnings=0'
-        language: system
-        files: ^frontend/.*\.(ts|tsx|js|jsx)$
-        exclude: ^frontend/(node_modules|\.next|out|lib/api/types\.gen\.ts|lib/api/sdk\.gen\.ts|lib/api/client\.gen\.ts)/
-        pass_filenames: false
+       - id: eslint-frontend
+         name: eslint (frontend)
+         entry: bash -c 'cd frontend && npx eslint --fix --max-warnings=0'
+         language: system
+         files: ^frontend/.*\.(ts|tsx|js|jsx)$
+         exclude: (node_modules|\.next|out)|lib/api/.*\.gen\.ts
+         pass_filenames: false
 
   # ===== FRONTEND: Prettier =====
   - repo: local
     hooks:
-      - id: prettier-frontend
-        name: prettier (frontend)
-        entry: bash -c 'cd frontend && npx prettier --check .'
-        language: system
-        files: ^frontend/.*\.(ts|tsx|js|jsx|json|css|md)$
-        exclude: ^frontend/(node_modules|\.next|out|lib/api/types\.gen\.ts|lib/api/sdk\.gen\.ts|lib/api/client\.gen\.ts)/
-        pass_filenames: false
+       - id: prettier-frontend
+         name: prettier (frontend)
+         entry: bash -c 'cd frontend && npx prettier --check .'
+         language: system
+         files: ^frontend/.*\.(ts|tsx|js|jsx|json|css|md)$
+         exclude: (node_modules|\.next|out)|lib/api/.*\.gen\.ts
+         pass_filenames: false
 
   # ===== FRONTEND: TypeScript Check (pre-push only — slow) =====
   - repo: local
