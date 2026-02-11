@@ -12,12 +12,15 @@ type MockProps = {
 vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...props }: MockProps) => <div {...props}>{children}</div>,
+    span: ({ children, ...props }: MockProps) => <span {...props}>{children}</span>,
+    ul: ({ children, ...props }: MockProps) => <ul {...props}>{children}</ul>,
+    li: ({ children, ...props }: MockProps) => <li {...props}>{children}</li>,
   },
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
 }))
 
 vi.mock("lucide-react", () => ({
-  ExternalLink: () => <div data-testid="external-link-icon" />,
+  ArrowRight: () => <div data-testid="arrow-right-icon" />,
   ChevronDown: () => <div data-testid="chevron-down-icon" />,
   ChevronUp: () => <div data-testid="chevron-up-icon" />,
   AlertCircle: () => <div data-testid="alert-circle-icon" />,
@@ -25,6 +28,32 @@ vi.mock("lucide-react", () => ({
 
 vi.mock("@/components/ui/skeleton", () => ({
   Skeleton: ({ className }: MockProps) => <div data-testid="skeleton" className={className} />,
+}))
+
+vi.mock("@/components/ui/popover", () => ({
+  Popover: ({ children, open }: { children: React.ReactNode; open?: boolean }) =>
+    open ? <>{children}</> : null,
+  PopoverTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  PopoverContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}))
+
+vi.mock("@/components/ui/button", () => ({
+  Button: ({ children, ...props }: MockProps) => <button {...props}>{children}</button>,
+}))
+
+vi.mock("@/components/ui/popover", () => ({
+  Popover: ({ children, open }: { children: React.ReactNode; open?: boolean }) =>
+    open ? <>{children}</> : null,
+  PopoverTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  PopoverContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}))
+
+vi.mock("next/link", () => ({
+  default: ({ children, href, ...props }: MockProps & { href: string }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }))
 
 vi.mock("next/link", () => ({
@@ -142,6 +171,8 @@ describe("EtymologyPopup", () => {
   })
 
   it("renders morphological forms", async () => {
+    const user = userEvent.setup()
+
     mockUseQuery.mockReturnValue({
       data: mockEtymologyData,
       isLoading: false,
@@ -154,6 +185,13 @@ describe("EtymologyPopup", () => {
         <button>Click me</button>
       </EtymologyPopup>
     )
+
+    await waitFor(() => {
+      expect(screen.getByText(/Morfolojik Formlar/)).toBeInTheDocument()
+    })
+
+    const expandButton = screen.getByRole("button", { name: /Tümünü Gör \(6\)/ })
+    await user.click(expandButton)
 
     await waitFor(() => {
       expect(screen.getByText("كَتَبَ")).toBeInTheDocument()
@@ -196,9 +234,9 @@ describe("EtymologyPopup", () => {
     )
 
     await waitFor(() => {
-      const link = screen.getByRole("link", { name: /Kelime Aramasına Git/ })
-      expect(link).toBeInTheDocument()
-      expect(link).toHaveAttribute("href", "/keyword-search?q=ktb")
+      expect(screen.getByTestId("detail-link")).toBeInTheDocument()
+      expect(screen.getByTestId("detail-link")).toHaveAttribute("href", "/keyword-search?q=ktb")
+      expect(screen.getByText("Detaylı Analiz")).toBeInTheDocument()
     })
   })
 
@@ -300,10 +338,10 @@ describe("EtymologyPopup", () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/Tümünü Gör \(6\)/)).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: /Tümünü Gör \(6\)/ })).toBeInTheDocument()
     })
 
-    const expandButton = screen.getByText(/Tümünü Gör \(6\)/)
+    const expandButton = screen.getByRole("button", { name: /Tümünü Gör \(6\)/ })
     await user.click(expandButton)
 
     await waitFor(() => {

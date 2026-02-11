@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query"
 import { getEtymologyApiEtymologyRootGet } from "@/lib/api"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
-import { ExternalLink, ChevronDown, ChevronUp, AlertCircle } from "lucide-react"
+import { ChevronDown, ChevronUp, AlertCircle, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 
@@ -76,8 +76,6 @@ export function EtymologyPopup({
   }
 
   const morphologicalForms = data?.morphological_forms || []
-  const displayedForms = showAllForms ? morphologicalForms : morphologicalForms.slice(0, 5)
-  const hasMoreForms = morphologicalForms.length > 5
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -86,11 +84,12 @@ export function EtymologyPopup({
         side="top"
         sideOffset={8}
         align="center"
-        className="z-50 max-w-[400px] min-w-[280px] p-0"
+        className="z-50 max-w-[min(400px,calc(100vw-2rem))] min-w-[min(280px,calc(100vw-2rem))] p-0"
       >
         <AnimatePresence>
           {isOpen && (
             <motion.div
+              data-testid="etymology-popover"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
@@ -137,9 +136,15 @@ export function EtymologyPopup({
               {data && !isLoading && !isError && (
                 <div className="space-y-4 p-4">
                   {/* Header: Root Arabic + Buckwalter */}
-                  <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3">
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ ...springPresets.gentle, delay: 0 }}
+                    className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-3"
+                  >
                     <div className="flex flex-col gap-1">
                       <p
+                        data-testid="root-text"
                         lang="ar"
                         className="font-arabic text-2xl font-bold text-[var(--color-text-primary)]"
                         dir="rtl"
@@ -150,25 +155,48 @@ export function EtymologyPopup({
                         ({data.root_buckwalter})
                       </p>
                     </div>
-                    {/* Confidence Badge */}
-                    <span
-                      className={cn(
-                        "rounded-full px-2.5 py-1 text-xs font-medium",
-                        "border border-indigo-500/30 bg-indigo-500/20 text-indigo-300"
-                      )}
-                    >
-                      {data.confidence === "high" && "Yüksek"}
-                      {data.confidence === "medium" && "Orta"}
-                      {data.confidence === "low" && "Düşük"}
-                    </span>
-                  </div>
+                    {/* Confidence Badge with Color Coding */}
+                    {data.confidence && (
+                      <span
+                        data-testid="confidence-badge"
+                        className={cn(
+                          "rounded-full border px-2.5 py-1 text-xs font-medium",
+                          data.confidence === "high" &&
+                            "border-emerald-500/30 bg-emerald-500/20 text-emerald-300",
+                          data.confidence === "medium" &&
+                            "border-amber-500/30 bg-amber-500/20 text-amber-300",
+                          data.confidence === "low" &&
+                            "border-zinc-500/30 bg-zinc-500/20 text-zinc-300"
+                        )}
+                      >
+                        {data.confidence === "high" && "Yüksek"}
+                        {data.confidence === "medium" && "Orta"}
+                        {data.confidence === "low" && "Düşük"}
+                      </span>
+                    )}
+                  </motion.div>
 
                   {/* Definitions */}
-                  <div className="space-y-2">
-                    {data.definition_tr && (
-                      <p className="text-sm text-[var(--color-text-primary)]">
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ ...springPresets.gentle, delay: 0.05 }}
+                    className="space-y-2"
+                  >
+                    {data.definition_tr ? (
+                      <p
+                        data-testid="root-meaning"
+                        className="text-sm text-[var(--color-text-primary)]"
+                      >
                         <span className="font-medium text-[var(--color-text-muted)]">Anlam:</span>{" "}
                         {data.definition_tr}
+                      </p>
+                    ) : (
+                      <p
+                        data-testid="root-meaning"
+                        className="text-sm text-[var(--color-text-muted)] italic"
+                      >
+                        <span className="font-medium">Anlam:</span> Tanım mevcut değil
                       </p>
                     )}
                     {data.definition_en && (
@@ -177,64 +205,94 @@ export function EtymologyPopup({
                         {data.definition_en}
                       </p>
                     )}
-                  </div>
+                  </motion.div>
 
-                  {/* Morphological Forms */}
+                  {/* Morphological Forms - Collapsible Section */}
                   {morphologicalForms.length > 0 && (
-                    <div className="space-y-2">
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ ...springPresets.gentle, delay: 0.1 }}
+                      className="space-y-2"
+                    >
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-[var(--color-text-primary)]">
                           Morfolojik Formlar:
                         </span>
-                        {hasMoreForms && (
+                        {morphologicalForms.length > 5 && (
                           <button
                             type="button"
                             onClick={() => setShowAllForms(!showAllForms)}
                             className="flex items-center gap-1 text-xs text-[var(--color-accent-primary)] transition-colors duration-200 hover:text-[var(--color-accent-hover)]"
                           >
-                            {showAllForms ? (
-                              <>
-                                <span>Daha Az</span>
-                                <ChevronUp className="h-3 w-3" />
-                              </>
-                            ) : (
-                              <>
-                                <span>Tümünü Gör ({morphologicalForms.length})</span>
-                                <ChevronDown className="h-3 w-3" />
-                              </>
-                            )}
+                            <motion.span
+                              whileTap={{ scale: 0.95 }}
+                              transition={springPresets.bouncy}
+                            >
+                              {showAllForms ? (
+                                <>
+                                  <span>Daha Az</span>
+                                  <ChevronUp className="inline h-3 w-3" />
+                                </>
+                              ) : (
+                                <>
+                                  <span>Tümünü Gör ({morphologicalForms.length})</span>
+                                  <ChevronDown className="inline h-3 w-3" />
+                                </>
+                              )}
+                            </motion.span>
                           </button>
                         )}
                       </div>
-                      <ul className="space-y-1.5">
-                        {displayedForms.map((form, idx) => (
-                          <li
-                            key={`${form.form_pattern}-${idx}`}
-                            className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]"
-                          >
-                            {form.form_arabic && (
-                              <span lang="ar" className="font-arabic text-base" dir="rtl">
-                                <bdi>{form.form_arabic}</bdi>
-                              </span>
-                            )}
-                            {form.form_pattern && (
-                              <span className="text-xs text-[var(--color-text-muted)]">
-                                ({form.form_pattern})
-                              </span>
-                            )}
-                            {form.occurrences !== null && form.occurrences !== undefined && (
-                              <span className="ml-auto text-xs text-[var(--color-text-muted)]">
-                                {form.occurrences} kez
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+
+                      <AnimatePresence mode="wait">
+                        <motion.ul
+                          key={showAllForms ? "all" : "partial"}
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={springPresets.gentle}
+                          className="space-y-1.5 overflow-hidden"
+                        >
+                          {(showAllForms ? morphologicalForms : morphologicalForms.slice(0, 5)).map(
+                            (form, idx) => (
+                              <motion.li
+                                key={`${form.form_pattern}-${idx}`}
+                                initial={{ opacity: 0, x: -8 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ ...springPresets.gentle, delay: idx * 0.02 }}
+                                className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]"
+                              >
+                                {form.form_arabic && (
+                                  <span lang="ar" className="font-arabic text-base" dir="rtl">
+                                    <bdi>{form.form_arabic}</bdi>
+                                  </span>
+                                )}
+                                {form.form_pattern && (
+                                  <span className="text-xs text-[var(--color-text-muted)]">
+                                    ({form.form_pattern})
+                                  </span>
+                                )}
+                                {form.occurrences !== null && form.occurrences !== undefined && (
+                                  <span className="ml-auto text-xs text-[var(--color-text-muted)]">
+                                    {form.occurrences} kez
+                                  </span>
+                                )}
+                              </motion.li>
+                            )
+                          )}
+                        </motion.ul>
+                      </AnimatePresence>
+                    </motion.div>
                   )}
 
                   {/* Frequency & Source */}
-                  <div className="space-y-1 border-t border-[var(--color-border-subtle)] pt-3 text-sm">
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ ...springPresets.gentle, delay: 0.15 }}
+                    className="space-y-1 border-t border-[var(--color-border-subtle)] pt-3 text-sm"
+                  >
                     {data.quran_frequency !== null && data.quran_frequency !== undefined && (
                       <p className="text-[var(--color-text-secondary)]">
                         <span className="font-medium text-[var(--color-text-muted)]">
@@ -252,18 +310,31 @@ export function EtymologyPopup({
                         {data.lane_match_type === "exact" && " ✓"}
                       </p>
                     )}
-                  </div>
+                  </motion.div>
 
-                  {/* Keyword Search Link */}
+                  {/* Deep Link to Keyword Search */}
                   {data.root_buckwalter && (
-                    <Link
-                      href={`/keyword-search?q=${encodeURIComponent(data.root_buckwalter)}`}
-                      className="flex items-center gap-1.5 text-sm text-[var(--color-accent-primary)] transition-colors duration-200 hover:text-[var(--color-accent-hover)]"
-                      onClick={() => setIsOpen(false)}
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ ...springPresets.gentle, delay: 0.2 }}
                     >
-                      <span>Kelime Aramasına Git →</span>
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </Link>
+                      <Link
+                        data-testid="detail-link"
+                        href={`/keyword-search?q=${encodeURIComponent(data.root_buckwalter)}`}
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.97 }}
+                          transition={springPresets.bouncy}
+                          className="flex items-center justify-center gap-2 rounded-lg border border-[var(--color-accent-primary)]/30 bg-[var(--color-accent-primary)]/10 px-4 py-2.5 text-sm font-medium text-[var(--color-accent-primary)] transition-colors hover:bg-[var(--color-accent-primary)]/20"
+                        >
+                          <span>Detaylı Analiz</span>
+                          <ArrowRight className="h-4 w-4" />
+                        </motion.div>
+                      </Link>
+                    </motion.div>
                   )}
                 </div>
               )}
