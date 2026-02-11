@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated API client files:
+    "lib/api/**/*.gen.ts",
   ]),
   prettierConfig,
 ])
