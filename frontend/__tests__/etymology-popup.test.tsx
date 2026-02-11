@@ -78,6 +78,8 @@ const mockEtymologyData = {
   root_buckwalter: "ktb",
   definition_en: "To write, to inscribe, to ordain, to decree",
   definition_tr: "Yazmak, kaydetmek, takdir etmek",
+  summary_tr: "Yazı ve kayıt kavramlarıyla ilgili kök.",
+  summary_en: "Root related to writing and recording.",
   semantic_field: "writing",
   morphological_forms: [
     { form_pattern: "فَعَلَ", form_arabic: "كَتَبَ", occurrences: 100 },
@@ -139,7 +141,7 @@ describe("EtymologyPopup", () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/Yazmak, kaydetmek, takdir etmek/)).toBeInTheDocument()
+      expect(screen.getByText(/Yazı ve kayıt kavramlarıyla ilgili kök/)).toBeInTheDocument()
     })
   })
 
@@ -158,7 +160,7 @@ describe("EtymologyPopup", () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/To write, to inscribe, to ordain, to decree/)).toBeInTheDocument()
+      expect(screen.getByText(/Root related to writing and recording/)).toBeInTheDocument()
     })
   })
 
@@ -227,7 +229,7 @@ describe("EtymologyPopup", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("detail-link")).toBeInTheDocument()
-      expect(screen.getByTestId("detail-link")).toHaveAttribute("href", "/keyword-search?q=ktb")
+      expect(screen.getByTestId("detail-link")).toHaveAttribute("href", "/keyword-search/root/ktb")
       expect(screen.getByText("Detaylı Analiz")).toBeInTheDocument()
     })
   })

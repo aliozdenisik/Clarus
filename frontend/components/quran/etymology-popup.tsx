@@ -183,7 +183,24 @@ export function EtymologyPopup({
                     transition={{ ...springPresets.gentle, delay: 0.05 }}
                     className="space-y-2"
                   >
-                    {data.definition_tr ? (
+                    {data.summary_tr || data.summary_en ? (
+                      <>
+                        {data.summary_tr && (
+                          <p
+                            data-testid="root-meaning"
+                            className="text-sm text-[var(--color-text-primary)]"
+                          >
+                            <span className="font-medium text-[var(--color-text-muted)]">Anlam:</span>{" "}
+                            {data.summary_tr}
+                          </p>
+                        )}
+                        {data.summary_en && (
+                          <p className="text-sm italic text-[var(--color-text-secondary)]">
+                            {data.summary_en}
+                          </p>
+                        )}
+                      </>
+                    ) : data.definition_tr ? (
                       <p
                         data-testid="root-meaning"
                         className="text-sm text-[var(--color-text-primary)]"
@@ -197,12 +214,6 @@ export function EtymologyPopup({
                         className="text-sm text-[var(--color-text-muted)] italic"
                       >
                         <span className="font-medium">Anlam:</span> Tanım mevcut değil
-                      </p>
-                    )}
-                    {data.definition_en && (
-                      <p className="text-sm text-[var(--color-text-secondary)]">
-                        <span className="font-medium text-[var(--color-text-muted)]">English:</span>{" "}
-                        {data.definition_en}
                       </p>
                     )}
                   </motion.div>
@@ -321,7 +332,7 @@ export function EtymologyPopup({
                     >
                       <Link
                         data-testid="detail-link"
-                        href={`/keyword-search?q=${encodeURIComponent(data.root_buckwalter)}`}
+                        href={`/keyword-search/root/${encodeURIComponent(data.root_buckwalter)}`}
                         onClick={() => setIsOpen(false)}
                       >
                         <motion.div
