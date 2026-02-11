@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 import type React from "react"
 
@@ -46,6 +47,8 @@ vi.mock("framer-motion", () => ({
 
 vi.mock("lucide-react", () => ({
   ArrowLeft: () => <div data-testid="arrow-left-icon" />,
+  BookOpen: () => <div data-testid="book-open-icon" />,
+  ChevronDown: () => <div data-testid="chevron-down-icon" />,
 }))
 
 vi.mock("@/components/ui/glow-card", () => ({
@@ -209,5 +212,33 @@ describe("RootDetailPage", () => {
     })
 
     expect(screen.getAllByText("كتب").length).toBeGreaterThan(0)
+  })
+
+  it("renders abbreviation legend toggle button", async () => {
+    render(<RootDetailPage />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId("legend-section")).toBeInTheDocument()
+    })
+
+    expect(screen.getByText("Kısaltmalar Rehberi")).toBeInTheDocument()
+  })
+
+  it("shows abbreviation categories when legend is opened", async () => {
+    render(<RootDetailPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText("Kısaltmalar Rehberi")).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByText("Kısaltmalar Rehberi"))
+
+    await waitFor(() => {
+      expect(screen.getByText("Kaynaklar")).toBeInTheDocument()
+    })
+
+    expect(screen.getByText("Gramer Terimleri")).toBeInTheDocument()
+    expect(screen.getByText("Referans Kısaltmaları")).toBeInTheDocument()
+    expect(screen.getByText("Anlam Belirteçleri")).toBeInTheDocument()
   })
 })
