@@ -23,7 +23,10 @@ vi.mock("next/navigation", () => ({
 }))
 
 // Mock Better Auth
-const mockSession = {
+const mockSession: {
+  data: { user: { id: string; name: string; email: string } } | null
+  isPending: boolean
+} = {
   data: { user: { id: "1", name: "Test User", email: "test@example.com" } },
   isPending: false,
 }
