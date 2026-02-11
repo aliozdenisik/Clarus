@@ -36,6 +36,7 @@
 
 ### Backend API
 
+- [x] Multi-translation verse API (`/api/metadata/quran/verses/{surahId}/{verseId}/translations`) — 8 Turkish translations from Qdrant
 - [x] SearchHistory `result_count` column + migration script
 - [x] History API `result_count` in response items
 - [x] Circuit breaker protection (pybreaker)
@@ -67,6 +68,12 @@
 
 ### Frontend (Next.js 15)
 
+- [x] **Verse display overhaul** (2026-02-11): "Ana Cadde / Yan Durak" architecture — borderless surah page, verse detail page with 8 Turkish translations, 2-panel keyword search, etymology popover refinement, Crimson Text serif, spring animations (279 tests, 9 tasks, 8 commits)
+- [x] Verse detail page (`/quran/[surahId]/[verseId]`) — 8 Turkish translations stacked vertically
+- [x] Borderless surah page rewrite with Crimson Text serif typography
+- [x] Keyword search 2-panel layout with rich etymology root card
+- [x] Etymology popover refinement — confidence badges, collapsible forms, deep link to keyword search
+- [x] Design system extension — bouncy/heavy spring presets, tactile scale tokens
 - [x] Search history page — SDK client migration, result_count display, search_type mapping
 - [x] SDK client global auth (`lib/api/config.ts` — auto-injects Bearer token)
 - [x] SSE reconnection with exponential backoff
