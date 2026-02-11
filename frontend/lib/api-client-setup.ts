@@ -9,6 +9,11 @@ import { configureApiClient } from "./api/config"
 
 let isSetupComplete = false
 
+const isAbortError = (error: unknown): boolean =>
+  error instanceof DOMException
+    ? error.name === "AbortError"
+    : error instanceof Error && error.name === "AbortError"
+
 /**
  * Configure API client interceptors once.
  */
@@ -55,13 +60,45 @@ export function setupApiClient(): void {
     const correlationId = response?.headers?.get("X-Correlation-ID")
     const requestId = response?.headers?.get("X-Request-ID")
 
-    logger.error("API request failed", error as Error, {
+    if (isAbortError(error)) {
+      logger.debug("API request aborted", {
+        component: "ApiClient",
+        action: "aborted",
+        method: request?.method,
+        url: request?.url,
+        correlationId,
+        requestId,
+      })
+
+      return error
+    }
+
+    const errorType =
+      error instanceof DOMException || error instanceof Error ? error.name : typeof error
+    const errorMessage =
+      error instanceof DOMException || error instanceof Error
+        ? error.message
+        : typeof error === "string"
+          ? error
+          : undefined
+    const errorPayload =
+      typeof error === "string"
+        ? error
+        : error && typeof error === "object" && !(error instanceof Error)
+          ? error
+          : undefined
+
+    logger.error("API request failed", error instanceof Error ? error : undefined, {
       component: "ApiClient",
       action: "error",
       status: response?.status,
+      method: request?.method,
       url: request?.url,
       correlationId,
       requestId,
+      errorType,
+      errorMessage,
+      errorPayload,
     })
 
     return error
