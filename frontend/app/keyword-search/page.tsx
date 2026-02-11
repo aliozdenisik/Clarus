@@ -8,7 +8,7 @@ import { useSession } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { SearchInput } from "@/components/keyword-search/search-input"
-import { RootCard } from "@/components/keyword-search/root-card"
+import { RichRootCard } from "@/components/keyword-search/rich-root-card"
 import { StatsBar } from "@/components/keyword-search/stats-bar"
 import { DerivedWords } from "@/components/keyword-search/derived-words"
 // Lazy-load recharts (~200KB) — only needed when chart is visible
@@ -668,7 +668,6 @@ function KeywordSearchContent() {
                   <p className="text-[var(--color-text-muted)]">{error}</p>
                 </div>
               ) : searchResult || bibleSearchResult ? (
-                // Full results
                 <div className="space-y-8">
                   {/* Buckwalter/Strong's feedback */}
                   {activeLanguage === "quran" &&
@@ -703,146 +702,162 @@ function KeywordSearchContent() {
                     </div>
                   ) : (
                     <>
-                      <RootCard
-                        root={
-                          activeLanguage === "quran"
-                            ? searchResult?.root || null
-                            : bibleSearchResult?.root || null
-                        }
-                        rootSource={
-                          activeLanguage === "quran"
-                            ? searchResult?.root_source || ""
-                            : bibleSearchResult?.root_source || ""
-                        }
-                        rootBuckwalter={
-                          activeLanguage === "quran"
-                            ? searchResult?.root_buckwalter
-                            : bibleSearchResult?.transliteration
-                        }
-                        strongNumber={
-                          activeLanguage !== "quran" ? bibleSearchResult?.strong_number : undefined
-                        }
-                        language={
-                          activeLanguage === "quran"
-                            ? "arabic"
-                            : activeLanguage === "hebrew_ot"
-                              ? "hebrew"
-                              : "greek"
-                        }
-                      />
-                      <StatsBar
-                        totalOccurrences={filteredStats.totalOccurrences}
-                        uniqueWords={filteredStats.uniqueWords}
-                        surahCount={filteredStats.surahCount}
-                        language={activeLanguage}
-                      />
-                      <DerivedWords
-                        words={
-                          activeLanguage === "quran"
-                            ? searchResult?.unique_words || []
-                            : bibleSearchResult?.unique_words || []
-                        }
-                        selectedWord={selectedWord}
-                        onWordSelect={handleWordFilter}
-                        transliterations={
-                          activeLanguage === "quran"
-                            ? searchResult?.word_transliterations || {}
-                            : bibleSearchResult?.word_transliterations || {}
-                        }
-                        language={
-                          activeLanguage === "quran"
-                            ? "arabic"
-                            : activeLanguage === "hebrew_ot"
-                              ? "hebrew"
-                              : "greek"
-                        }
-                      />
-                      <SurahChart
-                        data={
-                          activeLanguage === "quran"
-                            ? chartData.map((d) => ({
-                                ...d,
-                                surah_name: getSurahName(d.surah_id, d.surah_name),
-                              }))
-                            : chartData
-                        }
-                        language={activeLanguage}
-                      />
-
-                      {/* Verse Cards */}
-                      <div className="space-y-4">
-                        <div className="text-center text-xs tracking-widest text-[var(--color-text-muted)]">
-                          ◆
-                        </div>
-                        <h3 className="text-center text-lg font-medium text-[var(--color-text-primary)]">
-                          Verse Results
-                        </h3>
-                        {activeLanguage === "quran"
-                          ? paginatedVerses.map((verse, i) => {
-                              if (!isQuranVerseMatch(verse)) {
-                                return null
+                      <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+                        <motion.div
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={springPresets.fluid}
+                          className="lg:sticky lg:top-20 lg:w-80 lg:shrink-0"
+                          data-testid="root-card-panel"
+                        >
+                          <div className="space-y-6">
+                            <RichRootCard
+                              root={
+                                activeLanguage === "quran"
+                                  ? searchResult?.root || null
+                                  : bibleSearchResult?.root || null
                               }
-
-                              return (
-                                <VerseCard
-                                  key={`${verse.surah_id}-${verse.ayah_number}`}
-                                  surahId={verse.surah_id}
-                                  surahName={getSurahName(verse.surah_id, verse.surah_name)}
-                                  ayahNumber={verse.ayah_number}
-                                  textUthmani={verse.text_uthmani}
-                                  textClean={verse.text_clean}
-                                  matchedWords={verse.matched_words}
-                                  turkishTranslation={getTranslation(
-                                    verse.surah_id,
-                                    verse.ayah_number
-                                  )}
-                                  isTranslationLoading={translationsLoading}
-                                  index={i}
-                                  language="arabic"
-                                />
-                              )
-                            })
-                          : paginatedVerses.map((verse, i) => {
-                              if (!isBibleVerseMatch(verse)) {
-                                return null
+                              rootSource={
+                                activeLanguage === "quran"
+                                  ? searchResult?.root_source || ""
+                                  : bibleSearchResult?.root_source || ""
                               }
+                              rootBuckwalter={
+                                activeLanguage === "quran"
+                                  ? searchResult?.root_buckwalter
+                                  : bibleSearchResult?.transliteration
+                              }
+                              query={query}
+                              language={
+                                activeLanguage === "quran"
+                                  ? "arabic"
+                                  : activeLanguage === "hebrew_ot"
+                                    ? "hebrew"
+                                    : "greek"
+                              }
+                            />
+                            <StatsBar
+                              totalOccurrences={filteredStats.totalOccurrences}
+                              uniqueWords={filteredStats.uniqueWords}
+                              surahCount={filteredStats.surahCount}
+                              language={activeLanguage}
+                            />
+                            <DerivedWords
+                              words={
+                                activeLanguage === "quran"
+                                  ? searchResult?.unique_words || []
+                                  : bibleSearchResult?.unique_words || []
+                              }
+                              selectedWord={selectedWord}
+                              onWordSelect={handleWordFilter}
+                              transliterations={
+                                activeLanguage === "quran"
+                                  ? searchResult?.word_transliterations || {}
+                                  : bibleSearchResult?.word_transliterations || {}
+                              }
+                              language={
+                                activeLanguage === "quran"
+                                  ? "arabic"
+                                  : activeLanguage === "hebrew_ot"
+                                    ? "hebrew"
+                                    : "greek"
+                              }
+                            />
+                          </div>
+                        </motion.div>
 
-                              return (
-                                <VerseCard
-                                  key={`${verse.book_id}-${verse.chapter}-${verse.verse}`}
-                                  surahId={verse.book_id}
-                                  surahName={verse.book_name}
-                                  ayahNumber={verse.verse}
-                                  textUthmani={verse.text_original || ""}
-                                  textClean={verse.text_original || ""}
-                                  matchedWords={verse.matched_words}
-                                  englishTranslation={verse.text_english}
-                                  chapter={verse.chapter}
-                                  index={i}
-                                  language={activeLanguage === "hebrew_ot" ? "hebrew" : "greek"}
-                                />
-                              )
-                            })}
+                        <motion.div
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={springPresets.fluid}
+                          className="min-w-0 flex-1 space-y-8"
+                          data-testid="results-panel"
+                        >
+                          <SurahChart
+                            data={
+                              activeLanguage === "quran"
+                                ? chartData.map((d) => ({
+                                    ...d,
+                                    surah_name: getSurahName(d.surah_id, d.surah_name),
+                                  }))
+                                : chartData
+                            }
+                            language={activeLanguage}
+                          />
+
+                          <div className="space-y-4">
+                            <div className="text-center text-xs tracking-widest text-[var(--color-text-muted)]">
+                              ◆
+                            </div>
+                            <h3 className="text-center text-lg font-medium text-[var(--color-text-primary)]">
+                              Verse Results
+                            </h3>
+                            {activeLanguage === "quran"
+                              ? paginatedVerses.map((verse, i) => {
+                                  if (!isQuranVerseMatch(verse)) {
+                                    return null
+                                  }
+
+                                  return (
+                                    <VerseCard
+                                      key={`${verse.surah_id}-${verse.ayah_number}`}
+                                      surahId={verse.surah_id}
+                                      surahName={getSurahName(verse.surah_id, verse.surah_name)}
+                                      ayahNumber={verse.ayah_number}
+                                      textUthmani={verse.text_uthmani}
+                                      textClean={verse.text_clean}
+                                      matchedWords={verse.matched_words}
+                                      turkishTranslation={getTranslation(
+                                        verse.surah_id,
+                                        verse.ayah_number
+                                      )}
+                                      isTranslationLoading={translationsLoading}
+                                      index={i}
+                                      language="arabic"
+                                    />
+                                  )
+                                })
+                              : paginatedVerses.map((verse, i) => {
+                                  if (!isBibleVerseMatch(verse)) {
+                                    return null
+                                  }
+
+                                  return (
+                                    <VerseCard
+                                      key={`${verse.book_id}-${verse.chapter}-${verse.verse}`}
+                                      surahId={verse.book_id}
+                                      surahName={verse.book_name}
+                                      ayahNumber={verse.verse}
+                                      textUthmani={verse.text_original || ""}
+                                      textClean={verse.text_original || ""}
+                                      matchedWords={verse.matched_words}
+                                      englishTranslation={verse.text_english}
+                                      chapter={verse.chapter}
+                                      index={i}
+                                      language={activeLanguage === "hebrew_ot" ? "hebrew" : "greek"}
+                                    />
+                                  )
+                                })}
+                          </div>
+
+                          {filteredVerses.length > VERSES_PER_PAGE && (
+                            <Pagination
+                              page={currentPage}
+                              totalPages={totalFilteredPages}
+                              totalVerses={filteredVerses.length}
+                              hasNext={currentPage < totalFilteredPages}
+                              hasPrev={currentPage > 1}
+                              onPageChange={handlePageChange}
+                            />
+                          )}
+
+                          {(activeLanguage === "hebrew_ot" || activeLanguage === "greek_nt") && (
+                            <div className="mt-8 border-t border-[var(--color-border-subtle)] pt-6">
+                              <AccuracyDisclaimer />
+                            </div>
+                          )}
+                        </motion.div>
                       </div>
-
-                      {/* Pagination (client-side) */}
-                      {filteredVerses.length > VERSES_PER_PAGE && (
-                        <Pagination
-                          page={currentPage}
-                          totalPages={totalFilteredPages}
-                          totalVerses={filteredVerses.length}
-                          hasNext={currentPage < totalFilteredPages}
-                          hasPrev={currentPage > 1}
-                          onPageChange={handlePageChange}
-                        />
-                      )}
-
-                      {/* Accuracy Disclaimer (Bible modes only) */}
-                      {(activeLanguage === "hebrew_ot" || activeLanguage === "greek_nt") && (
-                        <div className="mt-8 border-t border-[var(--color-border-subtle)] pt-6">
-                          <AccuracyDisclaimer />
-                        </div>
-                      )}
                     </>
                   )}
                 </div>

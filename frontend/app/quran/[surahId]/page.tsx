@@ -6,17 +6,19 @@ import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
 import { useSession, signOut } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
-import { GlowCard } from "@/components/ui/glow-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
-import { ArrowLeft, User, LogOut } from "lucide-react"
+import { User, LogOut } from "lucide-react"
 import { API_BASE } from "@/lib/config"
-import { ClickableVerse } from "@/components/quran/clickable-verse"
+import { SurahHeader } from "@/components/quran/surah-header"
+import { VerseBlock } from "@/components/quran/verse-block"
+import { VerseSeparator } from "@/components/quran/verse-separator"
+import { TranslationSelector } from "@/components/quran/translation-selector"
 
 interface Verse {
   id: number
-  text: string // Arabic text (always present)
-  translation: string // Turkish translation (always present in API)
+  text: string
+  translation: string
 }
 
 interface SurahDetail {
@@ -46,7 +48,6 @@ export default function SurahDetailPage() {
     }
   }, [user, authLoading, router])
 
-  // Read verse parameter from URL on mount
   useEffect(() => {
     const verseParam = searchParams.get("verse")
     if (verseParam) {
@@ -57,15 +58,12 @@ export default function SurahDetailPage() {
     }
   }, [searchParams])
 
-  // Scroll to verse when content loads and highlightedVerse is set
   useEffect(() => {
     if (highlightedVerse && surah) {
-      // Small delay to ensure DOM is fully rendered
       const timer = setTimeout(() => {
         const element = document.querySelector(`[data-verse-id="${highlightedVerse}"]`)
         if (element) {
           element.scrollIntoView({ behavior: "smooth", block: "center" })
-          // Clear highlight after 2 seconds
           setTimeout(() => setHighlightedVerse(null), 2000)
         }
       }, 100)
@@ -129,6 +127,10 @@ export default function SurahDetailPage() {
     toast.success("Logged out successfully")
   }
 
+  const handleVerseClick = (verseId: number) => {
+    router.push(`/quran/${surahId}/${verseId}`)
+  }
+
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-[var(--color-bg-app)] p-8">
@@ -159,109 +161,53 @@ export default function SurahDetailPage() {
   return (
     <div className="min-h-screen bg-[var(--color-bg-app)] p-8">
       <div className="mx-auto max-w-4xl">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={springPresets.snappy}
-          className="mb-6 flex items-center justify-between"
+          className="mb-6 flex items-center justify-end gap-4"
         >
+          <TranslationSelector />
+          <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
+            <User className="h-4 w-4" />
+            <span className="text-sm">{user?.name || user?.email}</span>
+          </div>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push("/quran")}
+            onClick={handleLogout}
             className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Quran
+            <LogOut className="h-4 w-4" />
+            Logout
           </Button>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
-              <User className="h-4 w-4" />
-              <span className="text-sm">{user?.name || user?.email}</span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
-          </div>
         </motion.div>
 
-        {/* Surah Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={springPresets.fluid}
-          className="mb-8 text-center"
-        >
-          <div className="mb-4 flex items-center justify-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-accent-primary)] text-xl font-bold text-white">
-              {surah.id}
-            </div>
-            <h1 className="font-arabic text-4xl text-[var(--color-text-primary)]">
-              {surah.name_arabic}
-            </h1>
-          </div>
-          <h2 className="mb-2 text-2xl font-bold text-[var(--color-text-primary)]">
-            {surah.transliteration}
-          </h2>
-          <p className="text-[var(--color-text-muted)]">
-            {surah.type} • {surah.total_verses} verses
-          </p>
-        </motion.div>
+        <SurahHeader
+          id={surah.id}
+          nameArabic={surah.name_arabic}
+          transliteration={surah.transliteration}
+          type={surah.type}
+          totalVerses={surah.total_verses}
+        />
 
-        {/* Verses */}
-        <div className="space-y-4">
+        <div className="space-y-1">
           {surah.verses.map((verse, i) => (
-            <motion.div
-              key={verse.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ ...springPresets.snappy, delay: i * 0.02 }}
-              data-verse-id={verse.id}
-              className={
-                highlightedVerse === verse.id
-                  ? "rounded-lg shadow-[var(--color-accent-primary)]/20 shadow-lg ring-2 ring-[var(--color-accent-primary)] transition-all duration-500"
-                  : "transition-all duration-500"
-              }
-            >
-              <GlowCard className="p-6">
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-bg-secondary)] text-xl font-medium text-[var(--color-accent-primary)]">
-                      {verse.id}
-                    </div>
-                  </div>
-                  <div className="flex flex-1 flex-col gap-3">
-                    {/* Arabic text - RTL with proper font */}
-                    <ClickableVerse
-                      surahId={Number(surahId)}
-                      ayahNumber={verse.id}
-                      arabicText={verse.text}
-                    />
-
-                    {/* Turkish translation - with fallback for safety */}
-                    {verse.translation ? (
-                      <p
-                        lang="tr"
-                        className="text-2xl leading-relaxed text-[var(--color-text-secondary)]"
-                      >
-                        {verse.translation}
-                      </p>
-                    ) : (
-                      <p className="text-sm text-[var(--color-text-secondary)] italic">
-                        Translation not available
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </GlowCard>
-            </motion.div>
+            <div key={verse.id}>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ ...springPresets.gentle, delay: i * 0.02 }}
+              >
+                <VerseBlock
+                  surahId={Number(surahId)}
+                  verse={verse}
+                  isHighlighted={highlightedVerse === verse.id}
+                  onClick={() => handleVerseClick(verse.id)}
+                />
+              </motion.div>
+              {i < surah.verses.length - 1 && <VerseSeparator />}
+            </div>
           ))}
         </div>
       </div>
