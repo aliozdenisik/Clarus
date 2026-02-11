@@ -1,19 +1,23 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
-import { useSession, signOut } from "@/lib/auth-client"
+import { useSession } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
-import { User, LogOut } from "lucide-react"
 import { API_BASE } from "@/lib/config"
 import { SurahHeader } from "@/components/quran/surah-header"
 import { VerseBlock } from "@/components/quran/verse-block"
 import { VerseSeparator } from "@/components/quran/verse-separator"
-import { TranslationSelector } from "@/components/quran/translation-selector"
+import {
+  TRANSLATOR_STORAGE_KEY,
+  TRANSLATORS,
+  TranslationSelector,
+  type TranslatorKey,
+} from "@/components/quran/translation-selector"
 
 interface Verse {
   id: number
@@ -37,7 +41,21 @@ export default function SurahDetailPage() {
   const searchParams = useSearchParams()
   const [surah, setSurah] = useState<SurahDetail | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [highlightedVerse, setHighlightedVerse] = useState<number | null>(null)
+  const [selectedTranslator, setSelectedTranslator] = useState<TranslatorKey>(() => {
+    if (typeof window === "undefined") {
+      return "diyanet"
+    }
+
+    const storedTranslator = localStorage.getItem(TRANSLATOR_STORAGE_KEY)
+    if (storedTranslator && TRANSLATORS.some((translator) => translator.key === storedTranslator)) {
+      return storedTranslator as TranslatorKey
+    }
+
+    return "diyanet"
+  })
+  const hasLoadedSurahRef = useRef(false)
   const { data: session, isPending: authLoading } = useSession()
   const user = session?.user
   const router = useRouter()
@@ -75,11 +93,22 @@ export default function SurahDetailPage() {
     const controller = new AbortController()
 
     const fetchSurah = async () => {
+      const isInitialLoad = !hasLoadedSurahRef.current
+
+      if (isInitialLoad) {
+        setIsLoading(true)
+      } else {
+        setIsRefreshing(true)
+      }
+
       try {
-        const response = await fetch(`${API_BASE}/api/metadata/quran/surahs/${surahId}`, {
-          credentials: "include",
-          signal: controller.signal,
-        })
+        const response = await fetch(
+          `${API_BASE}/api/metadata/quran/surahs/${surahId}?translator=${encodeURIComponent(selectedTranslator)}`,
+          {
+            credentials: "include",
+            signal: controller.signal,
+          }
+        )
 
         if (controller.signal.aborted) {
           return
@@ -96,6 +125,7 @@ export default function SurahDetailPage() {
         }
 
         setSurah(data.data?.surah || null)
+        hasLoadedSurahRef.current = true
       } catch (error) {
         if (
           (error instanceof DOMException && error.name === "AbortError") ||
@@ -107,7 +137,11 @@ export default function SurahDetailPage() {
         toast.error("Failed to load surah")
       } finally {
         if (!controller.signal.aborted) {
-          setIsLoading(false)
+          if (isInitialLoad) {
+            setIsLoading(false)
+          } else {
+            setIsRefreshing(false)
+          }
         }
       }
     }
@@ -119,19 +153,13 @@ export default function SurahDetailPage() {
     return () => {
       controller.abort()
     }
-  }, [user, surahId])
-
-  const handleLogout = async () => {
-    await signOut()
-    router.push("/sign-in")
-    toast.success("Logged out successfully")
-  }
+  }, [user, surahId, selectedTranslator])
 
   const handleVerseClick = (verseId: number) => {
     router.push(`/quran/${surahId}/${verseId}`)
   }
 
-  if (authLoading || isLoading) {
+  if (authLoading || (isLoading && !surah)) {
     return (
       <div className="min-h-screen bg-[var(--color-bg-app)] p-8">
         <div className="mx-auto max-w-4xl">
@@ -167,20 +195,12 @@ export default function SurahDetailPage() {
           transition={springPresets.snappy}
           className="mb-6 flex items-center justify-end gap-4"
         >
-          <TranslationSelector />
-          <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
-            <User className="h-4 w-4" />
-            <span className="text-sm">{user?.name || user?.email}</span>
+          <div className="flex items-center gap-2">
+            <TranslationSelector value={selectedTranslator} onChange={setSelectedTranslator} />
+            {isRefreshing && (
+              <span className="text-xs text-[var(--color-text-muted)]">Meali güncelleniyor...</span>
+            )}
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
         </motion.div>
 
         <SurahHeader
@@ -194,18 +214,11 @@ export default function SurahDetailPage() {
         <div className="space-y-1">
           {surah.verses.map((verse, i) => (
             <div key={verse.id}>
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ ...springPresets.gentle, delay: i * 0.02 }}
-              >
-                <VerseBlock
-                  surahId={Number(surahId)}
-                  verse={verse}
-                  isHighlighted={highlightedVerse === verse.id}
-                  onClick={() => handleVerseClick(verse.id)}
-                />
-              </motion.div>
+              <VerseBlock
+                verse={verse}
+                isHighlighted={highlightedVerse === verse.id}
+                onClick={() => handleVerseClick(verse.id)}
+              />
               {i < surah.verses.length - 1 && <VerseSeparator />}
             </div>
           ))}

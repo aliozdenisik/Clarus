@@ -9,9 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { Languages } from "lucide-react"
 
-const TRANSLATORS = [
+export const TRANSLATORS = [
   { key: "diyanet", label: "Diyanet İşleri" },
   { key: "yazir", label: "Elmalılı Yazır" },
   { key: "ates", label: "Süleyman Ateş" },
@@ -24,7 +23,7 @@ const TRANSLATORS = [
 
 export type TranslatorKey = (typeof TRANSLATORS)[number]["key"]
 
-const STORAGE_KEY = "clarus:default-translator"
+export const TRANSLATOR_STORAGE_KEY = "clarus:default-translator"
 
 interface TranslationSelectorProps {
   value?: TranslatorKey
@@ -34,7 +33,7 @@ interface TranslationSelectorProps {
 export function TranslationSelector({ value, onChange }: TranslationSelectorProps) {
   const [selectedTranslator, setSelectedTranslator] = useState<TranslatorKey>(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(STORAGE_KEY)
+      const stored = localStorage.getItem(TRANSLATOR_STORAGE_KEY)
       if (stored && TRANSLATORS.some((t) => t.key === stored)) {
         return stored as TranslatorKey
       }
@@ -42,31 +41,37 @@ export function TranslationSelector({ value, onChange }: TranslationSelectorProp
     return "diyanet"
   })
 
+  const isControlled = value !== undefined
+
   const handleChange = (translator: TranslatorKey) => {
-    setSelectedTranslator(translator)
+    if (!isControlled) {
+      setSelectedTranslator(translator)
+    }
+
     if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, translator)
+      localStorage.setItem(TRANSLATOR_STORAGE_KEY, translator)
     }
     onChange?.(translator)
   }
 
   const currentTranslator = value ?? selectedTranslator
   const selected = TRANSLATORS.find((t) => t.key === currentTranslator)
+  const selectedLabel = selected?.label ?? "Diyanet İşleri"
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           className={cn(
-            "flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium",
+            "flex h-9 items-center rounded-lg px-3 text-sm font-medium",
             "bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)]",
             "border border-[var(--color-border-subtle)]",
             "transition-colors duration-200 hover:border-[var(--color-border-glow)]",
             "focus:border-[var(--color-accent-primary)] focus:ring-1 focus:ring-[var(--color-accent-primary)]/20 focus:outline-none"
           )}
+          aria-label="Türkçe meâl seç"
         >
-          <Languages className="h-4 w-4" />
-          <span>{selected?.label ?? "Diyanet İşleri"}</span>
+          <span>{`${selectedLabel} Meali`}</span>
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">

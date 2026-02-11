@@ -1,12 +1,8 @@
 "use client"
 
-import { motion } from "framer-motion"
-import { springPresets, tactileScale } from "@/lib/design-system"
-import { ClickableVerse } from "./clickable-verse"
 import { cn } from "@/lib/utils"
 
 interface VerseBlockProps {
-  surahId: number
   verse: {
     id: number
     text: string
@@ -16,15 +12,9 @@ interface VerseBlockProps {
   onClick?: () => void
 }
 
-export function VerseBlock({ surahId, verse, isHighlighted, onClick }: VerseBlockProps) {
+export function VerseBlock({ verse, isHighlighted, onClick }: VerseBlockProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={springPresets.gentle}
-      whileHover={{ y: -1 }}
-      whileTap={tactileScale.press}
+    <div
       onClick={onClick}
       data-testid="verse-block"
       data-verse={verse.id}
@@ -43,7 +33,9 @@ export function VerseBlock({ surahId, verse, isHighlighted, onClick }: VerseBloc
           </div>
         </div>
         <div className="flex flex-1 flex-col gap-4">
-          <ClickableVerse surahId={surahId} ayahNumber={verse.id} arabicText={verse.text} />
+          <p lang="ar" className="font-arabic text-2xl text-[var(--color-text-primary)]">
+            {verse.text}
+          </p>
           {verse.translation ? (
             <p
               lang="tr"
@@ -52,12 +44,10 @@ export function VerseBlock({ surahId, verse, isHighlighted, onClick }: VerseBloc
               {verse.translation}
             </p>
           ) : (
-            <p className="text-sm text-[var(--color-text-muted)] italic">
-              Translation not available
-            </p>
+            <p className="text-sm text-[var(--color-text-muted)] italic">Meâl bulunamadı</p>
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }

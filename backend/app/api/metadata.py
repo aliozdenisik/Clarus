@@ -3,10 +3,11 @@ import os
 from pathlib import Path
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
-from app.schemas.common import DEFAULT_TRANSLATOR, VALID_TRANSLATORS
+from app.schemas.common import DEFAULT_TRANSLATOR, VALID_TRANSLATORS, TranslatorType
+from src.tanzil_loader import TanzilLoader
 
 router = APIRouter()
 
@@ -52,6 +53,8 @@ class MetadataResponse(BaseModel):
 
 _quran_cache: list[dict] | None = None
 _bible_cache: dict | None = None
+_tanzil_loader: TanzilLoader | None = None
+_translator_verse_cache: dict[str, dict[int, dict[int, str]]] = {}
 
 
 def _load_quran_data() -> list[dict]:
@@ -80,6 +83,36 @@ def _load_bible_data() -> dict:
             _bible_cache = {"books": []}
     assert _bible_cache is not None
     return _bible_cache
+
+
+def _get_tanzil_loader() -> TanzilLoader:
+    global _tanzil_loader
+    if _tanzil_loader is None:
+        _tanzil_loader = TanzilLoader(data_dir=Path(DATA_DIR))
+    return _tanzil_loader
+
+
+def _load_translator_verses(translator: str) -> dict[int, dict[int, str]]:
+    cached = _translator_verse_cache.get(translator)
+    if cached is not None:
+        return cached
+
+    loader = _get_tanzil_loader()
+    verse_rows = loader.load_translation(translator)
+
+    translator_map: dict[int, dict[int, str]] = {}
+    for verse_row in verse_rows:
+        surah_number = int(verse_row["surah_number"])
+        verse_number = int(verse_row["verse_number"])
+        verse_text = str(verse_row["text"])
+
+        if surah_number not in translator_map:
+            translator_map[surah_number] = {}
+
+        translator_map[surah_number][verse_number] = verse_text
+
+    _translator_verse_cache[translator] = translator_map
+    return translator_map
 
 
 def _get_testament(book_nr: int) -> str:
@@ -150,12 +183,35 @@ async def get_quran_surahs():
 
 
 @router.get("/quran/surahs/{surah_id}")
-async def get_surah_detail(surah_id: int):
+async def get_surah_detail(
+    surah_id: int,
+    translator: TranslatorType = Query(
+        default=DEFAULT_TRANSLATOR,
+        description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
+    ),
+):
     quran_data = _load_quran_data()
 
     surah = next((s for s in quran_data if s["id"] == surah_id), None)
     if not surah:
         raise HTTPException(status_code=404, detail=f"Surah {surah_id} not found")
+
+    try:
+        translator_verses = _load_translator_verses(translator).get(surah_id, {})
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Failed to load translator data for '{translator}': {exc!s}",
+        ) from exc
+
+    verses = [
+        {
+            "id": verse.get("id", 0),
+            "text": verse.get("text", ""),
+            "translation": translator_verses.get(verse.get("id", 0), verse.get("translation", "")),
+        }
+        for verse in surah.get("verses", [])
+    ]
 
     return MetadataResponse(
         data={
@@ -166,7 +222,8 @@ async def get_surah_detail(surah_id: int):
                 "transliteration": surah.get("transliteration", ""),
                 "type": surah.get("type", ""),
                 "total_verses": surah.get("total_verses", 0),
-                "verses": surah.get("verses", []),
+                "verses": verses,
+                "translator": translator,
             }
         }
     )
