@@ -384,7 +384,7 @@ function SearchContent() {
     // Perform search with selected keywords
     if (enable_streaming) {
       setIsSearching(true)
-      let url = `${API_BASE}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`
+      let url = `/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`
       if (selectedLanguage) {
         url += `&language=${encodeURIComponent(selectedLanguage)}`
       }
@@ -513,7 +513,7 @@ function SearchContent() {
 
       if (enable_streaming) {
         setIsSearching(true)
-        let url = `${API_BASE}/api/stream/search?q=${encodeURIComponent(q)}&source=${activeTab}`
+        let url = `/api/stream/search?q=${encodeURIComponent(q)}&source=${activeTab}`
         if (selectedLanguage) {
           url += `&language=${encodeURIComponent(selectedLanguage)}`
         }
@@ -565,7 +565,7 @@ function SearchContent() {
     // Normal search flow
     if (enable_streaming) {
       setIsSearching(true)
-      let url = `${API_BASE}/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`
+      let url = `/api/stream/search?q=${encodeURIComponent(query)}&source=${activeTab}`
       if (selectedLanguage) {
         url += `&language=${encodeURIComponent(selectedLanguage)}`
       }

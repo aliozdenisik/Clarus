@@ -404,7 +404,7 @@ function CompareContent() {
       if (enable_streaming) {
         try {
           // Build SSE URL using q directly (NOT topic state, which may not be updated yet)
-          let url = `${API_BASE}/api/stream/compare?topic=${encodeURIComponent(q)}`
+          let url = `/api/stream/compare?topic=${encodeURIComponent(q)}`
           url += `&collections=${encodeURIComponent(selectedCollections.join(","))}`
           if (selectedLanguage) {
             url += `&language=${encodeURIComponent(selectedLanguage)}`
@@ -649,7 +649,7 @@ function CompareContent() {
     if (enable_streaming) {
       // Start SSE Stream — uses cookie auth via withCredentials
       try {
-        let url = `${API_BASE}/api/stream/compare?topic=${encodeURIComponent(topic)}`
+        let url = `/api/stream/compare?topic=${encodeURIComponent(topic)}`
         url += `&collections=${encodeURIComponent(selectedCollections.join(","))}`
         if (selectedLanguage) {
           url += `&language=${encodeURIComponent(selectedLanguage)}`
