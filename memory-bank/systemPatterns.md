@@ -116,6 +116,49 @@ onerror -> schedule reconnect timeout
 - `frontend/app/{quran,old-testament,new-testament,apocrypha}/page.tsx`
 - `frontend/app/bible/[bookNr]/page.tsx`
 - `frontend/app/quran/[surahId]/page.tsx`
+- `frontend/app/quran/[surahId]/[verseId]/page.tsx`
+
+## Verse Display Architecture ("Ana Cadde / Yan Durak")
+
+Two-tier reading architecture for Quran verse display:
+
+```
+Surah Page (Ana Cadde / Main Road)          Verse Detail (Yan Durak / Side Stop)
+├── Borderless verse flow                    ├── Arabic text (large, centered)
+├── 1 translation per verse (user pref)      ├── 8 Turkish translations stacked
+├── Gradient fade separators                 ├── Translator labels + Crimson Text
+├── Click verse → navigate to detail         ├── Prev/Next verse navigation
+└── ClickableVerse for word etymology        └── ClickableVerse for word etymology
+```
+
+**Navigation Flow:**
+```
+Surah Page → click verse → Verse Detail Page
+                              → click word → Etymology Popover
+                                              → "Detaylı Analiz" → Keyword Search (2-panel)
+```
+
+**Spring Animation Presets:**
+| Preset | Stiffness | Damping | Use Case |
+|--------|-----------|---------|----------|
+| snappy | 300 | 30 | Quick UI feedback |
+| fluid | 170 | 26 | Content transitions |
+| gentle | 120 | 14 | Stagger reveals |
+| bouncy | 400 | 10 | Tactile press feedback |
+| heavy | 80 | 20 | Large element motion |
+
+**Typography:**
+- Arabic: Amiri font, `text-2xl`/`text-3xl`, RTL, centered
+- Translations: Crimson Text serif (`font-crimson`), `verse-translation` utility class
+- UI: DM Sans (unchanged)
+
+**Key Files:**
+- `frontend/app/quran/[surahId]/page.tsx` — Surah reading page
+- `frontend/app/quran/[surahId]/[verseId]/page.tsx` — Verse detail page
+- `frontend/components/quran/` — verse-block, surah-header, verse-separator, translation-selector, translation-block
+- `frontend/components/keyword-search/rich-root-card.tsx` — Etymology-rich root card
+- `frontend/lib/design-system.ts` — Spring presets and tactile tokens
+- `backend/app/api/verse_translations.py` — Multi-translation API endpoint
 
 ## Data Flow
 

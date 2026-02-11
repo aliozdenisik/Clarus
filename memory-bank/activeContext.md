@@ -4,6 +4,67 @@
 
 **Date**: 2026-02-11
 
+## Verse Display & Morphology UX Overhaul — COMPLETED ✅
+
+**Date**: 2026-02-11
+**Branch**: `fix/sse-cross-origin-auth`
+**Plan**: `.sisyphus/plans/verse-display-overhaul.md`
+
+Complete redesign of Quran verse reading experience using "Ana Cadde / Yan Durak" (Main Road / Side Stop) architecture. 9 tasks across 4 parallel waves.
+
+### Implementation Summary
+
+**New Pages & Routes:**
+- `/quran/[surahId]/[verseId]` — Verse detail page with 8 Turkish translations stacked vertically
+- Rewritten `/quran/[surahId]` — Borderless surah reading page with Crimson Text serif typography
+
+**New Backend API:**
+- `GET /api/metadata/quran/verses/{surahId}/{verseId}/translations` — Fetches all 8 Turkish translations from Qdrant collections in parallel
+
+**New Components (6):**
+- `frontend/components/quran/verse-block.tsx` — Borderless verse unit with spring animations
+- `frontend/components/quran/surah-header.tsx` — Surah metadata header
+- `frontend/components/quran/verse-separator.tsx` — Gradient fade separator
+- `frontend/components/quran/translation-selector.tsx` — Translator dropdown (localStorage persisted)
+- `frontend/components/quran/translation-block.tsx` — Single translation unit with Crimson Text
+- `frontend/components/keyword-search/rich-root-card.tsx` — Etymology-rich root card for 2-panel layout
+
+**Design System Extensions:**
+- Crimson Text serif font (`--font-crimson` CSS variable)
+- Spring presets: `bouncy` (stiffness: 400, damping: 10), `heavy` (stiffness: 80, damping: 20)
+- Tactile scale tokens: `press` (0.98), `release` (1.0), `hover` (y: -2)
+- `.font-crimson` and `.verse-translation` CSS utilities
+
+**Key Modifications:**
+- `frontend/app/keyword-search/page.tsx` — Upgraded to 2-panel layout (sticky left root card, scrollable right results)
+- `frontend/components/quran/etymology-popup.tsx` — Confidence badges, collapsible forms, spring animations, deep link to keyword search
+- `frontend/components/verse-lookup/verse-lookup-input.tsx` — Navigates to `/quran/{surahId}/{verseId}` directly
+- `frontend/lib/utils/verse-url.ts` — Added `buildVerseDetailUrl()`
+
+**Verification:**
+- 279/279 Vitest tests pass (23 test files, up from 247)
+- `npm run build` succeeds with `/quran/[surahId]/[verseId]` route
+- `npx tsc --noEmit` zero errors
+- `npm run lint` zero warnings
+- `uv run ruff check .` clean
+- 9 QA screenshots captured at 375px, 768px, 1280px
+
+**Commits (8):**
+- `0605124` feat(design): add Crimson Text serif font and tactile spring animations
+- `d09b3b4` feat(api): add multi-translation verse endpoint for 8 Turkish translations
+- `84482fe` feat(quran): add verse detail page with 8 Turkish translations and spring animations
+- `dc9d4ee` feat(keyword-search): upgrade to 2-panel layout with rich etymology root card
+- `98c84e2` feat(quran): wire navigation to verse detail page
+- `d0ad7e2` fix(test): fix ClickableVerse Popover mock to render trigger content
+- `6a9d028` test(quran): add comprehensive tests for verse display components
+- `3080c56` fix(test): add explicit type annotation to mockSession for null assignment
+
+**Known Gaps:**
+- OpenAPI client not regenerated — frontend uses raw `fetch()` for translations endpoint
+- Playwright E2E tests not written — only Vitest component tests
+- `arabic_text` field is empty in Qdrant collections — verse detail gets Arabic from surah-level fetch
+- `definition_tr` is NULL for all 1,651 rows in local PostgreSQL — rich root card shows "Tanım mevcut değil" fallback
+
 ## Issue #128: Arabic Root Etymology Database — COMPLETED ✅
 
 **Date**: 2026-02-11
