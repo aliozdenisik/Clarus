@@ -92,6 +92,8 @@ async def get_etymology(root: str):
         root_buckwalter=etym.root_buckwalter,
         definition_en=etym.definition_en,
         definition_tr=etym.definition_tr,
+        summary_tr=etym.summary_tr,
+        summary_en=etym.summary_en,
         semantic_field=etym.semantic_field,
         morphological_forms=morphological_forms_list,
         related_roots=related_roots_list,

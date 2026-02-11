@@ -25,6 +25,8 @@ class RootEtymologyResponse(BaseModel):
     root_buckwalter: str = Field(..., description="Buckwalter Latin transliteration (e.g., ktb)")
     definition_en: str | None = Field(None, description="English definition from Lane's Lexicon")
     definition_tr: str | None = Field(None, description="Turkish translation (LLM-generated)")
+    summary_tr: str | None = Field(None, description="Plain Turkish summary of Lane's Lexicon definition (≤200 chars)")
+    summary_en: str | None = Field(None, description="Plain English summary of Lane's Lexicon definition (≤200 chars)")
     semantic_field: str | None = Field(None, description="Semantic category (e.g., 'writing', 'faith')")
     morphological_forms: list[MorphologicalForm] = Field(
         default_factory=list,
