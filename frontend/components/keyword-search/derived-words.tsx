@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { springPresets } from "@/lib/design-system"
+import { springPresets, tactileScale } from "@/lib/design-system"
 import { cn } from "@/lib/utils"
 
 interface DerivedWordsProps {
@@ -32,11 +32,11 @@ export function DerivedWords({
 
       {/* Word Tags */}
       <div className="flex flex-wrap gap-2">
-        {/* "All Words" tag */}
         <motion.button
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={springPresets.snappy}
+          whileTap={tactileScale.press}
+          transition={springPresets.bouncy}
           onClick={() => onWordSelect(null)}
           className={cn(
             "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
@@ -48,13 +48,13 @@ export function DerivedWords({
           All Words
         </motion.button>
 
-        {/* Individual word tags */}
         {words.map((word, index) => (
           <motion.button
             key={word}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ ...springPresets.snappy, delay: (index + 1) * 0.03 }}
+            whileTap={tactileScale.press}
+            transition={{ ...springPresets.bouncy, delay: (index + 1) * 0.03 }}
             onClick={() => onWordSelect(selectedWord === word ? null : word)}
             className={cn(
               "flex flex-col items-center gap-0.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",

@@ -49,6 +49,13 @@ vi.mock("@/lib/design-system", () => ({
     snappy: { type: "spring", stiffness: 300, damping: 30 },
     fluid: { type: "spring", stiffness: 170, damping: 26 },
     gentle: { type: "spring", stiffness: 120, damping: 14 },
+    bouncy: { type: "spring", stiffness: 400, damping: 10 },
+    heavy: { type: "spring", stiffness: 80, damping: 20 },
+  },
+  tactileScale: {
+    press: { scale: 0.98 },
+    release: { scale: 1.0 },
+    hover: { y: -2 },
   },
 }))
 
