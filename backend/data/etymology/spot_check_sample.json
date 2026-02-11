@@ -3,7 +3,7 @@
     "root": "جوو",
     "root_buckwalter": "jww",
     "definition_en": null,
-    "definition_tr": "Açlık çekmek, aç olmak.",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -21,8 +21,8 @@
     "lane_match_type": null,
     "lane_volume": null,
     "confidence": "low",
-    "tr_translation_source": "llm_generated",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "بحر",
@@ -46,14 +46,14 @@
     "lane_match_type": "exact",
     "lane_volume": 1,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
     "root": "حيي",
     "root_buckwalter": "Hyy",
     "definition_en": null,
-    "definition_tr": "Hayat sahibi olmak, yaşamak, canlanmak, dirilmek; utanç duymak, haya etmek.",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -111,8 +111,8 @@
     "lane_match_type": null,
     "lane_volume": null,
     "confidence": "low",
-    "tr_translation_source": "llm_generated",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "فوم",
@@ -136,7 +136,7 @@
     "lane_match_type": "exact",
     "lane_volume": 7,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
@@ -185,7 +185,7 @@
     "lane_match_type": "exact",
     "lane_volume": 8,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
@@ -210,7 +210,7 @@
     "lane_match_type": "exact",
     "lane_volume": 7,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
@@ -259,14 +259,14 @@
     "lane_match_type": "exact",
     "lane_volume": 8,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
     "root": "وسع",
     "root_buckwalter": "wsE",
     "definition_en": "5 تَوَسَّعَ ذ [ He became, or made himself, ample, or abundant, in his circumstances; or in his means of subsistence; for توسّع فِى عَيْشِهِ ;] i. q. تَرَفَّغَ . (S, in art. رفغ .) -b2- تَوَسَّعَ He took a wide, an ample, or a large, range, فِى أَمْرٍ , in an affair. -b3- تَوَسَّعَ فِى السَّخَآءِ (assumed tropical:) [ He took a wide, or an ample range, or was profuse, in bounty, or munificence ]. (S, K, in art. خرق .) -b4- It expanded itself, spread out, dilated, widened. -b5- He expatiated. One says, توسّع فِى الدَّارِ , and لَهُ سَاحَةٌ يتوسّع فِيهَا . (TA, voce تركّح .) -b6- He strode, in walking. -b7- تَوَسَّعُوا فِيهِ حَتَّى أَطْلَقُوهُ عَلَى كَذَا They extended its (a word's) signification, or amplified in respect of it, or rather, took an extended range in using it, so that they applied it to such a thing. (The lexicons, &c., passim.) -b8- تَوَسَّعَ : see تَبَقَّرَ .",
-    "definition_tr": "5. تَوَسَّعَ: [Geçim şartlarında veya rızık vasıtalarında genişledi veya kendini genişletti; zira توسّع فِى عَيْشِهِ (geçiminde genişledi) denir]; تَرَفَّغَ ile eş anlamlıdır. (S, رفغ maddesinde). -b2- تَوَسَّعَ: Bir işte geniş, kapsamlı veya büyük bir alan edindi. -b3- تَوَسَّعَ فِى السَّخَآءِ: (mecazi olarak) [Cömertlikte veya eli açıklıkta geniş bir alan edindi veya bol davrandı]. (S, K, خرق maddesinde). -b4- Genişledi, yayıldı, açıldı, büyüdü. -b5- Genişçe konuştu, tafsilat verdi. Şöyle denir: توسّع فِى الدَّارِ (evde genişledi) ve لَهُ سَاحَةٌ يتوسّع فِيهَا (onun genişleyeceği bir alanı var). (TA, تركّح maddesinde). -b6- Yürürken adımlarını açtı. -b7- تَوَسَّعُوا فِيهِ حَتَّى أَطْلَقُوهُ عَلَى كَذَا: Onlar (bir kelimenin) anlamını genişlettiler veya onun hakkında tafsilat verdiler, daha doğrusu onu kullanmada geniş bir alan edindiler, öyle ki onu şöyle bir şeye uyguladılar. (Sözlükler vb. her yerde). -b8- تَوَسَّعَ: تَبَقَّرَ maddesine bakınız.",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -308,8 +308,8 @@
     "lane_match_type": "exact",
     "lane_volume": 8,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "فضح",
@@ -341,14 +341,14 @@
     "lane_match_type": "exact",
     "lane_volume": 7,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
     "root": "كرم",
     "root_buckwalter": "krm",
     "definition_en": "كَرِيمٌ ذ Generous; liberal; honourable: noble; high-born; contr. of لَئِيمٌ . (K, &c.) -b2- [A generous, a noble, a high-bred, a well-born, or an excellent, horse, &c.; of generous, high, or good, breed or quality. ] -b3- A thing highly esteemed or prized or valued; excellent, precious, valuable, or rare. (Msb.) -b4- [ أَرْضٌ كَرِيمَةٌ Productive land. See كَرُمَتْ أَرْضُهُ .] -b5- بَعِيرٌ كَرِيمٌ عَلَى أَهْلِهِ [ A camel held in high estimation by his owner ]. (TA in art. دفع .) -b6- [ وَجْهُ ٱللّٰهِ الكَرِيمُ means The glorious face of God: see an ex. voce سُبْحَةٌ .] -b7- كَراَئِمُ المَالِ (TA) or الأَمْوَالِ (Mgh, Msb) Such as are held in high estimation, precious, or excellent, of cattle or other possessions; (Mgh, Msb, TA;) the choice, or best, thereof. (Mgh, Msb.)",
-    "definition_tr": "كَرِيمٌ: Cömert; eli açık; onurlu; asil; yüksek doğumlu; لَئِيمٌ kelimesinin zıttı. (K, vb.) -b2- [Cömert, asil, iyi cins, iyi doğmuş veya mükemmel bir at, vb.; cömert, yüksek veya iyi cins veya kalitede.] -b3- Çok saygı duyulan, değerli veya kıymetli bir şey; mükemmel, kıymetli, değerli veya nadir. (Msb.) -b4- [أَرْضٌ كَرِيمَةٌ: Verimli toprak. كَرُمَتْ أَرْضُهُ maddesine bakınız.] -b5- بَعِيرٌ كَرِيمٌ عَلَى أَهْلِهِ: [Sahibi tarafından çok değerli görülen bir deve]. ( دفع maddesinde TA.) -b6- [وَجْهُ ٱللّٰهِ الكَرِيمُ: Allah'ın şerefli/yüce yüzü anlamına gelir: سُبْحَةٌ maddesinde bir örneğe bakınız.] -b7- كَراَئِمُ المَالِ (TA) veya الأَمْوَالِ (Mgh, Msb): Hayvanlardan veya diğer mallardan çok değerli, kıymetli veya mükemmel olanlar; (Mgh, Msb, TA;) onların seçkin veya en iyi olanları. (Mgh, Msb.)",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -390,8 +390,8 @@
     "lane_match_type": "exact",
     "lane_volume": 8,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
-    "tr_translation_confidence": 0.95
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "رهو",
@@ -415,14 +415,14 @@
     "lane_match_type": "exact",
     "lane_volume": 4,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
     "root": "فهم",
     "root_buckwalter": "fhm",
     "definition_en": "1 فَهِمَهُ ذ , aor. فَهَمَ , inf. n. فَهْمٌ (S, Msb, K, &c.) and فَهَمٌ , (Msb, K,) which is the more chaste, (K,) but the former is a dial. var. [more] extensively obtaining, or, as some say, it is a subst. used as an inf. n., (Msb,) and فَهَامِيَةٌ (S, K) and فَهَامَةٌ and فِهَامَةٌ , (K,) He understood it, or knew it with the mind; he apprehended its meaning; syn. عَقَلَهُ , (JK,) and عَلِمَهُ (S, Msb, K) and عَرَفَهُ بِالقَلْبِ . (K.) And فَهِمَ عَنْهُ [ He understood what he (another) said ]. (A in art. خرس ; &c.) [See also فَهْمٌ below.] -b2- فَهُمَ , meaning He was, or became, such as is termed فَهِيم [i. e. one having much understanding ], is like عَلُمَ , meaning “ he was, or became, such as is termed عَلِيم . ” (TA.)",
-    "definition_tr": "1. فَهِمَهُ (fehimehu) fiili, aorist hali فَهَمَ (feheme), mastar hali فَهْمٌ (fehmün) (S, Mısbah, K, vb.) ve فَهَمٌ (fehemün) (Mısbah, K) olup ikincisi daha fasihtir (K). Ancak birincisi daha yaygın bir lehçe varyantıdır veya bazılarına göre mastar olarak kullanılan bir isimdir (Mısbah). Diğer mastar halleri فَهَامِيَةٌ (fehâmiyetün) (S, K), فَهَامَةٌ (fehâmetün) ve فِهَامَةٌ (fihâmetün)'dir (K). Anlamı: Onu anladı veya zihniyle bildi; anlamını kavradı; eş anlamlıları عَقَلَهُ (akalehu) (Cevherî) ve عَلِمَهُ (alimehu) (S, Mısbah, K) ve عَرَفَهُ بِالقَلْبِ (arafehu bil-kalbi)'dir (K). Ayrıca فَهِمَ عَنْهُ (fehime anhu) [Ondan (başkasından) söyleneni anladı] (Arapça'da 'ḫrs' maddesinde vb.). [Ayrıca aşağıda فَهْمٌ (fehmün) maddesine bakınız.]\n\n2. فَهُمَ (fehume) fiili, فَهِيم (fehîm) olarak adlandırılan [yani çok anlayışlı olan] biri olmak veya haline gelmek anlamına gelir; tıpkı عَلُمَ (alume) fiilinin “عَلِيم (alîm) olarak adlandırılan biri olmak veya haline gelmek” anlamına gelmesi gibidir (Tâcü'l-Arûs).",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -448,14 +448,14 @@
     "lane_match_type": "exact",
     "lane_volume": 7,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "ذبب",
     "root_buckwalter": "dhbb",
     "definition_en": null,
-    "definition_tr": "ذَبَب (zebbeb) kökü, Kur'an'da iki kez geçmektedir ve temel anlamı 'kovmak, uzaklaştırmak, defetmek'tir. Özellikle sinek gibi rahatsız edici şeyleri uzaklaştırmak bağlamında kullanılır. Kur'an'da bu kök, Allah'ın kudretini ve acizliğini vurgulamak için, putların bir sineği bile kendilerinden uzaklaştıramayacağı örneğinde geçer. Bu durum, putların ilahlık iddialarının boşluğunu ve güçsüzlüğünü ortaya koyar.",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -473,8 +473,8 @@
     "lane_match_type": null,
     "lane_volume": null,
     "confidence": "low",
-    "tr_translation_source": "llm_generated",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "غيب",
@@ -514,14 +514,14 @@
     "lane_match_type": "exact",
     "lane_volume": 7,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
     "root": "كهن",
     "root_buckwalter": "khn",
     "definition_en": null,
-    "definition_tr": "كهن (kâhin) kökünden türeyen kelimeler, gaybı bildiğini iddia eden, gelecekle ilgili kehanetlerde bulunan kişiyi ifade eder. Kur'an'da bu kelime, Hz. Muhammed'in (s.a.v.) kâhin olmadığını, onun Allah'tan vahiy alan bir peygamber olduğunu vurgulamak amacıyla kullanılmıştır.",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -539,8 +539,8 @@
     "lane_match_type": null,
     "lane_volume": null,
     "confidence": "low",
-    "tr_translation_source": "llm_generated",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "سجل",
@@ -564,7 +564,7 @@
     "lane_match_type": "exact",
     "lane_volume": 4,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
@@ -637,7 +637,7 @@
     "lane_match_type": "exact",
     "lane_volume": 7,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
@@ -702,14 +702,14 @@
     "lane_match_type": "exact",
     "lane_volume": 7,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
     "root": "نهي",
     "root_buckwalter": "nhy",
     "definition_en": null,
-    "definition_tr": "Nehyetmek, yasaklamak, men etmek. Allah'ın emirlerine karşı gelmeyi, günah işlemeyi veya haram kılınan şeyleri yapmayı yasaklamak.",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -759,8 +759,8 @@
     "lane_match_type": null,
     "lane_volume": null,
     "confidence": "low",
-    "tr_translation_source": "llm_generated",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "خون",
@@ -808,7 +808,7 @@
     "lane_match_type": "exact",
     "lane_volume": 3,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
@@ -841,7 +841,7 @@
     "lane_match_type": "exact",
     "lane_volume": 6,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
@@ -874,7 +874,7 @@
     "lane_match_type": "exact",
     "lane_volume": 8,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
@@ -907,7 +907,7 @@
     "lane_match_type": "exact",
     "lane_volume": 8,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
@@ -964,7 +964,7 @@
     "lane_match_type": "exact",
     "lane_volume": 2,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
@@ -989,14 +989,14 @@
     "lane_match_type": "exact",
     "lane_volume": 5,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
     "root": "مري",
     "root_buckwalter": "mry",
     "definition_en": null,
-    "definition_tr": "Şüphe etmek, tartışmak, çekişmek, münakaşa etmek. Özellikle hakikat hakkında şüpheye düşmek ve bu şüpheyi gidermek için tartışmak anlamında kullanılır. Kur'an'da genellikle peygamberlerin getirdiği mesajlar veya Allah'ın ayetleri hakkında insanların şüpheye düşmesi ve bu konuda tartışmaları bağlamında geçer.",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -1046,14 +1046,14 @@
     "lane_match_type": null,
     "lane_volume": null,
     "confidence": "low",
-    "tr_translation_source": "llm_generated",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "طفف",
     "root_buckwalter": "Tff",
     "definition_en": null,
-    "definition_tr": "Ölçü ve tartıda hile yapmak, eksik ölçüp fazla almak.",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -1079,14 +1079,14 @@
     "lane_match_type": null,
     "lane_volume": null,
     "confidence": "low",
-    "tr_translation_source": "llm_generated",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "حير",
     "root_buckwalter": "Hyr",
     "definition_en": "1 حَارَ حار , [sec. pers. حِرْتَ ,] aor. يَحَارُ , (S, A, Mgh, Msb, K,) and some say يَحِيرُ , but this is a mistake, (MF,) inf. n. حَيْرَةٌ (S, A, Mgh, K) and حَيَرٌ (S, Msb, K) and حَيْرٌ and حَيَرَانٌ , (K,) He was, or became, dazzled by a thing at which he looked, (T, Msb, K,) so that he turned away his eyes from it: this is the primary signification: (T, Msb:) and so (A, * Mgh, * K) and , (K,) and حاربَصَرُهُ (A, * TA) and بصره . (Mgh, and S and A and K in art. قمر , &c.) -b2- And hence, (T, Msb,) He was, or became, confounded, or perplexed, and unable to see his right course; (T, Msb, K, * TA;) as also (Msb, K) and . (K.) And حار , (S, A,) or حار فِى أَمْرِهِ , (Msb,) i. q. فى امره [ He was, or became, confounded, &c., in his affair, or case ]. (S, A.) And [ حار (see its part. n. حَائِرٌ ) and] [and ] He erred, or lost his way. (TA.) -b3- Also, said of water, (A, Msb, K,) and (S, A, K) and , (A, K,) (tropical:) It became collected, (S, A, K,) and stayed, (A,) or went round, (S, K, *) or went to and fro, or fluctuated, (Msb, K,) in a place, as though it knew not which way to run. (A.) -b4- See also 5.",
-    "definition_tr": "1. حَارَ (har), [ikinci şahıs حِرْتَ (hirte)], aorist يَحَارُ (yaharu), (S, A, Mgh, Msb, K) ve bazıları يَحِيرُ (yahiru) der, ancak bu bir hatadır, (MF) mastarı حَيْرَةٌ (hayra) (S, A, Mgh, K) ve حَيَرٌ (hayar) (S, Msb, K) ve حَيْرٌ (hayr) ve حَيَرَانٌ (hayaran), (K) Bir şeye baktığında gözleri kamaştı, (T, Msb, K) öyle ki gözlerini ondan çevirdi: bu birincil anlamdır: (T, Msb) ve aynı şekilde (A, * Mgh, * K) ve (K) ve حاربَصَرُهُ (harabasaruhu) (A, * TA) ve بصره (basaruhu). (Mgh, ve S ve A ve K, قمر (qamar) maddesinde, &c.)\n\n-b2. Ve buradan, (T, Msb) Şaşkına döndü, veya kafası karıştı ve doğru yolunu göremedi; (T, Msb, K, * TA) aynı şekilde (Msb, K) ve (K). Ve حار (har), (S, A) veya حار فِى أَمْرِهِ (hara fi amrihi), (Msb) i.q. فى امره (fi amrihi) [İşinde veya durumunda şaşkına döndü, &c.]. (S, A) Ve [حار (har) (bkz. ism-i faili حَائِرٌ (hairun)) ve] [ve] Yolunu şaşırdı veya kaybetti. (TA)\n\n-b3. Ayrıca, su hakkında söylendiğinde, (A, Msb, K) ve (S, A, K) ve (A, K), (mecazi olarak) Toplandı, (S, A, K) ve durdu, (A) veya etrafta döndü, (S, K, *) veya ileri geri gitti, veya dalgalandı, (Msb, K) bir yerde, sanki hangi yöne akacağını bilmiyormuş gibi. (A)\n\n-b4. Ayrıca bkz. 5.",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -1104,14 +1104,14 @@
     "lane_match_type": "exact",
     "lane_volume": 2,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "شمز",
     "root_buckwalter": "shmz",
     "definition_en": "Q. Q. 4 اِشْمَأَزَّ ذ , (S, K,) inf. n. اِشْمِئْزَازٌ , (S,) He (a man, S) shrank, or became contracted; (S, K, TA;) as also : (TA:) he quaked, or shuddered: (IAar, K:) or he was frightened (AZ, S, K) at a thing. (AZ, S.) It is said in the Kur xxxix. 46, وَإِذَا ذُكِرَ ٱللّٰهُ وَحْدَهُ ٱشْمَأَزَّتْ قُلُوبُ ٱلَّذِينَ لَا يُؤْمِنُونَ بِٱلْآخِرَةِ And when God is mentioned alone, the hearts of those who will not believe in the world to come become contracted, and shrink with aversion: (Bd, Jel:) or quake, or shudder. (Zj, TA.) And you say, قُلْتُ لَهُ كَذَا فَٱشْمَأَزَّ مِنْهُ [ I said to him such a thing, and he shrank from it; or quaked, or shuddered, at it; or was frightened at it ]. (A.) And اشمأزّ الشَّىْءَ , (K,) without a prep., accord. to Kr, (TA,) He disliked, or hated, the thing. (K.) [See also 1, and 5.]",
-    "definition_tr": "Q. Q. 4 اِشْمَأَزَّ ذ (S, K), mastar ismi اِشْمِئْزَازٌ (S), O (bir adam, S) büzüldü veya kasıldı; (S, K, TA;) aynı zamanda: (TA:) titredi veya ürperdi: (IAar, K:) veya bir şeyden korktu (AZ, S, K). (AZ, S.) Kur'an-ı Kerim'de Zümer Suresi 39:46'da şöyle buyrulmuştur: وَإِذَا ذُكِرَ ٱللّٰهُ وَحْدَهُ ٱشْمَأَزَّتْ قُلُوبُ ٱلَّذِينَ لَا يُؤْمِنُونَ بِٱلْآخِرَةِ \"Allah tek başına anıldığı zaman, ahirete inanmayanların kalpleri kasılır ve tiksintiyle büzülür\": (Beydavi, Celaleyn:) veya titrer, ürperir. (Zeccac, TA.) Ve şöyle dersiniz: قُلْتُ لَهُ كَذَا فَٱشْمَأَزَّ مِنْهُ [Ona şöyle bir şey söyledim, o da ondan büzüldü; veya ondan titredi, ürperdi; veya ondan korktu]. (A.) Ve اشمأزّ الشَّىْءَ (K), Kr'ye göre edat olmadan (TA), O şeyi beğenmedi veya ondan nefret etti. (K.) [Ayrıca bkz. 1 ve 5.]",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -1129,14 +1129,14 @@
     "lane_match_type": "exact",
     "lane_volume": 5,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "رقي",
     "root_buckwalter": "rqy",
     "definition_en": null,
-    "definition_tr": "Bir yerden yukarı çıkmak, yükselmek, mertebe katetmek, manevi olarak yücelmek, ilerlemek.",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -1178,8 +1178,8 @@
     "lane_match_type": null,
     "lane_volume": null,
     "confidence": "low",
-    "tr_translation_source": "llm_generated",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "غدو",
@@ -1219,7 +1219,7 @@
     "lane_match_type": "exact",
     "lane_volume": 6,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
@@ -1252,14 +1252,14 @@
     "lane_match_type": "exact",
     "lane_volume": 8,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
     "root": "كمم",
     "root_buckwalter": "kmm",
     "definition_en": null,
-    "definition_tr": "Bir şeyi örtmek, gizlemek, saklamak, örtü altına almak. Özellikle meyvelerin tomurcuklarını veya çiçeklerini örten kılıf, tomurcuk kılıfı anlamında kullanılır. Kur'an'da bu kök, meyvelerin tomurcuklarını örten kılıflar bağlamında geçmektedir.",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -1277,8 +1277,8 @@
     "lane_match_type": null,
     "lane_volume": null,
     "confidence": "low",
-    "tr_translation_source": "llm_generated",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "جبر",
@@ -1302,7 +1302,7 @@
     "lane_match_type": "exact",
     "lane_volume": 1,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
@@ -1327,14 +1327,14 @@
     "lane_match_type": "exact",
     "lane_volume": 8,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
     "root": "كلح",
     "root_buckwalter": "klH",
     "definition_en": "1 كَلَحَ ذ , aor. كَلَحَ , inf. n. كُلُوحٌ and كُلَاحٌ ; (S, K;) and , and , (K,) and ; (A;) He (a man, S) grinned, or displayed his teeth, (M, rendered in the S and K by تَكَشَّرَ ), frowning, or contracting his face, or looking sternly, austerely, or morosely. (S, M, K.) -b2- كَلَحَ فِى وَجْهِهِ He frightened him; namely a child, and a madman. (A.)",
-    "definition_tr": "كَلَحَ (kelaḥa) fiili, aorist hali كَلَحَ (kelaḥa), mastarları كُلُوحٌ (kulūḥun) ve كُلَاحٌ (kulāḥun) ile birlikte; ayrıca كَلَّحَ (kellaḥa), اِكْتَلَحَ (iktelaḥa) ve اِكْلَنْحَ (iklanḥa) fiilleri de kullanılır. Bir adam (S) dişlerini göstererek sırıttı (M, S ve K'de تَكَشَّرَ (tekeşşera) olarak ifade edilir), kaşlarını çattı, yüzünü buruşturdu veya sert, haşin ya da somurtkan bir ifadeyle baktı (S, M, K). كَلَحَ فِى وَجْهِهِ (kelaḥa fī vechihī) ifadesi ise bir çocuğu veya bir deliyi korkutmak anlamına gelir (A).",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -1352,14 +1352,14 @@
     "lane_match_type": "exact",
     "lane_volume": 7,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "ينع",
     "root_buckwalter": "ynE",
     "definition_en": null,
-    "definition_tr": "ينع (yeni'a) kökü, meyvenin olgunlaşması, kemale ermesi ve toplanmaya hazır hale gelmesi anlamlarına gelir. Kur'an'da bu kök, Allah'ın kudretini ve nimetlerini gösteren bir delil olarak, meyvelerin olgunlaşma sürecini ifade etmek için kullanılır. Özellikle, meyvelerin olgunlaşarak yenilebilir hale gelmesi ve bu durumun Allah'ın yaratmasındaki mükemmelliği vurgulaması bağlamında geçer.",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -1377,8 +1377,8 @@
     "lane_match_type": null,
     "lane_volume": null,
     "confidence": "low",
-    "tr_translation_source": "llm_generated",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "بوب",
@@ -1402,7 +1402,7 @@
     "lane_match_type": "exact",
     "lane_volume": 1,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
@@ -1427,7 +1427,7 @@
     "lane_match_type": "exact",
     "lane_volume": 5,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
@@ -1468,14 +1468,14 @@
     "lane_match_type": "exact",
     "lane_volume": 4,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
     "root": "بكم",
     "root_buckwalter": "bkm",
     "definition_en": "أَبْكَمٌ ذ (T, S, Msb, K, &c.) and (S, K) i. q. أَخْرَسُ [meaning Dumb, either by natural conformation or from inability to find words to express what he would say ]: (S, Msb, K:) or not having understanding to reply, (IAar, T, Msb, TA,) nor ability to frame speech well, (T, TA,) though possessing the faculty of speech; whereas اخرس signifies speechless, or destitute of the faculty of speech, by natural conformation, (T, Msb, TA,) like the beast that lacks the faculty of articulation; (T, TA;) unable to find words to express what he would say; unable to reply: (AZ, TA:) or dumb by natural conformation: (IAth, TA:) fem. بَكْمَآءُ : (TA:) pl. بُكْمٌ (Msb, K) and بُكْمَانٌ , (K,) both pls. of أَبْكَمُ , like as صُمٌّ and صُمَّانٌ are pls. of أَصَمُّ ; and the pl. of is أَبْكَامٌ . (TA.) In the Kur ii. 166, بُكْمٌ means persons in the condition of him who has been born dumb: or, as some say, deprived of their intellects: (Zj, TA:) or ignorant and ignoble; because not profiting much by the faculty of speech, so that they are as though they had been deprived of it. (IAth, TA.) The phrase فِتْنَةٌ صَمَّآءُ بَكْمَآءُ عَمْيَآءُ , occurring in a trad., [lit.] meaning [ A sedition, or the like,] deaf, dumb, blind, applies to a فتنة that does not withdraw, or become removed: or, as some say, to one which, by reason of the confusion attending it, and the perishing of the sound and the sick therein, is likened to the deaf and dumb and blind who does not pursue the right course to a thing, but goes at random like the weak-sighted she-camel. (TA.)",
-    "definition_tr": "أَبْكَمٌ (T, S, Msb, K, &c.) ve (S, K) أَخْرَسُ ile aynı anlamdadır [yani Doğuştan dilsiz veya söylemek istediklerini ifade edecek kelimeleri bulamayan kişi anlamında]: (S, Msb, K:) veya cevap verecek anlayışa sahip olmayan, (IAar, T, Msb, TA) ve konuşma yeteneğine sahip olmasına rağmen iyi konuşma becerisi olmayan; (T, TA) oysa اخرس, doğuştan konuşamayan veya konuşma yeteneğinden yoksun olanı ifade eder, (T, Msb, TA) eklemleme yeteneğinden yoksun hayvan gibi; (T, TA) söylemek istediklerini ifade edecek kelimeleri bulamayan; cevap veremeyen: (AZ, TA:) veya doğuştan dilsiz: (IAth, TA:) dişil hali بَكْمَآءُ'dur: (TA:) çoğulu بُكْمٌ (Msb, K) ve بُكْمَانٌ'dur, (K) her ikisi de أَبْكَمُ'nun çoğuludur, tıpkı صُمٌّ ve صُمَّانٌ'un أَصَمُّ'nun çoğulu olduğu gibi; ve çoğulu أَبْكَامٌ'dur. (TA.) Kur'an'da Bakara Suresi 2:166'da geçen بُكْمٌ, doğuştan dilsiz olanların durumundaki kişileri ifade eder: veya bazılarına göre, akıllarından mahrum bırakılmış olanları: (Zj, TA:) veya cahil ve değersiz olanları; çünkü konuşma yeteneğinden pek fayda görmedikleri için sanki ondan mahrum bırakılmış gibidirler. (IAth, TA.) Bir hadiste geçen فِتْنَةٌ صَمَّآءُ بَكْمَآءُ عَمْيَآءُ ifadesi, [kelimenin tam anlamıyla] [bir fitne veya benzeri bir şey] sağır, dilsiz, kör anlamına gelir, bu ifade geri çekilmeyen veya ortadan kalkmayan bir fitneye uygulanır: veya bazılarına göre, karışıklığı ve içindeki sağlam ve hasta olanların helak olması nedeniyle, bir şeye doğru yolu bulamayan, ancak zayıf görüşlü dişi deve gibi rastgele giden sağır, dilsiz ve köre benzetilen bir fitneye uygulanır. (TA.)",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -1493,8 +1493,8 @@
     "lane_match_type": "exact",
     "lane_volume": 1,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "حوط",
@@ -1534,7 +1534,7 @@
     "lane_match_type": "exact",
     "lane_volume": 2,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
@@ -1591,14 +1591,14 @@
     "lane_match_type": "exact",
     "lane_volume": 5,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
     "root": "لفح",
     "root_buckwalter": "lfH",
     "definition_en": "1 لَفَحَتْهُ النَّارُ ذ , (S, M, K,) aor. لَفَحَ , (M,) inf. n. لَفْحٌ and لَفَحَانٌ , (M, K,) The fire smote, or hurt, his face; as also لفحت وَجْهَهُ : (M, O:) the fire burned him; (TA;) as also نفحته النار بِحَرِّهَا ; (S, K;) and in like manner the hot wind called سَمُوم : (S:) لَفَحَتْ and نَفَحَتْ are syn., except that the effect of النَّفْح is greater than that of اللَّفْح : (Zj:) or لَفْحٌ relates to a hot wind; and نَفْحٌ , to a cold, or cool, wind: (As, S:) you also say لفحته السَّمُوم meaning the سموم blew in his face. (L.) -b2- Also لَفَحَهُ , aor. لَفَحَ , He smote, or struck, him, with a sword, (S, K,) lightly, or slightly: you say لَفَحْتُهُ بِالسَّيْفِ لَفْحَةً I struck him with the sword a light, or slight, blow. (S.)",
-    "definition_tr": "1. لَفَحَتْهُ النَّارُ (S, M, K), aor. لَفَحَ (M), masdar: لَفْحٌ ve لَفَحَانٌ (M, K): Ateş yüzüne çarptı veya zarar verdi; aynı şekilde لَفَحَتْ وَجْهَهُ de kullanılır. (M, O) Ateş onu yaktı; (TA) aynı şekilde نَفَحَتْهُ النَّارُ بِحَرِّهَا da kullanılır. (S, K) Benzer şekilde, 'semûm' adı verilen sıcak rüzgar için de kullanılır. (S) لَفَحَتْ ve نَفَحَتْ eş anlamlıdır, ancak نَفْح'ın etkisi لَفْح'ın etkisinden daha büyüktür. (Zj) Veya لَفْحٌ sıcak rüzgarla ilgiliyken, نَفْحٌ soğuk veya serin rüzgarla ilgilidir. (As, S) Ayrıca لَفَحَتْهُ السَّمُوم dersin, yani semûm rüzgarı yüzüne esti. (L)\n\n2. لَفَحَهُ, aor. لَفَحَ: Kılıçla hafifçe veya yüzeysel olarak vurdu veya çarptı. لَفَحْتُهُ بِالسَّيْفِ لَفْحَةً dersin, yani kılıçla ona hafif bir darbe vurdum. (S)",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -1616,14 +1616,14 @@
     "lane_match_type": "exact",
     "lane_volume": 7,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "نسك",
     "root_buckwalter": "nsk",
     "definition_en": "5 تَنَسَّكَ ذ He devoted himself to religious exercises; applied himself to devotion; (S, Msb, K:) as also (S, K) and : (K:) or the last, he became a نَاسِك . (S.)",
-    "definition_tr": "تَنَسَّكَ: Kendini dini ibadetlere adadı; ibadete yöneldi; (S, Misbah, K:) aynı şekilde نَسَكَ (S, K) ve اِعْتَنَسَ de (K) bu anlamdadır; veya sonuncusu, bir نَاسِك (zahid/dindar) oldu. (S.)",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -1649,8 +1649,8 @@
     "lane_match_type": "exact",
     "lane_volume": 8,
     "confidence": "medium",
-    "tr_translation_source": "llm_gemini",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "أجل",
@@ -1690,14 +1690,14 @@
     "lane_match_type": "exact",
     "lane_volume": 1,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   },
   {
     "root": "سدس",
     "root_buckwalter": "sds",
     "definition_en": "سَدِيسٌ ذ : see سُدُسٌ : -b2- and see سُدَاسِىٌّ . -A2- Also The tooth that is before that called the بَازِل ; (S, K;) after that called the رَبَاعِيَة ; (M, L, TA;) as also ; (S, K;) masc. and fem., because the fem. names of teeth are all with ة , except سَدَسٌ and سَدِيسٌ and بَازِلٌ : (S:) the pl. (of the former, S,) is سُدُسٌ and (of the latter, S) سُدْسٌ . (S, K.) You say, of a camel, أَلْقَى سَدِيسَهُ and [ He cast his tooth called the سديس and سدس ]. (A.) -b2- And hence, (Mgh,) A camel, (M, A, Mgh, Msb,) and a sheep or goat, (M, TA,) casting his سَدِيس , (M, A, TA,) or his tooth that is after the رَبَاعِيَة ; (Msb;) i. e., in the eighth year; (A, Mgh, Msb;) as also : (A, Mgh, TA:) masc. and fem.: (M, TA:) or a sheep or goat six years old: (S, K:) pl. سُدُسٌ . (M.) A poet, (S,) namely, Mansoor Ibn-Misjáh, speaking of a fine for homicide, taken from among selected camels, (TA,) says, فَطَافَ كَمَا طَافَ المُصَدِّقُ وَسْطَهَا يُخِيِّرُ مِنْهَا فِى البَوَازِلِ وَالسُّدْسِ [ And he went round about, as the collector of the poor-rate went round about, amid them, preferring certain of them, among the nine-year-old and the eight-year-old camels]. (S, TA.) -A3- Also A sort of measure, or a sort of مَكُّوك , [in some copies of the K ضَرْبٌ مِنَ المَكَايِيلِ , and in others and in the O ضرب من المَكَاكِيكِ ,] (O, K,) with which dates are measured. (O.) -A4- سَدِيسَ in the saying لَا آتِيكَ سَدِيسَ عُجَيْسٍ is a dial. var. of سَجِيسَ , q. v. (S.)",
-    "definition_tr": "سَدِيسٌ (sedîs): سُدُسٌ (sudus) ve سُدَاسِىٌّ (sudâsiyy) maddelerine bakınız. Ayrıca, بَازِل (bâzil) olarak adlandırılan dişten önceki diş; رَبَاعِيَة (rabâ'iyye) olarak adlandırılan dişten sonraki diş; hem eril hem dişil olarak kullanılır, çünkü dişlerin dişil isimleri سَدَسٌ (sedes), سَدِيسٌ (sedîs) ve بَازِلٌ (bâzil) dışındaki tüm kelimelerde ة (te) harfiyle biter. Çoğulu سُدُسٌ (sudus) ve سُدْسٌ (suds) şeklindedir. Bir deve için, أَلْقَى سَدِيسَهُ (elḳâ sedîsehu) ve أَلْقَى سُدُسَهُ (elḳâ sudusahu) denilir ki bu, [sedîs ve sudus denilen dişini düşürdü] anlamına gelir.\n\nBundan türeyerek, sekizinci yılında سَدِيس (sedîs) dişini veya رَبَاعِيَة (rabâ'iyye) dişinden sonraki dişini düşüren deve veya koyun/keçi anlamına gelir; hem eril hem dişil olarak kullanılır. Veya altı yaşında bir koyun/keçi. Çoğulu سُدُسٌ (sudus) şeklindedir. Şair Mansur İbn-Misjah, cinayet için seçilmiş develerden alınan cezayı anlatırken şöyle der: فَطَافَ كَمَا طَافَ المُصَدِّقُ وَسْطَهَا يُخِيِّرُ مِنْهَا فِى البَوَازِلِ وَالسُّدْسِ [Ve o, zekat toplayıcısının aralarında dolaştığı gibi dolaştı, dokuz yaşındaki ve sekiz yaşındaki develer arasından seçerek].\n\nAyrıca, hurmaların ölçüldüğü bir tür ölçü birimi veya bir tür مَكُّوك (mekkûk) anlamına gelir.\n\nلَا آتِيكَ سَدِيسَ عُجَيْسٍ (lâ âtîke sedîse 'uceysin) ifadesindeki سَدِيسَ (sedîse), سَجِيسَ (secîse) kelimesinin lehçesel bir varyantıdır.",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -1715,14 +1715,14 @@
     "lane_match_type": "exact",
     "lane_volume": 4,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "حلل",
     "root_buckwalter": "Hll",
     "definition_en": null,
-    "definition_tr": "Helal kılmak, çözmek, serbest bırakmak, izin vermek, mubah kılmak.",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -1772,14 +1772,14 @@
     "lane_match_type": null,
     "lane_volume": null,
     "confidence": "low",
-    "tr_translation_source": "llm_generated",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "لؤلؤ",
     "root_buckwalter": "l2l2",
     "definition_en": null,
-    "definition_tr": "İnci; denizden çıkarılan, değerli, parlak ve yuvarlak bir mücevher.",
+    "definition_tr": null,
     "semantic_field": null,
     "morphological_forms": [
       {
@@ -1797,8 +1797,8 @@
     "lane_match_type": null,
     "lane_volume": null,
     "confidence": "low",
-    "tr_translation_source": "llm_generated",
-    "tr_translation_confidence": 0.9
+    "tr_translation_source": null,
+    "tr_translation_confidence": null
   },
   {
     "root": "حطم",
@@ -1838,7 +1838,7 @@
     "lane_match_type": "exact",
     "lane_volume": 2,
     "confidence": "high",
-    "tr_translation_source": "llm_gemini",
+    "tr_translation_source": null,
     "tr_translation_confidence": null
   }
 ]
