@@ -98,7 +98,7 @@ main() {
     cd backend
 
     # Start uvicorn in background using uv-managed .venv
-    ../.venv/bin/uvicorn app.main:app --reload > ../logs/backend.log 2>&1 &
+    .venv/bin/uvicorn app.main:app --reload > ../logs/backend.log 2>&1 &
     BACKEND_PID=$!
     cd ..
 
