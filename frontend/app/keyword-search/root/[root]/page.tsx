@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, BookOpen, ChevronDown } from "lucide-react"
 import { springPresets } from "@/lib/design-system"
 import { GlowCard } from "@/components/ui/glow-card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -12,6 +12,7 @@ import { useSession } from "@/lib/auth-client"
 import { logger } from "@/lib/logger"
 import { API_BASE } from "@/lib/config"
 import { cn } from "@/lib/utils"
+import { getAbbreviationsByCategory } from "@/lib/constants/lane-abbreviations"
 
 interface EtymologyData {
   id: number
@@ -57,6 +58,7 @@ export default function RootDetailPage() {
   const [data, setData] = useState<EtymologyData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showLegend, setShowLegend] = useState(false)
   const controllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
@@ -233,6 +235,62 @@ export default function RootDetailPage() {
             <p className="whitespace-pre-line text-sm leading-relaxed text-zinc-500">
               {data.definition_en}
             </p>
+          </GlowCard>
+        </motion.div>
+      )}
+
+      {(data.definition_en || data.definition_tr) && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...springPresets.fluid, delay: 0.25 }}
+        >
+          <GlowCard className="p-6" data-testid="legend-section">
+            <button
+              onClick={() => setShowLegend((prev) => !prev)}
+              className="flex w-full items-center gap-2 text-left"
+            >
+              <BookOpen className="h-4 w-4 shrink-0 text-zinc-500" />
+              <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
+                Kısaltmalar Rehberi
+              </h2>
+              <ChevronDown
+                className={cn(
+                  "ml-auto h-4 w-4 shrink-0 text-zinc-500 transition-transform duration-200",
+                  !showLegend && "-rotate-90"
+                )}
+              />
+            </button>
+            {showLegend && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="mt-4 space-y-5"
+              >
+                {getAbbreviationsByCategory().map((group) => (
+                  <div key={group.category}>
+                    <h3 className="mb-2 text-xs font-medium tracking-wide text-indigo-400 uppercase">
+                      {group.label}
+                    </h3>
+                    <div className="space-y-1">
+                      {group.items.map((item) => (
+                        <div
+                          key={item.abbreviation}
+                          className="flex items-baseline gap-3 rounded-md px-2 py-1 text-xs odd:bg-zinc-900/40"
+                        >
+                          <span className="w-20 shrink-0 font-mono font-semibold text-amber-400">
+                            {item.abbreviation}
+                          </span>
+                          <span className="text-[var(--color-text-secondary)]">
+                            {item.meaning_tr}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </motion.div>
+            )}
           </GlowCard>
         </motion.div>
       )}
