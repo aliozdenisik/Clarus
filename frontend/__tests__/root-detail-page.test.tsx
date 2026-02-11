@@ -1,5 +1,4 @@
 import { render, screen, waitFor } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 import type React from "react"
 
@@ -47,8 +46,6 @@ vi.mock("framer-motion", () => ({
 
 vi.mock("lucide-react", () => ({
   ArrowLeft: () => <div data-testid="arrow-left-icon" />,
-  BookOpen: () => <div data-testid="book-open-icon" />,
-  ChevronDown: () => <div data-testid="chevron-down-icon" />,
 }))
 
 vi.mock("@/components/ui/glow-card", () => ({
@@ -214,48 +211,26 @@ describe("RootDetailPage", () => {
     expect(screen.getAllByText("كتب").length).toBeGreaterThan(0)
   })
 
-  it("renders inline legend toggles in both definition cards", async () => {
+  it("renders Turkish abbreviation legend panel beside TR definition", async () => {
     render(<RootDetailPage />)
 
     await waitFor(() => {
-      expect(screen.getByTestId("legend-tr-toggle")).toBeInTheDocument()
+      expect(screen.getByTestId("legend-tr-panel")).toBeInTheDocument()
     })
 
-    expect(screen.getByText("Kısaltmalar Rehberi")).toBeInTheDocument()
-    expect(screen.getByTestId("legend-en-toggle")).toBeInTheDocument()
-    expect(screen.getByText("Abbreviation Guide")).toBeInTheDocument()
-  })
-
-  it("shows Turkish abbreviation categories when TR legend is opened", async () => {
-    render(<RootDetailPage />)
-
-    await waitFor(() => {
-      expect(screen.getByTestId("legend-tr-toggle")).toBeInTheDocument()
-    })
-
-    await userEvent.click(screen.getByTestId("legend-tr-toggle"))
-
-    await waitFor(() => {
-      expect(screen.getByTestId("legend-tr-content")).toBeInTheDocument()
-    })
-
+    expect(screen.getByText("Kısaltmalar")).toBeInTheDocument()
     expect(screen.getByText("Kaynaklar")).toBeInTheDocument()
     expect(screen.getByText("Gramer Terimleri")).toBeInTheDocument()
   })
 
-  it("shows English abbreviation categories when EN legend is opened", async () => {
+  it("renders English abbreviation legend panel beside EN definition", async () => {
     render(<RootDetailPage />)
 
     await waitFor(() => {
-      expect(screen.getByTestId("legend-en-toggle")).toBeInTheDocument()
+      expect(screen.getByTestId("legend-en-panel")).toBeInTheDocument()
     })
 
-    await userEvent.click(screen.getByTestId("legend-en-toggle"))
-
-    await waitFor(() => {
-      expect(screen.getByTestId("legend-en-content")).toBeInTheDocument()
-    })
-
+    expect(screen.getByText("Abbreviations")).toBeInTheDocument()
     expect(screen.getByText("Sources")).toBeInTheDocument()
     expect(screen.getByText("Grammar Terms")).toBeInTheDocument()
   })
