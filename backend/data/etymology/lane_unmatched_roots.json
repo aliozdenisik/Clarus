@@ -1,8 +1,38 @@
 [
   {
+    "root": "أله",
+    "root_buckwalter": "Alh",
+    "quran_frequency": 2851
+  },
+  {
+    "root": "قول",
+    "root_buckwalter": "qwl",
+    "quran_frequency": 1722
+  },
+  {
+    "root": "كون",
+    "root_buckwalter": "kwn",
+    "quran_frequency": 1390
+  },
+  {
     "root": "ربب",
     "root_buckwalter": "rbb",
     "quran_frequency": 980
+  },
+  {
+    "root": "أمن",
+    "root_buckwalter": "Amn",
+    "quran_frequency": 879
+  },
+  {
+    "root": "علم",
+    "root_buckwalter": "Elm",
+    "quran_frequency": 854
+  },
+  {
+    "root": "قوم",
+    "root_buckwalter": "qwm",
+    "quran_frequency": 660
   },
   {
     "root": "أيي",
@@ -15,9 +45,39 @@
     "quran_frequency": 549
   },
   {
+    "root": "كفر",
+    "root_buckwalter": "kfr",
+    "quran_frequency": 525
+  },
+  {
+    "root": "بين",
+    "root_buckwalter": "byn",
+    "quran_frequency": 523
+  },
+  {
     "root": "شيأ",
     "root_buckwalter": "shyA",
     "quran_frequency": 519
+  },
+  {
+    "root": "رسل",
+    "root_buckwalter": "rsl",
+    "quran_frequency": 513
+  },
+  {
+    "root": "يوم",
+    "root_buckwalter": "ywm",
+    "quran_frequency": 475
+  },
+  {
+    "root": "أرض",
+    "root_buckwalter": "ArD",
+    "quran_frequency": 461
+  },
+  {
+    "root": "سمو",
+    "root_buckwalter": "smw",
+    "quran_frequency": 381
   },
   {
     "root": "كلل",
@@ -25,9 +85,39 @@
     "quran_frequency": 377
   },
   {
+    "root": "عذب",
+    "root_buckwalter": "Edhb",
+    "quran_frequency": 373
+  },
+  {
+    "root": "عمل",
+    "root_buckwalter": "Eml",
+    "quran_frequency": 360
+  },
+  {
+    "root": "جعل",
+    "root_buckwalter": "jEl",
+    "quran_frequency": 346
+  },
+  {
+    "root": "رحم",
+    "root_buckwalter": "rHm",
+    "quran_frequency": 339
+  },
+  {
+    "root": "أنس",
+    "root_buckwalter": "Ans",
+    "quran_frequency": 338
+  },
+  {
     "root": "رأي",
     "root_buckwalter": "rAy",
     "quran_frequency": 328
+  },
+  {
+    "root": "كتب",
+    "root_buckwalter": "ktb",
+    "quran_frequency": 319
   },
   {
     "root": "هدي",
@@ -35,9 +125,59 @@
     "quran_frequency": 316
   },
   {
+    "root": "ظلم",
+    "root_buckwalter": "zhlm",
+    "quran_frequency": 315
+  },
+  {
+    "root": "نفس",
+    "root_buckwalter": "nfs",
+    "quran_frequency": 298
+  },
+  {
+    "root": "قبل",
+    "root_buckwalter": "qbl",
+    "quran_frequency": 294
+  },
+  {
+    "root": "نزل",
+    "root_buckwalter": "nzl",
+    "quran_frequency": 293
+  },
+  {
+    "root": "ذكر",
+    "root_buckwalter": "dhkr",
+    "quran_frequency": 292
+  },
+  {
     "root": "حقق",
     "root_buckwalter": "Hqq",
     "quran_frequency": 287
+  },
+  {
+    "root": "كذب",
+    "root_buckwalter": "kdhb",
+    "quran_frequency": 282
+  },
+  {
+    "root": "جيأ",
+    "root_buckwalter": "jyA",
+    "quran_frequency": 278
+  },
+  {
+    "root": "عبد",
+    "root_buckwalter": "Ebd",
+    "quran_frequency": 275
+  },
+  {
+    "root": "أخذ",
+    "root_buckwalter": "Akhdh",
+    "quran_frequency": 273
+  },
+  {
+    "root": "خلق",
+    "root_buckwalter": "khlq",
+    "quran_frequency": 261
   },
   {
     "root": "وقي",
@@ -45,14 +185,69 @@
     "quran_frequency": 258
   },
   {
+    "root": "أخر",
+    "root_buckwalter": "Akhr",
+    "quran_frequency": 250
+  },
+  {
+    "root": "أمر",
+    "root_buckwalter": "Amr",
+    "quran_frequency": 248
+  },
+  {
+    "root": "بعد",
+    "root_buckwalter": "bEd",
+    "quran_frequency": 235
+  },
+  {
+    "root": "غفر",
+    "root_buckwalter": "gfr",
+    "quran_frequency": 234
+  },
+  {
     "root": "ولي",
     "root_buckwalter": "wly",
     "quran_frequency": 232
   },
   {
+    "root": "دعو",
+    "root_buckwalter": "dEw",
+    "quran_frequency": 212
+  },
+  {
+    "root": "حكم",
+    "root_buckwalter": "Hkm",
+    "quran_frequency": 210
+  },
+  {
+    "root": "ملك",
+    "root_buckwalter": "mlk",
+    "quran_frequency": 206
+  },
+  {
     "root": "جنن",
     "root_buckwalter": "jnn",
     "quran_frequency": 201
+  },
+  {
+    "root": "عند",
+    "root_buckwalter": "End",
+    "quran_frequency": 201
+  },
+  {
+    "root": "خير",
+    "root_buckwalter": "khyr",
+    "quran_frequency": 196
+  },
+  {
+    "root": "حسن",
+    "root_buckwalter": "Hsn",
+    "quran_frequency": 194
+  },
+  {
+    "root": "نور",
+    "root_buckwalter": "nwr",
+    "quran_frequency": 194
   },
   {
     "root": "ضلل",
@@ -65,9 +260,119 @@
     "quran_frequency": 189
   },
   {
+    "root": "سمع",
+    "root_buckwalter": "smE",
+    "quran_frequency": 185
+  },
+  {
     "root": "بني",
     "root_buckwalter": "bny",
     "quran_frequency": 184
+  },
+  {
+    "root": "خرج",
+    "root_buckwalter": "khrj",
+    "quran_frequency": 182
+  },
+  {
+    "root": "صلح",
+    "root_buckwalter": "SlH",
+    "quran_frequency": 180
+  },
+  {
+    "root": "سبل",
+    "root_buckwalter": "sbl",
+    "quran_frequency": 176
+  },
+  {
+    "root": "تبع",
+    "root_buckwalter": "tbE",
+    "quran_frequency": 172
+  },
+  {
+    "root": "قتل",
+    "root_buckwalter": "qtl",
+    "quran_frequency": 170
+  },
+  {
+    "root": "مثل",
+    "root_buckwalter": "mthl",
+    "quran_frequency": 169
+  },
+  {
+    "root": "شرك",
+    "root_buckwalter": "shrk",
+    "quran_frequency": 168
+  },
+  {
+    "root": "قلب",
+    "root_buckwalter": "qlb",
+    "quran_frequency": 168
+  },
+  {
+    "root": "سوأ",
+    "root_buckwalter": "swA",
+    "quran_frequency": 167
+  },
+  {
+    "root": "كثر",
+    "root_buckwalter": "kthr",
+    "quran_frequency": 167
+  },
+  {
+    "root": "موت",
+    "root_buckwalter": "mwt",
+    "quran_frequency": 165
+  },
+  {
+    "root": "كبر",
+    "root_buckwalter": "kbr",
+    "quran_frequency": 161
+  },
+  {
+    "root": "شهد",
+    "root_buckwalter": "shhd",
+    "quran_frequency": 160
+  },
+  {
+    "root": "نبأ",
+    "root_buckwalter": "nbA",
+    "quran_frequency": 160
+  },
+  {
+    "root": "بعض",
+    "root_buckwalter": "bED",
+    "quran_frequency": 158
+  },
+  {
+    "root": "نصر",
+    "root_buckwalter": "nSr",
+    "quran_frequency": 158
+  },
+  {
+    "root": "صدق",
+    "root_buckwalter": "Sdq",
+    "quran_frequency": 155
+  },
+  {
+    "root": "غير",
+    "root_buckwalter": "gyr",
+    "quran_frequency": 154
+  },
+  {
+    "root": "وعد",
+    "root_buckwalter": "wEd",
+    "quran_frequency": 151
+  },
+  {
+    "root": "بصر",
+    "root_buckwalter": "bSr",
+    "quran_frequency": 148
+  },
+  {
+    "root": "رود",
+    "root_buckwalter": "rwd",
+    "quran_frequency": 148
   },
   {
     "root": "لقي",
@@ -75,9 +380,94 @@
     "quran_frequency": 146
   },
   {
+    "root": "دون",
+    "root_buckwalter": "dwn",
+    "quran_frequency": 144
+  },
+  {
+    "root": "سلم",
+    "root_buckwalter": "slm",
+    "quran_frequency": 140
+  },
+  {
+    "root": "نعم",
+    "root_buckwalter": "nEm",
+    "quran_frequency": 140
+  },
+  {
+    "root": "دنو",
+    "root_buckwalter": "dnw",
+    "quran_frequency": 133
+  },
+  {
+    "root": "قدر",
+    "root_buckwalter": "qdr",
+    "quran_frequency": 132
+  },
+  {
+    "root": "نذر",
+    "root_buckwalter": "ndhr",
+    "quran_frequency": 130
+  },
+  {
+    "root": "جمع",
+    "root_buckwalter": "jmE",
+    "quran_frequency": 129
+  },
+  {
     "root": "سأل",
     "root_buckwalter": "sAl",
     "quran_frequency": 129
+  },
+  {
+    "root": "طوع",
+    "root_buckwalter": "TwE",
+    "quran_frequency": 129
+  },
+  {
+    "root": "نظر",
+    "root_buckwalter": "nzhr",
+    "quran_frequency": 129
+  },
+  {
+    "root": "عظم",
+    "root_buckwalter": "Ezhm",
+    "quran_frequency": 128
+  },
+  {
+    "root": "أهل",
+    "root_buckwalter": "Ahl",
+    "quran_frequency": 127
+  },
+  {
+    "root": "خلف",
+    "root_buckwalter": "khlf",
+    "quran_frequency": 127
+  },
+  {
+    "root": "دخل",
+    "root_buckwalter": "dkhl",
+    "quran_frequency": 126
+  },
+  {
+    "root": "أول",
+    "root_buckwalter": "Awl",
+    "quran_frequency": 125
+  },
+  {
+    "root": "خوف",
+    "root_buckwalter": "khwf",
+    "quran_frequency": 124
+  },
+  {
+    "root": "بشر",
+    "root_buckwalter": "bshr",
+    "quran_frequency": 123
+  },
+  {
+    "root": "رزق",
+    "root_buckwalter": "rzq",
+    "quran_frequency": 123
   },
   {
     "root": "عزز",
@@ -100,13 +490,108 @@
     "quran_frequency": 118
   },
   {
+    "root": "أبو",
+    "root_buckwalter": "Abw",
+    "quran_frequency": 117
+  },
+  {
+    "root": "نهر",
+    "root_buckwalter": "nhr",
+    "quran_frequency": 113
+  },
+  {
+    "root": "نفق",
+    "root_buckwalter": "nfq",
+    "quran_frequency": 111
+  },
+  {
+    "root": "أكل",
+    "root_buckwalter": "Akl",
+    "quran_frequency": 109
+  },
+  {
+    "root": "حسب",
+    "root_buckwalter": "Hsb",
+    "quran_frequency": 109
+  },
+  {
+    "root": "أجر",
+    "root_buckwalter": "Ajr",
+    "quran_frequency": 108
+  },
+  {
+    "root": "فعل",
+    "root_buckwalter": "fEl",
+    "quran_frequency": 108
+  },
+  {
+    "root": "وجد",
+    "root_buckwalter": "wjd",
+    "quran_frequency": 107
+  },
+  {
+    "root": "عدو",
+    "root_buckwalter": "Edw",
+    "quran_frequency": 106
+  },
+  {
+    "root": "رجع",
+    "root_buckwalter": "rjE",
+    "quran_frequency": 104
+  },
+  {
+    "root": "فضل",
+    "root_buckwalter": "fDl",
+    "quran_frequency": 104
+  },
+  {
+    "root": "صبر",
+    "root_buckwalter": "Sbr",
+    "quran_frequency": 103
+  },
+  {
+    "root": "أذن",
+    "root_buckwalter": "Adhn",
+    "quran_frequency": 102
+  },
+  {
     "root": "شدد",
     "root_buckwalter": "shdd",
     "quran_frequency": 102
   },
   {
+    "root": "ولد",
+    "root_buckwalter": "wld",
+    "quran_frequency": 102
+  },
+  {
+    "root": "دين",
+    "root_buckwalter": "dyn",
+    "quran_frequency": 101
+  },
+  {
+    "root": "صلو",
+    "root_buckwalter": "Slw",
+    "quran_frequency": 99
+  },
+  {
+    "root": "صحب",
+    "root_buckwalter": "SHb",
+    "quran_frequency": 97
+  },
+  {
+    "root": "أخو",
+    "root_buckwalter": "Akhw",
+    "quran_frequency": 96
+  },
+  {
     "root": "بغي",
     "root_buckwalter": "bgy",
+    "quran_frequency": 96
+  },
+  {
+    "root": "قرب",
+    "root_buckwalter": "qrb",
     "quran_frequency": 96
   },
   {
@@ -115,9 +600,94 @@
     "quran_frequency": 95
   },
   {
+    "root": "سبح",
+    "root_buckwalter": "sbH",
+    "quran_frequency": 92
+  },
+  {
+    "root": "سجد",
+    "root_buckwalter": "sjd",
+    "quran_frequency": 92
+  },
+  {
+    "root": "ليل",
+    "root_buckwalter": "lyl",
+    "quran_frequency": 92
+  },
+  {
+    "root": "ليس",
+    "root_buckwalter": "lys",
+    "quran_frequency": 89
+  },
+  {
+    "root": "شطن",
+    "root_buckwalter": "shTn",
+    "quran_frequency": 88
+  },
+  {
+    "root": "قرأ",
+    "root_buckwalter": "qrA",
+    "quran_frequency": 88
+  },
+  {
+    "root": "توب",
+    "root_buckwalter": "twb",
+    "quran_frequency": 87
+  },
+  {
+    "root": "خلد",
+    "root_buckwalter": "khld",
+    "quran_frequency": 87
+  },
+  {
+    "root": "مول",
+    "root_buckwalter": "mwl",
+    "quran_frequency": 86
+  },
+  {
+    "root": "أحد",
+    "root_buckwalter": "AHd",
+    "quran_frequency": 85
+  },
+  {
+    "root": "نجو",
+    "root_buckwalter": "njw",
+    "quran_frequency": 84
+  },
+  {
+    "root": "حرم",
+    "root_buckwalter": "Hrm",
+    "quran_frequency": 83
+  },
+  {
     "root": "سوي",
     "root_buckwalter": "swy",
     "quran_frequency": 83
+  },
+  {
+    "root": "كيف",
+    "root_buckwalter": "kyf",
+    "quran_frequency": 83
+  },
+  {
+    "root": "زوج",
+    "root_buckwalter": "zwj",
+    "quran_frequency": 81
+  },
+  {
+    "root": "عقب",
+    "root_buckwalter": "Eqb",
+    "quran_frequency": 80
+  },
+  {
+    "root": "عرض",
+    "root_buckwalter": "ErD",
+    "quran_frequency": 79
+  },
+  {
+    "root": "وجه",
+    "root_buckwalter": "wjh",
+    "quran_frequency": 78
   },
   {
     "root": "وحي",
@@ -125,9 +695,34 @@
     "quran_frequency": 78
   },
   {
+    "root": "بلغ",
+    "root_buckwalter": "blg",
+    "quran_frequency": 77
+  },
+  {
+    "root": "صوب",
+    "root_buckwalter": "Swb",
+    "quran_frequency": 77
+  },
+  {
     "root": "قلل",
     "root_buckwalter": "qll",
     "quran_frequency": 76
+  },
+  {
+    "root": "ألم",
+    "root_buckwalter": "Alm",
+    "quran_frequency": 75
+  },
+  {
+    "root": "شكر",
+    "root_buckwalter": "shkr",
+    "quran_frequency": 75
+  },
+  {
+    "root": "كلم",
+    "root_buckwalter": "klm",
+    "quran_frequency": 75
   },
   {
     "root": "ضرر",
@@ -140,9 +735,59 @@
     "quran_frequency": 73
   },
   {
+    "root": "بيت",
+    "root_buckwalter": "byt",
+    "quran_frequency": 73
+  },
+  {
+    "root": "رجل",
+    "root_buckwalter": "rjl",
+    "quran_frequency": 73
+  },
+  {
+    "root": "رضو",
+    "root_buckwalter": "rDw",
+    "quran_frequency": 73
+  },
+  {
     "root": "غني",
     "root_buckwalter": "gny",
     "quran_frequency": 73
+  },
+  {
+    "root": "فرق",
+    "root_buckwalter": "frq",
+    "quran_frequency": 72
+  },
+  {
+    "root": "عرف",
+    "root_buckwalter": "Erf",
+    "quran_frequency": 71
+  },
+  {
+    "root": "يمن",
+    "root_buckwalter": "ymn",
+    "quran_frequency": 71
+  },
+  {
+    "root": "علو",
+    "root_buckwalter": "Elw",
+    "quran_frequency": 70
+  },
+  {
+    "root": "متع",
+    "root_buckwalter": "mtE",
+    "quran_frequency": 70
+  },
+  {
+    "root": "وكل",
+    "root_buckwalter": "wkl",
+    "quran_frequency": 70
+  },
+  {
+    "root": "سكن",
+    "root_buckwalter": "skn",
+    "quran_frequency": 69
   },
   {
     "root": "ظنن",
@@ -150,9 +795,49 @@
     "quran_frequency": 69
   },
   {
+    "root": "حمد",
+    "root_buckwalter": "Hmd",
+    "quran_frequency": 68
+  },
+  {
+    "root": "هلك",
+    "root_buckwalter": "hlk",
+    "quran_frequency": 68
+  },
+  {
+    "root": "وحد",
+    "root_buckwalter": "wHd",
+    "quran_frequency": 68
+  },
+  {
+    "root": "بعث",
+    "root_buckwalter": "bEth",
+    "quran_frequency": 67
+  },
+  {
+    "root": "كسب",
+    "root_buckwalter": "ksb",
+    "quran_frequency": 67
+  },
+  {
+    "root": "جرم",
+    "root_buckwalter": "jrm",
+    "quran_frequency": 66
+  },
+  {
     "root": "وفي",
     "root_buckwalter": "wfy",
     "quran_frequency": 66
+  },
+  {
+    "root": "خسر",
+    "root_buckwalter": "khsr",
+    "quran_frequency": 65
+  },
+  {
+    "root": "عين",
+    "root_buckwalter": "Eyn",
+    "quran_frequency": 65
   },
   {
     "root": "جري",
@@ -160,9 +845,44 @@
     "quran_frequency": 64
   },
   {
+    "root": "حمل",
+    "root_buckwalter": "Hml",
+    "quran_frequency": 64
+  },
+  {
+    "root": "تلو",
+    "root_buckwalter": "tlw",
+    "quran_frequency": 63
+  },
+  {
+    "root": "ذوق",
+    "root_buckwalter": "dhwq",
+    "quran_frequency": 63
+  },
+  {
+    "root": "سحر",
+    "root_buckwalter": "sHr",
+    "quran_frequency": 63
+  },
+  {
+    "root": "عود",
+    "root_buckwalter": "Ewd",
+    "quran_frequency": 63
+  },
+  {
     "root": "قضي",
     "root_buckwalter": "qDy",
     "quran_frequency": 63
+  },
+  {
+    "root": "موه",
+    "root_buckwalter": "mwh",
+    "quran_frequency": 63
+  },
+  {
+    "root": "زيد",
+    "root_buckwalter": "zyd",
+    "quran_frequency": 61
   },
   {
     "root": "مسس",
@@ -170,9 +890,49 @@
     "quran_frequency": 61
   },
   {
+    "root": "غيب",
+    "root_buckwalter": "gyb",
+    "quran_frequency": 60
+  },
+  {
+    "root": "فتن",
+    "root_buckwalter": "ftn",
+    "quran_frequency": 60
+  },
+  {
+    "root": "فري",
+    "root_buckwalter": "fry",
+    "quran_frequency": 60
+  },
+  {
     "root": "ردد",
     "root_buckwalter": "rdd",
     "quran_frequency": 59
+  },
+  {
+    "root": "زكو",
+    "root_buckwalter": "zkw",
+    "quran_frequency": 59
+  },
+  {
+    "root": "ظهر",
+    "root_buckwalter": "zhhr",
+    "quran_frequency": 59
+  },
+  {
+    "root": "نسو",
+    "root_buckwalter": "nsw",
+    "quran_frequency": 59
+  },
+  {
+    "root": "ضرب",
+    "root_buckwalter": "Drb",
+    "quran_frequency": 58
+  },
+  {
+    "root": "روح",
+    "root_buckwalter": "rwH",
+    "quran_frequency": 57
   },
   {
     "root": "عدد",
@@ -185,9 +945,29 @@
     "quran_frequency": 57
   },
   {
+    "root": "أجل",
+    "root_buckwalter": "Ajl",
+    "quran_frequency": 56
+  },
+  {
+    "root": "ذهب",
+    "root_buckwalter": "dhhb",
+    "quran_frequency": 56
+  },
+  {
     "root": "نهي",
     "root_buckwalter": "nhy",
     "quran_frequency": 56
+  },
+  {
+    "root": "دور",
+    "root_buckwalter": "dwr",
+    "quran_frequency": 55
+  },
+  {
+    "root": "فسق",
+    "root_buckwalter": "fsq",
+    "quran_frequency": 54
   },
   {
     "root": "ندي",
@@ -195,9 +975,54 @@
     "quran_frequency": 53
   },
   {
+    "root": "خبر",
+    "root_buckwalter": "khbr",
+    "quran_frequency": 52
+  },
+  {
+    "root": "ضعف",
+    "root_buckwalter": "DEf",
+    "quran_frequency": 52
+  },
+  {
+    "root": "تحت",
+    "root_buckwalter": "tHt",
+    "quran_frequency": 51
+  },
+  {
     "root": "حلل",
     "root_buckwalter": "Hll",
     "quran_frequency": 51
+  },
+  {
+    "root": "طيب",
+    "root_buckwalter": "Tyb",
+    "quran_frequency": 50
+  },
+  {
+    "root": "فسد",
+    "root_buckwalter": "fsd",
+    "quran_frequency": 50
+  },
+  {
+    "root": "نفع",
+    "root_buckwalter": "nfE",
+    "quran_frequency": 50
+  },
+  {
+    "root": "سوع",
+    "root_buckwalter": "swE",
+    "quran_frequency": 49
+  },
+  {
+    "root": "عقل",
+    "root_buckwalter": "Eql",
+    "quran_frequency": 49
+  },
+  {
+    "root": "أثم",
+    "root_buckwalter": "Athm",
+    "quran_frequency": 48
   },
   {
     "root": "خشي",
@@ -205,14 +1030,129 @@
     "quran_frequency": 48
   },
   {
+    "root": "طعم",
+    "root_buckwalter": "TEm",
+    "quran_frequency": 48
+  },
+  {
+    "root": "قدم",
+    "root_buckwalter": "qdm",
+    "quran_frequency": 48
+  },
+  {
+    "root": "عجل",
+    "root_buckwalter": "Ejl",
+    "quran_frequency": 47
+  },
+  {
+    "root": "كرم",
+    "root_buckwalter": "krm",
+    "quran_frequency": 47
+  },
+  {
+    "root": "زين",
+    "root_buckwalter": "zyn",
+    "quran_frequency": 46
+  },
+  {
+    "root": "صدر",
+    "root_buckwalter": "Sdr",
+    "quran_frequency": 46
+  },
+  {
+    "root": "عهد",
+    "root_buckwalter": "Ehd",
+    "quran_frequency": 46
+  },
+  {
+    "root": "صبح",
+    "root_buckwalter": "SbH",
+    "quran_frequency": 45
+  },
+  {
+    "root": "صرط",
+    "root_buckwalter": "SrT",
+    "quran_frequency": 45
+  },
+  {
     "root": "نسي",
     "root_buckwalter": "nsy",
     "quran_frequency": 45
   },
   {
+    "root": "وذر",
+    "root_buckwalter": "wdhr",
+    "quran_frequency": 45
+  },
+  {
+    "root": "بدل",
+    "root_buckwalter": "bdl",
+    "quran_frequency": 44
+  },
+  {
+    "root": "حفظ",
+    "root_buckwalter": "Hfzh",
+    "quran_frequency": 44
+  },
+  {
+    "root": "دبر",
+    "root_buckwalter": "dbr",
+    "quran_frequency": 44
+  },
+  {
     "root": "سرر",
     "root_buckwalter": "srr",
     "quran_frequency": 44
+  },
+  {
+    "root": "يسر",
+    "root_buckwalter": "ysr",
+    "quran_frequency": 44
+  },
+  {
+    "root": "ترك",
+    "root_buckwalter": "trk",
+    "quran_frequency": 43
+  },
+  {
+    "root": "جوب",
+    "root_buckwalter": "jwb",
+    "quran_frequency": 43
+  },
+  {
+    "root": "حشر",
+    "root_buckwalter": "Hshr",
+    "quran_frequency": 43
+  },
+  {
+    "root": "فصل",
+    "root_buckwalter": "fSl",
+    "quran_frequency": 43
+  },
+  {
+    "root": "فوق",
+    "root_buckwalter": "fwq",
+    "quran_frequency": 43
+  },
+  {
+    "root": "مكر",
+    "root_buckwalter": "mkr",
+    "quran_frequency": 43
+  },
+  {
+    "root": "بحر",
+    "root_buckwalter": "bHr",
+    "quran_frequency": 42
+  },
+  {
+    "root": "حزن",
+    "root_buckwalter": "Hzn",
+    "quran_frequency": 42
+  },
+  {
+    "root": "سخر",
+    "root_buckwalter": "skhr",
+    "quran_frequency": 42
   },
   {
     "root": "صدد",
@@ -225,13 +1165,78 @@
     "quran_frequency": 42
   },
   {
+    "root": "جبل",
+    "root_buckwalter": "jbl",
+    "quran_frequency": 41
+  },
+  {
+    "root": "جهد",
+    "root_buckwalter": "jhd",
+    "quran_frequency": 41
+  },
+  {
+    "root": "طوف",
+    "root_buckwalter": "Twf",
+    "quran_frequency": 41
+  },
+  {
+    "root": "كره",
+    "root_buckwalter": "krh",
+    "quran_frequency": 41
+  },
+  {
+    "root": "لعن",
+    "root_buckwalter": "lEn",
+    "quran_frequency": 41
+  },
+  {
+    "root": "شعر",
+    "root_buckwalter": "shEr",
+    "quran_frequency": 40
+  },
+  {
+    "root": "فلح",
+    "root_buckwalter": "flH",
+    "quran_frequency": 40
+  },
+  {
+    "root": "ملأ",
+    "root_buckwalter": "mlA",
+    "quran_frequency": 40
+  },
+  {
+    "root": "ذنب",
+    "root_buckwalter": "dhnb",
+    "quran_frequency": 39
+  },
+  {
+    "root": "سلط",
+    "root_buckwalter": "slT",
+    "quran_frequency": 39
+  },
+  {
+    "root": "شرب",
+    "root_buckwalter": "shrb",
+    "quran_frequency": 39
+  },
+  {
     "root": "طغي",
     "root_buckwalter": "Tgy",
     "quran_frequency": 39
   },
   {
+    "root": "بلو",
+    "root_buckwalter": "blw",
+    "quran_frequency": 38
+  },
+  {
     "root": "ذرر",
     "root_buckwalter": "dhrr",
+    "quran_frequency": 38
+  },
+  {
+    "root": "فتح",
+    "root_buckwalter": "ftH",
     "quran_frequency": 38
   },
   {
@@ -240,9 +1245,29 @@
     "quran_frequency": 38
   },
   {
+    "root": "مرأ",
+    "root_buckwalter": "mrA",
+    "quran_frequency": 38
+  },
+  {
     "root": "هوي",
     "root_buckwalter": "hwy",
     "quran_frequency": 38
+  },
+  {
+    "root": "ألو",
+    "root_buckwalter": "Alw",
+    "quran_frequency": 37
+  },
+  {
+    "root": "سبق",
+    "root_buckwalter": "sbq",
+    "quran_frequency": 37
+  },
+  {
+    "root": "نكر",
+    "root_buckwalter": "nkr",
+    "quran_frequency": 37
   },
   {
     "root": "أوي",
@@ -250,9 +1275,64 @@
     "quran_frequency": 36
   },
   {
+    "root": "بطل",
+    "root_buckwalter": "bTl",
+    "quran_frequency": 36
+  },
+  {
+    "root": "حدث",
+    "root_buckwalter": "Hdth",
+    "quran_frequency": 36
+  },
+  {
+    "root": "ريب",
+    "root_buckwalter": "ryb",
+    "quran_frequency": 36
+  },
+  {
+    "root": "قرن",
+    "root_buckwalter": "qrn",
+    "quran_frequency": 36
+  },
+  {
+    "root": "قطع",
+    "root_buckwalter": "qTE",
+    "quran_frequency": 36
+  },
+  {
+    "root": "حين",
+    "root_buckwalter": "Hyn",
+    "quran_frequency": 35
+  },
+  {
+    "root": "عفو",
+    "root_buckwalter": "Efw",
+    "quran_frequency": 35
+  },
+  {
+    "root": "غفل",
+    "root_buckwalter": "gfl",
+    "quran_frequency": 35
+  },
+  {
+    "root": "كيد",
+    "root_buckwalter": "kyd",
+    "quran_frequency": 35
+  },
+  {
     "root": "مرر",
     "root_buckwalter": "mrr",
     "quran_frequency": 35
+  },
+  {
+    "root": "ورث",
+    "root_buckwalter": "wrth",
+    "quran_frequency": 35
+  },
+  {
+    "root": "جنح",
+    "root_buckwalter": "jnH",
+    "quran_frequency": 34
   },
   {
     "root": "خفي",
@@ -260,8 +1340,28 @@
     "quran_frequency": 34
   },
   {
+    "root": "هزأ",
+    "root_buckwalter": "hzA",
+    "quran_frequency": 34
+  },
+  {
+    "root": "وثق",
+    "root_buckwalter": "wthq",
+    "quran_frequency": 34
+  },
+  {
+    "root": "جنب",
+    "root_buckwalter": "jnb",
+    "quran_frequency": 33
+  },
+  {
     "root": "حجج",
     "root_buckwalter": "Hjj",
+    "quran_frequency": 33
+  },
+  {
+    "root": "شمس",
+    "root_buckwalter": "shms",
     "quran_frequency": 33
   },
   {
@@ -270,8 +1370,18 @@
     "quran_frequency": 33
   },
   {
+    "root": "عرش",
+    "root_buckwalter": "Ersh",
+    "quran_frequency": 33
+  },
+  {
     "root": "عمي",
     "root_buckwalter": "Emy",
+    "quran_frequency": 33
+  },
+  {
+    "root": "قسم",
+    "root_buckwalter": "qsm",
     "quran_frequency": 33
   },
   {
@@ -285,6 +1395,16 @@
     "quran_frequency": 32
   },
   {
+    "root": "برك",
+    "root_buckwalter": "brk",
+    "quran_frequency": 32
+  },
+  {
+    "root": "ثلث",
+    "root_buckwalter": "thlth",
+    "quran_frequency": 32
+  },
+  {
     "root": "عصي",
     "root_buckwalter": "ESy",
     "quran_frequency": 32
@@ -295,8 +1415,18 @@
     "quran_frequency": 32
   },
   {
+    "root": "نصب",
+    "root_buckwalter": "nSb",
+    "quran_frequency": 32
+  },
+  {
     "root": "وري",
     "root_buckwalter": "wry",
+    "quran_frequency": 32
+  },
+  {
+    "root": "وسع",
+    "root_buckwalter": "wsE",
     "quran_frequency": 32
   },
   {
@@ -305,13 +1435,78 @@
     "quran_frequency": 32
   },
   {
+    "root": "بدو",
+    "root_buckwalter": "bdw",
+    "quran_frequency": 31
+  },
+  {
+    "root": "برأ",
+    "root_buckwalter": "brA",
+    "quran_frequency": 31
+  },
+  {
+    "root": "حيث",
+    "root_buckwalter": "Hyth",
+    "quran_frequency": 31
+  },
+  {
+    "root": "خلص",
+    "root_buckwalter": "khlS",
+    "quran_frequency": 31
+  },
+  {
     "root": "شرر",
     "root_buckwalter": "shrr",
     "quran_frequency": 31
   },
   {
+    "root": "شفع",
+    "root_buckwalter": "shfE",
+    "quran_frequency": 31
+  },
+  {
+    "root": "طهر",
+    "root_buckwalter": "Thr",
+    "quran_frequency": 31
+  },
+  {
+    "root": "غلب",
+    "root_buckwalter": "glb",
+    "quran_frequency": 31
+  },
+  {
+    "root": "قعد",
+    "root_buckwalter": "qEd",
+    "quran_frequency": 31
+  },
+  {
+    "root": "لبث",
+    "root_buckwalter": "lbth",
+    "quran_frequency": 31
+  },
+  {
+    "root": "هجر",
+    "root_buckwalter": "hjr",
+    "quran_frequency": 31
+  },
+  {
+    "root": "أفك",
+    "root_buckwalter": "Afk",
+    "quran_frequency": 30
+  },
+  {
+    "root": "أنث",
+    "root_buckwalter": "Anth",
+    "quran_frequency": 30
+  },
+  {
     "root": "سعي",
     "root_buckwalter": "sEy",
+    "quran_frequency": 30
+  },
+  {
+    "root": "صرف",
+    "root_buckwalter": "Srf",
     "quran_frequency": 30
   },
   {
@@ -325,8 +1520,23 @@
     "quran_frequency": 30
   },
   {
+    "root": "هود",
+    "root_buckwalter": "hwd",
+    "quran_frequency": 30
+  },
+  {
     "root": "ثني",
     "root_buckwalter": "thny",
+    "quran_frequency": 29
+  },
+  {
+    "root": "جدل",
+    "root_buckwalter": "jdl",
+    "quran_frequency": 29
+  },
+  {
+    "root": "جند",
+    "root_buckwalter": "jnd",
     "quran_frequency": 29
   },
   {
@@ -335,13 +1545,78 @@
     "quran_frequency": 29
   },
   {
+    "root": "رفع",
+    "root_buckwalter": "rfE",
+    "quran_frequency": 29
+  },
+  {
+    "root": "صير",
+    "root_buckwalter": "Syr",
+    "quran_frequency": 29
+  },
+  {
+    "root": "طير",
+    "root_buckwalter": "Tyr",
+    "quran_frequency": 29
+  },
+  {
+    "root": "غشو",
+    "root_buckwalter": "gshw",
+    "quran_frequency": 29
+  },
+  {
+    "root": "فوز",
+    "root_buckwalter": "fwz",
+    "quran_frequency": 29
+  },
+  {
     "root": "ودد",
     "root_buckwalter": "wdd",
     "quran_frequency": 29
   },
   {
+    "root": "أبد",
+    "root_buckwalter": "Abd",
+    "quran_frequency": 28
+  },
+  {
+    "root": "ثقل",
+    "root_buckwalter": "thql",
+    "quran_frequency": 28
+  },
+  {
+    "root": "ثوب",
+    "root_buckwalter": "thwb",
+    "quran_frequency": 28
+  },
+  {
+    "root": "حوط",
+    "root_buckwalter": "HwT",
+    "quran_frequency": 28
+  },
+  {
+    "root": "خلو",
+    "root_buckwalter": "khlw",
+    "quran_frequency": 28
+  },
+  {
+    "root": "رجو",
+    "root_buckwalter": "rjw",
+    "quran_frequency": 28
+  },
+  {
+    "root": "سبع",
+    "root_buckwalter": "sbE",
+    "quran_frequency": 28
+  },
+  {
     "root": "شقق",
     "root_buckwalter": "shqq",
+    "quran_frequency": 28
+  },
+  {
+    "root": "عدل",
+    "root_buckwalter": "Edl",
     "quran_frequency": 28
   },
   {
@@ -350,8 +1625,53 @@
     "quran_frequency": 28
   },
   {
+    "root": "يقن",
+    "root_buckwalter": "yqn",
+    "quran_frequency": 28
+  },
+  {
+    "root": "بوب",
+    "root_buckwalter": "bwb",
+    "quran_frequency": 27
+  },
+  {
+    "root": "سير",
+    "root_buckwalter": "syr",
+    "quran_frequency": 27
+  },
+  {
+    "root": "شجر",
+    "root_buckwalter": "shjr",
+    "quran_frequency": 27
+  },
+  {
+    "root": "عجب",
+    "root_buckwalter": "Ejb",
+    "quran_frequency": 27
+  },
+  {
+    "root": "عشر",
+    "root_buckwalter": "Eshr",
+    "quran_frequency": 27
+  },
+  {
     "root": "غرر",
     "root_buckwalter": "grr",
+    "quran_frequency": 27
+  },
+  {
+    "root": "قمر",
+    "root_buckwalter": "qmr",
+    "quran_frequency": 27
+  },
+  {
+    "root": "مدن",
+    "root_buckwalter": "mdn",
+    "quran_frequency": 27
+  },
+  {
+    "root": "مسك",
+    "root_buckwalter": "msk",
     "quran_frequency": 27
   },
   {
@@ -360,13 +1680,68 @@
     "quran_frequency": 27
   },
   {
+    "root": "وزر",
+    "root_buckwalter": "wzr",
+    "quran_frequency": 27
+  },
+  {
+    "root": "جحم",
+    "root_buckwalter": "jHm",
+    "quran_frequency": 26
+  },
+  {
     "root": "خزي",
     "root_buckwalter": "khzy",
     "quran_frequency": 26
   },
   {
+    "root": "عجز",
+    "root_buckwalter": "Ejz",
+    "quran_frequency": 26
+  },
+  {
+    "root": "نبت",
+    "root_buckwalter": "nbt",
+    "quran_frequency": 26
+  },
+  {
+    "root": "هون",
+    "root_buckwalter": "hwn",
+    "quran_frequency": 26
+  },
+  {
+    "root": "وضع",
+    "root_buckwalter": "wDE",
+    "quran_frequency": 26
+  },
+  {
+    "root": "أدم",
+    "root_buckwalter": "Adm",
+    "quran_frequency": 25
+  },
+  {
+    "root": "بسط",
+    "root_buckwalter": "bsT",
+    "quran_frequency": 25
+  },
+  {
+    "root": "بطن",
+    "root_buckwalter": "bTn",
+    "quran_frequency": 25
+  },
+  {
     "root": "حدد",
     "root_buckwalter": "Hdd",
+    "quran_frequency": 25
+  },
+  {
+    "root": "حضر",
+    "root_buckwalter": "HDr",
+    "quran_frequency": 25
+  },
+  {
+    "root": "حول",
+    "root_buckwalter": "Hwl",
     "quran_frequency": 25
   },
   {
@@ -385,8 +1760,38 @@
     "quran_frequency": 25
   },
   {
+    "root": "فلك",
+    "root_buckwalter": "flk",
+    "quran_frequency": 25
+  },
+  {
+    "root": "قسط",
+    "root_buckwalter": "qsT",
+    "quran_frequency": 25
+  },
+  {
+    "root": "لسن",
+    "root_buckwalter": "lsn",
+    "quran_frequency": 25
+  },
+  {
+    "root": "وعظ",
+    "root_buckwalter": "wEzh",
+    "quran_frequency": 25
+  },
+  {
+    "root": "وهب",
+    "root_buckwalter": "whb",
+    "quran_frequency": 25
+  },
+  {
     "root": "أذي",
     "root_buckwalter": "Adhy",
+    "quran_frequency": 24
+  },
+  {
+    "root": "ثمر",
+    "root_buckwalter": "thmr",
     "quran_frequency": 24
   },
   {
@@ -400,9 +1805,99 @@
     "quran_frequency": 24
   },
   {
+    "root": "رقب",
+    "root_buckwalter": "rqb",
+    "quran_frequency": 24
+  },
+  {
+    "root": "عمر",
+    "root_buckwalter": "Emr",
+    "quran_frequency": 24
+  },
+  {
+    "root": "غضب",
+    "root_buckwalter": "gDb",
+    "quran_frequency": 24
+  },
+  {
+    "root": "فجر",
+    "root_buckwalter": "fjr",
+    "quran_frequency": 24
+  },
+  {
+    "root": "فحش",
+    "root_buckwalter": "fHsh",
+    "quran_frequency": 24
+  },
+  {
+    "root": "كود",
+    "root_buckwalter": "kwd",
+    "quran_frequency": 24
+  },
+  {
+    "root": "مرض",
+    "root_buckwalter": "mrD",
+    "quran_frequency": 24
+  },
+  {
+    "root": "وقع",
+    "root_buckwalter": "wqE",
+    "quran_frequency": 24
+  },
+  {
+    "root": "سرع",
+    "root_buckwalter": "srE",
+    "quran_frequency": 23
+  },
+  {
+    "root": "سرف",
+    "root_buckwalter": "srf",
+    "quran_frequency": 23
+  },
+  {
+    "root": "طلق",
+    "root_buckwalter": "Tlq",
+    "quran_frequency": 23
+  },
+  {
+    "root": "غرق",
+    "root_buckwalter": "grq",
+    "quran_frequency": 23
+  },
+  {
+    "root": "لبس",
+    "root_buckwalter": "lbs",
+    "quran_frequency": 23
+  },
+  {
     "root": "مشي",
     "root_buckwalter": "mshy",
     "quran_frequency": 23
+  },
+  {
+    "root": "نكح",
+    "root_buckwalter": "nkH",
+    "quran_frequency": 23
+  },
+  {
+    "root": "وزن",
+    "root_buckwalter": "wzn",
+    "quran_frequency": 23
+  },
+  {
+    "root": "يتم",
+    "root_buckwalter": "ytm",
+    "quran_frequency": 23
+  },
+  {
+    "root": "ألف",
+    "root_buckwalter": "Alf",
+    "quran_frequency": 22
+  },
+  {
+    "root": "ترب",
+    "root_buckwalter": "trb",
+    "quran_frequency": 22
   },
   {
     "root": "تمم",
@@ -415,8 +1910,23 @@
     "quran_frequency": 22
   },
   {
+    "root": "ربع",
+    "root_buckwalter": "rbE",
+    "quran_frequency": 22
+  },
+  {
+    "root": "عرب",
+    "root_buckwalter": "Erb",
+    "quran_frequency": 22
+  },
+  {
     "root": "غوي",
     "root_buckwalter": "gwy",
+    "quran_frequency": 22
+  },
+  {
+    "root": "فرح",
+    "root_buckwalter": "frH",
     "quran_frequency": 22
   },
   {
@@ -425,8 +1935,28 @@
     "quran_frequency": 22
   },
   {
+    "root": "أثر",
+    "root_buckwalter": "Athr",
+    "quran_frequency": 21
+  },
+  {
     "root": "بقي",
     "root_buckwalter": "bqy",
+    "quran_frequency": 21
+  },
+  {
+    "root": "حجر",
+    "root_buckwalter": "Hjr",
+    "quran_frequency": 21
+  },
+  {
+    "root": "حذر",
+    "root_buckwalter": "Hdhr",
+    "quran_frequency": 21
+  },
+  {
+    "root": "حلم",
+    "root_buckwalter": "Hlm",
     "quran_frequency": 21
   },
   {
@@ -440,14 +1970,144 @@
     "quran_frequency": 21
   },
   {
+    "root": "شهر",
+    "root_buckwalter": "shhr",
+    "quran_frequency": 21
+  },
+  {
     "root": "فتي",
     "root_buckwalter": "fty",
     "quran_frequency": 21
   },
   {
+    "root": "كتم",
+    "root_buckwalter": "ktm",
+    "quran_frequency": 21
+  },
+  {
+    "root": "نشر",
+    "root_buckwalter": "nshr",
+    "quran_frequency": 21
+  },
+  {
+    "root": "حزب",
+    "root_buckwalter": "Hzb",
+    "quran_frequency": 20
+  },
+  {
+    "root": "درج",
+    "root_buckwalter": "drj",
+    "quran_frequency": 20
+  },
+  {
+    "root": "ربو",
+    "root_buckwalter": "rbw",
+    "quran_frequency": 20
+  },
+  {
+    "root": "سنو",
+    "root_buckwalter": "snw",
+    "quran_frequency": 20
+  },
+  {
+    "root": "صنع",
+    "root_buckwalter": "SnE",
+    "quran_frequency": 20
+  },
+  {
+    "root": "فطر",
+    "root_buckwalter": "fTr",
+    "quran_frequency": 20
+  },
+  {
+    "root": "فقه",
+    "root_buckwalter": "fqh",
+    "quran_frequency": 20
+  },
+  {
+    "root": "كشف",
+    "root_buckwalter": "kshf",
+    "quran_frequency": 20
+  },
+  {
+    "root": "لعب",
+    "root_buckwalter": "lEb",
+    "quran_frequency": 20
+  },
+  {
     "root": "مري",
     "root_buckwalter": "mry",
     "quran_frequency": 20
+  },
+  {
+    "root": "نخل",
+    "root_buckwalter": "nkhl",
+    "quran_frequency": 20
+  },
+  {
+    "root": "نزع",
+    "root_buckwalter": "nzE",
+    "quran_frequency": 20
+  },
+  {
+    "root": "نفخ",
+    "root_buckwalter": "nfkh",
+    "quran_frequency": 20
+  },
+  {
+    "root": "بلد",
+    "root_buckwalter": "bld",
+    "quran_frequency": 19
+  },
+  {
+    "root": "ثمن",
+    "root_buckwalter": "thmn",
+    "quran_frequency": 19
+  },
+  {
+    "root": "رشد",
+    "root_buckwalter": "rshd",
+    "quran_frequency": 19
+  },
+  {
+    "root": "سعر",
+    "root_buckwalter": "sEr",
+    "quran_frequency": 19
+  },
+  {
+    "root": "صور",
+    "root_buckwalter": "Swr",
+    "quran_frequency": 19
+  },
+  {
+    "root": "طلع",
+    "root_buckwalter": "TlE",
+    "quran_frequency": 19
+  },
+  {
+    "root": "غرب",
+    "root_buckwalter": "grb",
+    "quran_frequency": 19
+  },
+  {
+    "root": "فكه",
+    "root_buckwalter": "fkh",
+    "quran_frequency": 19
+  },
+  {
+    "root": "ثبت",
+    "root_buckwalter": "thbt",
+    "quran_frequency": 18
+  },
+  {
+    "root": "حصن",
+    "root_buckwalter": "HSn",
+    "quran_frequency": 18
+  },
+  {
+    "root": "خصم",
+    "root_buckwalter": "khSm",
+    "quran_frequency": 18
   },
   {
     "root": "دبب",
@@ -460,14 +2120,144 @@
     "quran_frequency": 18
   },
   {
+    "root": "فرض",
+    "root_buckwalter": "frD",
+    "quran_frequency": 18
+  },
+  {
+    "root": "فكر",
+    "root_buckwalter": "fkr",
+    "quran_frequency": 18
+  },
+  {
+    "root": "لدن",
+    "root_buckwalter": "ldn",
+    "quran_frequency": 18
+  },
+  {
+    "root": "مكن",
+    "root_buckwalter": "mkn",
+    "quran_frequency": 18
+  },
+  {
     "root": "ملل",
     "root_buckwalter": "mll",
     "quran_frequency": 18
   },
   {
+    "root": "نفر",
+    "root_buckwalter": "nfr",
+    "quran_frequency": 18
+  },
+  {
+    "root": "نوب",
+    "root_buckwalter": "nwb",
+    "quran_frequency": 18
+  },
+  {
+    "root": "أوب",
+    "root_buckwalter": "Awb",
+    "quran_frequency": 17
+  },
+  {
+    "root": "بوأ",
+    "root_buckwalter": "bwA",
+    "quran_frequency": 17
+  },
+  {
+    "root": "خشع",
+    "root_buckwalter": "khshE",
+    "quran_frequency": 17
+  },
+  {
     "root": "خفف",
     "root_buckwalter": "khff",
     "quran_frequency": 17
+  },
+  {
+    "root": "ربص",
+    "root_buckwalter": "rbS",
+    "quran_frequency": 17
+  },
+  {
+    "root": "زعم",
+    "root_buckwalter": "zEm",
+    "quran_frequency": 17
+  },
+  {
+    "root": "سور",
+    "root_buckwalter": "swr",
+    "quran_frequency": 17
+  },
+  {
+    "root": "سوق",
+    "root_buckwalter": "swq",
+    "quran_frequency": 17
+  },
+  {
+    "root": "شرق",
+    "root_buckwalter": "shrq",
+    "quran_frequency": 17
+  },
+  {
+    "root": "صفو",
+    "root_buckwalter": "Sfw",
+    "quran_frequency": 17
+  },
+  {
+    "root": "عوذ",
+    "root_buckwalter": "Ewdh",
+    "quran_frequency": 17
+  },
+  {
+    "root": "منع",
+    "root_buckwalter": "mnE",
+    "quran_frequency": 17
+  },
+  {
+    "root": "نقم",
+    "root_buckwalter": "nqm",
+    "quran_frequency": 17
+  },
+  {
+    "root": "جهر",
+    "root_buckwalter": "jhr",
+    "quran_frequency": 16
+  },
+  {
+    "root": "حبط",
+    "root_buckwalter": "HbT",
+    "quran_frequency": 16
+  },
+  {
+    "root": "خبث",
+    "root_buckwalter": "khbth",
+    "quran_frequency": 16
+  },
+  {
+    "root": "خون",
+    "root_buckwalter": "khwn",
+    "quran_frequency": 16
+  },
+  {
+    "root": "سطر",
+    "root_buckwalter": "sTr",
+    "quran_frequency": 16
+  },
+  {
+    "root": "عتد",
+    "root_buckwalter": "Etd",
+    "quran_frequency": 16
+  },
+  {
+    "root": "علن",
+    "root_buckwalter": "Eln",
+    "quran_frequency": 16
+  },
+  {
+    "root": "غدو",
+    "root_buckwalter": "gdw",
+    "quran_frequency": 16
   },
   {
     "root": "غلل",
@@ -480,13 +2270,53 @@
     "quran_frequency": 16
   },
   {
+    "root": "كيل",
+    "root_buckwalter": "kyl",
+    "quran_frequency": 16
+  },
+  {
     "root": "لبب",
     "root_buckwalter": "lbb",
     "quran_frequency": 16
   },
   {
+    "root": "لهو",
+    "root_buckwalter": "lhw",
+    "quran_frequency": 16
+  },
+  {
+    "root": "مهد",
+    "root_buckwalter": "mhd",
+    "quran_frequency": 16
+  },
+  {
+    "root": "بدأ",
+    "root_buckwalter": "bdA",
+    "quran_frequency": 15
+  },
+  {
+    "root": "بيع",
+    "root_buckwalter": "byE",
+    "quran_frequency": 15
+  },
+  {
+    "root": "حرج",
+    "root_buckwalter": "Hrj",
+    "quran_frequency": 15
+  },
+  {
     "root": "حرر",
     "root_buckwalter": "Hrr",
+    "quran_frequency": 15
+  },
+  {
+    "root": "ركب",
+    "root_buckwalter": "rkb",
+    "quran_frequency": 15
+  },
+  {
+    "root": "سوم",
+    "root_buckwalter": "swm",
     "quran_frequency": 15
   },
   {
@@ -505,8 +2335,38 @@
     "quran_frequency": 15
   },
   {
+    "root": "مسح",
+    "root_buckwalter": "msH",
+    "quran_frequency": 15
+  },
+  {
+    "root": "مطر",
+    "root_buckwalter": "mTr",
+    "quran_frequency": 15
+  },
+  {
     "root": "ثوي",
     "root_buckwalter": "thwy",
+    "quran_frequency": 14
+  },
+  {
+    "root": "حرث",
+    "root_buckwalter": "Hrth",
+    "quran_frequency": 14
+  },
+  {
+    "root": "رجم",
+    "root_buckwalter": "rjm",
+    "quran_frequency": 14
+  },
+  {
+    "root": "رسو",
+    "root_buckwalter": "rsw",
+    "quran_frequency": 14
+  },
+  {
+    "root": "زرع",
+    "root_buckwalter": "zrE",
     "quran_frequency": 14
   },
   {
@@ -515,8 +2375,73 @@
     "quran_frequency": 14
   },
   {
+    "root": "صوم",
+    "root_buckwalter": "Swm",
+    "quran_frequency": 14
+  },
+  {
+    "root": "عشو",
+    "root_buckwalter": "Eshw",
+    "quran_frequency": 14
+  },
+  {
+    "root": "عطو",
+    "root_buckwalter": "ETw",
+    "quran_frequency": 14
+  },
+  {
+    "root": "فقر",
+    "root_buckwalter": "fqr",
+    "quran_frequency": 14
+  },
+  {
+    "root": "لوم",
+    "root_buckwalter": "lwm",
+    "quran_frequency": 14
+  },
+  {
+    "root": "وصف",
+    "root_buckwalter": "wSf",
+    "quran_frequency": 14
+  },
+  {
+    "root": "ولج",
+    "root_buckwalter": "wlj",
+    "quran_frequency": 14
+  },
+  {
     "root": "أبي",
     "root_buckwalter": "Aby",
+    "quran_frequency": 13
+  },
+  {
+    "root": "بغت",
+    "root_buckwalter": "bgt",
+    "quran_frequency": 13
+  },
+  {
+    "root": "جلد",
+    "root_buckwalter": "jld",
+    "quran_frequency": 13
+  },
+  {
+    "root": "جور",
+    "root_buckwalter": "jwr",
+    "quran_frequency": 13
+  },
+  {
+    "root": "حلف",
+    "root_buckwalter": "Hlf",
+    "quran_frequency": 13
+  },
+  {
+    "root": "حور",
+    "root_buckwalter": "Hwr",
+    "quran_frequency": 13
+  },
+  {
+    "root": "خزن",
+    "root_buckwalter": "khzn",
     "quran_frequency": 13
   },
   {
@@ -530,8 +2455,48 @@
     "quran_frequency": 13
   },
   {
+    "root": "ركع",
+    "root_buckwalter": "rkE",
+    "quran_frequency": 13
+  },
+  {
+    "root": "شهو",
+    "root_buckwalter": "shhw",
+    "quran_frequency": 13
+  },
+  {
+    "root": "صغر",
+    "root_buckwalter": "Sgr",
+    "quran_frequency": 13
+  },
+  {
+    "root": "صيح",
+    "root_buckwalter": "SyH",
+    "quran_frequency": 13
+  },
+  {
+    "root": "ضيق",
+    "root_buckwalter": "Dyq",
+    "quran_frequency": 13
+  },
+  {
     "root": "طمأن",
     "root_buckwalter": "TmAn",
+    "quran_frequency": 13
+  },
+  {
+    "root": "عصم",
+    "root_buckwalter": "ESm",
+    "quran_frequency": 13
+  },
+  {
+    "root": "غلظ",
+    "root_buckwalter": "glzh",
+    "quran_frequency": 13
+  },
+  {
+    "root": "غلم",
+    "root_buckwalter": "glm",
     "quran_frequency": 13
   },
   {
@@ -540,13 +2505,163 @@
     "quran_frequency": 13
   },
   {
+    "root": "فوه",
+    "root_buckwalter": "fwh",
+    "quran_frequency": 13
+  },
+  {
+    "root": "قرض",
+    "root_buckwalter": "qrD",
+    "quran_frequency": 13
+  },
+  {
+    "root": "قنت",
+    "root_buckwalter": "qnt",
+    "quran_frequency": 13
+  },
+  {
+    "root": "نجم",
+    "root_buckwalter": "njm",
+    "quran_frequency": 13
+  },
+  {
+    "root": "نصح",
+    "root_buckwalter": "nSH",
+    "quran_frequency": 13
+  },
+  {
+    "root": "وقت",
+    "root_buckwalter": "wqt",
+    "quran_frequency": 13
+  },
+  {
     "root": "يأس",
     "root_buckwalter": "yAs",
     "quran_frequency": 13
   },
   {
+    "root": "بخل",
+    "root_buckwalter": "bkhl",
+    "quran_frequency": 12
+  },
+  {
+    "root": "بكر",
+    "root_buckwalter": "bkr",
+    "quran_frequency": 12
+  },
+  {
+    "root": "بيض",
+    "root_buckwalter": "byD",
+    "quran_frequency": 12
+  },
+  {
+    "root": "جبي",
+    "root_buckwalter": "jby",
+    "quran_frequency": 12
+  },
+  {
+    "root": "جحد",
+    "root_buckwalter": "jHd",
+    "quran_frequency": 12
+  },
+  {
+    "root": "حسر",
+    "root_buckwalter": "Hsr",
+    "quran_frequency": 12
+  },
+  {
+    "root": "حنف",
+    "root_buckwalter": "Hnf",
+    "quran_frequency": 12
+  },
+  {
     "root": "خرر",
     "root_buckwalter": "khrr",
+    "quran_frequency": 12
+  },
+  {
+    "root": "خطب",
+    "root_buckwalter": "khTb",
+    "quran_frequency": 12
+  },
+  {
+    "root": "خوض",
+    "root_buckwalter": "khwD",
+    "quran_frequency": 12
+  },
+  {
+    "root": "درك",
+    "root_buckwalter": "drk",
+    "quran_frequency": 12
+  },
+  {
+    "root": "رهب",
+    "root_buckwalter": "rhb",
+    "quran_frequency": 12
+  },
+  {
+    "root": "سجن",
+    "root_buckwalter": "sjn",
+    "quran_frequency": 12
+  },
+  {
+    "root": "سفر",
+    "root_buckwalter": "sfr",
+    "quran_frequency": 12
+  },
+  {
+    "root": "سلك",
+    "root_buckwalter": "slk",
+    "quran_frequency": 12
+  },
+  {
+    "root": "شبه",
+    "root_buckwalter": "shbh",
+    "quran_frequency": 12
+  },
+  {
+    "root": "شقو",
+    "root_buckwalter": "shqw",
+    "quran_frequency": 12
+  },
+  {
+    "root": "شمل",
+    "root_buckwalter": "shml",
+    "quran_frequency": 12
+  },
+  {
+    "root": "شيع",
+    "root_buckwalter": "shyE",
+    "quran_frequency": 12
+  },
+  {
+    "root": "طمع",
+    "root_buckwalter": "TmE",
+    "quran_frequency": 12
+  },
+  {
+    "root": "طين",
+    "root_buckwalter": "Tyn",
+    "quran_frequency": 12
+  },
+  {
+    "root": "عذر",
+    "root_buckwalter": "Edhr",
+    "quran_frequency": 12
+  },
+  {
+    "root": "عسر",
+    "root_buckwalter": "Esr",
+    "quran_frequency": 12
+  },
+  {
+    "root": "عصو",
+    "root_buckwalter": "ESw",
+    "quran_frequency": 12
+  },
+  {
+    "root": "عون",
+    "root_buckwalter": "Ewn",
     "quran_frequency": 12
   },
   {
@@ -555,13 +2670,68 @@
     "quran_frequency": 12
   },
   {
+    "root": "لحم",
+    "root_buckwalter": "lHm",
+    "quran_frequency": 12
+  },
+  {
+    "root": "نبذ",
+    "root_buckwalter": "nbdh",
+    "quran_frequency": 12
+  },
+  {
+    "root": "نطف",
+    "root_buckwalter": "nTf",
+    "quran_frequency": 12
+  },
+  {
+    "root": "نطق",
+    "root_buckwalter": "nTq",
+    "quran_frequency": 12
+  },
+  {
+    "root": "نيل",
+    "root_buckwalter": "nyl",
+    "quran_frequency": 12
+  },
+  {
     "root": "ودي",
     "root_buckwalter": "wdy",
     "quran_frequency": 12
   },
   {
+    "root": "وصل",
+    "root_buckwalter": "wSl",
+    "quran_frequency": 12
+  },
+  {
+    "root": "أيد",
+    "root_buckwalter": "Ayd",
+    "quran_frequency": 11
+  },
+  {
+    "root": "جمل",
+    "root_buckwalter": "jml",
+    "quran_frequency": 11
+  },
+  {
+    "root": "حرب",
+    "root_buckwalter": "Hrb",
+    "quran_frequency": 11
+  },
+  {
     "root": "حصي",
     "root_buckwalter": "HSy",
+    "quran_frequency": 11
+  },
+  {
+    "root": "رضع",
+    "root_buckwalter": "rDE",
+    "quran_frequency": 11
+  },
+  {
+    "root": "زبر",
+    "root_buckwalter": "zbr",
     "quran_frequency": 11
   },
   {
@@ -570,8 +2740,58 @@
     "quran_frequency": 11
   },
   {
+    "root": "سحب",
+    "root_buckwalter": "sHb",
+    "quran_frequency": 11
+  },
+  {
+    "root": "سفه",
+    "root_buckwalter": "sfh",
+    "quran_frequency": 11
+  },
+  {
+    "root": "شفق",
+    "root_buckwalter": "shfq",
+    "quran_frequency": 11
+  },
+  {
+    "root": "صعق",
+    "root_buckwalter": "SEq",
+    "quran_frequency": 11
+  },
+  {
+    "root": "طبع",
+    "root_buckwalter": "TbE",
+    "quran_frequency": 11
+  },
+  {
+    "root": "طرف",
+    "root_buckwalter": "Trf",
+    "quran_frequency": 11
+  },
+  {
+    "root": "طرق",
+    "root_buckwalter": "Trq",
+    "quran_frequency": 11
+  },
+  {
+    "root": "طور",
+    "root_buckwalter": "Twr",
+    "quran_frequency": 11
+  },
+  {
+    "root": "عنب",
+    "root_buckwalter": "Enb",
+    "quran_frequency": 11
+  },
+  {
     "root": "غمم",
     "root_buckwalter": "gmm",
+    "quran_frequency": 11
+  },
+  {
+    "root": "غيظ",
+    "root_buckwalter": "gyzh",
     "quran_frequency": 11
   },
   {
@@ -585,9 +2805,49 @@
     "quran_frequency": 11
   },
   {
+    "root": "قصر",
+    "root_buckwalter": "qSr",
+    "quran_frequency": 11
+  },
+  {
+    "root": "لغو",
+    "root_buckwalter": "lgw",
+    "quran_frequency": 11
+  },
+  {
+    "root": "ورد",
+    "root_buckwalter": "wrd",
+    "quran_frequency": 11
+  },
+  {
+    "root": "وقد",
+    "root_buckwalter": "wqd",
+    "quran_frequency": 11
+  },
+  {
+    "root": "وكأ",
+    "root_buckwalter": "wkA",
+    "quran_frequency": 11
+  },
+  {
     "root": "يمم",
     "root_buckwalter": "ymm",
     "quran_frequency": 11
+  },
+  {
+    "root": "أصل",
+    "root_buckwalter": "ASl",
+    "quran_frequency": 10
+  },
+  {
+    "root": "بطش",
+    "root_buckwalter": "bTsh",
+    "quran_frequency": 10
+  },
+  {
+    "root": "جبر",
+    "root_buckwalter": "jbr",
+    "quran_frequency": 10
   },
   {
     "root": "جدد",
@@ -595,8 +2855,103 @@
     "quran_frequency": 10
   },
   {
+    "root": "حيق",
+    "root_buckwalter": "Hyq",
+    "quran_frequency": 10
+  },
+  {
+    "root": "دفع",
+    "root_buckwalter": "dfE",
+    "quran_frequency": 10
+  },
+  {
+    "root": "دمر",
+    "root_buckwalter": "dmr",
+    "quran_frequency": 10
+  },
+  {
+    "root": "دمو",
+    "root_buckwalter": "dmw",
+    "quran_frequency": 10
+  },
+  {
+    "root": "رجز",
+    "root_buckwalter": "rjz",
+    "quran_frequency": 10
+  },
+  {
+    "root": "رجس",
+    "root_buckwalter": "rjs",
+    "quran_frequency": 10
+  },
+  {
     "root": "رعي",
     "root_buckwalter": "rEy",
+    "quran_frequency": 10
+  },
+  {
+    "root": "رهق",
+    "root_buckwalter": "rhq",
+    "quran_frequency": 10
+  },
+  {
+    "root": "زلف",
+    "root_buckwalter": "zlf",
+    "quran_frequency": 10
+  },
+  {
+    "root": "زيل",
+    "root_buckwalter": "zyl",
+    "quran_frequency": 10
+  },
+  {
+    "root": "سفل",
+    "root_buckwalter": "sfl",
+    "quran_frequency": 10
+  },
+  {
+    "root": "سود",
+    "root_buckwalter": "swd",
+    "quran_frequency": 10
+  },
+  {
+    "root": "ضحك",
+    "root_buckwalter": "DHk",
+    "quran_frequency": 10
+  },
+  {
+    "root": "ضيع",
+    "root_buckwalter": "DyE",
+    "quran_frequency": 10
+  },
+  {
+    "root": "طول",
+    "root_buckwalter": "Twl",
+    "quran_frequency": 10
+  },
+  {
+    "root": "عتو",
+    "root_buckwalter": "Etw",
+    "quran_frequency": 10
+  },
+  {
+    "root": "عزل",
+    "root_buckwalter": "Ezl",
+    "quran_frequency": 10
+  },
+  {
+    "root": "قدس",
+    "root_buckwalter": "qds",
+    "quran_frequency": 10
+  },
+  {
+    "root": "قهر",
+    "root_buckwalter": "qhr",
+    "quran_frequency": 10
+  },
+  {
+    "root": "كفل",
+    "root_buckwalter": "kfl",
     "quran_frequency": 10
   },
   {
@@ -610,13 +2965,53 @@
     "quran_frequency": 10
   },
   {
+    "root": "نقص",
+    "root_buckwalter": "nqS",
+    "quran_frequency": 10
+  },
+  {
     "root": "بثث",
     "root_buckwalter": "bthth",
     "quran_frequency": 9
   },
   {
+    "root": "برز",
+    "root_buckwalter": "brz",
+    "quran_frequency": 9
+  },
+  {
+    "root": "بقر",
+    "root_buckwalter": "bqr",
+    "quran_frequency": 9
+  },
+  {
+    "root": "تجر",
+    "root_buckwalter": "tjr",
+    "quran_frequency": 9
+  },
+  {
+    "root": "حرق",
+    "root_buckwalter": "Hrq",
+    "quran_frequency": 9
+  },
+  {
     "root": "حلي",
     "root_buckwalter": "Hly",
+    "quran_frequency": 9
+  },
+  {
+    "root": "خيل",
+    "root_buckwalter": "khyl",
+    "quran_frequency": 9
+  },
+  {
+    "root": "دوم",
+    "root_buckwalter": "dwm",
+    "quran_frequency": 9
+  },
+  {
+    "root": "ذبح",
+    "root_buckwalter": "dhbH",
     "quran_frequency": 9
   },
   {
@@ -630,8 +3025,108 @@
     "quran_frequency": 9
   },
   {
+    "root": "زيغ",
+    "root_buckwalter": "zyg",
+    "quran_frequency": 9
+  },
+  {
+    "root": "سبت",
+    "root_buckwalter": "sbt",
+    "quran_frequency": 9
+  },
+  {
+    "root": "سرق",
+    "root_buckwalter": "srq",
+    "quran_frequency": 9
+  },
+  {
+    "root": "صحف",
+    "root_buckwalter": "SHf",
+    "quran_frequency": 9
+  },
+  {
+    "root": "صعد",
+    "root_buckwalter": "SEd",
+    "quran_frequency": 9
+  },
+  {
+    "root": "عبر",
+    "root_buckwalter": "Ebr",
+    "quran_frequency": 9
+  },
+  {
+    "root": "عرج",
+    "root_buckwalter": "Erj",
+    "quran_frequency": 9
+  },
+  {
+    "root": "عزم",
+    "root_buckwalter": "Ezm",
+    "quran_frequency": 9
+  },
+  {
+    "root": "عكف",
+    "root_buckwalter": "Ekf",
+    "quran_frequency": 9
+  },
+  {
+    "root": "عنق",
+    "root_buckwalter": "Enq",
+    "quran_frequency": 9
+  },
+  {
+    "root": "عوج",
+    "root_buckwalter": "Ewj",
+    "quran_frequency": 9
+  },
+  {
+    "root": "عوم",
+    "root_buckwalter": "Ewm",
+    "quran_frequency": 9
+  },
+  {
+    "root": "غنم",
+    "root_buckwalter": "gnm",
+    "quran_frequency": 9
+  },
+  {
+    "root": "فرج",
+    "root_buckwalter": "frj",
+    "quran_frequency": 9
+  },
+  {
     "root": "فضض",
     "root_buckwalter": "fDD",
+    "quran_frequency": 9
+  },
+  {
+    "root": "فيض",
+    "root_buckwalter": "fyD",
+    "quran_frequency": 9
+  },
+  {
+    "root": "قبض",
+    "root_buckwalter": "qbD",
+    "quran_frequency": 9
+  },
+  {
+    "root": "قذف",
+    "root_buckwalter": "qdhf",
+    "quran_frequency": 9
+  },
+  {
+    "root": "كنز",
+    "root_buckwalter": "knz",
+    "quran_frequency": 9
+  },
+  {
+    "root": "لون",
+    "root_buckwalter": "lwn",
+    "quran_frequency": 9
+  },
+  {
+    "root": "نقض",
+    "root_buckwalter": "nqD",
     "quran_frequency": 9
   },
   {
@@ -645,8 +3140,83 @@
     "quran_frequency": 9
   },
   {
+    "root": "وقر",
+    "root_buckwalter": "wqr",
+    "quran_frequency": 9
+  },
+  {
+    "root": "وهن",
+    "root_buckwalter": "whn",
+    "quran_frequency": 9
+  },
+  {
+    "root": "أني",
+    "root_buckwalter": "Any",
+    "quran_frequency": 8
+  },
+  {
+    "root": "أون",
+    "root_buckwalter": "Awn",
+    "quran_frequency": 8
+  },
+  {
+    "root": "برهن",
+    "root_buckwalter": "brhn",
+    "quran_frequency": 8
+  },
+  {
+    "root": "بهت",
+    "root_buckwalter": "bht",
+    "quran_frequency": 8
+  },
+  {
+    "root": "ترف",
+    "root_buckwalter": "trf",
+    "quran_frequency": 8
+  },
+  {
+    "root": "حجب",
+    "root_buckwalter": "Hjb",
+    "quran_frequency": 8
+  },
+  {
+    "root": "ختم",
+    "root_buckwalter": "khtm",
+    "quran_frequency": 8
+  },
+  {
+    "root": "خسف",
+    "root_buckwalter": "khsf",
+    "quran_frequency": 8
+  },
+  {
+    "root": "خضر",
+    "root_buckwalter": "khDr",
+    "quran_frequency": 8
+  },
+  {
+    "root": "خمس",
+    "root_buckwalter": "khms",
+    "quran_frequency": 8
+  },
+  {
+    "root": "خول",
+    "root_buckwalter": "khwl",
+    "quran_frequency": 8
+  },
+  {
     "root": "دلل",
     "root_buckwalter": "dll",
+    "quran_frequency": 8
+  },
+  {
+    "root": "رجف",
+    "root_buckwalter": "rjf",
+    "quran_frequency": 8
+  },
+  {
+    "root": "رغب",
+    "root_buckwalter": "rgb",
     "quran_frequency": 8
   },
   {
@@ -660,8 +3230,123 @@
     "quran_frequency": 8
   },
   {
+    "root": "سقط",
+    "root_buckwalter": "sqT",
+    "quran_frequency": 8
+  },
+  {
+    "root": "سلف",
+    "root_buckwalter": "slf",
+    "quran_frequency": 8
+  },
+  {
+    "root": "صفح",
+    "root_buckwalter": "SfH",
+    "quran_frequency": 8
+  },
+  {
+    "root": "صلب",
+    "root_buckwalter": "Slb",
+    "quran_frequency": 8
+  },
+  {
+    "root": "صوت",
+    "root_buckwalter": "Swt",
+    "quran_frequency": 8
+  },
+  {
+    "root": "ضرع",
+    "root_buckwalter": "DrE",
+    "quran_frequency": 8
+  },
+  {
+    "root": "عقر",
+    "root_buckwalter": "Eqr",
+    "quran_frequency": 8
+  },
+  {
+    "root": "عيش",
+    "root_buckwalter": "Eysh",
+    "quran_frequency": 8
+  },
+  {
+    "root": "غبر",
+    "root_buckwalter": "gbr",
+    "quran_frequency": 8
+  },
+  {
+    "root": "فرط",
+    "root_buckwalter": "frT",
+    "quran_frequency": 8
+  },
+  {
+    "root": "قبر",
+    "root_buckwalter": "qbr",
+    "quran_frequency": 8
+  },
+  {
+    "root": "كلف",
+    "root_buckwalter": "klf",
+    "quran_frequency": 8
+  },
+  {
+    "root": "لطف",
+    "root_buckwalter": "lTf",
+    "quran_frequency": 8
+  },
+  {
+    "root": "هبط",
+    "root_buckwalter": "hbT",
+    "quran_frequency": 8
+  },
+  {
+    "root": "وبل",
+    "root_buckwalter": "wbl",
+    "quran_frequency": 8
+  },
+  {
+    "root": "أسو",
+    "root_buckwalter": "Asw",
+    "quran_frequency": 7
+  },
+  {
+    "root": "بخس",
+    "root_buckwalter": "bkhs",
+    "quran_frequency": 7
+  },
+  {
+    "root": "برج",
+    "root_buckwalter": "brj",
+    "quran_frequency": 7
+  },
+  {
+    "root": "برق",
+    "root_buckwalter": "brq",
+    "quran_frequency": 7
+  },
+  {
+    "root": "بضع",
+    "root_buckwalter": "bDE",
+    "quran_frequency": 7
+  },
+  {
+    "root": "بعل",
+    "root_buckwalter": "bEl",
+    "quran_frequency": 7
+  },
+  {
     "root": "بكي",
     "root_buckwalter": "bky",
+    "quran_frequency": 7
+  },
+  {
+    "root": "تسع",
+    "root_buckwalter": "tsE",
+    "quran_frequency": 7
+  },
+  {
+    "root": "حبل",
+    "root_buckwalter": "Hbl",
     "quran_frequency": 7
   },
   {
@@ -670,13 +3355,113 @@
     "quran_frequency": 7
   },
   {
+    "root": "خطف",
+    "root_buckwalter": "khTf",
+    "quran_frequency": 7
+  },
+  {
+    "root": "خمر",
+    "root_buckwalter": "khmr",
+    "quran_frequency": 7
+  },
+  {
     "root": "دكك",
     "root_buckwalter": "dkk",
     "quran_frequency": 7
   },
   {
+    "root": "زيت",
+    "root_buckwalter": "zyt",
+    "quran_frequency": 7
+  },
+  {
+    "root": "سرح",
+    "root_buckwalter": "srH",
+    "quran_frequency": 7
+  },
+  {
+    "root": "سكر",
+    "root_buckwalter": "skr",
+    "quran_frequency": 7
+  },
+  {
+    "root": "ضحو",
+    "root_buckwalter": "DHw",
+    "quran_frequency": 7
+  },
+  {
+    "root": "عصف",
+    "root_buckwalter": "ESf",
+    "quran_frequency": 7
+  },
+  {
+    "root": "عقد",
+    "root_buckwalter": "Eqd",
+    "quran_frequency": 7
+  },
+  {
+    "root": "علق",
+    "root_buckwalter": "Elq",
+    "quran_frequency": 7
+  },
+  {
+    "root": "عمد",
+    "root_buckwalter": "Emd",
+    "quran_frequency": 7
+  },
+  {
+    "root": "عمه",
+    "root_buckwalter": "Emh",
+    "quran_frequency": 7
+  },
+  {
+    "root": "غرف",
+    "root_buckwalter": "grf",
+    "quran_frequency": 7
+  },
+  {
+    "root": "فيأ",
+    "root_buckwalter": "fyA",
+    "quran_frequency": 7
+  },
+  {
     "root": "قسو",
     "root_buckwalter": "qsw",
+    "quran_frequency": 7
+  },
+  {
+    "root": "مكث",
+    "root_buckwalter": "mkth",
+    "quran_frequency": 7
+  },
+  {
+    "root": "موج",
+    "root_buckwalter": "mwj",
+    "quran_frequency": 7
+  },
+  {
+    "root": "ندم",
+    "root_buckwalter": "ndm",
+    "quran_frequency": 7
+  },
+  {
+    "root": "نسك",
+    "root_buckwalter": "nsk",
+    "quran_frequency": 7
+  },
+  {
+    "root": "نصف",
+    "root_buckwalter": "nSf",
+    "quran_frequency": 7
+  },
+  {
+    "root": "نكث",
+    "root_buckwalter": "nkth",
+    "quran_frequency": 7
+  },
+  {
+    "root": "نوق",
+    "root_buckwalter": "nwq",
     "quran_frequency": 7
   },
   {
@@ -690,13 +3475,78 @@
     "quran_frequency": 6
   },
   {
+    "root": "أسر",
+    "root_buckwalter": "Asr",
+    "quran_frequency": 6
+  },
+  {
+    "root": "بكم",
+    "root_buckwalter": "bkm",
+    "quran_frequency": 6
+  },
+  {
+    "root": "تبر",
+    "root_buckwalter": "tbr",
+    "quran_frequency": 6
+  },
+  {
+    "root": "ثقف",
+    "root_buckwalter": "thqf",
+    "quran_frequency": 6
+  },
+  {
+    "root": "حبر",
+    "root_buckwalter": "Hbr",
+    "quran_frequency": 6
+  },
+  {
+    "root": "حرف",
+    "root_buckwalter": "Hrf",
+    "quran_frequency": 6
+  },
+  {
     "root": "حسس",
     "root_buckwalter": "Hss",
     "quran_frequency": 6
   },
   {
+    "root": "حصد",
+    "root_buckwalter": "HSd",
+    "quran_frequency": 6
+  },
+  {
+    "root": "حصر",
+    "root_buckwalter": "HSr",
+    "quran_frequency": 6
+  },
+  {
+    "root": "حطم",
+    "root_buckwalter": "HTm",
+    "quran_frequency": 6
+  },
+  {
+    "root": "حمر",
+    "root_buckwalter": "Hmr",
+    "quran_frequency": 6
+  },
+  {
     "root": "حمي",
     "root_buckwalter": "Hmy",
+    "quran_frequency": 6
+  },
+  {
+    "root": "خلط",
+    "root_buckwalter": "khlT",
+    "quran_frequency": 6
+  },
+  {
+    "root": "دأب",
+    "root_buckwalter": "dAb",
+    "quran_frequency": 6
+  },
+  {
+    "root": "درس",
+    "root_buckwalter": "drs",
     "quran_frequency": 6
   },
   {
@@ -710,8 +3560,23 @@
     "quran_frequency": 6
   },
   {
+    "root": "رصد",
+    "root_buckwalter": "rSd",
+    "quran_frequency": 6
+  },
+  {
+    "root": "زجر",
+    "root_buckwalter": "zjr",
+    "quran_frequency": 6
+  },
+  {
     "root": "زلزل",
     "root_buckwalter": "zlzl",
+    "quran_frequency": 6
+  },
+  {
+    "root": "زور",
+    "root_buckwalter": "zwr",
     "quran_frequency": 6
   },
   {
@@ -730,6 +3595,61 @@
     "quran_frequency": 6
   },
   {
+    "root": "صيد",
+    "root_buckwalter": "Syd",
+    "quran_frequency": 6
+  },
+  {
+    "root": "ضوأ",
+    "root_buckwalter": "DwA",
+    "quran_frequency": 6
+  },
+  {
+    "root": "ضيف",
+    "root_buckwalter": "Dyf",
+    "quran_frequency": 6
+  },
+  {
+    "root": "غرم",
+    "root_buckwalter": "grm",
+    "quran_frequency": 6
+  },
+  {
+    "root": "فخر",
+    "root_buckwalter": "fkhr",
+    "quran_frequency": 6
+  },
+  {
+    "root": "فرش",
+    "root_buckwalter": "frsh",
+    "quran_frequency": 6
+  },
+  {
+    "root": "فرغ",
+    "root_buckwalter": "frg",
+    "quran_frequency": 6
+  },
+  {
+    "root": "فزع",
+    "root_buckwalter": "fzE",
+    "quran_frequency": 6
+  },
+  {
+    "root": "قصد",
+    "root_buckwalter": "qSd",
+    "quran_frequency": 6
+  },
+  {
+    "root": "قمص",
+    "root_buckwalter": "qmS",
+    "quran_frequency": 6
+  },
+  {
+    "root": "قنط",
+    "root_buckwalter": "qnT",
+    "quran_frequency": 6
+  },
+  {
     "root": "كأس",
     "root_buckwalter": "kAs",
     "quran_frequency": 6
@@ -737,6 +3657,16 @@
   {
     "root": "كرر",
     "root_buckwalter": "krr",
+    "quran_frequency": 6
+  },
+  {
+    "root": "كظم",
+    "root_buckwalter": "kzhm",
+    "quran_frequency": 6
+  },
+  {
+    "root": "كلب",
+    "root_buckwalter": "klb",
     "quran_frequency": 6
   },
   {
@@ -750,6 +3680,41 @@
     "quran_frequency": 6
   },
   {
+    "root": "لحد",
+    "root_buckwalter": "lHd",
+    "quran_frequency": 6
+  },
+  {
+    "root": "لحق",
+    "root_buckwalter": "lHq",
+    "quran_frequency": 6
+  },
+  {
+    "root": "لوح",
+    "root_buckwalter": "lwH",
+    "quran_frequency": 6
+  },
+  {
+    "root": "مرج",
+    "root_buckwalter": "mrj",
+    "quran_frequency": 6
+  },
+  {
+    "root": "مقت",
+    "root_buckwalter": "mqt",
+    "quran_frequency": 6
+  },
+  {
+    "root": "مهل",
+    "root_buckwalter": "mhl",
+    "quran_frequency": 6
+  },
+  {
+    "root": "ميل",
+    "root_buckwalter": "myl",
+    "quran_frequency": 6
+  },
+  {
     "root": "ندد",
     "root_buckwalter": "ndd",
     "quran_frequency": 6
@@ -760,13 +3725,178 @@
     "quran_frequency": 6
   },
   {
+    "root": "وطأ",
+    "root_buckwalter": "wTA",
+    "quran_frequency": 6
+  },
+  {
+    "root": "أرك",
+    "root_buckwalter": "Ark",
+    "quran_frequency": 5
+  },
+  {
+    "root": "أسف",
+    "root_buckwalter": "Asf",
+    "quran_frequency": 5
+  },
+  {
+    "root": "برد",
+    "root_buckwalter": "brd",
+    "quran_frequency": 5
+  },
+  {
+    "root": "بغض",
+    "root_buckwalter": "bgD",
+    "quran_frequency": 5
+  },
+  {
+    "root": "بلس",
+    "root_buckwalter": "bls",
+    "quran_frequency": 5
+  },
+  {
+    "root": "بور",
+    "root_buckwalter": "bwr",
+    "quran_frequency": 5
+  },
+  {
+    "root": "ثبر",
+    "root_buckwalter": "thbr",
+    "quran_frequency": 5
+  },
+  {
+    "root": "ثور",
+    "root_buckwalter": "thwr",
+    "quran_frequency": 5
+  },
+  {
+    "root": "جثم",
+    "root_buckwalter": "jthm",
+    "quran_frequency": 5
+  },
+  {
+    "root": "جلو",
+    "root_buckwalter": "jlw",
+    "quran_frequency": 5
+  },
+  {
+    "root": "جوز",
+    "root_buckwalter": "jwz",
+    "quran_frequency": 5
+  },
+  {
+    "root": "جوع",
+    "root_buckwalter": "jwE",
+    "quran_frequency": 5
+  },
+  {
+    "root": "حرص",
+    "root_buckwalter": "HrS",
+    "quran_frequency": 5
+  },
+  {
+    "root": "حسد",
+    "root_buckwalter": "Hsd",
+    "quran_frequency": 5
+  },
+  {
+    "root": "حصب",
+    "root_buckwalter": "HSb",
+    "quran_frequency": 5
+  },
+  {
+    "root": "حوت",
+    "root_buckwalter": "Hwt",
+    "quran_frequency": 5
+  },
+  {
+    "root": "حيص",
+    "root_buckwalter": "HyS",
+    "quran_frequency": 5
+  },
+  {
+    "root": "خدع",
+    "root_buckwalter": "khdE",
+    "quran_frequency": 5
+  },
+  {
+    "root": "خرص",
+    "root_buckwalter": "khrS",
+    "quran_frequency": 5
+  },
+  {
+    "root": "خطو",
+    "root_buckwalter": "khTw",
+    "quran_frequency": 5
+  },
+  {
+    "root": "خنزر",
+    "root_buckwalter": "khnzr",
+    "quran_frequency": 5
+  },
+  {
     "root": "خوي",
     "root_buckwalter": "khwy",
     "quran_frequency": 5
   },
   {
+    "root": "خيب",
+    "root_buckwalter": "khyb",
+    "quran_frequency": 5
+  },
+  {
+    "root": "درأ",
+    "root_buckwalter": "drA",
+    "quran_frequency": 5
+  },
+  {
+    "root": "دهن",
+    "root_buckwalter": "dhn",
+    "quran_frequency": 5
+  },
+  {
+    "root": "ذرع",
+    "root_buckwalter": "dhrE",
+    "quran_frequency": 5
+  },
+  {
     "root": "ذمم",
     "root_buckwalter": "dhmm",
+    "quran_frequency": 5
+  },
+  {
+    "root": "ربط",
+    "root_buckwalter": "rbT",
+    "quran_frequency": 5
+  },
+  {
+    "root": "رعب",
+    "root_buckwalter": "rEb",
+    "quran_frequency": 5
+  },
+  {
+    "root": "رفق",
+    "root_buckwalter": "rfq",
+    "quran_frequency": 5
+  },
+  {
+    "root": "زهق",
+    "root_buckwalter": "zhq",
+    "quran_frequency": 5
+  },
+  {
+    "root": "سبط",
+    "root_buckwalter": "sbT",
+    "quran_frequency": 5
+  },
+  {
+    "root": "سدس",
+    "root_buckwalter": "sds",
+    "quran_frequency": 5
+  },
+  {
+    "root": "سنبل",
+    "root_buckwalter": "snbl",
     "quran_frequency": 5
   },
   {
@@ -780,8 +3910,63 @@
     "quran_frequency": 5
   },
   {
+    "root": "شرح",
+    "root_buckwalter": "shrH",
+    "quran_frequency": 5
+  },
+  {
+    "root": "شرع",
+    "root_buckwalter": "shrE",
+    "quran_frequency": 5
+  },
+  {
+    "root": "شطر",
+    "root_buckwalter": "shTr",
+    "quran_frequency": 5
+  },
+  {
+    "root": "شهب",
+    "root_buckwalter": "shhb",
+    "quran_frequency": 5
+  },
+  {
     "root": "صبب",
     "root_buckwalter": "Sbb",
+    "quran_frequency": 5
+  },
+  {
+    "root": "صدع",
+    "root_buckwalter": "SdE",
+    "quran_frequency": 5
+  },
+  {
+    "root": "صدف",
+    "root_buckwalter": "Sdf",
+    "quran_frequency": 5
+  },
+  {
+    "root": "صرخ",
+    "root_buckwalter": "Srkh",
+    "quran_frequency": 5
+  },
+  {
+    "root": "صفر",
+    "root_buckwalter": "Sfr",
+    "quran_frequency": 5
+  },
+  {
+    "root": "صنم",
+    "root_buckwalter": "Snm",
+    "quran_frequency": 5
+  },
+  {
+    "root": "طرد",
+    "root_buckwalter": "Trd",
+    "quran_frequency": 5
+  },
+  {
+    "root": "طمس",
+    "root_buckwalter": "Tms",
     "quran_frequency": 5
   },
   {
@@ -790,8 +3975,58 @@
     "quran_frequency": 5
   },
   {
+    "root": "عتب",
+    "root_buckwalter": "Etb",
+    "quran_frequency": 5
+  },
+  {
+    "root": "عثو",
+    "root_buckwalter": "Ethw",
+    "quran_frequency": 5
+  },
+  {
+    "root": "عصب",
+    "root_buckwalter": "ESb",
+    "quran_frequency": 5
+  },
+  {
+    "root": "عصر",
+    "root_buckwalter": "ESr",
+    "quran_frequency": 5
+  },
+  {
     "root": "عمم",
     "root_buckwalter": "Emm",
+    "quran_frequency": 5
+  },
+  {
+    "root": "عنت",
+    "root_buckwalter": "Ent",
+    "quran_frequency": 5
+  },
+  {
+    "root": "غوث",
+    "root_buckwalter": "gwth",
+    "quran_frequency": 5
+  },
+  {
+    "root": "فرد",
+    "root_buckwalter": "frd",
+    "quran_frequency": 5
+  },
+  {
+    "root": "فوت",
+    "root_buckwalter": "fwt",
+    "quran_frequency": 5
+  },
+  {
+    "root": "فوج",
+    "root_buckwalter": "fwj",
+    "quran_frequency": 5
+  },
+  {
+    "root": "قتر",
+    "root_buckwalter": "qtr",
     "quran_frequency": 5
   },
   {
@@ -800,8 +4035,58 @@
     "quran_frequency": 5
   },
   {
+    "root": "قرع",
+    "root_buckwalter": "qrE",
+    "quran_frequency": 5
+  },
+  {
+    "root": "قرف",
+    "root_buckwalter": "qrf",
+    "quran_frequency": 5
+  },
+  {
     "root": "قصو",
     "root_buckwalter": "qSw",
+    "quran_frequency": 5
+  },
+  {
+    "root": "قطر",
+    "root_buckwalter": "qTr",
+    "quran_frequency": 5
+  },
+  {
+    "root": "قفو",
+    "root_buckwalter": "qfw",
+    "quran_frequency": 5
+  },
+  {
+    "root": "كسف",
+    "root_buckwalter": "ksf",
+    "quran_frequency": 5
+  },
+  {
+    "root": "كسو",
+    "root_buckwalter": "ksw",
+    "quran_frequency": 5
+  },
+  {
+    "root": "كمل",
+    "root_buckwalter": "kml",
+    "quran_frequency": 5
+  },
+  {
+    "root": "كوكب",
+    "root_buckwalter": "kwkb",
+    "quran_frequency": 5
+  },
+  {
+    "root": "لزم",
+    "root_buckwalter": "lzm",
+    "quran_frequency": 5
+  },
+  {
+    "root": "لمس",
+    "root_buckwalter": "lms",
     "quran_frequency": 5
   },
   {
@@ -810,8 +4095,53 @@
     "quran_frequency": 5
   },
   {
+    "root": "لين",
+    "root_buckwalter": "lyn",
+    "quran_frequency": 5
+  },
+  {
+    "root": "مرد",
+    "root_buckwalter": "mrd",
+    "quran_frequency": 5
+  },
+  {
+    "root": "مصر",
+    "root_buckwalter": "mSr",
+    "quran_frequency": 5
+  },
+  {
     "root": "مضي",
     "root_buckwalter": "mDy",
+    "quran_frequency": 5
+  },
+  {
+    "root": "ميد",
+    "root_buckwalter": "myd",
+    "quran_frequency": 5
+  },
+  {
+    "root": "نسف",
+    "root_buckwalter": "nsf",
+    "quran_frequency": 5
+  },
+  {
+    "root": "نشز",
+    "root_buckwalter": "nshz",
+    "quran_frequency": 5
+  },
+  {
+    "root": "نفد",
+    "root_buckwalter": "nfd",
+    "quran_frequency": 5
+  },
+  {
+    "root": "نقذ",
+    "root_buckwalter": "nqdh",
+    "quran_frequency": 5
+  },
+  {
+    "root": "نكل",
+    "root_buckwalter": "nkl",
     "quran_frequency": 5
   },
   {
@@ -830,13 +4160,78 @@
     "quran_frequency": 5
   },
   {
+    "root": "وزع",
+    "root_buckwalter": "wzE",
+    "quran_frequency": 5
+  },
+  {
+    "root": "وسط",
+    "root_buckwalter": "wsT",
+    "quran_frequency": 5
+  },
+  {
     "root": "وسوس",
     "root_buckwalter": "wsws",
     "quran_frequency": 5
   },
   {
+    "root": "أفل",
+    "root_buckwalter": "Afl",
+    "quran_frequency": 4
+  },
+  {
+    "root": "أمد",
+    "root_buckwalter": "Amd",
+    "quran_frequency": 4
+  },
+  {
+    "root": "بدع",
+    "root_buckwalter": "bdE",
+    "quran_frequency": 4
+  },
+  {
+    "root": "بول",
+    "root_buckwalter": "bwl",
+    "quran_frequency": 4
+  },
+  {
     "root": "تبب",
     "root_buckwalter": "tbb",
+    "quran_frequency": 4
+  },
+  {
+    "root": "جدر",
+    "root_buckwalter": "jdr",
+    "quran_frequency": 4
+  },
+  {
+    "root": "جرح",
+    "root_buckwalter": "jrH",
+    "quran_frequency": 4
+  },
+  {
+    "root": "جسد",
+    "root_buckwalter": "jsd",
+    "quran_frequency": 4
+  },
+  {
+    "root": "جهز",
+    "root_buckwalter": "jhz",
+    "quran_frequency": 4
+  },
+  {
+    "root": "حمأ",
+    "root_buckwalter": "HmA",
+    "quran_frequency": 4
+  },
+  {
+    "root": "حيض",
+    "root_buckwalter": "HyD",
+    "quran_frequency": 4
+  },
+  {
+    "root": "خرق",
+    "root_buckwalter": "khrq",
     "quran_frequency": 4
   },
   {
@@ -850,8 +4245,53 @@
     "quran_frequency": 4
   },
   {
+    "root": "خفض",
+    "root_buckwalter": "khfD",
+    "quran_frequency": 4
+  },
+  {
+    "root": "دحر",
+    "root_buckwalter": "dHr",
+    "quran_frequency": 4
+  },
+  {
+    "root": "دحض",
+    "root_buckwalter": "dHD",
+    "quran_frequency": 4
+  },
+  {
+    "root": "دخر",
+    "root_buckwalter": "dkhr",
+    "quran_frequency": 4
+  },
+  {
     "root": "درر",
     "root_buckwalter": "drr",
+    "quran_frequency": 4
+  },
+  {
+    "root": "دلو",
+    "root_buckwalter": "dlw",
+    "quran_frequency": 4
+  },
+  {
+    "root": "رتل",
+    "root_buckwalter": "rtl",
+    "quran_frequency": 4
+  },
+  {
+    "root": "رحب",
+    "root_buckwalter": "rHb",
+    "quran_frequency": 4
+  },
+  {
+    "root": "رحل",
+    "root_buckwalter": "rHl",
+    "quran_frequency": 4
+  },
+  {
+    "root": "رذل",
+    "root_buckwalter": "rdhl",
     "quran_frequency": 4
   },
   {
@@ -860,8 +4300,78 @@
     "quran_frequency": 4
   },
   {
+    "root": "ركن",
+    "root_buckwalter": "rkn",
+    "quran_frequency": 4
+  },
+  {
+    "root": "زخرف",
+    "root_buckwalter": "zkhrf",
+    "quran_frequency": 4
+  },
+  {
     "root": "زلل",
     "root_buckwalter": "zll",
+    "quran_frequency": 4
+  },
+  {
+    "root": "زول",
+    "root_buckwalter": "zwl",
+    "quran_frequency": 4
+  },
+  {
+    "root": "سجل",
+    "root_buckwalter": "sjl",
+    "quran_frequency": 4
+  },
+  {
+    "root": "سحت",
+    "root_buckwalter": "sHt",
+    "quran_frequency": 4
+  },
+  {
+    "root": "سخط",
+    "root_buckwalter": "skhT",
+    "quran_frequency": 4
+  },
+  {
+    "root": "سدر",
+    "root_buckwalter": "sdr",
+    "quran_frequency": 4
+  },
+  {
+    "root": "سرب",
+    "root_buckwalter": "srb",
+    "quran_frequency": 4
+  },
+  {
+    "root": "سرج",
+    "root_buckwalter": "srj",
+    "quran_frequency": 4
+  },
+  {
+    "root": "سفح",
+    "root_buckwalter": "sfH",
+    "quran_frequency": 4
+  },
+  {
+    "root": "سفن",
+    "root_buckwalter": "sfn",
+    "quran_frequency": 4
+  },
+  {
+    "root": "سقف",
+    "root_buckwalter": "sqf",
+    "quran_frequency": 4
+  },
+  {
+    "root": "سلح",
+    "root_buckwalter": "slH",
+    "quran_frequency": 4
+  },
+  {
+    "root": "سمر",
+    "root_buckwalter": "smr",
     "quran_frequency": 4
   },
   {
@@ -870,8 +4380,38 @@
     "quran_frequency": 4
   },
   {
+    "root": "سمن",
+    "root_buckwalter": "smn",
+    "quran_frequency": 4
+  },
+  {
+    "root": "سول",
+    "root_buckwalter": "swl",
+    "quran_frequency": 4
+  },
+  {
+    "root": "سيل",
+    "root_buckwalter": "syl",
+    "quran_frequency": 4
+  },
+  {
     "root": "شأن",
     "root_buckwalter": "shAn",
+    "quran_frequency": 4
+  },
+  {
+    "root": "شور",
+    "root_buckwalter": "shwr",
+    "quran_frequency": 4
+  },
+  {
+    "root": "شيخ",
+    "root_buckwalter": "shykh",
+    "quran_frequency": 4
+  },
+  {
+    "root": "صرح",
+    "root_buckwalter": "SrH",
     "quran_frequency": 4
   },
   {
@@ -880,8 +4420,53 @@
     "quran_frequency": 4
   },
   {
+    "root": "طبق",
+    "root_buckwalter": "Tbq",
+    "quran_frequency": 4
+  },
+  {
+    "root": "طفل",
+    "root_buckwalter": "Tfl",
+    "quran_frequency": 4
+  },
+  {
+    "root": "طلب",
+    "root_buckwalter": "Tlb",
+    "quran_frequency": 4
+  },
+  {
+    "root": "طوق",
+    "root_buckwalter": "Twq",
+    "quran_frequency": 4
+  },
+  {
+    "root": "عجم",
+    "root_buckwalter": "Ejm",
+    "quran_frequency": 4
+  },
+  {
     "root": "عفف",
     "root_buckwalter": "Eff",
+    "quran_frequency": 4
+  },
+  {
+    "root": "عقم",
+    "root_buckwalter": "Eqm",
+    "quran_frequency": 4
+  },
+  {
+    "root": "عور",
+    "root_buckwalter": "Ewr",
+    "quran_frequency": 4
+  },
+  {
+    "root": "غسق",
+    "root_buckwalter": "gsq",
+    "quran_frequency": 4
+  },
+  {
+    "root": "غسل",
+    "root_buckwalter": "gsl",
     "quran_frequency": 4
   },
   {
@@ -890,8 +4475,108 @@
     "quran_frequency": 4
   },
   {
+    "root": "غمر",
+    "root_buckwalter": "gmr",
+    "quran_frequency": 4
+  },
+  {
+    "root": "غور",
+    "root_buckwalter": "gwr",
+    "quran_frequency": 4
+  },
+  {
+    "root": "غيث",
+    "root_buckwalter": "gyth",
+    "quran_frequency": 4
+  },
+  {
+    "root": "فشل",
+    "root_buckwalter": "fshl",
+    "quran_frequency": 4
+  },
+  {
+    "root": "فلق",
+    "root_buckwalter": "flq",
+    "quran_frequency": 4
+  },
+  {
+    "root": "فور",
+    "root_buckwalter": "fwr",
+    "quran_frequency": 4
+  },
+  {
+    "root": "قلد",
+    "root_buckwalter": "qld",
+    "quran_frequency": 4
+  },
+  {
+    "root": "قلم",
+    "root_buckwalter": "qlm",
+    "quran_frequency": 4
+  },
+  {
+    "root": "قنطر",
+    "root_buckwalter": "qnTr",
+    "quran_frequency": 4
+  },
+  {
+    "root": "كرب",
+    "root_buckwalter": "krb",
+    "quran_frequency": 4
+  },
+  {
+    "root": "كعب",
+    "root_buckwalter": "kEb",
+    "quran_frequency": 4
+  },
+  {
+    "root": "كوب",
+    "root_buckwalter": "kwb",
+    "quran_frequency": 4
+  },
+  {
     "root": "لجج",
     "root_buckwalter": "ljj",
+    "quran_frequency": 4
+  },
+  {
+    "root": "لمز",
+    "root_buckwalter": "lmz",
+    "quran_frequency": 4
+  },
+  {
+    "root": "مجد",
+    "root_buckwalter": "mjd",
+    "quran_frequency": 4
+  },
+  {
+    "root": "مزق",
+    "root_buckwalter": "mzq",
+    "quran_frequency": 4
+  },
+  {
+    "root": "مهن",
+    "root_buckwalter": "mhn",
+    "quran_frequency": 4
+  },
+  {
+    "root": "ميز",
+    "root_buckwalter": "myz",
+    "quran_frequency": 4
+  },
+  {
+    "root": "نحت",
+    "root_buckwalter": "nHt",
+    "quran_frequency": 4
+  },
+  {
+    "root": "نسخ",
+    "root_buckwalter": "nskh",
+    "quran_frequency": 4
+  },
+  {
+    "root": "نسل",
+    "root_buckwalter": "nsl",
     "quran_frequency": 4
   },
   {
@@ -900,13 +4585,78 @@
     "quran_frequency": 4
   },
   {
+    "root": "نعج",
+    "root_buckwalter": "nEj",
+    "quran_frequency": 4
+  },
+  {
+    "root": "نفل",
+    "root_buckwalter": "nfl",
+    "quran_frequency": 4
+  },
+  {
+    "root": "نقر",
+    "root_buckwalter": "nqr",
+    "quran_frequency": 4
+  },
+  {
+    "root": "نمل",
+    "root_buckwalter": "nml",
+    "quran_frequency": 4
+  },
+  {
     "root": "هات",
     "root_buckwalter": "hAt",
     "quran_frequency": 4
   },
   {
+    "root": "هنأ",
+    "root_buckwalter": "hnA",
+    "quran_frequency": 4
+  },
+  {
+    "root": "هيأ",
+    "root_buckwalter": "hyA",
+    "quran_frequency": 4
+  },
+  {
+    "root": "ودع",
+    "root_buckwalter": "wdE",
+    "quran_frequency": 4
+  },
+  {
+    "root": "ورق",
+    "root_buckwalter": "wrq",
+    "quran_frequency": 4
+  },
+  {
+    "root": "وفق",
+    "root_buckwalter": "wfq",
+    "quran_frequency": 4
+  },
+  {
+    "root": "وقف",
+    "root_buckwalter": "wqf",
+    "quran_frequency": 4
+  },
+  {
+    "root": "يبس",
+    "root_buckwalter": "ybs",
+    "quran_frequency": 4
+  },
+  {
+    "root": "أبل",
+    "root_buckwalter": "Abl",
+    "quran_frequency": 3
+  },
+  {
     "root": "أجج",
     "root_buckwalter": "Ajj",
+    "quran_frequency": 3
+  },
+  {
+    "root": "أزف",
+    "root_buckwalter": "Azf",
     "quran_frequency": 3
   },
   {
@@ -915,8 +4665,48 @@
     "quran_frequency": 3
   },
   {
+    "root": "أصر",
+    "root_buckwalter": "ASr",
+    "quran_frequency": 3
+  },
+  {
     "root": "أفف",
     "root_buckwalter": "Aff",
+    "quran_frequency": 3
+  },
+  {
+    "root": "أفق",
+    "root_buckwalter": "Afq",
+    "quran_frequency": 3
+  },
+  {
+    "root": "أنف",
+    "root_buckwalter": "Anf",
+    "quran_frequency": 3
+  },
+  {
+    "root": "بذر",
+    "root_buckwalter": "bdhr",
+    "quran_frequency": 3
+  },
+  {
+    "root": "برح",
+    "root_buckwalter": "brH",
+    "quran_frequency": 3
+  },
+  {
+    "root": "برزخ",
+    "root_buckwalter": "brzkh",
+    "quran_frequency": 3
+  },
+  {
+    "root": "بهج",
+    "root_buckwalter": "bhj",
+    "quran_frequency": 3
+  },
+  {
+    "root": "بهم",
+    "root_buckwalter": "bhm",
     "quran_frequency": 3
   },
   {
@@ -930,8 +4720,78 @@
     "quran_frequency": 3
   },
   {
+    "root": "جثو",
+    "root_buckwalter": "jthw",
+    "quran_frequency": 3
+  },
+  {
+    "root": "جدث",
+    "root_buckwalter": "jdth",
+    "quran_frequency": 3
+  },
+  {
+    "root": "جذع",
+    "root_buckwalter": "jdhE",
+    "quran_frequency": 3
+  },
+  {
+    "root": "جزأ",
+    "root_buckwalter": "jzA",
+    "quran_frequency": 3
+  },
+  {
+    "root": "جيب",
+    "root_buckwalter": "jyb",
+    "quran_frequency": 3
+  },
+  {
+    "root": "حدق",
+    "root_buckwalter": "Hdq",
+    "quran_frequency": 3
+  },
+  {
+    "root": "حرض",
+    "root_buckwalter": "HrD",
+    "quran_frequency": 3
+  },
+  {
     "root": "حضض",
     "root_buckwalter": "HDD",
+    "quran_frequency": 3
+  },
+  {
+    "root": "حفو",
+    "root_buckwalter": "Hfw",
+    "quran_frequency": 3
+  },
+  {
+    "root": "حلق",
+    "root_buckwalter": "Hlq",
+    "quran_frequency": 3
+  },
+  {
+    "root": "حوج",
+    "root_buckwalter": "Hwj",
+    "quran_frequency": 3
+  },
+  {
+    "root": "خبت",
+    "root_buckwalter": "khbt",
+    "quran_frequency": 3
+  },
+  {
+    "root": "خذل",
+    "root_buckwalter": "khdhl",
+    "quran_frequency": 3
+  },
+  {
+    "root": "خفت",
+    "root_buckwalter": "khft",
+    "quran_frequency": 3
+  },
+  {
+    "root": "خيط",
+    "root_buckwalter": "khyT",
     "quran_frequency": 3
   },
   {
@@ -945,8 +4805,103 @@
     "quran_frequency": 3
   },
   {
+    "root": "ذرو",
+    "root_buckwalter": "dhrw",
+    "quran_frequency": 3
+  },
+  {
+    "root": "ذقن",
+    "root_buckwalter": "dhqn",
+    "quran_frequency": 3
+  },
+  {
+    "root": "ردف",
+    "root_buckwalter": "rdf",
+    "quran_frequency": 3
+  },
+  {
+    "root": "رغد",
+    "root_buckwalter": "rgd",
+    "quran_frequency": 3
+  },
+  {
+    "root": "رقم",
+    "root_buckwalter": "rqm",
+    "quran_frequency": 3
+  },
+  {
+    "root": "ركض",
+    "root_buckwalter": "rkD",
+    "quran_frequency": 3
+  },
+  {
+    "root": "ركم",
+    "root_buckwalter": "rkm",
+    "quran_frequency": 3
+  },
+  {
+    "root": "رمن",
+    "root_buckwalter": "rmn",
+    "quran_frequency": 3
+  },
+  {
+    "root": "رهط",
+    "root_buckwalter": "rhT",
+    "quran_frequency": 3
+  },
+  {
+    "root": "رهن",
+    "root_buckwalter": "rhn",
+    "quran_frequency": 3
+  },
+  {
+    "root": "روغ",
+    "root_buckwalter": "rwg",
+    "quran_frequency": 3
+  },
+  {
+    "root": "زبد",
+    "root_buckwalter": "zbd",
+    "quran_frequency": 3
+  },
+  {
+    "root": "زجو",
+    "root_buckwalter": "zjw",
+    "quran_frequency": 3
+  },
+  {
+    "root": "زفر",
+    "root_buckwalter": "zfr",
+    "quran_frequency": 3
+  },
+  {
+    "root": "زقم",
+    "root_buckwalter": "zqm",
+    "quran_frequency": 3
+  },
+  {
     "root": "سأم",
     "root_buckwalter": "sAm",
+    "quran_frequency": 3
+  },
+  {
+    "root": "ستر",
+    "root_buckwalter": "str",
+    "quran_frequency": 3
+  },
+  {
+    "root": "سجر",
+    "root_buckwalter": "sjr",
+    "quran_frequency": 3
+  },
+  {
+    "root": "سربل",
+    "root_buckwalter": "srbl",
+    "quran_frequency": 3
+  },
+  {
+    "root": "سلخ",
+    "root_buckwalter": "slkh",
     "quran_frequency": 3
   },
   {
@@ -960,8 +4915,28 @@
     "quran_frequency": 3
   },
   {
+    "root": "سلو",
+    "root_buckwalter": "slw",
+    "quran_frequency": 3
+  },
+  {
+    "root": "سوغ",
+    "root_buckwalter": "swg",
+    "quran_frequency": 3
+  },
+  {
+    "root": "سيح",
+    "root_buckwalter": "syH",
+    "quran_frequency": 3
+  },
+  {
     "root": "شأم",
     "root_buckwalter": "shAm",
+    "quran_frequency": 3
+  },
+  {
+    "root": "شحن",
+    "root_buckwalter": "shHn",
     "quran_frequency": 3
   },
   {
@@ -970,8 +4945,38 @@
     "quran_frequency": 3
   },
   {
+    "root": "شكو",
+    "root_buckwalter": "shkw",
+    "quran_frequency": 3
+  },
+  {
     "root": "شنأ",
     "root_buckwalter": "shnA",
+    "quran_frequency": 3
+  },
+  {
+    "root": "شيب",
+    "root_buckwalter": "shyb",
+    "quran_frequency": 3
+  },
+  {
+    "root": "صبأ",
+    "root_buckwalter": "SbA",
+    "quran_frequency": 3
+  },
+  {
+    "root": "صبغ",
+    "root_buckwalter": "Sbg",
+    "quran_frequency": 3
+  },
+  {
+    "root": "صبو",
+    "root_buckwalter": "Sbw",
+    "quran_frequency": 3
+  },
+  {
+    "root": "صخر",
+    "root_buckwalter": "Skhr",
     "quran_frequency": 3
   },
   {
@@ -980,8 +4985,43 @@
     "quran_frequency": 3
   },
   {
+    "root": "صرم",
+    "root_buckwalter": "Srm",
+    "quran_frequency": 3
+  },
+  {
+    "root": "ضجع",
+    "root_buckwalter": "DjE",
+    "quran_frequency": 3
+  },
+  {
+    "root": "ضغث",
+    "root_buckwalter": "Dgth",
+    "quran_frequency": 3
+  },
+  {
+    "root": "طفأ",
+    "root_buckwalter": "TfA",
+    "quran_frequency": 3
+  },
+  {
+    "root": "طفق",
+    "root_buckwalter": "Tfq",
+    "quran_frequency": 3
+  },
+  {
     "root": "ظمأ",
     "root_buckwalter": "zhmA",
+    "quran_frequency": 3
+  },
+  {
+    "root": "عبس",
+    "root_buckwalter": "Ebs",
+    "quran_frequency": 3
+  },
+  {
+    "root": "عرو",
+    "root_buckwalter": "Erw",
     "quran_frequency": 3
   },
   {
@@ -990,8 +5030,33 @@
     "quran_frequency": 3
   },
   {
+    "root": "عزر",
+    "root_buckwalter": "Ezr",
+    "quran_frequency": 3
+  },
+  {
+    "root": "عير",
+    "root_buckwalter": "Eyr",
+    "quran_frequency": 3
+  },
+  {
+    "root": "فتر",
+    "root_buckwalter": "ftr",
+    "quran_frequency": 3
+  },
+  {
+    "root": "فتل",
+    "root_buckwalter": "ftl",
+    "quran_frequency": 3
+  },
+  {
     "root": "فجج",
     "root_buckwalter": "fjj",
+    "quran_frequency": 3
+  },
+  {
+    "root": "فرت",
+    "root_buckwalter": "frt",
     "quran_frequency": 3
   },
   {
@@ -1000,8 +5065,53 @@
     "quran_frequency": 3
   },
   {
+    "root": "فسح",
+    "root_buckwalter": "fsH",
+    "quran_frequency": 3
+  },
+  {
+    "root": "فقد",
+    "root_buckwalter": "fqd",
+    "quran_frequency": 3
+  },
+  {
+    "root": "قبس",
+    "root_buckwalter": "qbs",
+    "quran_frequency": 3
+  },
+  {
+    "root": "قرح",
+    "root_buckwalter": "qrH",
+    "quran_frequency": 3
+  },
+  {
+    "root": "قرد",
+    "root_buckwalter": "qrd",
+    "quran_frequency": 3
+  },
+  {
+    "root": "كبت",
+    "root_buckwalter": "kbt",
+    "quran_frequency": 3
+  },
+  {
+    "root": "كور",
+    "root_buckwalter": "kwr",
+    "quran_frequency": 3
+  },
+  {
+    "root": "لجأ",
+    "root_buckwalter": "ljA",
+    "quran_frequency": 3
+  },
+  {
     "root": "لذذ",
     "root_buckwalter": "ldhdh",
+    "quran_frequency": 3
+  },
+  {
+    "root": "لفت",
+    "root_buckwalter": "lft",
     "quran_frequency": 3
   },
   {
@@ -1010,8 +5120,103 @@
     "quran_frequency": 3
   },
   {
+    "root": "لفو",
+    "root_buckwalter": "lfw",
+    "quran_frequency": 3
+  },
+  {
+    "root": "لقف",
+    "root_buckwalter": "lqf",
+    "quran_frequency": 3
+  },
+  {
+    "root": "لهب",
+    "root_buckwalter": "lhb",
+    "quran_frequency": 3
+  },
+  {
+    "root": "متن",
+    "root_buckwalter": "mtn",
+    "quran_frequency": 3
+  },
+  {
+    "root": "محو",
+    "root_buckwalter": "mHw",
+    "quran_frequency": 3
+  },
+  {
+    "root": "مرح",
+    "root_buckwalter": "mrH",
+    "quran_frequency": 3
+  },
+  {
+    "root": "مزج",
+    "root_buckwalter": "mzj",
+    "quran_frequency": 3
+  },
+  {
+    "root": "مضغ",
+    "root_buckwalter": "mDg",
+    "quran_frequency": 3
+  },
+  {
+    "root": "مور",
+    "root_buckwalter": "mwr",
+    "quran_frequency": 3
+  },
+  {
     "root": "نأي",
     "root_buckwalter": "nAy",
+    "quran_frequency": 3
+  },
+  {
+    "root": "نثر",
+    "root_buckwalter": "nthr",
+    "quran_frequency": 3
+  },
+  {
+    "root": "نحس",
+    "root_buckwalter": "nHs",
+    "quran_frequency": 3
+  },
+  {
+    "root": "نسب",
+    "root_buckwalter": "nsb",
+    "quran_frequency": 3
+  },
+  {
+    "root": "نضد",
+    "root_buckwalter": "nDd",
+    "quran_frequency": 3
+  },
+  {
+    "root": "نضر",
+    "root_buckwalter": "nDr",
+    "quran_frequency": 3
+  },
+  {
+    "root": "نفذ",
+    "root_buckwalter": "nfdh",
+    "quran_frequency": 3
+  },
+  {
+    "root": "نقب",
+    "root_buckwalter": "nqb",
+    "quran_frequency": 3
+  },
+  {
+    "root": "نكس",
+    "root_buckwalter": "nks",
+    "quran_frequency": 3
+  },
+  {
+    "root": "نكف",
+    "root_buckwalter": "nkf",
+    "quran_frequency": 3
+  },
+  {
+    "root": "هزم",
+    "root_buckwalter": "hzm",
     "quran_frequency": 3
   },
   {
@@ -1020,8 +5225,48 @@
     "quran_frequency": 3
   },
   {
+    "root": "همز",
+    "root_buckwalter": "hmz",
+    "quran_frequency": 3
+  },
+  {
+    "root": "وتد",
+    "root_buckwalter": "wtd",
+    "quran_frequency": 3
+  },
+  {
+    "root": "وتر",
+    "root_buckwalter": "wtr",
+    "quran_frequency": 3
+  },
+  {
+    "root": "وثن",
+    "root_buckwalter": "wthn",
+    "quran_frequency": 3
+  },
+  {
+    "root": "وجس",
+    "root_buckwalter": "wjs",
+    "quran_frequency": 3
+  },
+  {
+    "root": "وصد",
+    "root_buckwalter": "wSd",
+    "quran_frequency": 3
+  },
+  {
     "root": "أثث",
     "root_buckwalter": "Athth",
+    "quran_frequency": 2
+  },
+  {
+    "root": "أرب",
+    "root_buckwalter": "Arb",
+    "quran_frequency": 2
+  },
+  {
+    "root": "أزر",
+    "root_buckwalter": "Azr",
     "quran_frequency": 2
   },
   {
@@ -1030,8 +5275,63 @@
     "quran_frequency": 2
   },
   {
+    "root": "أشر",
+    "root_buckwalter": "Ashr",
+    "quran_frequency": 2
+  },
+  {
     "root": "ألل",
     "root_buckwalter": "All",
+    "quran_frequency": 2
+  },
+  {
+    "root": "أمل",
+    "root_buckwalter": "Aml",
+    "quran_frequency": 2
+  },
+  {
+    "root": "أمو",
+    "root_buckwalter": "Amw",
+    "quran_frequency": 2
+  },
+  {
+    "root": "أوه",
+    "root_buckwalter": "Awh",
+    "quran_frequency": 2
+  },
+  {
+    "root": "بتل",
+    "root_buckwalter": "btl",
+    "quran_frequency": 2
+  },
+  {
+    "root": "بخع",
+    "root_buckwalter": "bkhE",
+    "quran_frequency": 2
+  },
+  {
+    "root": "بدن",
+    "root_buckwalter": "bdn",
+    "quran_frequency": 2
+  },
+  {
+    "root": "برص",
+    "root_buckwalter": "brS",
+    "quran_frequency": 2
+  },
+  {
+    "root": "برم",
+    "root_buckwalter": "brm",
+    "quran_frequency": 2
+  },
+  {
+    "root": "بزغ",
+    "root_buckwalter": "bzg",
+    "quran_frequency": 2
+  },
+  {
+    "root": "بسر",
+    "root_buckwalter": "bsr",
     "quran_frequency": 2
   },
   {
@@ -1040,8 +5340,48 @@
     "quran_frequency": 2
   },
   {
+    "root": "بسل",
+    "root_buckwalter": "bsl",
+    "quran_frequency": 2
+  },
+  {
+    "root": "بطر",
+    "root_buckwalter": "bTr",
+    "quran_frequency": 2
+  },
+  {
+    "root": "بعثر",
+    "root_buckwalter": "bEthr",
+    "quran_frequency": 2
+  },
+  {
+    "root": "بعر",
+    "root_buckwalter": "bEr",
+    "quran_frequency": 2
+  },
+  {
     "root": "بنن",
     "root_buckwalter": "bnn",
+    "quran_frequency": 2
+  },
+  {
+    "root": "تور",
+    "root_buckwalter": "twr",
+    "quran_frequency": 2
+  },
+  {
+    "root": "ثخن",
+    "root_buckwalter": "thkhn",
+    "quran_frequency": 2
+  },
+  {
+    "root": "ثعب",
+    "root_buckwalter": "thEb",
+    "quran_frequency": 2
+  },
+  {
+    "root": "ثقب",
+    "root_buckwalter": "thqb",
     "quran_frequency": 2
   },
   {
@@ -1055,8 +5395,63 @@
     "quran_frequency": 2
   },
   {
+    "root": "جرد",
+    "root_buckwalter": "jrd",
+    "quran_frequency": 2
+  },
+  {
+    "root": "جرز",
+    "root_buckwalter": "jrz",
+    "quran_frequency": 2
+  },
+  {
+    "root": "جزع",
+    "root_buckwalter": "jzE",
+    "quran_frequency": 2
+  },
+  {
+    "root": "جسم",
+    "root_buckwalter": "jsm",
+    "quran_frequency": 2
+  },
+  {
+    "root": "جلب",
+    "root_buckwalter": "jlb",
+    "quran_frequency": 2
+  },
+  {
     "root": "جلل",
     "root_buckwalter": "jll",
+    "quran_frequency": 2
+  },
+  {
+    "root": "جنف",
+    "root_buckwalter": "jnf",
+    "quran_frequency": 2
+  },
+  {
+    "root": "جني",
+    "root_buckwalter": "jny",
+    "quran_frequency": 2
+  },
+  {
+    "root": "جود",
+    "root_buckwalter": "jwd",
+    "quran_frequency": 2
+  },
+  {
+    "root": "حبس",
+    "root_buckwalter": "Hbs",
+    "quran_frequency": 2
+  },
+  {
+    "root": "حجز",
+    "root_buckwalter": "Hjz",
+    "quran_frequency": 2
+  },
+  {
+    "root": "حطب",
+    "root_buckwalter": "HTb",
     "quran_frequency": 2
   },
   {
@@ -1065,8 +5460,43 @@
     "quran_frequency": 2
   },
   {
+    "root": "حظر",
+    "root_buckwalter": "Hzhr",
+    "quran_frequency": 2
+  },
+  {
+    "root": "حفر",
+    "root_buckwalter": "Hfr",
+    "quran_frequency": 2
+  },
+  {
     "root": "حفف",
     "root_buckwalter": "Hff",
+    "quran_frequency": 2
+  },
+  {
+    "root": "حقب",
+    "root_buckwalter": "Hqb",
+    "quran_frequency": 2
+  },
+  {
+    "root": "حنث",
+    "root_buckwalter": "Hnth",
+    "quran_frequency": 2
+  },
+  {
+    "root": "حنجر",
+    "root_buckwalter": "Hnjr",
+    "quran_frequency": 2
+  },
+  {
+    "root": "حوذ",
+    "root_buckwalter": "Hwdh",
+    "quran_frequency": 2
+  },
+  {
+    "root": "حوش",
+    "root_buckwalter": "Hwsh",
     "quran_frequency": 2
   },
   {
@@ -1075,8 +5505,78 @@
     "quran_frequency": 2
   },
   {
+    "root": "خبل",
+    "root_buckwalter": "khbl",
+    "quran_frequency": 2
+  },
+  {
     "root": "خدد",
     "root_buckwalter": "khdd",
+    "quran_frequency": 2
+  },
+  {
+    "root": "خدن",
+    "root_buckwalter": "khdn",
+    "quran_frequency": 2
+  },
+  {
+    "root": "خرب",
+    "root_buckwalter": "khrb",
+    "quran_frequency": 2
+  },
+  {
+    "root": "خردل",
+    "root_buckwalter": "khrdl",
+    "quran_frequency": 2
+  },
+  {
+    "root": "خصف",
+    "root_buckwalter": "khSf",
+    "quran_frequency": 2
+  },
+  {
+    "root": "خضع",
+    "root_buckwalter": "khDE",
+    "quran_frequency": 2
+  },
+  {
+    "root": "خمد",
+    "root_buckwalter": "khmd",
+    "quran_frequency": 2
+  },
+  {
+    "root": "خمص",
+    "root_buckwalter": "khmS",
+    "quran_frequency": 2
+  },
+  {
+    "root": "خنس",
+    "root_buckwalter": "khns",
+    "quran_frequency": 2
+  },
+  {
+    "root": "خور",
+    "root_buckwalter": "khwr",
+    "quran_frequency": 2
+  },
+  {
+    "root": "دخن",
+    "root_buckwalter": "dkhn",
+    "quran_frequency": 2
+  },
+  {
+    "root": "دمع",
+    "root_buckwalter": "dmE",
+    "quran_frequency": 2
+  },
+  {
+    "root": "دهر",
+    "root_buckwalter": "dhr",
+    "quran_frequency": 2
+  },
+  {
+    "root": "دول",
+    "root_buckwalter": "dwl",
     "quran_frequency": 2
   },
   {
@@ -1090,13 +5590,58 @@
     "quran_frequency": 2
   },
   {
+    "root": "رسخ",
+    "root_buckwalter": "rskh",
+    "quran_frequency": 2
+  },
+  {
     "root": "رسس",
     "root_buckwalter": "rss",
     "quran_frequency": 2
   },
   {
+    "root": "رطب",
+    "root_buckwalter": "rTb",
+    "quran_frequency": 2
+  },
+  {
+    "root": "رعد",
+    "root_buckwalter": "rEd",
+    "quran_frequency": 2
+  },
+  {
+    "root": "رفت",
+    "root_buckwalter": "rft",
+    "quran_frequency": 2
+  },
+  {
+    "root": "رفث",
+    "root_buckwalter": "rfth",
+    "quran_frequency": 2
+  },
+  {
+    "root": "رفد",
+    "root_buckwalter": "rfd",
+    "quran_frequency": 2
+  },
+  {
+    "root": "رقد",
+    "root_buckwalter": "rqd",
+    "quran_frequency": 2
+  },
+  {
+    "root": "ركس",
+    "root_buckwalter": "rks",
+    "quran_frequency": 2
+  },
+  {
     "root": "رمم",
     "root_buckwalter": "rmm",
+    "quran_frequency": 2
+  },
+  {
+    "root": "روض",
+    "root_buckwalter": "rwD",
     "quran_frequency": 2
   },
   {
@@ -1110,8 +5655,98 @@
     "quran_frequency": 2
   },
   {
+    "root": "زلق",
+    "root_buckwalter": "zlq",
+    "quran_frequency": 2
+  },
+  {
+    "root": "زلم",
+    "root_buckwalter": "zlm",
+    "quran_frequency": 2
+  },
+  {
+    "root": "زمر",
+    "root_buckwalter": "zmr",
+    "quran_frequency": 2
+  },
+  {
+    "root": "زود",
+    "root_buckwalter": "zwd",
+    "quran_frequency": 2
+  },
+  {
+    "root": "سبأ",
+    "root_buckwalter": "sbA",
+    "quran_frequency": 2
+  },
+  {
+    "root": "سبغ",
+    "root_buckwalter": "sbg",
+    "quran_frequency": 2
+  },
+  {
+    "root": "سحق",
+    "root_buckwalter": "sHq",
+    "quran_frequency": 2
+  },
+  {
+    "root": "سرمد",
+    "root_buckwalter": "srmd",
+    "quran_frequency": 2
+  },
+  {
+    "root": "سعد",
+    "root_buckwalter": "sEd",
+    "quran_frequency": 2
+  },
+  {
+    "root": "سفك",
+    "root_buckwalter": "sfk",
+    "quran_frequency": 2
+  },
+  {
+    "root": "سقم",
+    "root_buckwalter": "sqm",
+    "quran_frequency": 2
+  },
+  {
+    "root": "سهو",
+    "root_buckwalter": "shw",
+    "quran_frequency": 2
+  },
+  {
+    "root": "شخص",
+    "root_buckwalter": "shkhS",
+    "quran_frequency": 2
+  },
+  {
     "root": "شطأ",
     "root_buckwalter": "shTA",
+    "quran_frequency": 2
+  },
+  {
+    "root": "شعب",
+    "root_buckwalter": "shEb",
+    "quran_frequency": 2
+  },
+  {
+    "root": "شغل",
+    "root_buckwalter": "shgl",
+    "quran_frequency": 2
+  },
+  {
+    "root": "شفو",
+    "root_buckwalter": "shfw",
+    "quran_frequency": 2
+  },
+  {
+    "root": "شكل",
+    "root_buckwalter": "shkl",
+    "quran_frequency": 2
+  },
+  {
+    "root": "شهق",
+    "root_buckwalter": "shhq",
     "quran_frequency": 2
   },
   {
@@ -1120,8 +5755,43 @@
     "quran_frequency": 2
   },
   {
+    "root": "شيد",
+    "root_buckwalter": "shyd",
+    "quran_frequency": 2
+  },
+  {
+    "root": "صبع",
+    "root_buckwalter": "SbE",
+    "quran_frequency": 2
+  },
+  {
     "root": "صدي",
     "root_buckwalter": "Sdy",
+    "quran_frequency": 2
+  },
+  {
+    "root": "صغو",
+    "root_buckwalter": "Sgw",
+    "quran_frequency": 2
+  },
+  {
+    "root": "صفد",
+    "root_buckwalter": "Sfd",
+    "quran_frequency": 2
+  },
+  {
+    "root": "صنو",
+    "root_buckwalter": "Snw",
+    "quran_frequency": 2
+  },
+  {
+    "root": "صهر",
+    "root_buckwalter": "Shr",
+    "quran_frequency": 2
+  },
+  {
+    "root": "ضغن",
+    "root_buckwalter": "Dgn",
     "quran_frequency": 2
   },
   {
@@ -1130,8 +5800,63 @@
     "quran_frequency": 2
   },
   {
+    "root": "طرو",
+    "root_buckwalter": "Trw",
+    "quran_frequency": 2
+  },
+  {
+    "root": "طعن",
+    "root_buckwalter": "TEn",
+    "quran_frequency": 2
+  },
+  {
+    "root": "طمث",
+    "root_buckwalter": "Tmth",
+    "quran_frequency": 2
+  },
+  {
+    "root": "ظفر",
+    "root_buckwalter": "zhfr",
+    "quran_frequency": 2
+  },
+  {
+    "root": "عبث",
+    "root_buckwalter": "Ebth",
+    "quran_frequency": 2
+  },
+  {
+    "root": "عتق",
+    "root_buckwalter": "Etq",
+    "quran_frequency": 2
+  },
+  {
+    "root": "عتل",
+    "root_buckwalter": "Etl",
+    "quran_frequency": 2
+  },
+  {
+    "root": "عثر",
+    "root_buckwalter": "Ethr",
+    "quran_frequency": 2
+  },
+  {
+    "root": "عجف",
+    "root_buckwalter": "Ejf",
+    "quran_frequency": 2
+  },
+  {
     "root": "عرر",
     "root_buckwalter": "Err",
+    "quran_frequency": 2
+  },
+  {
+    "root": "عزب",
+    "root_buckwalter": "Ezb",
+    "quran_frequency": 2
+  },
+  {
+    "root": "عضد",
+    "root_buckwalter": "EDd",
     "quran_frequency": 2
   },
   {
@@ -1140,8 +5865,63 @@
     "quran_frequency": 2
   },
   {
+    "root": "عضل",
+    "root_buckwalter": "EDl",
+    "quran_frequency": 2
+  },
+  {
+    "root": "عطل",
+    "root_buckwalter": "ETl",
+    "quran_frequency": 2
+  },
+  {
+    "root": "عنكب",
+    "root_buckwalter": "Enkb",
+    "quran_frequency": 2
+  },
+  {
+    "root": "عهن",
+    "root_buckwalter": "Ehn",
+    "quran_frequency": 2
+  },
+  {
+    "root": "عيل",
+    "root_buckwalter": "Eyl",
+    "quran_frequency": 2
+  },
+  {
     "root": "عيي",
     "root_buckwalter": "Eyy",
+    "quran_frequency": 2
+  },
+  {
+    "root": "غثو",
+    "root_buckwalter": "gthw",
+    "quran_frequency": 2
+  },
+  {
+    "root": "غدر",
+    "root_buckwalter": "gdr",
+    "quran_frequency": 2
+  },
+  {
+    "root": "غرو",
+    "root_buckwalter": "grw",
+    "quran_frequency": 2
+  },
+  {
+    "root": "غطو",
+    "root_buckwalter": "gTw",
+    "quran_frequency": 2
+  },
+  {
+    "root": "غلف",
+    "root_buckwalter": "glf",
+    "quran_frequency": 2
+  },
+  {
+    "root": "غلو",
+    "root_buckwalter": "glw",
     "quran_frequency": 2
   },
   {
@@ -1150,8 +5930,48 @@
     "quran_frequency": 2
   },
   {
+    "root": "غوص",
+    "root_buckwalter": "gwS",
+    "quran_frequency": 2
+  },
+  {
+    "root": "غوط",
+    "root_buckwalter": "gwT",
+    "quran_frequency": 2
+  },
+  {
+    "root": "غيض",
+    "root_buckwalter": "gyD",
+    "quran_frequency": 2
+  },
+  {
     "root": "فكك",
     "root_buckwalter": "fkk",
+    "quran_frequency": 2
+  },
+  {
+    "root": "قحم",
+    "root_buckwalter": "qHm",
+    "quran_frequency": 2
+  },
+  {
+    "root": "قدو",
+    "root_buckwalter": "qdw",
+    "quran_frequency": 2
+  },
+  {
+    "root": "قرطس",
+    "root_buckwalter": "qrTs",
+    "quran_frequency": 2
+  },
+  {
+    "root": "قسطس",
+    "root_buckwalter": "qsTs",
+    "quran_frequency": 2
+  },
+  {
+    "root": "قطف",
+    "root_buckwalter": "qTf",
     "quran_frequency": 2
   },
   {
@@ -1160,8 +5980,53 @@
     "quran_frequency": 2
   },
   {
+    "root": "قنع",
+    "root_buckwalter": "qnE",
+    "quran_frequency": 2
+  },
+  {
+    "root": "قوت",
+    "root_buckwalter": "qwt",
+    "quran_frequency": 2
+  },
+  {
+    "root": "قوع",
+    "root_buckwalter": "qwE",
+    "quran_frequency": 2
+  },
+  {
+    "root": "قيض",
+    "root_buckwalter": "qyD",
+    "quran_frequency": 2
+  },
+  {
+    "root": "قيل",
+    "root_buckwalter": "qyl",
+    "quran_frequency": 2
+  },
+  {
     "root": "كبب",
     "root_buckwalter": "kbb",
+    "quran_frequency": 2
+  },
+  {
+    "root": "كدح",
+    "root_buckwalter": "kdH",
+    "quran_frequency": 2
+  },
+  {
+    "root": "كرس",
+    "root_buckwalter": "krs",
+    "quran_frequency": 2
+  },
+  {
+    "root": "كسل",
+    "root_buckwalter": "ksl",
+    "quran_frequency": 2
+  },
+  {
+    "root": "كلو",
+    "root_buckwalter": "klw",
     "quran_frequency": 2
   },
   {
@@ -1170,8 +6035,33 @@
     "quran_frequency": 2
   },
   {
+    "root": "كمه",
+    "root_buckwalter": "kmh",
+    "quran_frequency": 2
+  },
+  {
+    "root": "كهل",
+    "root_buckwalter": "khl",
+    "quran_frequency": 2
+  },
+  {
     "root": "كهن",
     "root_buckwalter": "khn",
+    "quran_frequency": 2
+  },
+  {
+    "root": "كين",
+    "root_buckwalter": "kyn",
+    "quran_frequency": 2
+  },
+  {
+    "root": "لبد",
+    "root_buckwalter": "lbd",
+    "quran_frequency": 2
+  },
+  {
+    "root": "لبن",
+    "root_buckwalter": "lbn",
     "quran_frequency": 2
   },
   {
@@ -1180,8 +6070,113 @@
     "quran_frequency": 2
   },
   {
+    "root": "لغب",
+    "root_buckwalter": "lgb",
+    "quran_frequency": 2
+  },
+  {
+    "root": "لقط",
+    "root_buckwalter": "lqT",
+    "quran_frequency": 2
+  },
+  {
+    "root": "لمح",
+    "root_buckwalter": "lmH",
+    "quran_frequency": 2
+  },
+  {
     "root": "لمم",
     "root_buckwalter": "lmm",
+    "quran_frequency": 2
+  },
+  {
+    "root": "لهث",
+    "root_buckwalter": "lhth",
+    "quran_frequency": 2
+  },
+  {
+    "root": "محص",
+    "root_buckwalter": "mHS",
+    "quran_frequency": 2
+  },
+  {
+    "root": "محق",
+    "root_buckwalter": "mHq",
+    "quran_frequency": 2
+  },
+  {
+    "root": "محن",
+    "root_buckwalter": "mHn",
+    "quran_frequency": 2
+  },
+  {
+    "root": "مخر",
+    "root_buckwalter": "mkhr",
+    "quran_frequency": 2
+  },
+  {
+    "root": "ملح",
+    "root_buckwalter": "mlH",
+    "quran_frequency": 2
+  },
+  {
+    "root": "ملق",
+    "root_buckwalter": "mlq",
+    "quran_frequency": 2
+  },
+  {
+    "root": "نبع",
+    "root_buckwalter": "nbE",
+    "quran_frequency": 2
+  },
+  {
+    "root": "نحل",
+    "root_buckwalter": "nHl",
+    "quran_frequency": 2
+  },
+  {
+    "root": "نزف",
+    "root_buckwalter": "nzf",
+    "quran_frequency": 2
+  },
+  {
+    "root": "نسأ",
+    "root_buckwalter": "nsA",
+    "quran_frequency": 2
+  },
+  {
+    "root": "نشط",
+    "root_buckwalter": "nshT",
+    "quran_frequency": 2
+  },
+  {
+    "root": "نصت",
+    "root_buckwalter": "nSt",
+    "quran_frequency": 2
+  },
+  {
+    "root": "نعس",
+    "root_buckwalter": "nEs",
+    "quran_frequency": 2
+  },
+  {
+    "root": "نفش",
+    "root_buckwalter": "nfsh",
+    "quran_frequency": 2
+  },
+  {
+    "root": "نكب",
+    "root_buckwalter": "nkb",
+    "quran_frequency": 2
+  },
+  {
+    "root": "نكص",
+    "root_buckwalter": "nkS",
+    "quran_frequency": 2
+  },
+  {
+    "root": "هبو",
+    "root_buckwalter": "hbw",
     "quran_frequency": 2
   },
   {
@@ -1190,8 +6185,38 @@
     "quran_frequency": 2
   },
   {
+    "root": "هشم",
+    "root_buckwalter": "hshm",
+    "quran_frequency": 2
+  },
+  {
+    "root": "هضم",
+    "root_buckwalter": "hDm",
+    "quran_frequency": 2
+  },
+  {
+    "root": "هلم",
+    "root_buckwalter": "hlm",
+    "quran_frequency": 2
+  },
+  {
     "root": "همن",
     "root_buckwalter": "hmn",
+    "quran_frequency": 2
+  },
+  {
+    "root": "هور",
+    "root_buckwalter": "hwr",
+    "quran_frequency": 2
+  },
+  {
+    "root": "هيج",
+    "root_buckwalter": "hyj",
+    "quran_frequency": 2
+  },
+  {
+    "root": "هيم",
+    "root_buckwalter": "hym",
     "quran_frequency": 2
   },
   {
@@ -1205,8 +6230,48 @@
     "quran_frequency": 2
   },
   {
+    "root": "ودق",
+    "root_buckwalter": "wdq",
+    "quran_frequency": 2
+  },
+  {
+    "root": "وسق",
+    "root_buckwalter": "wsq",
+    "quran_frequency": 2
+  },
+  {
+    "root": "وسل",
+    "root_buckwalter": "wsl",
+    "quran_frequency": 2
+  },
+  {
+    "root": "وسم",
+    "root_buckwalter": "wsm",
+    "quran_frequency": 2
+  },
+  {
+    "root": "وصب",
+    "root_buckwalter": "wSb",
+    "quran_frequency": 2
+  },
+  {
+    "root": "وطر",
+    "root_buckwalter": "wTr",
+    "quran_frequency": 2
+  },
+  {
     "root": "أبب",
     "root_buckwalter": "Abb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "أبق",
+    "root_buckwalter": "Abq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "أثل",
+    "root_buckwalter": "Athl",
     "quran_frequency": 1
   },
   {
@@ -1215,8 +6280,133 @@
     "quran_frequency": 1
   },
   {
+    "root": "أسن",
+    "root_buckwalter": "Asn",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ألت",
+    "root_buckwalter": "Alt",
+    "quran_frequency": 1
+  },
+  {
+    "root": "أمت",
+    "root_buckwalter": "Amt",
+    "quran_frequency": 1
+  },
+  {
+    "root": "أنم",
+    "root_buckwalter": "Anm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "أود",
+    "root_buckwalter": "Awd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "أيم",
+    "root_buckwalter": "Aym",
+    "quran_frequency": 1
+  },
+  {
     "root": "بأر",
     "root_buckwalter": "bAr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "بتر",
+    "root_buckwalter": "btr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "بتك",
+    "root_buckwalter": "btk",
+    "quran_frequency": 1
+  },
+  {
+    "root": "بجس",
+    "root_buckwalter": "bjs",
+    "quran_frequency": 1
+  },
+  {
+    "root": "بحث",
+    "root_buckwalter": "bHth",
+    "quran_frequency": 1
+  },
+  {
+    "root": "بدر",
+    "root_buckwalter": "bdr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "بسق",
+    "root_buckwalter": "bsq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "بسم",
+    "root_buckwalter": "bsm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "بصل",
+    "root_buckwalter": "bSl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "بطأ",
+    "root_buckwalter": "bTA",
+    "quran_frequency": 1
+  },
+  {
+    "root": "بغل",
+    "root_buckwalter": "bgl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "بقع",
+    "root_buckwalter": "bqE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "بقل",
+    "root_buckwalter": "bql",
+    "quran_frequency": 1
+  },
+  {
+    "root": "بلع",
+    "root_buckwalter": "blE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "بهل",
+    "root_buckwalter": "bhl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "بيد",
+    "root_buckwalter": "byd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ترق",
+    "root_buckwalter": "trq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "تعس",
+    "root_buckwalter": "tEs",
+    "quran_frequency": 1
+  },
+  {
+    "root": "تفث",
+    "root_buckwalter": "tfth",
+    "quran_frequency": 1
+  },
+  {
+    "root": "تقن",
+    "root_buckwalter": "tqn",
     "quran_frequency": 1
   },
   {
@@ -1225,8 +6415,18 @@
     "quran_frequency": 1
   },
   {
+    "root": "تين",
+    "root_buckwalter": "tyn",
+    "quran_frequency": 1
+  },
+  {
     "root": "تيه",
     "root_buckwalter": "tyh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ثبط",
+    "root_buckwalter": "thbT",
     "quran_frequency": 1
   },
   {
@@ -1240,6 +6440,11 @@
     "quran_frequency": 1
   },
   {
+    "root": "ثرب",
+    "root_buckwalter": "thrb",
+    "quran_frequency": 1
+  },
+  {
     "root": "ثري",
     "root_buckwalter": "thry",
     "quran_frequency": 1
@@ -1250,8 +6455,28 @@
     "quran_frequency": 1
   },
   {
+    "root": "جبت",
+    "root_buckwalter": "jbt",
+    "quran_frequency": 1
+  },
+  {
+    "root": "جبن",
+    "root_buckwalter": "jbn",
+    "quran_frequency": 1
+  },
+  {
+    "root": "جبه",
+    "root_buckwalter": "jbh",
+    "quran_frequency": 1
+  },
+  {
     "root": "جثث",
     "root_buckwalter": "jthth",
+    "quran_frequency": 1
+  },
+  {
+    "root": "جذو",
+    "root_buckwalter": "jdhw",
     "quran_frequency": 1
   },
   {
@@ -1260,8 +6485,48 @@
     "quran_frequency": 1
   },
   {
+    "root": "جرع",
+    "root_buckwalter": "jrE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "جرف",
+    "root_buckwalter": "jrf",
+    "quran_frequency": 1
+  },
+  {
     "root": "جسس",
     "root_buckwalter": "jss",
+    "quran_frequency": 1
+  },
+  {
+    "root": "جفأ",
+    "root_buckwalter": "jfA",
+    "quran_frequency": 1
+  },
+  {
+    "root": "جفن",
+    "root_buckwalter": "jfn",
+    "quran_frequency": 1
+  },
+  {
+    "root": "جفو",
+    "root_buckwalter": "jfw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "جلس",
+    "root_buckwalter": "jls",
+    "quran_frequency": 1
+  },
+  {
+    "root": "جمح",
+    "root_buckwalter": "jmH",
+    "quran_frequency": 1
+  },
+  {
+    "root": "جمد",
+    "root_buckwalter": "jmd",
     "quran_frequency": 1
   },
   {
@@ -1270,8 +6535,33 @@
     "quran_frequency": 1
   },
   {
+    "root": "جوس",
+    "root_buckwalter": "jws",
+    "quran_frequency": 1
+  },
+  {
+    "root": "جوف",
+    "root_buckwalter": "jwf",
+    "quran_frequency": 1
+  },
+  {
     "root": "جوو",
     "root_buckwalter": "jww",
+    "quran_frequency": 1
+  },
+  {
+    "root": "جيد",
+    "root_buckwalter": "jyd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "حبك",
+    "root_buckwalter": "Hbk",
+    "quran_frequency": 1
+  },
+  {
+    "root": "حتم",
+    "root_buckwalter": "Htm",
     "quran_frequency": 1
   },
   {
@@ -1280,8 +6570,33 @@
     "quran_frequency": 1
   },
   {
+    "root": "حدب",
+    "root_buckwalter": "Hdb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "حرد",
+    "root_buckwalter": "Hrd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "حرس",
+    "root_buckwalter": "Hrs",
+    "quran_frequency": 1
+  },
+  {
+    "root": "حرك",
+    "root_buckwalter": "Hrk",
+    "quran_frequency": 1
+  },
+  {
     "root": "حري",
     "root_buckwalter": "Hry",
+    "quran_frequency": 1
+  },
+  {
+    "root": "حسم",
+    "root_buckwalter": "Hsm",
     "quran_frequency": 1
   },
   {
@@ -1290,8 +6605,58 @@
     "quran_frequency": 1
   },
   {
+    "root": "حصل",
+    "root_buckwalter": "HSl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "حفد",
+    "root_buckwalter": "Hfd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "حقف",
+    "root_buckwalter": "Hqf",
+    "quran_frequency": 1
+  },
+  {
+    "root": "حنذ",
+    "root_buckwalter": "Hndh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "حنك",
+    "root_buckwalter": "Hnk",
+    "quran_frequency": 1
+  },
+  {
     "root": "حنن",
     "root_buckwalter": "Hnn",
+    "quran_frequency": 1
+  },
+  {
+    "root": "حوب",
+    "root_buckwalter": "Hwb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "حوز",
+    "root_buckwalter": "Hwz",
+    "quran_frequency": 1
+  },
+  {
+    "root": "حيد",
+    "root_buckwalter": "Hyd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "حير",
+    "root_buckwalter": "Hyr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "حيف",
+    "root_buckwalter": "Hyf",
     "quran_frequency": 1
   },
   {
@@ -1300,8 +6665,83 @@
     "quran_frequency": 1
   },
   {
+    "root": "خبز",
+    "root_buckwalter": "khbz",
+    "quran_frequency": 1
+  },
+  {
+    "root": "خبط",
+    "root_buckwalter": "khbT",
+    "quran_frequency": 1
+  },
+  {
+    "root": "خبو",
+    "root_buckwalter": "khbw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ختر",
+    "root_buckwalter": "khtr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "خرطم",
+    "root_buckwalter": "khrTm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "خشب",
+    "root_buckwalter": "khshb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "خضد",
+    "root_buckwalter": "khDd",
+    "quran_frequency": 1
+  },
+  {
     "root": "خطط",
     "root_buckwalter": "khTT",
+    "quran_frequency": 1
+  },
+  {
+    "root": "خلع",
+    "root_buckwalter": "khlE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "خمط",
+    "root_buckwalter": "khmT",
+    "quran_frequency": 1
+  },
+  {
+    "root": "خنق",
+    "root_buckwalter": "khnq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "خيم",
+    "root_buckwalter": "khym",
+    "quran_frequency": 1
+  },
+  {
+    "root": "دثر",
+    "root_buckwalter": "dthr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "دحو",
+    "root_buckwalter": "dHw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "درهم",
+    "root_buckwalter": "drhm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "دسر",
+    "root_buckwalter": "dsr",
     "quran_frequency": 1
   },
   {
@@ -1315,8 +6755,43 @@
     "quran_frequency": 1
   },
   {
+    "root": "دفأ",
+    "root_buckwalter": "dfA",
+    "quran_frequency": 1
+  },
+  {
+    "root": "دفق",
+    "root_buckwalter": "dfq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "دلك",
+    "root_buckwalter": "dlk",
+    "quran_frequency": 1
+  },
+  {
     "root": "دمدم",
     "root_buckwalter": "dmdm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "دمغ",
+    "root_buckwalter": "dmg",
+    "quran_frequency": 1
+  },
+  {
+    "root": "دنر",
+    "root_buckwalter": "dnr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "دهق",
+    "root_buckwalter": "dhq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "دهم",
+    "root_buckwalter": "dhm",
     "quran_frequency": 1
   },
   {
@@ -1335,8 +6810,78 @@
     "quran_frequency": 1
   },
   {
+    "root": "ذخر",
+    "root_buckwalter": "dhkhr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ذعن",
+    "root_buckwalter": "dhEn",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ذكو",
+    "root_buckwalter": "dhkw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ذهل",
+    "root_buckwalter": "dhhl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ذود",
+    "root_buckwalter": "dhwd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ذيع",
+    "root_buckwalter": "dhyE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ربح",
+    "root_buckwalter": "rbH",
+    "quran_frequency": 1
+  },
+  {
+    "root": "رتع",
+    "root_buckwalter": "rtE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "رتق",
+    "root_buckwalter": "rtq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "رحق",
+    "root_buckwalter": "rHq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "رخو",
+    "root_buckwalter": "rkhw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ردأ",
+    "root_buckwalter": "rdA",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ردم",
+    "root_buckwalter": "rdm",
+    "quran_frequency": 1
+  },
+  {
     "root": "رصص",
     "root_buckwalter": "rSS",
+    "quran_frequency": 1
+  },
+  {
+    "root": "رغم",
+    "root_buckwalter": "rgm",
     "quran_frequency": 1
   },
   {
@@ -1350,6 +6895,81 @@
     "quran_frequency": 1
   },
   {
+    "root": "ركد",
+    "root_buckwalter": "rkd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ركز",
+    "root_buckwalter": "rkz",
+    "quran_frequency": 1
+  },
+  {
+    "root": "رمح",
+    "root_buckwalter": "rmH",
+    "quran_frequency": 1
+  },
+  {
+    "root": "رمد",
+    "root_buckwalter": "rmd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "رمز",
+    "root_buckwalter": "rmz",
+    "quran_frequency": 1
+  },
+  {
+    "root": "رمض",
+    "root_buckwalter": "rmD",
+    "quran_frequency": 1
+  },
+  {
+    "root": "رهو",
+    "root_buckwalter": "rhw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "روع",
+    "root_buckwalter": "rwE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ريش",
+    "root_buckwalter": "rysh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ريع",
+    "root_buckwalter": "ryE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "رين",
+    "root_buckwalter": "ryn",
+    "quran_frequency": 1
+  },
+  {
+    "root": "زبن",
+    "root_buckwalter": "zbn",
+    "quran_frequency": 1
+  },
+  {
+    "root": "زحف",
+    "root_buckwalter": "zHf",
+    "quran_frequency": 1
+  },
+  {
+    "root": "زرب",
+    "root_buckwalter": "zrb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "زرق",
+    "root_buckwalter": "zrq",
+    "quran_frequency": 1
+  },
+  {
     "root": "زري",
     "root_buckwalter": "zry",
     "quran_frequency": 1
@@ -1360,8 +6980,223 @@
     "quran_frequency": 1
   },
   {
+    "root": "زمل",
+    "root_buckwalter": "zml",
+    "quran_frequency": 1
+  },
+  {
+    "root": "زمهر",
+    "root_buckwalter": "zmhr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "زنم",
+    "root_buckwalter": "znm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "زهد",
+    "root_buckwalter": "zhd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "زهر",
+    "root_buckwalter": "zhr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سجو",
+    "root_buckwalter": "sjw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سحل",
+    "root_buckwalter": "sHl",
+    "quran_frequency": 1
+  },
+  {
     "root": "سدي",
     "root_buckwalter": "sdy",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سرد",
+    "root_buckwalter": "srd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سردق",
+    "root_buckwalter": "srdq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سطح",
+    "root_buckwalter": "sTH",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سطو",
+    "root_buckwalter": "sTw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سغب",
+    "root_buckwalter": "sgb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سفع",
+    "root_buckwalter": "sfE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سكب",
+    "root_buckwalter": "skb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سكت",
+    "root_buckwalter": "skt",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سلب",
+    "root_buckwalter": "slb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سلق",
+    "root_buckwalter": "slq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سمد",
+    "root_buckwalter": "smd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سمك",
+    "root_buckwalter": "smk",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سند",
+    "root_buckwalter": "snd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سنم",
+    "root_buckwalter": "snm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سنه",
+    "root_buckwalter": "snh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سهر",
+    "root_buckwalter": "shr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سهل",
+    "root_buckwalter": "shl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سهم",
+    "root_buckwalter": "shm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سوح",
+    "root_buckwalter": "swH",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سوط",
+    "root_buckwalter": "swT",
+    "quran_frequency": 1
+  },
+  {
+    "root": "سيب",
+    "root_buckwalter": "syb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "شتو",
+    "root_buckwalter": "shtw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "شحم",
+    "root_buckwalter": "shHm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "شرد",
+    "root_buckwalter": "shrd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "شرذم",
+    "root_buckwalter": "shrdhm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "شرط",
+    "root_buckwalter": "shrT",
+    "quran_frequency": 1
+  },
+  {
+    "root": "شعل",
+    "root_buckwalter": "shEl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "شغف",
+    "root_buckwalter": "shgf",
+    "quran_frequency": 1
+  },
+  {
+    "root": "شفه",
+    "root_buckwalter": "shfh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "شكس",
+    "root_buckwalter": "shks",
+    "quran_frequency": 1
+  },
+  {
+    "root": "شمت",
+    "root_buckwalter": "shmt",
+    "quran_frequency": 1
+  },
+  {
+    "root": "شمخ",
+    "root_buckwalter": "shmkh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "شمز",
+    "root_buckwalter": "shmz",
+    "quran_frequency": 1
+  },
+  {
+    "root": "شوب",
+    "root_buckwalter": "shwb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "شوظ",
+    "root_buckwalter": "shwzh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "شوك",
+    "root_buckwalter": "shwk",
     "quran_frequency": 1
   },
   {
@@ -1370,8 +7205,23 @@
     "quran_frequency": 1
   },
   {
+    "root": "صرع",
+    "root_buckwalter": "SrE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "صعر",
+    "root_buckwalter": "SEr",
+    "quran_frequency": 1
+  },
+  {
     "root": "صفصف",
     "root_buckwalter": "SfSf",
+    "quran_frequency": 1
+  },
+  {
+    "root": "صفن",
+    "root_buckwalter": "Sfn",
     "quran_frequency": 1
   },
   {
@@ -1380,8 +7230,53 @@
     "quran_frequency": 1
   },
   {
+    "root": "صلد",
+    "root_buckwalter": "Sld",
+    "quran_frequency": 1
+  },
+  {
+    "root": "صمت",
+    "root_buckwalter": "Smt",
+    "quran_frequency": 1
+  },
+  {
+    "root": "صمد",
+    "root_buckwalter": "Smd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "صمع",
+    "root_buckwalter": "SmE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "صوع",
+    "root_buckwalter": "SwE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "صوف",
+    "root_buckwalter": "Swf",
+    "quran_frequency": 1
+  },
+  {
+    "root": "صيص",
+    "root_buckwalter": "SyS",
+    "quran_frequency": 1
+  },
+  {
+    "root": "صيف",
+    "root_buckwalter": "Syf",
+    "quran_frequency": 1
+  },
+  {
     "root": "ضأن",
     "root_buckwalter": "DAn",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ضبح",
+    "root_buckwalter": "DbH",
     "quran_frequency": 1
   },
   {
@@ -1390,13 +7285,58 @@
     "quran_frequency": 1
   },
   {
+    "root": "ضفدع",
+    "root_buckwalter": "DfdE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ضمر",
+    "root_buckwalter": "Dmr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ضنك",
+    "root_buckwalter": "Dnk",
+    "quran_frequency": 1
+  },
+  {
     "root": "ضنن",
     "root_buckwalter": "Dnn",
     "quran_frequency": 1
   },
   {
+    "root": "ضهأ",
+    "root_buckwalter": "DhA",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ضير",
+    "root_buckwalter": "Dyr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ضيز",
+    "root_buckwalter": "Dyz",
+    "quran_frequency": 1
+  },
+  {
+    "root": "طحو",
+    "root_buckwalter": "THw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "طرح",
+    "root_buckwalter": "TrH",
+    "quran_frequency": 1
+  },
+  {
     "root": "طفف",
     "root_buckwalter": "Tff",
+    "quran_frequency": 1
+  },
+  {
+    "root": "طلح",
+    "root_buckwalter": "TlH",
     "quran_frequency": 1
   },
   {
@@ -1410,8 +7350,118 @@
     "quran_frequency": 1
   },
   {
+    "root": "طود",
+    "root_buckwalter": "Twd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ظعن",
+    "root_buckwalter": "zhEn",
+    "quran_frequency": 1
+  },
+  {
+    "root": "عبأ",
+    "root_buckwalter": "EbA",
+    "quran_frequency": 1
+  },
+  {
+    "root": "عبقر",
+    "root_buckwalter": "Ebqr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "عدس",
+    "root_buckwalter": "Eds",
+    "quran_frequency": 1
+  },
+  {
+    "root": "عرجن",
+    "root_buckwalter": "Erjn",
+    "quran_frequency": 1
+  },
+  {
+    "root": "عرم",
+    "root_buckwalter": "Erm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "عزو",
+    "root_buckwalter": "Ezw",
+    "quran_frequency": 1
+  },
+  {
     "root": "عسعس",
     "root_buckwalter": "EsEs",
+    "quran_frequency": 1
+  },
+  {
+    "root": "عسل",
+    "root_buckwalter": "Esl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "عضو",
+    "root_buckwalter": "EDw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "عطف",
+    "root_buckwalter": "ETf",
+    "quran_frequency": 1
+  },
+  {
+    "root": "عفر",
+    "root_buckwalter": "Efr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "عمق",
+    "root_buckwalter": "Emq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "عنو",
+    "root_buckwalter": "Enw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "عوق",
+    "root_buckwalter": "Ewq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "عول",
+    "root_buckwalter": "Ewl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "عيب",
+    "root_buckwalter": "Eyb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "غبن",
+    "root_buckwalter": "gbn",
+    "quran_frequency": 1
+  },
+  {
+    "root": "غدق",
+    "root_buckwalter": "gdq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "غزل",
+    "root_buckwalter": "gzl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "غزو",
+    "root_buckwalter": "gzw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "غصب",
+    "root_buckwalter": "gSb",
     "quran_frequency": 1
   },
   {
@@ -1420,8 +7470,103 @@
     "quran_frequency": 1
   },
   {
+    "root": "غطش",
+    "root_buckwalter": "gTsh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "غلق",
+    "root_buckwalter": "glq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "غمز",
+    "root_buckwalter": "gmz",
+    "quran_frequency": 1
+  },
+  {
+    "root": "غمض",
+    "root_buckwalter": "gmD",
+    "quran_frequency": 1
+  },
+  {
+    "root": "غول",
+    "root_buckwalter": "gwl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فتأ",
+    "root_buckwalter": "ftA",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فتق",
+    "root_buckwalter": "ftq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فجو",
+    "root_buckwalter": "fjw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فرث",
+    "root_buckwalter": "frth",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فرع",
+    "root_buckwalter": "frE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فره",
+    "root_buckwalter": "frh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فسر",
+    "root_buckwalter": "fsr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فصح",
+    "root_buckwalter": "fSH",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فصم",
+    "root_buckwalter": "fSm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فضح",
+    "root_buckwalter": "fDH",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فضو",
+    "root_buckwalter": "fDw",
+    "quran_frequency": 1
+  },
+  {
     "root": "فظظ",
     "root_buckwalter": "fzhzh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فقع",
+    "root_buckwalter": "fqE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فلن",
+    "root_buckwalter": "fln",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فند",
+    "root_buckwalter": "fnd",
     "quran_frequency": 1
   },
   {
@@ -1435,13 +7580,73 @@
     "quran_frequency": 1
   },
   {
+    "root": "فهم",
+    "root_buckwalter": "fhm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فوض",
+    "root_buckwalter": "fwD",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فوم",
+    "root_buckwalter": "fwm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "فيل",
+    "root_buckwalter": "fyl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قبح",
+    "root_buckwalter": "qbH",
+    "quran_frequency": 1
+  },
+  {
     "root": "قثأ",
     "root_buckwalter": "qthA",
     "quran_frequency": 1
   },
   {
+    "root": "قدح",
+    "root_buckwalter": "qdH",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قرش",
+    "root_buckwalter": "qrsh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قسر",
+    "root_buckwalter": "qsr",
+    "quran_frequency": 1
+  },
+  {
     "root": "قسس",
     "root_buckwalter": "qss",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قشعر",
+    "root_buckwalter": "qshEr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قصف",
+    "root_buckwalter": "qSf",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قصم",
+    "root_buckwalter": "qSm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قضب",
+    "root_buckwalter": "qDb",
     "quran_frequency": 1
   },
   {
@@ -1455,8 +7660,68 @@
     "quran_frequency": 1
   },
   {
+    "root": "قطمر",
+    "root_buckwalter": "qTmr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قعر",
+    "root_buckwalter": "qEr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قفل",
+    "root_buckwalter": "qfl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قلع",
+    "root_buckwalter": "qlE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قمح",
+    "root_buckwalter": "qmH",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قمطر",
+    "root_buckwalter": "qmTr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قمع",
+    "root_buckwalter": "qmE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قمل",
+    "root_buckwalter": "qml",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قنو",
+    "root_buckwalter": "qnw",
+    "quran_frequency": 1
+  },
+  {
     "root": "قني",
     "root_buckwalter": "qny",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قوب",
+    "root_buckwalter": "qwb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "قوس",
+    "root_buckwalter": "qws",
+    "quran_frequency": 1
+  },
+  {
+    "root": "كبد",
+    "root_buckwalter": "kbd",
     "quran_frequency": 1
   },
   {
@@ -1465,8 +7730,58 @@
     "quran_frequency": 1
   },
   {
+    "root": "كثب",
+    "root_buckwalter": "kthb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "كدر",
+    "root_buckwalter": "kdr",
+    "quran_frequency": 1
+  },
+  {
     "root": "كدي",
     "root_buckwalter": "kdy",
+    "quran_frequency": 1
+  },
+  {
+    "root": "كسد",
+    "root_buckwalter": "ksd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "كشط",
+    "root_buckwalter": "kshT",
+    "quran_frequency": 1
+  },
+  {
+    "root": "كفأ",
+    "root_buckwalter": "kfA",
+    "quran_frequency": 1
+  },
+  {
+    "root": "كفت",
+    "root_buckwalter": "kft",
+    "quran_frequency": 1
+  },
+  {
+    "root": "كلأ",
+    "root_buckwalter": "klA",
+    "quran_frequency": 1
+  },
+  {
+    "root": "كلح",
+    "root_buckwalter": "klH",
+    "quran_frequency": 1
+  },
+  {
+    "root": "كند",
+    "root_buckwalter": "knd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "كنس",
+    "root_buckwalter": "kns",
     "quran_frequency": 1
   },
   {
@@ -1475,8 +7790,23 @@
     "quran_frequency": 1
   },
   {
+    "root": "لحف",
+    "root_buckwalter": "lHf",
+    "quran_frequency": 1
+  },
+  {
+    "root": "لحن",
+    "root_buckwalter": "lHn",
+    "quran_frequency": 1
+  },
+  {
     "root": "لحي",
     "root_buckwalter": "lHy",
+    "quran_frequency": 1
+  },
+  {
+    "root": "لزب",
+    "root_buckwalter": "lzb",
     "quran_frequency": 1
   },
   {
@@ -1485,8 +7815,83 @@
     "quran_frequency": 1
   },
   {
+    "root": "لفح",
+    "root_buckwalter": "lfH",
+    "quran_frequency": 1
+  },
+  {
+    "root": "لفظ",
+    "root_buckwalter": "lfzh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "لقب",
+    "root_buckwalter": "lqb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "لقح",
+    "root_buckwalter": "lqH",
+    "quran_frequency": 1
+  },
+  {
+    "root": "لقم",
+    "root_buckwalter": "lqm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "لهم",
+    "root_buckwalter": "lhm",
+    "quran_frequency": 1
+  },
+  {
+    "root": "لوت",
+    "root_buckwalter": "lwt",
+    "quran_frequency": 1
+  },
+  {
+    "root": "لوذ",
+    "root_buckwalter": "lwdh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "ليت",
+    "root_buckwalter": "lyt",
+    "quran_frequency": 1
+  },
+  {
+    "root": "مجس",
+    "root_buckwalter": "mjs",
+    "quran_frequency": 1
+  },
+  {
+    "root": "محل",
+    "root_buckwalter": "mHl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "مخض",
+    "root_buckwalter": "mkhD",
+    "quran_frequency": 1
+  },
+  {
     "root": "مرو",
     "root_buckwalter": "mrw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "مزن",
+    "root_buckwalter": "mzn",
+    "quran_frequency": 1
+  },
+  {
+    "root": "مسخ",
+    "root_buckwalter": "mskh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "مسد",
+    "root_buckwalter": "msd",
     "quran_frequency": 1
   },
   {
@@ -1495,8 +7900,18 @@
     "quran_frequency": 1
   },
   {
+    "root": "مشج",
+    "root_buckwalter": "mshj",
+    "quran_frequency": 1
+  },
+  {
     "root": "مطو",
     "root_buckwalter": "mTw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "معز",
+    "root_buckwalter": "mEz",
     "quran_frequency": 1
   },
   {
@@ -1505,8 +7920,113 @@
     "quran_frequency": 1
   },
   {
+    "root": "مكو",
+    "root_buckwalter": "mkw",
+    "quran_frequency": 1
+  },
+  {
+    "root": "مير",
+    "root_buckwalter": "myr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نبز",
+    "root_buckwalter": "nbz",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نبط",
+    "root_buckwalter": "nbT",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نتق",
+    "root_buckwalter": "ntq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نجد",
+    "root_buckwalter": "njd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نجس",
+    "root_buckwalter": "njs",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نحب",
+    "root_buckwalter": "nHb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نحر",
+    "root_buckwalter": "nHr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نخر",
+    "root_buckwalter": "nkhr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نسر",
+    "root_buckwalter": "nsr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نضج",
+    "root_buckwalter": "nDj",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نضخ",
+    "root_buckwalter": "nDkh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نطح",
+    "root_buckwalter": "nTH",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نعق",
+    "root_buckwalter": "nEq",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نعل",
+    "root_buckwalter": "nEl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نغض",
+    "root_buckwalter": "ngD",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نفث",
+    "root_buckwalter": "nfth",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نفح",
+    "root_buckwalter": "nfH",
+    "quran_frequency": 1
+  },
+  {
     "root": "نفي",
     "root_buckwalter": "nfy",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نقع",
+    "root_buckwalter": "nqE",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نكد",
+    "root_buckwalter": "nkd",
     "quran_frequency": 1
   },
   {
@@ -1520,6 +8040,31 @@
     "quran_frequency": 1
   },
   {
+    "root": "نهج",
+    "root_buckwalter": "nhj",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نوأ",
+    "root_buckwalter": "nwA",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نوش",
+    "root_buckwalter": "nwsh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نوص",
+    "root_buckwalter": "nwS",
+    "quran_frequency": 1
+  },
+  {
+    "root": "نون",
+    "root_buckwalter": "nwn",
+    "quran_frequency": 1
+  },
+  {
     "root": "نوي",
     "root_buckwalter": "nwy",
     "quran_frequency": 1
@@ -1530,13 +8075,38 @@
     "quran_frequency": 1
   },
   {
+    "root": "هجد",
+    "root_buckwalter": "hjd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "هجع",
+    "root_buckwalter": "hjE",
+    "quran_frequency": 1
+  },
+  {
     "root": "هدد",
     "root_buckwalter": "hdd",
     "quran_frequency": 1
   },
   {
+    "root": "هدم",
+    "root_buckwalter": "hdm",
+    "quran_frequency": 1
+  },
+  {
     "root": "هدهد",
     "root_buckwalter": "hdhd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "هرب",
+    "root_buckwalter": "hrb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "هزل",
+    "root_buckwalter": "hzl",
     "quran_frequency": 1
   },
   {
@@ -1550,8 +8120,63 @@
     "quran_frequency": 1
   },
   {
+    "root": "همد",
+    "root_buckwalter": "hmd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "همر",
+    "root_buckwalter": "hmr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "همس",
+    "root_buckwalter": "hms",
+    "quran_frequency": 1
+  },
+  {
+    "root": "هيت",
+    "root_buckwalter": "hyt",
+    "quran_frequency": 1
+  },
+  {
+    "root": "هيل",
+    "root_buckwalter": "hyl",
+    "quran_frequency": 1
+  },
+  {
     "root": "وأد",
     "root_buckwalter": "wAd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وأل",
+    "root_buckwalter": "wAl",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وبر",
+    "root_buckwalter": "wbr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وتن",
+    "root_buckwalter": "wtn",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وجب",
+    "root_buckwalter": "wjb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وحش",
+    "root_buckwalter": "wHsh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وسن",
+    "root_buckwalter": "wsn",
     "quran_frequency": 1
   },
   {
@@ -1560,8 +8185,68 @@
     "quran_frequency": 1
   },
   {
+    "root": "وضن",
+    "root_buckwalter": "wDn",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وطن",
+    "root_buckwalter": "wTn",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وفد",
+    "root_buckwalter": "wfd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وفر",
+    "root_buckwalter": "wfr",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وفض",
+    "root_buckwalter": "wfD",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وقب",
+    "root_buckwalter": "wqb",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وقذ",
+    "root_buckwalter": "wqdh",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وكد",
+    "root_buckwalter": "wkd",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وكز",
+    "root_buckwalter": "wkz",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وني",
+    "root_buckwalter": "wny",
+    "quran_frequency": 1
+  },
+  {
+    "root": "وهج",
+    "root_buckwalter": "whj",
+    "quran_frequency": 1
+  },
+  {
     "root": "وهي",
     "root_buckwalter": "why",
+    "quran_frequency": 1
+  },
+  {
+    "root": "يقظ",
+    "root_buckwalter": "yqzh",
     "quran_frequency": 1
   },
   {
