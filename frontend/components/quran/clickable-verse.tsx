@@ -71,7 +71,7 @@ export function ClickableVerse({ surahId, ayahNumber, arabicText }: ClickableVer
             <span
               key={`word-${word.position}`}
               lang="ar"
-              className="font-arabic inline-block px-0.5 py-1 text-2xl text-[var(--color-text-primary)] opacity-60"
+              className="font-arabic inline-block px-0.5 py-1 text-2xl text-[var(--color-text-primary)]"
             >
               {word.token}
             </span>

@@ -154,12 +154,7 @@ export function EtymologyPopup({
                     <span
                       className={cn(
                         "rounded-full px-2.5 py-1 text-xs font-medium",
-                        data.confidence === "high" &&
-                          "border border-green-500/30 bg-green-500/20 text-green-300",
-                        data.confidence === "medium" &&
-                          "border border-yellow-500/30 bg-yellow-500/20 text-yellow-300",
-                        data.confidence === "low" &&
-                          "border border-red-500/30 bg-red-500/20 text-red-300"
+                        "border border-indigo-500/30 bg-indigo-500/20 text-indigo-300"
                       )}
                     >
                       {data.confidence === "high" && "Yüksek"}
@@ -263,11 +258,11 @@ export function EtymologyPopup({
                   {data.root_buckwalter && (
                     <Link
                       href={`/keyword-search?q=${encodeURIComponent(data.root_buckwalter)}`}
-                      className="flex items-center justify-center gap-1.5 rounded-md bg-[var(--color-accent-primary)] px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-[var(--color-accent-hover)]"
+                      className="flex items-center gap-1.5 text-sm text-[var(--color-accent-primary)] transition-colors duration-200 hover:text-[var(--color-accent-hover)]"
                       onClick={() => setIsOpen(false)}
                     >
-                      <span>Kelime Aramasına Git</span>
-                      <ExternalLink className="h-4 w-4" />
+                      <span>Kelime Aramasına Git →</span>
+                      <ExternalLink className="h-3.5 w-3.5" />
                     </Link>
                   )}
                 </div>
