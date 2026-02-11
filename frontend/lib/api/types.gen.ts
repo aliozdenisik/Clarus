@@ -5,6 +5,24 @@ export type ClientOptions = {
 };
 
 /**
+ * ApiKeyResponse
+ */
+export type ApiKeyResponse = {
+    /**
+     * Api Key
+     */
+    api_key: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Message
+     */
+    message?: string;
+};
+
+/**
  * BibleKeywordSearchRequest
  */
 export type BibleKeywordSearchRequest = {
@@ -261,6 +279,24 @@ export type CompareRequest = {
      * Response language (auto-detect if omitted)
      */
     language?: string | null;
+    /**
+     * Translator
+     *
+     * Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
+     */
+    translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | null;
+    /**
+     * Quran Keywords
+     *
+     * Optional Turkish keywords for Quran per-keyword search
+     */
+    quran_keywords?: Array<string> | null;
+    /**
+     * Bible Keywords
+     *
+     * Optional English keywords for Bible per-keyword search
+     */
+    bible_keywords?: Array<string> | null;
 };
 
 /**
@@ -390,19 +426,48 @@ export type CrossReferenceWord = {
 };
 
 /**
- * GoogleAuthRequest
- *
- * Google OAuth code exchange request.
+ * EnhanceRequest
  */
-export type GoogleAuthRequest = {
+export type EnhanceRequest = {
     /**
-     * Code
+     * Query
      */
-    code: string;
+    query: string;
     /**
-     * Redirect Uri
+     * Corpus
      */
-    redirect_uri?: string | null;
+    corpus?: string;
+};
+
+/**
+ * EnhanceResponse
+ *
+ * Complete query enhancement response with keywords and metadata.
+ *
+ * Attributes:
+ * original_query: User's original input query
+ * keywords: List of extracted/suggested keywords
+ * corpus: Target corpus ("quran" or "bible")
+ */
+export type EnhanceResponse = {
+    /**
+     * Original Query
+     *
+     * Original user query
+     */
+    original_query: string;
+    /**
+     * Keywords
+     *
+     * Extracted keywords
+     */
+    keywords?: Array<KeywordSuggestion>;
+    /**
+     * Corpus
+     *
+     * Target corpus: quran or bible
+     */
+    corpus?: string;
 };
 
 /**
@@ -492,6 +557,93 @@ export type KeywordSearchResponse = {
     word_transliterations?: {
         [key: string]: string;
     };
+};
+
+/**
+ * KeywordSuggestion
+ *
+ * A suggested keyword extracted from a query.
+ *
+ * Attributes:
+ * text: The keyword text
+ * language: Language code ("tr" for Turkish, "en" for English, "ar" for Arabic)
+ * confidence: Confidence score 0.0-1.0 (1.0 = high confidence)
+ * selected: Whether keyword is selected by default in frontend
+ * source: Extraction method ("llm", "rule_based", "fallback")
+ */
+export type KeywordSuggestion = {
+    /**
+     * Text
+     *
+     * Keyword text
+     */
+    text: string;
+    /**
+     * Language
+     *
+     * Language code: tr, en, ar
+     */
+    language?: string;
+    /**
+     * Confidence
+     *
+     * Confidence score 0.0-1.0
+     */
+    confidence?: number;
+    /**
+     * Selected
+     *
+     * Default selection state in UI
+     */
+    selected?: boolean;
+    /**
+     * Source
+     *
+     * Extraction method: llm, rule_based, fallback
+     */
+    source?: string;
+};
+
+/**
+ * MorphologicalForm
+ */
+export type MorphologicalForm = {
+    /**
+     * Form Pattern
+     *
+     * Pattern/template (e.g., فَاعِل, مَفْعُول)
+     */
+    form_pattern?: string | null;
+    /**
+     * Form Arabic
+     *
+     * Arabic text of the form
+     */
+    form_arabic?: string | null;
+    /**
+     * Form Name
+     *
+     * Name/category of the form
+     */
+    form_name?: string | null;
+    /**
+     * Form Category
+     *
+     * Grammatical category (noun, verb, etc.)
+     */
+    form_category?: string | null;
+    /**
+     * Example Word
+     *
+     * Example word using this form
+     */
+    example_word?: string | null;
+    /**
+     * Occurrences
+     *
+     * Number of occurrences in Quran
+     */
+    occurrences?: number | null;
 };
 
 /**
@@ -601,13 +753,143 @@ export type PreferencesUpdate = {
 };
 
 /**
- * RefreshTokenRequest
+ * RelatedRoot
  */
-export type RefreshTokenRequest = {
+export type RelatedRoot = {
     /**
-     * Refresh Token
+     * Root
+     *
+     * Related root in Arabic
      */
-    refresh_token: string;
+    root: string;
+    /**
+     * Root Buckwalter
+     *
+     * Related root in Buckwalter transliteration
+     */
+    root_buckwalter?: string | null;
+    /**
+     * Meaning Hint
+     *
+     * Brief semantic hint for the relationship
+     */
+    meaning_hint?: string | null;
+};
+
+/**
+ * RootEtymologyResponse
+ */
+export type RootEtymologyResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Id
+     *
+     * Etymology database ID
+     */
+    id: number;
+    /**
+     * Root
+     *
+     * Arabic root (e.g., كتب)
+     */
+    root: string;
+    /**
+     * Root Buckwalter
+     *
+     * Buckwalter Latin transliteration (e.g., ktb)
+     */
+    root_buckwalter: string;
+    /**
+     * Definition En
+     *
+     * English definition from Lane's Lexicon
+     */
+    definition_en?: string | null;
+    /**
+     * Definition Tr
+     *
+     * Turkish translation (LLM-generated)
+     */
+    definition_tr?: string | null;
+    /**
+     * Semantic Field
+     *
+     * Semantic category (e.g., 'writing', 'faith')
+     */
+    semantic_field?: string | null;
+    /**
+     * Morphological Forms
+     *
+     * Verb/noun patterns derived from this root (max 15)
+     */
+    morphological_forms?: Array<MorphologicalForm>;
+    /**
+     * Related Roots
+     *
+     * Semantically related Arabic roots (max 20)
+     */
+    related_roots?: Array<RelatedRoot>;
+    /**
+     * Quran Frequency
+     *
+     * Total occurrences in Quran
+     */
+    quran_frequency?: number;
+    /**
+     * Source
+     *
+     * Data source (e.g., 'lane', 'corpus_only')
+     */
+    source: string;
+    /**
+     * Lane Match Type
+     *
+     * Lane's Lexicon match quality (exact/fuzzy/none)
+     */
+    lane_match_type?: string | null;
+    /**
+     * Lane Volume
+     *
+     * Lane's Lexicon volume number (1-8)
+     */
+    lane_volume?: number | null;
+    /**
+     * Confidence
+     *
+     * Overall data confidence (high/medium/low)
+     */
+    confidence: string;
+    /**
+     * Tr Translation Source
+     *
+     * Turkish translation source
+     */
+    tr_translation_source?: string | null;
+    /**
+     * Tr Translation Confidence
+     *
+     * Turkish translation confidence score (0.0-1.0)
+     */
+    tr_translation_confidence?: number | null;
+    /**
+     * Created At
+     *
+     * Record creation timestamp
+     */
+    created_at: string;
+    /**
+     * Updated At
+     *
+     * Last update timestamp
+     */
+    updated_at: string;
+    /**
+     * Keyword Search Url
+     */
+    readonly keyword_search_url: string;
 };
 
 /**
@@ -672,6 +954,12 @@ export type SearchRequest = {
      * Response language (auto-detect if omitted)
      */
     language?: string | null;
+    /**
+     * Translator
+     *
+     * Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
+     */
+    translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | null;
 };
 
 /**
@@ -725,89 +1013,6 @@ export type SurahDistItem = {
 };
 
 /**
- * TokenResponse
- */
-export type TokenResponse = {
-    /**
-     * Access Token
-     */
-    access_token: string;
-    /**
-     * Refresh Token
-     */
-    refresh_token: string;
-    /**
-     * Token Type
-     */
-    token_type?: string;
-    /**
-     * Expires In
-     */
-    expires_in: number;
-    user: UserResponse;
-};
-
-/**
- * UserCreate
- *
- * Schema for user registration.
- */
-export type UserCreate = {
-    /**
-     * Email
-     */
-    email: string;
-    /**
-     * Password
-     */
-    password: string;
-    /**
-     * Name
-     */
-    name: string;
-};
-
-/**
- * UserLogin
- *
- * Schema for user login.
- */
-export type UserLogin = {
-    /**
-     * Email
-     */
-    email: string;
-    /**
-     * Password
-     */
-    password: string;
-};
-
-/**
- * UserResponse
- *
- * Schema for user response.
- */
-export type UserResponse = {
-    /**
-     * Id
-     */
-    id: number;
-    /**
-     * Email
-     */
-    email: string;
-    /**
-     * Name
-     */
-    name: string;
-    /**
-     * Created At
-     */
-    created_at: string;
-};
-
-/**
  * ValidationError
  */
 export type ValidationError = {
@@ -823,6 +1028,16 @@ export type ValidationError = {
      * Error Type
      */
     type: string;
+    /**
+     * Input
+     */
+    input?: unknown;
+    /**
+     * Context
+     */
+    ctx?: {
+        [key: string]: unknown;
+    };
 };
 
 /**
@@ -908,7 +1123,7 @@ export type VerseLookupResponse = {
      *
      * List of matching verses (empty if none found)
      */
-    verses: Array<VerseResult>;
+    verses: Array<AppSchemasVerseLookupVerseResult>;
     /**
      * Query
      *
@@ -954,6 +1169,122 @@ export type VerseMatchItem = {
 };
 
 /**
+ * VerseWordsResponse
+ *
+ * Response containing tokenized words for a specific verse.
+ */
+export type VerseWordsResponse = {
+    /**
+     * Success
+     *
+     * Always true for successful responses
+     */
+    success?: boolean;
+    /**
+     * Surah Id
+     *
+     * Surah ID (1-114)
+     */
+    surah_id: number;
+    /**
+     * Ayah Number
+     *
+     * Ayah number within the surah
+     */
+    ayah_number: number;
+    /**
+     * Words
+     *
+     * List of words in the verse
+     */
+    words: Array<WordItem>;
+    /**
+     * Word Count
+     *
+     * Total number of words
+     */
+    word_count: number;
+};
+
+/**
+ * WordItem
+ *
+ * Individual word item with morphological and etymology metadata.
+ */
+export type WordItem = {
+    /**
+     * Position
+     *
+     * Position of word in verse (0-indexed)
+     */
+    position: number;
+    /**
+     * Token
+     *
+     * Original Arabic token
+     */
+    token?: string | null;
+    /**
+     * Token Clean
+     *
+     * Cleaned Arabic token (no diacritics)
+     */
+    token_clean?: string | null;
+    /**
+     * Root
+     *
+     * Arabic root (if available)
+     */
+    root?: string | null;
+    /**
+     * Root Buckwalter
+     *
+     * Root in Buckwalter transliteration
+     */
+    root_buckwalter?: string | null;
+    /**
+     * Lemma
+     *
+     * Lemma (base form)
+     */
+    lemma?: string | null;
+    /**
+     * Pos Tag
+     *
+     * Part-of-speech tag
+     */
+    pos_tag?: string | null;
+    /**
+     * Has Etymology
+     *
+     * Whether etymology data exists for this root
+     */
+    has_etymology: boolean;
+};
+
+/**
+ * VerseResult
+ */
+export type AppApiSearchVerseResult = {
+    /**
+     * Source
+     */
+    source: string;
+    /**
+     * Reference
+     */
+    reference: string;
+    /**
+     * Text
+     */
+    text: string;
+    /**
+     * Score
+     */
+    score: number;
+};
+
+/**
  * VerseResult
  *
  * Single verse result with full metadata.
@@ -961,7 +1292,7 @@ export type VerseMatchItem = {
  * Contains both Quran and Bible-specific fields. Fields are null
  * when not applicable to the source (e.g., surah_id is null for Bible verses).
  */
-export type VerseResult = {
+export type AppSchemasVerseLookupVerseResult = {
     /**
      * Reference
      *
@@ -1031,101 +1362,116 @@ export type VerseResult = {
 };
 
 /**
- * VerseResult
+ * RootEtymologyResponse
  */
-export type AppApiSearchVerseResult = {
+export type RootEtymologyResponseWritable = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Id
+     *
+     * Etymology database ID
+     */
+    id: number;
+    /**
+     * Root
+     *
+     * Arabic root (e.g., كتب)
+     */
+    root: string;
+    /**
+     * Root Buckwalter
+     *
+     * Buckwalter Latin transliteration (e.g., ktb)
+     */
+    root_buckwalter: string;
+    /**
+     * Definition En
+     *
+     * English definition from Lane's Lexicon
+     */
+    definition_en?: string | null;
+    /**
+     * Definition Tr
+     *
+     * Turkish translation (LLM-generated)
+     */
+    definition_tr?: string | null;
+    /**
+     * Semantic Field
+     *
+     * Semantic category (e.g., 'writing', 'faith')
+     */
+    semantic_field?: string | null;
+    /**
+     * Morphological Forms
+     *
+     * Verb/noun patterns derived from this root (max 15)
+     */
+    morphological_forms?: Array<MorphologicalForm>;
+    /**
+     * Related Roots
+     *
+     * Semantically related Arabic roots (max 20)
+     */
+    related_roots?: Array<RelatedRoot>;
+    /**
+     * Quran Frequency
+     *
+     * Total occurrences in Quran
+     */
+    quran_frequency?: number;
     /**
      * Source
+     *
+     * Data source (e.g., 'lane', 'corpus_only')
      */
     source: string;
     /**
-     * Reference
+     * Lane Match Type
+     *
+     * Lane's Lexicon match quality (exact/fuzzy/none)
      */
-    reference: string;
+    lane_match_type?: string | null;
     /**
-     * Text
+     * Lane Volume
+     *
+     * Lane's Lexicon volume number (1-8)
      */
-    text: string;
+    lane_volume?: number | null;
     /**
-     * Score
+     * Confidence
+     *
+     * Overall data confidence (high/medium/low)
      */
-    score: number;
-};
-
-export type RegisterApiAuthRegisterPostData = {
-    body: UserCreate;
-    path?: never;
-    query?: never;
-    url: '/api/auth/register';
-};
-
-export type RegisterApiAuthRegisterPostErrors = {
+    confidence: string;
     /**
-     * Validation Error
+     * Tr Translation Source
+     *
+     * Turkish translation source
      */
-    422: HttpValidationError;
-};
-
-export type RegisterApiAuthRegisterPostError = RegisterApiAuthRegisterPostErrors[keyof RegisterApiAuthRegisterPostErrors];
-
-export type RegisterApiAuthRegisterPostResponses = {
+    tr_translation_source?: string | null;
     /**
-     * Successful Response
+     * Tr Translation Confidence
+     *
+     * Turkish translation confidence score (0.0-1.0)
      */
-    200: TokenResponse;
-};
-
-export type RegisterApiAuthRegisterPostResponse = RegisterApiAuthRegisterPostResponses[keyof RegisterApiAuthRegisterPostResponses];
-
-export type LoginApiAuthLoginPostData = {
-    body: UserLogin;
-    path?: never;
-    query?: never;
-    url: '/api/auth/login';
-};
-
-export type LoginApiAuthLoginPostErrors = {
+    tr_translation_confidence?: number | null;
     /**
-     * Validation Error
+     * Created At
+     *
+     * Record creation timestamp
      */
-    422: HttpValidationError;
-};
-
-export type LoginApiAuthLoginPostError = LoginApiAuthLoginPostErrors[keyof LoginApiAuthLoginPostErrors];
-
-export type LoginApiAuthLoginPostResponses = {
+    created_at: string;
     /**
-     * Successful Response
+     * Updated At
+     *
+     * Last update timestamp
      */
-    200: TokenResponse;
+    updated_at: string;
 };
-
-export type LoginApiAuthLoginPostResponse = LoginApiAuthLoginPostResponses[keyof LoginApiAuthLoginPostResponses];
-
-export type GoogleAuthApiAuthGooglePostData = {
-    body: GoogleAuthRequest;
-    path?: never;
-    query?: never;
-    url: '/api/auth/google';
-};
-
-export type GoogleAuthApiAuthGooglePostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type GoogleAuthApiAuthGooglePostError = GoogleAuthApiAuthGooglePostErrors[keyof GoogleAuthApiAuthGooglePostErrors];
-
-export type GoogleAuthApiAuthGooglePostResponses = {
-    /**
-     * Successful Response
-     */
-    200: TokenResponse;
-};
-
-export type GoogleAuthApiAuthGooglePostResponse = GoogleAuthApiAuthGooglePostResponses[keyof GoogleAuthApiAuthGooglePostResponses];
 
 export type GetMeApiAuthMeGetData = {
     body?: never;
@@ -1138,35 +1484,8 @@ export type GetMeApiAuthMeGetResponses = {
     /**
      * Successful Response
      */
-    200: UserResponse;
+    200: unknown;
 };
-
-export type GetMeApiAuthMeGetResponse = GetMeApiAuthMeGetResponses[keyof GetMeApiAuthMeGetResponses];
-
-export type RefreshTokenApiAuthRefreshPostData = {
-    body: RefreshTokenRequest;
-    path?: never;
-    query?: never;
-    url: '/api/auth/refresh';
-};
-
-export type RefreshTokenApiAuthRefreshPostErrors = {
-    /**
-     * Validation Error
-     */
-    422: HttpValidationError;
-};
-
-export type RefreshTokenApiAuthRefreshPostError = RefreshTokenApiAuthRefreshPostErrors[keyof RefreshTokenApiAuthRefreshPostErrors];
-
-export type RefreshTokenApiAuthRefreshPostResponses = {
-    /**
-     * Successful Response
-     */
-    200: TokenResponse;
-};
-
-export type RefreshTokenApiAuthRefreshPostResponse = RefreshTokenApiAuthRefreshPostResponses[keyof RefreshTokenApiAuthRefreshPostResponses];
 
 export type LogoutApiAuthLogoutPostData = {
     body?: never;
@@ -1195,6 +1514,22 @@ export type GetRateLimitStatusApiAuthRateLimitGetResponses = {
      */
     200: unknown;
 };
+
+export type GenerateApiKeyApiAuthApiKeyPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/auth/api-key';
+};
+
+export type GenerateApiKeyApiAuthApiKeyPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: ApiKeyResponse;
+};
+
+export type GenerateApiKeyApiAuthApiKeyPostResponse = GenerateApiKeyApiAuthApiKeyPostResponses[keyof GenerateApiKeyApiAuthApiKeyPostResponses];
 
 export type SearchQuranApiSearchQuranPostData = {
     body: SearchRequest;
@@ -1329,6 +1664,61 @@ export type DeleteHistoryItemApiSearchHistoryHistoryIdDeleteResponses = {
     200: unknown;
 };
 
+export type EnhanceQueryApiSearchEnhancePostData = {
+    body: EnhanceRequest;
+    path?: never;
+    query?: never;
+    url: '/api/search/enhance';
+};
+
+export type EnhanceQueryApiSearchEnhancePostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type EnhanceQueryApiSearchEnhancePostError = EnhanceQueryApiSearchEnhancePostErrors[keyof EnhanceQueryApiSearchEnhancePostErrors];
+
+export type EnhanceQueryApiSearchEnhancePostResponses = {
+    /**
+     * Successful Response
+     */
+    200: EnhanceResponse;
+};
+
+export type EnhanceQueryApiSearchEnhancePostResponse = EnhanceQueryApiSearchEnhancePostResponses[keyof EnhanceQueryApiSearchEnhancePostResponses];
+
+export type GetEtymologyApiEtymologyRootGetData = {
+    body?: never;
+    path: {
+        /**
+         * Root
+         */
+        root: string;
+    };
+    query?: never;
+    url: '/api/etymology/{root}';
+};
+
+export type GetEtymologyApiEtymologyRootGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetEtymologyApiEtymologyRootGetError = GetEtymologyApiEtymologyRootGetErrors[keyof GetEtymologyApiEtymologyRootGetErrors];
+
+export type GetEtymologyApiEtymologyRootGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: RootEtymologyResponse;
+};
+
+export type GetEtymologyApiEtymologyRootGetResponse = GetEtymologyApiEtymologyRootGetResponses[keyof GetEtymologyApiEtymologyRootGetResponses];
+
 export type CompareScripturesApiComparePostData = {
     body: CompareRequest;
     path?: never;
@@ -1367,21 +1757,21 @@ export type StreamSearchApiStreamSearchGetData = {
         /**
          * Source
          *
-         * quran veya bible
+         * Source collection: quran, ot, nt, or apocrypha
          */
-        source?: string;
-        /**
-         * Token
-         *
-         * JWT access token (required for SSE - EventSource can't send headers)
-         */
-        token: string;
+        source?: 'quran' | 'ot' | 'nt' | 'apocrypha';
         /**
          * Language
          *
          * Detected user language (ISO 639-1)
          */
         language?: string | null;
+        /**
+         * Translator
+         *
+         * Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
+         */
+        translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | null;
     };
     url: '/api/stream/search';
 };
@@ -1413,12 +1803,6 @@ export type StreamCompareApiStreamCompareGetData = {
          */
         topic: string;
         /**
-         * Token
-         *
-         * JWT access token (required for SSE - EventSource can't send headers)
-         */
-        token: string;
-        /**
          * Collections
          *
          * Comma-separated list of collections to search (minimum 2)
@@ -1430,6 +1814,12 @@ export type StreamCompareApiStreamCompareGetData = {
          * Detected user language (ISO 639-1)
          */
         language?: string | null;
+        /**
+         * Translator
+         *
+         * Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
+         */
+        translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | null;
     };
     url: '/api/stream/compare';
 };
@@ -1532,6 +1922,20 @@ export type DeleteUserApiAdminUsersUserIdDeleteErrors = {
 export type DeleteUserApiAdminUsersUserIdDeleteError = DeleteUserApiAdminUsersUserIdDeleteErrors[keyof DeleteUserApiAdminUsersUserIdDeleteErrors];
 
 export type DeleteUserApiAdminUsersUserIdDeleteResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type FlushSearchCacheApiAdminCacheFlushPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/admin/cache/flush';
+};
+
+export type FlushSearchCacheApiAdminCacheFlushPostResponses = {
     /**
      * Successful Response
      */
@@ -1690,6 +2094,20 @@ export type GetTestamentsApiMetadataTestamentsGetData = {
 };
 
 export type GetTestamentsApiMetadataTestamentsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetTranslatorsApiMetadataTranslatorsGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/metadata/translators';
+};
+
+export type GetTranslatorsApiMetadataTranslatorsGetResponses = {
     /**
      * Successful Response
      */
@@ -2003,6 +2421,12 @@ export type LookupVerseApiVerseLookupGetData = {
          * Verse reference: '2:183', 'Bakara 183', 'Genesis 1:1', etc.
          */
         ref: string;
+        /**
+         * Translator
+         *
+         * Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
+         */
+        translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | null;
     };
     url: '/api/verse/lookup';
 };
@@ -2024,6 +2448,44 @@ export type LookupVerseApiVerseLookupGetResponses = {
 };
 
 export type LookupVerseApiVerseLookupGetResponse = LookupVerseApiVerseLookupGetResponses[keyof LookupVerseApiVerseLookupGetResponses];
+
+export type GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Surah Id
+         *
+         * Surah ID (1-114)
+         */
+        surah_id: number;
+        /**
+         * Ayah Number
+         *
+         * Ayah number within the surah
+         */
+        ayah_number: number;
+    };
+    query?: never;
+    url: '/api/quran/verses/{surah_id}/{ayah_number}/words';
+};
+
+export type GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetError = GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetErrors[keyof GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetErrors];
+
+export type GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: VerseWordsResponse;
+};
+
+export type GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetResponse = GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetResponses[keyof GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetResponses];
 
 export type HealthCheckApiHealthGetData = {
     body?: never;
