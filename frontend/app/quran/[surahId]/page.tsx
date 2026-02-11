@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { ArrowLeft, User, LogOut } from "lucide-react"
 import { API_BASE } from "@/lib/config"
+import { ClickableVerse } from "@/components/quran/clickable-verse"
 
 interface Verse {
   id: number
@@ -238,9 +239,11 @@ export default function SurahDetailPage() {
                   </div>
                   <div className="flex flex-1 flex-col gap-3">
                     {/* Arabic text - RTL with proper font */}
-                    <p lang="ar" className="font-arabic text-2xl text-[var(--color-text-primary)]">
-                      {verse.text}
-                    </p>
+                    <ClickableVerse
+                      surahId={Number(surahId)}
+                      ayahNumber={verse.id}
+                      arabicText={verse.text}
+                    />
 
                     {/* Turkish translation - with fallback for safety */}
                     {verse.translation ? (
