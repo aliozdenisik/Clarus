@@ -58,7 +58,8 @@ export default function RootDetailPage() {
   const [data, setData] = useState<EtymologyData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [showLegend, setShowLegend] = useState(false)
+  const [showTrLegend, setShowTrLegend] = useState(false)
+  const [showEnLegend, setShowEnLegend] = useState(false)
   const controllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
@@ -218,6 +219,55 @@ export default function RootDetailPage() {
             <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--color-text-secondary)]">
               {data.definition_tr}
             </p>
+            <div className="border-t border-zinc-800 pt-3">
+              <button
+                onClick={() => setShowTrLegend((prev) => !prev)}
+                className="flex w-full items-center gap-2 text-left"
+                data-testid="legend-tr-toggle"
+              >
+                <BookOpen className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
+                <span className="text-xs font-medium text-zinc-500">
+                  Kısaltmalar Rehberi
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "ml-auto h-3.5 w-3.5 shrink-0 text-zinc-600 transition-transform duration-200",
+                    !showTrLegend && "-rotate-90"
+                  )}
+                />
+              </button>
+              {showTrLegend && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="mt-3 space-y-4"
+                  data-testid="legend-tr-content"
+                >
+                  {getAbbreviationsByCategory("tr").map((group) => (
+                    <div key={group.category}>
+                      <h3 className="mb-1.5 text-[10px] font-medium tracking-wider text-indigo-400/80 uppercase">
+                        {group.label}
+                      </h3>
+                      <div className="space-y-0.5">
+                        {group.items.map((item) => (
+                          <div
+                            key={item.abbreviation}
+                            className="flex items-baseline gap-3 rounded px-2 py-0.5 text-xs odd:bg-zinc-900/30"
+                          >
+                            <span className="w-20 shrink-0 font-mono font-semibold text-amber-400/90">
+                              {item.abbreviation}
+                            </span>
+                            <span className="text-zinc-400">
+                              {item.meaning_tr}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+            </div>
           </GlowCard>
         </motion.div>
       )}
@@ -235,62 +285,55 @@ export default function RootDetailPage() {
             <p className="whitespace-pre-line text-sm leading-relaxed text-zinc-500">
               {data.definition_en}
             </p>
-          </GlowCard>
-        </motion.div>
-      )}
-
-      {(data.definition_en || data.definition_tr) && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...springPresets.fluid, delay: 0.25 }}
-        >
-          <GlowCard className="p-6" data-testid="legend-section">
-            <button
-              onClick={() => setShowLegend((prev) => !prev)}
-              className="flex w-full items-center gap-2 text-left"
-            >
-              <BookOpen className="h-4 w-4 shrink-0 text-zinc-500" />
-              <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-                Kısaltmalar Rehberi
-              </h2>
-              <ChevronDown
-                className={cn(
-                  "ml-auto h-4 w-4 shrink-0 text-zinc-500 transition-transform duration-200",
-                  !showLegend && "-rotate-90"
-                )}
-              />
-            </button>
-            {showLegend && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="mt-4 space-y-5"
+            <div className="border-t border-zinc-800 pt-3">
+              <button
+                onClick={() => setShowEnLegend((prev) => !prev)}
+                className="flex w-full items-center gap-2 text-left"
+                data-testid="legend-en-toggle"
               >
-                {getAbbreviationsByCategory().map((group) => (
-                  <div key={group.category}>
-                    <h3 className="mb-2 text-xs font-medium tracking-wide text-indigo-400 uppercase">
-                      {group.label}
-                    </h3>
-                    <div className="space-y-1">
-                      {group.items.map((item) => (
-                        <div
-                          key={item.abbreviation}
-                          className="flex items-baseline gap-3 rounded-md px-2 py-1 text-xs odd:bg-zinc-900/40"
-                        >
-                          <span className="w-20 shrink-0 font-mono font-semibold text-amber-400">
-                            {item.abbreviation}
-                          </span>
-                          <span className="text-[var(--color-text-secondary)]">
-                            {item.meaning_tr}
-                          </span>
-                        </div>
-                      ))}
+                <BookOpen className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
+                <span className="text-xs font-medium text-zinc-500">
+                  Abbreviation Guide
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "ml-auto h-3.5 w-3.5 shrink-0 text-zinc-600 transition-transform duration-200",
+                    !showEnLegend && "-rotate-90"
+                  )}
+                />
+              </button>
+              {showEnLegend && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="mt-3 space-y-4"
+                  data-testid="legend-en-content"
+                >
+                  {getAbbreviationsByCategory("en").map((group) => (
+                    <div key={group.category}>
+                      <h3 className="mb-1.5 text-[10px] font-medium tracking-wider text-indigo-400/80 uppercase">
+                        {group.label}
+                      </h3>
+                      <div className="space-y-0.5">
+                        {group.items.map((item) => (
+                          <div
+                            key={item.abbreviation}
+                            className="flex items-baseline gap-3 rounded px-2 py-0.5 text-xs odd:bg-zinc-900/30"
+                          >
+                            <span className="w-20 shrink-0 font-mono font-semibold text-amber-400/90">
+                              {item.abbreviation}
+                            </span>
+                            <span className="text-zinc-400">
+                              {item.meaning_en}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </motion.div>
-            )}
+                  ))}
+                </motion.div>
+              )}
+            </div>
           </GlowCard>
         </motion.div>
       )}
