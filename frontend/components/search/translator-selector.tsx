@@ -20,9 +20,11 @@ export const TRANSLATORS = [
   { key: "yuksel", label: "Edip Yüksel", shortLabel: "Yüksel" },
 ] as const
 
+export type TranslatorKey = (typeof TRANSLATORS)[number]["key"]
+
 interface TranslatorSelectorProps {
   value: string
-  onChange: (translator: string) => void
+  onChange: (translator: TranslatorKey) => void
 }
 
 export function TranslatorSelector({ value, onChange }: TranslatorSelectorProps) {
@@ -48,7 +50,10 @@ export function TranslatorSelector({ value, onChange }: TranslatorSelectorProps)
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuRadioGroup value={value} onValueChange={onChange}>
+        <DropdownMenuRadioGroup
+          value={value}
+          onValueChange={(val) => onChange(val as TranslatorKey)}
+        >
           {TRANSLATORS.map((translator) => (
             <DropdownMenuRadioItem key={translator.key} value={translator.key}>
               <span className="flex w-full items-center justify-between">

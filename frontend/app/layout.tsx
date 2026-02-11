@@ -1,5 +1,12 @@
 import type { Metadata } from "next"
-import { DM_Sans, DM_Serif_Display, Amiri, Noto_Sans_Hebrew, Noto_Serif } from "next/font/google"
+import {
+  DM_Sans,
+  DM_Serif_Display,
+  Amiri,
+  Noto_Sans_Hebrew,
+  Noto_Serif,
+  Crimson_Text,
+} from "next/font/google"
 import "./globals.css"
 import { Providers } from "@/components/providers"
 import { Toaster } from "sonner"
@@ -43,6 +50,13 @@ const notoSerifGreek = Noto_Serif({
   display: "swap",
 })
 
+const crimsonText = Crimson_Text({
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  variable: "--font-crimson",
+  display: "swap",
+})
+
 export const metadata: Metadata = {
   title: "Clarus",
   description: "Search and explore Quran and Bible with AI-powered insights",
@@ -56,7 +70,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${dmSans.variable} ${dmSerif.variable} ${amiri.variable} ${notoSansHebrew.variable} ${notoSerifGreek.variable} antialiased`}
+        className={`${dmSans.variable} ${dmSerif.variable} ${amiri.variable} ${notoSansHebrew.variable} ${notoSerifGreek.variable} ${crimsonText.variable} antialiased`}
         suppressHydrationWarning
       >
         <Providers>
