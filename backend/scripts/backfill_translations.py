@@ -45,7 +45,7 @@ DATABASE_URL = os.environ.get(
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 TRANSLATION_MODEL = "google/gemini-2.5-flash"
 DEFAULT_WORKERS = 20
-DEFAULT_TIMEOUT = 45.0
+DEFAULT_TIMEOUT = 90.0
 
 LANE_SYSTEM_PROMPT = (
     "You are a Quranic Arabic lexicography expert specializing in classical Arabic roots. "
@@ -288,7 +288,7 @@ def main() -> int:
                 else:
                     prompt = LANE_SYSTEM_PROMPT
                     user_content = def_en
-                translation, confidence = _call_openrouter(api_key, prompt, user_content, max_tokens=1200)
+                translation, confidence = _call_openrouter(api_key, prompt, user_content, max_tokens=4096)
                 tr_source = "llm_gemini"
             else:
                 corpus_prompt = f"Arabic root: {root}, Quran frequency: {freq}"
