@@ -123,9 +123,9 @@ describe("StatsBar", () => {
     expect(screen.getByText("319")).toBeInTheDocument()
     expect(screen.getByText("5")).toBeInTheDocument()
     expect(screen.getByText("12")).toBeInTheDocument()
-    expect(screen.getByText("Total Occurrences")).toBeInTheDocument()
-    expect(screen.getByText("Unique Words")).toBeInTheDocument()
-    expect(screen.getByText("Surahs")).toBeInTheDocument()
+    expect(screen.getByText("Toplam Kullanım")).toBeInTheDocument()
+    expect(screen.getByText("Benzersiz Kelime")).toBeInTheDocument()
+    expect(screen.getByText("Sure")).toBeInTheDocument()
   })
 })
 
@@ -171,7 +171,7 @@ describe("SurahChart", () => {
 
     render(<SurahChart data={data} language="quran" />)
 
-    expect(screen.getByText(/Show all 25 surahs/i)).toBeInTheDocument()
+    expect(screen.getByText(/Tümünü göster \(25 sure\)/)).toBeInTheDocument()
   })
 
   it("shows empty state when no data", () => {

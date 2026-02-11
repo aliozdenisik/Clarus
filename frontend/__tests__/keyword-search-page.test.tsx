@@ -17,6 +17,15 @@ vi.mock("next/navigation", () => ({
   useSearchParams: vi.fn(() => new URLSearchParams()),
 }))
 
+// Mock next/link
+vi.mock("next/link", () => ({
+  default: ({ children, href, ...props }: MockProps & { href: string }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}))
+
 // Mock Better Auth
 vi.mock("@/lib/auth-client", () => ({
   useSession: vi.fn(() => ({

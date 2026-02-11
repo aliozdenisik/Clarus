@@ -8,6 +8,14 @@ type MockProps = {
   [key: string]: unknown
 }
 
+vi.mock("next/link", () => ({
+  default: ({ children, href, ...props }: MockProps & { href: string }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}))
+
 vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...props }: MockProps) => <div {...props}>{children}</div>,
@@ -20,6 +28,7 @@ vi.mock("lucide-react", () => ({
   ChevronDown: () => <div data-testid="chevron-down-icon" />,
   ChevronRight: () => <div data-testid="chevron-right-icon" />,
   ExternalLink: () => <div data-testid="external-link-icon" />,
+  BookOpen: () => <div data-testid="book-open-icon" />,
 }))
 
 vi.mock("@/lib/design-system", () => ({
@@ -64,6 +73,8 @@ const mockEtymologyData = {
   root_buckwalter: "ktb",
   definition_tr: "Yazmak, kaydetmek, kitap yazmak",
   definition_en: "To write, record, prescribe",
+  summary_tr: "Yazı ve kayıt kavramları ile ilgili kök.",
+  summary_en: "Root related to writing and recording concepts.",
   quran_frequency: 319,
   source: "lane",
   confidence: "high",
@@ -125,14 +136,18 @@ describe("RichRootCard", () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByTestId("root-definition-tr")).toBeInTheDocument()
-      expect(screen.getByText("Yazmak, kaydetmek, kitap yazmak")).toBeInTheDocument()
+      expect(screen.getByTestId("root-summary")).toBeInTheDocument()
+      expect(screen.getByText("Yazı ve kayıt kavramları ile ilgili kök.")).toBeInTheDocument()
     })
   })
 
   it("renders English definition", async () => {
     mockUseQuery.mockReturnValue({
-      data: mockEtymologyData,
+      data: {
+        ...mockEtymologyData,
+        summary_tr: null,
+        summary_en: null,
+      },
       isLoading: false,
       isError: false,
     })
@@ -148,8 +163,8 @@ describe("RichRootCard", () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByTestId("root-definition-en")).toBeInTheDocument()
-      expect(screen.getByText("To write, record, prescribe")).toBeInTheDocument()
+      expect(screen.getByTestId("root-definition-tr")).toBeInTheDocument()
+      expect(screen.getByText("Yazmak, kaydetmek, kitap yazmak")).toBeInTheDocument()
     })
   })
 
@@ -172,7 +187,7 @@ describe("RichRootCard", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("root-frequency")).toBeInTheDocument()
-      expect(screen.getByText("319 occurrences")).toBeInTheDocument()
+      expect(screen.getByText("319 kullanım")).toBeInTheDocument()
     })
   })
 
@@ -313,14 +328,14 @@ describe("RichRootCard", () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/Show all \(10\)/)).toBeInTheDocument()
+      expect(screen.getByText(/Tümünü göster \(10\)/)).toBeInTheDocument()
     })
 
-    const showAllButton = screen.getByText(/Show all \(10\)/)
+    const showAllButton = screen.getByText(/Tümünü göster \(10\)/)
     fireEvent.click(showAllButton)
 
     await waitFor(() => {
-      expect(screen.getByText("Show less")).toBeInTheDocument()
+      expect(screen.getByText("Daha az göster")).toBeInTheDocument()
     })
   })
 
