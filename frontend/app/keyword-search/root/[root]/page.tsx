@@ -232,7 +232,7 @@ export default function RootDetailPage() {
                         key={item.abbreviation}
                         className="flex items-baseline gap-2 py-[2px] text-[11px]"
                       >
-                        <span className="w-14 shrink-0 font-mono font-semibold text-amber-400/80">
+                        <span className="w-14 shrink-0 font-mono font-semibold text-cyan-400/80">
                           {item.abbreviation}
                         </span>
                         <span className="text-zinc-500 leading-tight">
@@ -281,7 +281,7 @@ export default function RootDetailPage() {
                         key={item.abbreviation}
                         className="flex items-baseline gap-2 py-[2px] text-[11px]"
                       >
-                        <span className="w-14 shrink-0 font-mono font-semibold text-amber-400/80">
+                        <span className="w-14 shrink-0 font-mono font-semibold text-cyan-400/80">
                           {item.abbreviation}
                         </span>
                         <span className="text-zinc-500 leading-tight">
