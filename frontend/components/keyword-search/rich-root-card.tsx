@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { useQuery } from "@tanstack/react-query"
-import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react"
+import Link from "next/link"
+import { ChevronDown, ChevronRight, ExternalLink, BookOpen } from "lucide-react"
 import { springPresets, tactileScale } from "@/lib/design-system"
 import { GlowCard } from "@/components/ui/glow-card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -199,34 +200,48 @@ export function RichRootCard({
             </div>
           </div>
 
-          {data.definition_tr && (
+          {/* Inline summary (≤200 chars) */}
+          {(data.summary_tr || data.summary_en) && (
+            <div className="space-y-2" data-testid="root-summary">
+              <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
+                Özet
+              </h4>
+              <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                {data.summary_tr || data.summary_en}
+              </p>
+            </div>
+          )}
+
+          {/* Fallback to definition if no summary */}
+          {!data.summary_tr && !data.summary_en && data.definition_tr && (
             <div className="space-y-2" data-testid="root-definition-tr">
               <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
                 Türkçe Tanım
               </h4>
-              <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
+              <p className="line-clamp-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
                 {data.definition_tr}
               </p>
             </div>
           )}
 
-          {data.definition_en && (
-            <div className="space-y-2" data-testid="root-definition-en">
-              <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-                İngilizce Tanım
-              </h4>
-              <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                {data.definition_en}
-              </p>
-            </div>
-          )}
-
-          {!data.definition_tr && !data.definition_en && (
+          {!data.summary_tr && !data.summary_en && !data.definition_tr && !data.definition_en && (
             <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
               <p className="text-xs text-amber-300">
                 Tanım mevcut değil. Daha fazla bilgi için kök kullanımlarına bakın.
               </p>
             </div>
+          )}
+
+          {/* Detail page link */}
+          {data.root_buckwalter && (
+            <Link
+              href={`/keyword-search/root/${data.root_buckwalter}`}
+              className="group flex items-center gap-2 rounded-md border border-indigo-500/20 bg-indigo-500/5 px-3 py-2 text-xs text-indigo-400 transition-colors hover:border-indigo-500/40 hover:bg-indigo-500/10 hover:text-indigo-300"
+              data-testid="root-detail-link"
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              <span>Detaylı Akademik Açıklama →</span>
+            </Link>
           )}
 
           {morphologicalForms.length > 0 && (
