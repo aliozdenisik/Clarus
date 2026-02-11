@@ -11,12 +11,14 @@ from app.api import (
     bible_keyword_search,
     compare,
     enhance,
+    etymology,
     keyword_search,
     metadata,
     preferences,
     search,
     stream,
     verse_lookup,
+    verse_words,
 )
 from app.config import settings
 from app.db import init_db
@@ -251,6 +253,7 @@ async def csrf_protection(request: Request, call_next):
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(search.router, prefix="/api/search", tags=["search"])
 app.include_router(enhance.router, prefix="/api/search", tags=["search"])
+app.include_router(etymology.router, prefix="/api/etymology", tags=["etymology"])
 app.include_router(compare.router, prefix="/api/compare", tags=["compare"])
 app.include_router(stream.router, prefix="/api/stream", tags=["stream"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
@@ -263,6 +266,7 @@ app.include_router(
     tags=["bible-keyword"],
 )
 app.include_router(verse_lookup.router, prefix="/api/verse", tags=["verse"])
+app.include_router(verse_words.router, prefix="/api/quran/verses", tags=["verse-words"])
 
 
 @app.get("/api/health")
