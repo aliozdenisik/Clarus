@@ -214,31 +214,49 @@ describe("RootDetailPage", () => {
     expect(screen.getAllByText("كتب").length).toBeGreaterThan(0)
   })
 
-  it("renders abbreviation legend toggle button", async () => {
+  it("renders inline legend toggles in both definition cards", async () => {
     render(<RootDetailPage />)
 
     await waitFor(() => {
-      expect(screen.getByTestId("legend-section")).toBeInTheDocument()
+      expect(screen.getByTestId("legend-tr-toggle")).toBeInTheDocument()
     })
 
     expect(screen.getByText("Kısaltmalar Rehberi")).toBeInTheDocument()
+    expect(screen.getByTestId("legend-en-toggle")).toBeInTheDocument()
+    expect(screen.getByText("Abbreviation Guide")).toBeInTheDocument()
   })
 
-  it("shows abbreviation categories when legend is opened", async () => {
+  it("shows Turkish abbreviation categories when TR legend is opened", async () => {
     render(<RootDetailPage />)
 
     await waitFor(() => {
-      expect(screen.getByText("Kısaltmalar Rehberi")).toBeInTheDocument()
+      expect(screen.getByTestId("legend-tr-toggle")).toBeInTheDocument()
     })
 
-    await userEvent.click(screen.getByText("Kısaltmalar Rehberi"))
+    await userEvent.click(screen.getByTestId("legend-tr-toggle"))
 
     await waitFor(() => {
-      expect(screen.getByText("Kaynaklar")).toBeInTheDocument()
+      expect(screen.getByTestId("legend-tr-content")).toBeInTheDocument()
     })
 
+    expect(screen.getByText("Kaynaklar")).toBeInTheDocument()
     expect(screen.getByText("Gramer Terimleri")).toBeInTheDocument()
-    expect(screen.getByText("Referans Kısaltmaları")).toBeInTheDocument()
-    expect(screen.getByText("Anlam Belirteçleri")).toBeInTheDocument()
+  })
+
+  it("shows English abbreviation categories when EN legend is opened", async () => {
+    render(<RootDetailPage />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId("legend-en-toggle")).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByTestId("legend-en-toggle"))
+
+    await waitFor(() => {
+      expect(screen.getByTestId("legend-en-content")).toBeInTheDocument()
+    })
+
+    expect(screen.getByText("Sources")).toBeInTheDocument()
+    expect(screen.getByText("Grammar Terms")).toBeInTheDocument()
   })
 })

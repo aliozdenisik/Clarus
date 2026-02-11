@@ -116,14 +116,14 @@ export const LANE_ABBREVIATIONS: LaneAbbreviation[] = [
   },
 ]
 
-const CATEGORY_LABELS: Record<LaneAbbreviation["category"], string> = {
-  Source: "Kaynaklar",
-  Grammar: "Gramer Terimleri",
-  Reference: "Referans Kısaltmaları",
-  Semantics: "Anlam Belirteçleri",
+const CATEGORY_LABELS: Record<LaneAbbreviation["category"], { tr: string; en: string }> = {
+  Source: { tr: "Kaynaklar", en: "Sources" },
+  Grammar: { tr: "Gramer Terimleri", en: "Grammar Terms" },
+  Reference: { tr: "Referans Kısaltmaları", en: "Reference Abbreviations" },
+  Semantics: { tr: "Anlam Belirteçleri", en: "Semantic Markers" },
 }
 
-export function getAbbreviationsByCategory(): {
+export function getAbbreviationsByCategory(lang: "tr" | "en"): {
   category: LaneAbbreviation["category"]
   label: string
   items: LaneAbbreviation[]
@@ -140,7 +140,7 @@ export function getAbbreviationsByCategory(): {
     .filter((cat) => groups.has(cat))
     .map((cat) => ({
       category: cat,
-      label: CATEGORY_LABELS[cat],
+      label: CATEGORY_LABELS[cat][lang],
       items: groups.get(cat)!,
     }))
 }
