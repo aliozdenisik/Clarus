@@ -254,3 +254,14 @@
     offset-distance: 100%;
   }
 }
+
+/* Crimson Text serif typography */
+.font-crimson {
+  font-family: var(--font-crimson), "Crimson Text", serif;
+  font-weight: 450; /* Optical weight compensation for dark backgrounds */
+}
+
+.verse-translation {
+  line-height: 1.75;
+  letter-spacing: 0.01em;
+}

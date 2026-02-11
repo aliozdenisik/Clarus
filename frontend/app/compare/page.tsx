@@ -100,7 +100,9 @@ function CompareContent() {
   const [highlightedVerse, setHighlightedVerse] = useState<string | null>(null)
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null)
   const [detectedLanguage, setDetectedLanguage] = useState<string | undefined>(undefined)
-  const [selectedTranslator, setSelectedTranslator] = useState("diyanet")
+  const [selectedTranslator, setSelectedTranslator] = useState<
+    "diyanet" | "yazir" | "ates" | "bulac" | "ozturk" | "vakfi" | "yildirim" | "yuksel"
+  >("diyanet")
   const [selectedCollections, setSelectedCollections] = useState<string[]>([
     "quran_tr",
     "bible_ot",
