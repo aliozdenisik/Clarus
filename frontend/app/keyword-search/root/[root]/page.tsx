@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { ArrowLeft, BookOpen, ChevronDown } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { springPresets } from "@/lib/design-system"
 import { GlowCard } from "@/components/ui/glow-card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -58,8 +58,6 @@ export default function RootDetailPage() {
   const [data, setData] = useState<EtymologyData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [showTrLegend, setShowTrLegend] = useState(false)
-  const [showEnLegend, setShowEnLegend] = useState(false)
   const controllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
@@ -157,20 +155,23 @@ export default function RootDetailPage() {
         : "border-zinc-500/30 bg-zinc-500/20 text-zinc-300"
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 px-4 py-12">
-      <Link
-        href="/keyword-search"
-        className="inline-flex items-center gap-2 text-sm text-zinc-400 transition-colors hover:text-zinc-200"
-        data-testid="back-link"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Kelime Aramasına Dön
-      </Link>
+    <div className="mx-auto max-w-6xl space-y-8 px-4 py-12">
+      <div className="mx-auto max-w-3xl">
+        <Link
+          href="/keyword-search"
+          className="inline-flex items-center gap-2 text-sm text-zinc-400 transition-colors hover:text-zinc-200"
+          data-testid="back-link"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Kelime Aramasına Dön
+        </Link>
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={springPresets.fluid}
+        className="mx-auto max-w-3xl"
       >
         <GlowCard className="space-y-6 p-8">
           <div className="space-y-3 text-center">
@@ -212,63 +213,46 @@ export default function RootDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...springPresets.fluid, delay: 0.1 }}
         >
-          <GlowCard className="space-y-3 p-6" data-testid="definition-tr-section">
-            <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-              Türkçe Çeviri
-            </h2>
-            <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--color-text-secondary)]">
-              {data.definition_tr}
-            </p>
-            <div className="border-t border-zinc-800 pt-3">
-              <button
-                onClick={() => setShowTrLegend((prev) => !prev)}
-                className="flex w-full items-center gap-2 text-left"
-                data-testid="legend-tr-toggle"
-              >
-                <BookOpen className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
-                <span className="text-xs font-medium text-zinc-500">
-                  Kısaltmalar Rehberi
-                </span>
-                <ChevronDown
-                  className={cn(
-                    "ml-auto h-3.5 w-3.5 shrink-0 text-zinc-600 transition-transform duration-200",
-                    !showTrLegend && "-rotate-90"
-                  )}
-                />
-              </button>
-              {showTrLegend && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  className="mt-3 space-y-4"
-                  data-testid="legend-tr-content"
-                >
-                  {getAbbreviationsByCategory("tr").map((group) => (
-                    <div key={group.category}>
-                      <h3 className="mb-1.5 text-[10px] font-medium tracking-wider text-indigo-400/80 uppercase">
-                        {group.label}
-                      </h3>
-                      <div className="space-y-0.5">
-                        {group.items.map((item) => (
-                          <div
-                            key={item.abbreviation}
-                            className="flex items-baseline gap-3 rounded px-2 py-0.5 text-xs odd:bg-zinc-900/30"
-                          >
-                            <span className="w-20 shrink-0 font-mono font-semibold text-amber-400/90">
-                              {item.abbreviation}
-                            </span>
-                            <span className="text-zinc-400">
-                              {item.meaning_tr}
-                            </span>
-                          </div>
-                        ))}
+          <div className="grid gap-4 lg:grid-cols-[240px_1fr]" data-testid="definition-tr-section">
+            <aside
+              className="top-6 self-start rounded-lg border border-zinc-800/60 bg-zinc-900/40 p-3 lg:sticky"
+              data-testid="legend-tr-panel"
+            >
+              <h3 className="mb-3 text-[10px] font-semibold tracking-widest text-zinc-500 uppercase">
+                Kısaltmalar
+              </h3>
+              <div className="space-y-3">
+                {getAbbreviationsByCategory("tr").map((group) => (
+                  <div key={group.category}>
+                    <p className="mb-1 text-[9px] font-medium tracking-wider text-indigo-400/70 uppercase">
+                      {group.label}
+                    </p>
+                    {group.items.map((item) => (
+                      <div
+                        key={item.abbreviation}
+                        className="flex items-baseline gap-2 py-[2px] text-[11px]"
+                      >
+                        <span className="w-14 shrink-0 font-mono font-semibold text-amber-400/80">
+                          {item.abbreviation}
+                        </span>
+                        <span className="text-zinc-500 leading-tight">
+                          {item.meaning_tr}
+                        </span>
                       </div>
-                    </div>
-                  ))}
-                </motion.div>
-              )}
-            </div>
-          </GlowCard>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </aside>
+            <GlowCard className="space-y-3 p-6">
+              <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
+                Türkçe Çeviri
+              </h2>
+              <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                {data.definition_tr}
+              </p>
+            </GlowCard>
+          </div>
         </motion.div>
       )}
 
@@ -278,63 +262,46 @@ export default function RootDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...springPresets.fluid, delay: 0.2 }}
         >
-          <GlowCard className="space-y-3 p-6" data-testid="definition-en-section">
-            <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-              Orijinal Lane&apos;s Lexicon
-            </h2>
-            <p className="whitespace-pre-line text-sm leading-relaxed text-zinc-500">
-              {data.definition_en}
-            </p>
-            <div className="border-t border-zinc-800 pt-3">
-              <button
-                onClick={() => setShowEnLegend((prev) => !prev)}
-                className="flex w-full items-center gap-2 text-left"
-                data-testid="legend-en-toggle"
-              >
-                <BookOpen className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
-                <span className="text-xs font-medium text-zinc-500">
-                  Abbreviation Guide
-                </span>
-                <ChevronDown
-                  className={cn(
-                    "ml-auto h-3.5 w-3.5 shrink-0 text-zinc-600 transition-transform duration-200",
-                    !showEnLegend && "-rotate-90"
-                  )}
-                />
-              </button>
-              {showEnLegend && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  className="mt-3 space-y-4"
-                  data-testid="legend-en-content"
-                >
-                  {getAbbreviationsByCategory("en").map((group) => (
-                    <div key={group.category}>
-                      <h3 className="mb-1.5 text-[10px] font-medium tracking-wider text-indigo-400/80 uppercase">
-                        {group.label}
-                      </h3>
-                      <div className="space-y-0.5">
-                        {group.items.map((item) => (
-                          <div
-                            key={item.abbreviation}
-                            className="flex items-baseline gap-3 rounded px-2 py-0.5 text-xs odd:bg-zinc-900/30"
-                          >
-                            <span className="w-20 shrink-0 font-mono font-semibold text-amber-400/90">
-                              {item.abbreviation}
-                            </span>
-                            <span className="text-zinc-400">
-                              {item.meaning_en}
-                            </span>
-                          </div>
-                        ))}
+          <div className="grid gap-4 lg:grid-cols-[240px_1fr]" data-testid="definition-en-section">
+            <aside
+              className="top-6 self-start rounded-lg border border-zinc-800/60 bg-zinc-900/40 p-3 lg:sticky"
+              data-testid="legend-en-panel"
+            >
+              <h3 className="mb-3 text-[10px] font-semibold tracking-widest text-zinc-500 uppercase">
+                Abbreviations
+              </h3>
+              <div className="space-y-3">
+                {getAbbreviationsByCategory("en").map((group) => (
+                  <div key={group.category}>
+                    <p className="mb-1 text-[9px] font-medium tracking-wider text-indigo-400/70 uppercase">
+                      {group.label}
+                    </p>
+                    {group.items.map((item) => (
+                      <div
+                        key={item.abbreviation}
+                        className="flex items-baseline gap-2 py-[2px] text-[11px]"
+                      >
+                        <span className="w-14 shrink-0 font-mono font-semibold text-amber-400/80">
+                          {item.abbreviation}
+                        </span>
+                        <span className="text-zinc-500 leading-tight">
+                          {item.meaning_en}
+                        </span>
                       </div>
-                    </div>
-                  ))}
-                </motion.div>
-              )}
-            </div>
-          </GlowCard>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </aside>
+            <GlowCard className="space-y-3 p-6">
+              <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
+                Orijinal Lane&apos;s Lexicon
+              </h2>
+              <p className="whitespace-pre-line text-sm leading-relaxed text-zinc-500">
+                {data.definition_en}
+              </p>
+            </GlowCard>
+          </div>
         </motion.div>
       )}
 
@@ -343,6 +310,7 @@ export default function RootDetailPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...springPresets.fluid, delay: 0.3 }}
+          className="mx-auto max-w-3xl"
         >
           <GlowCard className="space-y-4 p-6" data-testid="morphological-section">
             <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
@@ -394,6 +362,7 @@ export default function RootDetailPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...springPresets.fluid, delay: 0.4 }}
+          className="mx-auto max-w-3xl"
         >
           <GlowCard className="space-y-4 p-6" data-testid="related-roots-section">
             <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
