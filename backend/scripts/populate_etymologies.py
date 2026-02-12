@@ -53,6 +53,9 @@ def main() -> int:
     )
     parser.add_argument("--dry-run", action="store_true", help="Run without inserting")
     parser.add_argument("--corpus-only", action="store_true", help="Skip Lane matching")
+    parser.add_argument(
+        "--skip-translation", action="store_true", help="Skip Turkish translation (populate definition_en only)"
+    )
     parser.add_argument("--batch-size", type=int, default=100, help="Insert batch size")
     args = parser.parse_args()
 
@@ -67,6 +70,7 @@ def main() -> int:
         batch_size=args.batch_size,
         dry_run=args.dry_run,
         use_lane=use_lane,
+        skip_translation=args.skip_translation,
     )
     result = pipeline.run()
 

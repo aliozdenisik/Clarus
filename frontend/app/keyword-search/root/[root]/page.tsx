@@ -13,6 +13,7 @@ import { logger } from "@/lib/logger"
 import { API_BASE } from "@/lib/config"
 import { cn } from "@/lib/utils"
 import { getAbbreviationsByCategory } from "@/lib/constants/lane-abbreviations"
+import { formatLaneDefinition } from "@/lib/utils/format-lane-definition"
 
 interface EtymologyData {
   id: number
@@ -213,44 +214,19 @@ export default function RootDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...springPresets.fluid, delay: 0.1 }}
         >
-          <div className="grid gap-4 lg:grid-cols-[240px_1fr]" data-testid="definition-tr-section">
-            <aside
-              className="top-6 self-start rounded-lg border border-zinc-800/60 bg-zinc-900/40 p-3 lg:sticky"
-              data-testid="legend-tr-panel"
-            >
-              <h3 className="mb-3 text-[10px] font-semibold tracking-widest text-zinc-500 uppercase">
-                Kısaltmalar
-              </h3>
-              <div className="space-y-3">
-                {getAbbreviationsByCategory("tr").map((group) => (
-                  <div key={group.category}>
-                    <p className="mb-1 text-[9px] font-medium tracking-wider text-indigo-400/70 uppercase">
-                      {group.label}
-                    </p>
-                    {group.items.map((item) => (
-                      <div
-                        key={item.abbreviation}
-                        className="flex items-baseline gap-2 py-[2px] text-[11px]"
-                      >
-                        <span className="w-14 shrink-0 font-mono font-semibold text-amber-400/80">
-                          {item.abbreviation}
-                        </span>
-                        <span className="leading-tight text-zinc-400">{item.meaning_tr}</span>
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </aside>
-            <GlowCard className="space-y-3 p-6">
-              <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-                Türkçe Çeviri
-              </h2>
-              <p className="text-sm leading-relaxed whitespace-pre-line text-zinc-200">
-                {data.definition_tr}
-              </p>
-            </GlowCard>
-          </div>
+          <GlowCard className="space-y-3 p-6" data-testid="definition-tr-section">
+            <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
+              Lane&apos;s Lexicon &mdash; Akademik Türkçe Tercüme
+            </h2>
+            <p className="text-sm leading-relaxed whitespace-pre-line text-zinc-200">
+              {formatLaneDefinition(data.definition_tr)}
+            </p>
+            <p className="mt-2 text-[10px] leading-relaxed text-zinc-600">
+              Bu tercüme, orijinal İngilizce Lane&apos;s Lexicon metninden yapay zeka (LLM)
+              aracılığıyla üretilmiştir. Akademik çalışmalarda orijinal İngilizce metni referans
+              almanız önerilir.
+            </p>
+          </GlowCard>
         </motion.div>
       )}
 
@@ -291,10 +267,10 @@ export default function RootDetailPage() {
             </aside>
             <GlowCard className="space-y-3 p-6">
               <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-                Orijinal Lane&apos;s Lexicon
+                Lane&apos;s Lexicon &mdash; Original English
               </h2>
               <p className="text-sm leading-relaxed whitespace-pre-line text-zinc-200">
-                {data.definition_en}
+                {formatLaneDefinition(data.definition_en)}
               </p>
             </GlowCard>
           </div>
