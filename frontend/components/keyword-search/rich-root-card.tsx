@@ -47,6 +47,7 @@ export function RichRootCard({
     },
     enabled: !!rootBuckwalter && rootSource !== "not_found" && isArabic,
     staleTime: Infinity,
+    retry: false,
   })
 
   if (!isArabic) {

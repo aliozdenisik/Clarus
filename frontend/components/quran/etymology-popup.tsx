@@ -69,6 +69,7 @@ export function EtymologyPopup({
     },
     enabled: isOpen && !!root && hasEtymology,
     staleTime: Infinity, // Etymology data never changes
+    retry: false,
   })
 
   if (!hasEtymology) {

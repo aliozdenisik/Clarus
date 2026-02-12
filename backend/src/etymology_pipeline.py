@@ -401,6 +401,7 @@ class EtymologyPipeline:
         dry_run: bool = False,
         *,
         use_lane: bool = True,
+        skip_translation: bool = False,
     ):
         """Initialize pipeline."""
         self.db_url = db_url
@@ -409,6 +410,7 @@ class EtymologyPipeline:
         self._engine = create_engine(self._sqlalchemy_dsn, future=True)
         self.batch_size = batch_size
         self.dry_run = dry_run
+        self.skip_translation = skip_translation
         self.openrouter_api_key = openrouter_api_key
         self.translation_timeout_seconds = _parse_positive_float_env(
             "ETYMOLOGY_TRANSLATION_TIMEOUT_SECONDS",
@@ -494,7 +496,11 @@ class EtymologyPipeline:
 
             self._forms_connection = None
 
-            final_rows = self._translate_batch(processed_rows)
+            if self.skip_translation:
+                logger.info("Skipping translation (skip_translation=True)")
+                final_rows = processed_rows
+            else:
+                final_rows = self._translate_batch(processed_rows)
 
             inserted_rows = 0
             if not self.dry_run:

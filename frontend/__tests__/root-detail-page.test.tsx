@@ -131,12 +131,11 @@ describe("RootDetailPage", () => {
     render(<RootDetailPage />)
 
     await waitFor(() => {
-      expect(screen.getByText("Türkçe Çeviri")).toBeInTheDocument()
+      expect(screen.getByTestId("definition-tr-section")).toBeInTheDocument()
     })
 
-    expect(screen.getByText("Orijinal Lane's Lexicon")).toBeInTheDocument()
+    expect(screen.getByTestId("definition-en-section")).toBeInTheDocument()
     expect(screen.getByText(/Morfolojik Formlar/)).toBeInTheDocument()
-    // Summary section should NOT be present on this page
     expect(screen.queryByText("Özet")).not.toBeInTheDocument()
   })
 
@@ -198,10 +197,10 @@ describe("RootDetailPage", () => {
     render(<RootDetailPage />)
 
     await waitFor(() => {
-      expect(screen.getByText("Türkçe Çeviri")).toBeInTheDocument()
+      expect(screen.getByTestId("definition-tr-section")).toBeInTheDocument()
     })
 
-    expect(screen.getByText("Orijinal Lane's Lexicon")).toBeInTheDocument()
+    expect(screen.getByTestId("definition-en-section")).toBeInTheDocument()
     expect(screen.getByText("Yazmak, kaydetmek. Türkçe açıklama...")).toBeInTheDocument()
   })
 
@@ -213,18 +212,6 @@ describe("RootDetailPage", () => {
     })
 
     expect(screen.getAllByText("كتب").length).toBeGreaterThan(0)
-  })
-
-  it("renders Turkish abbreviation legend panel beside TR definition", async () => {
-    render(<RootDetailPage />)
-
-    await waitFor(() => {
-      expect(screen.getByTestId("legend-tr-panel")).toBeInTheDocument()
-    })
-
-    expect(screen.getByText("Kısaltmalar")).toBeInTheDocument()
-    expect(screen.getByText("Kaynaklar")).toBeInTheDocument()
-    expect(screen.getByText("Gramer Terimleri")).toBeInTheDocument()
   })
 
   it("renders English abbreviation legend panel beside EN definition", async () => {

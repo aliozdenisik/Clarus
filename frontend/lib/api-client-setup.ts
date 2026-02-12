@@ -88,7 +88,7 @@ export function setupApiClient(): void {
           ? error
           : undefined
 
-    logger.error("API request failed", error instanceof Error ? error : undefined, {
+    const context = {
       component: "ApiClient",
       action: "error",
       status: response?.status,
@@ -99,7 +99,14 @@ export function setupApiClient(): void {
       errorType,
       errorMessage,
       errorPayload,
-    })
+    }
+
+    // 404s are expected for optional data lookups (e.g. etymology) — warn, not error
+    if (response?.status === 404) {
+      logger.warn("API resource not found", context)
+    } else {
+      logger.error("API request failed", error instanceof Error ? error : undefined, context)
+    }
 
     return error
   })

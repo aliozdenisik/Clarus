@@ -16,6 +16,7 @@ import argparse
 import json
 import logging
 import os
+import random
 import re
 import sys
 import threading
@@ -44,27 +45,86 @@ DATABASE_URL = os.environ.get(
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 TRANSLATION_MODEL = "google/gemini-2.5-flash"
-DEFAULT_WORKERS = 20
+DEFAULT_WORKERS = 10
 DEFAULT_TIMEOUT = 90.0
 
 LANE_SYSTEM_PROMPT = (
     "You are a Quranic Arabic lexicography expert specializing in classical Arabic roots. "
-    "Translate the following Lane's Arabic-English Lexicon definition to Turkish. "
-    "This definition describes a Quranic Arabic root — preserve Islamic and Quranic terminology "
-    "(e.g., 'tövbe' for repentance, 'salat' for prayer, 'sadaka' for charity). "
-    "Use academic Turkish suitable for a Quran concordance. Return JSON: "
-    '{"translation": "...", "confidence": 0.0-1.0}'
+    "Translate the following Lane's Arabic-English Lexicon definition to READABLE modern Turkish. "
+    "\n\n"
+    "CRITICAL REQUIREMENTS:\n"
+    "1. EXPAND abbreviations inline - NEVER leave them as-is:\n"
+    "   SOURCE ABBREVIATIONS (Dictionary References):\n"
+    "   - S → Sihâh'a göre (es-Sıhâh sözlüğüne göre)\n"
+    "   - K → Kámoos'a göre (el-Kâmûs sözlüğüne göre)\n"
+    "   - TA → Tâcu'l-Arûs'a göre (en kapsamlı kaynak)\n"
+    "   - Msb → Misbáh'a göre (el-Misbâhu'l-Münîr sözlüğüne göre)\n"
+    "   - Bd → Beyzâvî Tefsiri'ne göre\n"
+    "   - A → Esâsu'l-Belâga'ya göre (mecaz sözlüğü)\n"
+    "   - Lh → El-Lihyânî'ye göre (dilbilimci)\n"
+    "   - IAar → İbnu'l-A'râbî'ye göre (dilbilimci)\n"
+    "   \n"
+    "   GRAMMAR ABBREVIATIONS:\n"
+    "   - aor. → muzari fiil (geniş/şimdiki zaman)\n"
+    "   - inf. n. → mastar (fiilin isim hali)\n"
+    "   - pl. → çoğul\n"
+    "   - subst. → isim\n"
+    "   \n"
+    "   REFERENCE ABBREVIATIONS:\n"
+    "   - q. v. → (bakınız)\n"
+    "   - accord. → ...-e göre\n"
+    "   - app. → zahiren / görünüşe göre\n"
+    "   - And → ve\n"
+    "   - or → veya\n"
+    "   \n"
+    "   SEMANTIC MARKERS:\n"
+    "   - tropical → mecaz (mecazi anlam)\n"
+    "   - assumed tropical → varsayılan mecaz\n"
+    "   - syn. → eş anlamlı\n"
+    "   - contr. → zıt anlamlı\n"
+    "\n"
+    "2. Convert 19th-century dense academic English to CLEAR modern Turkish:\n"
+    "   - Break long sentences into shorter ones\n"
+    "   - Use active voice instead of passive where possible\n"
+    "   - Replace archaic constructions with contemporary Turkish\n"
+    "   - Simplify complex nested clauses\n"
+    "\n"
+    "3. PRESERVE ALL CONTENT - nothing removed, nothing added:\n"
+    "   - All meanings, nuances, and usage examples must be included\n"
+    "   - All scholarly citations preserved (just expanded)\n"
+    "   - All cross-references maintained\n"
+    "\n"
+    "4. PRESERVE Lane's section codes EXACTLY as they appear:\n"
+    "   - -b2- -b3- -b4- etc. (sub-meanings) → keep as -b2- -b3- -b4-\n"
+    "   - -A2- -A3- -A4- etc. (new main senses) → keep as -A2- -A3- -A4-\n"
+    "   - Do NOT remove, rename, or renumber these codes\n"
+    "   - Place them at the SAME position in the Turkish text as in the English original\n"
+    "\n"
+    "5. Target audience: Quran readers with basic Islamic knowledge (not Arabic scholars)\n"
+    "   - Use standard Islamic Turkish terminology (tövbe, salat, sadaka)\n"
+    "   - Explain technical terms in parentheses when first used\n"
+    "   - Make it readable without sacrificing accuracy\n"
+    "\n"
+    'Return JSON: {"translation": "...", "confidence": 0.0-1.0}'
 )
 
 LANE_LONG_SYSTEM_PROMPT = (
     "You are a Quranic Arabic lexicography expert specializing in classical Arabic roots. "
-    "Translate the following Lane's Arabic-English Lexicon definition to Turkish COMPLETELY. "
+    "Translate the following Lane's Arabic-English Lexicon definition to READABLE modern Turkish COMPLETELY. "
     "This is a LONG definition — translate ALL meanings, usages, citations and examples faithfully. "
     "Do NOT summarize or shorten. Provide a FULL, comprehensive Turkish translation. "
-    "Preserve Islamic and Quranic terminology (e.g., 'tövbe' for repentance, 'salat' for prayer). "
-    "Preserve Lane's scholarly references (S, K, TA, Msb etc.) as-is. "
-    "Use academic Turkish suitable for a Quran concordance. Return JSON: "
-    '{"translation": "...", "confidence": 0.0-1.0}'
+    "\n\n"
+    "CRITICAL REQUIREMENTS:\n"
+    "1. EXPAND abbreviations inline using Turkish equivalents (see above list):\n"
+    "   - S → Sihâh'a göre, K → Kámoos'a göre, TA → Tâcu'l-Arûs'a göre\n"
+    "   - aor. → muzari fiil, inf. n. → mastar, pl. → çoğul\n"
+    "   - q. v. → bakınız, tropical → mecaz\n"
+    "\n"
+    "2. Convert 19th-century English to clear modern Turkish while preserving ALL content\n"
+    "3. Target: Quran readers (not academics) — readable but comprehensive\n"
+    "4. Use Islamic Turkish terminology (tövbe, salat, sadaka, etc.)\n"
+    "\n"
+    'Return JSON: {"translation": "...", "confidence": 0.0-1.0}'
 )
 
 LONG_DEFINITION_THRESHOLD = 1500
@@ -101,6 +161,8 @@ def _throttle_wait() -> None:
     if sleep_for > 0:
         logger.info("Rate-limit backoff: sleeping %.1fs", sleep_for)
         time.sleep(sleep_for)
+        jitter = random.uniform(0.1, 1.0)
+        time.sleep(jitter)
 
 
 def _throttle_set(seconds: float) -> None:
@@ -134,6 +196,7 @@ def _call_openrouter(
 ) -> tuple[str | None, float | None]:
     """Single LLM translation call → (translation_text, confidence)."""
     _throttle_wait()
+    time.sleep(random.uniform(0.1, 0.5))
 
     resp = requests.post(
         OPENROUTER_URL,
