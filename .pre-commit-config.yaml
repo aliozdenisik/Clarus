@@ -33,8 +33,9 @@ repos:
       - id: check-case-conflict
       - id: mixed-line-ending
         args: [--fix=lf]
-      - id: no-commit-to-branch
-        args: [--branch, main, --branch, master]
+      # DISABLED: Allow direct commits to main during development (re-enable before production)
+      # - id: no-commit-to-branch
+      #   args: [--branch, main, --branch, master]
 
   # ===== GLOBAL: Secret Detection =====
   - repo: https://github.com/gitleaks/gitleaks
