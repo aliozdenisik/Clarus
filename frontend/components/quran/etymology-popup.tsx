@@ -190,12 +190,14 @@ export function EtymologyPopup({
                             data-testid="root-meaning"
                             className="text-sm text-[var(--color-text-primary)]"
                           >
-                            <span className="font-medium text-[var(--color-text-muted)]">Anlam:</span>{" "}
+                            <span className="font-medium text-[var(--color-text-muted)]">
+                              Anlam:
+                            </span>{" "}
                             {data.summary_tr}
                           </p>
                         )}
                         {data.summary_en && (
-                          <p className="text-sm italic text-[var(--color-text-secondary)]">
+                          <p className="text-sm text-[var(--color-text-secondary)] italic">
                             {data.summary_en}
                           </p>
                         )}

@@ -235,9 +235,7 @@ export default function RootDetailPage() {
                         <span className="w-14 shrink-0 font-mono font-semibold text-amber-400/80">
                           {item.abbreviation}
                         </span>
-                        <span className="text-zinc-500 leading-tight">
-                          {item.meaning_tr}
-                        </span>
+                        <span className="leading-tight text-zinc-400">{item.meaning_tr}</span>
                       </div>
                     ))}
                   </div>
@@ -248,7 +246,7 @@ export default function RootDetailPage() {
               <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
                 Türkçe Çeviri
               </h2>
-              <p className="whitespace-pre-line text-sm leading-relaxed text-[var(--color-text-secondary)]">
+              <p className="text-sm leading-relaxed whitespace-pre-line text-zinc-200">
                 {data.definition_tr}
               </p>
             </GlowCard>
@@ -284,9 +282,7 @@ export default function RootDetailPage() {
                         <span className="w-14 shrink-0 font-mono font-semibold text-amber-400/80">
                           {item.abbreviation}
                         </span>
-                        <span className="text-zinc-500 leading-tight">
-                          {item.meaning_en}
-                        </span>
+                        <span className="leading-tight text-zinc-400">{item.meaning_en}</span>
                       </div>
                     ))}
                   </div>
@@ -297,7 +293,7 @@ export default function RootDetailPage() {
               <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
                 Orijinal Lane&apos;s Lexicon
               </h2>
-              <p className="whitespace-pre-line text-sm leading-relaxed text-zinc-500">
+              <p className="text-sm leading-relaxed whitespace-pre-line text-zinc-200">
                 {data.definition_en}
               </p>
             </GlowCard>

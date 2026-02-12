@@ -49,7 +49,11 @@ vi.mock("lucide-react", () => ({
 }))
 
 vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, className, ...rest }: MockProps) => <div className={className} {...rest}>{children}</div>,
+  GlowCard: ({ children, className, ...rest }: MockProps) => (
+    <div className={className} {...rest}>
+      {children}
+    </div>
+  ),
 }))
 
 vi.mock("@/components/ui/skeleton", () => ({
@@ -83,9 +87,7 @@ const mockEtymologyData = {
       occurrences: 45,
     },
   ],
-  related_roots: [
-    { root: "قرأ", root_buckwalter: "qr>", meaning_hint: "to read" },
-  ],
+  related_roots: [{ root: "قرأ", root_buckwalter: "qr>", meaning_hint: "to read" }],
   quran_frequency: 319,
   source: "lane",
   lane_match_type: "exact",
@@ -147,7 +149,9 @@ describe("RootDetailPage", () => {
 
     expect(screen.getByTestId("definition-en-section")).toBeInTheDocument()
     // Lane's definition text should be visible without clicking (no collapsible)
-    expect(screen.getByText("To write, to inscribe. Lane's Lexicon definition goes here...")).toBeInTheDocument()
+    expect(
+      screen.getByText("To write, to inscribe. Lane's Lexicon definition goes here...")
+    ).toBeInTheDocument()
     expect(screen.getByText("Yazmak, kaydetmek. Türkçe açıklama...")).toBeInTheDocument()
   })
 

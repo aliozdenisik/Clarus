@@ -35,6 +35,15 @@ Phase 3 (Sprint 5+): Altyapı
 |---|--------|------------|
 | ~~#50~~ | İki Ayrı AI Agent (Kuran + İncil) + Sentez AI | 2026-02-05 |
 | ~~#51~~ | Query Modelleri için Hızlı Model Geçişi (flash-lite) | 2026-02-05 |
+| ~~#60~~ | Arapça Kelime Etimoloji Popup | 2026-02-11 |
+| ~~#67~~ | Etimoloji ↔ Kelime Arama Çift Yönlü Navigasyon — ileri yön var, ters yön gereksiz | 2026-02-12 |
+
+## Birleştirilmesi Önerilen Issue'lar
+
+> **#68 + #70 + #72 → "Akıllı Keyword Search" paketi**
+>
+> Bu 3 issue birbirine bağımlı ve örtüşüyor. Ayrı ayrı değil, tek grup olarak planlanmalı.
+> Detay: [`03-keyword-etymology.md`](./03-keyword-etymology.md#68-70-72--birlikte-planlanmalı)
 
 ## Kaldırılan Issue'lar
 
@@ -54,4 +63,4 @@ Her grup dosyası şunları içerir:
 
 ---
 
-*Son güncelleme: 2026-02-05*
+*Son güncelleme: 2026-02-12*
