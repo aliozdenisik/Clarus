@@ -10,6 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.api_key_validator import get_current_user_flexible
 from app.config import settings
 from app.db import get_db
+from app.i18n.detector import get_locale
+from app.i18n.messages import get_error_message
+from app.middleware.error_handler import NotFoundError, ValidationError
 from app.models import SearchHistory, User
 
 router = APIRouter()
@@ -143,22 +146,23 @@ async def delete_user(
     user_id: int,
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     check_admin(current_user)
 
     if user_id == current_user["id"]:
-        raise HTTPException(status_code=400, detail="Kendi hesabinizi silemezsiniz")
+        raise ValidationError(message=get_error_message("cannot_delete_own_account", locale))
 
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
 
     if not user:
-        raise HTTPException(status_code=404, detail="Kullanici bulunamadi")
+        raise NotFoundError(message=get_error_message("user_not_found", locale), locale=locale)
 
     await db.delete(user)
     await db.commit()
 
-    return {"success": True, "message": "Kullanici silindi"}
+    return {"success": True, "message": get_error_message("user_deleted", locale)}
 
 
 @router.post("/cache/flush")

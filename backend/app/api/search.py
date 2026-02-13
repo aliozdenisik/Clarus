@@ -1,7 +1,7 @@
 import time
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +16,9 @@ from app.auth.api_key_validator import get_current_user_flexible
 from app.config import settings
 from app.db import get_db
 from app.i18n.detector import get_locale
+from app.i18n.messages import get_error_message
 from app.logging_config import get_logger, log_performance
+from app.middleware.error_handler import NotFoundError, ValidationError
 from app.models import SearchHistory
 from app.schemas.common import DEFAULT_TRANSLATOR, QueryValidation, TranslatorType
 from src.ultimate_rag import UltimateRAG
@@ -79,20 +81,16 @@ def _sanitize_query(query: str) -> str:
     return QueryValidation.sanitize(query)
 
 
-def _validate_query(query: str) -> str:
+def _validate_query(query: str, locale: str = "tr") -> str:
     sanitized = _sanitize_query(query)
 
     if len(sanitized) < settings.query_min_length:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Sorgu en az {settings.query_min_length} karakter olmali",
+        raise ValidationError(
+            message=get_error_message("query_too_short", locale, min_length=settings.query_min_length)
         )
 
     if len(sanitized) > settings.query_max_length:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Sorgu en fazla {settings.query_max_length} karakter olmali",
-        )
+        raise ValidationError(message=get_error_message("query_too_long", locale, max_length=settings.query_max_length))
 
     return sanitized
 
@@ -118,9 +116,9 @@ async def search_quran(
         },
     )
 
-    await check_rate_limit(current_user, db)
+    await check_rate_limit(current_user, db, locale)
 
-    validated_query = _validate_query(request.query)
+    validated_query = _validate_query(request.query, locale)
 
     rag = get_rag()
     results = await rag.search_quran(validated_query, translator=translator, top_k=request.top_k, locale=locale)
@@ -189,9 +187,9 @@ async def search_bible(
         },
     )
 
-    await check_rate_limit(current_user, db)
+    await check_rate_limit(current_user, db, locale)
 
-    validated_query = _validate_query(request.query)
+    validated_query = _validate_query(request.query, locale)
 
     rag = get_rag()
     results = await rag.search_bible(validated_query, testament=testament, top_k=request.top_k, locale=locale)
@@ -305,6 +303,7 @@ async def delete_history_item(
     history_id: int,
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     result = await db.execute(
         select(SearchHistory).where(SearchHistory.id == history_id).where(SearchHistory.user_id == current_user["id"])
@@ -312,22 +311,23 @@ async def delete_history_item(
     history_item = result.scalar_one_or_none()
 
     if not history_item:
-        raise HTTPException(status_code=404, detail="Gecmis ogesi bulunamadi")
+        raise NotFoundError(message=get_error_message("history_not_found", locale), locale=locale)
 
     await db.delete(history_item)
     await db.commit()
 
-    return {"success": True, "message": "Gecmis ogesi silindi"}
+    return {"success": True, "message": get_error_message("history_deleted", locale)}
 
 
 @router.delete("/history")
 async def clear_history(
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     from sqlalchemy import delete
 
     await db.execute(delete(SearchHistory).where(SearchHistory.user_id == current_user["id"]))
     await db.commit()
 
-    return {"success": True, "message": "Tum gecmis temizlendi"}
+    return {"success": True, "message": get_error_message("all_history_cleared", locale)}
