@@ -3,7 +3,7 @@ import logging
 import secrets
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.api_key_validator import get_current_user_flexible
 from app.config import settings
 from app.db import get_db
+from app.i18n.messages import get_error_message
+from app.middleware.error_handler import RateLimitError
 from app.middleware.rate_limit import get_user_rate_limit_info
 from app.models import UserStats
 
@@ -26,7 +28,7 @@ class ApiKeyResponse(BaseModel):
     message: str = "Store this key securely. It will not be shown again."
 
 
-async def check_rate_limit(user: dict, db: AsyncSession) -> None:
+async def check_rate_limit(user: dict, db: AsyncSession, locale: str = "tr") -> None:
     """
     Check rate limit for user (works with dict from get_current_user_flexible).
     Queries UserStats table for Better Auth users.
@@ -65,10 +67,8 @@ async def check_rate_limit(user: dict, db: AsyncSession) -> None:
 
     # Check limit
     if stats.query_count_today >= settings.rate_limit_per_day:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"Gunluk sorgu limitine ulastiniz ({settings.rate_limit_per_day}/gun)",
-        )
+        message = get_error_message("rate_limit_with_count", locale, limit=settings.rate_limit_per_day)
+        raise RateLimitError(message=message, locale=locale)
 
     # Increment count
     stats.query_count_today += 1

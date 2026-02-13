@@ -12,6 +12,9 @@ ERROR_MESSAGES: dict[str, dict[str, str]] = {
         "not_found": "Kaynak bulunamadi",
         "user_not_found": "Kullanici bulunamadi",
         "history_not_found": "Gecmis ogesi bulunamadi",
+        "history_deleted": "Gecmis ogesi silindi",
+        "all_history_cleared": "Tum gecmis temizlendi",
+        "user_deleted": "Kullanici silindi",
         "internal_error": "Beklenmeyen bir hata olustu",
         "query_too_short": "Sorgu en az {min_length} karakter olmali",
         "query_too_long": "Sorgu en fazla {max_length} karakter olmali",
@@ -19,6 +22,7 @@ ERROR_MESSAGES: dict[str, dict[str, str]] = {
         "search_failed": "Arama basarisiz oldu",
         "cannot_delete_own_account": "Kendi hesabinizi silemezsiniz",
         "validation_error": "Dogrulama hatasi",
+        "min_collections_required": "Karsilastirma icin en az {min_count} koleksiyon gereklidir",
     },
     "en": {
         "auth_failed": "Authentication failed",
@@ -27,6 +31,9 @@ ERROR_MESSAGES: dict[str, dict[str, str]] = {
         "not_found": "Resource not found",
         "user_not_found": "User not found",
         "history_not_found": "Search history not found",
+        "history_deleted": "Search history deleted",
+        "all_history_cleared": "All search history cleared",
+        "user_deleted": "User deleted",
         "internal_error": "An unexpected error occurred",
         "query_too_short": "Query must be at least {min_length} characters",
         "query_too_long": "Query must be at most {max_length} characters",
@@ -34,6 +41,7 @@ ERROR_MESSAGES: dict[str, dict[str, str]] = {
         "search_failed": "Search failed",
         "cannot_delete_own_account": "Cannot delete your own account",
         "validation_error": "Validation error",
+        "min_collections_required": "At least {min_count} collections required for comparison",
     },
 }
 

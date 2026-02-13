@@ -5,6 +5,8 @@ from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.i18n.detector import get_locale
+from app.i18n.messages import get_error_message
 from app.logging_config import get_logger, set_user_id
 
 sentry_sdk = None
@@ -44,7 +46,9 @@ class ValidationError(APIError):
 
 
 class AuthenticationError(APIError):
-    def __init__(self, message: str = "Kimlik dogrulama basarisiz"):
+    def __init__(self, message: str | None = None, locale: str = "tr"):
+        if message is None:
+            message = get_error_message("auth_failed", locale)
         super().__init__(
             message=message,
             code="AUTHENTICATION_ERROR",
@@ -53,7 +57,9 @@ class AuthenticationError(APIError):
 
 
 class RateLimitError(APIError):
-    def __init__(self, message: str = "Gunluk sorgu limitine ulastiniz"):
+    def __init__(self, message: str | None = None, locale: str = "tr"):
+        if message is None:
+            message = get_error_message("rate_limit", locale)
         super().__init__(
             message=message,
             code="RATE_LIMIT_EXCEEDED",
@@ -62,7 +68,9 @@ class RateLimitError(APIError):
 
 
 class NotFoundError(APIError):
-    def __init__(self, message: str = "Kaynak bulunamadi"):
+    def __init__(self, message: str | None = None, locale: str = "tr"):
+        if message is None:
+            message = get_error_message("not_found", locale)
         super().__init__(
             message=message,
             code="NOT_FOUND",
@@ -109,6 +117,9 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
         if hasattr(request.state, "user_id") and request.state.user_id:
             set_user_id(request.state.user_id)
 
+        # Detect locale for error messages
+        locale = await get_locale(request)
+
         try:
             response = await call_next(request)
             return response
@@ -154,6 +165,6 @@ class ErrorHandlerMiddleware(BaseHTTPMiddleware):
             return create_error_response(
                 request_id=request_id,
                 code="INTERNAL_ERROR",
-                message="Beklenmeyen bir hata olustu",
+                message=get_error_message("internal_error", locale),
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
