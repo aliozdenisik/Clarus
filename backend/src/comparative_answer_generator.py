@@ -29,6 +29,7 @@ from tenacity import (
 
 from src.circuit_breaker import CircuitBreakerError, llm_with_breaker
 from src.confidence_scorer import ConfidenceScorer
+from src.prompts import PromptManager
 
 logger = logging.getLogger(__name__)
 
@@ -138,18 +139,27 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         },
     ]
 
-    def __init__(self, model: str | None = None, api_key: str | None = None):
-        """Initialize Comparative Answer Generator with OpenRouter API"""
+    def __init__(self, model: str | None = None, api_key: str | None = None, locale: str = "tr"):
+        """
+        Initialize Comparative Answer Generator with OpenRouter API.
+
+        Args:
+            model: LLM model identifier (default: Gemini 3 Flash Preview)
+            api_key: OpenRouter API key (default: from OPENROUTER_API_KEY env var)
+            locale: Language code for prompts ("tr" or "en", default: "tr")
+        """
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
             raise ValueError("OpenRouter API key required. Set OPENROUTER_API_KEY environment variable.")
         self.model = model or self.MODEL
+        self.locale = locale
         self._headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
             "HTTP-Referer": "https://github.com/qdrant/qdrant",
         }
         self.confidence_scorer = ConfidenceScorer()
+        self._prompt_manager = PromptManager()
         print(f"Initialized ComparativeAnswerGenerator with model: {self.model}")
 
     def _extract_reference(self, result, source: str) -> str:

@@ -46,6 +46,7 @@ from tenacity import (
 from app.logging_config import get_logger, log_performance
 from src.circuit_breaker import CircuitBreakerError, llm_with_breaker
 from src.confidence_scorer import ConfidenceScorer
+from src.prompts import PromptManager
 
 logger = get_logger(__name__)
 
@@ -54,36 +55,39 @@ logger = get_logger(__name__)
 class MultiAgentAnswer:
     """Multi-agent theological analysis result"""
 
-    old_testament_commentary: str  # Paragraph 1: OT perspective
-    new_testament_commentary: str  # Paragraph 2: NT perspective
-    apocrypha_commentary: str  # Paragraph 3: Apocryphal perspective
-    quran_commentary: str  # Paragraph 4: Islamic perspective
-    synthesis: str  # Paragraph 5: Comparative summary
+    old_testament_commentary: str
+    new_testament_commentary: str
+    apocrypha_commentary: str
+    quran_commentary: str
+    synthesis: str
 
     citations: dict[str, list[str]] = field(default_factory=dict)
     confidence: float = 0.0
     confidence_breakdown: dict | None = None
     query: str = ""
     verses_provided: dict[str, int] = field(default_factory=dict)
+    locale: str = "tr"
 
     def to_essay(self) -> str:
-        """Format as complete essay with all 5 paragraphs"""
+        """Format as markdown essay with locale-specific section headers"""
+        pm = PromptManager()
+        headers = pm.get_section_headers(self.locale)
         sections = []
 
         if self.old_testament_commentary:
-            sections.append(f"## Eski Ahit (Old Testament)\n\n{self.old_testament_commentary}")
+            sections.append(f"{headers['old_testament']}\n\n{self.old_testament_commentary}")
 
         if self.new_testament_commentary:
-            sections.append(f"## Yeni Ahit (New Testament)\n\n{self.new_testament_commentary}")
+            sections.append(f"{headers['new_testament']}\n\n{self.new_testament_commentary}")
 
         if self.apocrypha_commentary:
-            sections.append(f"## Apokrifa (Apocrypha)\n\n{self.apocrypha_commentary}")
+            sections.append(f"{headers['apocrypha']}\n\n{self.apocrypha_commentary}")
 
         if self.quran_commentary:
-            sections.append(f"## Kuran-ı Kerim\n\n{self.quran_commentary}")
+            sections.append(f"{headers['quran']}\n\n{self.quran_commentary}")
 
         if self.synthesis:
-            sections.append(f"## Karşılaştırmalı Değerlendirme\n\n{self.synthesis}")
+            sections.append(f"{headers['synthesis']}\n\n{self.synthesis}")
 
         return "\n\n---\n\n".join(sections)
 
@@ -94,15 +98,24 @@ class BaseSpecialistAgent:
     OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
     MODEL = "google/gemini-3-flash-preview"
 
-    def __init__(self, api_key: str | None = None):
+    def __init__(self, api_key: str | None = None, locale: str = "tr"):
+        """
+        Initialize specialist agent.
+
+        Args:
+            api_key: OpenRouter API key (default: from OPENROUTER_API_KEY env var)
+            locale: Language code for prompts ("tr" or "en", default: "tr")
+        """
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
             raise ValueError("OpenRouter API key required")
+        self.locale = locale
         self._headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
             "HTTP-Referer": "https://github.com/qdrant/qdrant",
         }
+        self._prompt_manager = PromptManager()
 
     def _extract_reference(self, result, source: str) -> str:
         """Extract reference string from search result"""
@@ -264,12 +277,15 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
             return {"commentary": "", "citations": [], "confidence": 0.0}
 
         context = self._format_verses(verses, "bible")
+        system_prompt = self._prompt_manager.get_prompt("multi_agent", "old_testament", self.locale)
+        user_content = (
+            f"SORU: {query}\n\nESKİ AHİT AYETLERİ:\n{context}"
+            if self.locale == "tr"
+            else f"QUESTION: {query}\n\nOLD TESTAMENT VERSES:\n{context}"
+        )
         messages = [
-            {"role": "system", "content": self.SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": f"SORU: {query}\n\nESKİ AHİT AYETLERİ:\n{context}",
-            },
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content},
         ]
         return self._call_llm(messages)
 
@@ -307,12 +323,15 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
             return {"commentary": "", "citations": [], "confidence": 0.0}
 
         context = self._format_verses(verses, "bible")
+        system_prompt = self._prompt_manager.get_prompt("multi_agent", "new_testament", self.locale)
+        user_content = (
+            f"SORU: {query}\n\nYENİ AHİT AYETLERİ:\n{context}"
+            if self.locale == "tr"
+            else f"QUESTION: {query}\n\nNEW TESTAMENT VERSES:\n{context}"
+        )
         messages = [
-            {"role": "system", "content": self.SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": f"SORU: {query}\n\nYENİ AHİT AYETLERİ:\n{context}",
-            },
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content},
         ]
         return self._call_llm(messages)
 
@@ -352,12 +371,15 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
             return {"commentary": "", "citations": [], "confidence": 0.0}
 
         context = self._format_verses(verses, "bible")
+        system_prompt = self._prompt_manager.get_prompt("multi_agent", "apocrypha", self.locale)
+        user_content = (
+            f"SORU: {query}\n\nAPOKRİFA AYETLERİ:\n{context}"
+            if self.locale == "tr"
+            else f"QUESTION: {query}\n\nAPOCRYPHA VERSES:\n{context}"
+        )
         messages = [
-            {"role": "system", "content": self.SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": f"SORU: {query}\n\nAPOKRİFA AYETLERİ:\n{context}",
-            },
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content},
         ]
         return self._call_llm(messages)
 
@@ -395,9 +417,15 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
             return {"commentary": "", "citations": [], "confidence": 0.0}
 
         context = self._format_verses(verses, "quran")
+        system_prompt = self._prompt_manager.get_prompt("multi_agent", "quran", self.locale)
+        user_content = (
+            f"SORU: {query}\n\nKURAN AYETLERİ:\n{context}"
+            if self.locale == "tr"
+            else f"QUESTION: {query}\n\nQURAN VERSES:\n{context}"
+        )
         messages = [
-            {"role": "system", "content": self.SYSTEM_PROMPT},
-            {"role": "user", "content": f"SORU: {query}\n\nKURAN AYETLERİ:\n{context}"},
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content},
         ]
         return self._call_llm(messages)
 
@@ -455,9 +483,11 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
             }
 
         context = "\n\n".join(parts)
+        system_prompt = self._prompt_manager.get_prompt("multi_agent", "summary", self.locale)
+        user_content = f"SORU: {query}\n\n{context}" if self.locale == "tr" else f"QUESTION: {query}\n\n{context}"
         messages = [
-            {"role": "system", "content": self.SYSTEM_PROMPT},
-            {"role": "user", "content": f"SORU: {query}\n\n{context}"},
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content},
         ]
         return self._call_llm(messages, max_tokens=800)
 
@@ -473,9 +503,18 @@ class MultiAgentOrchestrator:
     4. Return 5-paragraph result
     """
 
-    def __init__(self, api_key: str | None = None, verbose: bool = True):
+    def __init__(self, api_key: str | None = None, verbose: bool = True, locale: str = "tr"):
+        """
+        Initialize MultiAgentOrchestrator.
+
+        Args:
+            api_key: OpenRouter API key (default: from OPENROUTER_API_KEY env var)
+            verbose: Enable verbose logging (default: True)
+            locale: Language code for prompts ("tr" or "en", default: "tr")
+        """
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY") or ""
         self.verbose = verbose
+        self.locale = locale
 
         # Initialize agents
         self._ot_agent = None
@@ -490,31 +529,31 @@ class MultiAgentOrchestrator:
     @property
     def ot_agent(self) -> OldTestamentAgent:
         if self._ot_agent is None:
-            self._ot_agent = OldTestamentAgent(self.api_key)
+            self._ot_agent = OldTestamentAgent(self.api_key, self.locale)
         return self._ot_agent
 
     @property
     def nt_agent(self) -> NewTestamentAgent:
         if self._nt_agent is None:
-            self._nt_agent = NewTestamentAgent(self.api_key)
+            self._nt_agent = NewTestamentAgent(self.api_key, self.locale)
         return self._nt_agent
 
     @property
     def apocrypha_agent(self) -> ApocryphaAgent:
         if self._apocrypha_agent is None:
-            self._apocrypha_agent = ApocryphaAgent(self.api_key)
+            self._apocrypha_agent = ApocryphaAgent(self.api_key, self.locale)
         return self._apocrypha_agent
 
     @property
     def quran_agent(self) -> QuranAgent:
         if self._quran_agent is None:
-            self._quran_agent = QuranAgent(self.api_key)
+            self._quran_agent = QuranAgent(self.api_key, self.locale)
         return self._quran_agent
 
     @property
     def summary_agent(self) -> SummaryAgent:
         if self._summary_agent is None:
-            self._summary_agent = SummaryAgent(self.api_key)
+            self._summary_agent = SummaryAgent(self.api_key, self.locale)
         return self._summary_agent
 
     def _log(self, message: str, **extra):
@@ -765,6 +804,7 @@ class MultiAgentOrchestrator:
                 "apocrypha": len(apocrypha_verses),
                 "quran": len(quran_verses),
             },
+            locale=self.locale,
         )
 
 
