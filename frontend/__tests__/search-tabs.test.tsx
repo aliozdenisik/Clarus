@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { vi, describe, it, expect, beforeEach } from "vitest"
-import SearchPage from "../app/search/page"
+import SearchPage from "../app/[locale]/search/page"
 import { SearchTabs } from "../components/search/search-tabs"
 
 // Mock components

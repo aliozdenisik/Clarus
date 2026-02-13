@@ -25,6 +25,7 @@ from tenacity import (
 
 from app.logging_config import get_logger
 from src.circuit_breaker import CircuitBreakerError, llm_with_breaker
+from src.prompts import PromptManager
 
 logger = get_logger(__name__)
 
@@ -210,16 +211,26 @@ Adım 3: JSON formatında ver.
         },
     ]
 
-    def __init__(self, model: str | None = None, api_key: str | None = None):
+    def __init__(self, model: str | None = None, api_key: str | None = None, locale: str = "tr"):
+        """
+        Initialize Query Enhancer with OpenRouter API.
+
+        Args:
+            model: LLM model identifier (default: Grok 4.1 Fast)
+            api_key: OpenRouter API key (default: from OPENROUTER_API_KEY env var)
+            locale: Language code for prompts ("tr" or "en", default: "tr")
+        """
         self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not self.api_key:
             raise ValueError("OpenRouter API key required.")
         self.model = model or self.DEFAULT_MODEL
+        self.locale = locale
         self._headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
             "HTTP-Referer": "https://github.com/qdrant/qdrant",
         }
+        self._prompt_manager = PromptManager()
 
     @retry(
         stop=stop_after_attempt(5),
@@ -317,13 +328,21 @@ Adım 3: JSON formatında ver.
         )
 
         if corpus == "quran":
-            prompt = f"Bu sorguyu Kuran araması için hazırla. Sorgu: '{query}'"
-            system_prompt = self.SYSTEM_PROMPT_QURAN
-            examples = self.FEW_SHOT_QURAN
+            prompt = (
+                f"Bu sorguyu Kuran araması için hazırla. Sorgu: '{query}'"
+                if self.locale == "tr"
+                else f"Prepare this query for Quran search. Query: '{query}'"
+            )
+            system_prompt = self._prompt_manager.get_prompt("query_enhancer", "quran_system", self.locale)
+            examples = self._prompt_manager.get_prompt("query_enhancer", "quran_few_shot")
         else:
-            prompt = f"Make this query search-ready. Query: '{query}'"
-            system_prompt = self.SYSTEM_PROMPT_BIBLE
-            examples = self.FEW_SHOT_BIBLE
+            prompt = (
+                f"Make this query search-ready. Query: '{query}'"
+                if self.locale == "en"
+                else f"Bu sorguyu arama için hazırla. Sorgu: '{query}'"
+            )
+            system_prompt = self._prompt_manager.get_prompt("query_enhancer", "bible_system", self.locale)
+            examples = self._prompt_manager.get_prompt("query_enhancer", "bible_few_shot")
 
         result = self._call_llm_json(prompt, system_prompt, examples)
         final_query = result.get("final_search_query", query)
@@ -431,13 +450,21 @@ Adım 3: JSON formatında ver.
             try:
                 # Select prompts based on corpus (same logic as expand_query)
                 if corpus == "quran":
-                    prompt = f"Bu sorguyu Kuran araması için hazırla. Sorgu: '{query}'"
-                    system_prompt = self.SYSTEM_PROMPT_QURAN
-                    examples = self.FEW_SHOT_QURAN
+                    prompt = (
+                        f"Bu sorguyu Kuran araması için hazırla. Sorgu: '{query}'"
+                        if self.locale == "tr"
+                        else f"Prepare this query for Quran search. Query: '{query}'"
+                    )
+                    system_prompt = self._prompt_manager.get_prompt("query_enhancer", "quran_system", self.locale)
+                    examples = self._prompt_manager.get_prompt("query_enhancer", "quran_few_shot")
                 else:
-                    prompt = f"Make this query search-ready. Query: '{query}'"
-                    system_prompt = self.SYSTEM_PROMPT_BIBLE
-                    examples = self.FEW_SHOT_BIBLE
+                    prompt = (
+                        f"Make this query search-ready. Query: '{query}'"
+                        if self.locale == "en"
+                        else f"Bu sorguyu arama için hazırla. Sorgu: '{query}'"
+                    )
+                    system_prompt = self._prompt_manager.get_prompt("query_enhancer", "bible_system", self.locale)
+                    examples = self._prompt_manager.get_prompt("query_enhancer", "bible_few_shot")
 
                 # Call LLM with existing infrastructure (retries, circuit breaker, etc.)
                 result = self._call_llm_json(prompt, system_prompt, examples)

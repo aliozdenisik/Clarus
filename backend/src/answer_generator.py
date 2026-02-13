@@ -30,6 +30,7 @@ from tenacity import (
 from app.logging_config import get_logger, log_performance
 from src.circuit_breaker import CircuitBreakerError, llm_with_breaker
 from src.confidence_scorer import ConfidenceScorer
+from src.prompts import PromptManager
 
 logger = get_logger(__name__)
 
@@ -64,7 +65,30 @@ class AnswerGenerator:
     OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
     MODEL = "google/gemini-3-flash-preview"
 
-    # --- QURAN PROMPT (Turkish in, Turkish out) ---
+    def __init__(self, model: str | None = None, api_key: str | None = None, locale: str = "tr"):
+        """
+        Initialize Answer Generator with OpenRouter API.
+
+        Args:
+            model: LLM model identifier (default: Gemini 3 Flash Preview)
+            api_key: OpenRouter API key (default: from OPENROUTER_API_KEY env var)
+            locale: Language code for prompts ("tr" or "en", default: "tr")
+        """
+        self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
+        if not self.api_key:
+            raise ValueError("OpenRouter API key required. Set OPENROUTER_API_KEY environment variable.")
+        self.model = model or self.MODEL
+        self.locale = locale
+        self._headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://github.com/qdrant/qdrant",
+        }
+        self.confidence_scorer = ConfidenceScorer()
+        self._prompt_manager = PromptManager()
+
+    # --- DEPRECATED: Prompts moved to src/prompts/ ---
+    # Kept for reference only - now loaded via PromptManager
     SYSTEM_PROMPT_QURAN = """Sen uzman bir İslam Alimi ve Kuran tefsircisisin.
 Görevin: Kullanıcının sorusunu, sana verilen Kuran ayetlerine dayanarak cevaplamak.
 
@@ -147,19 +171,6 @@ VERSES:
             ),
         },
     ]
-
-    def __init__(self, model: str | None = None, api_key: str | None = None):
-        """Initialize Answer Generator with OpenRouter API"""
-        self.api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
-        if not self.api_key:
-            raise ValueError("OpenRouter API key required. Set OPENROUTER_API_KEY environment variable.")
-        self.model = model or self.MODEL
-        self._headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/qdrant/qdrant",
-        }
-        self.confidence_scorer = ConfidenceScorer()
 
     def _extract_reference(self, result, source: str) -> str:
         """Extract reference string from search result based on source"""
@@ -276,13 +287,21 @@ VERSES:
 
             # Select appropriate prompt based on source
             if "quran" in source:
-                system_prompt = self.SYSTEM_PROMPT_QURAN
-                examples = self.FEW_SHOT_QURAN
-                user_content = f"SORU: {query}\n\nAYETLER:\n{context}"
+                system_prompt = self._prompt_manager.get_prompt("answer_generator", "quran_system", self.locale)
+                examples = self._prompt_manager.get_prompt("answer_generator", "quran_few_shot")
+                user_content = (
+                    f"SORU: {query}\n\nAYETLER:\n{context}"
+                    if self.locale == "tr"
+                    else f"QUESTION: {query}\n\nVERSES:\n{context}"
+                )
             else:
-                system_prompt = self.SYSTEM_PROMPT_BIBLE
-                examples = self.FEW_SHOT_BIBLE
-                user_content = f"QUESTION: {query}\n\nVERSES:\n{context}"
+                system_prompt = self._prompt_manager.get_prompt("answer_generator", "bible_system", self.locale)
+                examples = self._prompt_manager.get_prompt("answer_generator", "bible_few_shot")
+                user_content = (
+                    f"QUESTION: {query}\n\nVERSES:\n{context}"
+                    if self.locale == "en"
+                    else f"SORU: {query}\n\nAYETLER:\n{context}"
+                )
 
             messages = [{"role": "system", "content": system_prompt}]
             messages.extend(examples)

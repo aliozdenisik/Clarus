@@ -141,7 +141,7 @@ vi.mock("@/lib/api/sdk.gen", () => ({
   getQuranSurahsApiMetadataQuranSurahsGet: (...args: unknown[]) => mockGetQuranSurahs(...args),
 }))
 
-import KeywordSearchPage from "@/app/keyword-search/page"
+import KeywordSearchPage from "@/app/[locale]/keyword-search/page"
 import { toast } from "sonner"
 
 // ── Test Data Fixtures ──────────────────────────────────────────────────────

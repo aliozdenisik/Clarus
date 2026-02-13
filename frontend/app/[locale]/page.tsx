@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
 import { LuxuryQuote } from "@/components/ui/text-rotate"
+import { useTranslations } from "next-intl"
 
 import { DotPattern, RadialGradient } from "@/components/ui/dot-pattern"
 import { useRouter } from "next/navigation"
@@ -21,102 +22,6 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import { BentoGrid, BentoCard } from "@/components/ui/bento-grid"
-
-const features = [
-  {
-    icon: Sparkles,
-    title: "Understands What You Mean",
-    description:
-      "Describe a concept or explore an idea in your own words. The AI grasps meaning and context — surfacing relevant passages even when you don't know the exact terms to search for.",
-    techNote: "Hybrid semantic + keyword search",
-  },
-  {
-    icon: Layers,
-    title: "Every Scripture at Once",
-    description:
-      "Quran, Old Testament, New Testament, and Apocrypha — all 43,055 verses searched simultaneously so no perspective goes unheard.",
-    techNote: "Parallel multi-collection retrieval",
-  },
-  {
-    icon: BookMarked,
-    title: "Traceable to the Source",
-    description:
-      "Every insight is backed by exact verse references. Nothing is claimed without a source you can look up and verify yourself.",
-    techNote: "AI-generated with full citation traceability",
-  },
-]
-
-const steps = [
-  {
-    icon: Search,
-    label: "Ask",
-    desc: "Pose your question",
-    detail: "Any theological concept, moral question, or scriptural topic — in your own words.",
-  },
-  {
-    icon: Sparkles,
-    label: "Enrich",
-    desc: "Context is deepened",
-    detail: "The AI expands your question with related concepts and terminology across traditions.",
-  },
-  {
-    icon: Layers,
-    label: "Discover",
-    desc: "All scriptures searched",
-    detail:
-      "43,055 verses across Quran and Bible are scanned simultaneously for the most relevant passages.",
-  },
-  {
-    icon: Brain,
-    label: "Understand",
-    desc: "Perspectives unite",
-    detail:
-      "5 specialist agents each contribute their scripture's voice, then a synthesis brings them together.",
-  },
-]
-
-const agents = [
-  {
-    name: "Quran Agent",
-    role: "Quran Specialist",
-    description:
-      "Surfaces the most relevant verses with precise Surah and Ayah citations — presenting the Quran's own words on any topic.",
-    collection: "quran_tr",
-    verseCount: "6,236",
-    color: "emerald" as const,
-    icon: BookOpen,
-  },
-  {
-    name: "Old Testament Agent",
-    role: "Old Testament Specialist",
-    description:
-      "Searches Genesis through Malachi to find relevant passages with exact chapter and verse references — the scripture in its own voice.",
-    collection: "bible_ot",
-    verseCount: "23,145",
-    color: "amber" as const,
-    icon: ScrollText,
-  },
-  {
-    name: "New Testament Agent",
-    role: "New Testament Specialist",
-    description:
-      "Retrieves relevant passages from the Gospels, Letters, and Revelation with precise citations — the text as it was written.",
-    collection: "bible_nt",
-    verseCount: "7,957",
-    color: "sky" as const,
-    icon: BookMarked,
-  },
-  {
-    name: "Apocrypha Agent",
-    role: "Apocrypha Specialist",
-    description:
-      "Explores books like Wisdom, Sirach, and Maccabees — scriptures cherished across Christian traditions, cited with full references.",
-    collection: "bible_apocrypha",
-    verseCount: "5,717",
-    color: "purple" as const,
-    icon: Library,
-  },
-]
 
 const agentColorMap = {
   emerald: {
@@ -165,6 +70,95 @@ export default function HomePage() {
   const router = useRouter()
   const { data: session } = useSession()
   const user = session?.user
+  const tLanding = useTranslations("Landing")
+  const tCommon = useTranslations("Common")
+
+  const features = [
+    {
+      icon: Sparkles,
+      title: tLanding("features.semantic.title"),
+      description: tLanding("features.semantic.description"),
+      techNote: tLanding("features.semantic.techNote"),
+    },
+    {
+      icon: Layers,
+      title: tLanding("features.parallel.title"),
+      description: tLanding("features.parallel.description"),
+      techNote: tLanding("features.parallel.techNote"),
+    },
+    {
+      icon: BookMarked,
+      title: tLanding("features.traceable.title"),
+      description: tLanding("features.traceable.description"),
+      techNote: tLanding("features.traceable.techNote"),
+    },
+  ]
+
+  const steps = [
+    {
+      icon: Search,
+      label: tLanding("howItWorks.ask.label"),
+      desc: tLanding("howItWorks.ask.description"),
+      detail: tLanding("howItWorks.ask.detail"),
+    },
+    {
+      icon: Sparkles,
+      label: tLanding("howItWorks.enrich.label"),
+      desc: tLanding("howItWorks.enrich.description"),
+      detail: tLanding("howItWorks.enrich.detail"),
+    },
+    {
+      icon: Layers,
+      label: tLanding("howItWorks.discover.label"),
+      desc: tLanding("howItWorks.discover.description"),
+      detail: tLanding("howItWorks.discover.detail"),
+    },
+    {
+      icon: Brain,
+      label: tLanding("howItWorks.understand.label"),
+      desc: tLanding("howItWorks.understand.description"),
+      detail: tLanding("howItWorks.understand.detail"),
+    },
+  ]
+
+  const agents = [
+    {
+      name: tLanding("agents.quran.name"),
+      role: tLanding("agents.quran.role"),
+      description: tLanding("agents.quran.description"),
+      collection: tLanding("agents.quran.collection"),
+      verseCount: tLanding("agents.quran.verseCount"),
+      color: "emerald" as const,
+      icon: BookOpen,
+    },
+    {
+      name: tLanding("agents.oldTestament.name"),
+      role: tLanding("agents.oldTestament.role"),
+      description: tLanding("agents.oldTestament.description"),
+      collection: tLanding("agents.oldTestament.collection"),
+      verseCount: tLanding("agents.oldTestament.verseCount"),
+      color: "amber" as const,
+      icon: ScrollText,
+    },
+    {
+      name: tLanding("agents.newTestament.name"),
+      role: tLanding("agents.newTestament.role"),
+      description: tLanding("agents.newTestament.description"),
+      collection: tLanding("agents.newTestament.collection"),
+      verseCount: tLanding("agents.newTestament.verseCount"),
+      color: "sky" as const,
+      icon: BookMarked,
+    },
+    {
+      name: tLanding("agents.apocrypha.name"),
+      role: tLanding("agents.apocrypha.role"),
+      description: tLanding("agents.apocrypha.description"),
+      collection: tLanding("agents.apocrypha.collection"),
+      verseCount: tLanding("agents.apocrypha.verseCount"),
+      color: "purple" as const,
+      icon: Library,
+    },
+  ]
 
   return (
     <main className="min-h-screen overflow-hidden bg-[var(--color-bg-app)]">
@@ -218,14 +212,13 @@ export default function HomePage() {
             className="flex max-w-[900px] flex-col items-center"
           >
             <h1 className="mb-8 font-[family-name:var(--font-serif)] text-6xl leading-[1.1] font-normal tracking-tight md:text-8xl">
-              <span className="text-[var(--color-text-primary)]">Explore Sacred Texts</span>
+              <span className="text-[var(--color-text-primary)]">{tLanding("hero.title")}</span>
               <br />
-              <span className="text-[var(--color-accent-primary)]">with AI</span>
+              <span className="text-[var(--color-accent-primary)]">{tLanding("hero.titleAI")}</span>
             </h1>
 
             <p className="mx-auto mb-16 max-w-[600px] text-xl leading-relaxed font-light tracking-wide text-[var(--color-text-secondary)] md:text-2xl">
-              Search across Quran and Bible with AI. Discover connections, compare perspectives,
-              find answers.
+              {tLanding("hero.subtitle")}
             </p>
 
             {/* CTA Buttons - Luxury */}
@@ -239,7 +232,7 @@ export default function HomePage() {
                     whileTap={{ scale: 0.98 }}
                   >
                     <Search className="h-4 w-4" />
-                    Go to Search
+                    {tLanding("hero.goToSearch")}
                   </motion.button>
                   <motion.button
                     onClick={() => router.push("/compare")}
@@ -248,7 +241,7 @@ export default function HomePage() {
                     whileTap={{ scale: 0.98 }}
                   >
                     <GitCompare className="h-4 w-4" />
-                    Compare
+                    {tLanding("hero.goToCompare")}
                   </motion.button>
                 </>
               ) : (
@@ -259,7 +252,7 @@ export default function HomePage() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    Get Started
+                    {tCommon("getStarted")}
                     <ArrowRight className="h-4 w-4" />
                   </motion.button>
                   <motion.button
@@ -268,7 +261,7 @@ export default function HomePage() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    Sign In
+                    {tCommon("signIn")}
                   </motion.button>
                 </>
               )}
@@ -362,7 +355,7 @@ export default function HomePage() {
                   Icon={feature.icon}
                   description={feature.description}
                   href={user ? "/search" : "/sign-up"}
-                  cta="Explore"
+                  cta={tCommon("learnMore")}
                 />
               ))}
             </BentoGrid>
@@ -402,7 +395,7 @@ export default function HomePage() {
               Core Feature
             </span>
             <h2 className="mx-auto mb-8 max-w-[700px] font-[family-name:var(--font-serif)] text-5xl leading-tight font-normal tracking-tight text-[var(--color-text-primary)] md:text-6xl">
-              Multi-Agent Analysis
+              {tLanding("agents.title")}
             </h2>
             <p className="mx-auto max-w-[650px] text-lg leading-relaxed font-light text-[var(--color-text-secondary)]">
               Each question is analyzed by 5 specialized AI agents in parallel — 4 scripture experts
@@ -536,7 +529,7 @@ export default function HomePage() {
               Your Journey
             </span>
             <h2 className="mx-auto max-w-[700px] font-[family-name:var(--font-serif)] text-5xl leading-tight font-normal tracking-tight text-[var(--color-text-primary)] md:text-6xl">
-              From Question to Insight
+              {tLanding("howItWorks.title")}
             </h2>
           </motion.div>
 
@@ -593,15 +586,13 @@ export default function HomePage() {
             transition={{ ...springPresets.gentle, duration: 1.2 }}
           >
             <h2 className="mb-8 font-[family-name:var(--font-serif)] text-6xl leading-tight text-[var(--color-text-primary)] md:text-7xl">
-              {user ? "Your Scriptures Await" : "Transform Your Search Into"}{" "}
+              {tLanding("cta.title")}{" "}
               <span className="text-[var(--color-accent-primary)]">
                 {user ? "Discovery" : "Insight"}
               </span>
             </h2>
             <p className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-[var(--color-text-secondary)] md:text-xl">
-              {user
-                ? "Search across 43,055 verses. Compare perspectives. Discover connections you never knew existed."
-                : "Join thousands exploring sacred texts with AI-powered search. Every verse, every perspective, every answer — at your fingertips."}
+              {tLanding("cta.description")}
             </p>
             <div className="inline-block">
               <motion.button
@@ -610,7 +601,7 @@ export default function HomePage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                {user ? "Go to Search" : "Begin Your Journey"}
+                {user ? tLanding("hero.goToSearch") : tLanding("cta.signUp")}
                 <ArrowRight className="h-5 w-5" />
               </motion.button>
             </div>

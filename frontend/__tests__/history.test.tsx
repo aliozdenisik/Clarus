@@ -9,7 +9,7 @@ vi.mock("@/lib/api/sdk.gen", () => ({
   clearHistoryApiSearchHistoryDelete: vi.fn(),
 }))
 
-import HistoryPage from "../app/history/page"
+import HistoryPage from "../app/[locale]/history/page"
 import { useRouter } from "next/navigation"
 import {
   getSearchHistoryApiSearchHistoryGet,
