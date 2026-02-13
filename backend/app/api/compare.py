@@ -424,7 +424,7 @@ async def compare_scriptures(
     else:
         # Single essay mode (ComparativeAnswer)
         quran_translator = request.translator or DEFAULT_TRANSLATOR
-        result = rag.compare(request.topic, translator=quran_translator)
+        result = rag.compare(request.topic, translator=quran_translator, locale=locale)
 
         # Sanitize essay output
         result.essay = sanitize_citations(result.essay)
