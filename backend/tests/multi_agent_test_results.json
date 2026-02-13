@@ -38,8 +38,8 @@
   "synthesis_length": 0,
   "confidence": 0.15,
   "timing": {
-    "search_time_s": 8.98619794845581,
-    "generation_time_s": 0.0011219978332519531,
-    "total_time_s": 8.990566968917847
+    "search_time_s": 8.338995456695557,
+    "generation_time_s": 0.0013647079467773438,
+    "total_time_s": 8.343579769134521
   }
 }

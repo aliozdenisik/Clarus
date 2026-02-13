@@ -103,12 +103,19 @@ export function useSSE(): UseSSEReturn {
       eventSourceRef.current = null
     }
 
-    // Store current URL for reconnection
+    // Store original URL (locale appended fresh on each connection to avoid duplication on reconnect)
     currentUrlRef.current = url
+
+    const pathSegments = window.location.pathname.split("/").filter(Boolean)
+    const locale = pathSegments[0] === "en" || pathSegments[0] === "tr" ? pathSegments[0] : "tr"
+
+    // Append locale as query parameter (EventSource doesn't support custom headers)
+    const separator = url.includes("?") ? "&" : "?"
+    const urlWithLocale = `${url}${separator}lang=${locale}`
 
     try {
       // Create EventSource with credentials for auth
-      const eventSource = new EventSource(url, {
+      const eventSource = new EventSource(urlWithLocale, {
         withCredentials: true,
       })
 

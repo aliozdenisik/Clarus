@@ -292,7 +292,9 @@ describe("ComparePage", () => {
 
   it("renders the page title and description", () => {
     render(<ComparePage />)
-    expect(screen.getByRole("heading", { name: /comparative analysis/i, level: 1 })).toBeInTheDocument()
+    expect(
+      screen.getByRole("heading", { name: /comparative analysis/i, level: 1 })
+    ).toBeInTheDocument()
     expect(screen.getByText(/Comparative analysis across/)).toBeInTheDocument()
   })
 
