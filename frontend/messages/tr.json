@@ -1,19 +1,257 @@
 {
-  "common": {
+  "Common": {
+    "loading": "Yükleniyor...",
+    "error": "Hata",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "close": "Kapat",
+    "back": "Geri",
+    "next": "İleri",
+    "previous": "Önceki",
+    "retry": "Tekrar Dene",
+    "noResults": "Sonuç bulunamadı",
     "search": "Ara",
     "login": "Giriş Yap",
     "register": "Kayıt Ol",
     "logout": "Çıkış",
-    "loading": "Yükleniyor..."
-  },
-  "hero": {
-    "title": "Clarus",
-    "subtitle": "Kuran ve İncil'de yapay zeka destekli arama",
-    "searchPlaceholder": "Kutsal metinlerde ara...",
+    "delete": "Sil",
+    "confirm": "Onayla",
+    "reset": "Sıfırla",
+    "success": "Başarılı",
+    "failed": "Başarısız",
+    "tryAgain": "Tekrar deneyin",
+    "learnMore": "Daha fazla bilgi",
+    "getStarted": "Başla",
     "signIn": "Giriş Yap",
-    "getStarted": "Başla"
+    "signUp": "Kayıt Ol",
+    "results": "Sonuçlar",
+    "filters": "Filtreler",
+    "settings": "Ayarlar"
   },
-  "auth": {
+  "Navigation": {
+    "search": "Ara",
+    "browse": "Gözat",
+    "compare": "Karşılaştır",
+    "history": "Geçmiş",
+    "settings": "Ayarlar",
+    "quranSearch": "Kuran'da Ara",
+    "quranSearchDesc": "Türkçe Kuran çevirilerinde anlamsal arama",
+    "oldTestamentSearch": "Eski Ahit'te Ara",
+    "oldTestamentSearchDesc": "Eski Ahit'in 39 kitabında arama yapın",
+    "newTestamentSearch": "Yeni Ahit'te Ara",
+    "newTestamentSearchDesc": "İnciller, Elçilerin İşleri ve Mektuplar'da ara",
+    "apocryphaSearch": "Apokrif'te Ara",
+    "apocryphaSearchDesc": "Deuterokanonik metinleri ve yazıları keşfedin",
+    "wordSearch": "Kelime Arama",
+    "wordSearchDesc": "Kökler ile morfolojik kelime arama",
+    "quranBrowse": "Kuran",
+    "quranBrowseDesc": "114 surenin tamamını çevirileriyle gözatın",
+    "oldTestamentBrowse": "Eski Ahit",
+    "oldTestamentBrowseDesc": "Tevrat, Nebiler ve Yazılar",
+    "newTestamentBrowse": "Yeni Ahit",
+    "newTestamentBrowseDesc": "İnciller, Mektuplar ve Vahiy",
+    "apocrypha": "Apokrif",
+    "apocryphaDesc": "Bilgelik, Sira, Makabiler ve daha fazlası",
+    "userMenu": "Kullanıcı menüsü",
+    "viewProfile": "Profili görüntüle",
+    "signOut": "Çıkış yap"
+  },
+  "Landing": {
+    "hero": {
+      "title": "Kutsal Metinleri Keşfedin",
+      "titleAI": "Yapay Zeka ile",
+      "subtitle": "Kuran ve İncil'de yapay zeka ile arama yapın. Bağlantıları keşfedin, bakış açılarını karşılaştırın, cevaplar bulun.",
+      "searchPlaceholder": "Kutsal metinlerde ara...",
+      "getStarted": "Başla",
+      "signIn": "Giriş Yap",
+      "goToSearch": "Aramaya Git",
+      "goToCompare": "Karşılaştırmaya Git"
+    },
+    "features": {
+      "semantic": {
+        "title": "Ne Demek İstediğinizi Anlar",
+        "description": "Bir kavramı kendi kelimelerinizle tanımlayın ya da bir fikri keşfedin. Yapay zeka anlamı ve bağlamı kavrar — tam terimlerini bilmeseniz bile ilgili ayetleri bulur.",
+        "techNote": "Hibrit anlamsal + anahtar kelime arama"
+      },
+      "parallel": {
+        "title": "Tüm Kutsal Metinler Aynı Anda",
+        "description": "Kuran, Eski Ahit, Yeni Ahit ve Apokrif — toplam 43.055 ayet aynı anda aranır, hiçbir bakış açısı gözden kaçmaz.",
+        "techNote": "Paralel çoklu-koleksiyon erişimi"
+      },
+      "traceable": {
+        "title": "Kaynağına İzlenebilir",
+        "description": "Her içgörü kesin ayet referanslarıyla desteklenir. Kaynak gösterilmeden hiçbir şey iddia edilmez, kendiniz bakıp doğrulayabilirsiniz.",
+        "techNote": "Tam atıf izlenebilirliği ile yapay zeka üretimi"
+      }
+    },
+    "howItWorks": {
+      "title": "Nasıl Çalışır",
+      "ask": {
+        "label": "Sorun",
+        "description": "Sorunuzu sorun",
+        "detail": "Herhangi bir teolojik kavram, ahlaki soru veya kutsal metin konusu — kendi kelimelerinizle."
+      },
+      "enrich": {
+        "label": "Zenginleştirin",
+        "description": "Bağlam derinleştirilir",
+        "detail": "Yapay zeka sorunuzu ilgili kavramlar ve gelenekler arası terminoloji ile genişletir."
+      },
+      "discover": {
+        "label": "Keşfedin",
+        "description": "Tüm kutsal metinler aranır",
+        "detail": "Kuran ve İncil'deki 43.055 ayet, en uygun pasajlar için aynı anda taranır."
+      },
+      "understand": {
+        "label": "Anlayın",
+        "description": "Bakış açıları birleşir",
+        "detail": "5 uzman ajan kendi kutsal metninin sesini katkıda bulunur, ardından bir sentez onları bir araya getirir."
+      }
+    },
+    "agents": {
+      "title": "Çoklu-Ajan Analizi",
+      "quran": {
+        "name": "Kuran Ajanı",
+        "role": "Kuran Uzmanı",
+        "description": "En uygun ayetleri kesin sure ve ayet atıflarıyla sunar — Kuran'ın kendi sözlerini her konuda ortaya koyar.",
+        "collection": "quran_tr",
+        "verseCount": "6.236"
+      },
+      "oldTestament": {
+        "name": "Eski Ahit Ajanı",
+        "role": "Eski Ahit Uzmanı",
+        "description": "Tekvin'den Malaki'ye kadar ilgili pasajları kesin bölüm ve ayet referanslarıyla bulur — kutsal metin kendi sesiyle.",
+        "collection": "bible_ot",
+        "verseCount": "23.145"
+      },
+      "newTestament": {
+        "name": "Yeni Ahit Ajanı",
+        "role": "Yeni Ahit Uzmanı",
+        "description": "İnciller, Mektuplar ve Vahiy'den ilgili pasajları kesin atıflarla alır — metin yazıldığı gibi.",
+        "collection": "bible_nt",
+        "verseCount": "7.957"
+      },
+      "apocrypha": {
+        "name": "Apokrif Ajanı",
+        "role": "Apokrif Uzmanı",
+        "description": "Bilgelik, Sira ve Makabiler gibi kitapları keşfeder — Hristiyan geleneklerinde değer gören kutsal metinler, tam referanslarla atıflanır.",
+        "collection": "bible_apocrypha",
+        "verseCount": "5.717"
+      }
+    },
+    "cta": {
+      "title": "Keşfetmeye Hazır mısınız?",
+      "description": "Yapay zeka destekli içgörülerle kutsal metinlerdeki yolculuğunuza başlayın.",
+      "signUp": "Şimdi Kayıt Olun",
+      "learnMore": "Daha Fazla Bilgi"
+    }
+  },
+  "Search": {
+    "title": "Ara",
+    "placeholder": "Kuran'da ara...",
+    "biblePlaceholder": "İncil'de ara...",
+    "searching": "Aranıyor...",
+    "searchButton": "Ara",
+    "resultsFound": "{count, plural, =0 {Sonuç yok} =1 {1 sonuç} other {# sonuç}} bulundu",
+    "searchFailed": "Arama başarısız. Lütfen tekrar deneyin.",
+    "score": "Skor",
+    "filters": "Filtreler",
+    "tabs": {
+      "quran": "Kuran",
+      "oldTestament": "Eski Ahit",
+      "newTestament": "Yeni Ahit",
+      "apocrypha": "Apokrif"
+    },
+    "language": "Dil",
+    "translator": "Çeviri",
+    "autoDetect": "Otomatik algıla",
+    "advancedMode": "Gelişmiş Mod",
+    "keywordSuggestions": "Anahtar Kelime Önerileri",
+    "enhancing": "Sorgu zenginleştiriliyor...",
+    "streaming": "Cevap akıtılıyor...",
+    "noResultsTitle": "Sonuç bulunamadı",
+    "noResultsMessage": "Arama sorgunuzu veya filtrelerinizi ayarlamayı deneyin.",
+    "verseDetails": "Ayet Detayları",
+    "viewVerse": "Ayeti görüntüle",
+    "copyReference": "Referansı kopyala",
+    "shareVerse": "Ayeti paylaş"
+  },
+  "Compare": {
+    "title": "Karşılaştırmalı Analiz",
+    "placeholder": "Karşılaştırmak için teolojik bir konu veya soru girin...",
+    "analyzing": "Analiz ediliyor...",
+    "analyzeButton": "Analiz Et",
+    "multiAgent": "Çoklu-Ajan Analizi",
+    "selectCollections": "Koleksiyonları Seç",
+    "allCollections": "Tüm Koleksiyonlar",
+    "confidence": "Güven",
+    "totalVerses": "Toplam Ayetler",
+    "totalCitations": "Toplam Atıflar",
+    "latency": "Gecikme",
+    "progress": {
+      "initializing": "Analiz başlatılıyor...",
+      "enhancing": "Sorgu zenginleştiriliyor...",
+      "searching": "{count} ayet aranıyor...",
+      "analyzing": "Bakış açıları analiz ediliyor...",
+      "synthesizing": "İçgörüler sentezleniyor...",
+      "complete": "Analiz tamamlandı"
+    },
+    "agents": {
+      "quran": "Kuran Ajanı",
+      "oldTestament": "Eski Ahit Ajanı",
+      "newTestament": "Yeni Ahit Ajanı",
+      "apocrypha": "Apokrif Ajanı",
+      "summary": "Özet Ajanı"
+    },
+    "filters": {
+      "all": "Tüm Kaynaklar",
+      "quran": "Sadece Kuran",
+      "oldTestament": "Sadece Eski Ahit",
+      "newTestament": "Sadece Yeni Ahit",
+      "apocrypha": "Sadece Apokrif"
+    },
+    "expandParagraph": "Genişlet",
+    "collapseParagraph": "Daralt",
+    "viewCitations": "Atıfları görüntüle",
+    "hideCitations": "Atıfları gizle",
+    "noResults": "Karşılaştırmalı analiz mevcut değil",
+    "compareFailed": "Karşılaştırma başarısız. Lütfen tekrar deneyin."
+  },
+  "Settings": {
+    "title": "Kullanıcı Tercihleri",
+    "subtitle": "Arama deneyiminizi ve arayüz ayarlarınızı özelleştirin",
+    "general": "Genel",
+    "theme": "Tema",
+    "themeLight": "Açık",
+    "themeDark": "Koyu",
+    "themeSystem": "Sistem",
+    "language": "Dil",
+    "languageTurkish": "Türkçe",
+    "languageEnglish": "English",
+    "languageArabic": "العربية",
+    "search": "Arama",
+    "defaultSearchSource": "Varsayılan Arama Kaynağı",
+    "sourceQuran": "Kuran",
+    "sourceOldTestament": "Eski Ahit",
+    "sourceNewTestament": "Yeni Ahit",
+    "sourceApocrypha": "Apokrif",
+    "defaultBibleTestament": "Varsayılan İncil Ahdi",
+    "resultsPerPage": "Sayfa Başına Sonuç",
+    "features": "Özellikler",
+    "enableStreaming": "Akışı Etkinleştir",
+    "streamingDesc": "Daha hızlı algılanan performans için yanıtları token-token akıtın",
+    "enableMultiAgent": "Çoklu-Ajan Analizini Etkinleştir",
+    "multiAgentDesc": "Karşılaştırmalı analiz için 5 uzman ajan kullanın (daha kapsamlı ama daha yavaş)",
+    "savePreferences": "Tercihleri Kaydet",
+    "resetPreferences": "Varsayılanlara Sıfırla",
+    "saving": "Kaydediliyor...",
+    "resetting": "Sıfırlanıyor...",
+    "confirmReset": "Tüm tercihleri varsayılanlara sıfırlamak istediğinizden emin misiniz?",
+    "preferencesSaved": "Tercihler başarıyla kaydedildi",
+    "preferencesFailed": "Tercihleri kaydetme başarısız",
+    "resetSuccess": "Tercihler varsayılanlara sıfırlandı",
+    "resetFailed": "Sıfırlama başarısız"
+  },
+  "Auth": {
     "welcomeBack": "Tekrar Hoş Geldiniz",
     "signInSubtitle": "Aramaya devam etmek için giriş yapın",
     "createAccount": "Hesap Oluştur",
@@ -29,18 +267,201 @@
     "dontHaveAccount": "Hesabınız yok mu?",
     "alreadyHaveAccount": "Zaten hesabınız var mı?",
     "signUp": "Kayıt ol",
+    "signIn": "Giriş yap",
     "loginSuccess": "Giriş başarılı!",
     "loginFailed": "Giriş başarısız. Lütfen bilgilerinizi kontrol edin.",
     "registerSuccess": "Hesap başarıyla oluşturuldu!",
-    "registerFailed": "Kayıt başarısız. Lütfen tekrar deneyin."
+    "registerFailed": "Kayıt başarısız. Lütfen tekrar deneyin.",
+    "logoutSuccess": "Çıkış başarılı",
+    "sessionExpired": "Oturumunuz sona erdi. Lütfen tekrar giriş yapın.",
+    "unauthorized": "Bu sayfaya erişmek için giriş yapmalısınız."
   },
-  "search": {
-    "title": "Ara",
-    "placeholder": "Kuran'da ara...",
+  "KeywordSearch": {
+    "title": "Morfolojik Anahtar Kelime Arama",
+    "subtitle": "Arapça, İbranice veya Yunanca köklerle arama",
+    "searchPlaceholder": "Arapça kök, Buckwalter veya İbranice/Yunanca girin...",
     "searching": "Aranıyor...",
-    "searchButton": "Ara",
-    "resultsFound": "{count} sonuç bulundu",
+    "searchButton": "Kökü Ara",
+    "tabs": {
+      "results": "Arama Sonuçları",
+      "browser": "Kök Tarayıcı"
+    },
+    "language": {
+      "quran": "Kuran (Arapça)",
+      "oldTestament": "Eski Ahit (İbranice)",
+      "newTestament": "Yeni Ahit (Yunanca)"
+    },
+    "bibleCategory": {
+      "all": "Tüm Kitaplar",
+      "oldTestament": "Eski Ahit",
+      "newTestament": "Yeni Ahit"
+    },
+    "stats": {
+      "root": "Kök",
+      "occurrences": "Geçiş Sayısı",
+      "uniqueWords": "Benzersiz Kelimeler",
+      "surahs": "Sureler",
+      "books": "Kitaplar"
+    },
+    "rootInfo": {
+      "title": "Kök Bilgisi",
+      "buckwalter": "Buckwalter",
+      "definition": "Tanım",
+      "forms": "Morfolojik Formlar"
+    },
+    "derivedWords": {
+      "title": "Türetilmiş Kelimeler",
+      "showing": "{count} türetilmiş kelime gösteriliyor"
+    },
+    "chart": {
+      "title": "Surelere Göre Dağılım",
+      "bibleTitle": "Kitaplara Göre Dağılım",
+      "occurrences": "Geçiş Sayısı"
+    },
+    "pagination": {
+      "showing": "{total} sonuçtan {from}-{to} gösteriliyor",
+      "previous": "Önceki",
+      "next": "Sonraki",
+      "page": "{pages} sayfadan {page}. sayfa"
+    },
+    "noResults": "Bu kök için ayet bulunamadı",
     "searchFailed": "Arama başarısız. Lütfen tekrar deneyin.",
-    "score": "Skor"
+    "disclaimer": {
+      "title": "Doğruluk Uyarısı",
+      "content": "Morfolojik analiz hesaplamalıdır ve hatalar içerebilir. Her zaman akademik kaynaklarla doğrulayın.",
+      "understand": "Anladım"
+    },
+    "experimental": {
+      "title": "Deneysel Özellik",
+      "content": "Bu özellik deneyseldir ve aktif geliştirme aşamasındadır. Sonuçlar doğruluk açısından değişiklik gösterebilir.",
+      "understand": "Anladım"
+    },
+    "browser": {
+      "title": "Tüm Köklere Gözat",
+      "searchPlaceholder": "Kökleri filtrele...",
+      "totalRoots": "{count} kök mevcut",
+      "loading": "Kökler yükleniyor...",
+      "noRoots": "Kök bulunamadı"
+    }
+  },
+  "VerseLookup": {
+    "placeholder": "Ayet referansı girin (örn: Bakara 2:255)",
+    "biblePlaceholder": "Ayet referansı girin (örn: Yuhanna 3:16)",
+    "lookup": "Bul",
+    "lookingUp": "Bulunuyor...",
+    "verseNotFound": "Ayet bulunamadı",
+    "invalidReference": "Geçersiz ayet referans formatı",
+    "exampleQuran": "Örnek: Fatiha 1:1",
+    "exampleBible": "Örnek: Tekvin 1:1"
+  },
+  "History": {
+    "title": "Arama Geçmişi",
+    "subtitle": "Son aramalarınız ve analizleriniz",
+    "empty": "Henüz arama geçmişi yok",
+    "emptyMessage": "Geçmiş oluşturmak için aramaya başlayın",
+    "clearAll": "Tüm Geçmişi Temizle",
+    "deleteItem": "Sil",
+    "confirmClear": "Tüm geçmişi temizlemek istediğinizden emin misiniz?",
+    "confirmDelete": "Bu öğeyi silmek istediğinizden emin misiniz?",
+    "cleared": "Geçmiş temizlendi",
+    "deleted": "Öğe silindi",
+    "clearFailed": "Geçmişi temizleme başarısız",
+    "deleteFailed": "Öğe silme başarısız",
+    "searchTypes": {
+      "search": "Arama",
+      "compare": "Karşılaştır",
+      "multiAgent": "Çoklu-Ajan",
+      "quran": "Kuran",
+      "bible": "İncil",
+      "oldTestament": "Eski Ahit",
+      "newTestament": "Yeni Ahit",
+      "apocrypha": "Apokrif"
+    },
+    "resultsCount": "{count} sonuç",
+    "noResults": "Sonuç yok",
+    "timeAgo": "önce",
+    "pagination": {
+      "previous": "Önceki",
+      "next": "Sonraki",
+      "page": "{pages} sayfadan {page}. sayfa"
+    }
+  },
+  "Toast": {
+    "searchSuccess": "Arama başarıyla tamamlandı",
+    "searchFailed": "Arama başarısız. Lütfen tekrar deneyin.",
+    "compareSuccess": "Karşılaştırma başarıyla tamamlandı",
+    "compareFailed": "Karşılaştırma başarısız. Lütfen tekrar deneyin.",
+    "preferencesSaved": "Tercihler başarıyla kaydedildi",
+    "preferencesFailed": "Tercihleri kaydetme başarısız",
+    "historyCleared": "Geçmiş temizlendi",
+    "historyItemDeleted": "Öğe silindi",
+    "copied": "Panoya kopyalandı",
+    "copyFailed": "Kopyalama başarısız",
+    "networkError": "Ağ hatası. Lütfen bağlantınızı kontrol edin.",
+    "unauthorized": "Giriş yapmalısınız",
+    "rateLimitExceeded": "Hız sınırı aşıldı. Lütfen daha sonra tekrar deneyin.",
+    "serverError": "Sunucu hatası. Lütfen daha sonra tekrar deneyin."
+  },
+  "Errors": {
+    "notFound": "Sayfa bulunamadı",
+    "notFoundMessage": "Aradığınız sayfa mevcut değil.",
+    "serverError": "Sunucu hatası",
+    "serverErrorMessage": "Tarafımızda bir sorun oluştu. Lütfen daha sonra tekrar deneyin.",
+    "networkError": "Ağ hatası",
+    "networkErrorMessage": "Bağlantı kurulamadı. Lütfen internet bağlantınızı kontrol edin.",
+    "unauthorized": "Yetkisiz",
+    "unauthorizedMessage": "Bu kaynağa erişim izniniz yok.",
+    "badRequest": "Hatalı istek",
+    "badRequestMessage": "İstek geçersiz veya sunulamıyor.",
+    "goHome": "Ana Sayfaya Git",
+    "tryAgain": "Tekrar Dene",
+    "contactSupport": "Destek ile İletişime Geç"
+  },
+  "Metadata": {
+    "title": "Clarus - Yapay Zeka Destekli Kutsal Metin Arama",
+    "description": "Kuran ve İncil'i yapay zeka ile keşfedin. Bağlantıları bulun, bakış açılarını karşılaştırın, cevaplar edinin.",
+    "searchTitle": "Ara - Clarus",
+    "compareTitle": "Karşılaştır - Clarus",
+    "settingsTitle": "Ayarlar - Clarus",
+    "historyTitle": "Geçmiş - Clarus",
+    "keywordSearchTitle": "Anahtar Kelime Arama - Clarus",
+    "quranTitle": "Kuran - Clarus",
+    "bibleTitle": "İncil - Clarus"
+  },
+  "Bible": {
+    "oldTestament": "Eski Ahit",
+    "newTestament": "Yeni Ahit",
+    "apocrypha": "Apokrif",
+    "books": "Kitaplar",
+    "chapters": "Bölümler",
+    "verses": "Ayetler",
+    "book": "Kitap",
+    "chapter": "Bölüm",
+    "verse": "Ayet",
+    "reference": "Referans",
+    "translation": "Çeviri"
+  },
+  "Quran": {
+    "quran": "Kuran",
+    "surah": "Sure",
+    "ayah": "Ayet",
+    "surahs": "Sureler",
+    "ayahs": "Ayetler",
+    "juz": "Cüz",
+    "page": "Sayfa",
+    "translation": "Çeviri",
+    "translators": {
+      "diyanet": "Diyanet İşleri",
+      "yazir": "Elmalılı Hamdi Yazır",
+      "ates": "Süleyman Ateş",
+      "bulac": "Ali Bulaç",
+      "ozturk": "Yaşar Nuri Öztürk",
+      "vakfi": "Diyanet Vakfı",
+      "yildirim": "Suat Yıldırım",
+      "yuksel": "Edip Yüksel"
+    },
+    "selectTranslation": "Çeviri Seçin",
+    "allSurahs": "Tüm Sureler",
+    "browseQuran": "Kuran'a Gözat"
   }
 }

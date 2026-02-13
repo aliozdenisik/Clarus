@@ -1,19 +1,257 @@
 {
-  "common": {
+  "Common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "retry": "Retry",
+    "noResults": "No results found",
     "search": "Search",
     "login": "Login",
     "register": "Register",
     "logout": "Logout",
-    "loading": "Loading..."
-  },
-  "hero": {
-    "title": "Clarus",
-    "subtitle": "Explore Quran and Bible with AI-powered insights",
-    "searchPlaceholder": "Search sacred texts...",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "reset": "Reset",
+    "success": "Success",
+    "failed": "Failed",
+    "tryAgain": "Try again",
+    "learnMore": "Learn more",
+    "getStarted": "Get Started",
     "signIn": "Sign In",
-    "getStarted": "Get Started"
+    "signUp": "Sign Up",
+    "results": "Results",
+    "filters": "Filters",
+    "settings": "Settings"
   },
-  "auth": {
+  "Navigation": {
+    "search": "Search",
+    "browse": "Browse",
+    "compare": "Compare",
+    "history": "History",
+    "settings": "Settings",
+    "quranSearch": "Quran Search",
+    "quranSearchDesc": "Semantic search across Turkish Quran translation",
+    "oldTestamentSearch": "Old Testament Search",
+    "oldTestamentSearchDesc": "Search through 39 books of the Old Testament",
+    "newTestamentSearch": "New Testament Search",
+    "newTestamentSearchDesc": "Search the Gospels, Acts, and Epistles",
+    "apocryphaSearch": "Apocrypha Search",
+    "apocryphaSearchDesc": "Explore deuterocanonical texts and writings",
+    "wordSearch": "Word Search",
+    "wordSearchDesc": "Morphological keyword search with roots",
+    "quranBrowse": "Quran",
+    "quranBrowseDesc": "Browse all 114 Surahs with translations",
+    "oldTestamentBrowse": "Old Testament",
+    "oldTestamentBrowseDesc": "Torah, Prophets, and Writings",
+    "newTestamentBrowse": "New Testament",
+    "newTestamentBrowseDesc": "Gospels, Letters, and Revelation",
+    "apocrypha": "Apocrypha",
+    "apocryphaDesc": "Wisdom, Sirach, Maccabees, and more",
+    "userMenu": "User menu",
+    "viewProfile": "View profile",
+    "signOut": "Sign out"
+  },
+  "Landing": {
+    "hero": {
+      "title": "Explore Sacred Texts",
+      "titleAI": "with AI",
+      "subtitle": "Search across Quran and Bible with AI. Discover connections, compare perspectives, find answers.",
+      "searchPlaceholder": "Search sacred texts...",
+      "getStarted": "Get Started",
+      "signIn": "Sign In",
+      "goToSearch": "Go to Search",
+      "goToCompare": "Go to Compare"
+    },
+    "features": {
+      "semantic": {
+        "title": "Understands What You Mean",
+        "description": "Describe a concept or explore an idea in your own words. The AI grasps meaning and context — surfacing relevant passages even when you don't know the exact terms to search for.",
+        "techNote": "Hybrid semantic + keyword search"
+      },
+      "parallel": {
+        "title": "Every Scripture at Once",
+        "description": "Quran, Old Testament, New Testament, and Apocrypha — all 43,055 verses searched simultaneously so no perspective goes unheard.",
+        "techNote": "Parallel multi-collection retrieval"
+      },
+      "traceable": {
+        "title": "Traceable to the Source",
+        "description": "Every insight is backed by exact verse references. Nothing is claimed without a source you can look up and verify yourself.",
+        "techNote": "AI-generated with full citation traceability"
+      }
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "ask": {
+        "label": "Ask",
+        "description": "Pose your question",
+        "detail": "Any theological concept, moral question, or scriptural topic — in your own words."
+      },
+      "enrich": {
+        "label": "Enrich",
+        "description": "Context is deepened",
+        "detail": "The AI expands your question with related concepts and terminology across traditions."
+      },
+      "discover": {
+        "label": "Discover",
+        "description": "All scriptures searched",
+        "detail": "43,055 verses across Quran and Bible are scanned simultaneously for the most relevant passages."
+      },
+      "understand": {
+        "label": "Understand",
+        "description": "Perspectives unite",
+        "detail": "5 specialist agents each contribute their scripture's voice, then a synthesis brings them together."
+      }
+    },
+    "agents": {
+      "title": "Multi-Agent Analysis",
+      "quran": {
+        "name": "Quran Agent",
+        "role": "Quran Specialist",
+        "description": "Surfaces the most relevant verses with precise Surah and Ayah citations — presenting the Quran's own words on any topic.",
+        "collection": "quran_tr",
+        "verseCount": "6,236"
+      },
+      "oldTestament": {
+        "name": "Old Testament Agent",
+        "role": "Old Testament Specialist",
+        "description": "Searches Genesis through Malachi to find relevant passages with exact chapter and verse references — the scripture in its own voice.",
+        "collection": "bible_ot",
+        "verseCount": "23,145"
+      },
+      "newTestament": {
+        "name": "New Testament Agent",
+        "role": "New Testament Specialist",
+        "description": "Retrieves relevant passages from the Gospels, Letters, and Revelation with precise citations — the text as it was written.",
+        "collection": "bible_nt",
+        "verseCount": "7,957"
+      },
+      "apocrypha": {
+        "name": "Apocrypha Agent",
+        "role": "Apocrypha Specialist",
+        "description": "Explores books like Wisdom, Sirach, and Maccabees — scriptures cherished across Christian traditions, cited with full references.",
+        "collection": "bible_apocrypha",
+        "verseCount": "5,717"
+      }
+    },
+    "cta": {
+      "title": "Ready to Explore?",
+      "description": "Start your journey through sacred texts with AI-powered insights.",
+      "signUp": "Sign Up Now",
+      "learnMore": "Learn More"
+    }
+  },
+  "Search": {
+    "title": "Search",
+    "placeholder": "Search Quran...",
+    "biblePlaceholder": "Search Bible...",
+    "searching": "Searching...",
+    "searchButton": "Search",
+    "resultsFound": "{count, plural, =0 {No results} =1 {1 result} other {# results}} found",
+    "searchFailed": "Search failed. Please try again.",
+    "score": "Score",
+    "filters": "Filters",
+    "tabs": {
+      "quran": "Quran",
+      "oldTestament": "Old Testament",
+      "newTestament": "New Testament",
+      "apocrypha": "Apocrypha"
+    },
+    "language": "Language",
+    "translator": "Translation",
+    "autoDetect": "Auto-detect",
+    "advancedMode": "Advanced Mode",
+    "keywordSuggestions": "Keyword Suggestions",
+    "enhancing": "Enhancing query...",
+    "streaming": "Streaming answer...",
+    "noResultsTitle": "No results found",
+    "noResultsMessage": "Try adjusting your search query or filters.",
+    "verseDetails": "Verse Details",
+    "viewVerse": "View verse",
+    "copyReference": "Copy reference",
+    "shareVerse": "Share verse"
+  },
+  "Compare": {
+    "title": "Comparative Analysis",
+    "placeholder": "Enter a theological topic or question to compare...",
+    "analyzing": "Analyzing...",
+    "analyzeButton": "Analyze",
+    "multiAgent": "Multi-Agent Analysis",
+    "selectCollections": "Select Collections",
+    "allCollections": "All Collections",
+    "confidence": "Confidence",
+    "totalVerses": "Total Verses",
+    "totalCitations": "Total Citations",
+    "latency": "Latency",
+    "progress": {
+      "initializing": "Initializing analysis...",
+      "enhancing": "Enhancing query...",
+      "searching": "Searching {count} verses...",
+      "analyzing": "Analyzing perspectives...",
+      "synthesizing": "Synthesizing insights...",
+      "complete": "Analysis complete"
+    },
+    "agents": {
+      "quran": "Quran Agent",
+      "oldTestament": "Old Testament Agent",
+      "newTestament": "New Testament Agent",
+      "apocrypha": "Apocrypha Agent",
+      "summary": "Summary Agent"
+    },
+    "filters": {
+      "all": "All Sources",
+      "quran": "Quran Only",
+      "oldTestament": "Old Testament Only",
+      "newTestament": "New Testament Only",
+      "apocrypha": "Apocrypha Only"
+    },
+    "expandParagraph": "Expand",
+    "collapseParagraph": "Collapse",
+    "viewCitations": "View citations",
+    "hideCitations": "Hide citations",
+    "noResults": "No comparative analysis available",
+    "compareFailed": "Comparison failed. Please try again."
+  },
+  "Settings": {
+    "title": "User Preferences",
+    "subtitle": "Customize your search experience and interface settings",
+    "general": "General",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "language": "Language",
+    "languageTurkish": "Türkçe",
+    "languageEnglish": "English",
+    "languageArabic": "العربية",
+    "search": "Search",
+    "defaultSearchSource": "Default Search Source",
+    "sourceQuran": "Quran",
+    "sourceOldTestament": "Old Testament",
+    "sourceNewTestament": "New Testament",
+    "sourceApocrypha": "Apocrypha",
+    "defaultBibleTestament": "Default Bible Testament",
+    "resultsPerPage": "Results Per Page",
+    "features": "Features",
+    "enableStreaming": "Enable Streaming",
+    "streamingDesc": "Stream responses token-by-token for faster perceived performance",
+    "enableMultiAgent": "Enable Multi-Agent Analysis",
+    "multiAgentDesc": "Use 5 specialized agents for comparative analysis (more comprehensive but slower)",
+    "savePreferences": "Save Preferences",
+    "resetPreferences": "Reset to Defaults",
+    "saving": "Saving...",
+    "resetting": "Resetting...",
+    "confirmReset": "Are you sure you want to reset all preferences to defaults?",
+    "preferencesSaved": "Preferences saved successfully",
+    "preferencesFailed": "Failed to save preferences",
+    "resetSuccess": "Preferences reset to defaults",
+    "resetFailed": "Failed to reset preferences"
+  },
+  "Auth": {
     "welcomeBack": "Welcome Back",
     "signInSubtitle": "Sign in to continue your search",
     "createAccount": "Create Account",
@@ -29,18 +267,201 @@
     "dontHaveAccount": "Don't have an account?",
     "alreadyHaveAccount": "Already have an account?",
     "signUp": "Sign up",
+    "signIn": "Sign in",
     "loginSuccess": "Login successful!",
     "loginFailed": "Login failed. Please check your credentials.",
     "registerSuccess": "Account created successfully!",
-    "registerFailed": "Registration failed. Please try again."
+    "registerFailed": "Registration failed. Please try again.",
+    "logoutSuccess": "Logged out successfully",
+    "sessionExpired": "Your session has expired. Please sign in again.",
+    "unauthorized": "You must be signed in to access this page."
   },
-  "search": {
-    "title": "Search",
-    "placeholder": "Search Quran...",
+  "KeywordSearch": {
+    "title": "Morphological Keyword Search",
+    "subtitle": "Search by Arabic, Hebrew, or Greek roots",
+    "searchPlaceholder": "Enter Arabic root, Buckwalter, or Hebrew/Greek...",
     "searching": "Searching...",
-    "searchButton": "Search",
-    "resultsFound": "Found {count} results",
+    "searchButton": "Search Root",
+    "tabs": {
+      "results": "Search Results",
+      "browser": "Root Browser"
+    },
+    "language": {
+      "quran": "Quran (Arabic)",
+      "oldTestament": "Old Testament (Hebrew)",
+      "newTestament": "New Testament (Greek)"
+    },
+    "bibleCategory": {
+      "all": "All Books",
+      "oldTestament": "Old Testament",
+      "newTestament": "New Testament"
+    },
+    "stats": {
+      "root": "Root",
+      "occurrences": "Occurrences",
+      "uniqueWords": "Unique Words",
+      "surahs": "Surahs",
+      "books": "Books"
+    },
+    "rootInfo": {
+      "title": "Root Information",
+      "buckwalter": "Buckwalter",
+      "definition": "Definition",
+      "forms": "Morphological Forms"
+    },
+    "derivedWords": {
+      "title": "Derived Words",
+      "showing": "Showing {count} derived words"
+    },
+    "chart": {
+      "title": "Distribution by Surah",
+      "bibleTitle": "Distribution by Book",
+      "occurrences": "Occurrences"
+    },
+    "pagination": {
+      "showing": "Showing {from}-{to} of {total}",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page} of {pages}"
+    },
+    "noResults": "No verses found for this root",
     "searchFailed": "Search failed. Please try again.",
-    "score": "Score"
+    "disclaimer": {
+      "title": "Accuracy Disclaimer",
+      "content": "Morphological analysis is computational and may contain errors. Always verify with scholarly sources.",
+      "understand": "I Understand"
+    },
+    "experimental": {
+      "title": "Experimental Feature",
+      "content": "This feature is experimental and under active development. Results may vary in accuracy.",
+      "understand": "I Understand"
+    },
+    "browser": {
+      "title": "Browse All Roots",
+      "searchPlaceholder": "Filter roots...",
+      "totalRoots": "{count} roots available",
+      "loading": "Loading roots...",
+      "noRoots": "No roots found"
+    }
+  },
+  "VerseLookup": {
+    "placeholder": "Enter verse reference (e.g., Al-Baqarah 2:255)",
+    "biblePlaceholder": "Enter verse reference (e.g., John 3:16)",
+    "lookup": "Look Up",
+    "lookingUp": "Looking up...",
+    "verseNotFound": "Verse not found",
+    "invalidReference": "Invalid verse reference format",
+    "exampleQuran": "Example: Al-Fatiha 1:1",
+    "exampleBible": "Example: Genesis 1:1"
+  },
+  "History": {
+    "title": "Search History",
+    "subtitle": "Your recent searches and analyses",
+    "empty": "No search history yet",
+    "emptyMessage": "Start searching to build your history",
+    "clearAll": "Clear All History",
+    "deleteItem": "Delete",
+    "confirmClear": "Are you sure you want to clear all history?",
+    "confirmDelete": "Are you sure you want to delete this item?",
+    "cleared": "History cleared",
+    "deleted": "Item deleted",
+    "clearFailed": "Failed to clear history",
+    "deleteFailed": "Failed to delete item",
+    "searchTypes": {
+      "search": "Search",
+      "compare": "Compare",
+      "multiAgent": "Multi-Agent",
+      "quran": "Quran",
+      "bible": "Bible",
+      "oldTestament": "Old Testament",
+      "newTestament": "New Testament",
+      "apocrypha": "Apocrypha"
+    },
+    "resultsCount": "{count} results",
+    "noResults": "No results",
+    "timeAgo": "ago",
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page} of {pages}"
+    }
+  },
+  "Toast": {
+    "searchSuccess": "Search completed successfully",
+    "searchFailed": "Search failed. Please try again.",
+    "compareSuccess": "Comparison completed successfully",
+    "compareFailed": "Comparison failed. Please try again.",
+    "preferencesSaved": "Preferences saved successfully",
+    "preferencesFailed": "Failed to save preferences",
+    "historyCleared": "History cleared",
+    "historyItemDeleted": "Item deleted",
+    "copied": "Copied to clipboard",
+    "copyFailed": "Failed to copy",
+    "networkError": "Network error. Please check your connection.",
+    "unauthorized": "You must be signed in",
+    "rateLimitExceeded": "Rate limit exceeded. Please try again later.",
+    "serverError": "Server error. Please try again later."
+  },
+  "Errors": {
+    "notFound": "Page not found",
+    "notFoundMessage": "The page you're looking for doesn't exist.",
+    "serverError": "Server error",
+    "serverErrorMessage": "Something went wrong on our end. Please try again later.",
+    "networkError": "Network error",
+    "networkErrorMessage": "Unable to connect. Please check your internet connection.",
+    "unauthorized": "Unauthorized",
+    "unauthorizedMessage": "You don't have permission to access this resource.",
+    "badRequest": "Bad request",
+    "badRequestMessage": "The request was invalid or cannot be served.",
+    "goHome": "Go Home",
+    "tryAgain": "Try Again",
+    "contactSupport": "Contact Support"
+  },
+  "Metadata": {
+    "title": "Clarus - AI-Powered Sacred Text Search",
+    "description": "Explore Quran and Bible with AI. Discover connections, compare perspectives, find answers.",
+    "searchTitle": "Search - Clarus",
+    "compareTitle": "Compare - Clarus",
+    "settingsTitle": "Settings - Clarus",
+    "historyTitle": "History - Clarus",
+    "keywordSearchTitle": "Keyword Search - Clarus",
+    "quranTitle": "Quran - Clarus",
+    "bibleTitle": "Bible - Clarus"
+  },
+  "Bible": {
+    "oldTestament": "Old Testament",
+    "newTestament": "New Testament",
+    "apocrypha": "Apocrypha",
+    "books": "Books",
+    "chapters": "Chapters",
+    "verses": "Verses",
+    "book": "Book",
+    "chapter": "Chapter",
+    "verse": "Verse",
+    "reference": "Reference",
+    "translation": "Translation"
+  },
+  "Quran": {
+    "quran": "Quran",
+    "surah": "Surah",
+    "ayah": "Ayah",
+    "surahs": "Surahs",
+    "ayahs": "Ayahs",
+    "juz": "Juz",
+    "page": "Page",
+    "translation": "Translation",
+    "translators": {
+      "diyanet": "Diyanet İşleri",
+      "yazir": "Elmalılı Hamdi Yazır",
+      "ates": "Süleyman Ateş",
+      "bulac": "Ali Bulaç",
+      "ozturk": "Yaşar Nuri Öztürk",
+      "vakfi": "Diyanet Vakfı",
+      "yildirim": "Suat Yıldırım",
+      "yuksel": "Edip Yüksel"
+    },
+    "selectTranslation": "Select Translation",
+    "allSurahs": "All Surahs",
+    "browseQuran": "Browse Quran"
   }
 }
