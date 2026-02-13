@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ExternalLink, Search } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { SearchTabs, SearchSource } from "@/components/search/search-tabs"
 import { useSSE } from "@/lib/hooks/use-sse"
 import { usePreferencesStore } from "@/lib/stores/preferences-store"
@@ -97,6 +98,9 @@ function SearchContent() {
 
   const { data: sseData, isStreaming, error: sseError, startStream } = useSSE()
   const { enable_streaming } = usePreferencesStore()
+
+  const t = useTranslations("Search")
+  const tToast = useTranslations("Toast")
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -294,15 +298,15 @@ function SearchContent() {
   const getPlaceholder = () => {
     switch (activeTab) {
       case "quran":
-        return "Search Quran..."
+        return t("placeholder")
       case "ot":
-        return "Search Old Testament..."
+        return t("biblePlaceholder")
       case "nt":
-        return "Search New Testament..."
+        return t("biblePlaceholder")
       case "apocrypha":
-        return "Search Apocrypha..."
+        return t("biblePlaceholder")
       default:
-        return "Search..."
+        return t("placeholder")
     }
   }
 
@@ -360,7 +364,7 @@ function SearchContent() {
       }
 
       log.error("Query enhancement failed", { error })
-      toast.error("Failed to extract keywords")
+      toast.error(tToast("searchFailed"))
       return null
     } finally {
       if (enhanceAbortControllerRef.current === controller) {
@@ -377,7 +381,7 @@ function SearchContent() {
     const effectiveKeywords = keywordsOverride ?? selectedKeywords
 
     if (effectiveKeywords.length === 0) {
-      toast.error("Please select at least one keyword")
+      toast.error(tToast("searchFailed"))
       return
     }
 
@@ -470,13 +474,13 @@ function SearchContent() {
           setDetectedLanguage(data.detected_language)
         }
 
-        toast.success(`Found ${data.results.length} results`)
+        toast.success(tToast("searchSuccess"))
       } catch (error) {
         if (isAbortError(error)) {
           return
         }
 
-        toast.error("Search failed. Please try again.")
+        toast.error(tToast("searchFailed"))
       } finally {
         if (batchSearchAbortControllerRef.current === controller) {
           batchSearchAbortControllerRef.current = null
@@ -487,16 +491,16 @@ function SearchContent() {
         }
       }
     },
-    [query, activeTab, selectedLanguage, selectedTranslator, advancedMode, selectedKeywords]
+    [query, activeTab, selectedLanguage, selectedTranslator, advancedMode, selectedKeywords, tToast]
   )
 
   useEffect(() => {
     if (sseError && !hasHandledSSEError.current) {
       hasHandledSSEError.current = true
-      toast.error("Streaming failed. Switching to standard search.")
+      toast.error(tToast("searchFailed"))
       performBatchSearch()
     }
-  }, [sseError, performBatchSearch])
+  }, [sseError, performBatchSearch, tToast])
 
   // Auto-execute search from URL q param (history re-run)
   useEffect(() => {
@@ -615,14 +619,14 @@ function SearchContent() {
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-500" />
               </span>
               <span className="text-xs font-medium tracking-wide text-[var(--color-text-secondary)]">
-                AI-Powered Semantic Search
+                {t("title")}
               </span>
             </motion.div>
 
             {/* Title */}
             <h1 className="mb-4 text-4xl font-bold tracking-tight text-[var(--color-text-primary)] md:text-5xl">
               <span className="bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">
-                Search
+                {t("title")}
               </span>
             </h1>
 
@@ -679,10 +683,10 @@ function SearchContent() {
                     aria-label="Submit search"
                   >
                     {isEnhancing
-                      ? "Extracting..."
+                      ? t("enhancing")
                       : isSearching || isStreaming
-                        ? "Searching..."
-                        : "Search"}
+                        ? t("searching")
+                        : t("searchButton")}
                   </button>
                 </div>
                 <LanguageSelector
@@ -734,11 +738,11 @@ function SearchContent() {
                     type="button"
                     onClick={() => {
                       resetKeywordStore()
-                      toast.info("Switched to normal search")
+                      toast.info(tToast("searchSuccess"))
                     }}
                     className="ml-auto text-xs text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-secondary)]"
                   >
-                    Clear keywords & use normal search
+                    {t("advancedMode")}
                   </button>
                 )}
               </div>
@@ -911,11 +915,15 @@ function SearchContent() {
 }
 
 export default function SearchPage() {
+  const tCommon = useTranslations("Common")
+
   return (
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
-          <div className="text-sm tracking-wide text-[var(--color-text-muted)]">Loading...</div>
+          <div className="text-sm tracking-wide text-[var(--color-text-muted)]">
+            {tCommon("loading")}
+          </div>
         </div>
       }
     >

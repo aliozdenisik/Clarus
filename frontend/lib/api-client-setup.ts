@@ -29,12 +29,20 @@ export function setupApiClient(): void {
       request.headers.set("X-Correlation-ID", correlationId)
     }
 
+    // Extract locale from current URL path (e.g., /en/search -> "en")
+    const pathSegments = window.location.pathname.split("/").filter(Boolean)
+    const locale = pathSegments[0] === "en" || pathSegments[0] === "tr" ? pathSegments[0] : "tr"
+
+    // Inject Accept-Language header for backend locale detection
+    request.headers.set("Accept-Language", locale)
+
     logger.debug("API request initiated", {
       component: "ApiClient",
       action: "request",
       method: request.method,
       url: request.url,
       hasCorrelation: Boolean(correlationId),
+      locale,
     })
 
     return request

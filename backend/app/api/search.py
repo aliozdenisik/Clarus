@@ -15,6 +15,7 @@ from app.api.compare import (
 from app.auth.api_key_validator import get_current_user_flexible
 from app.config import settings
 from app.db import get_db
+from app.i18n.detector import get_locale
 from app.logging_config import get_logger, log_performance
 from app.models import SearchHistory
 from app.schemas.common import DEFAULT_TRANSLATOR, QueryValidation, TranslatorType
@@ -101,6 +102,7 @@ async def search_quran(
     request: SearchRequest,
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     start = time.perf_counter()
     translator = request.translator or DEFAULT_TRANSLATOR
@@ -173,6 +175,7 @@ async def search_bible(
     testament: str | None = Query(None, pattern="^(ot|nt|apocrypha)$"),
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     start = time.perf_counter()
     collection = f"bible_{testament}" if testament else "bible_all"
