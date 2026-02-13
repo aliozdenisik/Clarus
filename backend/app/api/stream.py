@@ -135,11 +135,11 @@ async def stream_search(
             logger.info("[SSE /search] Starting ask call (search + answer generation)...")
             quran_translator = translator or DEFAULT_TRANSLATOR
             if source == "quran":
-                ask_result = await rag.ask_quran(q, translator=quran_translator, top_k=10)
+                ask_result = await rag.ask_quran(q, translator=quran_translator, top_k=10, locale=locale)
             elif source in ["ot", "nt", "apocrypha"]:
-                ask_result = await rag.ask_bible(q, translation="kjva", testament=source, top_k=10)
+                ask_result = await rag.ask_bible(q, translation="kjva", testament=source, top_k=10, locale=locale)
             else:
-                ask_result = await rag.ask_bible(q, top_k=10)
+                ask_result = await rag.ask_bible(q, top_k=10, locale=locale)
 
             # Extract results and answer from ask_result
             results = ask_result.search_results
