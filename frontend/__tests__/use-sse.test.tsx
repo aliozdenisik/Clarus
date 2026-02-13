@@ -93,7 +93,7 @@ describe("useSSE", () => {
       })
 
       expect(constructorCalls).toHaveLength(1)
-      expect(constructorCalls[0].url).toBe(testUrl)
+      expect(constructorCalls[0].url).toBe(testUrl + "&lang=tr")
       expect(constructorCalls[0].options?.withCredentials).toBe(true)
     })
 
@@ -673,7 +673,7 @@ describe("useSSE", () => {
       })
 
       // Verify first EventSource was created with correct URL
-      expect(constructorCalls[0].url).toBe(testUrl)
+      expect(constructorCalls[0].url).toBe(testUrl + "&lang=tr")
 
       const mockEventSource = mockEventSourceInstances[0]
 
@@ -688,7 +688,7 @@ describe("useSSE", () => {
       })
 
       // Verify second EventSource uses same URL
-      expect(constructorCalls[1].url).toBe(testUrl)
+      expect(constructorCalls[1].url).toBe(testUrl + "&lang=tr")
     })
   })
 

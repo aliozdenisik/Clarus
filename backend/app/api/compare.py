@@ -3,7 +3,7 @@
 import time as time_module
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,7 +12,9 @@ from app.api.compare_helpers import strip_markdown_headers
 from app.auth.api_key_validator import get_current_user_flexible
 from app.db import get_db
 from app.i18n.detector import get_locale
+from app.i18n.messages import get_error_message
 from app.logging_config import get_logger, log_performance
+from app.middleware.error_handler import ValidationError
 from app.models import SearchHistory
 from app.schemas.common import DEFAULT_TRANSLATOR, TranslatorType
 from src.citation_sanitizer import sanitize_citations
@@ -227,7 +229,7 @@ async def compare_scriptures(
         }
         collections = [c for c in request.collections if c in valid_collections]
         if len(collections) < 2:
-            raise HTTPException(status_code=400, detail="At least 2 collections required for comparison")
+            raise ValidationError(message=get_error_message("min_collections_required", locale, min_count=2))
 
         logger.info(
             "Compare with filtered collections",
