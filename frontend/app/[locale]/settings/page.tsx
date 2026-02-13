@@ -10,6 +10,7 @@ import { GlowCard } from "@/components/ui/glow-card"
 import { Button } from "@/components/ui/button"
 import { DotPattern, RadialGradient } from "@/components/ui/dot-pattern"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 import { Settings, Save, RotateCcw, Palette, Search, Zap } from "lucide-react"
 import {
   Select,
@@ -25,6 +26,9 @@ export default function SettingsPage() {
   const { data: session, isPending: authLoading } = useSession()
   const user = session?.user
   const router = useRouter()
+  const t = useTranslations("Settings")
+  const tToast = useTranslations("Toast")
+  const tCommon = useTranslations("Common")
   const {
     theme,
     language,
@@ -65,16 +69,16 @@ export default function SettingsPage() {
     try {
       setIsSaving(true)
       await savePreferences()
-      toast.success("Preferences saved successfully")
+      toast.success(tToast("preferencesSaved"))
     } catch {
-      toast.error("Failed to save preferences")
+      toast.error(tToast("preferencesFailed"))
     } finally {
       setIsSaving(false)
     }
   }
 
   const handleReset = async () => {
-    if (!confirm("Are you sure you want to reset all preferences to defaults?")) {
+    if (!confirm(t("confirmReset"))) {
       return
     }
 
@@ -90,9 +94,9 @@ export default function SettingsPage() {
       }
 
       reset()
-      toast.success("Preferences reset to defaults")
+      toast.success(t("resetSuccess"))
     } catch {
-      toast.error("Failed to reset preferences")
+      toast.error(t("resetFailed"))
     } finally {
       setIsResetting(false)
     }
@@ -101,7 +105,7 @@ export default function SettingsPage() {
   if (authLoading || (!user && !authLoading)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
-        <div className="text-[var(--color-text-secondary)]">Loading...</div>
+        <div className="text-[var(--color-text-secondary)]">{tCommon("loading")}</div>
       </div>
     )
   }
@@ -137,11 +141,9 @@ export default function SettingsPage() {
         >
           <h1 className="flex items-center gap-3 text-3xl font-bold text-[var(--color-text-primary)]">
             <Settings className="h-8 w-8 text-[var(--color-accent-primary)]" />
-            User Preferences
+            {t("title")}
           </h1>
-          <p className="mt-2 text-[var(--color-text-secondary)]">
-            Customize your search experience and interface settings
-          </p>
+          <p className="mt-2 text-[var(--color-text-secondary)]">{t("subtitle")}</p>
         </motion.div>
 
         <div className="space-y-6">
@@ -331,7 +333,7 @@ export default function SettingsPage() {
               className="flex items-center gap-2 bg-[var(--color-accent-primary)] shadow-[var(--color-accent-primary)]/20 shadow-lg hover:bg-[var(--color-accent-primary)]/90"
             >
               <Save className="h-4 w-4" />
-              Save Changes
+              {t("savePreferences")}
             </Button>
           </motion.div>
         </div>

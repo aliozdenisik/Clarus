@@ -22,6 +22,7 @@ from app.api.compare_helpers import (
     strip_markdown_headers,
 )
 from app.db import get_db
+from app.i18n.detector import get_locale
 from app.models import SearchHistory
 from app.schemas.common import DEFAULT_TRANSLATOR, TranslatorType
 from src.comparative_rag import ComparativeRAG
@@ -99,6 +100,7 @@ async def stream_search(
         description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
     ),
     db: AsyncSession = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     """Stream search results with AI answer generation.
 
@@ -284,6 +286,7 @@ async def stream_compare(
         description="Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)",
     ),
     db: AsyncSession = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     """Stream comparative analysis with multi-agent output.
 

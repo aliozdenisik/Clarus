@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from "rea
 import { motion, AnimatePresence } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
 import { useSession } from "@/lib/auth-client"
+import { useTranslations } from "next-intl"
 
 import { GlowCard } from "@/components/ui/glow-card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -138,6 +139,9 @@ function CompareContent() {
 
   const { data: sseData, isStreaming, error: sseError, startStream } = useSSE()
   const { enable_streaming } = usePreferencesStore()
+
+  const t = useTranslations("Compare")
+  const tToast = useTranslations("Toast")
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -365,13 +369,13 @@ function CompareContent() {
         if (data.detected_language) {
           setDetectedLanguage(data.detected_language)
         }
-        toast.success(`Analysis complete in ${(data.latency_ms / 1000).toFixed(1)}s`)
+        toast.success(tToast("compareSuccess"))
       } catch (error) {
         if (isAbortError(error)) {
           return
         }
 
-        toast.error("Analysis failed. Please try again.")
+        toast.error(tToast("compareFailed"))
       } finally {
         if (batchCompareAbortRef.current === controller) {
           batchCompareAbortRef.current = null
@@ -387,6 +391,7 @@ function CompareContent() {
       selectedLanguage,
       selectedTranslator,
       advancedMode,
+      tToast,
       quranKeywords,
       bibleKeywords,
     ]
@@ -568,10 +573,10 @@ function CompareContent() {
   useEffect(() => {
     if (sseError && sseError !== lastHandledSseError.current) {
       lastHandledSseError.current = sseError
-      toast.error("Streaming connection lost. Falling back to standard analysis...")
+      toast.error(tToast("compareFailed"))
       performBatchCompare(topic)
     }
-  }, [sseError, topic, performBatchCompare])
+  }, [sseError, topic, performBatchCompare, tToast])
 
   const handleCompare = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -589,7 +594,7 @@ function CompareContent() {
       const source =
         selectedCollections.length === 1 ? sourceMap[selectedCollections[0]] || "quran" : "quran"
       router.push(`/search?source=${source}&q=${encodeURIComponent(topic)}`)
-      toast.info("Karşılaştırma için en az 2 kaynak gerekli. Arama sayfasına yönlendiriliyorsunuz.")
+      toast.info(tToast("compareFailed"))
       return
     }
 
@@ -637,7 +642,7 @@ function CompareContent() {
           return
         }
 
-        toast.error("Keyword extraction failed. Proceeding with normal search.")
+        toast.error(tToast("compareFailed"))
         setIsExtractingKeywords(false)
         // Fall through to normal compare
       } finally {
@@ -711,7 +716,7 @@ function CompareContent() {
             {/* Title */}
             <h1 className="mb-4 text-4xl font-bold tracking-tight text-[var(--color-text-primary)] md:text-5xl">
               <span className="bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">
-                Compare
+                {t("title")}
               </span>
             </h1>
 
@@ -776,7 +781,7 @@ function CompareContent() {
                     className="focus-visible:outline-ring/70 absolute end-1.5 top-1.5 flex h-9 items-center justify-center rounded-lg bg-gradient-to-r from-violet-500 to-indigo-500 px-4 text-sm font-medium text-white shadow-lg shadow-violet-500/25 transition-all hover:from-violet-600 hover:to-indigo-600 focus:z-10 focus-visible:outline focus-visible:outline-2 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="Submit analysis"
                   >
-                    {isLoading ? "Analyzing..." : "Analyze"}
+                    {isLoading ? t("analyzing") : t("analyzeButton")}
                   </button>
                 </div>
                 <LanguageSelector
@@ -935,7 +940,7 @@ function CompareContent() {
                     <TypingIndicator />
                     <span className="text-sm">
                       {result?.paragraphs?.length
-                        ? `Analyzing... (${result.paragraphs.length}/5 agents completed)`
+                        ? t("analyzing")
                         : "Initializing multi-agent analysis..."}
                     </span>
                   </div>
@@ -1241,11 +1246,13 @@ function CompareContent() {
 }
 
 export default function ComparePage() {
+  const tCommon = useTranslations("Common")
+
   return (
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
-          <div className="text-[var(--color-text-secondary)]">Loading...</div>
+          <div className="text-[var(--color-text-secondary)]">{tCommon("loading")}</div>
         </div>
       }
     >

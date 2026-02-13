@@ -9,12 +9,14 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams.toString()
   const backendUrl = `${BACKEND_URL}/api/stream/compare${searchParams ? `?${searchParams}` : ""}`
   const cookieHeader = request.headers.get("cookie") || ""
+  const acceptLanguage = request.headers.get("accept-language") || "tr"
 
   try {
     const response = await fetch(backendUrl, {
       headers: {
         Cookie: cookieHeader,
         Accept: "text/event-stream",
+        "Accept-Language": acceptLanguage,
       },
       cache: "no-store",
     })

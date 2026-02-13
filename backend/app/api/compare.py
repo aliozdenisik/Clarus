@@ -11,6 +11,7 @@ from app.api.auth import check_rate_limit
 from app.api.compare_helpers import strip_markdown_headers
 from app.auth.api_key_validator import get_current_user_flexible
 from app.db import get_db
+from app.i18n.detector import get_locale
 from app.logging_config import get_logger, log_performance
 from app.models import SearchHistory
 from app.schemas.common import DEFAULT_TRANSLATOR, TranslatorType
@@ -180,6 +181,7 @@ async def compare_scriptures(
     request: CompareRequest,
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
+    locale: str = Depends(get_locale),
 ):
     """
     Compare a topic across scriptures (Quran, Old Testament, New Testament, Apocrypha).
