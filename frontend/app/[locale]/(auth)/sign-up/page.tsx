@@ -4,6 +4,7 @@ import { AuthView } from "@daveyplate/better-auth-ui"
 import "@daveyplate/better-auth-ui/css"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 /**
  * Sign Up Page
@@ -12,6 +13,9 @@ import { ChevronLeft } from "lucide-react"
  * Supports email/password and Google OAuth sign-up.
  */
 export default function SignUpPage() {
+  const t = useTranslations("Auth")
+  const tCommon = useTranslations("Common")
+
   return (
     <>
       {/* Header with back button */}
@@ -21,7 +25,7 @@ export default function SignUpPage() {
           className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)]"
         >
           <ChevronLeft size={16} />
-          <span>Home</span>
+          <span>{tCommon("back")}</span>
         </Link>
       </div>
 
@@ -31,9 +35,9 @@ export default function SignUpPage() {
           Clarus
         </span>
         <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
-          Create your account
+          {t("createAccount")}
         </h1>
-        <p className="text-[var(--color-text-muted)]">Start exploring sacred texts with AI</p>
+        <p className="text-[var(--color-text-muted)]">{t("registerSubtitle")}</p>
       </div>
 
       {/* Better Auth Form */}
@@ -41,7 +45,7 @@ export default function SignUpPage() {
         <AuthView pathname="sign-up" />
       </div>
 
-      {/* Terms */}
+      {/* Terms - Keep hardcoded as legal text */}
       <p className="text-center text-xs text-[var(--color-text-muted)]">
         By creating an account, you agree to our{" "}
         <Link href="#" className="text-[var(--color-accent-primary)] hover:underline">

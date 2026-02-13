@@ -933,6 +933,7 @@ class UltimateRAG:
         translator: str = "diyanet",
         top_k: int | None = None,
         detected_language: str | None = None,
+        locale: str = "tr",
     ) -> list:
         """
         Shortcut for Quran search
@@ -1084,6 +1085,7 @@ class UltimateRAG:
         top_k: int | None = None,
         detected_language: str | None = None,
         language: str = "en",
+        locale: str = "tr",
     ) -> list:
         """
         Shortcut for Bible search.
@@ -1247,6 +1249,7 @@ class UltimateRAG:
         translator: str = "diyanet",
         top_k: int | None = None,
         detected_language: str | None = None,
+        locale: str = "tr",
     ):
         """
         Shortcut for Quran Q&A - Turkish in, Turkish out
@@ -1289,6 +1292,7 @@ class UltimateRAG:
         testament: str | None = None,
         top_k: int | None = None,
         detected_language: str | None = None,
+        locale: str = "tr",
     ):
         """
         Shortcut for Bible Q&A.

@@ -1014,7 +1014,7 @@ class ComparativeRAG:
 
         return result
 
-    def compare(self, query: str, translator: str = "diyanet"):
+    def compare(self, query: str, translator: str = "diyanet", locale: str = "tr"):
         """
         Full comparative pipeline: Search + Generate Comparative Essay
 
@@ -1118,6 +1118,7 @@ class ComparativeRAG:
         quran_keywords: list[str] | None = None,
         bible_keywords: list[str] | None = None,
         translator: str = "diyanet",
+        locale: str = "tr",
     ):
         """
         Full comparative pipeline with Multi-Agent answer generation.
