@@ -4,6 +4,7 @@ import { AuthView } from "@daveyplate/better-auth-ui"
 import "@daveyplate/better-auth-ui/css"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 /**
  * Sign In Page
@@ -12,6 +13,9 @@ import { ChevronLeft } from "lucide-react"
  * Supports email/password and Google OAuth sign-in.
  */
 export default function SignInPage() {
+  const t = useTranslations("Auth")
+  const tCommon = useTranslations("Common")
+
   return (
     <>
       {/* Header with back button */}
@@ -21,7 +25,7 @@ export default function SignInPage() {
           className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)]"
         >
           <ChevronLeft size={16} />
-          <span>Home</span>
+          <span>{tCommon("back")}</span>
         </Link>
       </div>
 
@@ -30,8 +34,10 @@ export default function SignInPage() {
         <span className="bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-3xl font-bold text-transparent">
           Clarus
         </span>
-        <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">Welcome back</h1>
-        <p className="text-[var(--color-text-muted)]">Sign in to continue your research</p>
+        <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
+          {t("welcomeBack")}
+        </h1>
+        <p className="text-[var(--color-text-muted)]">{t("signInSubtitle")}</p>
       </div>
 
       {/* Better Auth Form (the actual auth logic) */}
@@ -39,7 +45,7 @@ export default function SignInPage() {
         <AuthView pathname="sign-in" />
       </div>
 
-      {/* Terms */}
+      {/* Terms - Keep hardcoded as legal text */}
       <p className="text-center text-xs text-[var(--color-text-muted)]">
         By signing in, you agree to our{" "}
         <Link href="#" className="text-[var(--color-accent-primary)] hover:underline">
