@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor } from "./test-utils"
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest"
 import userEvent from "@testing-library/user-event"
 import { createElement } from "react"
@@ -311,7 +311,7 @@ describe("SearchPage", () => {
     fireEvent.submit(container.querySelector("form")!)
 
     await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith("Found 2 results")
+      expect(toast.success).toHaveBeenCalledWith("Search completed successfully")
     })
   })
 
@@ -327,7 +327,7 @@ describe("SearchPage", () => {
     fireEvent.submit(container.querySelector("form")!)
 
     await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith("Found 0 results")
+      expect(toast.success).toHaveBeenCalledWith("Search completed successfully")
       expect(screen.queryByText(/Score:/)).not.toBeInTheDocument()
     })
   })
@@ -340,7 +340,7 @@ describe("SearchPage", () => {
     await userEvent.click(otTab)
 
     expect(mockPush).toHaveBeenCalledWith("/search?source=ot")
-    expect(screen.getByPlaceholderText("Search Old Testament...")).toBeInTheDocument()
+    expect(screen.getByPlaceholderText("Search Bible...")).toBeInTheDocument()
   })
 
   it("redirects to sign-in if not authenticated", () => {
@@ -460,7 +460,7 @@ describe("SearchPage", () => {
     fireEvent.submit(container.querySelector("form")!)
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith("Failed to extract keywords")
+      expect(toast.error).toHaveBeenCalledWith("Search failed. Please try again.")
     })
 
     await waitFor(() => {
@@ -526,7 +526,7 @@ describe("SearchPage", () => {
     render(<SearchPage />)
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText("Search New Testament...")).toBeInTheDocument()
+      expect(screen.getByPlaceholderText("Search Bible...")).toBeInTheDocument()
     })
   })
 })

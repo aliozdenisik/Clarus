@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, within } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor, within } from "./test-utils"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 import { createElement } from "react"
 import type React from "react"
@@ -292,7 +292,7 @@ describe("ComparePage", () => {
 
   it("renders the page title and description", () => {
     render(<ComparePage />)
-    expect(screen.getByRole("heading", { name: /^compare$/i, level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: /comparative analysis/i, level: 1 })).toBeInTheDocument()
     expect(screen.getByText(/Comparative analysis across/)).toBeInTheDocument()
   })
 
