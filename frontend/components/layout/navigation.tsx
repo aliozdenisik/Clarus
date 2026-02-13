@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import {
   Menu,
   X,
@@ -40,6 +41,8 @@ export default function Navigation() {
   const { data: session } = useSession()
   const user = session?.user
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const t = useTranslations("Navigation")
+  const tCommon = useTranslations("Common")
 
   const isActive = (path: string) => pathname === path
 
@@ -73,7 +76,7 @@ export default function Navigation() {
                 {/* Search Dropdown */}
                 <NavigationMenuItem className="text-muted-foreground">
                   <NavigationMenuTrigger className="bg-transparent text-gray-300 hover:bg-white/5 hover:text-white data-[state=open]:bg-white/5">
-                    Search
+                    {t("search")}
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="w-80 p-3">
@@ -84,9 +87,9 @@ export default function Navigation() {
                         >
                           <Book className="size-5 shrink-0" />
                           <div>
-                            <div className="text-sm font-semibold">Quran Search</div>
+                            <div className="text-sm font-semibold">{t("quranSearch")}</div>
                             <p className="text-muted-foreground text-sm leading-snug">
-                              Semantic search across Turkish Quran translation
+                              {t("quranSearchDesc")}
                             </p>
                           </div>
                         </Link>
@@ -98,9 +101,9 @@ export default function Navigation() {
                         >
                           <BookOpen className="size-5 shrink-0" />
                           <div>
-                            <div className="text-sm font-semibold">Old Testament Search</div>
+                            <div className="text-sm font-semibold">{t("oldTestamentSearch")}</div>
                             <p className="text-muted-foreground text-sm leading-snug">
-                              Search through 39 books of the Old Testament
+                              {t("oldTestamentSearchDesc")}
                             </p>
                           </div>
                         </Link>
@@ -112,9 +115,9 @@ export default function Navigation() {
                         >
                           <ScrollText className="size-5 shrink-0" />
                           <div>
-                            <div className="text-sm font-semibold">New Testament Search</div>
+                            <div className="text-sm font-semibold">{t("newTestamentSearch")}</div>
                             <p className="text-muted-foreground text-sm leading-snug">
-                              Search the Gospels, Acts, and Epistles
+                              {t("newTestamentSearchDesc")}
                             </p>
                           </div>
                         </Link>
@@ -126,9 +129,9 @@ export default function Navigation() {
                         >
                           <FileText className="size-5 shrink-0" />
                           <div>
-                            <div className="text-sm font-semibold">Apocrypha Search</div>
+                            <div className="text-sm font-semibold">{t("apocryphaSearch")}</div>
                             <p className="text-muted-foreground text-sm leading-snug">
-                              Explore deuterocanonical texts and writings
+                              {t("apocryphaSearchDesc")}
                             </p>
                           </div>
                         </Link>
@@ -140,9 +143,9 @@ export default function Navigation() {
                         >
                           <SearchIcon className="size-5 shrink-0" />
                           <div>
-                            <div className="text-sm font-semibold">Word Search</div>
+                            <div className="text-sm font-semibold">{t("wordSearch")}</div>
                             <p className="text-muted-foreground text-sm leading-snug">
-                              Morphological keyword search with roots
+                              {t("wordSearchDesc")}
                             </p>
                           </div>
                         </Link>
@@ -154,7 +157,7 @@ export default function Navigation() {
                 {/* Browse Dropdown */}
                 <NavigationMenuItem className="text-muted-foreground">
                   <NavigationMenuTrigger className="bg-transparent text-gray-300 hover:bg-white/5 hover:text-white data-[state=open]:bg-white/5">
-                    Browse
+                    {t("browse")}
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="w-80 p-3">
@@ -165,9 +168,9 @@ export default function Navigation() {
                         >
                           <Book className="size-5 shrink-0" />
                           <div>
-                            <div className="text-sm font-semibold">Quran</div>
+                            <div className="text-sm font-semibold">{t("quranBrowse")}</div>
                             <p className="text-muted-foreground text-sm leading-snug">
-                              Browse all 114 Surahs with translations
+                              {t("quranBrowseDesc")}
                             </p>
                           </div>
                         </Link>
@@ -179,9 +182,9 @@ export default function Navigation() {
                         >
                           <BookOpen className="size-5 shrink-0" />
                           <div>
-                            <div className="text-sm font-semibold">Old Testament</div>
+                            <div className="text-sm font-semibold">{t("oldTestamentBrowse")}</div>
                             <p className="text-muted-foreground text-sm leading-snug">
-                              39 books from Genesis to Malachi
+                              {t("oldTestamentBrowseDesc")}
                             </p>
                           </div>
                         </Link>
@@ -193,9 +196,9 @@ export default function Navigation() {
                         >
                           <ScrollText className="size-5 shrink-0" />
                           <div>
-                            <div className="text-sm font-semibold">New Testament</div>
+                            <div className="text-sm font-semibold">{t("newTestamentBrowse")}</div>
                             <p className="text-muted-foreground text-sm leading-snug">
-                              27 books including Gospels and Epistles
+                              {t("newTestamentBrowseDesc")}
                             </p>
                           </div>
                         </Link>
@@ -207,9 +210,9 @@ export default function Navigation() {
                         >
                           <FileText className="size-5 shrink-0" />
                           <div>
-                            <div className="text-sm font-semibold">Apocrypha</div>
+                            <div className="text-sm font-semibold">{t("apocrypha")}</div>
                             <p className="text-muted-foreground text-sm leading-snug">
-                              14 deuterocanonical books and texts
+                              {t("apocryphaDesc")}
                             </p>
                           </div>
                         </Link>
@@ -225,7 +228,7 @@ export default function Navigation() {
                     isActive("/keyword-search") ? "text-purple-400" : "text-gray-300"
                   }`}
                 >
-                  Word Search
+                  {t("wordSearch")}
                 </Link>
 
                 {/* Compare Link */}
@@ -235,7 +238,7 @@ export default function Navigation() {
                     isActive("/compare") ? "text-purple-400" : "text-gray-300"
                   }`}
                 >
-                  Compare
+                  {t("compare")}
                 </Link>
 
                 {/* History Link */}
@@ -245,7 +248,7 @@ export default function Navigation() {
                     isActive("/history") ? "text-purple-400" : "text-gray-300"
                   }`}
                 >
-                  History
+                  {t("history")}
                 </Link>
               </NavigationMenuList>
             </NavigationMenu>
@@ -272,19 +275,19 @@ export default function Navigation() {
                   <DropdownMenuItem asChild>
                     <Link href="/settings">
                       <Settings className="mr-2 h-4 w-4" />
-                      Settings
+                      {t("settings")}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} variant="destructive">
                     <LogOut className="mr-2 h-4 w-4" />
-                    Logout
+                    {tCommon("logout")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <Link href="/sign-in">
-                <Button variant="outline">Sign In</Button>
+                <Button variant="outline">{tCommon("signIn")}</Button>
               </Link>
             )}
           </div>
@@ -317,35 +320,35 @@ export default function Navigation() {
               {/* Search Section */}
               <div className="space-y-1">
                 <p className="px-3 py-2 text-xs font-semibold tracking-wider text-gray-400 uppercase">
-                  Search
+                  {t("search")}
                 </p>
                 <Link
                   href="/search"
                   className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Quran Search
+                  {t("quranSearch")}
                 </Link>
                 <Link
                   href="/search?source=ot"
                   className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Old Testament Search
+                  {t("oldTestamentSearch")}
                 </Link>
                 <Link
                   href="/search?source=nt"
                   className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  New Testament Search
+                  {t("newTestamentSearch")}
                 </Link>
                 <Link
                   href="/search?source=apocrypha"
                   className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Apocrypha Search
+                  {t("apocryphaSearch")}
                 </Link>
                 <Link
                   href="/keyword-search"
@@ -356,14 +359,14 @@ export default function Navigation() {
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Word Search
+                  {t("wordSearch")}
                 </Link>
               </div>
 
               {/* Browse Section */}
               <div className="space-y-1 pt-2">
                 <p className="px-3 py-2 text-xs font-semibold tracking-wider text-gray-400 uppercase">
-                  Browse
+                  {t("browse")}
                 </p>
                 <Link
                   href="/quran"
@@ -406,7 +409,7 @@ export default function Navigation() {
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Compare
+                  {t("compare")}
                 </Link>
                 <Link
                   href="/history"
@@ -417,7 +420,7 @@ export default function Navigation() {
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  History
+                  {t("history")}
                 </Link>
               </div>
 
@@ -434,7 +437,7 @@ export default function Navigation() {
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <Settings className="mr-2 inline h-4 w-4" />
-                    Settings
+                    {t("settings")}
                   </Link>
                   <button
                     onClick={() => {
@@ -444,7 +447,7 @@ export default function Navigation() {
                     className="w-full rounded-md px-3 py-2 text-left text-base text-red-400 hover:bg-red-500/10"
                   >
                     <LogOut className="mr-2 inline h-4 w-4" />
-                    Logout
+                    {tCommon("logout")}
                   </button>
                 </div>
               )}

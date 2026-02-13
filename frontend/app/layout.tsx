@@ -1,4 +1,3 @@
-import type { Metadata } from "next"
 import {
   DM_Sans,
   DM_Serif_Display,
@@ -8,10 +7,6 @@ import {
   Crimson_Text,
 } from "next/font/google"
 import "./globals.css"
-import { Providers } from "@/components/providers"
-import { Toaster } from "sonner"
-import Navigation from "@/components/layout/navigation"
-import { Footer } from "@/components/ui/large-name-footer"
 import { configureApiClient } from "@/lib/api/config"
 
 configureApiClient()
@@ -57,28 +52,18 @@ const crimsonText = Crimson_Text({
   display: "swap",
 })
 
-export const metadata: Metadata = {
-  title: "Clarus",
-  description: "Search and explore Quran and Bible with AI-powered insights",
-}
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html className="dark" suppressHydrationWarning>
       <body
         className={`${dmSans.variable} ${dmSerif.variable} ${amiri.variable} ${notoSansHebrew.variable} ${notoSerifGreek.variable} ${crimsonText.variable} antialiased`}
         suppressHydrationWarning
       >
-        <Providers>
-          <Navigation />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
-          <Toaster position="bottom-right" />
-        </Providers>
+        {children}
       </body>
     </html>
   )

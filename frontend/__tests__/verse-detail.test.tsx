@@ -121,7 +121,7 @@ const mockTranslationsResponse = {
   ],
 }
 
-import VerseDetailPage from "@/app/quran/[surahId]/[verseId]/page"
+import VerseDetailPage from "@/app/[locale]/quran/[surahId]/[verseId]/page"
 import { toast } from "sonner"
 
 describe("VerseDetailPage", () => {

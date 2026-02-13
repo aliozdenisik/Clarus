@@ -98,7 +98,7 @@ const mockEtymologyData = {
 
 global.fetch = vi.fn()
 
-import RootDetailPage from "@/app/keyword-search/root/[root]/page"
+import RootDetailPage from "@/app/[locale]/keyword-search/root/[root]/page"
 
 describe("RootDetailPage", () => {
   beforeEach(() => {

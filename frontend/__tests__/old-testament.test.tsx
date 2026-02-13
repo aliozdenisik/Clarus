@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import { vi, describe, it, expect, beforeEach } from "vitest"
-import OldTestamentPage from "../app/old-testament/page"
+import OldTestamentPage from "../app/[locale]/old-testament/page"
 import { getBibleBooksApiMetadataBibleBooksGet } from "@/lib/api/sdk.gen"
 
 vi.mock("@/components/ui/glow-card", () => ({

@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import { vi, describe, it, expect, beforeEach } from "vitest"
-import ApocryphaPage from "../app/apocrypha/page"
+import ApocryphaPage from "../app/[locale]/apocrypha/page"
 
 // Mock GlowCard to avoid complex rendering in tests
 vi.mock("@/components/ui/glow-card", () => ({

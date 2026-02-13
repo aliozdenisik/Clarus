@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor, within } from "@testing-library/rea
 import { vi, describe, it, expect, beforeEach } from "vitest"
 import { createElement } from "react"
 import type React from "react"
-import ComparePage from "@/app/compare/page"
+import ComparePage from "@/app/[locale]/compare/page"
 import { useSSE } from "@/lib/hooks/use-sse"
 import { usePreferencesStore } from "@/lib/stores/preferences-store"
 import { useSearchParams } from "next/navigation"

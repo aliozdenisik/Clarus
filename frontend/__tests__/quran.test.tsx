@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import { vi, describe, it, expect, beforeEach } from "vitest"
-import QuranPage from "@/app/quran/page"
+import QuranPage from "@/app/[locale]/quran/page"
 import { getQuranSurahsApiMetadataQuranSurahsGet } from "@/lib/api/sdk.gen"
 
 vi.mock("next/navigation", () => ({
