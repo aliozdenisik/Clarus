@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor } from "./test-utils"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 import SettingsPage from "../app/[locale]/settings/page"
 import * as PreferencesStore from "@/lib/stores/preferences-store"
@@ -119,7 +119,7 @@ describe("SettingsPage", () => {
   it("calls savePreferences when Save button is clicked", async () => {
     render(<SettingsPage />)
 
-    const saveButton = screen.getByRole("button", { name: /Save Changes/i })
+    const saveButton = screen.getByRole("button", { name: /Save Preferences/i })
     fireEvent.click(saveButton)
 
     await waitFor(() => {

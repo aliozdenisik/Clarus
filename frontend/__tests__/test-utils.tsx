@@ -10,7 +10,7 @@ import enMessages from "../messages/en.json"
 export function renderWithIntl(
   ui: ReactElement,
   locale: string = "en",
-  messages: IntlMessages = enMessages,
+  messages: typeof enMessages = enMessages,
   options?: Omit<RenderOptions, "wrapper">
 ) {
   function Wrapper({ children }: { children: ReactNode }) {
