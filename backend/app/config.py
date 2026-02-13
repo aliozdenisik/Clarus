@@ -64,6 +64,10 @@ class Settings(BaseSettings):
     # Admin Authorization
     admin_emails: str = ""  # Comma-separated admin email addresses
 
+    # i18n Configuration
+    supported_locales: list[str] = ["tr", "en"]
+    default_locale: str = "tr"
+
     @property
     def admin_emails_list(self) -> list[str]:
         """Parse comma-separated admin emails into list."""
