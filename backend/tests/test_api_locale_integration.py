@@ -2,7 +2,6 @@
 
 import pytest
 from fastapi import Request
-from fastapi.testclient import TestClient
 
 from app.i18n.detector import get_locale
 
