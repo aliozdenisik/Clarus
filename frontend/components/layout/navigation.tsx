@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useState, useSyncExternalStore } from "react"
 import { useTranslations } from "next-intl"
 import {
   Menu,
@@ -41,6 +41,11 @@ export default function Navigation() {
   const { data: session } = useSession()
   const user = session?.user
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
   const t = useTranslations("Navigation")
   const tCommon = useTranslations("Common")
 
@@ -50,8 +55,12 @@ export default function Navigation() {
     await signOut()
   }
 
-  // Don't show navigation on login/register pages
-  if (pathname === "/login" || pathname === "/register" || pathname === "/") {
+  // Don't show navigation on auth and landing pages
+  // With locale routing, pathname includes locale prefix (e.g. /en, /tr)
+  const segments = pathname.split("/").filter(Boolean)
+  const page = segments.length > 1 ? segments[segments.length - 1] : ""
+  const isLandingPage = segments.length <= 1 // e.g. /en or /tr
+  if (page === "sign-in" || page === "sign-up" || isLandingPage) {
     return null
   }
 
@@ -256,7 +265,7 @@ export default function Navigation() {
 
           {/* User Menu (Desktop) */}
           <div className="hidden md:flex md:items-center">
-            {user ? (
+            {mounted && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="text-gray-300 hover:text-white">
@@ -373,28 +382,28 @@ export default function Navigation() {
                   className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Quran (114 Surahs)
+                  {t("quranBrowse")}
                 </Link>
                 <Link
                   href="/old-testament"
                   className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Old Testament (39 Books)
+                  {t("oldTestamentBrowse")}
                 </Link>
                 <Link
                   href="/new-testament"
                   className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  New Testament (27 Books)
+                  {t("newTestamentBrowse")}
                 </Link>
                 <Link
                   href="/apocrypha"
                   className="block rounded-md px-3 py-2 text-base text-gray-300 hover:bg-white/5 hover:text-white"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Apocrypha (14 Books)
+                  {t("apocrypha")}
                 </Link>
               </div>
 
@@ -425,7 +434,7 @@ export default function Navigation() {
               </div>
 
               {/* User Section */}
-              {user && (
+              {mounted && user && (
                 <div className="mt-2 space-y-1 border-t border-white/10 pt-2">
                   <div className="px-3 py-2">
                     <p className="text-sm font-medium text-white">{user.name}</p>
