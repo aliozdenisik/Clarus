@@ -22,10 +22,10 @@ function Footer() {
                 height={32}
                 className="opacity-90"
               />
-              <span className="text-xl font-bold text-zinc-100">Clarus</span>
+              <span className="text-xl font-bold text-zinc-900 dark:text-zinc-100">Clarus</span>
             </Link>
 
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-zinc-400">
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
               {t("description")}
             </p>
 
@@ -38,20 +38,20 @@ function Footer() {
               </Link>
             </div>
 
-            <p className="mt-8 text-xs text-zinc-500">
+            <p className="mt-8 text-xs text-zinc-400 dark:text-zinc-500">
               {t("copyright", { year: new Date().getFullYear() })}
             </p>
           </div>
 
           <div>
-            <h3 className="mb-6 text-[11px] font-semibold tracking-widest text-zinc-500 uppercase">
+            <h3 className="mb-6 text-[11px] font-semibold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">
               {t("pages")}
             </h3>
             <ul className="space-y-3">
               <li>
                 <Link
                   href="/search"
-                  className="text-sm font-medium text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
+                  className="text-sm font-medium text-zinc-600 transition-colors duration-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                 >
                   {t("search")}
                 </Link>
@@ -59,7 +59,7 @@ function Footer() {
               <li>
                 <Link
                   href="/compare"
-                  className="text-sm font-medium text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
+                  className="text-sm font-medium text-zinc-600 transition-colors duration-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                 >
                   {t("compare")}
                 </Link>
@@ -67,7 +67,7 @@ function Footer() {
               <li>
                 <Link
                   href="/keyword-search"
-                  className="text-sm font-medium text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
+                  className="text-sm font-medium text-zinc-600 transition-colors duration-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                 >
                   {t("keywordSearch")}
                 </Link>
@@ -75,7 +75,7 @@ function Footer() {
               <li>
                 <Link
                   href="/history"
-                  className="text-sm font-medium text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
+                  className="text-sm font-medium text-zinc-600 transition-colors duration-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                 >
                   {t("history")}
                 </Link>
@@ -83,7 +83,7 @@ function Footer() {
               <li>
                 <Link
                   href="/settings"
-                  className="text-sm font-medium text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
+                  className="text-sm font-medium text-zinc-600 transition-colors duration-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                 >
                   {t("settings")}
                 </Link>
@@ -92,14 +92,14 @@ function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-6 text-[11px] font-semibold tracking-widest text-zinc-500 uppercase">
+            <h3 className="mb-6 text-[11px] font-semibold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">
               {t("scriptures")}
             </h3>
             <ul className="space-y-3">
               <li>
                 <Link
                   href="/quran"
-                  className="text-sm font-medium text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
+                  className="text-sm font-medium text-zinc-600 transition-colors duration-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                 >
                   {t("quran")}
                 </Link>
@@ -107,7 +107,7 @@ function Footer() {
               <li>
                 <Link
                   href="/old-testament"
-                  className="text-sm font-medium text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
+                  className="text-sm font-medium text-zinc-600 transition-colors duration-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                 >
                   {t("oldTestament")}
                 </Link>
@@ -115,7 +115,7 @@ function Footer() {
               <li>
                 <Link
                   href="/new-testament"
-                  className="text-sm font-medium text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
+                  className="text-sm font-medium text-zinc-600 transition-colors duration-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                 >
                   {t("newTestament")}
                 </Link>
@@ -123,7 +123,7 @@ function Footer() {
               <li>
                 <Link
                   href="/apocrypha"
-                  className="text-sm font-medium text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
+                  className="text-sm font-medium text-zinc-600 transition-colors duration-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                 >
                   {t("apocrypha")}
                 </Link>
@@ -132,14 +132,14 @@ function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-6 text-[11px] font-semibold tracking-widest text-zinc-500 uppercase">
+            <h3 className="mb-6 text-[11px] font-semibold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">
               {t("links")}
             </h3>
             <ul className="space-y-3">
               <li>
                 <Link
                   href="https://github.com/aliozdenisik/Clarus"
-                  className="text-sm font-medium text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
+                  className="text-sm font-medium text-zinc-600 transition-colors duration-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                 >
                   {t("github")}
                 </Link>
@@ -147,7 +147,7 @@ function Footer() {
               <li>
                 <Link
                   href="https://github.com/aliozdenisik/Clarus/issues"
-                  className="text-sm font-medium text-zinc-400 transition-colors duration-200 hover:text-zinc-100"
+                  className="text-sm font-medium text-zinc-600 transition-colors duration-200 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
                 >
                   {t("reportIssue")}
                 </Link>
