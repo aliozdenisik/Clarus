@@ -120,6 +120,9 @@
 - [x] **Issue #94 React key stability** (2026-02-09): Replaced index-based keys in dynamic lists and standardized deterministic skeleton keys across search/compare/history/browse/components
 - [x] **Issue #91 frontend perf hotspots** (2026-02-09): Batched vercel-tabs layout measurements, virtualized root-browser with react-window, cached magnetic-button bounds for mousemove
 - [x] **Issue #88 async lifecycle hardening** (2026-02-10): Added AbortController cancellation + AbortError guards across client request paths and unmount-safe SSE retry cleanup in `use-sse`
+- [x] **Issue #156 black void fix** (2026-02-16): Migrated root-browser from broken react-window to react-virtuoso v4.18.1 — eliminated 12,000px void, scroll container now 560px
+- [x] **Issue #157 auth redirect fix** (2026-02-16): Removed triple-layer auth gate from /keyword-search/* routes, added bot detection regex in middleware for SEO crawlability (Googlebot, Bingbot, AI crawlers)
+- [x] **Regression tests** (2026-02-16): 10 new tests — 6 virtualization (root-browser-virtuoso.test.tsx) + 4 auth (keyword-search-auth.test.tsx). Total: 363 tests across 31 files
 
 ### CLI Commands
 
@@ -231,6 +234,8 @@
 8. ~~**SSE Stats Format Mismatch**: Compare page stats (confidence, latency, verses) showing zero values~~ → **FIXED** (2026-01-29, Issue #17 — SSE message format alignment)
 9. ~~**Arabic hamza normalization mismatch**: 137 roots unreachable via Arabic input~~ → **FIXED** (2026-02-01)
 10. ~~**Null byte crash**: HTTP 500 on null byte input~~ → **FIXED** (2026-02-01)
+11. ~~**Black void bug (#156)**: react-window wrong API props → 12,000px empty space in root-browser~~ → **FIXED** (2026-02-16, react-virtuoso migration)
+12. ~~**Auth redirect bug (#157)**: Triple-layer auth gate blocking read-only keyword-search content~~ → **FIXED** (2026-02-16, auth gate removal + bot detection)
 
 ## Technical Debt (GitHub Issues)
 
