@@ -5,7 +5,7 @@ import { routing } from "./i18n/routing"
 
 const handleI18nRouting = createMiddleware(routing)
 
-const protectedRoutes = ["/compare", "/search", "/settings", "/history", "/keyword-search"]
+const protectedRoutes = ["/compare", "/search", "/settings", "/history"]
 
 export function middleware(request: NextRequest) {
   const response = handleI18nRouting(request)
