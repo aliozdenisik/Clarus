@@ -114,9 +114,9 @@ class SemanticLLMCache:
             self._encoder = DenseEncoder()
         return self._encoder
 
-    def _get_cache_key(self, query: str, operation: str) -> str:
-        """Generate unique cache key (MD5 hash)."""
-        return hashlib.md5(f"{operation}:{query}".encode()).hexdigest()
+    def _get_cache_key(self, query: str, operation: str, locale: str = "tr") -> str:
+        """Generate unique cache key (MD5 hash) including locale."""
+        return hashlib.md5(f"{operation}:{locale}:{query}".encode()).hexdigest()
 
     def _cosine_similarity(self, vec1: list[float], vec2: list[float]) -> float:
         """Compute cosine similarity between two vectors."""
@@ -131,13 +131,16 @@ class SemanticLLMCache:
 
         return float(np.dot(a, b) / (norm_a * norm_b))
 
-    async def _find_similar_key(self, query_embedding: list[float], operation: str) -> tuple[str, float] | None:
+    async def _find_similar_key(
+        self, query_embedding: list[float], operation: str, locale: str = "tr"
+    ) -> tuple[str, float] | None:
         """
         Find the most similar cached query via semantic search.
 
         Args:
             query_embedding: Query embedding vector
             operation: Operation type for filtering (e.g., "expand", "multi_query")
+            locale: Locale code (e.g., "tr", "en") - default "tr"
 
         Returns:
             Tuple of (cache_key, similarity) if found above threshold, else None
@@ -146,8 +149,8 @@ class SemanticLLMCache:
             return None
 
         try:
-            # Get all embeddings for this operation from Redis hash
-            index_key = f"llm_cache_idx:{operation}"
+            # Get all embeddings for this operation from Redis hash (locale-aware)
+            index_key = f"llm_cache_idx:{operation}:{locale}"
             stored_embeddings = await self._redis.hgetall(index_key)
 
             if not stored_embeddings:
@@ -189,15 +192,16 @@ class SemanticLLMCache:
             logger.warning(f"Semantic search failed: {e}")
             return None
 
-    async def get(self, query: str, operation: str, skip_semantic: bool = False) -> Any | None:
+    async def get(self, query: str, operation: str, locale: str = "tr", skip_semantic: bool = False) -> Any | None:
         """
         Get cached response for query.
 
-        First checks exact match, then semantic similarity.
+        First checks exact match, then semantic similarity. Locale-aware: same query with different locales produces different cache hits.
 
         Args:
             query: The search query
             operation: Operation type ('expand' or 'multi_query')
+            locale: Locale code (e.g., "tr", "en") - default "tr"
             skip_semantic: If True, only check exact match
 
         Returns:
@@ -210,8 +214,8 @@ class SemanticLLMCache:
 
         try:
             # 1. Try exact match first
-            exact_key = self._get_cache_key(query, operation)
-            redis_key = f"llm_cache:{operation}:{exact_key}"
+            exact_key = self._get_cache_key(query, operation, locale)
+            redis_key = f"llm_cache:{operation}:{locale}:{exact_key}"
 
             cached_bytes = await self._redis.get(redis_key)
 
@@ -238,11 +242,11 @@ class SemanticLLMCache:
 
             # 2. Try semantic match
             query_embedding = self.encoder.encode(query)
-            similar_result = await self._find_similar_key(query_embedding, operation)
+            similar_result = await self._find_similar_key(query_embedding, operation, locale)
 
             if similar_result:
                 similar_key, similarity = similar_result
-                redis_key = f"llm_cache:{operation}:{similar_key}"
+                redis_key = f"llm_cache:{operation}:{locale}:{similar_key}"
 
                 cached_bytes = await self._redis.get(redis_key)
 
@@ -275,6 +279,7 @@ class SemanticLLMCache:
         query: str,
         operation: str,
         response: Any,
+        locale: str = "tr",
         embedding: list[float] | None = None,
         source_language: str | None = None,
     ):
@@ -285,6 +290,7 @@ class SemanticLLMCache:
             query: The search query
             operation: Operation type ('expand' or 'multi_query')
             response: The LLM response to cache
+            locale: Locale code (e.g., "tr", "en") - default "tr"
             embedding: Pre-computed query embedding (optional, will compute if not provided)
             source_language: Source language metadata (optional, for logging)
         """
@@ -293,10 +299,10 @@ class SemanticLLMCache:
             return
 
         try:
-            cache_key = self._get_cache_key(query, operation)
+            cache_key = self._get_cache_key(query, operation, locale)
 
             # Store response with TTL
-            redis_key = f"llm_cache:{operation}:{cache_key}"
+            redis_key = f"llm_cache:{operation}:{locale}:{cache_key}"
             response_json = json.dumps(response)
             await self._redis.set(redis_key, response_json, ex=self.ttl)
 
@@ -304,8 +310,8 @@ class SemanticLLMCache:
             if embedding is None:
                 embedding = self.encoder.encode(query)
 
-            # Store embedding in Redis hash
-            index_key = f"llm_cache_idx:{operation}"
+            # Store embedding in Redis hash (locale-aware)
+            index_key = f"llm_cache_idx:{operation}:{locale}"
             embedding_json = json.dumps(embedding)
             await self._redis.hset(index_key, cache_key, embedding_json)
 
@@ -322,7 +328,7 @@ class SemanticLLMCache:
             logger.warning(f"Failed to cache response: {e}")
 
     async def clear(self):
-        """Clear all cache entries."""
+        """Clear all cache entries (including locale-specific entries)."""
         if self._redis is None:
             return
 
