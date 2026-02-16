@@ -17,8 +17,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.auth import check_rate_limit
 from app.api.compare import extract_bible_verse_detail, extract_quran_verse_detail
 from app.api.compare_helpers import (
+    VALID_COMPARE_COLLECTIONS,
     build_paragraphs,
     build_verse_details,
+    normalize_compare_collections,
     strip_markdown_headers,
 )
 from app.db import get_db
@@ -294,26 +296,13 @@ async def stream_compare(
 
     Args:
         collections: Comma-separated collection names (e.g., 'quran_tr,bible_ot').
-                    Valid values: quran_tr, bible_ot, bible_nt, bible_apocrypha
+                    Valid values: quran_tr (alias), quran_tr_*, bible_ot, bible_nt, bible_apocrypha
     """
     # Parse and validate collections
-    # Valid collections: all quran_tr_* translators + bible collections
-    valid_collections = {
-        "quran_tr_diyanet",
-        "quran_tr_yazir",
-        "quran_tr_ates",
-        "quran_tr_bulac",
-        "quran_tr_ozturk",
-        "quran_tr_vakfi",
-        "quran_tr_yildirim",
-        "quran_tr_yuksel",
-        "bible_ot",
-        "bible_nt",
-        "bible_apocrypha",
-        "bible_tr_ot",
-        "bible_tr_nt",
-    }
-    collection_list = [c.strip() for c in collections.split(",") if c.strip() in valid_collections]
+    quran_translator = translator or DEFAULT_TRANSLATOR
+    requested_collections = [c.strip() for c in collections.split(",") if c.strip()]
+    normalized_collections = normalize_compare_collections(requested_collections, quran_translator)
+    collection_list = [c for c in normalized_collections if c in VALID_COMPARE_COLLECTIONS]
     if len(collection_list) < 2:
         raise HTTPException(
             status_code=400,
@@ -400,7 +389,6 @@ async def stream_compare(
 
         try:
             # Step 1: Get search results (blocking call with real-time progress)
-            quran_translator = translator or DEFAULT_TRANSLATOR
             logger.info(
                 f"[COMPARE] Starting search_all with collections: {collection_list}, translator: {quran_translator}"
             )

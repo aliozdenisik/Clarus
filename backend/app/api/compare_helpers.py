@@ -22,6 +22,29 @@ from src.search import BibleSearchResult, SearchResult
 logger = logging.getLogger(__name__)
 
 
+VALID_COMPARE_COLLECTIONS: set[str] = {
+    "quran_tr_diyanet",
+    "quran_tr_yazir",
+    "quran_tr_ates",
+    "quran_tr_bulac",
+    "quran_tr_ozturk",
+    "quran_tr_vakfi",
+    "quran_tr_yildirim",
+    "quran_tr_yuksel",
+    "bible_ot",
+    "bible_nt",
+    "bible_apocrypha",
+    "bible_tr_ot",
+    "bible_tr_nt",
+}
+
+
+def normalize_compare_collections(collections: list[str], translator: str) -> list[str]:
+    quran_collection = f"quran_tr_{translator}"
+    normalized = [quran_collection if collection == "quran_tr" else collection for collection in collections]
+    return list(dict.fromkeys(normalized))
+
+
 # =============================================================================
 # Text Post-Processing Helpers
 # =============================================================================

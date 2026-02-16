@@ -78,6 +78,28 @@
 | `app/api/` | RAG modules | API endpoints |
 | `src/` | Qdrant, LLM APIs | RAG pipeline |
 
+## Compare Collection Normalization Pattern
+
+Compare endpoints accept a legacy Quran collection alias (`quran_tr`) and normalize it to the active translator collection before validation/search.
+
+Flow:
+
+1. Client sends collections (example: `quran_tr,bible_ot,bible_nt,bible_apocrypha`)
+2. Backend resolves alias via selected translator (example: `quran_tr` -> `quran_tr_diyanet`)
+3. Backend filters against `VALID_COMPARE_COLLECTIONS`
+4. ComparativeRAG receives only concrete collection names
+
+Shared implementation:
+
+- `backend/app/api/compare_helpers.py`
+  - `VALID_COMPARE_COLLECTIONS`
+  - `normalize_compare_collections()`
+
+Used by:
+
+- `backend/app/api/compare.py` (batch)
+- `backend/app/api/stream.py` (SSE)
+
 ## Frontend Performance Patterns
 
 - **Batched tab indicator layout**: `frontend/components/ui/vercel-tabs.tsx` reads active/hover geometry and updates indicator state in one `useLayoutEffect` pass.
