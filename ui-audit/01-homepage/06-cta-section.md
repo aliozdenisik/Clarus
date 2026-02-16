@@ -237,7 +237,7 @@ DOĞRU HİYERARŞİ:
 🔧 Fix:
 ```css
 .cta-section {
-  background: 
+  background:
     radial-gradient(ellipse 900px 700px at center, rgba(139, 92, 246, 0.15), transparent 70%),
     radial-gradient(ellipse 600px 400px at 70% 30%, rgba(245, 158, 11, 0.08), transparent 60%);
   /* Dual gradients, daha visible */
@@ -260,18 +260,18 @@ DOĞRU HİYERARŞİ:
 <section className="relative py-24 px-6">
   {/* Background glow */}
   <div className="absolute inset-0 bg-gradient-to-b from-violet-950/20 via-transparent to-transparent" />
-  
+
   <div className="relative max-w-4xl mx-auto text-center space-y-6">
     {/* Headline */}
     <h2 className="text-6xl font-extrabold bg-gradient-to-r from-white to-violet-300 bg-clip-text text-transparent">
       Discover Sacred Wisdom
     </h2>
-    
+
     {/* Subheadline */}
     <p className="text-xl text-gray-200 max-w-2xl mx-auto leading-relaxed">
       Search 43,055 verses across Quran & Bible with AI-powered semantic understanding
     </p>
-    
+
     {/* CTA Button */}
     <div className="pt-4">
       <Button size="lg" className="h-14 px-10 text-lg font-semibold bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400">
@@ -279,7 +279,7 @@ DOĞRU HİYERARŞİ:
         <ArrowRight className="ml-3 w-5 h-5" />
       </Button>
     </div>
-    
+
     {/* Features */}
     <div className="flex flex-wrap justify-center gap-8 pt-6 text-sm text-gray-300 font-medium">
       <span>Free to use</span>

@@ -34,7 +34,7 @@ Morfolojik form listesindeki satırlar basık, harfler birbirine temas ediyor. A
   - Yeşil (#10B981 - "Definition")
   - Turuncu (#F59E0B - "Medium")
   - Mor (indigo-600 - butonlar, tab indicator)
-  
+
   **3 farklı aksan rengi sidebar'da.** "Definition" niye yeşil? "Medium" niye turuncu? Renk kodlaması sistemi yok.
 - **Vurgu Rengi:** Ayet kartlarındaki Arapça kelimelerin highlight rengi koyu mor (indigo-900?). Beyaz metin bu koyu vurgu içinde boğuluyor, kontrast düşük.
 

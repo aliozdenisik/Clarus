@@ -37,7 +37,7 @@ Bu bir **SHOWSTOPPER BUG**. Production'a nasıl çıkmış? QA testinde kimse sc
 ### ❌ **SHOWSTOPPER: Ghost Scroll (Hayalet Kaydırma)**
 
 **Teknik Analiz:**
-Proje `react-window` kullanıyor (bkz: AGENTS.md - Issue #91). Virtualization (sanallaştırma) katmanında bug var. 
+Proje `react-window` kullanıyor (bkz: AGENTS.md - Issue #91). Virtualization (sanallaştırma) katmanında bug var.
 
 **Muhtemel Nedenler:**
 
@@ -48,7 +48,7 @@ Proje `react-window` kullanıyor (bkz: AGENTS.md - Issue #91). Virtualization (s
      itemCount={totalDatabaseSize} // ❌ 43,055 (tüm veritabanı)
      ...
    />
-   
+
    // FIX:
    <VariableSizeList
      itemCount={filteredResults.length} // ✅ 190 (gerçek sonuç sayısı)
@@ -62,7 +62,7 @@ Proje `react-window` kullanıyor (bkz: AGENTS.md - Issue #91). Virtualization (s
    <div style={{ minHeight: '16000px' }}>
      {/* İçerik */}
    </div>
-   
+
    // FIX:
    <div style={{ minHeight: 'auto' }}>
      {/* İçerik */}
@@ -73,7 +73,7 @@ Proje `react-window` kullanıyor (bkz: AGENTS.md - Issue #91). Virtualization (s
    ```tsx
    // BUG: Önceki aramanın toplam yüksekliği temizlenmemiş
    const [totalHeight, setTotalHeight] = useState(16000);
-   
+
    // FIX: Her aramada resetle
    useEffect(() => {
      setTotalHeight(filteredResults.length * itemHeight);
@@ -89,7 +89,7 @@ Proje `react-window` kullanıyor (bkz: AGENTS.md - Issue #91). Virtualization (s
      }
      return results[index].height;
    };
-   
+
    // FIX:
    const getItemSize = (index) => {
      if (index >= results.length) {
@@ -108,23 +108,23 @@ import { VariableSizeList as List } from 'react-window';
 
 const KeywordSearchResults = ({ results }) => {
   const listRef = useRef<List>(null);
-  
+
   // Her aramada listeyi resetle
   useEffect(() => {
     listRef.current?.resetAfterIndex(0);
   }, [results]);
-  
+
   const getItemSize = (index: number) => {
     // Sadece gerçek öğeler için yükseklik döndür
     if (index >= results.length) return 0;
-    
+
     // Dinamik yükseklik hesapla
     const item = results[index];
     const baseHeight = 120; // Kart base yüksekliği
     const textHeight = item.hasTranslation ? 40 : 0;
     return baseHeight + textHeight;
   };
-  
+
   return (
     <List
       ref={listRef}

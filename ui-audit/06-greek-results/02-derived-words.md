@@ -2,7 +2,7 @@
 
 ## 1. İLK İZLENİM VE "ROAST"
 
-30 tane Yunanca kelime butonu var. Hepsi aynı görsel ağırlıkta, hepsi sıkışık, hepsi kaos. Kullanıcı "gegrammenon mu arıyordum, gegraptai mi?" diye düşünürken gözleri bulanıyor. 
+30 tane Yunanca kelime butonu var. Hepsi aynı görsel ağırlıkta, hepsi sıkışık, hepsi kaos. Kullanıcı "gegrammenon mu arıyordum, gegraptai mi?" diye düşünürken gözleri bulanıyor.
 
 **BU BİR WORD CLOUD DEĞİL, BİR MORFOLOJİK REFERANS ARACI.** Ama tasarım word cloud gibi. Kelimeler alfabetik mi, gramatik formlarına göre mi, yoksa rastgele mi sıralanmış — Allah bilir. Gruplandırma yok, hiyerarşi yok, sadece "işte 30 tane buton, uğraş bakalım" mantığı.
 
@@ -83,7 +83,7 @@ Sol taraf dar bir kolona hapsedilmiş. Sağ tarafta geniş alan var ama bu 30 bu
       <Chip>γράφει</Chip>
     </div>
   </div>
-  
+
   <div>
     <h4 className="text-xs uppercase tracking-wider text-gray-400 mb-2">
       Aorist
@@ -93,7 +93,7 @@ Sol taraf dar bir kolona hapsedilmiş. Sağ tarafta geniş alan var ama bu 30 bu
       <Chip>ἔγραψας</Chip>
     </div>
   </div>
-  
+
   {/* Perfect, Passive, vb. */}
 </div>
 ```
@@ -105,7 +105,7 @@ Sol taraf dar bir kolona hapsedilmiş. Sağ tarafta geniş alan var ama bu 30 bu
 ```tsx
 <div className="grid grid-cols-3 gap-3">
   {derivedWords.map(word => (
-    <Button 
+    <Button
       key={word.id}
       variant={selected === word.id ? 'default' : 'ghost'}
       className="justify-start text-left"
@@ -126,7 +126,7 @@ Koyu gri arka plan + açık gri metin = butonlar "devre dışı" gibi görünüy
 🔧 **Fix: Kontrast Artır**
 ```tsx
 // Pasif butonlar için:
-<Button 
+<Button
   variant="ghost"
   className="bg-gray-800 hover:bg-gray-700 text-gray-200"
 >
@@ -158,7 +158,7 @@ text-sm veya daha küçük, aksan işaretleri birbirine giriyor.
 🔧 **Fix: Mini Search Input Ekle**
 ```tsx
 <div className="mb-4">
-  <Input 
+  <Input
     placeholder="Filter forms..."
     value={filter}
     onChange={(e) => setFilter(e.target.value)}

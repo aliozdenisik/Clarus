@@ -108,18 +108,18 @@ const publicPaths = [
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  
+
   // Public path'lerde auth gereksiz
   if (publicPaths.some(path => pathname.match(path))) {
     return NextResponse.next();
   }
-  
+
   // Diğer path'lerde auth kontrol et
   const token = req.cookies.get('auth_token');
   if (!token) {
     return NextResponse.redirect(new URL('/sign-in', req.url));
   }
-  
+
   return NextResponse.next();
 }
 ```
@@ -133,15 +133,15 @@ Eğer mutlaka auth gate isteniyorsa (örn: istatistik kısıtlaması), **soft pa
 
 const RootDetail = ({ data, isAuthenticated }) => {
   const maxFreeResults = 10;
-  const displayedResults = isAuthenticated 
-    ? data.derivedWords 
+  const displayedResults = isAuthenticated
+    ? data.derivedWords
     : data.derivedWords.slice(0, maxFreeResults);
-  
+
   return (
     <>
       {/* İlk 10 sonuç herkes görsün */}
       <DerivedWordsList words={displayedResults} />
-      
+
       {!isAuthenticated && data.derivedWords.length > maxFreeResults && (
         <div className="mt-8 p-6 bg-gradient-to-r from-indigo-900/50 to-purple-900/50 rounded-lg border border-indigo-700/50">
           <h3 className="text-xl font-semibold mb-2">
@@ -171,7 +171,7 @@ const RootDetail = ({ data, isAuthenticated }) => {
 ```tsx
 // AuthPrompt.tsx
 
-const message = referrer === 'search' 
+const message = referrer === 'search'
   ? "Sign in to continue your search"
   : "Sign in to access advanced features";
 
@@ -196,12 +196,12 @@ import { userAgent } from 'next/server';
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const { isBot } = userAgent(req);
-  
+
   // Botlar için auth gate'i bypass et
   if (isBot && pathname.startsWith('/en/keyword-search/root/')) {
     return NextResponse.next();
   }
-  
+
   // Normal kullanıcılar için auth kontrol et
   // ...
 }
@@ -300,7 +300,7 @@ Wikipedia, Dictionary.com, Merriam-Webster — hiçbiri "kelime anlamını görm
   ↓
   → 80 ziyaretçi çıkıyor (değer görmediler)
   → 20 ziyaretçi kayıt oluyor
-  
+
 Conversion Rate: 20%
 Bounce Rate: 80%
 ```
@@ -312,7 +312,7 @@ Bounce Rate: 80%
   → Değeri görüyorlar
   → 50 ziyaretçi "Sign up for more" CTA'ya tıklıyor
   → 40 ziyaretçi kayıt oluyor
-  
+
 Conversion Rate: 40% (2x artış)
 Bounce Rate: 50% (azalma)
 ```

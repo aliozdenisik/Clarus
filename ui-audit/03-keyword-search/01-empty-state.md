@@ -2,7 +2,7 @@
 
 ## 1. İLK İZLENİM VE "ROAST"
 
-İlk bakışta ne görüyorum? Bir sayfanın ortasında yalnız başına, kaybolmuş, hiçbir şey yapmayan bir arama kutusu. Etrafında göz kamaştırıcı miktarda **anlamsız boşluk**. Altta devasa bir "Clarus" filigranı sanki sayfanın asıl amacı logoya tapınmak. 
+İlk bakışta ne görüyorum? Bir sayfanın ortasında yalnız başına, kaybolmuş, hiçbir şey yapmayan bir arama kutusu. Etrafında göz kamaştırıcı miktarda **anlamsız boşluk**. Altta devasa bir "Clarus" filigranı sanki sayfanın asıl amacı logoya tapınmak.
 
 **Gözü kanatan en büyük hata:** AMBER RENKLI PANIK BUTONUNA DÖNÜŞMÜŞ "EXPERIMENTAL FEATURE" UYARI KUTUSU. Adamlar "deneysel özellik" diyorlar ama sanki nükleer santral patlamak üzere. Sayfadaki tüm görsel hiyerarşiyi çalmış. İkincisi: Footer'daki "Clarus" logosu, sayfa içeriğinden daha baskın — bu ne cüret?
 
@@ -20,17 +20,17 @@ Bu sayfayı hazırlayan kişi, "faydacı lüks" yerine "lüks boşluk israfı" y
 **Çözüm:**
 ```css
 /* Başlık hiyerarşisi */
-h1.page-title { 
+h1.page-title {
   @apply text-4xl font-bold tracking-tight; /* 36px, 700 weight */
 }
-p.subtitle { 
+p.subtitle {
   @apply text-lg font-normal text-zinc-400; /* 18px, 400 weight */
 }
 
 /* CTA Butonu Dominansı */
 button.search-cta {
-  @apply bg-gradient-to-r from-blue-600 to-indigo-600 
-         shadow-[0_0_20px_rgba(99,102,241,0.3)] 
+  @apply bg-gradient-to-r from-blue-600 to-indigo-600
+         shadow-[0_0_20px_rgba(99,102,241,0.3)]
          hover:shadow-[0_0_30px_rgba(99,102,241,0.5)]
          transform hover:scale-105 transition-all;
 }
@@ -45,7 +45,7 @@ button.search-cta {
 ```css
 /* Dikey ritim */
 .empty-state-container {
-  @apply min-h-[calc(100vh-200px)] 
+  @apply min-h-[calc(100vh-200px)]
          flex flex-col justify-center items-center
          py-12; /* Footer için 200px reserve, geri kalanı center */
 }
@@ -73,7 +73,7 @@ button.search-cta {
 
 /* Placeholder görünürlüğü */
 input::placeholder {
-  @apply text-zinc-400 font-light italic; 
+  @apply text-zinc-400 font-light italic;
   /* Italic vurgusu + daha açık ton = fark edilir ancak dikkat çekmez */
 }
 ```
@@ -87,8 +87,8 @@ input::placeholder {
 ```css
 /* Nötr deneysel özellik bildirimi */
 .experimental-notice {
-  @apply bg-zinc-800/50 border border-zinc-700/50 
-         text-zinc-300 
+  @apply bg-zinc-800/50 border border-zinc-700/50
+         text-zinc-300
          backdrop-blur-sm; /* Glass morphism, dikkat çekmeden orada */
 }
 
@@ -112,8 +112,8 @@ Alttaki "Clarus" logosu 200px+ yüksekliğinde, %20 opacity ile ekranın 1/4'ün
 🔧 **Fix:**
 ```css
 .footer-logo {
-  @apply text-[80px] opacity-5 
-         absolute bottom-4 right-4 
+  @apply text-[80px] opacity-5
+         absolute bottom-4 right-4
          pointer-events-none select-none
          max-w-[200px]; /* Boyut sınırı */
 }
@@ -138,13 +138,13 @@ Alttaki "Clarus" logosu 200px+ yüksekliğinde, %20 opacity ile ekranın 1/4'ün
       Search by Arabic root (كتب), Buckwalter (ktb), or semantic meaning
     </p>
   </div>
-  
+
   {/* Örnek aramalar */}
   <div className="flex flex-wrap gap-2 justify-center max-w-lg">
     {['كتب (write)', 'صبر (patience)', 'علم (knowledge)'].map(term => (
-      <button 
+      <button
         key={term}
-        className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 
+        className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700
                    border border-zinc-700 rounded-full text-sm
                    transition-colors"
       >
@@ -169,11 +169,11 @@ Alttaki "Clarus" logosu 200px+ yüksekliğinde, %20 opacity ile ekranın 1/4'ün
 
 /* Secondary tabs (view mode) */
 .view-mode-tabs {
-  @apply bg-zinc-900 rounded-lg p-1 mt-6 
+  @apply bg-zinc-900 rounded-lg p-1 mt-6
          inline-flex gap-1; /* Segmented control pattern */
 }
 .view-mode-tabs button {
-  @apply px-4 py-2 rounded-md 
+  @apply px-4 py-2 rounded-md
          data-[active]:bg-zinc-800 data-[active]:text-white
          text-zinc-500 transition-all;
 }
@@ -202,7 +202,7 @@ Basit, net, evrensel. "Root" terimini arayüzden kaldır, yardımcı metne göm�
 🔧 **Fix:**
 ```css
 .experimental-badge {
-  @apply bg-blue-500/5 border border-blue-500/20 
+  @apply bg-blue-500/5 border border-blue-500/20
          text-blue-300/80
          px-4 py-2.5 rounded-lg
          flex items-center gap-2
@@ -223,14 +223,14 @@ Arama kutusu ile "Search Root" butonu arasında 12px+ boşluk var. İkisinin **a
 ```tsx
 {/* Birleşik input-button grubu */}
 <div className="flex items-center gap-2 w-full max-w-2xl">
-  <input 
-    className="flex-1 bg-zinc-900 border border-zinc-700 
+  <input
+    className="flex-1 bg-zinc-900 border border-zinc-700
                focus:border-indigo-500 rounded-l-lg px-4 py-3
                transition-colors"
     placeholder="كتب or ktb (Buckwalter)"
   />
-  <button 
-    className="bg-gradient-to-r from-indigo-600 to-blue-600 
+  <button
+    className="bg-gradient-to-r from-indigo-600 to-blue-600
                px-8 py-3 rounded-r-lg font-semibold
                hover:from-indigo-500 hover:to-blue-500
                transition-all"
@@ -303,7 +303,7 @@ Input ve buton arasında **sıfır boşluk**, `rounded-l-lg` + `rounded-r-lg` il
 
 ## Sonuç
 
-Bu sayfa, "boşluğu doldurmayı unutmuş bir Figma frame'i" gibi duruyor. Kullanıcıya değer katmayan, sadece "bir şeyler var" hissi yaratan **minimal effort maksimum boşluk** örneği. 
+Bu sayfa, "boşluğu doldurmayı unutmuş bir Figma frame'i" gibi duruyor. Kullanıcıya değer katmayan, sadece "bir şeyler var" hissi yaratan **minimal effort maksimum boşluk** örneği.
 
 **Acilen yapılması gerekenler:**
 1. Footer logosunu boyutsal ve görsel olarak öldür (opacity %5, boyut 1/3'e)

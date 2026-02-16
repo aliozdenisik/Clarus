@@ -2,7 +2,7 @@
 
 ## 1. İLK İZLENİM VE "ROAST"
 
-Sol sidebar hala dolmuş gibi — morfolojik formlar listesi o kadar basık ki Arapça harflerin harekesi (fetḥa, ḍamma) üstteki satıra temas ediyor. **Line-height diye bir kavram yok mu?** 
+Sol sidebar hala dolmuş gibi — morfolojik formlar listesi o kadar basık ki Arapça harflerin harekesi (fetḥa, ḍamma) üstteki satıra temas ediyor. **Line-height diye bir kavram yok mu?**
 
 Ayet kartlarındaki vurgu rengi felaket: **koyu lacivert highlight üzerinde beyaz metin** — kontrast o kadar düşük ki okumak için zoom yapmak gerekiyor. Tasarımcınız renk körlüğü testinden geçti mi?
 
@@ -25,7 +25,7 @@ Sidebar'ın sağ kenarındaki scrollbar o kadar ince ki (1-2px) kullanıcı fare
   - Başlık ile Arapça metin arası: 28px (excessive)
   - Arapça metin ile Türkçe meal arası: 16px (ok)
   - Türkçe meal ile kart alt sınırı arası: 10px (insufficient)
-  
+
   **Asimetrik padding = amatör iş.**
 - **Sidebar Alt Boşluk:** "Compiling..." göstergesi istatistik kutularına 6px mesafede, üst üste biniyormuş hissi veriyor.
 

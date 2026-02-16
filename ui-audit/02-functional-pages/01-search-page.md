@@ -32,7 +32,7 @@
 ## 3. KRİTİK HATALAR VE ÇÖZÜMLER
 
 ### ❌ **DİL KAOS:** İngilizce başlıklar (Search, Browse) + Türkçe kontroller (Gelişmiş Arama, Anahtar kelime bazlı arama)
-🔧 Fix: 
+🔧 Fix:
 ```tsx
 // Tek dil seç. Ya tamamen TR:
 "Ara" | "Göz At" | "Karşılaştır" | "Gelişmiş Arama"
@@ -47,12 +47,12 @@
 // Arama alanı boşken göster:
 <div className="max-w-2xl mx-auto mt-16 text-center">
   <h3 className="text-xl font-semibold mb-6">Başlamak için bir sorgu girin</h3>
-  
+
   {/* Trending Searches */}
   <div className="space-y-3">
     <p className="text-sm text-zinc-400 mb-4">Popüler aramalar:</p>
     {["Sabır ve namaz", "Yaratılış", "Adalet kavramı"].map(query => (
-      <button className="px-4 py-2 bg-zinc-800/50 hover:bg-zinc-700 rounded-lg 
+      <button className="px-4 py-2 bg-zinc-800/50 hover:bg-zinc-700 rounded-lg
                          text-sm transition-colors">
         {query}
       </button>
@@ -97,7 +97,7 @@
 .subtitle { color: rgb(113, 113, 122); font-weight: 300; }
 
 /* Olmalı: */
-.subtitle { 
+.subtitle {
   color: rgb(161, 161, 170); /* zinc-400 */
   font-weight: 400;
   font-size: 0.9375rem; /* 15px */
@@ -190,7 +190,7 @@ small { font-size: 0.875rem; }                 /* 14px */
 
 ## SON SÖZ
 
-Bu sayfa "minimalist" değil, **tamamlanmamış**. Apple'ın minimalizmi her pikselin bir amacı olduğu yerdir. Burası sadece boş. 
+Bu sayfa "minimalist" değil, **tamamlanmamış**. Apple'ın minimalizmi her pikselin bir amacı olduğu yerdir. Burası sadece boş.
 
 Empty state UX yoksa, o sayfa production'da olmamalı. Kullanıcı sayfaya geldiğinde "ne yapmalıyım?" diye düşünüyorsa, tasarım başarısız demektir.
 

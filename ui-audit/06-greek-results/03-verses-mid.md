@@ -2,11 +2,11 @@
 
 ## 1. İLK İZLENİM VE "ROAST"
 
-Ayet kartları genel olarak "fena değil" kategorisinde — ki bu benim dilimdeki "yetersiz" demek. Mor highlight iyi çalışıyor, kartlar okunabilir, ama **tutarsızlık** diz boyu. 
+Ayet kartları genel olarak "fena değil" kategorisinde — ki bu benim dilimdeki "yetersiz" demek. Mor highlight iyi çalışıyor, kartlar okunabilir, ama **tutarsızlık** diz boyu.
 
 Matthew 27:37 kartına bak: Yunanca metin var, ama **İngilizce çeviri yok**. Sanki tercüman işini yarıda bırakmış. Diğer kartlarda çeviri var, bu kartta yok. Kullanıcı "bu ayet çevrilmedi mi, yoksa bug mu?" diye düşünüyor.
 
-Sol altta "Compiling..." indikatörü var. Pill formunda, turuncu nokta ile, siyah arka plan. Ama bu indikatör viewport'un EN ALT sınırına çok yakın — mobil tarayıcıda veya bazı ekranlarda kesilme riski var. 
+Sol altta "Compiling..." indikatörü var. Pill formunda, turuncu nokta ile, siyah arka plan. Ama bu indikatör viewport'un EN ALT sınırına çok yakın — mobil tarayıcıda veya bazı ekranlarda kesilme riski var.
 
 İngilizce çeviri metni **çok küçük ve italik**. Okunmuyor. Ayet referansı (örn: Matthew 26:31) çok sönük, kartın içinde fark edilmiyor. **Bu bir referans aracı.** Referans bölümü en belirgin olmalıydı, ama şu halde en sönük.
 

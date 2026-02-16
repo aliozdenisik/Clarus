@@ -4,7 +4,7 @@
 
 İlk bakışta: **Minimalist, temiz, ama TEMBEL.**
 
-Bu carousel kutsal metin alıntıları gösteriyor ama kendini saklamaktan utanıyor gibi duruyor. Kartlar yok, gölgeler yok, **görsel varlık (visual presence) neredeyse sıfır.** Open layout tercih edilmiş — iyi fikir, ama yürütüm yarım kalmış. 
+Bu carousel kutsal metin alıntıları gösteriyor ama kendini saklamaktan utanıyor gibi duruyor. Kartlar yok, gölgeler yok, **görsel varlık (visual presence) neredeyse sıfır.** Open layout tercih edilmiş — iyi fikir, ama yürütüm yarım kalmış.
 
 Gözü kanatan en büyük hata: **TİPOGRAFİK KİŞİLİK EKSİKLİĞİ.** Quote metni italic serif'te ama hangi font kullanıldığı belli değil. "Love is patient, love is kind" gibi bir metni **serif italic** ile göstermek klişenin ta kendisi. Bu 1996 PowerPoint presentation slide'ı değil — kutsal metinler **typography ile karakterize edilmeli**, generic template'lerle değil.
 
@@ -216,14 +216,14 @@ Satırlar birbirine giriyor, metin sıkışık duruyor.
   <blockquote className="mb-12"> {/* 48px spacing */}
     "Love is patient, love is kind..."
   </blockquote>
-  
+
   {/* Referans + Dividers */}
   <div className="flex items-center gap-4 mb-14"> {/* 56px spacing */}
     <div className="w-10 h-[1px] bg-white/15" />
     <span className="reference">1 Corinthians 13:4</span>
     <div className="w-10 h-[1px] bg-white/15" />
   </div>
-  
+
   {/* Pagination */}
   <div className="flex gap-2">
     {/* Indicators */}

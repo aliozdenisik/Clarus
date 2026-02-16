@@ -33,7 +33,7 @@ Sağdaki grafik temiz, ama barların sonunda **rakam yok**. Kullanıcı gözle m
   - Yeşil (#10B981 - "Definition")
   - Turuncu (#F59E0B - "Medium")
   - Sarı (#FCD34D - "Experimental" uyarı banner'ı)
-  
+
   **4 farklı aksan rengi aynı görünümde.** Görsel dil yok, renk kodlaması sistemi yok. "Definition" niye yeşil? Yeşil başarı mı, tanım mı ifade ediyor?
 
 ## 3. KRİTİK HATALAR VE ÇÖZÜMLER

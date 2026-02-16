@@ -113,7 +113,7 @@ Oran: 1:1.5 (golden ratio'ya daha yakın)
   background: rgba(255, 255, 255, 0.03); /* Hafif fill */
   border: 1px solid rgba(255, 255, 255, 0.1); /* Daha belirgin border */
   backdrop-filter: blur(12px); /* Blur efekti */
-  box-shadow: 
+  box-shadow:
     0 4px 24px rgba(0, 0, 0, 0.4), /* Dış gölge */
     inset 0 1px 0 rgba(255, 255, 255, 0.1); /* İç ışıltı */
 }
@@ -129,7 +129,7 @@ Border çok ince, arka plan fill yok, backdrop blur eksik. Kartlar "cam efekti" 
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(12px) saturate(120%);
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
@@ -221,7 +221,7 @@ Sadece renk farkı var, ama visual weight aynı. Vurgu yetersiz.
   backdrop-filter: blur(16px) saturate(150%);
   border-radius: 16px;
   padding: 48px;
-  box-shadow: 
+  box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
@@ -229,7 +229,7 @@ Sadece renk farkı var, ama visual weight aynı. Vurgu yetersiz.
 
 .feature-card:hover {
   border-color: rgba(245, 158, 11, 0.3); /* Amber accent */
-  box-shadow: 
+  box-shadow:
     0 12px 48px rgba(0, 0, 0, 0.5),
     0 0 24px rgba(245, 158, 11, 0.15);
   transform: translateY(-4px);
@@ -245,11 +245,11 @@ Sadece renk farkı var, ama visual weight aynı. Vurgu yetersiz.
     <p>Search across <strong>43,055 verses</strong>...</p>
     <span className="label primary">Search Across 43,055 Verses</span>
   </FeatureCard>
-  
+
   <FeatureCard variant="secondary">
     {/* Standart stil */}
   </FeatureCard>
-  
+
   <FeatureCard variant="secondary">
     {/* Standart stil */}
   </FeatureCard>
@@ -298,7 +298,7 @@ Sadece renk farkı var, ama visual weight aynı. Vurgu yetersiz.
 <section className="features-grid mb-24"> {/* 160px → 96px */}
   <div className="grid grid-cols-3 gap-8"> {/* 24px → 32px */}
     {features.map(feature => (
-      <FeatureCard 
+      <FeatureCard
         key={feature.id}
         variant={feature.isPrimary ? "primary" : "secondary"}
       >
@@ -314,9 +314,9 @@ Sadece renk farkı var, ama visual weight aynı. Vurgu yetersiz.
 /* Kartlara subtle hover animation ekle */
 <motion.div
   className="feature-card"
-  whileHover={{ 
-    y: -8, 
-    boxShadow: "0 12px 48px rgba(0,0,0,0.5), 0 0 24px rgba(245,158,11,0.2)" 
+  whileHover={{
+    y: -8,
+    boxShadow: "0 12px 48px rgba(0,0,0,0.5), 0 0 24px rgba(245,158,11,0.2)"
   }}
   transition={{ duration: 0.3, ease: "easeOut" }}
 >

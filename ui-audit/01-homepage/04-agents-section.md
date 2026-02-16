@@ -163,7 +163,7 @@ DOĞRU HİYERARŞİ:
       <Icon className="w-8 h-8 text-amber-500" />
     </div>
   </div>
-  
+
   <div className="space-y-2">
     <h3 className="text-3xl font-bold text-white">
       Synthesis Agent
@@ -172,11 +172,11 @@ DOĞRU HİYERARŞİ:
       COMPARATIVE THEOLOGIAN
     </Badge>
   </div>
-  
+
   <p className="text-gray-300 text-base leading-relaxed max-w-2xl">
     Synthesizes all 4 perspectives into a unified analysis...
   </p>
-  
+
   <div className="pt-6 border-t border-gray-800 flex gap-3">
     <Badge variant="secondary" className="capitalize">
       5-paragraph essay
