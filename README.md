@@ -21,15 +21,17 @@ Comparative theological analysis across Quran and Bible with multi-agent LLM syn
 
 ## Overview
 
-Clarus is a production-ready Retrieval-Augmented Generation (RAG) system for **maximum retrieval accuracy** on religious texts. It combines hybrid search (dense + sparse vectors) with multi-agent LLM synthesis to provide scholarly-quality comparative analysis across the Quran (8 Turkish translations) and Bible (English KJVA + Turkish).
+Clarus is a production-ready Retrieval-Augmented Generation (RAG) system for **maximum retrieval accuracy** on religious texts. It combines dense semantic search with multi-agent LLM synthesis to provide scholarly-quality comparative analysis across the Quran (8 Turkish translations) and Bible (English KJVA + Turkish).
 
 ### Key Highlights
 
-- **Hybrid Search** — Dense embeddings (OpenAI text-embedding-3-large) + BM25 sparse vectors fused via Reciprocal Rank Fusion
-- **5-Agent Synthesis** — Specialized agents for Quran, OT, NT, and Apocrypha, unified by a Summary agent into cohesive essays
+- **Semantic Search** — Dense embeddings (OpenAI text-embedding-3-large) with semantic chunking for context-aware verse retrieval
+- **Multi-Agent Synthesis** — 5 specialized agents (Quran, OT, NT, Apocrypha, Summary) generating comparative theological essays
+- **RRF Fusion** — Reciprocal Rank Fusion combining multi-query results for maximum recall
 - **Morphological Keyword Search** — Root-based Arabic (كتب) and Hebrew/Greek concordance with Strong's numbers
-- **Multilingual** — Query in 8 languages (TR, EN, ES, FR, IT, PT, AR, DE) with automatic detection and translation
-- **Production Ready** — Better Auth, Redis caching, rate limiting, SSE streaming, Sentry observability, pre-commit hooks
+- **Full i18n Support** — Complete TR/EN interface localization with next-intl, Accept-Language detection, locale-aware LLM caching
+- **Multilingual Queries** — Query in 8 languages (TR, EN, ES, FR, IT, PT, AR, DE) with automatic detection
+- **Production Ready** — Better Auth, Redis semantic caching, rate limiting, SSE streaming, Sentry observability
 
 ---
 
@@ -39,11 +41,12 @@ Clarus is a production-ready Retrieval-Augmented Generation (RAG) system for **m
 
 | Feature | Description |
 |---------|-------------|
-| **Hybrid Search** | Dense vectors (3072-dim) + BM25 sparse vectors across all collections |
-| **Semantic Chunking** | Context-aware verse grouping that preserves scriptural boundaries |
+| **Semantic Search** | Dense embeddings (3072-dim) for context-aware verse retrieval across all collections |
+| **Semantic Chunking** | Groups semantically related verses preserving scriptural boundaries |
+| **Multi-Query RAG** | 3-5 query variants per request with RRF fusion for maximum recall |
 | **Query Enhancement** | LLM-powered query expansion with synonym and concept injection |
-| **Multi-Query RAG** | 3-5 query variants per request for maximum recall |
-| **RRF Fusion** | Reciprocal Rank Fusion (k=60) combining dense + sparse scores |
+| **RRF Fusion** | Reciprocal Rank Fusion (k=60) combining multi-query results |
+| **Semantic Cache** | Redis-backed embedding similarity cache reducing API costs by 60-80% |
 
 ### Multi-Agent Comparative Analysis
 
@@ -100,10 +103,22 @@ Clarus includes an Arabic root etymology database for all 1,651 Quranic roots, p
 | ApocryphaAgent | `bible_apocrypha` | Deuterocanonical texts |
 | SummaryAgent | -- | Synthesizes all perspectives into cohesive essay |
 
+### Internationalization (i18n)
+
+Full Turkish/English localization across the entire stack:
+
+| Component | Implementation |
+|-----------|----------------|
+| **Frontend** | next-intl with namespace-based message catalogs (TR/EN) |
+| **Backend** | Locale-aware error messages with Accept-Language header support |
+| **LLM Cache** | Locale-aware cache keys prevent cross-language cache hits |
+| **SEO** | hreflang tags, locale-aware metadata, and language switch navigation |
+| **Testing** | Translation completeness and quality checks |
+
 ### Production Infrastructure
 
 - **Authentication** — [Better Auth](https://www.better-auth.com/) with JWT + Google OAuth + API key support for CLI
-- **Caching** — Redis Stack 7.2 with semantic cache (theta=0.95), embedding cache, rate limiting, and fail-open resilience
+- **Caching** — Redis Stack 7.2 with LLM semantic cache, embedding cache, and fail-open resilience
 - **Streaming** — Server-Sent Events for token-by-token response delivery
 - **Observability** — Structured logging with correlation IDs, Sentry error tracking, performance spans
 - **Code Quality** — 11 pre-commit hooks (Ruff, ESLint, Prettier, Pyright, TypeScript, gitleaks, codespell)
@@ -119,7 +134,7 @@ Clarus includes an Arabic root etymology database for all 1,651 Quranic roots, p
    ┌──────────────┐      ┌──────────────┐      ┌──────────────────────────────┐
    │   Next.js 16 │      │   FastAPI    │      │        Data Stores           │
    │   React 19   │─────>│   Python    │─────>│                              │
-   │   Port 3000  │ JWT  │   Port 8000  │      │  Qdrant (6333)  13 collections│
+   │   Port 3000  │ JWT  │   Port 8000  │      │  Qdrant (6333)  collections  │
    └──────────────┘      └──────┬───────┘      │  PostgreSQL (54322)          │
                                 │              │  Redis Stack (6379)          │
                                 v              └──────────────────────────────┘
@@ -128,7 +143,7 @@ Clarus includes an Arabic root etymology database for all 1,651 Quranic roots, p
                      ├──────────────────┤
                      │ 1. Query Enhance │──> Grok 4.1 Fast
                      │ 2. Multi-Query   │──> 3-5 variants
-                     │ 3. Parallel      │──> 13 collections (dense + sparse)
+                     │ 3. Parallel      │──> Dense semantic search
                      │    Search        │
                      │ 4. RRF Fusion    │──> k=60
                      │ 5. Multi-Agent   │──> 5 agents via Gemini 2.5 Flash
@@ -312,14 +327,17 @@ Full OpenAPI documentation is available at `/docs` when the server is running.
 
 | Endpoint | Method | Description | Auth |
 |----------|--------|-------------|------|
-| `/api/search/quran` | POST | Quran search with translator selection | Yes |
-| `/api/search/bible` | POST | Bible search (OT/NT/Apocrypha) | Yes |
+| `/api/search/quran` | POST | Quran semantic search with translator selection | Yes |
+| `/api/search/bible` | POST | Bible semantic search (OT/NT/Apocrypha) | Yes |
 | `/api/compare/` | POST | Multi-agent comparative analysis | Yes |
 | `/api/stream/search` | GET | SSE streaming search | Yes |
 | `/api/stream/compare` | GET | SSE streaming compare | Yes |
 | `/api/search/keyword/` | POST | Quran morphological root search | -- |
 | `/api/search/keyword/roots` | GET | List all Arabic roots (paginated) | -- |
 | `/api/search/bible-keyword/` | POST | Bible morphological search | -- |
+| `/api/verse-lookup/` | POST | Lookup verse by reference | Yes |
+| `/api/verse-translations/` | GET | Get verse in all translations | Yes |
+| `/api/etymology/` | GET | Arabic root etymology from Lane's Lexicon | -- |
 | `/api/enhance/` | POST | Query enhancement preview | Yes |
 
 ### Auth & User
@@ -352,9 +370,8 @@ Full OpenAPI documentation is available at `/docs` when the server is running.
 | Runtime | Python 3.11+ with [uv](https://docs.astral.sh/uv/) |
 | Vector DB | Qdrant (HNSW + Scalar Quantization) |
 | Database | PostgreSQL 15 (Supabase) |
-| Cache | Redis Stack 7.2 (semantic cache, rate limiting, JWT blacklist) |
-| Dense Encoder | OpenAI text-embedding-3-large (3072-dim) |
-| Sparse Encoder | BM25 via FastEmbed |
+| Cache | Redis Stack 7.2 (LLM semantic cache, search cache, JWT blacklist) |
+| Encoder | OpenAI text-embedding-3-large (3072-dim) |
 | LLM (Enhancement) | Grok 4.1 Fast via OpenRouter |
 | LLM (Generation) | Gemini 2.5 Flash via OpenRouter |
 | LLM (Translation) | Gemini 2.5 Flash Lite via OpenRouter |
@@ -448,9 +465,10 @@ Clarus/
 │   ├── main.py                     # CLI entrypoint (Rich formatting)
 │   ├── app/                        # FastAPI application
 │   │   ├── main.py                 # ASGI server
-│   │   ├── api/                    # Route handlers (13 endpoints)
+│   │   ├── api/                    # Route handlers (15 endpoints)
 │   │   ├── auth/                   # JWKS validator + API key auth
-│   │   ├── middleware/             # CORS, rate limiting, correlation ID
+│   │   ├── i18n/                   # Locale detection + message catalogs
+│   │   ├── middleware/             # CORS, correlation ID, error handling
 │   │   ├── schemas/                # Pydantic models
 │   │   └── config.py               # Settings
 │   ├── src/                        # RAG pipeline modules (29 files)
@@ -467,16 +485,20 @@ Clarus/
 │   ├── tests/                      # Pytest + accuracy benchmarks
 │   └── scripts/                    # Setup & migration scripts
 ├── frontend/                       # Next.js 16 + React 19
-│   ├── app/                        # App Router pages (17 routes)
+│   ├── app/                        # App Router with [locale] (17 routes)
 │   ├── components/                 # UI components (60+ files)
 │   │   ├── ui/                     # Radix primitives (33 files)
 │   │   ├── compare/                # Comparative analysis UI
 │   │   ├── keyword-search/         # Morphological search UI (12 files)
+│   │   ├── quran/                  # Quran-specific components
+│   │   ├── verse-lookup/           # Verse reference lookup
 │   │   └── search/                 # Search components
 │   ├── lib/                        # API client, hooks, stores
 │   │   ├── api/                    # Generated TypeScript client
 │   │   ├── stores/                 # Zustand state management
-│   │   └── auth/                   # Better Auth integration
+│   │   ├── auth/                   # Better Auth integration
+│   │   └── i18n/                   # next-intl configuration
+│   ├── messages/                   # TR/EN translation files
 │   └── __tests__/                  # Vitest + RTL (21 files, 228+ tests)
 ├── docker-compose.yml              # PostgreSQL + Qdrant + Redis
 ├── .pre-commit-config.yaml         # 11 hooks for code quality
