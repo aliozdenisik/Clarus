@@ -141,6 +141,23 @@ vi.mock("@/lib/api/sdk.gen", () => ({
   getQuranSurahsApiMetadataQuranSurahsGet: (...args: unknown[]) => mockGetQuranSurahs(...args),
 }))
 
+// Mock react-virtuoso
+vi.mock("react-virtuoso", () => ({
+  Virtuoso: ({
+    totalCount,
+    itemContent,
+  }: {
+    totalCount: number
+    itemContent: (index: number) => React.ReactNode
+  }) => (
+    <div data-testid="virtuoso-mock">
+      {Array.from({ length: totalCount }).map((_, i) => (
+        <div key={i}>{itemContent(i)}</div>
+      ))}
+    </div>
+  ),
+}))
+
 import KeywordSearchPage from "@/app/[locale]/keyword-search/page"
 import { toast } from "sonner"
 
