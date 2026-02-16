@@ -6,7 +6,6 @@
 
 Comparative theological analysis across Quran and Bible with multi-agent LLM synthesis, morphological keyword search, and multilingual support.
 
-[![Backend CI](https://github.com/aliozdenisik/Clarus/actions/workflows/backend-ci.yml/badge.svg)](https://github.com/aliozdenisik/Clarus/actions/workflows/backend-ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&style=flat-square)](https://github.com/pre-commit/pre-commit)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776ab.svg?style=flat-square&logo=python&logoColor=white)](https://python.org)
