@@ -54,6 +54,7 @@
 - [x] Pagination for list endpoints
 - [x] Input validation & XSS prevention
 - [x] Compare API with rich response schema
+- [x] Compare collection alias compatibility fix (2026-02-16) - `quran_tr` is normalized to `quran_tr_{translator}` in both batch and SSE compare endpoints
 - [x] **SSE streaming format fix** (structured paragraphs + stats)
 - [x] Citation sanitizer for LLM output normalization
 - [x] Strengthened LLM prompts against double-bracket drift

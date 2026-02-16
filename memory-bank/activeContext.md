@@ -4,6 +4,49 @@
 
 **Date**: 2026-02-11
 
+## Compare Quran Collection Alias Fix - COMPLETED ✅
+
+**Date**: 2026-02-16
+**Scope**: Backend compare + stream compatibility for legacy frontend collection IDs
+
+Resolved a regression where Compare requests selecting Quran sent `quran_tr`, but backend validation only accepted `quran_tr_*` translator-specific collections. This caused Quran to be silently filtered out and only Bible sections to appear.
+
+### Root Cause
+
+- Frontend compare selector sends `quran_tr` as a generic Quran collection ID.
+- Backend compare (`/api/compare`) and streaming compare (`/api/stream/compare`) validated only `quran_tr_{translator}` variants.
+- Invalid collections were dropped, so Quran search pipeline was skipped while Bible collections remained valid.
+
+### Implementation
+
+- Added shared collection normalization utility:
+  - `backend/app/api/compare_helpers.py`
+    - `VALID_COMPARE_COLLECTIONS`
+    - `normalize_compare_collections(collections, translator)`
+- Updated batch compare endpoint:
+  - `backend/app/api/compare.py`
+    - Normalizes incoming collections before filtering
+    - Supports legacy `quran_tr` alias by mapping to `quran_tr_{selected_translator}`
+    - Added structured logging fields for requested vs normalized collections
+- Updated SSE compare endpoint:
+  - `backend/app/api/stream.py`
+    - Same normalization flow for query param `collections`
+    - Preserves existing default `quran_tr,...` query format via alias mapping
+
+### Verification
+
+- `uv run ruff check app/api/compare.py app/api/stream.py app/api/compare_helpers.py tests/test_compare_helpers.py` ✅
+- `uv run ruff format --check app/api/compare.py app/api/stream.py app/api/compare_helpers.py tests/test_compare_helpers.py` ✅
+- `uv run pytest tests/test_compare_helpers.py -v` ✅ (3/3 pass)
+- `uv run pyright app/api/compare.py app/api/stream.py app/api/compare_helpers.py tests/test_compare_helpers.py` ✅ (0 errors)
+
+### New Tests
+
+- `backend/tests/test_compare_helpers.py`
+  - Validates `quran_tr` -> `quran_tr_{translator}` normalization
+  - Validates order-preserving deduplication
+  - Validates normalized outputs belong to allowed compare collections
+
 ## Verse Display & Morphology UX Overhaul — COMPLETED ✅
 
 **Date**: 2026-02-11

@@ -8,7 +8,11 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import check_rate_limit
-from app.api.compare_helpers import strip_markdown_headers
+from app.api.compare_helpers import (
+    VALID_COMPARE_COLLECTIONS,
+    normalize_compare_collections,
+    strip_markdown_headers,
+)
 from app.auth.api_key_validator import get_current_user_flexible
 from app.db import get_db
 from app.i18n.detector import get_locale
@@ -68,30 +72,16 @@ class CompareRequest(BaseModel):
     @classmethod
     def validate_collections(cls, v: list[str]) -> list[str]:
         """Validate collections list."""
-        # Valid collections: all quran_tr_* translators + bible collections
-        valid_collections = {
-            "quran_tr_diyanet",
-            "quran_tr_yazir",
-            "quran_tr_ates",
-            "quran_tr_bulac",
-            "quran_tr_ozturk",
-            "quran_tr_vakfi",
-            "quran_tr_yildirim",
-            "quran_tr_yuksel",
-            "bible_ot",
-            "bible_nt",
-            "bible_apocrypha",
-            "bible_tr_ot",
-            "bible_tr_nt",
-        }
+        valid_collections = VALID_COMPARE_COLLECTIONS | {"quran_tr"}
         if not v:
             raise ValueError("At least 2 collections required")
         if len(v) < 2:
             raise ValueError("At least 2 collections required for comparison")
-        invalid = set(v) - valid_collections
+        normalized = normalize_compare_collections(v, DEFAULT_TRANSLATOR)
+        invalid = set(normalized) - valid_collections
         if invalid:
             raise ValueError(f"Invalid collections: {invalid}")
-        return list(set(v))  # Deduplicate
+        return list(dict.fromkeys(normalized))
 
 
 class ParagraphData(BaseModel):
@@ -209,35 +199,25 @@ async def compare_scriptures(
 
     rag = get_comparative_rag()
     translator = QueryTranslator()
+    quran_translator = request.translator or DEFAULT_TRANSLATOR
 
     if request.use_multi_agent:
-        # Validate collections (all quran_tr_* translators + bible collections)
-        valid_collections = {
-            "quran_tr_diyanet",
-            "quran_tr_yazir",
-            "quran_tr_ates",
-            "quran_tr_bulac",
-            "quran_tr_ozturk",
-            "quran_tr_vakfi",
-            "quran_tr_yildirim",
-            "quran_tr_yuksel",
-            "bible_ot",
-            "bible_nt",
-            "bible_apocrypha",
-            "bible_tr_ot",
-            "bible_tr_nt",
-        }
-        collections = [c for c in request.collections if c in valid_collections]
+        normalized_collections = normalize_compare_collections(request.collections, quran_translator)
+        collections = [c for c in normalized_collections if c in VALID_COMPARE_COLLECTIONS]
         if len(collections) < 2:
             raise ValidationError(message=get_error_message("min_collections_required", locale, min_count=2))
 
         logger.info(
             "Compare with filtered collections",
-            extra={"collections": collections, "count": len(collections)},
+            extra={
+                "requested_collections": request.collections,
+                "normalized_collections": normalized_collections,
+                "collections": collections,
+                "count": len(collections),
+            },
         )
 
         # Step 1: Get search results for selected collections only
-        quran_translator = request.translator or DEFAULT_TRANSLATOR
         search_result = rag.search_all(
             request.topic,
             collections=collections,
@@ -425,7 +405,6 @@ async def compare_scriptures(
         )
     else:
         # Single essay mode (ComparativeAnswer)
-        quran_translator = request.translator or DEFAULT_TRANSLATOR
         result = rag.compare(request.topic, translator=quran_translator, locale=locale)
 
         # Sanitize essay output
