@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
 import { Info, ChevronDown, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useTranslations } from "next-intl"
 
 interface VerificationEntry {
   strong: string
@@ -38,6 +39,8 @@ interface AccuracyDisclaimerProps {
 }
 
 export function AccuracyDisclaimer({ className }: AccuracyDisclaimerProps) {
+  const t = useTranslations("KeywordSearch")
+  const tCommon = useTranslations("Common")
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
@@ -48,7 +51,7 @@ export function AccuracyDisclaimer({ className }: AccuracyDisclaimerProps) {
         className="group mx-auto flex items-center gap-2 text-xs text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-secondary)]"
       >
         <Info className="h-3.5 w-3.5" />
-        <span>Clarus can make mistakes. Verify important information.</span>
+        <span>{t("accuracy.verifyInfo")}</span>
         <ChevronDown
           className={cn(
             "h-3.5 w-3.5 transition-transform duration-200",
@@ -71,7 +74,7 @@ export function AccuracyDisclaimer({ className }: AccuracyDisclaimerProps) {
               {/* Header */}
               <div className="mb-3 flex items-center justify-between">
                 <h4 className="text-sm font-medium text-[var(--color-text-primary)]">
-                  Accuracy Verification
+                  {t("accuracy.verificationTitle")}
                 </h4>
                 <a
                   href="https://www.blueletterbible.org/"
@@ -79,16 +82,14 @@ export function AccuracyDisclaimer({ className }: AccuracyDisclaimerProps) {
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 text-xs text-[var(--color-accent-primary)] hover:underline"
                 >
-                  Blue Letter Bible
+                  {t("accuracy.verificationTitle")}
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
 
               {/* Explanation */}
               <p className="mb-3 text-xs text-[var(--color-text-muted)]">
-                Our occurrence counts are verified against Blue Letter Bible (authoritative
-                concordance). Small discrepancies (&lt;1%) are expected due to different manuscript
-                traditions (OSHB/MorphGNT vs WLC/Textus Receptus).
+                {t("disclaimer.content")}
               </p>
 
               {/* Data Table */}
@@ -97,22 +98,22 @@ export function AccuracyDisclaimer({ className }: AccuracyDisclaimerProps) {
                   <thead>
                     <tr className="border-b border-[var(--color-border-subtle)]">
                       <th className="py-2 text-left font-medium text-[var(--color-text-muted)]">
-                        Strong&apos;s
+                        {t("stats.root")}
                       </th>
                       <th className="py-2 text-left font-medium text-[var(--color-text-muted)]">
-                        Word
+                        {t("derivedWords.title")}
                       </th>
                       <th className="py-2 text-right font-medium text-[var(--color-text-muted)]">
-                        Clarus
+                        {t("pageTitle")}
                       </th>
                       <th className="py-2 text-right font-medium text-[var(--color-text-muted)]">
-                        BLB
+                        {t("rootInfo.buckwalter")}
                       </th>
                       <th className="py-2 text-right font-medium text-[var(--color-text-muted)]">
                         Δ
                       </th>
                       <th className="py-2 text-right font-medium text-[var(--color-text-muted)]">
-                        Status
+                        {tCommon("success")}
                       </th>
                     </tr>
                   </thead>
@@ -153,7 +154,7 @@ export function AccuracyDisclaimer({ className }: AccuracyDisclaimerProps) {
                                   : "bg-amber-500/20 text-amber-400"
                               )}
                             >
-                              {delta.status === "exact" ? "EXACT" : "PASS"}
+                              {delta.status === "exact" ? tCommon("success") : tCommon("failed")}
                             </span>
                           </td>
                         </tr>
@@ -166,9 +167,7 @@ export function AccuracyDisclaimer({ className }: AccuracyDisclaimerProps) {
               {/* Footer note */}
               <div className="mt-3 border-t border-[var(--color-border-subtle)] pt-3">
                 <p className="text-[10px] leading-relaxed text-[var(--color-text-muted)]">
-                  <strong>Data Sources:</strong> Hebrew (OSHB - Open Scriptures Hebrew Bible), Greek
-                  (MorphGNT - Morphologically tagged Greek NT based on NA27/NA28). BLB uses WLC
-                  (Westminster Leningrad Codex) and Textus Receptus.
+                  <strong>{t("disclaimer.title")}:</strong> {t("disclaimer.content")}
                 </p>
               </div>
             </div>

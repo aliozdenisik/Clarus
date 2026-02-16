@@ -329,10 +329,10 @@ export default function HomePage() {
             className="mb-20 text-center"
           >
             <span className="mb-6 inline-block text-xs font-medium tracking-[0.2em] text-[var(--color-accent-primary)] uppercase">
-              Why Clarus
+              {tLanding("sections.whyClarus")}
             </span>
             <h2 className="mx-auto max-w-[700px] font-[family-name:var(--font-serif)] text-5xl leading-tight font-normal tracking-tight text-[var(--color-text-primary)] md:text-6xl">
-              Built for Depth, Not Just Speed
+              {tLanding("sections.builtForDepth")}
             </h2>
           </motion.div>
 
@@ -392,14 +392,13 @@ export default function HomePage() {
             className="mb-20 text-center"
           >
             <span className="mb-6 inline-block text-xs font-medium tracking-[0.2em] text-[var(--color-accent-primary)] uppercase">
-              Core Feature
+              {tLanding("sections.coreFeature")}
             </span>
             <h2 className="mx-auto mb-8 max-w-[700px] font-[family-name:var(--font-serif)] text-5xl leading-tight font-normal tracking-tight text-[var(--color-text-primary)] md:text-6xl">
               {tLanding("agents.title")}
             </h2>
             <p className="mx-auto max-w-[650px] text-lg leading-relaxed font-light text-[var(--color-text-secondary)]">
-              Each question is analyzed by 5 specialized AI agents in parallel — 4 scripture experts
-              and 1 comparative theologian — producing a comprehensive essay with full citations.
+              {tLanding("agents.subtitle")}
             </p>
           </motion.div>
 
@@ -453,7 +452,7 @@ export default function HomePage() {
                       <div className="flex items-center gap-2 border-t border-white/[0.06] pt-4">
                         <div className={`h-1.5 w-1.5 rounded-full ${colors.dot}`} />
                         <p className={`text-xs font-medium tabular-nums ${colors.stat}`}>
-                          {agent.verseCount} verses indexed
+                          {agent.verseCount} {tLanding("agents.versesIndexed")}
                         </p>
                       </div>
                     </div>
@@ -483,30 +482,33 @@ export default function HomePage() {
                 </div>
 
                 {/* Name & Role Badge */}
-                <h3 className="mb-3 text-xl font-semibold text-white">Synthesis Agent</h3>
+                <h3 className="mb-3 text-xl font-semibold text-white">
+                  {tLanding("agents.synthesis.name")}
+                </h3>
                 <span className="mb-5 inline-block rounded-full border border-indigo-500/20 bg-indigo-500/15 px-3 py-1.5 text-[10px] font-medium tracking-wide text-indigo-400 uppercase">
-                  Comparative Theologian
+                  {tLanding("agents.synthesis.role")}
                 </span>
 
                 {/* Description */}
                 <p className="mb-8 max-w-2xl text-base leading-relaxed text-zinc-400">
-                  Synthesizes all 4 perspectives into a unified comparative essay — identifying
-                  common themes, key differences, and cross-scripture connections with full citation
-                  traceability.
+                  {tLanding("agents.synthesis.description")}
                 </p>
 
                 {/* Output Tags */}
                 <div className="flex flex-wrap gap-2 border-t border-white/[0.06] pt-6">
-                  {["5-Paragraph Essay", "Common Themes", "Key Differences", "Full Citations"].map(
-                    (tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-[10px] font-medium tracking-wide text-zinc-400 uppercase transition-colors hover:bg-white/[0.08] hover:text-zinc-300"
-                      >
-                        {tag}
-                      </span>
-                    )
-                  )}
+                  {[
+                    tLanding("agents.synthesis.tags.essay"),
+                    tLanding("agents.synthesis.tags.themes"),
+                    tLanding("agents.synthesis.tags.differences"),
+                    tLanding("agents.synthesis.tags.citations"),
+                  ].map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-[10px] font-medium tracking-wide text-zinc-400 uppercase transition-colors hover:bg-white/[0.08] hover:text-zinc-300"
+                    >
+                      {tag}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
@@ -526,7 +528,7 @@ export default function HomePage() {
             className="mb-20 text-center"
           >
             <span className="mb-6 inline-block text-xs font-medium tracking-[0.2em] text-[var(--color-accent-primary)] uppercase">
-              Your Journey
+              {tLanding("sections.yourJourney")}
             </span>
             <h2 className="mx-auto max-w-[700px] font-[family-name:var(--font-serif)] text-5xl leading-tight font-normal tracking-tight text-[var(--color-text-primary)] md:text-6xl">
               {tLanding("howItWorks.title")}
@@ -588,7 +590,7 @@ export default function HomePage() {
             <h2 className="mb-8 font-[family-name:var(--font-serif)] text-6xl leading-tight text-[var(--color-text-primary)] md:text-7xl">
               {tLanding("cta.title")}{" "}
               <span className="text-[var(--color-accent-primary)]">
-                {user ? "Discovery" : "Insight"}
+                {user ? tLanding("cta.discovery") : tLanding("cta.insight")}
               </span>
             </h2>
             <p className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-[var(--color-text-secondary)] md:text-xl">
@@ -608,15 +610,15 @@ export default function HomePage() {
             <div className="mt-16 flex items-center justify-center gap-8 text-sm text-[var(--color-text-muted)]">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-[var(--color-accent-primary)]" />
-                <span>No credit card required</span>
+                <span>{tLanding("cta.noCreditCard")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-[var(--color-accent-primary)]" />
-                <span>43,055 verses indexed</span>
+                <span>{tLanding("cta.versesIndexed")}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-[var(--color-accent-primary)]" />
-                <span>5-agent AI analysis</span>
+                <span>{tLanding("cta.agentAnalysis")}</span>
               </div>
             </div>
           </motion.div>

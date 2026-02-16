@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import { ArrowLeft } from "lucide-react"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { springPresets } from "@/lib/design-system"
 import { useRouter } from "next/navigation"
@@ -22,6 +23,8 @@ export function SurahHeader({
   totalVerses,
 }: SurahHeaderProps) {
   const router = useRouter()
+  const t = useTranslations("QuranBrowse")
+  const tCommon = useTranslations("Common")
 
   return (
     <motion.div
@@ -37,7 +40,7 @@ export function SurahHeader({
         className="mb-6 flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to Quran
+        {t("backToQuran")}
       </Button>
 
       <div className="text-center">
@@ -51,7 +54,7 @@ export function SurahHeader({
           {transliteration}
         </h2>
         <p className="text-[var(--color-text-muted)]">
-          {type} • {totalVerses} verses
+          {type} • {tCommon("verses", { count: totalVerses })}
         </p>
       </div>
     </motion.div>

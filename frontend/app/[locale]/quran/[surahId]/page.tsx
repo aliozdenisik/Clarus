@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
 import { useSession } from "@/lib/auth-client"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
@@ -59,6 +60,7 @@ export default function SurahDetailPage() {
   const { data: session, isPending: authLoading } = useSession()
   const user = session?.user
   const router = useRouter()
+  const t = useTranslations("QuranBrowse")
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -134,7 +136,7 @@ export default function SurahDetailPage() {
           return
         }
 
-        toast.error("Failed to load surah")
+        toast.error(t("failedToLoad"))
       } finally {
         if (!controller.signal.aborted) {
           if (isInitialLoad) {
@@ -153,7 +155,7 @@ export default function SurahDetailPage() {
     return () => {
       controller.abort()
     }
-  }, [user, surahId, selectedTranslator])
+  }, [user, surahId, selectedTranslator, t])
 
   const handleVerseClick = (verseId: number) => {
     router.push(`/quran/${surahId}/${verseId}`)
@@ -179,8 +181,8 @@ export default function SurahDetailPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)] p-8">
         <div className="text-center">
-          <p className="mb-4 text-[var(--color-text-muted)]">Surah not found</p>
-          <Button onClick={() => router.push("/quran")}>Back to Quran</Button>
+          <p className="mb-4 text-[var(--color-text-muted)]">{t("surahNotFound")}</p>
+          <Button onClick={() => router.push("/quran")}>{t("backToQuran")}</Button>
         </div>
       </div>
     )
@@ -198,7 +200,9 @@ export default function SurahDetailPage() {
           <div className="flex items-center gap-2">
             <TranslationSelector value={selectedTranslator} onChange={setSelectedTranslator} />
             {isRefreshing && (
-              <span className="text-xs text-[var(--color-text-muted)]">Meali güncelleniyor...</span>
+              <span className="text-xs text-[var(--color-text-muted)]">
+                {t("updatingTranslation")}
+              </span>
             )}
           </div>
         </motion.div>

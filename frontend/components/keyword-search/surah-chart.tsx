@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts"
 import { GlowCard } from "@/components/ui/glow-card"
 import { springPresets } from "@/lib/design-system"
+import { useTranslations } from "next-intl"
 
 interface SurahChartProps {
   data: Array<{
@@ -29,6 +30,7 @@ interface CustomTooltipProps {
       count: number
     }
   }>
+  occurrencesLabel: string
 }
 
 function CustomYAxisTick({ x, y, payload }: CustomYAxisTickProps) {
@@ -48,13 +50,15 @@ function CustomYAxisTick({ x, y, payload }: CustomYAxisTickProps) {
   )
 }
 
-function CustomTooltip({ active, payload }: CustomTooltipProps) {
+function CustomTooltip({ active, payload, occurrencesLabel }: CustomTooltipProps) {
   if (!active || !payload?.length) return null
   const data = payload[0].payload
   return (
     <div className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 shadow-xl">
       <p className="text-sm text-zinc-100">{data.surah_name}</p>
-      <p className="text-xs text-zinc-400">{data.count} kullanım</p>
+      <p className="text-xs text-zinc-400">
+        {data.count} {occurrencesLabel}
+      </p>
     </div>
   )
 }
@@ -65,6 +69,7 @@ const tooltipCursorStyle = { fill: "rgba(99, 102, 241, 0.1)" }
 const barRadius: [number, number, number, number] = [0, 4, 4, 0]
 
 export function SurahChart({ data, language }: SurahChartProps) {
+  const t = useTranslations("KeywordSearch")
   const [showAll, setShowAll] = useState(false)
 
   // Empty state
@@ -77,7 +82,7 @@ export function SurahChart({ data, language }: SurahChartProps) {
       >
         <GlowCard>
           <p className="py-8 text-center text-sm text-[var(--color-text-muted)]">
-            {language === "quran" ? "No surah distribution data" : "No book distribution data"}
+            {language === "quran" ? t("chart.noSurahData") : t("chart.noBookData")}
           </p>
         </GlowCard>
       </motion.div>
@@ -101,7 +106,7 @@ export function SurahChart({ data, language }: SurahChartProps) {
             ◆
           </div>
           <h3 className="text-center text-lg font-medium text-[var(--color-text-primary)]">
-            {language === "quran" ? "Surah Distribution" : "Book Distribution"}
+            {language === "quran" ? t("chart.title") : t("chart.bibleTitle")}
           </h3>
         </div>
 
@@ -126,7 +131,10 @@ export function SurahChart({ data, language }: SurahChartProps) {
               width={90}
               axisLine={axisLineStyle}
             />
-            <Tooltip content={<CustomTooltip />} cursor={tooltipCursorStyle} />
+            <Tooltip
+              content={<CustomTooltip occurrencesLabel={t("chart.occurrences")} />}
+              cursor={tooltipCursorStyle}
+            />
             <Bar
               dataKey="count"
               fill="#6366f1"
@@ -144,7 +152,10 @@ export function SurahChart({ data, language }: SurahChartProps) {
             onClick={() => setShowAll(true)}
             className="mt-4 w-full text-center text-sm text-[var(--color-accent-primary)] hover:underline"
           >
-            Tümünü göster ({sortedData.length} {language === "quran" ? "sure" : "kitap"})
+            {t("chart.showAll", {
+              count: sortedData.length,
+              type: language === "quran" ? t("chart.surahs") : t("chart.books"),
+            })}
           </button>
         )}
       </GlowCard>

@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { VerseLookupInput } from "@/components/verse-lookup"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { BookOpen, Search, User, LogOut } from "lucide-react"
 import { getQuranSurahsApiMetadataQuranSurahsGet } from "@/lib/api/sdk.gen"
 
@@ -42,6 +43,8 @@ export default function QuranPage() {
   const { data: session, isPending: authLoading } = useSession()
   const user = session?.user
   const router = useRouter()
+  const t = useTranslations("QuranBrowse")
+  const tCommon = useTranslations("Common")
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -90,7 +93,7 @@ export default function QuranPage() {
           return
         }
 
-        toast.error("Failed to load surahs")
+        toast.error(t("failedToLoad"))
       } finally {
         if (!controller.signal.aborted) {
           setIsLoading(false)
@@ -105,7 +108,7 @@ export default function QuranPage() {
     return () => {
       controller.abort()
     }
-  }, [user])
+  }, [user, t])
 
   const handleLogout = async () => {
     await signOut()
@@ -195,18 +198,16 @@ export default function QuranPage() {
             <div>
               <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-[var(--color-text-primary)]">
                 <BookOpen className="h-8 w-8 text-[var(--color-accent-primary)]" />
-                Quran Browse
+                {t("title")}
               </h1>
-              <p className="text-[var(--color-text-muted)]">
-                Browse all 114 surahs of the Holy Quran
-              </p>
+              <p className="text-[var(--color-text-muted)]">{t("description")}</p>
             </div>
             <div className="w-full md:w-72">
               <div className="relative">
                 <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
                 <Input
                   type="text"
-                  placeholder="Search surah..."
+                  placeholder={t("searchPlaceholder")}
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
                   className="pl-9"
@@ -256,7 +257,7 @@ export default function QuranPage() {
                           <div className="mt-1 flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
                             <span>{surah.revelation_type}</span>
                             <span>•</span>
-                            <span>{surah.verse_count} verses</span>
+                            <span>{tCommon("verses", { count: surah.verse_count })}</span>
                           </div>
                         </div>
                       </div>
@@ -270,7 +271,7 @@ export default function QuranPage() {
 
         {!isLoading && filteredSurahs.length === 0 && (
           <div className="py-20 text-center text-[var(--color-text-muted)]">
-            No surahs found matching &quot;{filter}&quot;
+            {t("noSurahs", { filter })}
           </div>
         )}
       </div>

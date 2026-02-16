@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { springPresets, tactileScale } from "@/lib/design-system"
 import { cn } from "@/lib/utils"
+import { useTranslations } from "next-intl"
 
 interface DerivedWordsProps {
   words: string[]
@@ -19,6 +20,7 @@ export function DerivedWords({
   transliterations,
   language = "arabic",
 }: DerivedWordsProps) {
+  const t = useTranslations("KeywordSearch")
   const isHebrew = language === "hebrew"
   const isGreek = language === "greek"
 
@@ -26,7 +28,9 @@ export function DerivedWords({
     <div className="space-y-4">
       {/* Section Header */}
       <div className="flex items-center gap-3">
-        <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Derived Words</h3>
+        <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+          {t("derivedWords.title")}
+        </h3>
         <span className="text-[var(--color-text-muted)]">◆</span>
       </div>
 
@@ -45,7 +49,7 @@ export function DerivedWords({
               : "bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)]/80"
           )}
         >
-          All Words
+          {t("derivedWords.allWords")}
         </motion.button>
 
         {words.map((word, index) => (

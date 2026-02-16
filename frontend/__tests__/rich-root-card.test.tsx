@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from "@testing-library/react"
+import { render, screen, waitFor, fireEvent } from "./test-utils"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 import type React from "react"
 
@@ -187,7 +187,8 @@ describe("RichRootCard", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("root-frequency")).toBeInTheDocument()
-      expect(screen.getByText("319 kullanım")).toBeInTheDocument()
+      const badge = screen.getByTestId("root-frequency")
+      expect(badge).toHaveTextContent("319")
     })
   })
 
@@ -258,7 +259,8 @@ describe("RichRootCard", () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText("Lane's Lexicon")).toBeInTheDocument()
+      // Source badge shows "Definition" when source is "lane"
+      expect(screen.getByText("Definition")).toBeInTheDocument()
     })
   })
 
@@ -328,14 +330,14 @@ describe("RichRootCard", () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByText(/Tümünü göster \(10\)/)).toBeInTheDocument()
+      expect(screen.getByText(/Show all \(10 Derived Words\)/)).toBeInTheDocument()
     })
 
-    const showAllButton = screen.getByText(/Tümünü göster \(10\)/)
+    const showAllButton = screen.getByText(/Show all \(10 Derived Words\)/)
     fireEvent.click(showAllButton)
 
     await waitFor(() => {
-      expect(screen.getByText("Daha az göster")).toBeInTheDocument()
+      expect(screen.getByText(/Previous/)).toBeInTheDocument()
     })
   })
 

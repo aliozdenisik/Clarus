@@ -3,6 +3,7 @@
 import { Search, X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useTranslations } from "next-intl"
 
 interface SearchInputProps {
   value: string
@@ -17,8 +18,11 @@ export function SearchInput({
   onChange,
   onSearch,
   isLoading,
-  placeholder = "Search for Arabic roots...",
+  placeholder,
 }: SearchInputProps) {
+  const t = useTranslations("KeywordSearch")
+  const tCommon = useTranslations("Common")
+
   const handleClear = () => {
     onChange("")
   }
@@ -40,7 +44,7 @@ export function SearchInput({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t("placeholderQuran")}
           disabled={isLoading}
           className={cn(
             "h-12 w-full rounded-xl bg-[var(--color-bg-surface)] pr-24 pl-12",
@@ -58,7 +62,7 @@ export function SearchInput({
             type="button"
             onClick={handleClear}
             className="absolute top-1/2 right-20 -translate-y-1/2 text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)]"
-            aria-label="Clear search"
+            aria-label={tCommon("search")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -78,14 +82,12 @@ export function SearchInput({
           disabled={isLoading || !value.trim()}
           className="absolute top-1/2 right-2 h-8 -translate-y-1/2 rounded-lg bg-[var(--color-accent-primary)] px-5 text-sm font-medium tracking-wide text-[#09090b] hover:bg-[var(--color-accent-hover)] disabled:opacity-40"
         >
-          {isLoading ? "Searching..." : "Search"}
+          {isLoading ? t("searching") : t("searchButton")}
         </Button>
       </div>
 
       {/* Helper text */}
-      <p className="pl-1 text-xs text-[var(--color-text-muted)]">
-        Supports Arabic (كتب) and Buckwalter Latin (ktb)
-      </p>
+      <p className="pl-1 text-xs text-[var(--color-text-muted)]">{t("helperText")}</p>
     </div>
   )
 }

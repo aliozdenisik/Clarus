@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { logger } from "@/lib/logger"
 import { API_BASE } from "@/lib/config"
+import { useTranslations } from "next-intl"
 
 interface Book {
   nr: number
@@ -22,6 +23,8 @@ interface Book {
 }
 
 export default function ApocryphaPage() {
+  const t = useTranslations("BibleBrowse")
+  const tCommon = useTranslations("Common")
   const [books, setBooks] = useState<Book[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -66,7 +69,7 @@ export default function ApocryphaPage() {
         }
 
         logger.error("Failed to load books", error, { component: "ApocryphaPage" })
-        toast.error("Failed to load books")
+        toast.error(t("failedToLoad"))
       } finally {
         if (!controller.signal.aborted) {
           setIsLoading(false)
@@ -81,12 +84,12 @@ export default function ApocryphaPage() {
     return () => {
       controller.abort()
     }
-  }, [user])
+  }, [user, t])
 
   const handleLogout = async () => {
     await signOut()
     router.push("/sign-in")
-    toast.success("Logged out successfully")
+    toast.success(tCommon("logoutSuccess"))
   }
 
   const filteredBooks = books.filter((book) =>
@@ -96,7 +99,7 @@ export default function ApocryphaPage() {
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
-        <div className="text-[var(--color-text-secondary)]">Loading...</div>
+        <div className="text-[var(--color-text-secondary)]">{tCommon("loading")}</div>
       </div>
     )
   }
@@ -123,7 +126,7 @@ export default function ApocryphaPage() {
               className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
             >
               <Search className="h-4 w-4" />
-              Search
+              {tCommon("search")}
             </Button>
             <Button
               variant="ghost"
@@ -132,7 +135,7 @@ export default function ApocryphaPage() {
               className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
             >
               <LogOut className="h-4 w-4" />
-              Logout
+              {tCommon("logout")}
             </Button>
           </div>
         </motion.div>
@@ -145,9 +148,9 @@ export default function ApocryphaPage() {
         >
           <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-[var(--color-text-primary)]">
             <BookOpen className="h-8 w-8 text-[var(--color-accent-primary)]" />
-            Apocrypha
+            {t("apocryphaTitle")}
           </h1>
-          <p className="text-[var(--color-text-secondary)]">Browse the books of the Apocrypha</p>
+          <p className="text-[var(--color-text-secondary)]">{t("apocryphaDescription")}</p>
         </motion.div>
 
         {/* Search */}
@@ -159,7 +162,7 @@ export default function ApocryphaPage() {
         >
           <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
           <Input
-            placeholder="Search book..."
+            placeholder={t("searchPlaceholderApocrypha")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] pl-10"
@@ -192,9 +195,9 @@ export default function ApocryphaPage() {
                         </h3>
                       </div>
                       <div className="mt-4 flex items-center justify-between border-t border-[var(--color-border-subtle)] pt-4 text-xs text-[var(--color-text-muted)]">
-                        <span>{book.chapters_count} chapters</span>
+                        <span>{tCommon("chapters", { count: book.chapters_count })}</span>
                         <span className="font-medium text-[var(--color-accent-primary)] opacity-0 transition-opacity group-hover:opacity-100">
-                          Read &rarr;
+                          {tCommon("read")} &rarr;
                         </span>
                       </div>
                     </div>
@@ -205,7 +208,7 @@ export default function ApocryphaPage() {
 
         {!isLoading && filteredBooks.length === 0 && (
           <div className="py-20 text-center text-[var(--color-text-muted)]">
-            <p>No books found matching &quot;{searchQuery}&quot;</p>
+            <p>{t("noBooks", { query: searchQuery })}</p>
           </div>
         )}
       </div>

@@ -1,11 +1,13 @@
 "use client"
 import Link from "next/link"
 import Image from "next/image"
+import { useTranslations } from "next-intl"
 
 import { Icons } from "@/components/ui/icons"
 import { Button } from "@/components/ui/button"
 
 function Footer() {
+  const t = useTranslations("Footer")
   return (
     <footer className="bg-background border-border/40 border-t px-4 py-12 md:px-6">
       <div className="container mx-auto">
@@ -22,31 +24,29 @@ function Footer() {
               <h2 className="text-lg font-bold">Clarus</h2>
             </Link>
 
-            <p className="mt-4 max-w-xs dark:text-gray-300">
-              Maximum-accuracy RAG search for sacred texts with AI-powered comparative analysis.
-            </p>
+            <p className="mt-4 max-w-xs dark:text-gray-300">{t("description")}</p>
             <div className="mt-4">
               <Link href="https://github.com/aliozdenisik/Clarus">
                 <Button variant="secondary">
-                  Star on GitHub
+                  {t("starOnGithub")}
                   <Icons.gitHub className="ml-1 h-4 w-4" />
                 </Button>
               </Link>
             </div>
             <p className="mt-5 text-sm dark:text-gray-400">
-              © {new Date().getFullYear()} Clarus. All rights reserved.
+              {t("copyright", { year: new Date().getFullYear() })}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-8 md:grid-cols-3">
             <div>
-              <h3 className="mb-4 font-semibold">Pages</h3>
+              <h3 className="mb-4 font-semibold">{t("pages")}</h3>
               <ul className="space-y-2">
                 <li>
                   <Link
                     href="/search"
                     className="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white"
                   >
-                    Search
+                    {t("search")}
                   </Link>
                 </li>
                 <li>
@@ -54,7 +54,7 @@ function Footer() {
                     href="/compare"
                     className="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white"
                   >
-                    Compare
+                    {t("compare")}
                   </Link>
                 </li>
                 <li>
@@ -62,7 +62,7 @@ function Footer() {
                     href="/keyword-search"
                     className="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white"
                   >
-                    Keyword Search
+                    {t("keywordSearch")}
                   </Link>
                 </li>
                 <li>
@@ -70,7 +70,7 @@ function Footer() {
                     href="/history"
                     className="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white"
                   >
-                    History
+                    {t("history")}
                   </Link>
                 </li>
                 <li>
@@ -78,20 +78,20 @@ function Footer() {
                     href="/settings"
                     className="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white"
                   >
-                    Settings
+                    {t("settings")}
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="mb-4 font-semibold">Scriptures</h3>
+              <h3 className="mb-4 font-semibold">{t("scriptures")}</h3>
               <ul className="space-y-2">
                 <li>
                   <Link
                     href="/quran"
                     className="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white"
                   >
-                    Quran
+                    {t("quran")}
                   </Link>
                 </li>
                 <li>
@@ -99,7 +99,7 @@ function Footer() {
                     href="/old-testament"
                     className="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white"
                   >
-                    Old Testament
+                    {t("oldTestament")}
                   </Link>
                 </li>
                 <li>
@@ -107,7 +107,7 @@ function Footer() {
                     href="/new-testament"
                     className="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white"
                   >
-                    New Testament
+                    {t("newTestament")}
                   </Link>
                 </li>
                 <li>
@@ -115,20 +115,20 @@ function Footer() {
                     href="/apocrypha"
                     className="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white"
                   >
-                    Apocrypha
+                    {t("apocrypha")}
                   </Link>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="mb-4 font-semibold">Links</h3>
+              <h3 className="mb-4 font-semibold">{t("links")}</h3>
               <ul className="space-y-2">
                 <li>
                   <Link
                     href="https://github.com/aliozdenisik/Clarus"
                     className="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white"
                   >
-                    GitHub
+                    {t("github")}
                   </Link>
                 </li>
                 <li>
@@ -136,7 +136,7 @@ function Footer() {
                     href="https://github.com/aliozdenisik/Clarus/issues"
                     className="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white"
                   >
-                    Report Issue
+                    {t("reportIssue")}
                   </Link>
                 </li>
               </ul>

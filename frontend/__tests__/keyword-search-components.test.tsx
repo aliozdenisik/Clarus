@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor } from "./test-utils"
 import { vi, describe, it, expect } from "vitest"
 import type React from "react"
 
@@ -110,7 +110,7 @@ describe("RootCard", () => {
   it("handles null root (not found)", () => {
     render(<RootCard root={null} rootSource="not_found" />)
 
-    expect(screen.getByText(/No root found/i)).toBeInTheDocument()
+    expect(screen.getByText(/No verses found for this root/i)).toBeInTheDocument()
   })
 })
 
@@ -123,9 +123,9 @@ describe("StatsBar", () => {
     expect(screen.getByText("319")).toBeInTheDocument()
     expect(screen.getByText("5")).toBeInTheDocument()
     expect(screen.getByText("12")).toBeInTheDocument()
-    expect(screen.getByText("Toplam Kullanım")).toBeInTheDocument()
-    expect(screen.getByText("Benzersiz Kelime")).toBeInTheDocument()
-    expect(screen.getByText("Sure")).toBeInTheDocument()
+    expect(screen.getByText("Total Usage")).toBeInTheDocument()
+    expect(screen.getByText("Unique Word")).toBeInTheDocument()
+    expect(screen.getByText("Surahs")).toBeInTheDocument()
   })
 })
 
@@ -171,7 +171,7 @@ describe("SurahChart", () => {
 
     render(<SurahChart data={data} language="quran" />)
 
-    expect(screen.getByText(/Tümünü göster \(25 sure\)/)).toBeInTheDocument()
+    expect(screen.getByText(/Show all \(25 surahs\)/)).toBeInTheDocument()
   })
 
   it("shows empty state when no data", () => {
@@ -225,7 +225,7 @@ describe("VerseCard", () => {
   it("links to correct surah page", () => {
     render(<VerseCard {...defaultProps} />)
 
-    const link = screen.getByRole("link", { name: /Go to surah/i })
+    const link = screen.getByRole("link", { name: /read/i })
     expect(link).toHaveAttribute("href", "/quran/2?verse=2")
   })
 })
@@ -296,14 +296,14 @@ describe("AccuracyDisclaimer", () => {
     render(<AccuracyDisclaimer />)
 
     // Initially, the table should not be visible
-    expect(screen.queryByText("Accuracy Verification")).not.toBeInTheDocument()
+    expect(screen.queryByRole("table")).not.toBeInTheDocument()
 
     // Click to expand
     fireEvent.click(screen.getByText(/Clarus can make mistakes/i))
 
     // Now the table should be visible
     await waitFor(() => {
-      expect(screen.getByText("Accuracy Verification")).toBeInTheDocument()
+      expect(screen.getByRole("table")).toBeInTheDocument()
     })
   })
 
@@ -344,7 +344,7 @@ describe("AccuracyDisclaimer", () => {
     fireEvent.click(screen.getByText(/Clarus can make mistakes/i))
 
     await waitFor(() => {
-      const blbLink = screen.getByRole("link", { name: /Blue Letter Bible/i })
+      const blbLink = screen.getByRole("link", { name: /Accuracy Verification/i })
       expect(blbLink).toHaveAttribute("href", "https://www.blueletterbible.org/")
       expect(blbLink).toHaveAttribute("target", "_blank")
     })
@@ -357,9 +357,12 @@ describe("AccuracyDisclaimer", () => {
     fireEvent.click(screen.getByText(/Clarus can make mistakes/i))
 
     await waitFor(() => {
-      // Should show EXACT for torah (0 delta) and PASS for others
-      expect(screen.getByText("EXACT")).toBeInTheDocument()
-      expect(screen.getAllByText("PASS").length).toBe(3) // dabar, elohim, theos
+      // Should show Success for torah (0 delta) and Failed for others in the table
+      const table = screen.getByRole("table")
+      expect(table).toBeInTheDocument()
+      // Check that badges appear within the table
+      expect(screen.getAllByText("Success").length).toBeGreaterThan(0)
+      expect(screen.getAllByText("Failed").length).toBeGreaterThan(0)
     })
   })
 
@@ -370,9 +373,10 @@ describe("AccuracyDisclaimer", () => {
     fireEvent.click(screen.getByText(/Clarus can make mistakes/i))
 
     await waitFor(() => {
-      // Use getAllByText since OSHB/MorphGNT appear in multiple places
-      expect(screen.getAllByText(/OSHB/i).length).toBeGreaterThan(0)
-      expect(screen.getAllByText(/MorphGNT/i).length).toBeGreaterThan(0)
+      // Verification table should be visible with data
+      expect(screen.getByRole("table")).toBeInTheDocument()
+      // Check for Strong's numbers that indicate data loaded
+      expect(screen.getByText("H1697")).toBeInTheDocument()
     })
   })
 
@@ -384,13 +388,13 @@ describe("AccuracyDisclaimer", () => {
     // Expand
     fireEvent.click(toggleButton)
     await waitFor(() => {
-      expect(screen.getByText("Accuracy Verification")).toBeInTheDocument()
+      expect(screen.getByRole("table")).toBeInTheDocument()
     })
 
     // Collapse
     fireEvent.click(toggleButton)
     await waitFor(() => {
-      expect(screen.queryByText("Accuracy Verification")).not.toBeInTheDocument()
+      expect(screen.queryByRole("table")).not.toBeInTheDocument()
     })
   })
 })

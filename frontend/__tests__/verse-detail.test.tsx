@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { render, screen, waitFor } from "./test-utils"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 import type React from "react"
 
@@ -277,7 +277,7 @@ describe("VerseDetailPage", () => {
     render(<VerseDetailPage />)
 
     await waitFor(() => {
-      expect(screen.getByText("Çeviri mevcut değil")).toBeInTheDocument()
+      expect(screen.getByText("Translation not available")).toBeInTheDocument()
     })
   })
 })

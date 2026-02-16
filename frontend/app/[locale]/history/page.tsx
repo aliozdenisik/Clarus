@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { useTranslations } from "next-intl"
 import { motion, AnimatePresence } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
 import { useSession, signOut } from "@/lib/auth-client"
@@ -44,27 +45,28 @@ interface PaginationData {
   pages: number
 }
 
-const SEARCH_TYPE_LABELS: Record<string, string> = {
+const SEARCH_TYPE_KEYS: Record<string, string> = {
   // Standard search
-  search_quran: "Quran",
-  search_bible_all: "Bible",
-  search_bible_ot: "Old Testament",
-  search_bible_nt: "New Testament",
-  search_bible_apocrypha: "Apocrypha",
+  search_quran: "searchTypes.quran",
+  search_bible_all: "searchTypes.bible",
+  search_bible_ot: "searchTypes.oldTestament",
+  search_bible_nt: "searchTypes.newTestament",
+  search_bible_apocrypha: "searchTypes.apocrypha",
   // Streaming search
-  stream_search_quran: "Quran",
-  stream_search_bible: "Bible",
-  stream_search_ot: "Old Testament",
-  stream_search_nt: "New Testament",
-  stream_search_apocrypha: "Apocrypha",
+  stream_search_quran: "searchTypes.quran",
+  stream_search_bible: "searchTypes.bible",
+  stream_search_ot: "searchTypes.oldTestament",
+  stream_search_nt: "searchTypes.newTestament",
+  stream_search_apocrypha: "searchTypes.apocrypha",
   // Compare
-  compare: "Compare",
-  compare_multi_agent: "Multi-Agent",
-  stream_compare: "Compare",
+  compare: "searchTypes.compare",
+  compare_multi_agent: "searchTypes.multiAgent",
+  stream_compare: "searchTypes.compare",
 }
 
-function getSearchTypeLabel(searchType: string): string {
-  return SEARCH_TYPE_LABELS[searchType] || "Search"
+function getSearchTypeLabel(searchType: string, t: (key: string) => string): string {
+  const key = SEARCH_TYPE_KEYS[searchType] || "searchTypes.search"
+  return t(key)
 }
 
 function getHistoryItemUrl(item: HistoryItem): string {
@@ -106,6 +108,8 @@ function getHistoryItemUrl(item: HistoryItem): string {
 }
 
 export default function HistoryPage() {
+  const t = useTranslations("History")
+  const tCommon = useTranslations("Common")
   const [items, setItems] = useState<HistoryItem[]>([])
   const [pagination, setPagination] = useState<PaginationData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -120,53 +124,56 @@ export default function HistoryPage() {
     }
   }, [user, authLoading, router])
 
-  const fetchHistory = async (page = 1) => {
-    try {
-      setIsLoading(true)
-      const response = await getSearchHistoryApiSearchHistoryGet({
-        query: { page, limit: 20 },
-      })
-
-      // ACTUAL backend response structure (from backend/app/api/search.py:262-273):
-      // { success: true, data: [...], pagination: { page, limit, total_items, total_pages, has_next, has_prev } }
-      if (response.data) {
-        const body = response.data as {
-          success: boolean
-          data: HistoryItem[]
-          pagination: {
-            page: number
-            limit: number
-            total_items: number
-            total_pages: number
-            has_next: boolean
-            has_prev: boolean
-          }
-        }
-        setItems(body.data)
-        setPagination({
-          total: body.pagination.total_items,
-          page: body.pagination.page,
-          per_page: body.pagination.limit,
-          pages: body.pagination.total_pages,
+  const fetchHistory = useCallback(
+    async (page = 1) => {
+      try {
+        setIsLoading(true)
+        const response = await getSearchHistoryApiSearchHistoryGet({
+          query: { page, limit: 20 },
         })
+
+        // ACTUAL backend response structure (from backend/app/api/search.py:262-273):
+        // { success: true, data: [...], pagination: { page, limit, total_items, total_pages, has_next, has_prev } }
+        if (response.data) {
+          const body = response.data as {
+            success: boolean
+            data: HistoryItem[]
+            pagination: {
+              page: number
+              limit: number
+              total_items: number
+              total_pages: number
+              has_next: boolean
+              has_prev: boolean
+            }
+          }
+          setItems(body.data)
+          setPagination({
+            total: body.pagination.total_items,
+            page: body.pagination.page,
+            per_page: body.pagination.limit,
+            pages: body.pagination.total_pages,
+          })
+        }
+      } catch {
+        toast.error(t("failedToLoad"))
+      } finally {
+        setIsLoading(false)
       }
-    } catch {
-      toast.error("Failed to load history")
-    } finally {
-      setIsLoading(false)
-    }
-  }
+    },
+    [t]
+  )
 
   useEffect(() => {
     if (user) {
       fetchHistory()
     }
-  }, [user])
+  }, [user, fetchHistory])
 
   const handleLogout = async () => {
     await signOut()
     router.push("/sign-in")
-    toast.success("Logged out successfully")
+    toast.success(tCommon("loggedOutSuccessfully"))
   }
 
   const handleDelete = async (id: number) => {
@@ -176,7 +183,7 @@ export default function HistoryPage() {
       })
 
       setItems((prev) => prev.filter((item) => item.id !== id))
-      toast.success("Item deleted")
+      toast.success(t("deleted"))
 
       if (items.length === 1 && pagination && pagination.page > 1) {
         fetchHistory(pagination.page - 1)
@@ -184,12 +191,12 @@ export default function HistoryPage() {
         fetchHistory(1)
       }
     } catch {
-      toast.error("Failed to delete item")
+      toast.error(t("deleteFailed"))
     }
   }
 
   const handleClearAll = async () => {
-    if (!confirm("Are you sure you want to clear all history?")) return
+    if (!confirm(t("confirmClear"))) return
 
     try {
       setIsClearing(true)
@@ -197,9 +204,9 @@ export default function HistoryPage() {
 
       setItems([])
       setPagination(null)
-      toast.success("History cleared")
+      toast.success(t("cleared"))
     } catch {
-      toast.error("Failed to clear history")
+      toast.error(t("clearFailed"))
     } finally {
       setIsClearing(false)
     }
@@ -218,7 +225,7 @@ export default function HistoryPage() {
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
-        <div className="text-[var(--color-text-secondary)]">Loading...</div>
+        <div className="text-[var(--color-text-secondary)]">{t("loading")}</div>
       </div>
     )
   }
@@ -264,7 +271,7 @@ export default function HistoryPage() {
               className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
             >
               <Search className="h-4 w-4" />
-              Search
+              {tCommon("search")}
             </Button>
             <Button
               variant="ghost"
@@ -273,7 +280,7 @@ export default function HistoryPage() {
               className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
             >
               <LogOut className="h-4 w-4" />
-              Logout
+              {tCommon("logout")}
             </Button>
           </div>
         </motion.div>
@@ -288,11 +295,9 @@ export default function HistoryPage() {
           <div>
             <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-[var(--color-text-primary)]">
               <HistoryIcon className="h-8 w-8 text-[var(--color-accent-primary)]" />
-              Search History
+              {t("title")}
             </h1>
-            <p className="text-[var(--color-text-muted)]">
-              View and manage your past search queries
-            </p>
+            <p className="text-[var(--color-text-muted)]">{t("subtitle")}</p>
           </div>
           {items && items.length > 0 && (
             <Button
@@ -303,7 +308,7 @@ export default function HistoryPage() {
               className="flex items-center gap-2"
             >
               <Trash2 className="h-4 w-4" />
-              Clear All
+              {t("clearAll")}
             </Button>
           )}
         </motion.div>
@@ -311,7 +316,7 @@ export default function HistoryPage() {
         {/* Content */}
         {isLoading ? (
           <div className="space-y-4">
-            <div className="mb-4 text-[var(--color-text-secondary)]">Loading history...</div>
+            <div className="mb-4 text-[var(--color-text-secondary)]">{t("loadingHistory")}</div>
             {[...Array(5)].map((_, i) => (
               <Skeleton key={`history-skeleton-${i}`} className="h-24 w-full" />
             ))}
@@ -331,10 +336,10 @@ export default function HistoryPage() {
               </div>
             </div>
             <h3 className="mb-2 text-xl font-medium text-[var(--color-text-primary)]">
-              No search history yet
+              {t("empty")}
             </h3>
             <p className="mb-8 max-w-sm text-center text-sm text-[var(--color-text-muted)]">
-              Your searches will appear here. Start exploring sacred texts to build your history.
+              {t("emptyMessage")}
             </p>
             <GlowingButton
               onClick={() => router.push("/search")}
@@ -343,7 +348,7 @@ export default function HistoryPage() {
             >
               <span className="flex items-center gap-2">
                 <Search className="h-4 w-4" />
-                Start Searching
+                {t("startSearching")}
               </span>
             </GlowingButton>
           </motion.div>
@@ -366,7 +371,7 @@ export default function HistoryPage() {
                       <div className="flex-1">
                         <div className="mb-1 flex items-center gap-3">
                           <span className="text-sm font-medium text-[var(--color-accent-primary)] uppercase">
-                            {getSearchTypeLabel(item.search_type)}
+                            {getSearchTypeLabel(item.search_type, t)}
                           </span>
                           <span className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
                             <Clock className="h-3 w-3" />
@@ -380,7 +385,7 @@ export default function HistoryPage() {
                         </p>
                         {item.result_count != null && item.result_count > 0 && (
                           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                            {item.result_count} {item.result_count === 1 ? "result" : "results"}
+                            {t("resultsCount", { count: item.result_count })}
                           </p>
                         )}
                       </div>
@@ -413,10 +418,10 @@ export default function HistoryPage() {
                   className="flex items-center gap-2"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  {t("pagination.previous")}
                 </Button>
                 <span className="text-sm text-[var(--color-text-secondary)]">
-                  Page {pagination.page} of {pagination.pages}
+                  {t("pagination.page", { page: pagination.page, pages: pagination.pages })}
                 </span>
                 <Button
                   variant="outline"
@@ -425,7 +430,7 @@ export default function HistoryPage() {
                   disabled={pagination.page === pagination.pages}
                   className="flex items-center gap-2"
                 >
-                  Next
+                  {t("pagination.next")}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

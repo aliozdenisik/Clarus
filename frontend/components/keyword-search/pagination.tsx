@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 interface PaginationProps {
   page: number
@@ -20,6 +21,8 @@ export function Pagination({
   hasPrev,
   onPageChange,
 }: PaginationProps) {
+  const t = useTranslations("KeywordSearch")
+
   if (totalPages <= 1) return null
 
   return (
@@ -32,11 +35,11 @@ export function Pagination({
         className="text-[var(--color-text-secondary)]"
       >
         <ChevronLeft className="mr-1 h-4 w-4" />
-        Previous
+        {t("pagination.previous")}
       </Button>
 
       <span className="text-sm text-[var(--color-text-muted)]">
-        Page {page} of {totalPages} ({totalVerses} verses)
+        {t("pagination.pageWithVerses", { page, totalPages, totalVerses })}
       </span>
 
       <Button
@@ -46,7 +49,7 @@ export function Pagination({
         onClick={() => onPageChange(page + 1)}
         className="text-[var(--color-text-secondary)]"
       >
-        Next
+        {t("pagination.next")}
         <ChevronRight className="ml-1 h-4 w-4" />
       </Button>
     </div>

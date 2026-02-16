@@ -26,7 +26,13 @@
     "signUp": "Kayıt Ol",
     "results": "Sonuçlar",
     "filters": "Filtreler",
-    "settings": "Ayarlar"
+    "settings": "Ayarlar",
+    "chapters": "{count} bölüm",
+    "verses": "{count} ayet",
+    "read": "Oku",
+    "logoutSuccess": "Çıkış başarılı",
+    "result": "sonuç",
+    "resultPlural": "sonuç"
   },
   "Navigation": {
     "search": "Ara",
@@ -66,6 +72,12 @@
       "signIn": "Giriş Yap",
       "goToSearch": "Aramaya Git",
       "goToCompare": "Karşılaştırmaya Git"
+    },
+    "sections": {
+      "whyClarus": "Neden Clarus",
+      "builtForDepth": "Hız İçin Değil, Derinlik İçin",
+      "coreFeature": "Temel Özellik",
+      "yourJourney": "Yolculuğunuz"
     },
     "features": {
       "semantic": {
@@ -109,6 +121,8 @@
     },
     "agents": {
       "title": "Çoklu-Ajan Analizi",
+      "subtitle": "Her soru 5 uzman yapay zeka ajanı tarafından paralel olarak analiz edilir — 4 kutsal metin uzmanı ve 1 karşılaştırmalı teolog — tam atıflarla kapsamlı bir deneme üretir.",
+      "versesIndexed": "ayet indeksli",
       "quran": {
         "name": "Kuran Ajanı",
         "role": "Kuran Uzmanı",
@@ -136,14 +150,49 @@
         "description": "Bilgelik, Sira ve Makabiler gibi kitapları keşfeder — Hristiyan geleneklerinde değer gören kutsal metinler, tam referanslarla atıflanır.",
         "collection": "bible_apocrypha",
         "verseCount": "5.717"
+      },
+      "synthesis": {
+        "name": "Sentez Ajanı",
+        "role": "Karşılaştırmalı Teolog",
+        "description": "4 bakış açısını birleşik bir karşılaştırmalı denemeye sentezler — ortak temaları, temel farklılıkları ve kutsal metinler arası bağlantıları tam atıf izlenebilirliğiyle belirler.",
+        "tags": {
+          "essay": "5 Paragraflık Deneme",
+          "themes": "Ortak Temalar",
+          "differences": "Temel Farklılıklar",
+          "citations": "Tam Atıflar"
+        }
       }
     },
     "cta": {
       "title": "Keşfetmeye Hazır mısınız?",
       "description": "Yapay zeka destekli içgörülerle kutsal metinlerdeki yolculuğunuza başlayın.",
       "signUp": "Şimdi Kayıt Olun",
-      "learnMore": "Daha Fazla Bilgi"
+      "learnMore": "Daha Fazla Bilgi",
+      "discovery": "Keşif",
+      "insight": "İçgörü",
+      "noCreditCard": "Kredi kartı gerekmez",
+      "versesIndexed": "43.055 ayet indeksli",
+      "agentAnalysis": "5 ajanlı yapay zeka analizi"
     }
+  },
+  "Footer": {
+    "description": "Yapay zeka destekli karşılaştırmalı analizle kutsal metinler için maksimum doğrulukta RAG araması.",
+    "starOnGithub": "GitHub'da Yıldızla",
+    "copyright": "© {year} Clarus. Tüm hakları saklıdır.",
+    "pages": "Sayfalar",
+    "scriptures": "Kutsal Metinler",
+    "links": "Bağlantılar",
+    "search": "Ara",
+    "compare": "Karşılaştır",
+    "keywordSearch": "Kelime Arama",
+    "history": "Geçmiş",
+    "settings": "Ayarlar",
+    "quran": "Kuran",
+    "oldTestament": "Eski Ahit",
+    "newTestament": "Yeni Ahit",
+    "apocrypha": "Apokrif",
+    "github": "GitHub",
+    "reportIssue": "Hata Bildir"
   },
   "Search": {
     "title": "Ara",
@@ -284,8 +333,16 @@
   },
   "KeywordSearch": {
     "title": "Morfolojik Anahtar Kelime Arama",
+    "pageTitle": "Kelime Arama",
     "subtitle": "Arapça, İbranice veya Yunanca köklerle arama",
+    "subtitleQuran": "Arapça kökleri ve Kuran'daki izlerini keşfedin",
+    "subtitleHebrew": "İbranice kökleri ve İncil'deki izlerini keşfedin",
+    "subtitleGreek": "Yunanca kökleri ve Yeni Ahit'teki izlerini keşfedin",
     "searchPlaceholder": "Arapça kök, Buckwalter veya İbranice/Yunanca girin...",
+    "placeholderQuran": "Arapça kök arayın (örn: كتب veya ktb)...",
+    "placeholderHebrew": "İbranice kök arayın (örn: כתב veya H3789)...",
+    "placeholderGreek": "Yunanca kök arayın (örn: βιβλος veya G976)...",
+    "helperText": "Arapça (كتب) ve Buckwalter Latin (ktb) destekler",
     "searching": "Aranıyor...",
     "searchButton": "Kökü Ara",
     "tabs": {
@@ -293,21 +350,27 @@
       "browser": "Kök Tarayıcı"
     },
     "language": {
-      "quran": "Kuran (Arapça)",
-      "oldTestament": "Eski Ahit (İbranice)",
-      "newTestament": "Yeni Ahit (Yunanca)"
+      "quran": "Kuran Arapça",
+      "oldTestament": "İbranice Eski Ahit",
+      "newTestament": "Yunanca Yeni Ahit"
     },
     "bibleCategory": {
-      "all": "Tüm Kitaplar",
+      "all": "Tümü",
       "oldTestament": "Eski Ahit",
-      "newTestament": "Yeni Ahit"
+      "newTestament": "Yeni Ahit",
+      "apocrypha": "Apokrif",
+      "pseudepigrapha": "Pseudepigrafa",
+      "gnostic": "Gnostik",
+      "apostolicFathers": "Apostolik Babalar"
     },
     "stats": {
       "root": "Kök",
       "occurrences": "Geçiş Sayısı",
       "uniqueWords": "Benzersiz Kelimeler",
       "surahs": "Sureler",
-      "books": "Kitaplar"
+      "books": "Kitaplar",
+      "totalUsage": "Toplam Kullanım",
+      "uniqueWord": "Benzersiz Kelime"
     },
     "rootInfo": {
       "title": "Kök Bilgisi",
@@ -317,21 +380,42 @@
     },
     "derivedWords": {
       "title": "Türetilmiş Kelimeler",
-      "showing": "{count} türetilmiş kelime gösteriliyor"
+      "showing": "{count} türetilmiş kelime gösteriliyor",
+      "allWords": "Tüm Kelimeler"
     },
     "chart": {
       "title": "Surelere Göre Dağılım",
       "bibleTitle": "Kitaplara Göre Dağılım",
-      "occurrences": "Geçiş Sayısı"
+      "occurrences": "Geçiş Sayısı",
+      "noSurahData": "Sure dağılım verisi yok",
+      "noBookData": "Kitap dağılım verisi yok",
+      "showAll": "Tümünü göster ({count} {type})",
+      "surahs": "sure",
+      "books": "kitap"
     },
     "pagination": {
       "showing": "{total} sonuçtan {from}-{to} gösteriliyor",
       "previous": "Önceki",
       "next": "Sonraki",
-      "page": "{pages} sayfadan {page}. sayfa"
+      "page": "{pages} sayfadan {page}. sayfa",
+      "pageWithVerses": "{totalPages} sayfadan {page}. sayfa ({totalVerses} ayet)"
     },
+    "verseResults": "Ayet Sonuçları",
     "noResults": "Bu kök için ayet bulunamadı",
+    "noRootFound": "\"{query}\" için kök bulunamadı",
+    "tryDifferentQuran": "Farklı bir Arapça kelime veya Buckwalter transliterasyonu deneyin.",
+    "tryDifferentHebrew": "Farklı bir İbranice kelime veya Strong numarası deneyin.",
+    "tryDifferentGreek": "Farklı bir Yunanca kelime veya Strong numarası deneyin.",
+    "emptyStateQuran": "Kuran'daki izlerini keşfetmek için herhangi bir Arapça kök veya kelime arayın",
+    "emptyStateHebrew": "İncil'deki izlerini keşfetmek için herhangi bir İbranice kök veya kelime arayın",
+    "emptyStateGreek": "Yeni Ahit'teki izlerini keşfetmek için herhangi bir Yunanca kök veya kelime arayın",
+    "errorQuran": "Lütfen bir Arapça kelime veya Buckwalter kökü girin",
+    "errorHebrew": "Lütfen bir İbranice kelime veya Strong numarası girin",
+    "errorGreek": "Lütfen bir Yunanca kelime veya Strong numarası girin",
+    "detectedBuckwalter": "Algılanan: Buckwalter Latin → Arapça:",
+    "rateLimited": "Günlük arama limiti doldu. Lütfen yarın tekrar deneyin.",
     "searchFailed": "Arama başarısız. Lütfen tekrar deneyin.",
+    "translationNotAvailable": "Çeviri mevcut değil",
     "disclaimer": {
       "title": "Doğruluk Uyarısı",
       "content": "Morfolojik analiz hesaplamalıdır ve hatalar içerebilir. Her zaman akademik kaynaklarla doğrulayın.",
@@ -339,7 +423,7 @@
     },
     "experimental": {
       "title": "Deneysel Özellik",
-      "content": "Bu özellik deneyseldir ve aktif geliştirme aşamasındadır. Sonuçlar doğruluk açısından değişiklik gösterebilir.",
+      "content": "Bu morfolojik arama aktif geliştirme aşamasındadır. Sonuçlar akademik veya teolojik araştırma için tek başına kaynak olarak kullanılmamalıdır. Her zaman yetkili kaynaklarla doğrulayın.",
       "understand": "Anladım"
     },
     "browser": {
@@ -347,25 +431,64 @@
       "searchPlaceholder": "Kökleri filtrele...",
       "totalRoots": "{count} kök mevcut",
       "loading": "Kökler yükleniyor...",
-      "noRoots": "Kök bulunamadı"
+      "noRoots": "Kök bulunamadı",
+      "arabicRoots": "Arapça Kökler",
+      "byFrequency": "Sıklığa Göre",
+      "alphabetical": "Alfabetik",
+      "featuredRoots": "Öne Çıkan / En Sık Kökler",
+      "noRootsMatch": "Filtrenizle eşleşen kök yok",
+      "noRootsAvailable": "Mevcut kök yok"
+    },
+    "accuracy": {
+      "verifyInfo": "Clarus hata yapabilir. Önemli bilgileri doğrulayın.",
+      "verificationTitle": "Doğruluk Kontrolü"
     }
   },
-  "VerseLookup": {
-    "placeholder": "Ayet referansı girin (örn: Bakara 2:255)",
-    "biblePlaceholder": "Ayet referansı girin (örn: Yuhanna 3:16)",
-    "lookup": "Bul",
-    "lookingUp": "Bulunuyor...",
+  "BibleBrowse": {
+    "oldTestamentTitle": "Eski Ahit",
+    "oldTestamentDescription": "Eski Ahit'in (Tanah) 39 kitabına göz atın",
+    "newTestamentTitle": "Yeni Ahit",
+    "newTestamentDescription": "Yeni Ahit'in 27 kitabına göz atın",
+    "apocryphaTitle": "Apokrif",
+    "apocryphaDescription": "Apokrif kitaplarına göz atın",
+    "searchPlaceholderOT": "Kitap ara (İngilizce veya İbranice)...",
+    "searchPlaceholderNT": "Kitap ara (İngilizce veya Yunanca)...",
+    "searchPlaceholderApocrypha": "Kitap ara...",
+    "noBooks": "\"{query}\" ile eşleşen kitap bulunamadı",
+    "failedToLoad": "Kitaplar yüklenemedi",
+    "backToOldTestament": "Eski Ahit'e Dön",
+    "backToNewTestament": "Yeni Ahit'e Dön",
+    "backToApocrypha": "Apokrif'e Dön",
+    "bookNotFound": "Kitap bulunamadı",
+    "backToBooks": "Kitaplara Dön",
+    "selectChapter": "Bölüm Seçin",
+    "chapterTitle": "Bölüm {chapter}",
+    "selectChapterPrompt": "Okumaya başlamak için bir bölüm seçin",
+    "failedToLoadChapter": "Bölüm yüklenemedi"
+  },
+  "QuranBrowse": {
+    "title": "Kuran'a Gözat",
+    "description": "Kutsal Kuran'ın 114 suresinin tamamına göz atın",
+    "searchPlaceholder": "Sure ara...",
+    "noSurahs": "\"{filter}\" ile eşleşen sure bulunamadı",
+    "failedToLoad": "Sureler yüklenemedi",
+    "backToQuran": "Kuran'a Dön",
+    "surahNotFound": "Sure bulunamadı",
+    "updatingTranslation": "Meali güncelleniyor...",
     "verseNotFound": "Ayet bulunamadı",
-    "invalidReference": "Geçersiz ayet referans formatı",
-    "exampleQuran": "Örnek: Fatiha 1:1",
-    "exampleBible": "Örnek: Tekvin 1:1"
+    "backToSurah": "Sure sayfasına dön",
+    "translationNotAvailable": "Çeviri mevcut değil",
+    "previousVerse": "Önceki Ayet",
+    "nextVerse": "Sonraki Ayet",
+    "failedToLoadVerse": "Ayet çevirileri yüklenemedi"
   },
   "History": {
     "title": "Arama Geçmişi",
-    "subtitle": "Son aramalarınız ve analizleriniz",
+    "subtitle": "Son aramalarınızı görüntüleyin ve yönetin",
     "empty": "Henüz arama geçmişi yok",
-    "emptyMessage": "Geçmiş oluşturmak için aramaya başlayın",
-    "clearAll": "Tüm Geçmişi Temizle",
+    "emptyMessage": "Aramalarınız burada görünecek. Geçmişinizi oluşturmak için kutsal metinleri keşfetmeye başlayın.",
+    "startSearching": "Aramaya Başla",
+    "clearAll": "Tümünü Temizle",
     "deleteItem": "Sil",
     "confirmClear": "Tüm geçmişi temizlemek istediğinizden emin misiniz?",
     "confirmDelete": "Bu öğeyi silmek istediğinizden emin misiniz?",
@@ -373,6 +496,8 @@
     "deleted": "Öğe silindi",
     "clearFailed": "Geçmişi temizleme başarısız",
     "deleteFailed": "Öğe silme başarısız",
+    "failedToLoad": "Geçmiş yüklenemedi",
+    "loadingHistory": "Geçmiş yükleniyor...",
     "searchTypes": {
       "search": "Arama",
       "compare": "Karşılaştır",
@@ -391,6 +516,16 @@
       "next": "Sonraki",
       "page": "{pages} sayfadan {page}. sayfa"
     }
+  },
+  "VerseLookup": {
+    "placeholder": "Ayet referansı girin (örn: Bakara 2:255)",
+    "biblePlaceholder": "Ayet referansı girin (örn: Yuhanna 3:16)",
+    "lookup": "Bul",
+    "lookingUp": "Bulunuyor...",
+    "verseNotFound": "Ayet bulunamadı",
+    "invalidReference": "Geçersiz ayet referans formatı",
+    "exampleQuran": "Örnek: Fatiha 1:1",
+    "exampleBible": "Örnek: Tekvin 1:1"
   },
   "Toast": {
     "searchSuccess": "Arama başarıyla tamamlandı",
@@ -421,7 +556,11 @@
     "badRequestMessage": "İstek geçersiz veya sunulamıyor.",
     "goHome": "Ana Sayfaya Git",
     "tryAgain": "Tekrar Dene",
-    "contactSupport": "Destek ile İletişime Geç"
+    "contactSupport": "Destek ile İletişime Geç",
+    "somethingWentWrong": "Bir şeyler yanlış gitti",
+    "keywordSearchError": "Kelime aramasında beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.",
+    "historyError": "Geçmişiniz yüklenirken beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.",
+    "errorId": "Hata Kimliği:"
   },
   "Metadata": {
     "title": "Clarus - Yapay Zeka Destekli Kutsal Metin Arama",

@@ -10,6 +10,7 @@ import { GlowCard } from "@/components/ui/glow-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getEtymologyApiEtymologyRootGet } from "@/lib/api/sdk.gen"
 import { cn } from "@/lib/utils"
+import { useTranslations } from "next-intl"
 
 interface RichRootCardProps {
   root: string | null
@@ -26,21 +27,20 @@ export function RichRootCard({
   query,
   language = "arabic",
 }: RichRootCardProps) {
+  const t = useTranslations("KeywordSearch")
   const [showAllForms, setShowAllForms] = useState(false)
   const isArabic = language === "arabic"
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["etymology", rootBuckwalter],
     queryFn: async () => {
-      if (!rootBuckwalter) throw new Error("No root available")
+      if (!rootBuckwalter) throw new Error(t("noResults"))
       const response = await getEtymologyApiEtymologyRootGet({
         path: { root: rootBuckwalter },
       })
       if (response.error) {
         const errorMsg =
-          typeof response.error.detail === "string"
-            ? response.error.detail
-            : "Failed to fetch etymology"
+          typeof response.error.detail === "string" ? response.error.detail : t("searchFailed")
         throw new Error(errorMsg)
       }
       return response.data
@@ -77,7 +77,7 @@ export function RichRootCard({
               </>
             ) : (
               <p className="text-center text-sm text-[var(--color-text-muted)]">
-                No root found for this query
+                {t("noRootFound", { query })}
               </p>
             )}
           </div>
@@ -135,7 +135,7 @@ export function RichRootCard({
               </>
             ) : (
               <p className="text-center text-sm text-[var(--color-text-muted)]">
-                No root found for this query
+                {t("noRootFound", { query })}
               </p>
             )}
           </div>
@@ -187,11 +187,11 @@ export function RichRootCard({
                   className="rounded border border-indigo-500/30 bg-indigo-500/20 px-2 py-0.5 text-xs text-indigo-300"
                   data-testid="root-frequency"
                 >
-                  {data.quran_frequency} kullanım
+                  {data.quran_frequency} {t("stats.occurrences")}
                 </span>
               )}
               <span className={cn("rounded border px-2 py-0.5 text-xs", sourceColor)}>
-                {data.source === "lane" ? "Lane's Lexicon" : "Korpus"}
+                {data.source === "lane" ? t("rootInfo.definition") : t("rootInfo.title")}
               </span>
               <span
                 className={cn("rounded border px-2 py-0.5 text-xs capitalize", confidenceColor)}
@@ -205,7 +205,7 @@ export function RichRootCard({
           {(data.summary_tr || data.summary_en) && (
             <div className="space-y-2" data-testid="root-summary">
               <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-                Özet
+                {t("rootInfo.title")}
               </h4>
               <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
                 {data.summary_tr || data.summary_en}
@@ -217,7 +217,7 @@ export function RichRootCard({
           {!data.summary_tr && !data.summary_en && data.definition_tr && (
             <div className="space-y-2" data-testid="root-definition-tr">
               <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-                Türkçe Tanım
+                {t("rootInfo.definition")}
               </h4>
               <p className="line-clamp-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
                 {data.definition_tr}
@@ -227,9 +227,7 @@ export function RichRootCard({
 
           {!data.summary_tr && !data.summary_en && !data.definition_tr && !data.definition_en && (
             <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
-              <p className="text-xs text-amber-300">
-                Tanım mevcut değil. Daha fazla bilgi için kök kullanımlarına bakın.
-              </p>
+              <p className="text-xs text-amber-300">{t("translationNotAvailable")}</p>
             </div>
           )}
 
@@ -241,7 +239,7 @@ export function RichRootCard({
               data-testid="root-detail-link"
             >
               <BookOpen className="h-3.5 w-3.5" />
-              <span>Detaylı Akademik Açıklama →</span>
+              <span>{t("accuracy.verificationTitle")}</span>
             </Link>
           )}
 
@@ -249,7 +247,7 @@ export function RichRootCard({
             <div className="space-y-3" data-testid="morphological-forms">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-                  Morfolojik Formlar
+                  {t("rootInfo.forms")}
                 </h4>
                 {hasMoreForms && (
                   <motion.button
@@ -260,12 +258,15 @@ export function RichRootCard({
                     {showAllForms ? (
                       <>
                         <ChevronDown className="h-3 w-3" />
-                        Daha az göster
+                        {t("pagination.previous")}
                       </>
                     ) : (
                       <>
                         <ChevronRight className="h-3 w-3" />
-                        Tümünü göster ({morphologicalForms.length})
+                        {t("chart.showAll", {
+                          count: morphologicalForms.length,
+                          type: t("derivedWords.title"),
+                        })}
                       </>
                     )}
                   </motion.button>
@@ -315,7 +316,7 @@ export function RichRootCard({
             whileTap={tactileScale.press}
             className="flex items-center justify-center gap-2 rounded-md bg-indigo-500/20 px-4 py-2 text-sm font-medium text-indigo-300 transition-colors hover:bg-indigo-500/30"
           >
-            Tüm kullanımları gör
+            {t("stats.totalUsage")}
             <ExternalLink className="h-3.5 w-3.5" />
           </motion.a>
         </div>

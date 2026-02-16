@@ -9,6 +9,7 @@ import { ExternalLink } from "lucide-react"
 import { stripArabicDiacritics } from "@/lib/utils/arabic"
 import { stripHebrewDiacritics } from "@/lib/utils/hebrew"
 import { stripGreekDiacritics } from "@/lib/utils/greek"
+import { useTranslations } from "next-intl"
 
 interface VerseCardProps {
   surahId: number
@@ -100,6 +101,8 @@ export const VerseCard = React.memo(function VerseCard({
   language = "arabic",
   chapter,
 }: VerseCardProps) {
+  const t = useTranslations("KeywordSearch")
+  const tCommon = useTranslations("Common")
   const highlightedText = useMemo(
     () => highlightText(textUthmani, textClean, matchedWords, language),
     [textUthmani, textClean, matchedWords, language]
@@ -127,7 +130,7 @@ export const VerseCard = React.memo(function VerseCard({
               target="_blank"
               rel="noopener noreferrer"
               className="text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-accent-primary)]"
-              aria-label="Go to surah"
+              aria-label={tCommon("read")}
             >
               <ExternalLink className="h-4 w-4" />
             </a>
@@ -148,7 +151,9 @@ export const VerseCard = React.memo(function VerseCard({
               dir="ltr"
             >
               {englishTranslation || (
-                <span className="text-[var(--color-text-muted)]">Translation not available</span>
+                <span className="text-[var(--color-text-muted)]">
+                  {t("translationNotAvailable")}
+                </span>
               )}
             </div>
           </div>
@@ -173,7 +178,7 @@ export const VerseCard = React.memo(function VerseCard({
                   englishTranslation
                 ) : (
                   <span className="text-[var(--color-text-muted)] italic">
-                    Translation not available
+                    {t("translationNotAvailable")}
                   </span>
                 )
               ) : isTranslationLoading ? (
@@ -184,7 +189,9 @@ export const VerseCard = React.memo(function VerseCard({
               ) : turkishTranslation ? (
                 turkishTranslation
               ) : (
-                <span className="text-[var(--color-text-muted)] italic">Çeviri yüklenemedi</span>
+                <span className="text-[var(--color-text-muted)] italic">
+                  {t("translationNotAvailable")}
+                </span>
               )}
             </div>
           </>

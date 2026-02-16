@@ -2,12 +2,15 @@
 
 import { AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useTranslations } from "next-intl"
 
 interface ExperimentalDisclaimerProps {
   className?: string
 }
 
 export function ExperimentalDisclaimer({ className }: ExperimentalDisclaimerProps) {
+  const t = useTranslations("KeywordSearch")
+
   return (
     <div
       className={cn(
@@ -19,9 +22,7 @@ export function ExperimentalDisclaimer({ className }: ExperimentalDisclaimerProp
     >
       <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
       <span>
-        <strong>Experimental Feature:</strong> This morphological search is under active
-        development. Results should not be used as the sole basis for academic or theological
-        research. Always verify with authoritative sources.
+        <strong>{t("experimental.title")}:</strong> {t("experimental.content")}
       </span>
     </div>
   )
