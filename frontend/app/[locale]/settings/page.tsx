@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "@/i18n/navigation"
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
 import { useSession } from "@/lib/auth-client"
@@ -26,6 +26,7 @@ export default function SettingsPage() {
   const { data: session, isPending: authLoading } = useSession()
   const user = session?.user
   const router = useRouter()
+  const pathname = usePathname()
   const t = useTranslations("Settings")
   const tToast = useTranslations("Toast")
   const tCommon = useTranslations("Common")
@@ -156,44 +157,57 @@ export default function SettingsPage() {
             <GlowCard className="bg-[var(--color-bg-surface)]/80 p-6 backdrop-blur-xl">
               <div className="mb-6 flex items-center gap-2">
                 <Palette className="h-5 w-5 text-[var(--color-accent-primary)]" />
-                <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">General</h2>
+                <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  {t("general")}
+                </h2>
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-[var(--color-text-primary)]">
-                    Theme
+                    {t("theme")}
                   </label>
                   <Select
                     value={theme}
                     onValueChange={(value) => setTheme(value as "light" | "dark" | "system")}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select theme" />
+                      <SelectValue placeholder={t("selectTheme")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="light">Light</SelectItem>
-                      <SelectItem value="dark">Dark</SelectItem>
-                      <SelectItem value="system">System</SelectItem>
+                      <SelectItem value="light">{t("themeLight")}</SelectItem>
+                      <SelectItem value="dark">{t("themeDark")}</SelectItem>
+                      <SelectItem value="system">{t("themeSystem")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-[var(--color-text-primary)]">
-                    Language
+                    {t("language")}
                   </label>
                   <Select
                     value={language}
-                    onValueChange={(value) => setLanguage(value as "tr" | "en" | "ar")}
+                    onValueChange={async (value) => {
+                      const newLocale = value as "tr" | "en" | "ar"
+                      setLanguage(newLocale)
+                      try {
+                        await savePreferences()
+                        router.replace(pathname, { locale: newLocale })
+                      } catch {
+                        toast.error(tToast("preferencesFailed"))
+                      }
+                    }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select language" />
+                      <SelectValue placeholder={t("selectLanguage")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="tr">Türkçe</SelectItem>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="ar">العربية</SelectItem>
+                      <SelectItem value="tr">{t("languageTurkish")}</SelectItem>
+                      <SelectItem value="en">{t("languageEnglish")}</SelectItem>
+                      <SelectItem value="ar" disabled>
+                        {t("languageArabic")} (Coming soon)
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -211,7 +225,7 @@ export default function SettingsPage() {
               <div className="mb-6 flex items-center gap-2">
                 <Search className="h-5 w-5 text-[var(--color-accent-primary)]" />
                 <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-                  Search Defaults
+                  {t("searchDefaults")}
                 </h2>
               </div>
 
@@ -219,7 +233,7 @@ export default function SettingsPage() {
                 <div className="grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[var(--color-text-primary)]">
-                      Default Source
+                      {t("defaultSource")}
                     </label>
                     <Select
                       value={default_search_source}
@@ -228,19 +242,19 @@ export default function SettingsPage() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select source" />
+                        <SelectValue placeholder={t("selectSource")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="quran">Quran</SelectItem>
-                        <SelectItem value="bible">Bible</SelectItem>
-                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="quran">{t("sourceQuran")}</SelectItem>
+                        <SelectItem value="bible">{t("sourceBible")}</SelectItem>
+                        <SelectItem value="all">{t("sourceAll")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-[var(--color-text-primary)]">
-                      Default Bible Testament
+                      {t("defaultBibleTestament")}
                     </label>
                     <Select
                       value={default_bible_testament}
@@ -249,13 +263,13 @@ export default function SettingsPage() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select testament" />
+                        <SelectValue placeholder={t("selectTestament")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All</SelectItem>
-                        <SelectItem value="ot">Old Testament</SelectItem>
-                        <SelectItem value="nt">New Testament</SelectItem>
-                        <SelectItem value="apocrypha">Apocrypha</SelectItem>
+                        <SelectItem value="all">{t("sourceAll")}</SelectItem>
+                        <SelectItem value="ot">{t("sourceOldTestament")}</SelectItem>
+                        <SelectItem value="nt">{t("sourceNewTestament")}</SelectItem>
+                        <SelectItem value="apocrypha">{t("sourceApocrypha")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -263,7 +277,7 @@ export default function SettingsPage() {
 
                 <div className="pt-2">
                   <Slider
-                    label="Results Per Page"
+                    label={t("resultsPerPage")}
                     showValue
                     min={5}
                     max={50}
@@ -285,14 +299,16 @@ export default function SettingsPage() {
             <GlowCard className="bg-[var(--color-bg-surface)]/80 p-6 backdrop-blur-xl">
               <div className="mb-6 flex items-center gap-2">
                 <Zap className="h-5 w-5 text-[var(--color-accent-primary)]" />
-                <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Advanced</h2>
+                <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  {t("advanced")}
+                </h2>
               </div>
 
               <div className="space-y-6">
                 <div className="rounded-lg border border-[var(--color-border)] p-4 transition-colors hover:border-[var(--color-accent-primary)]/30">
                   <Switch
-                    label="Enable Streaming"
-                    description="Stream search results and answers in real-time"
+                    label={t("enableStreaming")}
+                    description={t("enableStreamingDesc")}
                     checked={enable_streaming}
                     onCheckedChange={setEnableStreaming}
                   />
@@ -300,8 +316,8 @@ export default function SettingsPage() {
 
                 <div className="rounded-lg border border-[var(--color-border)] p-4 transition-colors hover:border-[var(--color-accent-primary)]/30">
                   <Switch
-                    label="Enable Multi-Agent"
-                    description="Use multiple AI agents for comprehensive answers (slower)"
+                    label={t("enableMultiAgent")}
+                    description={t("enableMultiAgentDesc")}
                     checked={enable_multi_agent}
                     onCheckedChange={setEnableMultiAgent}
                   />
@@ -324,7 +340,7 @@ export default function SettingsPage() {
               className="flex items-center gap-2 border-red-500/30 text-red-400 hover:border-red-500/50 hover:bg-red-500/10"
             >
               <RotateCcw className="h-4 w-4" />
-              Reset to Defaults
+              {t("resetToDefaults")}
             </Button>
 
             <Button
