@@ -342,11 +342,11 @@ const keywords = useKeywordStore((s) => s.keywords)
 
 **Benefit**: Re-renders only when subscribed fields change
 
-### React-Window Virtualization (Issue #91)
+### React-Virtuoso Virtualization (Issue #91, #156)
 
 **Problem**: Rendering 1,600+ roots causes layout thrashing.
 
-**Solution**: `react-window` `List` component renders only visible rows (~10 instead of 1,600)
+**Solution**: `react-virtuoso` `Virtuoso` component renders only visible rows (~10 instead of 1,600)
 
 ### Batched DOM Reads (Issue #91)
 
