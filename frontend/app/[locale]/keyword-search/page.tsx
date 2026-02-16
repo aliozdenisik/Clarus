@@ -4,8 +4,6 @@ import { useState, useEffect, useCallback, Suspense, useMemo, useRef } from "rea
 import dynamic from "next/dynamic"
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
-import { useSession } from "@/lib/auth-client"
-import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { SearchInput } from "@/components/keyword-search/search-input"
@@ -97,7 +95,6 @@ const isAbortError = (error: unknown): boolean =>
 
 function KeywordSearchContent() {
   const t = useTranslations("KeywordSearch")
-  const tCommon = useTranslations("Common")
   const [query, setQuery] = useState("")
   const [activeLanguage, setActiveLanguage] = useState<LanguageTab>("quran")
   const [bibleCategoryFilter, setBibleCategoryFilter] = useState<BibleCategoryFilter>("all")
@@ -112,10 +109,6 @@ function KeywordSearchContent() {
   const [translationsLoading, setTranslationsLoading] = useState(false)
   const [surahTransliterations, setSurahTransliterations] = useState<Map<number, string>>(new Map())
   const searchAbortControllerRef = useRef<AbortController | null>(null)
-
-  const { data: session, isPending: authLoading } = useSession()
-  const user = session?.user
-  const router = useRouter()
 
   useEffect(() => {
     return () => {
@@ -166,13 +159,6 @@ function KeywordSearchContent() {
       surahTransliterations.get(surahId) || arabicFallback,
     [surahTransliterations]
   )
-
-  // Auth guard
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/sign-in")
-    }
-  }, [user, authLoading, router])
 
   const handleSearch = useCallback(
     async (searchQuery: string) => {
@@ -545,14 +531,6 @@ function KeywordSearchContent() {
       surahCount: chartData.length,
     }
   }, [activeLanguage, selectedWord, searchResult, bibleSearchResult, filteredVerses, chartData])
-
-  if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
-        <div className="text-[var(--color-text-secondary)]">{tCommon("loading")}</div>
-      </div>
-    )
-  }
 
   return (
     <div className="relative min-h-screen bg-[var(--color-bg-app)]">

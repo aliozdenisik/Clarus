@@ -1,14 +1,13 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { ArrowLeft } from "lucide-react"
 import { springPresets } from "@/lib/design-system"
 import { GlowCard } from "@/components/ui/glow-card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useSession } from "@/lib/auth-client"
 import { logger } from "@/lib/logger"
 import { API_BASE } from "@/lib/config"
 import { cn } from "@/lib/utils"
@@ -52,9 +51,6 @@ interface RelatedRoot {
 export default function RootDetailPage() {
   const params = useParams()
   const rootParam = params.root as string
-  const router = useRouter()
-  const { data: session, isPending: authLoading } = useSession()
-  const user = session?.user
 
   const [data, setData] = useState<EtymologyData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -62,13 +58,7 @@ export default function RootDetailPage() {
   const controllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/sign-in")
-    }
-  }, [user, authLoading, router])
-
-  useEffect(() => {
-    if (!rootParam || !user) return
+    if (!rootParam) return
 
     controllerRef.current?.abort()
     const controller = new AbortController()
@@ -107,17 +97,7 @@ export default function RootDetailPage() {
 
     fetchData()
     return () => controller.abort()
-  }, [rootParam, user])
-
-  if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
-        <Skeleton className="h-8 w-48" />
-      </div>
-    )
-  }
-
-  if (!user) return null
+  }, [rootParam])
 
   if (isLoading) {
     return (
