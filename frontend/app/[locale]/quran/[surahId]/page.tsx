@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
-import { useSession } from "@/lib/auth-client"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -57,16 +56,8 @@ export default function SurahDetailPage() {
     return "diyanet"
   })
   const hasLoadedSurahRef = useRef(false)
-  const { data: session, isPending: authLoading } = useSession()
-  const user = session?.user
   const router = useRouter()
   const t = useTranslations("QuranBrowse")
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/sign-in")
-    }
-  }, [user, authLoading, router])
 
   useEffect(() => {
     const verseParam = searchParams.get("verse")
@@ -148,20 +139,20 @@ export default function SurahDetailPage() {
       }
     }
 
-    if (user && surahId) {
+    if (surahId) {
       fetchSurah()
     }
 
     return () => {
       controller.abort()
     }
-  }, [user, surahId, selectedTranslator, t])
+  }, [surahId, selectedTranslator, t])
 
   const handleVerseClick = (verseId: number) => {
     router.push(`/quran/${surahId}/${verseId}`)
   }
 
-  if (authLoading || (isLoading && !surah)) {
+  if (isLoading && !surah) {
     return (
       <div className="min-h-screen bg-[var(--color-bg-app)] p-8">
         <div className="mx-auto max-w-4xl">

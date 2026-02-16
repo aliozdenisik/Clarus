@@ -40,17 +40,11 @@ export default function QuranPage() {
   const [surahs, setSurahs] = useState<Surah[]>([])
   const [filter, setFilter] = useState("")
   const [isLoading, setIsLoading] = useState(true)
-  const { data: session, isPending: authLoading } = useSession()
+  const { data: session } = useSession()
   const user = session?.user
   const router = useRouter()
   const t = useTranslations("QuranBrowse")
   const tCommon = useTranslations("Common")
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/sign-in")
-    }
-  }, [user, authLoading, router])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -101,14 +95,12 @@ export default function QuranPage() {
       }
     }
 
-    if (user) {
-      fetchSurahs()
-    }
+    fetchSurahs()
 
     return () => {
       controller.abort()
     }
-  }, [user, t])
+  }, [t])
 
   const handleLogout = async () => {
     await signOut()
@@ -122,14 +114,6 @@ export default function QuranPage() {
       surah.id.toString().includes(filter)
   )
 
-  if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
-        <div className="text-[var(--color-text-secondary)]">Loading...</div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-[var(--color-bg-app)] p-8">
       <div className="mx-auto max-w-7xl">
@@ -140,10 +124,12 @@ export default function QuranPage() {
           transition={springPresets.snappy}
           className="mb-6 flex items-center justify-between"
         >
-          <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
-            <User className="h-4 w-4" />
-            <span className="text-sm">{user?.name || user?.email}</span>
-          </div>
+          {user && (
+            <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
+              <User className="h-4 w-4" />
+              <span className="text-sm">{user?.name || user?.email}</span>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -154,15 +140,17 @@ export default function QuranPage() {
               <Search className="h-4 w-4" />
               Search
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
+            {user && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+            )}
           </div>
         </motion.div>
 

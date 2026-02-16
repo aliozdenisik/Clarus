@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { getTranslations } from "next-intl/server"
 
 export const metadata: Metadata = {
   title: "Authentication - Clarus",
@@ -12,7 +13,9 @@ export const metadata: Metadata = {
  * Mobile: Full-width form, hero hidden.
  * Desktop: 50/50 split with animated gradient blobs.
  */
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+  const t = await getTranslations("AuthLayout")
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-[var(--color-bg-app)] lg:flex-row">
       {/* LEFT SIDE — Auth Form */}
@@ -65,25 +68,22 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             </div>
 
             <h2 className="text-3xl leading-tight font-bold text-white lg:text-4xl">
-              Sacred Texts,
+              {t("heroTitle")}
               <br />
-              Modern Search
+              {t("heroTitleLine2")}
             </h2>
-            <p className="text-lg leading-relaxed text-white/70">
-              Explore the Quran and Bible with AI-powered semantic search, morphological analysis,
-              and multi-agent comparative theology.
-            </p>
+            <p className="text-lg leading-relaxed text-white/70">{t("heroDescription")}</p>
 
             {/* Feature pills */}
             <div className="flex flex-wrap justify-center gap-2 pt-2">
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
-                Semantic Search
+                {t("pillSemantic")}
               </span>
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
-                5-Agent Analysis
+                {t("pillAgents")}
               </span>
               <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
-                43K+ Verses
+                {t("pillVerses")}
               </span>
             </div>
           </div>

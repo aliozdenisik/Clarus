@@ -71,15 +71,9 @@ export default function OldTestamentPage() {
   const [books, setBooks] = useState<Book[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const { data: session, isPending: authLoading } = useSession()
+  const { data: session } = useSession()
   const user = session?.user
   const router = useRouter()
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/sign-in")
-    }
-  }, [user, authLoading, router])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -114,14 +108,12 @@ export default function OldTestamentPage() {
       }
     }
 
-    if (user) {
-      fetchBooks()
-    }
+    fetchBooks()
 
     return () => {
       controller.abort()
     }
-  }, [user, t])
+  }, [t])
 
   const handleLogout = async () => {
     await signOut()
@@ -135,14 +127,6 @@ export default function OldTestamentPage() {
       (HEBREW_NAMES[book.name] || "").toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
-        <div className="text-[var(--color-text-secondary)]">{tCommon("loading")}</div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-[var(--color-bg-app)] p-8">
       <div className="mx-auto max-w-6xl">
@@ -153,10 +137,12 @@ export default function OldTestamentPage() {
           transition={springPresets.snappy}
           className="mb-8 flex items-center justify-between"
         >
-          <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
-            <User className="h-4 w-4" />
-            <span className="text-sm">{user?.name || user?.email}</span>
-          </div>
+          {user && (
+            <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
+              <User className="h-4 w-4" />
+              <span className="text-sm">{user?.name || user?.email}</span>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -167,15 +153,17 @@ export default function OldTestamentPage() {
               <Search className="h-4 w-4" />
               {tCommon("search")}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
-            >
-              <LogOut className="h-4 w-4" />
-              {tCommon("logout")}
-            </Button>
+            {user && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
+              >
+                <LogOut className="h-4 w-4" />
+                {tCommon("logout")}
+              </Button>
+            )}
           </div>
         </motion.div>
 

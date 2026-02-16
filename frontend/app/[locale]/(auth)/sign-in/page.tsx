@@ -45,15 +45,14 @@ export default function SignInPage() {
         <AuthView pathname="sign-in" />
       </div>
 
-      {/* Terms - Keep hardcoded as legal text */}
       <p className="text-center text-xs text-[var(--color-text-muted)]">
-        By signing in, you agree to our{" "}
+        {t("termsSignIn")}{" "}
         <Link href="#" className="text-[var(--color-accent-primary)] hover:underline">
-          Terms
+          {t("terms")}
         </Link>{" "}
-        and{" "}
+        {t("and")}{" "}
         <Link href="#" className="text-[var(--color-accent-primary)] hover:underline">
-          Privacy Policy
+          {t("privacyPolicy")}
         </Link>
         .
       </p>
