@@ -1,6 +1,7 @@
 "use client"
 
 import { Tabs, Tab } from "@/components/ui/vercel-tabs"
+import { useTranslations } from "next-intl"
 
 export type BibleCategoryFilter =
   | "all"
@@ -17,28 +18,26 @@ interface BibleCategoryTabsProps {
   languageMode: "hebrew_ot" | "greek_nt"
 }
 
-// Categories available for Hebrew OT mode
-const hebrewCategories: Tab[] = [
-  { id: "all", label: "All" },
-  { id: "ot", label: "Old Testament" },
-  { id: "apocrypha", label: "Apocrypha" },
-  { id: "pseudepigrapha", label: "Pseudepigrapha" },
-]
-
-// Categories available for Greek NT mode
-const greekCategories: Tab[] = [
-  { id: "all", label: "All" },
-  { id: "nt", label: "New Testament" },
-  { id: "apocrypha", label: "Apocrypha" },
-  { id: "gnostic", label: "Gnostic" },
-  { id: "apostolic_fathers", label: "Apostolic Fathers" },
-]
-
 export function BibleCategoryTabs({
   activeCategory,
   onCategoryChange,
   languageMode,
 }: BibleCategoryTabsProps) {
+  const t = useTranslations("KeywordSearch")
+  const hebrewCategories: Tab[] = [
+    { id: "all", label: t("bibleCategory.all") },
+    { id: "ot", label: t("bibleCategory.oldTestament") },
+    { id: "apocrypha", label: t("bibleCategory.apocrypha") },
+    { id: "pseudepigrapha", label: t("bibleCategory.pseudepigrapha") },
+  ]
+  const greekCategories: Tab[] = [
+    { id: "all", label: t("bibleCategory.all") },
+    { id: "nt", label: t("bibleCategory.newTestament") },
+    { id: "apocrypha", label: t("bibleCategory.apocrypha") },
+    { id: "gnostic", label: t("bibleCategory.gnostic") },
+    { id: "apostolic_fathers", label: t("bibleCategory.apostolicFathers") },
+  ]
+
   const categories = languageMode === "hebrew_ot" ? hebrewCategories : greekCategories
 
   return (

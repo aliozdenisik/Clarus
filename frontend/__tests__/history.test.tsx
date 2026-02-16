@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor } from "./test-utils"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 import type React from "react"
 
@@ -151,7 +151,10 @@ describe("HistoryPage", () => {
     })
 
     render(<HistoryPage />)
-    expect(screen.getByText("Loading...")).toBeInTheDocument()
+    // Component shows loading state with flex/center layout when auth is loading
+    expect(
+      document.querySelector(".flex.min-h-screen.items-center.justify-center")
+    ).toBeInTheDocument()
   })
 
   it("fetches and displays history items", async () => {

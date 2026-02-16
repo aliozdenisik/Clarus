@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
 import { useSession } from "@/lib/auth-client"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
@@ -154,6 +155,8 @@ export default function VerseDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const { data: session, isPending: authLoading } = useSession()
   const user = session?.user
+  const t = useTranslations("QuranBrowse")
+  const tCommon = useTranslations("Common")
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -208,7 +211,7 @@ export default function VerseDetailPage() {
           return
         }
 
-        toast.error("Failed to load verse translations")
+        toast.error(t("failedToLoadVerse"))
         router.replace(`/quran/${surahId}`)
       } finally {
         if (!controller.signal.aborted) {
@@ -224,7 +227,7 @@ export default function VerseDetailPage() {
     return () => {
       controller.abort()
     }
-  }, [user, surahId, verseId, router])
+  }, [user, surahId, verseId, router, t])
 
   const getPrevVerse = (): { surahId: number; verseId: number } | null => {
     if (surahId === 1 && verseId === 1) {
@@ -287,10 +290,10 @@ export default function VerseDetailPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)] p-8">
         <div className="text-center">
-          <p className="mb-4 text-[var(--color-text-muted)]">Ayet bulunamadı</p>
+          <p className="mb-4 text-[var(--color-text-muted)]">{t("verseNotFound")}</p>
           <Button onClick={() => router.push(`/quran/${surahId}`)}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Sure sayfasına dön
+            {t("backToSurah")}
           </Button>
         </div>
       </div>
@@ -314,7 +317,7 @@ export default function VerseDetailPage() {
               className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
             >
               <ArrowLeft className="h-4 w-4" />
-              Geri
+              {tCommon("back")}
             </Button>
             <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
               <button
@@ -359,13 +362,13 @@ export default function VerseDetailPage() {
                 key={`translation-${translation.translator}`}
                 translator={translation.translator}
                 translatorDisplay={translation.translator_display}
-                text={translation.text || "Çeviri mevcut değil"}
+                text={translation.text || t("translationNotAvailable")}
                 index={index}
               />
             ))
           ) : (
             <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8 text-center">
-              <p className="text-[var(--color-text-muted)]">Çeviri mevcut değil</p>
+              <p className="text-[var(--color-text-muted)]">{t("translationNotAvailable")}</p>
             </div>
           )}
         </div>
@@ -389,7 +392,7 @@ export default function VerseDetailPage() {
               transition={springPresets.bouncy}
             >
               <ChevronLeft className="h-5 w-5" />
-              Önceki Ayet
+              {t("previousVerse")}
             </motion.div>
           </Button>
 
@@ -411,7 +414,7 @@ export default function VerseDetailPage() {
               whileTap={nextVerse ? { scale: 0.97 } : {}}
               transition={springPresets.bouncy}
             >
-              Sonraki Ayet
+              {t("nextVerse")}
               <ChevronRight className="h-5 w-5" />
             </motion.div>
           </Button>

@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import { listRootsApiSearchKeywordRootsGet } from "@/lib/api/sdk.gen"
 import type { RootListItem } from "@/lib/api/types.gen"
 import { cn } from "@/lib/utils"
+import { useTranslations } from "next-intl"
 
 interface RootBrowserProps {
   onRootSelect: (root: string) => void
@@ -81,6 +82,7 @@ function VirtualizedRootRow({
 }
 
 export function RootBrowser({ onRootSelect }: RootBrowserProps) {
+  const t = useTranslations("KeywordSearch")
   const [roots, setRoots] = useState<RootListItem[]>([])
   const [totalCount, setTotalCount] = useState<number>(0)
   const [isLoading, setIsLoading] = useState(false)
@@ -126,14 +128,14 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
         setRoots(dedupedRoots)
         setTotalCount(dedupedRoots.length)
       } catch {
-        toast.error("Failed to load roots")
+        toast.error(t("browser.loading"))
       } finally {
         setIsLoading(false)
       }
     }
 
     fetchAllRoots()
-  }, [])
+  }, [t])
 
   // Filter and sort roots
   const sortedRoots = useMemo(() => {
@@ -169,7 +171,9 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
-          {totalCount > 0 ? `${totalCount.toLocaleString()} Arabic Roots` : "Arabic Roots"}
+          {totalCount > 0
+            ? t("browser.totalRoots", { count: totalCount.toLocaleString() })
+            : t("browser.arabicRoots")}
         </h2>
       </div>
 
@@ -181,7 +185,7 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
           dir="auto"
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
-          placeholder="Filter roots..."
+          placeholder={t("browser.searchPlaceholder")}
           disabled={isLoading}
           className={cn(
             "h-12 w-full rounded-xl bg-[var(--color-bg-surface)] pr-4 pl-12",
@@ -205,7 +209,7 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
               : "bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
           )}
         >
-          By Frequency
+          {t("browser.byFrequency")}
         </button>
         <button
           onClick={() => setSortBy("alphabetical")}
@@ -216,7 +220,7 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
               : "bg-[var(--color-bg-elevated)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
           )}
         >
-          Alphabetical
+          {t("browser.alphabetical")}
         </button>
       </div>
 
@@ -224,7 +228,7 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
       {!filterText && sortBy === "frequency" && (
         <div className="flex items-center gap-3">
           <h3 className="text-sm font-medium tracking-widest text-[var(--color-text-secondary)] uppercase">
-            Featured / Most Frequent Roots
+            {t("browser.featuredRoots")}
           </h3>
           <div className="h-px flex-1 bg-[var(--color-border-subtle)]" />
           <span className="text-xs text-[var(--color-text-muted)]">◆</span>
@@ -266,7 +270,7 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
       {!isLoading && displayRoots.length === 0 && (
         <div className="py-12 text-center">
           <p className="text-[var(--color-text-muted)]">
-            {filterText ? "No roots match your filter" : "No roots available"}
+            {filterText ? t("browser.noRootsMatch") : t("browser.noRootsAvailable")}
           </p>
         </div>
       )}

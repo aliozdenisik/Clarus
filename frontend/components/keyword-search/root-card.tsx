@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
+import { useTranslations } from "next-intl"
 
 interface RootCardProps {
   root: string | null
@@ -18,6 +19,7 @@ export function RootCard({
   strongNumber,
   language = "arabic",
 }: RootCardProps) {
+  const t = useTranslations("KeywordSearch")
   void rootSource
   const isHebrew = language === "hebrew"
   const isGreek = language === "greek"
@@ -52,7 +54,7 @@ export function RootCard({
           )}
         </>
       ) : (
-        <p className="text-center text-[var(--color-text-muted)]">No root found for this query</p>
+        <p className="text-center text-[var(--color-text-muted)]">{t("noResults")}</p>
       )}
     </motion.div>
   )

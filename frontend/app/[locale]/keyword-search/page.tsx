@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
 import { useSession } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { SearchInput } from "@/components/keyword-search/search-input"
 import { RichRootCard } from "@/components/keyword-search/rich-root-card"
@@ -95,6 +96,8 @@ const isAbortError = (error: unknown): boolean =>
     : error instanceof Error && error.name === "AbortError"
 
 function KeywordSearchContent() {
+  const t = useTranslations("KeywordSearch")
+  const tCommon = useTranslations("Common")
   const [query, setQuery] = useState("")
   const [activeLanguage, setActiveLanguage] = useState<LanguageTab>("quran")
   const [bibleCategoryFilter, setBibleCategoryFilter] = useState<BibleCategoryFilter>("all")
@@ -176,10 +179,10 @@ function KeywordSearchContent() {
       if (!searchQuery.trim()) {
         setError(
           activeLanguage === "quran"
-            ? "Please enter an Arabic word or Buckwalter root"
+            ? t("errorQuran")
             : activeLanguage === "hebrew_ot"
-              ? "Please enter a Hebrew word or Strong's number"
-              : "Please enter a Greek word or Strong's number"
+              ? t("errorHebrew")
+              : t("errorGreek")
         )
         return
       }
@@ -245,11 +248,11 @@ function KeywordSearchContent() {
 
           if (!res.ok) {
             if (res.status === 429) {
-              toast.error("Daily search limit reached. Please try again tomorrow.")
+              toast.error(t("rateLimited"))
             } else {
-              toast.error("Search failed. Please try again.")
+              toast.error(t("searchFailed"))
             }
-            setError("Search failed")
+            setError(t("searchFailed"))
             return
           }
 
@@ -268,11 +271,11 @@ function KeywordSearchContent() {
 
         const error = err as { status?: number }
         if (error.status === 429) {
-          toast.error("Daily search limit reached. Please try again tomorrow.")
+          toast.error(t("rateLimited"))
         } else {
-          toast.error("Search failed. Please try again.")
+          toast.error(t("searchFailed"))
         }
-        setError("Search failed")
+        setError(t("searchFailed"))
       } finally {
         if (searchAbortControllerRef.current === controller) {
           searchAbortControllerRef.current = null
@@ -283,7 +286,7 @@ function KeywordSearchContent() {
         }
       }
     },
-    [activeLanguage, bibleCategoryFilter]
+    [activeLanguage, bibleCategoryFilter, t]
   )
 
   // All pagination is client-side — no API calls needed
@@ -546,7 +549,7 @@ function KeywordSearchContent() {
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
-        <div className="text-[var(--color-text-secondary)]">Loading...</div>
+        <div className="text-[var(--color-text-secondary)]">{tCommon("loading")}</div>
       </div>
     )
   }
@@ -573,14 +576,14 @@ function KeywordSearchContent() {
 
             {/* Title */}
             <h1 className="font-display mb-2 text-center text-4xl font-normal tracking-tight text-[var(--color-text-primary)]">
-              Word Search
+              {t("pageTitle")}
             </h1>
             <p className="mb-6 text-center text-sm text-[var(--color-text-secondary)]">
               {activeLanguage === "quran"
-                ? "Explore Arabic roots and their Quranic footprint"
+                ? t("subtitleQuran")
                 : activeLanguage === "hebrew_ot"
-                  ? "Explore Hebrew roots and their Biblical footprint"
-                  : "Explore Greek roots and their New Testament footprint"}
+                  ? t("subtitleHebrew")
+                  : t("subtitleGreek")}
             </p>
 
             {/* Language Tabs */}
@@ -607,10 +610,10 @@ function KeywordSearchContent() {
               isLoading={isLoading}
               placeholder={
                 activeLanguage === "quran"
-                  ? "Search for Arabic roots (e.g., كتب or ktb)..."
+                  ? t("placeholderQuran")
                   : activeLanguage === "hebrew_ot"
-                    ? "Search for Hebrew roots (e.g., כתב or H3789)..."
-                    : "Search for Greek roots (e.g., βιβλος or G976)..."
+                    ? t("placeholderHebrew")
+                    : t("placeholderGreek")
               }
             />
 
@@ -626,8 +629,8 @@ function KeywordSearchContent() {
           {/* Tab Navigation */}
           <VercelTabs
             tabs={[
-              { id: "results", label: "Search Results" },
-              ...(activeLanguage === "quran" ? [{ id: "browser", label: "Root Browser" }] : []),
+              { id: "results", label: t("tabs.results") },
+              ...(activeLanguage === "quran" ? [{ id: "browser", label: t("tabs.browser") }] : []),
             ]}
             activeTab={activeTab}
             onTabChange={(tabId) => setActiveTab(tabId as TabType)}
@@ -674,7 +677,7 @@ function KeywordSearchContent() {
                     searchResult?.root_source?.includes("buckwalter") &&
                     searchResult.root && (
                       <div className="text-center text-sm text-[var(--color-text-secondary)]">
-                        Detected: Buckwalter Latin → Arabic:{" "}
+                        {t("detectedBuckwalter")}{" "}
                         <span className="font-arabic" lang="ar">
                           {searchResult.root}
                         </span>
@@ -686,18 +689,19 @@ function KeywordSearchContent() {
                   (activeLanguage !== "quran" && bibleSearchResult?.root_source === "not_found") ? (
                     <div className="py-12 text-center">
                       <p className="text-lg text-[var(--color-text-muted)]">
-                        No root found for &quot;
-                        {activeLanguage === "quran"
-                          ? searchResult?.query
-                          : bibleSearchResult?.query}
-                        &quot;
+                        {t("noRootFound", {
+                          query:
+                            activeLanguage === "quran"
+                              ? searchResult?.query || ""
+                              : bibleSearchResult?.query || "",
+                        })}
                       </p>
                       <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
                         {activeLanguage === "quran"
-                          ? "Try a different Arabic word or Buckwalter transliteration."
+                          ? t("tryDifferentQuran")
                           : activeLanguage === "hebrew_ot"
-                            ? "Try a different Hebrew word or Strong's number."
-                            : "Try a different Greek word or Strong's number."}
+                            ? t("tryDifferentHebrew")
+                            : t("tryDifferentGreek")}
                       </p>
                     </div>
                   ) : (
@@ -790,7 +794,7 @@ function KeywordSearchContent() {
                               ◆
                             </div>
                             <h3 className="text-center text-lg font-medium text-[var(--color-text-primary)]">
-                              Ayet Sonuçları
+                              {t("verseResults")}
                             </h3>
                             {activeLanguage === "quran"
                               ? paginatedVerses.map((verse, i) => {
@@ -867,10 +871,10 @@ function KeywordSearchContent() {
                   <div className="text-xs tracking-widest text-[var(--color-text-muted)]">◆</div>
                   <p className="text-lg text-[var(--color-text-secondary)]">
                     {activeLanguage === "quran"
-                      ? "Search for any Arabic root or word to explore its Quranic footprint"
+                      ? t("emptyStateQuran")
                       : activeLanguage === "hebrew_ot"
-                        ? "Search for any Hebrew root or word to explore its Biblical footprint"
-                        : "Search for any Greek root or word to explore its New Testament footprint"}
+                        ? t("emptyStateHebrew")
+                        : t("emptyStateGreek")}
                   </p>
                 </div>
               )}
@@ -893,11 +897,13 @@ function KeywordSearchContent() {
 }
 
 export default function KeywordSearchPage() {
+  const tCommon = useTranslations("Common")
+
   return (
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
-          <div className="text-[var(--color-text-secondary)]">Loading...</div>
+          <div className="text-[var(--color-text-secondary)]">{tCommon("loading")}</div>
         </div>
       }
     >

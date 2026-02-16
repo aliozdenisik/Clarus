@@ -12,6 +12,7 @@ import { toast } from "sonner"
 import { ArrowLeft, BookOpen, User, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { API_BASE } from "@/lib/config"
+import { useTranslations } from "next-intl"
 
 interface ChapterSummary {
   chapter: number
@@ -37,6 +38,8 @@ interface ChapterContent {
 }
 
 export default function BookDetailPage() {
+  const t = useTranslations("BibleBrowse")
+  const tCommon = useTranslations("Common")
   const params = useParams()
   const bookNr = params.bookNr as string
   const searchParams = useSearchParams()
@@ -127,7 +130,7 @@ export default function BookDetailPage() {
           return
         }
 
-        toast.error("Failed to load book")
+        toast.error(t("failedToLoad"))
       } finally {
         if (!controller.signal.aborted) {
           setIsLoadingBook(false)
@@ -145,7 +148,7 @@ export default function BookDetailPage() {
     return () => {
       controller.abort()
     }
-  }, [user, bookNr, searchParams])
+  }, [user, bookNr, searchParams, t])
 
   // Fetch chapter content when user switches chapters (after initial load)
   const initialChapterRef = useRef<number | null>(null)
@@ -192,7 +195,7 @@ export default function BookDetailPage() {
           return
         }
 
-        toast.error("Failed to load chapter")
+        toast.error(t("failedToLoadChapter"))
       } finally {
         if (!controller.signal.aborted) {
           setIsLoadingChapter(false)
@@ -207,7 +210,7 @@ export default function BookDetailPage() {
     return () => {
       controller.abort()
     }
-  }, [user, bookNr, selectedChapter, chapterContent?.chapter])
+  }, [user, bookNr, selectedChapter, chapterContent?.chapter, t])
 
   // Scroll to verse when chapter content loads and highlightedVerse is set.
   // Uses polling because AnimatePresence mode="wait" delays DOM mounting
@@ -243,7 +246,7 @@ export default function BookDetailPage() {
   const handleLogout = async () => {
     await signOut()
     router.push("/sign-in")
-    toast.success("Logged out successfully")
+    toast.success(tCommon("logoutSuccess"))
   }
 
   const getBackRoute = () => {
@@ -264,11 +267,11 @@ export default function BookDetailPage() {
     if (!book) return ""
     switch (book.testament) {
       case "old_testament":
-        return "Old Testament"
+        return t("oldTestamentTitle")
       case "new_testament":
-        return "New Testament"
+        return t("newTestamentTitle")
       case "apocrypha":
-        return "Apocrypha"
+        return t("apocryphaTitle")
       default:
         return ""
     }
@@ -295,8 +298,8 @@ export default function BookDetailPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)] p-8">
         <div className="text-center">
-          <p className="mb-4 text-[var(--color-text-muted)]">Book not found</p>
-          <Button onClick={() => router.push("/old-testament")}>Back to Books</Button>
+          <p className="mb-4 text-[var(--color-text-muted)]">{t("bookNotFound")}</p>
+          <Button onClick={() => router.push("/old-testament")}>{t("backToBooks")}</Button>
         </div>
       </div>
     )
@@ -319,7 +322,9 @@ export default function BookDetailPage() {
             className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to {getTestamentLabel()}
+            {book?.testament === "old_testament" && t("backToOldTestament")}
+            {book?.testament === "new_testament" && t("backToNewTestament")}
+            {book?.testament === "apocrypha" && t("backToApocrypha")}
           </Button>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-[var(--color-text-secondary)]">
@@ -333,7 +338,7 @@ export default function BookDetailPage() {
               className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
             >
               <LogOut className="h-4 w-4" />
-              Logout
+              {tCommon("logout")}
             </Button>
           </div>
         </motion.div>
@@ -361,7 +366,7 @@ export default function BookDetailPage() {
           transition={{ delay: 0.1 }}
           className="mb-6"
         >
-          <p className="mb-3 text-sm text-[var(--color-text-muted)]">Select Chapter</p>
+          <p className="mb-3 text-sm text-[var(--color-text-muted)]">{t("selectChapter")}</p>
           <div className="flex flex-wrap gap-2">
             {book.chapters.map((ch) => (
               <button
@@ -403,7 +408,7 @@ export default function BookDetailPage() {
             >
               <GlowCard className="p-6">
                 <h3 className="mb-4 text-lg font-bold text-[var(--color-text-primary)]">
-                  Chapter {chapterContent.chapter}
+                  {t("chapterTitle", { chapter: chapterContent.chapter })}
                 </h3>
                 <div className="space-y-3">
                   {chapterContent.verses.map((verse) => (
@@ -432,7 +437,7 @@ export default function BookDetailPage() {
               animate={{ opacity: 1 }}
               className="py-12 text-center text-[var(--color-text-muted)]"
             >
-              Select a chapter to start reading
+              {t("selectChapterPrompt")}
             </motion.div>
           )}
         </AnimatePresence>

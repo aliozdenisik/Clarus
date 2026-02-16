@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor } from "./test-utils"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 import QuranPage from "@/app/[locale]/quran/page"
 import { getQuranSurahsApiMetadataQuranSurahsGet } from "@/lib/api/sdk.gen"

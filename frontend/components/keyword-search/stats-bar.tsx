@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
 import { GlowCard } from "@/components/ui/glow-card"
+import { useTranslations } from "next-intl"
 
 interface StatsBarProps {
   totalOccurrences: number
@@ -17,10 +18,11 @@ interface StatItem {
 }
 
 export function StatsBar({ totalOccurrences, uniqueWords, surahCount, language }: StatsBarProps) {
+  const t = useTranslations("KeywordSearch")
   const stats: StatItem[] = [
-    { label: "Toplam Kullanım", value: totalOccurrences },
-    { label: "Benzersiz Kelime", value: uniqueWords },
-    { label: language === "quran" ? "Sure" : "Kitap", value: surahCount },
+    { label: t("stats.totalUsage"), value: totalOccurrences },
+    { label: t("stats.uniqueWord"), value: uniqueWords },
+    { label: language === "quran" ? t("stats.surahs") : t("stats.books"), value: surahCount },
   ]
 
   return (
