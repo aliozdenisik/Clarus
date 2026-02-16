@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react"
 import { motion } from "framer-motion"
-import { List, type RowComponentProps, useListRef } from "react-window"
+import { Virtuoso } from "react-virtuoso"
 import { springPresets } from "@/lib/design-system"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Search } from "lucide-react"
@@ -21,11 +21,6 @@ type SortMode = "frequency" | "alphabetical"
 const ROOT_ROW_HEIGHT = 56
 const ROOT_LIST_MAX_HEIGHT = 560
 const ROOT_LIST_OVERSCAN = 8
-
-interface RootListData {
-  roots: RootListItem[]
-  onSelect: (root: string) => void
-}
 
 const RootRow = React.memo(function RootRow({
   root,
@@ -61,26 +56,6 @@ const RootRow = React.memo(function RootRow({
   )
 })
 
-function VirtualizedRootRow({
-  index,
-  style,
-  roots,
-  onSelect,
-  ariaAttributes,
-}: RowComponentProps<RootListData>) {
-  const rootItem = roots[index]
-
-  if (!rootItem) {
-    return null
-  }
-
-  return (
-    <div style={style} className="px-1" {...ariaAttributes}>
-      <RootRow root={rootItem.root} count={rootItem.count} onSelect={onSelect} />
-    </div>
-  )
-}
-
 export function RootBrowser({ onRootSelect }: RootBrowserProps) {
   const t = useTranslations("KeywordSearch")
   const [roots, setRoots] = useState<RootListItem[]>([])
@@ -88,7 +63,6 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [filterText, setFilterText] = useState("")
   const [sortBy, setSortBy] = useState<SortMode>("frequency")
-  const listRef = useListRef(null)
 
   // Fetch all roots on mount
   useEffect(() => {
@@ -159,11 +133,6 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
   // Show featured roots initially, all roots when filtering/sorting
   const displayRoots = filterText || sortBy === "alphabetical" ? sortedRoots : featuredRoots
 
-  const listData = useMemo<RootListData>(
-    () => ({ roots: displayRoots, onSelect: onRootSelect }),
-    [displayRoots, onRootSelect]
-  )
-
   const listHeight = Math.min(ROOT_LIST_MAX_HEIGHT, displayRoots.length * ROOT_ROW_HEIGHT)
 
   return (
@@ -201,6 +170,7 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
       {/* Sort toggle */}
       <div className="flex items-center gap-2">
         <button
+          type="button"
           onClick={() => setSortBy("frequency")}
           className={cn(
             "rounded-lg px-4 py-2 text-sm font-medium transition-colors",
@@ -212,6 +182,7 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
           {t("browser.byFrequency")}
         </button>
         <button
+          type="button"
           onClick={() => setSortBy("alphabetical")}
           className={cn(
             "rounded-lg px-4 py-2 text-sm font-medium transition-colors",
@@ -253,15 +224,19 @@ export function RootBrowser({ onRootSelect }: RootBrowserProps) {
       {/* Root list */}
       {!isLoading && displayRoots.length > 0 && (
         <div className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/40">
-          <List
-            listRef={listRef}
-            defaultHeight={ROOT_LIST_MAX_HEIGHT}
-            overscanCount={ROOT_LIST_OVERSCAN}
-            rowComponent={VirtualizedRootRow}
-            rowCount={displayRoots.length}
-            rowHeight={ROOT_ROW_HEIGHT}
-            rowProps={listData}
+          <Virtuoso
             style={{ height: listHeight, width: "100%" }}
+            totalCount={displayRoots.length}
+            overscan={ROOT_LIST_OVERSCAN}
+            itemContent={(index) => {
+              const rootItem = displayRoots[index]
+              if (!rootItem) return null
+              return (
+                <div className="px-1">
+                  <RootRow root={rootItem.root} count={rootItem.count} onSelect={onRootSelect} />
+                </div>
+              )
+            }}
           />
         </div>
       )}
