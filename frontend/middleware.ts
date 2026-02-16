@@ -10,13 +10,19 @@ const protectedRoutes = ["/compare", "/search", "/settings", "/history", "/keywo
 export function middleware(request: NextRequest) {
   const response = handleI18nRouting(request)
 
+  // Bot detection for SEO crawlability
+  const userAgent = request.headers.get("user-agent") || ""
+  const botPattern =
+    /googlebot|bingbot|yandex|baiduspider|duckduckbot|facebookexternalhit|twitterbot|linkedinbot|slackbot|whatsapp|telegrambot|gptbot|claudebot|anthropic-ai|perplexitybot/i
+  const isBot = botPattern.test(userAgent)
+
   const pathname = request.nextUrl.pathname
   const isProtectedRoute = protectedRoutes.some((route) => {
     const localePrefix = `/(en|tr)`
     return new RegExp(`^${localePrefix}${route}(/|$)`).test(pathname)
   })
 
-  if (isProtectedRoute) {
+  if (isProtectedRoute && !isBot) {
     const sessionCookie = request.cookies.get("better-auth.session_token")
 
     if (!sessionCookie) {
