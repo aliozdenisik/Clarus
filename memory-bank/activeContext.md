@@ -2,7 +2,50 @@
 
 ## Current Work Focus
 
-**Date**: 2026-02-11
+**Date**: 2026-02-16
+
+## Issue #156 & #157: P0 SHOWSTOPPER Bug Fixes — COMPLETED ✅
+
+**Date**: 2026-02-16
+**Plan**: `.sisyphus/plans/issue-156-157-audit-fixes.md`
+**Scope**: Fix two P0 bugs from UI/UX audit milestone — black void (#156) and auth redirect (#157)
+
+### Issue #156: Black Void Bug (react-window → react-virtuoso)
+- **Root Cause**: react-window used with WRONG API props (rowCount, rowComponent, rowHeight instead of itemCount, children, itemSize). Props silently ignored → 12,000px black void.
+- **Fix**: Migrated to react-virtuoso v4.18.1 — zero-config variable heights, auto-measurement, SSR-safe.
+- **File**: `frontend/components/keyword-search/root-browser.tsx` (255 lines)
+- **Verification**: Playwright QA — scroll container 560px (not 12,000px), scrolling works, filter/sort functional.
+
+### Issue #157: Auth Redirect Bug (triple-layer auth gate removal)
+- **Root Cause**: Triple-layer auth enforcement (middleware protectedRoutes + main page useEffect + root detail page useEffect) blocked ALL /keyword-search/* routes including read-only reference content.
+- **Fix**: Removed auth gates from all 3 layers. Added bot detection regex in middleware for SEO crawlability.
+- **Files**: `frontend/middleware.ts`, `frontend/app/[locale]/keyword-search/page.tsx`, `frontend/app/[locale]/keyword-search/root/[root]/page.tsx`
+- **Verification**: curl confirms 200 on /keyword-search (no auth), 307 redirect on /compare (auth enforced), 200 with Googlebot UA on /compare (bot bypass).
+
+### Implementation Summary
+| Task | Commit | Description |
+|------|--------|-------------|
+| 1 | `93d2ab1` | Pre-flight validation + react-virtuoso install |
+| 2 | `3635868` | Migrate root-browser to react-virtuoso |
+| 3 | `2d696ab` | Remove auth gate from /keyword-search |
+| 4 | `bc2fe4a` | Add bot detection to middleware |
+| 5 | `80ba98b` | Write regression tests (10 new tests) |
+| 6 | `8242971` | Remove react-window + update docs |
+
+### Verification (4/4 APPROVE)
+| Review | Verdict |
+|--------|---------|
+| F1: Plan compliance audit | APPROVE — Must Have 5/5, Must NOT 11/11 |
+| F2: Code quality review | APPROVE — Lint PASS, Tests 363/363, 8 files clean |
+| F3: Real manual QA | APPROVE — 8/8 scenarios pass |
+| F4: Scope fidelity check | APPROVE — Tasks 6/6 compliant, Contamination CLEAN |
+
+### Test Results
+- **363 tests passing** across 31 test files (353 baseline + 10 new regression tests)
+- Production build succeeds
+- Evidence: `.sisyphus/evidence/final-qa/` (4 screenshots, 4 curl outputs, QA report)
+
+---
 
 ## Compare Quran Collection Alias Fix - COMPLETED ✅
 
