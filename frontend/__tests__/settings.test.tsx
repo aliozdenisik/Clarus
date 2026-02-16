@@ -9,6 +9,15 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }))
 
+// Mock next-intl locale-aware navigation (used by settings page)
+vi.mock("@/i18n/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  usePathname: () => "/settings",
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Link: ({ children, ...props }: Record<string, any>) => <a {...props}>{children}</a>,
+  redirect: vi.fn(),
+}))
+
 // Mock Sonner toast
 vi.mock("sonner", () => ({
   toast: {
