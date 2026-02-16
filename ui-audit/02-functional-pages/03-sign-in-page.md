@@ -86,9 +86,9 @@
 </button>
 
 // Olmalı:
-<button className="inline-flex items-center gap-2 px-4 py-2 
-                   text-sm font-medium text-zinc-300 
-                   hover:text-white hover:bg-zinc-800 
+<button className="inline-flex items-center gap-2 px-4 py-2
+                   text-sm font-medium text-zinc-300
+                   hover:text-white hover:bg-zinc-800
                    rounded-lg transition-colors">
   <svg>...</svg> {/* Daha kalın ok ikonu */}
   <span>Back</span>
@@ -126,7 +126,7 @@
 input::placeholder { color: rgba(255, 255, 255, 0.3); }
 
 /* Olmalı (WCAG AA uyumlu): */
-input::placeholder { 
+input::placeholder {
   color: #71717a; /* zinc-500 */
 }
 
@@ -259,11 +259,11 @@ opacity: 0.8;
   <form className="space-y-4 mt-6">
     <div>
       <label className="text-sm font-medium mb-2 block">Email</label>
-      <input 
-        type="email" 
+      <input
+        type="email"
         placeholder="you@example.com"
         className="w-full px-4 py-3 bg-zinc-900 border border-zinc-800
-                   rounded-lg focus:border-purple-500 focus:ring-2 
+                   rounded-lg focus:border-purple-500 focus:ring-2
                    focus:ring-purple-500/20 transition-colors"
       />
     </div>
@@ -295,16 +295,16 @@ opacity: 0.8;
   --bg-page: #09090b;         /* zinc-950 */
   --bg-card: #18181b;         /* zinc-900 */
   --bg-input: #18181b;        /* zinc-900 */
-  
+
   /* Borders */
   --border-default: #27272a;  /* zinc-800 */
   --border-focus: #a855f7;    /* purple-500 */
-  
+
   /* Text */
   --text-primary: #fafafa;    /* zinc-50 */
   --text-secondary: #a1a1aa;  /* zinc-400 */
   --text-muted: #71717a;      /* zinc-500 */
-  
+
   /* Accent */
   --accent: #a855f7;          /* purple-500 */
   --accent-hover: #9333ea;    /* purple-600 */

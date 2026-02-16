@@ -118,9 +118,9 @@ Noktalı grid çizgileri neredeyse görünmüyor, değer takibi zor.
 🔧 Fix: Opacity'yi artır.
 
 ```tsx
-<CartesianGrid 
-  strokeDasharray="3 3" 
-  stroke="#3F3F46" 
+<CartesianGrid
+  strokeDasharray="3 3"
+  stroke="#3F3F46"
   opacity={0.3} // 0.1 değil
 />
 ```

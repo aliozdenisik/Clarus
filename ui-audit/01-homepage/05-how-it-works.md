@@ -234,12 +234,12 @@ Contrast Ratios (tahmin):
       STEP {index + 1}
     </span>
   </div>
-  
+
   {/* Icon */}
   <div className="w-14 h-14 rounded-xl border-2 border-violet-500/30 bg-violet-500/5 flex items-center justify-center">
     <Icon className="w-6 h-6 text-violet-400" />
   </div>
-  
+
   {/* Text hierarchy */}
   <div className="space-y-3">
     <h3 className="text-xl font-bold text-white">

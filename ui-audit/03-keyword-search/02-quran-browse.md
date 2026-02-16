@@ -21,7 +21,7 @@ Bu sayfayı yapan kişi Arapça'nın **kaligrafik bir dil** olduğunu bilmiyor.
 ```css
 /* Kart numara rozeti */
 .sura-number {
-  @apply w-10 h-10 rounded-full 
+  @apply w-10 h-10 rounded-full
          bg-indigo-500/20 border border-indigo-500/40
          flex items-center justify-center
          text-lg font-bold text-indigo-300; /* Parlak, fark edilir */
@@ -36,7 +36,7 @@ Bu sayfayı yapan kişi Arapça'nın **kaligrafik bir dil** olduğunu bilmiyor.
 
 /* Alt meta bilgi */
 .sura-meta {
-  @apply text-xs font-medium text-zinc-300 
+  @apply text-xs font-medium text-zinc-300
          tracking-wide uppercase; /* Okunabilir kontrast */
 }
 ```
@@ -168,7 +168,7 @@ Numara rozeti solda, Arapça metin sağda. Kullanıcının gözü her kartta **Z
   <div className="sura-number shrink-0">
     {sura.number}
   </div>
-  
+
   <div className="flex-1 rtl:text-right">
     <h3 className="arabic text-2xl font-semibold mb-1" dir="rtl">
       {sura.nameArabic}
@@ -215,7 +215,7 @@ Numara rozeti solda, Arapça metin sağda. Kullanıcının gözü her kartta **Z
 **Alternatif:** Başlığı sticky yap, scroll ederken sabit kalsın:
 ```css
 .browse-header {
-  @apply sticky top-16 z-10 
+  @apply sticky top-16 z-10
          bg-zinc-950/80 backdrop-blur-lg
          py-4 mb-6
          border-b border-zinc-800/50;
@@ -230,15 +230,15 @@ Input alanı %75, "Ara" butonu %25 gibi bir dağılım var. Buton çok küçük,
 🔧 **Fix:**
 ```tsx
 <div className="flex items-center gap-3 max-w-md">
-  <input 
-    className="flex-1 bg-zinc-900 border border-zinc-700 
+  <input
+    className="flex-1 bg-zinc-900 border border-zinc-700
                focus:border-indigo-500 rounded-lg px-4 py-2.5
                placeholder:text-zinc-500
                transition-colors"
     placeholder="Bakara 183 veya 2:183"
   />
-  <button 
-    className="bg-indigo-600 hover:bg-indigo-500 
+  <button
+    className="bg-indigo-600 hover:bg-indigo-500
                px-6 py-2.5 rounded-lg font-semibold
                shrink-0 min-w-[100px]
                transition-colors"
@@ -259,7 +259,7 @@ Kartlara tıklanabilir mi belirsiz. Hover state çok minimal, kullanıcı etkile
 ```css
 .sura-card {
   @apply transition-all duration-300 cursor-pointer
-         hover:border-indigo-500/40 
+         hover:border-indigo-500/40
          hover:shadow-[0_4px_20px_rgba(99,102,241,0.15)]
          hover:-translate-y-1;
 }
@@ -448,7 +448,7 @@ Bu sayfa, **"Kuran'ı Times New Roman'la yazdırmak"** gibi bir şey yapmış. �
 .arabic-text {
   direction: rtl;
   unicode-bidi: embed;
-  font-feature-settings: 
+  font-feature-settings:
     'liga' 1,  /* Ligatures */
     'calt' 1,  /* Contextual alternates */
     'dlig' 1;  /* Discretionary ligatures */

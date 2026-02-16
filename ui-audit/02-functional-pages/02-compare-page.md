@@ -21,7 +21,7 @@
 - **Header sıkışması:** "Comparative Analysis" başlığı üst navigasyona **çok yakın**. Nefes alamıyor.
 
 ### Typography
-- **Başlık kafa karışıklığı:** 
+- **Başlık kafa karışıklığı:**
   - Ana başlık: "Comparative Analysis" (Title Case)
   - Alt başlık: "Comparative analysis across..." (Sentence case)
   - Bu tutarsızlık amatör işi.
@@ -81,14 +81,14 @@ const SOURCES_EN = {
       "Merhamet ve affetme",
       "Peygamberlerin ortak öğretileri"
     ].map(query => (
-      <button 
+      <button
         onClick={() => setQuery(query)}
         className="p-4 bg-zinc-900/50 hover:bg-zinc-800 rounded-lg text-left
                    transition-colors group"
       >
         <div className="flex items-center justify-between">
           <span className="font-medium">{query}</span>
-          <span className="text-zinc-600 group-hover:text-purple-500 
+          <span className="text-zinc-600 group-hover:text-purple-500
                            transition-colors">→</span>
         </div>
       </button>
@@ -164,7 +164,7 @@ const SOURCES_EN = {
 .input-bg { background: #1a1a1a; }
 
 /* Olmalı: */
-.input-bg { 
+.input-bg {
   background: #18181b; /* zinc-900 */
   border: 1px solid #27272a; /* zinc-800 */
 }
@@ -201,9 +201,9 @@ const SOURCES_EN = {
 .footer-watermark { font-size: 12rem; opacity: 0.05; }
 
 /* Olmalı: */
-.footer-watermark { 
-  font-size: 8rem; 
-  opacity: 0.02; 
+.footer-watermark {
+  font-size: 8rem;
+  opacity: 0.02;
   transform: translateY(2rem); /* Yukarı kaydır */
 }
 ```
@@ -240,13 +240,13 @@ const SOURCES_EN = {
 
 ### Tipografi Hiyerarşisi:
 ```css
-h1.page-title { 
+h1.page-title {
   font-size: 2rem;    /* 32px */
   font-weight: 700;
   margin-bottom: 0.5rem;
 }
 
-p.subtitle { 
+p.subtitle {
   font-size: 1rem;    /* 16px */
   font-weight: 400;
   color: #a1a1aa;     /* zinc-400 */

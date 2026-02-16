@@ -123,7 +123,7 @@ DOĞRU HİYERARŞİ:
       <Button>...</Button>
       <p className="text-xs text-gray-500">...</p>
     </div>
-    
+
     {/* Nav columns */}
     <div>...</div>
     <div>...</div>
@@ -243,17 +243,17 @@ DOĞRU HİYERARŞİ:
             Maximum-accuracy RAG search engine for sacred texts. Quran & Bible semantic search.
           </p>
         </div>
-        
+
         <Button variant="outline" size="sm" className="border-gray-700 hover:border-gray-600">
           <Github className="w-4 h-4 mr-2" />
           Star on GitHub
         </Button>
-        
+
         <p className="text-xs text-gray-500">
           © 2024 Clarus. All rights reserved.
         </p>
       </div>
-      
+
       {/* Nav columns */}
       <div className="space-y-4">
         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide">
@@ -268,7 +268,7 @@ DOĞRU HİYERARŞİ:
           </a>
         </nav>
       </div>
-      
+
       <div className="space-y-4">
         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide">
           Scriptures
@@ -288,7 +288,7 @@ DOĞRU HİYERARŞİ:
           </a>
         </nav>
       </div>
-      
+
       <div className="space-y-4">
         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide">
           Links
@@ -304,7 +304,7 @@ DOĞRU HİYERARŞİ:
       </div>
     </div>
   </div>
-  
+
   {/* Optional subtle watermark */}
   <div className="absolute bottom-4 right-8 text-7xl font-black text-white/[0.015] select-none pointer-events-none">
     Clarus

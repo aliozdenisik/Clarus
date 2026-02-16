@@ -4,7 +4,7 @@
 
 İlk bakışta: **Güvenli, sıradan, unutulabilir.**
 
-Bu hero section bir kutsal metin arama uygulaması için mi yoksa bir generic SaaS landing page template'i mi anlamak imkansız. Serif font kullanımı akademik hava katmaya çalışmış ama ortaya çıkan şey "AI startup starter pack #2847" olmuş. 
+Bu hero section bir kutsal metin arama uygulaması için mi yoksa bir generic SaaS landing page template'i mi anlamak imkansız. Serif font kullanımı akademik hava katmaya çalışmış ama ortaya çıkan şey "AI startup starter pack #2847" olmuş.
 
 Gözü kanatan en büyük hata: **TIPOGRAFIK KARAKTER EKSİKLİĞİ.** "Explore Sacred Texts" yazan devasa başlığın hiçbir personality'si yok. Serife vurgu yapılmış ama hangi serif kullanıldığı belli bile değil — muhtemelen Playfair Display gibi overused bir font. Kutsal metinlerle çalışan bir platformun typographic voice'u bu kadar yavan olamaz.
 
@@ -105,7 +105,7 @@ color: #C4C8CC; /* Daha açık gri */
 
 ❌ **Logo Hizalaması Optik Olarak Bozuk**  
 "CLARUS" metni, üstteki kitap ikonu ile merkeze hizalanmış ama "C" ve "S" harflerinin serif çıkıntıları nedeniyle sola yatık duruyor.  
-🔧 Fix: 
+🔧 Fix:
 ```css
 .logo-text {
   transform: translateX(1px); /* Optik düzeltme */
@@ -114,7 +114,7 @@ color: #C4C8CC; /* Daha açık gri */
 
 ❌ **Alt Metin Kontrastı Yetersiz (#9CA3AF)**  
 WCAG AA standardının altında. Düşük görüşlü kullanıcılar için accessibility riski.  
-🔧 Fix: 
+🔧 Fix:
 ```css
 .subtitle {
   color: #D1D5DB; /* Daha açık gri */
@@ -204,17 +204,17 @@ background-image: url("data:image/svg+xml,%3Csvg...noise-pattern");
 <div className="flex flex-col items-center">
   {/* Logo */}
   <Logo className="mb-16" /> {/* 64px spacing */}
-  
+
   {/* Title */}
   <h1 className="mb-6"> {/* 24px spacing */}
     Explore Sacred Texts <span className="accent">with AI</span>
   </h1>
-  
+
   {/* Subtitle */}
   <p className="mb-10"> {/* 40px spacing */}
     Search across 43,055 verses...
   </p>
-  
+
   {/* CTAs */}
   <div className="flex gap-4">...</div>
 </div>
@@ -238,10 +238,10 @@ background-image: url("data:image/svg+xml,%3Csvg...noise-pattern");
 ```tsx
 /* Primary CTA */
 <Button className="
-  bg-[#F59E0B] 
-  text-[#0B0B0F] 
-  font-semibold 
-  px-6 py-3 
+  bg-[#F59E0B]
+  text-[#0B0B0F]
+  font-semibold
+  px-6 py-3
   rounded-lg
   hover:bg-[#FBBF24]
   transition-all duration-200
@@ -270,9 +270,9 @@ background-image: url("data:image/svg+xml,%3Csvg...noise-pattern");
 <div className="relative">
   {/* Gradyan background */}
   <div className="absolute inset-0 bg-gradient-to-b from-[#0B0B0F] to-[#16151E]" />
-  
+
   {/* Noise overlay */}
-  <div 
+  <div
     className="absolute inset-0 opacity-[0.03]"
     style={{
       backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
@@ -295,7 +295,7 @@ background-image: url("data:image/svg+xml,%3Csvg...noise-pattern");
 
 ## SON SÖZ
 
-Bu hero section bir **B-** landing page. Çalışıyor ama hiç kimse hatırlamayacak. Kutsal metinlerle çalışan bir platformun hero'su **akademik ağırlık, tarihsel derinlik ve typographic zenginlik** taşımalı. 
+Bu hero section bir **B-** landing page. Çalışıyor ama hiç kimse hatırlamayacak. Kutsal metinlerle çalışan bir platformun hero'su **akademik ağırlık, tarihsel derinlik ve typographic zenginlik** taşımalı.
 
 Şu anki durum: "AI ile bir şeyler yapıyoruz" startup template'i #2847.  
 Olması gereken: "Bin yıllık metinlere modern teknoloji ile dokunuyoruz" — cesur, distinctive, memorable.

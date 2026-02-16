@@ -2,7 +2,7 @@
 
 ## 1. İLK İZLENİM VE "ROAST"
 
-Bu sayfa dua edip çok iyi bir insan olsam belki bir gün ulaşabileceğim seviyede değil — tam tersine, daha şimdiden beni terk etmiş. Sağ taraftaki DEV-ASA grafik container'ı sanki Chernobyl reaktörü gibi patlamış ve geriye sadece %50 ekran alanını kaplayan siyah bir void bırakmış. 
+Bu sayfa dua edip çok iyi bir insan olsam belki bir gün ulaşabileceğim seviyede değil — tam tersine, daha şimdiden beni terk etmiş. Sağ taraftaki DEV-ASA grafik container'ı sanki Chernobyl reaktörü gibi patlamış ve geriye sadece %50 ekran alanını kaplayan siyah bir void bırakmış.
 
 Kullanıcı "Yunanca kelime" araması yapıyor ama ona "Arabic (كتب) and Buckwalter Latin (ktb) destekleriz" diye yardım mesajı gösteriyorsun. **ÇEVİRİCİ Mİ BU, YOKSA BİR TERCÜME HATA MÜZESI Mİ?**
 
@@ -86,7 +86,7 @@ Kullanıcı **Yunanca** aramada, arama kutusunun altında "Arabic (كتب) and B
 🔧 **Fix:**
 ```tsx
 // KeywordSearchInput.tsx
-const helpText = collection === 'greek_nt' 
+const helpText = collection === 'greek_nt'
   ? "Supports Strong's numbers (e.g., G1125) or Greek text (γράφω)"
   : "Supports Arabic (كتب) and Buckwalter Latin (ktb)";
 ```
@@ -179,7 +179,7 @@ const helpText = collection === 'greek_nt'
 
 ## SONUÇ
 
-Bu sayfa Steve Jobs'un "insanely great" değil, "insanely broken" kategorisinde. Grafik render edilmemiş, yardım mesajı yanlış, gramer hatası var. Sağ yarı ekranın tamamen boş olması, kullanıcıyı gereksiz yere scroll yapmaya zorluyor. 
+Bu sayfa Steve Jobs'un "insanely great" değil, "insanely broken" kategorisinde. Grafik render edilmemiş, yardım mesajı yanlış, gramer hatası var. Sağ yarı ekranın tamamen boş olması, kullanıcıyı gereksiz yere scroll yapmaya zorluyor.
 
 **Acil Aksiyonlar:**
 1. Grafik render bug'ını fix et veya fallback UI ekle (empty state)
