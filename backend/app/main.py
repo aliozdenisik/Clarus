@@ -109,26 +109,34 @@ async def lifespan(app: FastAPI):
 
             return event
 
-        sentry_sdk.init(
-            dsn=settings.sentry_dsn_backend,
-            integrations=[
-                StarletteIntegration(transaction_style="endpoint"),
-                FastApiIntegration(transaction_style="endpoint"),
-                SqlalchemyIntegration(),
-            ],
-            traces_sample_rate=settings.sentry_traces_sample_rate,
-            environment=settings.sentry_environment,
-            release="clarus-backend@2.0.0",
-            send_default_pii=False,
-            before_send=before_send,
-        )
-        logger.info(
-            "Sentry initialized",
-            extra={
-                "environment": settings.sentry_environment,
-                "traces_sample_rate": settings.sentry_traces_sample_rate,
-            },
-        )
+        try:
+            sentry_sdk.init(
+                dsn=settings.sentry_dsn_backend,
+                integrations=[
+                    StarletteIntegration(transaction_style="endpoint"),
+                    FastApiIntegration(transaction_style="endpoint"),
+                    SqlalchemyIntegration(),
+                ],
+                traces_sample_rate=settings.sentry_traces_sample_rate,
+                environment=settings.sentry_environment,
+                release="clarus-backend@2.0.0",
+                send_default_pii=False,
+                before_send=before_send,
+                auto_enabling_integrations=False,
+            )
+            logger.info(
+                "Sentry initialized",
+                extra={
+                    "environment": settings.sentry_environment,
+                    "traces_sample_rate": settings.sentry_traces_sample_rate,
+                },
+            )
+        except Exception as e:
+            logger.error(
+                "Sentry initialization failed; continuing without Sentry",
+                extra={"error_type": type(e).__name__},
+                exc_info=True,
+            )
 
     yield  # <-- App runs here
 
