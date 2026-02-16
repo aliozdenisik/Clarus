@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { NextIntlClientProvider } from "next-intl"
-import { getMessages } from "next-intl/server"
+import { getMessages, getTranslations } from "next-intl/server"
 import { notFound } from "next/navigation"
 import { routing } from "@/i18n/routing"
 import { Providers } from "@/components/providers"
@@ -8,14 +8,37 @@ import { Toaster } from "sonner"
 import Navigation from "@/components/layout/navigation"
 import { Footer } from "@/components/ui/large-name-footer"
 
-export const metadata: Metadata = {
-  title: "Clarus",
-  description: "Search and explore Quran and Bible with AI-powered insights",
-}
-
 type Props = {
   children: React.ReactNode
   params: Promise<{ locale: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: "Metadata" })
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
+
+  return {
+    title: {
+      default: t("title"),
+      template: `%s | ${t("title")}`,
+    },
+    description: t("description"),
+    alternates: {
+      canonical: `${baseUrl}/${locale}`,
+      languages: {
+        en: `${baseUrl}/en`,
+        tr: `${baseUrl}/tr`,
+        "x-default": `${baseUrl}/tr`,
+      },
+    },
+    openGraph: {
+      locale: locale === "tr" ? "tr_TR" : "en_US",
+      alternateLocale: locale === "tr" ? ["en_US"] : ["tr_TR"],
+      type: "website",
+      url: `${baseUrl}/${locale}`,
+    },
+  }
 }
 
 export default async function LocaleLayout({ children, params }: Props) {
