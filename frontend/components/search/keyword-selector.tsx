@@ -8,21 +8,53 @@ import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { KeywordSuggestion } from "@/lib/stores/keyword-store"
 
+export interface KeywordSelectorLabels {
+  advancedSearch: string
+  advancedSearchHint: string
+  selectAll: string
+  deselectAll: string
+  selectAtLeastOne: string
+}
+
 export interface KeywordSelectorProps {
   keywords: KeywordSuggestion[]
+  advancedMode: boolean
+  onAdvancedModeChange: (enabled: boolean) => void
   onSelectionChange: (selected: KeywordSuggestion[]) => void
   isLoading: boolean
   onSearch: () => void
+  labels?: KeywordSelectorLabels
 }
 
 export function KeywordSelector({
   keywords,
+  advancedMode,
+  onAdvancedModeChange,
   onSelectionChange,
   isLoading,
   onSearch,
+  labels,
 }: KeywordSelectorProps) {
   void onSearch
-  const [advancedMode, setAdvancedMode] = React.useState(false)
+
+  const fallbackLabels: KeywordSelectorLabels = {
+    advancedSearch: "Advanced Search",
+    advancedSearchHint: "Keyword-based search",
+    selectAll: "Select All",
+    deselectAll: "Clear All",
+    selectAtLeastOne: "Select at least one keyword",
+  }
+
+  const text = labels ?? fallbackLabels
+
+  const loadingSkeletonKeys = [
+    "keyword-selector-skeleton-a",
+    "keyword-selector-skeleton-b",
+    "keyword-selector-skeleton-c",
+    "keyword-selector-skeleton-d",
+    "keyword-selector-skeleton-e",
+  ]
+
   const [selectedKeywords, setSelectedKeywords] = React.useState<KeywordSuggestion[]>(
     keywords.filter((k) => k.selected)
   )
@@ -32,7 +64,7 @@ export function KeywordSelector({
   }, [keywords])
 
   const handleToggle = (checked: boolean) => {
-    setAdvancedMode(checked)
+    onAdvancedModeChange(checked)
   }
 
   const handleKeywordToggle = (keyword: KeywordSuggestion) => {
@@ -64,13 +96,15 @@ export function KeywordSelector({
   return (
     <div className="space-y-4">
       {/* Toggle Switch */}
-      <div className="flex items-center justify-between">
-        <Switch
-          checked={advancedMode}
-          onCheckedChange={handleToggle}
-          label="Gelişmiş Arama"
-          description="Anahtar kelime bazlı arama"
-        />
+      <div className="flex justify-center">
+        <div className="w-full max-w-md">
+          <Switch
+            checked={advancedMode}
+            onCheckedChange={handleToggle}
+            label={text.advancedSearch}
+            description={text.advancedSearchHint}
+          />
+        </div>
       </div>
 
       {/* Keyword Chips Section */}
@@ -96,7 +130,7 @@ export function KeywordSelector({
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40"
                     )}
                   >
-                    Tümünü Seç
+                    {text.selectAll}
                   </button>
                   <button
                     type="button"
@@ -107,7 +141,7 @@ export function KeywordSelector({
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40"
                     )}
                   >
-                    Tümünü Kaldır
+                    {text.deselectAll}
                   </button>
                 </div>
               )}
@@ -115,11 +149,8 @@ export function KeywordSelector({
               {/* Loading State */}
               {isLoading && (
                 <div className="flex gap-2 overflow-x-auto pb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Skeleton
-                      key={`keyword-selector-skeleton-${i}`}
-                      className="h-8 w-24 shrink-0 rounded-full"
-                    />
+                  {loadingSkeletonKeys.map((key) => (
+                    <Skeleton key={key} className="h-8 w-24 shrink-0 rounded-full" />
                   ))}
                 </div>
               )}
@@ -191,6 +222,7 @@ export function KeywordSelector({
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
@@ -199,7 +231,7 @@ export function KeywordSelector({
                       d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                     />
                   </svg>
-                  <span className="text-xs text-amber-500">En az 1 anahtar kelime seçin</span>
+                  <span className="text-xs text-amber-500">{text.selectAtLeastOne}</span>
                 </motion.div>
               )}
             </div>

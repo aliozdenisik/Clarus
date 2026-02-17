@@ -211,15 +211,58 @@
       "newTestament": "Yeni Ahit",
       "apocrypha": "Apokrif"
     },
+    "subtitlePrefix": "Kutsal metinlerde anlamsal aramayla",
+    "verseCounts": {
+      "quran": "6.236 ayet",
+      "oldTestament": "23.145 ayet",
+      "newTestament": "7.957 ayet",
+      "apocrypha": "5.717 ayet"
+    },
     "language": "Dil",
     "translator": "Çeviri",
     "autoDetect": "Otomatik algıla",
     "advancedMode": "Gelişmiş Mod",
+    "advancedSearchHint": "Anahtar kelime bazlı arama",
+    "selectAllKeywords": "Tümünü Seç",
+    "deselectAllKeywords": "Tümünü Kaldır",
+    "selectAtLeastOneKeyword": "En az bir anahtar kelime seçin",
+    "extractKeywords": "Gelişmiş arama için anahtar kelime çıkar",
+    "extractingKeywords": "Anahtar kelimeler çıkarılıyor...",
+    "clearKeywords": "Seçili anahtar kelimeleri temizle",
     "keywordSuggestions": "Anahtar Kelime Önerileri",
     "enhancing": "Sorgu zenginleştiriliyor...",
     "streaming": "Cevap akıtılıyor...",
+    "aiInterpretation": "YZ Yorumu",
+    "retrievingSources": "Kaynaklar getiriliyor...",
+    "unknownReference": "Bilinmeyen Referans",
     "noResultsTitle": "Sonuç bulunamadı",
     "noResultsMessage": "Arama sorgunuzu veya filtrelerinizi ayarlamayı deneyin.",
+    "noResultsQuery": "\"{query}\" için sonuç yok",
+    "noResultsHint": "Daha geniş terimler deneyin, kaynakları değiştirin veya gelişmiş modu kullanın.",
+    "clearSearch": "Aramayı temizle",
+    "emptyState": {
+      "title": "Bir kavram, soru veya ayet ile başlayın",
+      "description": "Kapsamlı karşılaştırma öncesinde Kuran ve İncil koleksiyonları arasında anlamsal ilişkileri keşfedin.",
+      "suggestions": {
+        "patience": "Sabır ve namaz",
+        "creation": "Yaratılış hikayesi",
+        "justice": "Adalet ve merhamet"
+      },
+      "tips": {
+        "semantic": {
+          "title": "Anlamsal Arama",
+          "description": "Sadece kelimeye değil, anlama göre arama yapın."
+        },
+        "compare": {
+          "title": "Kaynak Sekmeleri",
+          "description": "Kuran, Eski Ahit, Yeni Ahit ve Apokrif arasında geçiş yapın."
+        },
+        "keyword": {
+          "title": "Gelişmiş Mod",
+          "description": "Hedefli sonuçlar için anahtar kelimeleri çıkarın ve daraltın."
+        }
+      }
+    },
     "verseDetails": "Ayet Detayları",
     "viewVerse": "Ayeti görüntüle",
     "copyReference": "Referansı kopyala",
@@ -227,9 +270,48 @@
   },
   "Compare": {
     "title": "Karşılaştırmalı Analiz",
+    "badge": "5 Ajanlı Çoklu Kutsal Metin Analizi",
+    "subtitlePrefix": "Karşılaştırmalı analiz,",
+    "subtitleMiddle": "ayet ve",
+    "subtitleSuffix": "kaynakta",
     "placeholder": "Karşılaştırmak için teolojik bir konu veya soru girin...",
     "analyzing": "Analiz ediliyor...",
     "analyzeButton": "Analiz Et",
+    "sourcesLabel": "Kaynaklar:",
+    "advancedSearch": "Gelişmiş Arama",
+    "advancedSearchHint": "Anahtar kelime bazlı arama",
+    "quranKeywords": "Kuran Anahtar Kelimeleri:",
+    "bibleKeywords": "İncil Anahtar Kelimeleri:",
+    "extractingKeywords": "Anahtar kelimeler çıkarılıyor...",
+    "analysisComplete": "Analiz Tamamlandı",
+    "citationsLabel": "Atıflar:",
+    "citationsCount": "{count} atıf",
+    "sourceReferences": "Kaynak Referansları",
+    "categoryNoResults": "Bu kategori için sonuç bulunamadı.",
+    "clickAllTab": "Tüm referansları görmek için \"Tüm Kaynaklar\" sekmesine tıklayın.",
+    "allCitationsBySource": "Kaynağa Göre Tüm Atıflar",
+    "collections": {
+      "quran": "Kuran",
+      "oldTestament": "Eski Ahit",
+      "newTestament": "Yeni Ahit",
+      "apocrypha": "Apokrif"
+    },
+    "emptyState": {
+      "title": "Yönlendirilmiş istemlerle metinleri karşılaştırın",
+      "description": "Teolojik bir konu seçin ve 5 ajanın çoklu metin perspektiflerini atıflarla birlikte sentezlemesini izleyin.",
+      "stepLabel": "Adım {number}",
+      "suggestions": {
+        "creation": "Yaratılış hikayesi",
+        "justice": "Adalet ve merhamet",
+        "mercy": "Affetme ve şefkat",
+        "prophets": "Peygamberlerin ortak öğretileri"
+      },
+      "steps": {
+        "input": "Bir kavram, soru veya tema girin.",
+        "analyze": "Ajanlar seçilen koleksiyonlarda paralel arama yapar.",
+        "synthesize": "Atıflarla desteklenen karşılaştırmalı yorum alın."
+      }
+    },
     "multiAgent": "Çoklu-Ajan Analizi",
     "selectCollections": "Koleksiyonları Seç",
     "allCollections": "Tüm Koleksiyonlar",

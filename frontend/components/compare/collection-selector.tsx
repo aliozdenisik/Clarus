@@ -1,20 +1,19 @@
 "use client"
 
-import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 
 export interface CollectionOption {
   id: string
-  label: string
-  labelTr: string
+  translationKey: "quran" | "oldTestament" | "newTestament" | "apocrypha"
 }
 
 export const COLLECTION_OPTIONS: CollectionOption[] = [
-  { id: "quran_tr", label: "Quran", labelTr: "Kuran" },
-  { id: "bible_ot", label: "Old Testament", labelTr: "Eski Ahit" },
-  { id: "bible_nt", label: "New Testament", labelTr: "Yeni Ahit" },
-  { id: "bible_apocrypha", label: "Apocrypha", labelTr: "Apokrifa" },
+  { id: "quran_tr", translationKey: "quran" },
+  { id: "bible_ot", translationKey: "oldTestament" },
+  { id: "bible_nt", translationKey: "newTestament" },
+  { id: "bible_apocrypha", translationKey: "apocrypha" },
 ]
 
 const collectionButtonVariants = {
@@ -50,6 +49,8 @@ export function CollectionSelector({
   disabled = false,
   className,
 }: CollectionSelectorProps) {
+  const t = useTranslations("Compare.collections")
+
   const toggleCollection = (collectionId: string) => {
     if (disabled) return
 
@@ -87,7 +88,7 @@ export function CollectionSelector({
               disabled && "cursor-not-allowed opacity-50"
             )}
           >
-            {option.labelTr}
+            {t(option.translationKey)}
             <AnimatePresence>
               {isSelected && (
                 <motion.span
@@ -97,7 +98,7 @@ export function CollectionSelector({
                   transition={{ duration: 0.15 }}
                   className="inline-flex items-center overflow-hidden"
                 >
-                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
+                  <svg width="12" height="12" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                     <path
                       d="M5 10.5L9 14.5L15 7.5"
                       stroke="currentColor"
