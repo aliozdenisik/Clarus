@@ -18,7 +18,16 @@ import logging
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.config import settings
+
 logger = logging.getLogger(__name__)
+
+
+def _is_https_request(request: Request) -> bool:
+    if request.url.scheme == "https":
+        return True
+    forwarded_proto = request.headers.get("x-forwarded-proto", "").split(",", 1)[0].strip().lower()
+    return forwarded_proto == "https"
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -54,7 +63,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
 
             # Strict-Transport-Security: Enforce HTTPS for 1 year, include subdomains
-            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+            if settings.is_production and _is_https_request(request):
+                response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
             # X-Content-Type-Options: Prevent MIME type sniffing
             response.headers["X-Content-Type-Options"] = "nosniff"

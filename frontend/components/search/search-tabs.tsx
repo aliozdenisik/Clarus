@@ -1,6 +1,6 @@
 "use client"
 
-import { Tabs, Tab } from "@/components/ui/vercel-tabs"
+import { AnimatedBackground } from "@/components/motion-primitives/animated-background"
 import { useTranslations } from "next-intl"
 
 export type SearchSource = "quran" | "ot" | "nt" | "apocrypha"
@@ -13,7 +13,7 @@ interface SearchTabsProps {
 export function SearchTabs({ activeTab, onTabChange }: SearchTabsProps) {
   const t = useTranslations("Search.tabs")
 
-  const tabs: Tab[] = [
+  const tabs = [
     { id: "quran", label: t("quran") },
     { id: "ot", label: t("oldTestament") },
     { id: "nt", label: t("newTestament") },
@@ -22,11 +22,23 @@ export function SearchTabs({ activeTab, onTabChange }: SearchTabsProps) {
 
   return (
     <div className="mb-8 flex justify-center">
-      <Tabs
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={(tabId) => onTabChange(tabId as SearchSource)}
-      />
+      <AnimatedBackground
+        defaultValue={activeTab}
+        onValueChange={(id) => id && onTabChange(id as SearchSource)}
+        className="rounded-lg bg-white/[0.08]"
+        transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+      >
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            data-id={tab.id}
+            type="button"
+            className="px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] transition-colors data-[checked=true]:text-white"
+          >
+            {tab.label}
+          </button>
+        ))}
+      </AnimatedBackground>
     </div>
   )
 }

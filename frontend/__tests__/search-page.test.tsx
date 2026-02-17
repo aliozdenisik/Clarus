@@ -79,9 +79,9 @@ vi.mock("lucide-react", () => ({
   ExternalLink: () => <div data-testid="external-link-icon" />,
 }))
 
-// Mock GlowCard
-vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
+// Mock MagicCard
+vi.mock("@/components/ui/magic-card", () => ({
+  MagicCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
 }))
 
 // Mock DotPattern + AuroraSectionBackground

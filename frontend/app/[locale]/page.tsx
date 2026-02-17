@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
-import { LuxuryQuote } from "@/components/ui/text-rotate"
+import { LuxuryQuote } from "@/components/ui/luxury-quote"
 import { useTranslations } from "next-intl"
 
 import { DotPattern, RadialGradient } from "@/components/ui/dot-pattern"
@@ -344,8 +344,8 @@ export default function HomePage() {
             viewport={{ once: true, margin: "-50px" }}
             transition={{ ...springPresets.gentle, duration: 1 }}
           >
-            <BentoGrid className="md:grid-cols-3">
-              {features.map((feature, index) => (
+            <BentoGrid className="grid-cols-1 gap-6 md:grid-cols-3">
+              {features.map((feature) => (
                 <BentoCard
                   key={feature.title}
                   name={feature.title}
@@ -357,7 +357,6 @@ export default function HomePage() {
                   description={feature.description}
                   href={user ? "/search" : "/sign-up"}
                   cta={tCommon("learnMore")}
-                  isPrimary={index === 0}
                 />
               ))}
             </BentoGrid>

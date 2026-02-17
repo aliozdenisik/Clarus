@@ -12,10 +12,10 @@ vi.mock("framer-motion", () => ({
   },
 }))
 
-// Mock GlowCard
-vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <div data-testid="glow-card" className={className}>
+// Mock MagicCard
+vi.mock("@/components/ui/magic-card", () => ({
+  MagicCard: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+    <div data-testid="magic-card" className={className}>
       {children}
     </div>
   ),
@@ -60,9 +60,9 @@ describe("SourceReferenceCard", () => {
       expect(screen.getByText("King James Version with Apocrypha")).toBeInTheDocument()
     })
 
-    it("renders GlowCard wrapper", () => {
+    it("renders MagicCard wrapper", () => {
       render(<SourceReferenceCard verse={mockVerse} reference="Genesis 1:1" />)
-      expect(screen.getByTestId("glow-card")).toBeInTheDocument()
+      expect(screen.getByTestId("magic-card")).toBeInTheDocument()
     })
   })
 

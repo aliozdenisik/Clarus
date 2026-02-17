@@ -98,7 +98,11 @@ describe("InlineCitation", () => {
       render(<InlineCitation reference="1 Corinthians 15:46" onNavigate={vi.fn()} />)
 
       await userEvent.click(screen.getByRole("button"))
-      expect(openSpy).toHaveBeenCalledWith("/bible/46?chapter=15&verse=46", "_blank")
+      expect(openSpy).toHaveBeenCalledWith(
+        "/bible/46?chapter=15&verse=46",
+        "_blank",
+        "noopener,noreferrer"
+      )
       openSpy.mockRestore()
     })
 
@@ -107,7 +111,7 @@ describe("InlineCitation", () => {
       render(<InlineCitation reference="Bakara:153" onNavigate={vi.fn()} />)
 
       await userEvent.click(screen.getByRole("button"))
-      expect(openSpy).toHaveBeenCalledWith("/quran/2/153", "_blank")
+      expect(openSpy).toHaveBeenCalledWith("/quran/2/153", "_blank", "noopener,noreferrer")
       openSpy.mockRestore()
     })
   })

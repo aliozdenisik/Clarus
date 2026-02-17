@@ -287,7 +287,7 @@ function SearchContent() {
         return
       }
 
-      window.open(url, "_blank")
+      window.open(url, "_blank", "noopener,noreferrer")
     },
     [verseDetails, scrollToVerse, log]
   )

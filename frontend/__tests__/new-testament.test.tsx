@@ -2,10 +2,10 @@ import { render, screen, fireEvent, waitFor } from "./test-utils"
 import { vi, describe, it, expect, beforeEach } from "vitest"
 import NewTestamentPage from "../app/[locale]/new-testament/page"
 
-// Mock GlowCard to avoid complex rendering in tests
-vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
-    <div data-testid="glow-card" onClick={onClick}>
+// Mock MagicCard to avoid complex rendering in tests
+vi.mock("@/components/ui/magic-card", () => ({
+  MagicCard: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
+    <div data-testid="magic-card" onClick={onClick}>
       {children}
     </div>
   ),

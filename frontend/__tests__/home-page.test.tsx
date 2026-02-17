@@ -61,7 +61,7 @@ vi.mock("@/components/ui/dot-pattern", () => ({
   RadialGradient: () => null,
 }))
 
-vi.mock("@/components/ui/text-rotate", () => ({
+vi.mock("@/components/ui/luxury-quote", () => ({
   LuxuryQuote: ({
     quotes,
     className,
@@ -103,6 +103,9 @@ vi.mock("lucide-react", () => {
     ScrollText: Icon,
     BookMarked: Icon,
     Library: Icon,
+    ShieldCheck: Icon,
+    Zap: Icon,
+    Globe: Icon,
   }
 })
 

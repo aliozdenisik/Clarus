@@ -42,8 +42,8 @@ vi.mock("@/lib/design-system", () => ({
   },
 }))
 
-vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
+vi.mock("@/components/ui/magic-card", () => ({
+  MagicCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
 }))
 
 vi.mock("@/components/ui/skeleton", () => ({

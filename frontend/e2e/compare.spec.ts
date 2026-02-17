@@ -74,7 +74,7 @@ test.describe("Compare Page E2E Tests", () => {
         await expect(page.locator(`text=${title}`)).toBeVisible({ timeout: 5000 })
       }
 
-      // Verify paragraph cards are rendered (use GlowCard containers)
+      // Verify paragraph cards are rendered (use MagicCard containers)
       const paragraphCards = page.locator('button:has-text("Eski Ahit")').locator("..")
       await expect(paragraphCards).toHaveCount(1, { timeout: 5000 })
 
