@@ -539,7 +539,10 @@ export default function HomePage() {
           </motion.div>
 
           {/* Steps Grid */}
-          <div className="grid grid-cols-1 gap-12 md:grid-cols-4">
+          <div
+            data-testid="how-it-works-grid"
+            className="mx-auto grid max-w-[1120px] grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4 xl:gap-8"
+          >
             {steps.map((step, index) => (
               <motion.div
                 key={step.label}
@@ -551,30 +554,50 @@ export default function HomePage() {
                   delay: 0.2 + index * 0.15,
                   duration: 1,
                 }}
-                className="relative"
+                className="relative h-full"
               >
-                {/* Step Number */}
-                <div className="mb-8">
-                  <span className="font-[family-name:var(--font-serif)] text-6xl text-[var(--color-accent-primary)]/20">
+                <div
+                  data-testid={`how-it-works-step-${index + 1}`}
+                  className="group relative flex h-full flex-col rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-transparent p-6 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-500 hover:border-white/[0.15] hover:from-white/[0.06]"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -top-2.5 -left-2.5 inline-flex h-7 min-w-7 items-center justify-center rounded-lg border border-indigo-500/30 bg-indigo-500/15 px-2 text-[10px] font-semibold tracking-[0.12em] text-indigo-300 tabular-nums"
+                  >
                     {String(index + 1).padStart(2, "0")}
                   </span>
+
+                  {/* Icon */}
+                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-indigo-500/30 bg-indigo-500/10">
+                    <step.icon className="h-6 w-6 text-indigo-300" />
+                  </div>
+
+                  {/* Text Content */}
+                  <h3 className="mb-1 text-xl font-semibold tracking-wide text-white">
+                    {step.label}
+                  </h3>
+                  <p className="mb-4 text-sm font-semibold tracking-wide text-indigo-300">
+                    {step.desc}
+                  </p>
+                  <p className="max-w-[30ch] text-sm leading-relaxed text-zinc-300">
+                    {step.detail}
+                  </p>
+
+                  {index === 2 ? (
+                    <p className="mt-4 inline-flex w-fit items-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-1 text-[11px] font-medium tracking-wide text-indigo-200 tabular-nums">
+                      {tLanding("cta.versesIndexed")}
+                    </p>
+                  ) : null}
                 </div>
 
-                {/* Icon */}
-                <div className="mb-6 flex h-12 w-12 items-center justify-center border border-[var(--color-border-subtle)]">
-                  <step.icon className="h-5 w-5 text-[var(--color-accent-primary)]" />
-                </div>
-
-                {/* Text Content */}
-                <h3 className="mb-3 text-xl font-medium tracking-wide text-[var(--color-text-primary)]">
-                  {step.label}
-                </h3>
-                <p className="mb-4 text-sm font-light text-[var(--color-text-muted)]">
-                  {step.desc}
-                </p>
-                <p className="text-sm leading-relaxed font-light text-[var(--color-text-secondary)]">
-                  {step.detail}
-                </p>
+                {index < steps.length - 1 ? (
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-7 left-[calc(100%-0.5rem)] hidden w-[calc(100%+1.5rem)] xl:block"
+                  >
+                    <div className="h-px bg-gradient-to-r from-indigo-500/40 to-transparent" />
+                  </div>
+                ) : null}
               </motion.div>
             ))}
           </div>
