@@ -1,7 +1,7 @@
 "use client"
 
-import * as React from "react"
 import { Tabs, Tab } from "@/components/ui/vercel-tabs"
+import { useTranslations } from "next-intl"
 
 export type SearchSource = "quran" | "ot" | "nt" | "apocrypha"
 
@@ -10,14 +10,16 @@ interface SearchTabsProps {
   onTabChange: (tab: SearchSource) => void
 }
 
-const tabs: Tab[] = [
-  { id: "quran", label: "Quran" },
-  { id: "ot", label: "Old Testament" },
-  { id: "nt", label: "New Testament" },
-  { id: "apocrypha", label: "Apocrypha" },
-]
-
 export function SearchTabs({ activeTab, onTabChange }: SearchTabsProps) {
+  const t = useTranslations("Search.tabs")
+
+  const tabs: Tab[] = [
+    { id: "quran", label: t("quran") },
+    { id: "ot", label: t("oldTestament") },
+    { id: "nt", label: t("newTestament") },
+    { id: "apocrypha", label: t("apocrypha") },
+  ]
+
   return (
     <div className="mb-8 flex justify-center">
       <Tabs
