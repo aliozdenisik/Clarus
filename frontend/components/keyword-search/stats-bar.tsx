@@ -19,9 +19,11 @@ interface StatItem {
 
 export function StatsBar({ totalOccurrences, uniqueWords, surahCount, language }: StatsBarProps) {
   const t = useTranslations("KeywordSearch")
+  const uniqueWordLabel = uniqueWords === 1 ? t("stats.uniqueWord") : t("stats.uniqueWords")
+
   const stats: StatItem[] = [
     { label: t("stats.totalUsage"), value: totalOccurrences },
-    { label: t("stats.uniqueWord"), value: uniqueWords },
+    { label: uniqueWordLabel, value: uniqueWords },
     { label: language === "quran" ? t("stats.surahs") : t("stats.books"), value: surahCount },
   ]
 

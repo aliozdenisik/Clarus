@@ -118,7 +118,8 @@ vi.mock("recharts", () => ({
       {children}
     </div>
   ),
-  Bar: () => <div data-testid="bar" />,
+  Bar: ({ children }: MockProps) => <div data-testid="bar">{children}</div>,
+  LabelList: () => <div data-testid="label-list" />,
   XAxis: () => <div data-testid="x-axis" />,
   YAxis: () => <div data-testid="y-axis" />,
   Tooltip: () => <div data-testid="tooltip" />,
@@ -262,6 +263,17 @@ describe("KeywordSearchPage", () => {
     // Tab navigation - animated-tabs renders plain divs, not ARIA tabs
     expect(screen.getByText("Search Results")).toBeInTheDocument()
     expect(screen.getByText("Root Browser")).toBeInTheDocument()
+  })
+
+  it("shows contextual helper text for each language mode", async () => {
+    render(<KeywordSearchPage />)
+
+    expect(screen.getByText(/Buckwalter Latin/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText("Greek New Testament"))
+    await waitFor(() => {
+      expect(screen.getByText(/Supports Strong's numbers \(e\.g\., G1125\)/i)).toBeInTheDocument()
+    })
   })
 
   it("renders enriched empty state before any search", () => {

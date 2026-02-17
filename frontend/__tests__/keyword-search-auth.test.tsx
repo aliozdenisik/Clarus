@@ -56,6 +56,7 @@ vi.mock("lucide-react", () => ({
   ArrowLeft: () => <div data-testid="arrow-left-icon" />,
   AlertTriangle: () => <div data-testid="alert-triangle-icon" />,
   Info: () => <div data-testid="info-icon" />,
+  X: () => <div data-testid="x-icon" />,
   ChevronDown: () => <div data-testid="chevron-down-icon" />,
 }))
 
@@ -94,7 +95,8 @@ vi.mock("recharts", () => ({
     <div data-testid="responsive-container">{children}</div>
   ),
   BarChart: ({ children }: MockProps) => <div data-testid="bar-chart">{children}</div>,
-  Bar: () => <div data-testid="bar" />,
+  Bar: ({ children }: MockProps) => <div data-testid="bar">{children}</div>,
+  LabelList: () => <div data-testid="label-list" />,
   XAxis: () => <div data-testid="x-axis" />,
   YAxis: () => <div data-testid="y-axis" />,
   Tooltip: () => <div data-testid="tooltip" />,
@@ -110,8 +112,8 @@ vi.mock("react-virtuoso", () => ({
     itemContent: (index: number) => React.ReactNode
   }) => (
     <div data-testid="virtuoso-mock">
-      {Array.from({ length: totalCount }, (_, i) => (
-        <div key={`virtuoso-item-${i}`}>{itemContent(i)}</div>
+      {Array.from({ length: totalCount }, (_, idx) => idx).map((itemIndex) => (
+        <div key={`virtuoso-item-${itemIndex}`}>{itemContent(itemIndex)}</div>
       ))}
     </div>
   ),
