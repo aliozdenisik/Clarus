@@ -238,6 +238,17 @@ describe("SearchPage", () => {
     expect(screen.getByPlaceholderText("Search Quran...")).toBeInTheDocument()
   })
 
+  it("shows pre-search empty state and applies suggested query", () => {
+    render(<SearchPage />)
+
+    const suggestionButton = screen.getByRole("button", { name: "Patience and prayer" })
+    expect(suggestionButton).toBeInTheDocument()
+
+    fireEvent.click(suggestionButton)
+
+    expect(screen.getByTestId("search-input")).toHaveValue("Patience and prayer")
+  })
+
   it("performs batch search on form submission", async () => {
     const mockResults = [
       { source: "quran", reference: "2:255", text: "Ayat al-Kursi", score: 0.95 },
