@@ -26,6 +26,7 @@ from app.db import init_db
 from app.logging_config import LoggingConfig, get_logger, setup_logging
 from app.middleware.correlation import CorrelationIDMiddleware
 from app.middleware.error_handler import ErrorHandlerMiddleware
+from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 
 logger = get_logger(__name__)
@@ -196,6 +197,7 @@ app = FastAPI(
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(ErrorHandlerMiddleware)
 app.add_middleware(CorrelationIDMiddleware)
+app.add_middleware(RateLimitMiddleware)
 
 app.add_middleware(
     CORSMiddleware,

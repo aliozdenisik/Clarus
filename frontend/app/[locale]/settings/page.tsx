@@ -154,7 +154,13 @@ export default function SettingsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...springPresets.fluid, delay: 0.1 }}
           >
-            <MagicCard className="bg-[var(--color-bg-surface)]/80 p-6 backdrop-blur-xl rounded-lg border border-[var(--color-border-subtle)]" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+            <MagicCard
+              className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/80 p-6 backdrop-blur-xl"
+              gradientSize={200}
+              gradientColor="#1a1a2e"
+              gradientFrom="#7c3aed"
+              gradientTo="#4f46e5"
+            >
               <div className="mb-6 flex items-center gap-2">
                 <Palette className="h-5 w-5 text-[var(--color-accent-primary)]" />
                 <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
@@ -221,7 +227,13 @@ export default function SettingsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...springPresets.fluid, delay: 0.2 }}
           >
-            <MagicCard className="bg-[var(--color-bg-surface)]/80 p-6 backdrop-blur-xl rounded-lg border border-[var(--color-border-subtle)]" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+            <MagicCard
+              className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/80 p-6 backdrop-blur-xl"
+              gradientSize={200}
+              gradientColor="#1a1a2e"
+              gradientFrom="#7c3aed"
+              gradientTo="#4f46e5"
+            >
               <div className="mb-6 flex items-center gap-2">
                 <Search className="h-5 w-5 text-[var(--color-accent-primary)]" />
                 <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
@@ -296,7 +308,13 @@ export default function SettingsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...springPresets.fluid, delay: 0.3 }}
           >
-            <MagicCard className="bg-[var(--color-bg-surface)]/80 p-6 backdrop-blur-xl rounded-lg border border-[var(--color-border-subtle)]" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+            <MagicCard
+              className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/80 p-6 backdrop-blur-xl"
+              gradientSize={200}
+              gradientColor="#1a1a2e"
+              gradientFrom="#7c3aed"
+              gradientTo="#4f46e5"
+            >
               <div className="mb-6 flex items-center gap-2">
                 <Zap className="h-5 w-5 text-[var(--color-accent-primary)]" />
                 <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">

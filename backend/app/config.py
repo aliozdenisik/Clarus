@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -29,6 +30,7 @@ class Settings(BaseSettings):
 
     rate_limit_per_day: int = 50
     rate_limit_enabled: bool = True
+    public_rate_limit_per_minute: int = 120
 
     openrouter_api_key: str = ""
 
@@ -93,8 +95,43 @@ class Settings(BaseSettings):
 
     def validate_production_settings(self) -> None:
         """Raise RuntimeError if dangerous settings are used in production."""
+        if self.cors_allow_credentials and "*" in self.cors_origins_list:
+            raise RuntimeError(
+                "CORS misconfiguration: allow_credentials=true cannot be used with wildcard origins. "
+                "Set explicit CORS_ORIGINS values."
+            )
+
         if self.debug and self.app_env == "production":
             raise RuntimeError("Debug mode must be disabled in production (set DEBUG=false)")
+
+        if self.app_env == "production" and not self.rate_limit_enabled:
+            raise RuntimeError("Rate limiting must be enabled in production (set RATE_LIMIT_ENABLED=true)")
+
+        if self.app_env == "production":
+            production_urls = {
+                "database_url": self.database_url,
+                "better_auth_jwks_url": self.better_auth_jwks_url,
+                "better_auth_issuer": self.better_auth_issuer,
+            }
+
+            for key, value in production_urls.items():
+                parsed = urlparse(value)
+                host = (parsed.hostname or "").lower()
+                if host in {"localhost", "127.0.0.1", "::1"}:
+                    raise RuntimeError(f"{key} cannot point to localhost in production")
+
+            if self.better_auth_jwks_url.startswith("http://"):
+                raise RuntimeError("BETTER_AUTH_JWKS_URL must use HTTPS in production")
+
+            if self.better_auth_issuer.startswith("http://"):
+                raise RuntimeError("BETTER_AUTH_ISSUER must use HTTPS in production")
+
+            for origin in self.cors_origins_list:
+                parsed = urlparse(origin)
+                host = (parsed.hostname or "").lower()
+                if host in {"localhost", "127.0.0.1", "::1"}:
+                    raise RuntimeError("CORS_ORIGINS cannot contain localhost in production")
+
         if self.app_env == "production" and self.jwt_secret_key in (
             "",
             "your-secret-key-change-in-production",

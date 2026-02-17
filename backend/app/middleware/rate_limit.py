@@ -122,6 +122,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     Features:
     - 50 queries/day per user (configurable)
     - 10 queries/minute for auth endpoints
+    - IP-based limit for public heavy-read endpoints
     - Calendar day reset (UTC midnight)
     - Fail-open if Redis unavailable
     - Atomic increment using Lua script
@@ -135,6 +136,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     AUTH_RATE_LIMITED_PATHS = ["/api/auth/"]
     AUTH_RATE_LIMIT_PER_MINUTE = 10
+    PUBLIC_RATE_LIMITED_PATHS = [
+        "/api/search/keyword/",
+        "/api/keyword-search/bible/",
+        "/api/metadata/",
+        "/api/etymology/",
+        "/api/verse/",
+        "/api/quran/verses/",
+    ]
 
     async def dispatch(self, request: Request, call_next):
         """Apply rate limiting to configured paths."""
@@ -147,8 +156,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Check if path should be rate limited
         is_rate_limited_path = any(path.startswith(p) for p in self.RATE_LIMITED_PATHS)
         is_auth_path = any(path.startswith(p) for p in self.AUTH_RATE_LIMITED_PATHS)
+        matched_public_path = next((p for p in self.PUBLIC_RATE_LIMITED_PATHS if path.startswith(p)), None)
+        is_public_path = matched_public_path is not None
 
-        if not is_rate_limited_path and not is_auth_path:
+        if not is_rate_limited_path and not is_auth_path and not is_public_path:
             return await call_next(request)
 
         # Get user ID from request state (set by auth middleware)
@@ -156,7 +167,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # Auth endpoints: rate limit even without user_id (by IP or allow anonymous)
         # For now, skip rate limiting if no user_id (auth endpoints before login)
-        if user_id is None and not is_auth_path:
+        if user_id is None and not is_auth_path and not is_public_path:
             return await call_next(request)
 
         # For auth endpoints without user_id, use IP-based rate limiting
@@ -214,6 +225,47 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
                 # Auth endpoints: don't add rate limit headers to successful responses
                 return await call_next(request)
+
+            if is_public_path:
+                minute_key = now.strftime("%Y-%m-%d-%H-%M")
+                client_ip = request.client.host if request.client else "anonymous"
+                path_bucket = (matched_public_path or "public").strip("/").replace("/", ":")
+                key = f"ratelimit:public:{path_bucket}:{client_ip}:{minute_key}"
+                limit = settings.public_rate_limit_per_minute
+                ttl_seconds = 60
+
+                script = redis_manager.client.register_script(RATE_LIMIT_SCRIPT)
+                current_count_raw = await script(
+                    keys=[key],
+                    args=[limit, ttl_seconds],
+                )
+                current_count = _to_int(current_count_raw)
+
+                if current_count > limit:
+                    request_id = getattr(request.state, "request_id", "unknown")
+                    return JSONResponse(
+                        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                        content={
+                            "success": False,
+                            "error": {
+                                "code": "RATE_LIMIT_EXCEEDED",
+                                "message": "Cok fazla istek gonderildi. Lutfen 1 dakika sonra tekrar deneyin",
+                                "details": [],
+                            },
+                            "request_id": request_id,
+                            "timestamp": now.isoformat(),
+                        },
+                        headers={
+                            "X-RateLimit-Limit": str(limit),
+                            "X-RateLimit-Remaining": str(max(0, limit - current_count)),
+                            "Retry-After": "60",
+                        },
+                    )
+
+                response = await call_next(request)
+                response.headers["X-RateLimit-Limit"] = str(limit)
+                response.headers["X-RateLimit-Remaining"] = str(max(0, limit - current_count))
+                return response
 
             # REGULAR ENDPOINTS: Per-day rate limiting
             # Calculate reset time (next UTC midnight)

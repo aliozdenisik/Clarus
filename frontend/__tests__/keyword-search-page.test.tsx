@@ -683,7 +683,7 @@ describe("KeywordSearchPage", () => {
 
     render(<KeywordSearchPage />)
 
-     // Click Root Browser tab - animated-tabs renders plain divs
+    // Click Root Browser tab - animated-tabs renders plain divs
     const browserTab = screen.getByText("Root Browser")
     await userEvent.click(browserTab)
 

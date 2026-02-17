@@ -41,7 +41,15 @@ export function AnimatedBackground({
   return Children.map(
     children,
     (
-      child: ReactElement<{ "data-id": string; className?: string; children?: React.ReactNode }>
+      child: ReactElement<{
+        "data-id": string
+        className?: string
+        children?: React.ReactNode
+        "data-checked"?: string
+        onClick?: () => void
+        onMouseEnter?: () => void
+        onMouseLeave?: () => void
+      }>
     ) => {
       const id = child.props["data-id"]
 

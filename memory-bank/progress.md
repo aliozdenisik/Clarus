@@ -36,6 +36,7 @@
 
 ### Backend API
 
+- [x] Public endpoint per-minute rate-limit middleware regression tests (`backend/tests/test_rate_limit_middleware.py`) — covers 429 behavior, headers, bypass paths, and Redis fail-open behavior
 - [x] Multi-translation verse API (`/api/metadata/quran/verses/{surahId}/{verseId}/translations`) — 8 Turkish translations from Qdrant
 - [x] SearchHistory `result_count` column + migration script
 - [x] History API `result_count` in response items
@@ -67,7 +68,7 @@
 - [x] Etymology ETL pipeline — parallel LLM translations, batch circuit breaker, robust JSON parsing
 - [x] Lane's Lexicon PostgreSQL integration — 47,919 entries, 5,160 roots
 
-### Frontend (Next.js 15)
+### Frontend (Next.js 16)
 
 - [x] **Verse display overhaul** (2026-02-11): "Ana Cadde / Yan Durak" architecture — borderless surah page, verse detail page with 8 Turkish translations, 2-panel keyword search, etymology popover refinement, Crimson Text serif, spring animations (279 tests, 9 tasks, 8 commits)
 - [x] Verse detail page (`/quran/[surahId]/[verseId]`) — 8 Turkish translations stacked vertically
@@ -118,11 +119,12 @@
 - [x] **Accuracy disclaimer UI** (2026-02-04): Added expandable accuracy verification panel to Bible Word Search with "Clarus can make mistakes" disclaimer, BLB comparison table, data source info (8 tests)
 - [x] Better Auth UI — sign-in/sign-up pages, session management via useSession()
 - [x] **Issue #94 React key stability** (2026-02-09): Replaced index-based keys in dynamic lists and standardized deterministic skeleton keys across search/compare/history/browse/components
-- [x] **Issue #91 frontend perf hotspots** (2026-02-09): Batched vercel-tabs layout measurements, virtualized root-browser with react-window, cached magnetic-button bounds for mousemove
+- [x] **Issue #91 frontend perf hotspots** (2026-02-09): Batched vercel-tabs layout measurements, virtualized root-browser with react-virtuoso, cached magnetic-button bounds for mousemove
 - [x] **Issue #88 async lifecycle hardening** (2026-02-10): Added AbortController cancellation + AbortError guards across client request paths and unmount-safe SSE retry cleanup in `use-sse`
 - [x] **Issue #156 black void fix** (2026-02-16): Migrated root-browser from broken react-window to react-virtuoso v4.18.1 — eliminated 12,000px void, scroll container now 560px
 - [x] **Issue #157 auth redirect fix** (2026-02-16): Removed triple-layer auth gate from /keyword-search/* routes, added bot detection regex in middleware for SEO crawlability (Googlebot, Bingbot, AI crawlers)
 - [x] **Regression tests** (2026-02-16): 10 new tests — 6 virtualization (root-browser-virtuoso.test.tsx) + 4 auth (keyword-search-auth.test.tsx). Total: 363 tests across 31 files
+- [x] **Component library migration** (2026-02-17): Replaced 5 manual UI components with Magic UI + Motion Primitives library alternatives. Deleted 7 dead files (glow-card, vercel-tabs, typewriter, text-rotate, glowing-button, luxury-components, demo-navbar page). All tests pass (378/378 across 35 files).
 
 ### CLI Commands
 
@@ -164,6 +166,8 @@
 - Backend: 76 unit tests (all passing)
 - Total new tests added: 144
 
+**Note**: Test counts updated after component library migration (2026-02-17) to 378 tests across 35 files.
+
 ## What's Left to Build
 
 ### Frontend Enhancements
@@ -174,7 +178,7 @@
 - [x] SSE streaming integration
 - [x] Browse pages (Quran, OT, NT, Apocrypha)
 - [x] Global navigation
-- [x] Vitest + RTL testing (71 tests)
+- [x] Vitest + RTL testing (378 tests across 35 files)
 
 ### Production Deployment
 
@@ -216,7 +220,7 @@
 | Keyword Search | Complete | RFC-006: 77,429 words, 1,651 roots |
 | Etymology DB | Complete | 1,651 roots, Lane's Lexicon, Turkish translations |
 | Landing Page | Complete | Utilitarian luxury redesign, non-technical |
-| Frontend | Complete | Next.js 15 + Framer Motion |
+| Frontend | Complete | Next.js 16 + Framer Motion + Magic UI |
 | Docker Setup | Complete | PostgreSQL + Qdrant |
 | Browser Tests | Passed | Login ✅, Search ✅, Compare ✅ (rich refs) |
 | Multi-Translator | Complete | 8 Quran + 2 Turkish Bible |

@@ -34,7 +34,13 @@ export function StatsBar({ totalOccurrences, uniqueWords, surahCount, language }
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...springPresets.snappy, delay: index * 0.1 }}
         >
-          <MagicCard className="flex flex-col items-center justify-center p-6 rounded-lg border border-[var(--color-border-subtle)]" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+          <MagicCard
+            className="flex flex-col items-center justify-center rounded-lg border border-[var(--color-border-subtle)] p-6"
+            gradientSize={200}
+            gradientColor="#1a1a2e"
+            gradientFrom="#7c3aed"
+            gradientTo="#4f46e5"
+          >
             <div className="text-3xl font-bold text-[var(--color-text-primary)]">{stat.value}</div>
             <div className="mt-1 text-xs text-[var(--color-text-muted)]">{stat.label}</div>
           </MagicCard>

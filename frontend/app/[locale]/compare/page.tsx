@@ -258,7 +258,7 @@ function CompareContent() {
       }
 
       // Open in new tab
-      window.open(url, "_blank")
+      window.open(url, "_blank", "noopener,noreferrer")
     },
     [result?.verse_details, scrollToVerse, log]
   )
@@ -783,7 +783,7 @@ function CompareContent() {
                 onLanguageChange={setSelectedLanguage}
                 detectedLanguage={detectedLanguage}
                 selectedTranslator={selectedTranslator}
-                onTranslatorChange={setSelectedTranslator}
+                onTranslatorChange={(t) => setSelectedTranslator(t as typeof selectedTranslator)}
                 selectedCollections={selectedCollections}
                 onCollectionsChange={setSelectedCollections}
                 showTranslatorSelector={selectedCollections.includes("quran_tr")}
@@ -995,7 +995,13 @@ function CompareContent() {
                   transition={springPresets.fluid}
                 >
                   {/* Stats Header */}
-                  <MagicCard className="mb-6 rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+                  <MagicCard
+                    className="mb-6 rounded-lg border border-[var(--color-border-subtle)] p-6"
+                    gradientSize={200}
+                    gradientColor="#1a1a2e"
+                    gradientFrom="#7c3aed"
+                    gradientTo="#4f46e5"
+                  >
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div className="flex items-center gap-2">
                         <Sparkles className="h-5 w-5 text-[var(--color-accent-primary)]" />
@@ -1044,7 +1050,13 @@ function CompareContent() {
                             delay: index * 0.1,
                           }}
                         >
-                          <MagicCard className="rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+                          <MagicCard
+                            className="rounded-lg border border-[var(--color-border-subtle)] p-6"
+                            gradientSize={200}
+                            gradientColor="#1a1a2e"
+                            gradientFrom="#7c3aed"
+                            gradientTo="#4f46e5"
+                          >
                             {/* Paragraph Header */}
                             <button
                               type="button"
@@ -1166,7 +1178,13 @@ function CompareContent() {
                       className="mt-6"
                       data-testid="verse-references-section"
                     >
-                      <MagicCard className="rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+                      <MagicCard
+                        className="rounded-lg border border-[var(--color-border-subtle)] p-6"
+                        gradientSize={200}
+                        gradientColor="#1a1a2e"
+                        gradientFrom="#7c3aed"
+                        gradientTo="#4f46e5"
+                      >
                         <h3
                           className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]"
                           data-testid="verse-references-heading"
@@ -1213,7 +1231,13 @@ function CompareContent() {
                       }}
                       className="mt-6"
                     >
-                      <MagicCard className="rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+                      <MagicCard
+                        className="rounded-lg border border-[var(--color-border-subtle)] p-6"
+                        gradientSize={200}
+                        gradientColor="#1a1a2e"
+                        gradientFrom="#7c3aed"
+                        gradientTo="#4f46e5"
+                      >
                         <h3 className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">
                           {t("allCitationsBySource")}
                         </h3>

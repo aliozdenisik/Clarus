@@ -225,7 +225,7 @@ export default function HistoryPage() {
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
-        <div className="text-[var(--color-text-secondary)]">{t("loading")}</div>
+        <div className="text-[var(--color-text-secondary)]">{tCommon("loading")}</div>
       </div>
     )
   }
@@ -367,7 +367,13 @@ export default function HistoryPage() {
                   onClick={() => handleHistoryClick(item)}
                   className="cursor-pointer"
                 >
-                  <MagicCard className="group relative overflow-hidden rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+                  <MagicCard
+                    className="group relative overflow-hidden rounded-lg border border-[var(--color-border-subtle)] p-6"
+                    gradientSize={200}
+                    gradientColor="#1a1a2e"
+                    gradientFrom="#7c3aed"
+                    gradientTo="#4f46e5"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="mb-1 flex items-center gap-3">

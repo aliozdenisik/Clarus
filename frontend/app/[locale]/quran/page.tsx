@@ -228,7 +228,13 @@ export default function QuranPage() {
                     onClick={() => router.push(`/quran/${surah.id}`)}
                     className="w-full text-left"
                   >
-                    <MagicCard className="h-full transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--color-accent-primary)] hover:shadow-[0_8px_24px_rgba(99,102,241,0.15)] rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+                    <MagicCard
+                      className="h-full rounded-lg border border-[var(--color-border-subtle)] p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--color-accent-primary)] hover:shadow-[0_8px_24px_rgba(99,102,241,0.15)]"
+                      gradientSize={200}
+                      gradientColor="#1a1a2e"
+                      gradientFrom="#7c3aed"
+                      gradientTo="#4f46e5"
+                    >
                       <div className="flex h-full flex-col gap-4">
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-indigo-500/35 bg-indigo-500/15 text-sm font-bold text-indigo-200">
