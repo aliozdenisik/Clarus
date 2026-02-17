@@ -115,7 +115,7 @@ export default function QuranPage() {
   )
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-app)] p-8">
+    <div className="min-h-screen bg-[var(--color-bg-app)] px-6 py-8 md:px-8">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <motion.div
@@ -159,7 +159,7 @@ export default function QuranPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={springPresets.fluid}
-          className="mb-6"
+          className="mb-4"
         >
           <div className="mb-3">
             <h2 className="text-sm font-medium tracking-wide text-[var(--color-text-secondary)] uppercase">
@@ -173,14 +173,14 @@ export default function QuranPage() {
         </motion.div>
 
         {/* Divider */}
-        <div className="mb-8 border-t border-[var(--color-border)]" />
+        <div className="mb-6 border-t border-[var(--color-border)]" />
 
         {/* Title & Filter */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...springPresets.fluid, delay: 0.1 }}
-          className="mb-8"
+          className="mb-6"
         >
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div>
@@ -207,13 +207,13 @@ export default function QuranPage() {
 
         {/* Content */}
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {[...Array(12)].map((_, i) => (
-              <Skeleton key={`quran-page-skeleton-${i}`} className="h-32 w-full" />
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 12 }, (_, slot) => slot + 1).map((slot) => (
+              <Skeleton key={`quran-page-skeleton-${slot}`} className="h-32 w-full" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             <AnimatePresence mode="popLayout">
               {filteredSurahs.map((surah, i) => (
                 <motion.div
@@ -224,27 +224,32 @@ export default function QuranPage() {
                   transition={{ ...springPresets.snappy, delay: i * 0.02 }}
                 >
                   <button
+                    type="button"
                     onClick={() => router.push(`/quran/${surah.id}`)}
                     className="w-full text-left"
                   >
-                    <GlowCard className="h-full transition-colors hover:border-[var(--color-accent-primary)]">
-                      <div className="flex h-full flex-col justify-between gap-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-bg-secondary)] text-sm font-medium text-[var(--color-text-secondary)]">
+                    <GlowCard className="h-full transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--color-accent-primary)] hover:shadow-[0_8px_24px_rgba(99,102,241,0.15)]">
+                      <div className="flex h-full flex-col gap-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-indigo-500/35 bg-indigo-500/15 text-sm font-bold text-indigo-200">
                             {surah.id}
                           </div>
-                          <span className="font-arabic text-xl text-[var(--color-text-primary)]">
+                          <span
+                            className="font-arabic text-2xl leading-relaxed font-semibold text-[var(--color-text-primary)]"
+                            lang="ar"
+                            dir="rtl"
+                          >
                             {surah.name}
                           </span>
                         </div>
 
-                        <div>
-                          <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
+                        <div className="mt-auto">
+                          <h3 className="text-base font-semibold text-[var(--color-text-primary)]">
                             {surah.name_transliterated}
                           </h3>
-                          <div className="mt-1 flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+                          <div className="mt-1 flex items-center gap-2 text-xs font-medium tracking-wide text-[var(--color-text-secondary)] uppercase">
                             <span>{surah.revelation_type}</span>
-                            <span>•</span>
+                            <span aria-hidden="true">•</span>
                             <span>{tCommon("verses", { count: surah.verse_count })}</span>
                           </div>
                         </div>
