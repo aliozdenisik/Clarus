@@ -66,7 +66,13 @@ export const SourceReferenceCard = React.memo(function SourceReferenceCard({
           "shadow-[var(--color-accent-primary)]/20 shadow-lg ring-2 ring-[var(--color-accent-primary)]"
       )}
     >
-      <MagicCard className="motion-safe:transition-all motion-safe:duration-500 rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+      <MagicCard
+        className="rounded-lg border border-[var(--color-border-subtle)] p-6 motion-safe:transition-all motion-safe:duration-500"
+        gradientSize={200}
+        gradientColor="#1a1a2e"
+        gradientFrom="#7c3aed"
+        gradientTo="#4f46e5"
+      >
         {/* Header row */}
         <div className="mb-2 flex items-start justify-between">
           <div className="flex items-center gap-2">

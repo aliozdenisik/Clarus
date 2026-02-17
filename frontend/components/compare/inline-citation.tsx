@@ -32,7 +32,7 @@ export function InlineCitation({ reference, verseDetail, onNavigate }: InlineCit
   const handleClick = () => {
     const url = buildUrlFromReference(reference)
     if (url) {
-      window.open(url, "_blank")
+      window.open(url, "_blank", "noopener,noreferrer")
     }
   }
 

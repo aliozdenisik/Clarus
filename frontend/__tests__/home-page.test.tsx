@@ -103,6 +103,9 @@ vi.mock("lucide-react", () => {
     ScrollText: Icon,
     BookMarked: Icon,
     Library: Icon,
+    ShieldCheck: Icon,
+    Zap: Icon,
+    Globe: Icon,
   }
 })
 

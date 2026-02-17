@@ -4,6 +4,7 @@ import hashlib
 import logging
 from datetime import UTC
 from typing import Any
+from urllib.parse import unquote
 
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy import select
@@ -13,6 +14,21 @@ from app.db import get_db
 from app.models import BetterAuthSession, BetterAuthUser, UserStats
 
 logger = logging.getLogger(__name__)
+
+
+def extract_raw_session_token(cookie_token: str) -> str:
+    decoded_token = unquote(cookie_token).strip()
+    if not decoded_token:
+        raise ValueError("Session cookie is empty")
+
+    raw_token, separator, _signature = decoded_token.rpartition(".")
+    if not separator:
+        raw_token = decoded_token
+
+    if not raw_token:
+        raise ValueError("Session cookie token segment is empty")
+
+    return raw_token
 
 
 async def get_current_user_from_api_key(
@@ -179,13 +195,8 @@ async def get_current_user_flexible(
     if cookie_token:
         try:
             from datetime import datetime
-            from urllib.parse import unquote
 
-            # Better Auth cookie format: <token>.<hmac-signature> (URL-encoded)
-            # The DB stores only the raw token without the signature.
-            raw_token = (
-                unquote(cookie_token).rsplit(".", 1)[0] if "." in unquote(cookie_token) else unquote(cookie_token)
-            )
+            raw_token = extract_raw_session_token(cookie_token)
 
             session_result = await db.execute(select(BetterAuthSession).where(BetterAuthSession.token == raw_token))
             session = session_result.scalar_one_or_none()

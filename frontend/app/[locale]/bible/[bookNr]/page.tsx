@@ -406,7 +406,13 @@ export default function BookDetailPage() {
               exit={{ opacity: 0, y: -20 }}
               transition={springPresets.fluid}
             >
-              <MagicCard className="p-6 rounded-lg border border-[var(--color-border-subtle)]" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+              <MagicCard
+                className="rounded-lg border border-[var(--color-border-subtle)] p-6"
+                gradientSize={200}
+                gradientColor="#1a1a2e"
+                gradientFrom="#7c3aed"
+                gradientTo="#4f46e5"
+              >
                 <h3 className="mb-4 text-lg font-bold text-[var(--color-text-primary)]">
                   {t("chapterTitle", { chapter: chapterContent.chapter })}
                 </h3>

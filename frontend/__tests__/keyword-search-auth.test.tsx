@@ -55,6 +55,8 @@ vi.mock("lucide-react", () => ({
   Search: () => <div data-testid="search-icon" />,
   ArrowLeft: () => <div data-testid="arrow-left-icon" />,
   AlertTriangle: () => <div data-testid="alert-triangle-icon" />,
+  Info: () => <div data-testid="info-icon" />,
+  ChevronDown: () => <div data-testid="chevron-down-icon" />,
 }))
 
 vi.mock("@/components/ui/magic-card", () => ({

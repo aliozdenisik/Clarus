@@ -2,7 +2,83 @@
 
 ## Current Work Focus
 
-**Date**: 2026-02-16
+**Date**: 2026-02-17
+
+## Public Repo Security Hardening Follow-up — COMPLETED ✅
+
+**Date**: 2026-02-17
+**Scope**: Close test coverage gap for newly added public endpoint per-minute rate limiting
+
+Added dedicated middleware unit coverage for public, unauthenticated endpoint throttling introduced during security hardening.
+
+### Added Tests
+
+- `backend/tests/test_rate_limit_middleware.py`
+  - Public path under limit returns success and rate-limit headers
+  - Public path over limit returns 429 with `Retry-After`
+  - Non-rate-limited paths bypass limiter
+  - Redis unavailable path fails open
+
+### Verification
+
+- `uv run ruff check tests/test_rate_limit_middleware.py` ✅
+- `uv run ruff format --check tests/test_rate_limit_middleware.py` ✅
+- `uv run pytest tests/test_rate_limit_middleware.py -q` ✅ (4/4 pass)
+- `uv run pyright tests/test_rate_limit_middleware.py` ✅ (0 errors)
+
+## Component Library Migration — COMPLETED ✅
+
+**Date**: 2026-02-17
+**Scope**: Replace manually-written UI components with Magic UI + Motion Primitives library alternatives
+
+Completed full migration of 5 manual UI components to established library alternatives following project's "Golden Rule" — ready-made components are priority, manual components only when no suitable alternative exists.
+
+### Implementation Summary
+
+**Replaced Components:**
+| Manual Component | Library Replacement | Library |
+|------------------|---------------------|---------|
+| `glow-card.tsx` | `magic-card.tsx` | Magic UI |
+| `vercel-tabs.tsx` | `animated-background.tsx` | Motion Primitives |
+| `typewriter.tsx` | `typing-indicator.tsx` (extracted) | Custom (no library alternative) |
+| `text-rotate.tsx` | `luxury-quote.tsx` (extracted) | Custom (no library alternative) |
+| `glowing-button.tsx` | `shimmer-button.tsx` | Magic UI |
+
+**Libraries Installed:**
+- Magic UI: MagicCard, ShimmerButton, DotPattern, BentoGrid (via shadcn CLI)
+- Motion Primitives: AnimatedBackground (via CLI)
+
+**Files Modified:**
+- 14 source files for GlowCard → MagicCard migration
+- 6 source files for vercel-tabs → AnimatedBackground migration
+- 16 test files for mock path updates
+- 1 test file completely rewritten (filter-tabs.test.tsx)
+
+**Files Deleted:**
+- `frontend/components/ui/glow-card.tsx`
+- `frontend/components/ui/vercel-tabs.tsx`
+- `frontend/components/ui/typewriter.tsx`
+- `frontend/components/ui/text-rotate.tsx`
+- `frontend/components/ui/glowing-button.tsx`
+- `frontend/components/ui/luxury-components.ts`
+- `frontend/app/[locale]/demo-navbar/` (entire directory)
+
+**Files Created:**
+- `frontend/components/ui/typing-indicator.tsx` (extracted from typewriter)
+- `frontend/components/ui/luxury-quote.tsx` (extracted from text-rotate)
+
+**Verification:**
+- Build: ✅ `npm run build` passes, all routes generated
+- Tests: ✅ 378/378 tests pass (35 files)
+- Visual: ✅ 6 pages verified via Playwright browser
+
+**Key Decisions:**
+- RadialGradient manually re-added to dot-pattern.tsx after Magic UI overwrite
+- BentoGrid responsive classes added (grid-cols-1 md:grid-cols-2 lg:grid-cols-3)
+- AnimatedBackground type widened to accept data-checked + event handlers
+- Type errors fixed: compare/page translator setter, history/page i18n namespace
+
+---
 
 ## Issue #156 & #157: P0 SHOWSTOPPER Bug Fixes — COMPLETED ✅
 

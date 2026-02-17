@@ -175,7 +175,13 @@ export default function ApocryphaPage() {
                   onClick={() => router.push(`/bible/${book.nr}`)}
                   className="cursor-pointer"
                 >
-                  <MagicCard className="group h-full transition-colors hover:border-[var(--color-accent-glow)] rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+                  <MagicCard
+                    className="group h-full rounded-lg border border-[var(--color-border-subtle)] p-6 transition-colors hover:border-[var(--color-accent-glow)]"
+                    gradientSize={200}
+                    gradientColor="#1a1a2e"
+                    gradientFrom="#7c3aed"
+                    gradientTo="#4f46e5"
+                  >
                     <div className="flex h-full flex-col justify-between">
                       <div>
                         <h3 className="text-xl font-bold text-[var(--color-text-primary)] transition-colors group-hover:text-[var(--color-accent-primary)]">

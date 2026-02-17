@@ -58,7 +58,13 @@ export function RichRootCard({
         transition={springPresets.fluid}
         data-testid="rich-root-card"
       >
-        <MagicCard className="p-6 rounded-lg border border-[var(--color-border-subtle)]" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+        <MagicCard
+          className="rounded-lg border border-[var(--color-border-subtle)] p-6"
+          gradientSize={200}
+          gradientColor="#1a1a2e"
+          gradientFrom="#7c3aed"
+          gradientTo="#4f46e5"
+        >
           <div className="flex flex-col items-center gap-3">
             {root ? (
               <>
@@ -94,7 +100,13 @@ export function RichRootCard({
         transition={springPresets.fluid}
         data-testid="rich-root-card"
       >
-        <MagicCard className="p-6 rounded-lg border border-[var(--color-border-subtle)]" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+        <MagicCard
+          className="rounded-lg border border-[var(--color-border-subtle)] p-6"
+          gradientSize={200}
+          gradientColor="#1a1a2e"
+          gradientFrom="#7c3aed"
+          gradientTo="#4f46e5"
+        >
           <div className="space-y-4">
             <div className="flex flex-col items-center gap-3">
               <Skeleton className="h-12 w-32" />
@@ -116,7 +128,13 @@ export function RichRootCard({
         transition={springPresets.fluid}
         data-testid="rich-root-card"
       >
-        <MagicCard className="p-6 rounded-lg border border-[var(--color-border-subtle)]" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+        <MagicCard
+          className="rounded-lg border border-[var(--color-border-subtle)] p-6"
+          gradientSize={200}
+          gradientColor="#1a1a2e"
+          gradientFrom="#7c3aed"
+          gradientTo="#4f46e5"
+        >
           <div className="flex flex-col items-center gap-3">
             {root ? (
               <>
@@ -167,7 +185,13 @@ export function RichRootCard({
       transition={springPresets.fluid}
       data-testid="rich-root-card"
     >
-        <MagicCard className="p-6 rounded-lg border border-[var(--color-border-subtle)]" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
+      <MagicCard
+        className="rounded-lg border border-[var(--color-border-subtle)] p-6"
+        gradientSize={200}
+        gradientColor="#1a1a2e"
+        gradientFrom="#7c3aed"
+        gradientTo="#4f46e5"
+      >
         <div className="space-y-6">
           <div className="flex flex-col items-center gap-3">
             <p
