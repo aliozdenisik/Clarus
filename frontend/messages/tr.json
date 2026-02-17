@@ -164,9 +164,10 @@
       }
     },
     "cta": {
-      "title": "Keşfetmeye Hazır mısınız?",
-      "description": "Yapay zeka destekli içgörülerle kutsal metinlerdeki yolculuğunuza başlayın.",
-      "signUp": "Şimdi Kayıt Olun",
+      "title": "Kutsal metinleri keşfetmeye hazır mısınız?",
+      "description": "Kuran ve İncil'de 43.055 ayeti yapay zeka destekli içgörüyle arayın.",
+      "signUp": "Keşfetmeye başla",
+      "goToSearch": "Aramaya git",
       "learnMore": "Daha Fazla Bilgi",
       "discovery": "Keşif",
       "insight": "İçgörü",
