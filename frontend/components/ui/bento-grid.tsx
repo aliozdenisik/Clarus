@@ -88,8 +88,8 @@ export const BentoCard = ({
       />
       <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">{name}</h3>
       <p className="max-w-lg text-[var(--color-text-secondary)]">
-        {description.split(/(\d[\d,]*)/g).map((part) =>
-          /^\d[\d,]*$/.test(part) ? (
+        {description.split(/(\d[\d.,]*\d)/g).map((part) =>
+          /^\d[\d.,]*\d$/.test(part) ? (
             <span key={`num-${part}`} className="font-semibold text-[var(--color-text-primary)]">
               {part}
             </span>
