@@ -3,26 +3,31 @@ import type { Metadata } from "next"
 import en from "../../messages/en.json"
 import tr from "../../messages/tr.json"
 
+type MetadataAlternates = NonNullable<Metadata["alternates"]>
+type MetadataAlternateLanguages = NonNullable<MetadataAlternates["languages"]>
+type MetadataOpenGraph = NonNullable<Metadata["openGraph"]>
+
+function getLanguages(metadata: Metadata): MetadataAlternateLanguages | undefined {
+  return metadata.alternates?.languages ?? undefined
+}
+
+function getOpenGraph(metadata: Metadata): MetadataOpenGraph | undefined {
+  return metadata.openGraph ?? undefined
+}
+
 /**
  * Mock implementation of generateMetadata for testing
  * This mirrors the actual implementation in app/[locale]/layout.tsx
  */
 async function generateMetadata(locale: string): Promise<Metadata> {
-  interface AlternateLanguages {
-    en: string
-    tr: string
-    "x-default": string
-  }
-
-  interface OpenGraphMetadata {
-    locale?: string
-    alternateLocale?: string[]
-    type?: string
-    url?: string
-  }
   const baseUrl = "http://localhost:3000"
   const metadata = locale === "tr" ? tr : en
   const metadataNamespace = metadata.Metadata
+  const alternateLanguages: MetadataAlternateLanguages = {
+    en: `${baseUrl}/en`,
+    tr: `${baseUrl}/tr`,
+    "x-default": `${baseUrl}/tr`,
+  }
 
   return {
     title: {
@@ -32,18 +37,14 @@ async function generateMetadata(locale: string): Promise<Metadata> {
     description: metadataNamespace.description,
     alternates: {
       canonical: `${baseUrl}/${locale}`,
-      languages: {
-        en: `${baseUrl}/en`,
-        tr: `${baseUrl}/tr`,
-        "x-default": `${baseUrl}/tr`,
-      } as AlternateLanguages,
+      languages: alternateLanguages,
     },
     openGraph: {
       locale: locale === "tr" ? "tr_TR" : "en_US",
       alternateLocale: locale === "tr" ? ["en_US"] : ["tr_TR"],
       type: "website",
       url: `${baseUrl}/${locale}`,
-    } as OpenGraphMetadata,
+    },
   }
 }
 
@@ -72,7 +73,7 @@ describe("Layout Metadata Generation (hreflang & SEO)", () => {
     })
 
     it("includes hreflang link for en, tr, and x-default", () => {
-      const languages = (metadata.alternates as { languages?: AlternateLanguages })?.languages
+      const languages = getLanguages(metadata)
       expect(languages).toBeDefined()
       expect(languages?.en).toBe("http://localhost:3000/en")
       expect(languages?.tr).toBe("http://localhost:3000/tr")
@@ -80,25 +81,29 @@ describe("Layout Metadata Generation (hreflang & SEO)", () => {
     })
 
     it("sets og:locale to en_US for English locale", () => {
-      const ogMetadata = metadata.openGraph as OpenGraphMetadata
+      const ogMetadata = getOpenGraph(metadata)
       expect(ogMetadata?.locale).toBe("en_US")
     })
 
     it("sets alternateLocale to tr_TR for English locale", () => {
-      const ogMetadata = metadata.openGraph as OpenGraphMetadata
+      const ogMetadata = getOpenGraph(metadata)
       const alternateLocale = ogMetadata?.alternateLocale
       expect(alternateLocale).toContain("tr_TR")
       expect(alternateLocale).toHaveLength(1)
     })
 
     it("sets og:url with /en prefix", () => {
-      const ogMetadata = metadata.openGraph as OpenGraphMetadata
+      const ogMetadata = getOpenGraph(metadata)
       expect(ogMetadata?.url).toBe("http://localhost:3000/en")
     })
 
     it("sets og:type to website", () => {
-      const ogMetadata = metadata.openGraph as OpenGraphMetadata
-      expect(ogMetadata?.type).toBe("website")
+      const ogMetadata = getOpenGraph(metadata)
+      const ogType =
+        ogMetadata && "type" in ogMetadata && typeof ogMetadata.type === "string"
+          ? ogMetadata.type
+          : undefined
+      expect(ogType).toBe("website")
     })
   })
 
@@ -126,7 +131,7 @@ describe("Layout Metadata Generation (hreflang & SEO)", () => {
     })
 
     it("includes hreflang link for en, tr, and x-default (pointing to tr)", () => {
-      const languages = (metadata.alternates as { languages?: AlternateLanguages })?.languages
+      const languages = getLanguages(metadata)
       expect(languages).toBeDefined()
       expect(languages?.en).toBe("http://localhost:3000/en")
       expect(languages?.tr).toBe("http://localhost:3000/tr")
@@ -134,39 +139,43 @@ describe("Layout Metadata Generation (hreflang & SEO)", () => {
     })
 
     it("sets og:locale to tr_TR for Turkish locale", () => {
-      const ogMetadata = metadata.openGraph as OpenGraphMetadata
+      const ogMetadata = getOpenGraph(metadata)
       expect(ogMetadata?.locale).toBe("tr_TR")
     })
 
     it("sets alternateLocale to en_US for Turkish locale", () => {
-      const ogMetadata = metadata.openGraph as OpenGraphMetadata
+      const ogMetadata = getOpenGraph(metadata)
       const alternateLocale = ogMetadata?.alternateLocale
       expect(alternateLocale).toContain("en_US")
       expect(alternateLocale).toHaveLength(1)
     })
 
     it("sets og:url with /tr prefix", () => {
-      const ogMetadata = metadata.openGraph as OpenGraphMetadata
+      const ogMetadata = getOpenGraph(metadata)
       expect(ogMetadata?.url).toBe("http://localhost:3000/tr")
     })
 
     it("sets og:type to website", () => {
-      const ogMetadata = metadata.openGraph as OpenGraphMetadata
-      expect(ogMetadata?.type).toBe("website")
+      const ogMetadata = getOpenGraph(metadata)
+      const ogType =
+        ogMetadata && "type" in ogMetadata && typeof ogMetadata.type === "string"
+          ? ogMetadata.type
+          : undefined
+      expect(ogType).toBe("website")
     })
   })
 
   describe("Hreflang SEO Compliance", () => {
     it("hreflang languages object contains required locales", async () => {
       const enMetadata = await generateMetadata("en")
-      const languages = (enMetadata.alternates as { languages?: AlternateLanguages })?.languages
+      const languages = getLanguages(enMetadata)
 
       expect(Object.keys(languages ?? {}).sort()).toEqual(["en", "tr", "x-default"])
     })
 
     it("x-default points to default locale (tr)", async () => {
       const enMetadata = await generateMetadata("en")
-      const languages = (enMetadata.alternates as { languages?: AlternateLanguages })?.languages
+      const languages = getLanguages(enMetadata)
 
       expect(languages?.["x-default"]).toBe("http://localhost:3000/tr")
     })
@@ -185,8 +194,8 @@ describe("Layout Metadata Generation (hreflang & SEO)", () => {
       const enMetadata = await generateMetadata("en")
       const trMetadata = await generateMetadata("tr")
 
-      const enOgMetadata = enMetadata.openGraph as OpenGraphMetadata
-      const trOgMetadata = trMetadata.openGraph as OpenGraphMetadata
+      const enOgMetadata = getOpenGraph(enMetadata)
+      const trOgMetadata = getOpenGraph(trMetadata)
 
       expect(enOgMetadata?.locale).toBe("en_US")
       expect(trOgMetadata?.locale).toBe("tr_TR")
@@ -196,8 +205,8 @@ describe("Layout Metadata Generation (hreflang & SEO)", () => {
       const enMetadata = await generateMetadata("en")
       const trMetadata = await generateMetadata("tr")
 
-      const enOgMetadata = enMetadata.openGraph as OpenGraphMetadata
-      const trOgMetadata = trMetadata.openGraph as OpenGraphMetadata
+      const enOgMetadata = getOpenGraph(enMetadata)
+      const trOgMetadata = getOpenGraph(trMetadata)
 
       expect(enOgMetadata?.alternateLocale).toEqual(["tr_TR"])
       expect(trOgMetadata?.alternateLocale).toEqual(["en_US"])
@@ -207,8 +216,8 @@ describe("Layout Metadata Generation (hreflang & SEO)", () => {
       const enMetadata = await generateMetadata("en")
       const trMetadata = await generateMetadata("tr")
 
-      const enOgMetadata = enMetadata.openGraph as OpenGraphMetadata
-      const trOgMetadata = trMetadata.openGraph as OpenGraphMetadata
+      const enOgMetadata = getOpenGraph(enMetadata)
+      const trOgMetadata = getOpenGraph(trMetadata)
 
       expect(enOgMetadata?.url).toContain("/en")
       expect(trOgMetadata?.url).toContain("/tr")

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest"
+import { describe, it, expect, beforeEach } from "vitest"
 import { client } from "@/lib/api/client.gen"
 
 interface RequestInterceptors {
@@ -6,22 +6,12 @@ interface RequestInterceptors {
 }
 
 describe("API Client i18n Integration", () => {
-  let originalLocation: Location
-
   beforeEach(() => {
-    originalLocation = window.location
-    delete (window as { location?: Location }).location
-  })
-
-  afterEach(() => {
-    window.location = originalLocation
+    window.history.replaceState(null, "", "/")
   })
 
   it("injects Accept-Language header based on /en/ URL path", () => {
-    window.location = {
-      ...originalLocation,
-      pathname: "/en/search",
-    } as Location
+    window.history.replaceState(null, "", "/en/search")
 
     const mockRequest = new Request("http://localhost:3000/api/test")
     const requestInterceptors =
@@ -36,10 +26,7 @@ describe("API Client i18n Integration", () => {
   })
 
   it("injects Accept-Language header based on /tr/ URL path", () => {
-    window.location = {
-      ...originalLocation,
-      pathname: "/tr/compare",
-    } as Location
+    window.history.replaceState(null, "", "/tr/compare")
 
     const mockRequest = new Request("http://localhost:3000/api/test")
     const requestInterceptors =
@@ -54,10 +41,7 @@ describe("API Client i18n Integration", () => {
   })
 
   it("defaults to 'tr' when no locale in URL path", () => {
-    window.location = {
-      ...originalLocation,
-      pathname: "/search",
-    } as Location
+    window.history.replaceState(null, "", "/search")
 
     const mockRequest = new Request("http://localhost:3000/api/test")
     const requestInterceptors =
