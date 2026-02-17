@@ -74,6 +74,18 @@ describe("QuranPage", () => {
     expect(screen.getByText("286 verses")).toBeInTheDocument()
   })
 
+  it("renders Arabic surah names with RTL semantics", async () => {
+    render(<QuranPage />)
+
+    await waitFor(() => {
+      expect(screen.getByText("الفاتحة")).toBeInTheDocument()
+    })
+
+    const arabicName = screen.getByText("الفاتحة")
+    expect(arabicName).toHaveAttribute("lang", "ar")
+    expect(arabicName).toHaveAttribute("dir", "rtl")
+  })
+
   it("filters surahs by name", async () => {
     render(<QuranPage />)
 

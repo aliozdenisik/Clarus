@@ -49,6 +49,12 @@ type TabType = "results" | "browser"
 const QURAN_VERSES_PER_PAGE = 30
 const BIBLE_VERSES_PER_PAGE = 12
 
+const EMPTY_STATE_SUGGESTIONS: Record<LanguageTab, string[]> = {
+  quran: ["كتب", "صبر", "علم"],
+  hebrew_ot: ["H3789", "H2617", "H430"],
+  greek_nt: ["G3056", "G26", "G4102"],
+}
+
 // Bible search response type (not in generated types yet)
 interface BibleSearchResult {
   success: boolean
@@ -301,6 +307,14 @@ function KeywordSearchContent() {
     [handleSearch]
   )
 
+  const handleSuggestionSearch = useCallback(
+    (suggestion: string) => {
+      setQuery(suggestion)
+      void handleSearch(suggestion)
+    },
+    [handleSearch]
+  )
+
   const handleLanguageChange = useCallback((language: LanguageTab) => {
     setActiveLanguage(language)
     setBibleCategoryFilter("all") // Reset category filter when changing language
@@ -535,6 +549,15 @@ function KeywordSearchContent() {
     }
   }, [activeLanguage, selectedWord, searchResult, bibleSearchResult, filteredVerses, chartData])
 
+  const emptyStateHint =
+    activeLanguage === "quran"
+      ? t("emptyStateHintQuran")
+      : activeLanguage === "hebrew_ot"
+        ? t("emptyStateHintHebrew")
+        : t("emptyStateHintGreek")
+
+  const emptyStateSuggestions = EMPTY_STATE_SUGGESTIONS[activeLanguage]
+
   return (
     <div className="relative min-h-screen bg-[var(--color-bg-app)]">
       {/* Ambient teal gradient background */}
@@ -543,7 +566,7 @@ function KeywordSearchContent() {
       </div>
 
       {/* Header */}
-      <div className="relative px-6 pt-12 pb-2">
+      <div className="relative px-6 pt-10 pb-3">
         <div className="mx-auto max-w-4xl">
           <motion.div
             initial={{ opacity: 0, y: 12 }}
@@ -556,10 +579,10 @@ function KeywordSearchContent() {
             </div>
 
             {/* Title */}
-            <h1 className="font-display mb-2 text-center text-4xl font-normal tracking-tight text-[var(--color-text-primary)]">
+            <h1 className="font-display mb-2 text-center text-4xl font-semibold tracking-tight text-[var(--color-text-primary)]">
               {t("pageTitle")}
             </h1>
-            <p className="mb-6 text-center text-sm text-[var(--color-text-secondary)]">
+            <p className="mb-6 text-center text-base text-[var(--color-text-secondary)]">
               {activeLanguage === "quran"
                 ? t("subtitleQuran")
                 : activeLanguage === "hebrew_ot"
@@ -568,7 +591,7 @@ function KeywordSearchContent() {
             </p>
 
             {/* Language Tabs */}
-            <div className="mb-4 flex justify-center">
+            <div className="mb-6 flex justify-center border-b border-[var(--color-border-subtle)] pb-4">
               <LanguageTabs activeTab={activeLanguage} onTabChange={handleLanguageChange} />
             </div>
 
@@ -615,7 +638,7 @@ function KeywordSearchContent() {
             ]}
             activeTab={activeTab}
             onTabChange={(tabId) => setActiveTab(tabId as TabType)}
-            className="mb-6"
+            className="mb-8 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/60 p-1"
           />
 
           {/* Tab Content */}
@@ -648,8 +671,8 @@ function KeywordSearchContent() {
                 </div>
               ) : error ? (
                 // Error state
-                <div className="py-12 text-center">
-                  <p className="text-[var(--color-text-muted)]">{error}</p>
+                <div className="rounded-xl border border-red-500/30 bg-red-500/5 px-4 py-8 text-center">
+                  <p className="text-sm font-medium text-red-300">{error}</p>
                 </div>
               ) : searchResult || bibleSearchResult ? (
                 <div className="space-y-8">
@@ -668,8 +691,14 @@ function KeywordSearchContent() {
                   {/* Root not found */}
                   {(activeLanguage === "quran" && searchResult?.root_source === "not_found") ||
                   (activeLanguage !== "quran" && bibleSearchResult?.root_source === "not_found") ? (
-                    <div className="py-12 text-center">
-                      <p className="text-lg text-[var(--color-text-muted)]">
+                    <div className="space-y-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/40 px-6 py-10 text-center">
+                      <div
+                        className="text-xs tracking-widest text-[var(--color-text-muted)]"
+                        aria-hidden="true"
+                      >
+                        ◆
+                      </div>
+                      <p className="text-lg font-semibold text-[var(--color-text-primary)]">
                         {t("noRootFound", {
                           query:
                             activeLanguage === "quran"
@@ -684,6 +713,36 @@ function KeywordSearchContent() {
                             ? t("tryDifferentHebrew")
                             : t("tryDifferentGreek")}
                       </p>
+
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium tracking-wide text-[var(--color-text-secondary)] uppercase">
+                          {t("emptyStateExamples")}
+                        </p>
+                        <div className="flex flex-wrap justify-center gap-2">
+                          {emptyStateSuggestions.map((suggestion) => (
+                            <button
+                              key={`keyword-empty-retry-${suggestion}`}
+                              type="button"
+                              onClick={() => handleSuggestionSearch(suggestion)}
+                              className="rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-1.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-glow)] hover:text-[var(--color-text-primary)]"
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {activeLanguage === "quran" && (
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab("browser")}
+                            className="rounded-lg bg-[var(--color-accent-primary)] px-4 py-2 text-sm font-medium text-[#09090b] transition-colors hover:bg-[var(--color-accent-hover)]"
+                          >
+                            {t("browseRoots")}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <>
@@ -846,15 +905,51 @@ function KeywordSearchContent() {
                 </div>
               ) : (
                 // Empty state (before any search)
-                <div className="space-y-4 py-12 text-center">
-                  <div className="text-xs tracking-widest text-[var(--color-text-muted)]">◆</div>
-                  <p className="text-lg text-[var(--color-text-secondary)]">
+                <div className="flex min-h-[45vh] flex-col items-center justify-center gap-5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/40 px-6 py-10 text-center">
+                  <div
+                    className="text-xs tracking-widest text-[var(--color-text-muted)]"
+                    aria-hidden="true"
+                  >
+                    ◆
+                  </div>
+                  <p className="text-xl font-semibold text-[var(--color-text-primary)]">
                     {activeLanguage === "quran"
                       ? t("emptyStateQuran")
                       : activeLanguage === "hebrew_ot"
                         ? t("emptyStateHebrew")
                         : t("emptyStateGreek")}
                   </p>
+                  <p className="max-w-2xl text-sm text-[var(--color-text-secondary)]">
+                    {emptyStateHint}
+                  </p>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium tracking-wide text-[var(--color-text-secondary)] uppercase">
+                      {t("emptyStateExamples")}
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {emptyStateSuggestions.map((suggestion) => (
+                        <button
+                          key={`keyword-empty-suggestion-${suggestion}`}
+                          type="button"
+                          onClick={() => handleSuggestionSearch(suggestion)}
+                          className="rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-1.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-glow)] hover:text-[var(--color-text-primary)]"
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {activeLanguage === "quran" && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("browser")}
+                      className="rounded-lg bg-[var(--color-accent-primary)] px-4 py-2 text-sm font-medium text-[#09090b] transition-colors hover:bg-[var(--color-accent-hover)]"
+                    >
+                      {t("browseRoots")}
+                    </button>
+                  )}
                 </div>
               )}
             </motion.div>

@@ -485,6 +485,11 @@
     "placeholderHebrew": "İbranice kök arayın (örn: כתב veya H3789)...",
     "placeholderGreek": "Yunanca kök arayın (örn: βιβλος veya G976)...",
     "helperText": "Arapça (كتب) ve Buckwalter Latin (ktb) destekler",
+    "emptyStateHintQuran": "Arapça yazı, Buckwalter transliterasyon veya anlamsal köklerle arayın.",
+    "emptyStateHintHebrew": "İbranice yazı veya Strong numaralarıyla ilgili kökleri bulun.",
+    "emptyStateHintGreek": "Yeni Ahit köklerini keşfetmek için Yunanca yazı veya Strong numaralarıyla arayın.",
+    "emptyStateExamples": "Bu örneklerden birini deneyin",
+    "browseRoots": "Köklere göz at",
     "searching": "Aranıyor...",
     "searchButton": "Kökü Ara",
     "tabs": {

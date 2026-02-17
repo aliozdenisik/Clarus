@@ -264,6 +264,35 @@ describe("KeywordSearchPage", () => {
     expect(screen.getByText("Root Browser")).toBeInTheDocument()
   })
 
+  it("renders enriched empty state before any search", () => {
+    render(<KeywordSearchPage />)
+
+    expect(screen.getByText(/Search for any Arabic root or word/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/Search by Arabic script, Buckwalter transliteration, or semantic roots/i)
+    ).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "كتب" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "صبر" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "علم" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Browse roots/i })).toBeInTheDocument()
+  })
+
+  it("runs search when an empty-state suggestion is clicked", async () => {
+    mockSearchKeyword.mockResolvedValue(mockSearchResponse)
+
+    render(<KeywordSearchPage />)
+
+    fireEvent.click(screen.getByRole("button", { name: "كتب" }))
+
+    await waitFor(() => {
+      expect(mockSearchKeyword).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({ query: "كتب" }),
+        })
+      )
+    })
+  })
+
   it("Arabic search triggers API and displays root card", async () => {
     mockSearchKeyword.mockResolvedValue(mockSearchResponse)
 

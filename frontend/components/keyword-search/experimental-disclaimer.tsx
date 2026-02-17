@@ -1,6 +1,6 @@
 "use client"
 
-import { AlertTriangle } from "lucide-react"
+import { Info } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 
@@ -15,14 +15,20 @@ export function ExperimentalDisclaimer({ className }: ExperimentalDisclaimerProp
     <div
       className={cn(
         "flex items-center justify-center gap-2 rounded-lg px-4 py-2",
-        "border border-amber-500/20 bg-amber-500/10",
-        "text-xs text-amber-400",
+        "border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/60",
+        "text-xs text-[var(--color-text-secondary)]",
         className
       )}
     >
-      <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
+      <Info
+        aria-hidden="true"
+        className="h-3.5 w-3.5 flex-shrink-0 text-[var(--color-text-muted)]"
+      />
       <span>
-        <strong>{t("experimental.title")}:</strong> {t("experimental.content")}
+        <strong className="font-semibold text-[var(--color-text-primary)]">
+          {t("experimental.title")}:
+        </strong>{" "}
+        {t("experimental.content")}
       </span>
     </div>
   )
