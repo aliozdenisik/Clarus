@@ -274,35 +274,34 @@ export function LuxuryQuote({ quotes, rotationInterval = 5000, className }: Luxu
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
           className="text-center"
         >
-          <blockquote className="text-xl leading-relaxed font-light text-[var(--color-text-primary)] italic md:text-2xl lg:text-3xl">
+          <blockquote className="font-[family-name:var(--font-display)] text-2xl leading-[1.5] font-medium tracking-[0.01em] text-[#FAFAFA] md:text-3xl lg:text-[32px]">
             &quot;{quotes[currentIndex].text}&quot;
           </blockquote>
           <motion.div
-            className="mt-4 flex items-center justify-center gap-2"
+            className="mt-8 flex items-center justify-center gap-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            <div className="h-px w-8 bg-gradient-to-r from-transparent via-[var(--color-accent-primary)] to-transparent" />
-            <cite className="text-sm font-medium text-[var(--color-text-secondary)] not-italic">
+            <div className="h-px w-10 bg-white/[0.15]" />
+            <cite className="text-[13px] font-medium tracking-[0.08em] text-[#D1D5DB] uppercase not-italic">
               {quotes[currentIndex].source}
             </cite>
-            <div className="h-px w-8 bg-gradient-to-r from-transparent via-[var(--color-accent-primary)] to-transparent" />
+            <div className="h-px w-10 bg-white/[0.15]" />
           </motion.div>
         </motion.div>
       </AnimatePresence>
 
       {/* Progress indicators */}
-      <div className="mt-6 flex justify-center gap-1.5">
+      <div className="mt-10 flex justify-center gap-2">
         {quotes.map((quote, index) => (
           <button
+            type="button"
             key={`${quote.source}-${quote.text}`}
             onClick={() => setCurrentIndex(index)}
             className={cn(
-              "h-1.5 w-1.5 rounded-full transition-all duration-300",
-              index === currentIndex
-                ? "w-6 bg-[var(--color-accent-primary)]"
-                : "bg-white/20 hover:bg-white/40"
+              "h-2 w-2 rounded-full transition-all duration-300",
+              index === currentIndex ? "w-8 bg-amber-500" : "bg-[#6B7280] hover:bg-[#9CA3AF]"
             )}
             aria-label={`Go to quote ${index + 1}`}
           />

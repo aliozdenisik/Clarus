@@ -15,6 +15,7 @@ import {
   BookOpen,
   ArrowRight,
   Brain,
+  ShieldCheck,
   Layers,
   ScrollText,
   BookMarked,
@@ -29,7 +30,7 @@ const agentColorMap = {
     iconBg: "bg-emerald-500/10",
     iconBorder: "border-emerald-500/20",
     text: "text-emerald-400",
-    badge: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20",
+    badge: "text-emerald-300/80 border border-emerald-500/30",
     stat: "text-emerald-400/80",
     dot: "bg-emerald-400",
     line: "bg-emerald-600/30",
@@ -39,7 +40,7 @@ const agentColorMap = {
     iconBg: "bg-amber-500/10",
     iconBorder: "border-amber-500/20",
     text: "text-amber-400",
-    badge: "bg-amber-500/15 text-amber-400 border border-amber-500/20",
+    badge: "text-amber-300/80 border border-amber-500/30",
     stat: "text-amber-400/80",
     dot: "bg-amber-400",
     line: "bg-amber-600/30",
@@ -49,7 +50,7 @@ const agentColorMap = {
     iconBg: "bg-sky-500/10",
     iconBorder: "border-sky-500/20",
     text: "text-sky-400",
-    badge: "bg-sky-500/15 text-sky-400 border border-sky-500/20",
+    badge: "text-sky-300/80 border border-sky-500/30",
     stat: "text-sky-400/80",
     dot: "bg-sky-400",
     line: "bg-sky-600/30",
@@ -59,7 +60,7 @@ const agentColorMap = {
     iconBg: "bg-purple-500/10",
     iconBorder: "border-purple-500/20",
     text: "text-purple-400",
-    badge: "bg-purple-500/15 text-purple-400 border border-purple-500/20",
+    badge: "text-purple-300/80 border border-purple-500/30",
     stat: "text-purple-400/80",
     dot: "bg-purple-400",
     line: "bg-purple-600/30",
@@ -211,13 +212,13 @@ export default function HomePage() {
             transition={{ ...springPresets.gentle, delay: 0.2, duration: 1.2 }}
             className="flex max-w-[900px] flex-col items-center"
           >
-            <h1 className="mb-8 font-[family-name:var(--font-serif)] text-6xl leading-[1.1] font-normal tracking-tight md:text-8xl">
+            <h1 className="mb-6 font-[family-name:var(--font-display)] text-5xl leading-[1.2] font-semibold tracking-[-0.02em] md:text-7xl">
               <span className="text-[var(--color-text-primary)]">{tLanding("hero.title")}</span>
               <br />
-              <span className="text-[var(--color-accent-primary)]">{tLanding("hero.titleAI")}</span>
+              <span className="text-amber-400">{tLanding("hero.titleAI")}</span>
             </h1>
 
-            <p className="mx-auto mb-16 max-w-[600px] text-xl leading-relaxed font-light tracking-wide text-[var(--color-text-secondary)] md:text-2xl">
+            <p className="mx-auto mb-10 max-w-[540px] text-lg leading-[1.65] font-light tracking-wide text-[#D1D5DB] md:text-xl">
               {tLanding("hero.subtitle")}
             </p>
 
@@ -227,20 +228,20 @@ export default function HomePage() {
                 <>
                   <motion.button
                     onClick={() => router.push("/search")}
-                    className="flex items-center justify-center gap-3 rounded-xl border border-indigo-500/50 bg-indigo-600 px-10 py-4 font-medium text-white transition-colors duration-200 hover:bg-indigo-500"
+                    className="flex items-center justify-center gap-3 rounded-xl border border-amber-500/50 bg-amber-500 px-10 py-4 font-medium text-[#0B0B0F] transition-colors duration-200 hover:bg-amber-400"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Search className="h-4 w-4" />
+                    <Search className="h-5 w-5" />
                     {tLanding("hero.goToSearch")}
                   </motion.button>
                   <motion.button
                     onClick={() => router.push("/compare")}
-                    className="flex items-center justify-center gap-3 rounded-xl border border-white/20 bg-transparent px-10 py-4 font-medium text-white transition-colors duration-200 hover:border-white/30 hover:bg-white/5"
+                    className="flex items-center justify-center gap-3 rounded-xl border border-white/[0.12] bg-transparent px-10 py-4 font-medium text-[#9CA3AF] transition-colors duration-200 hover:border-white/20 hover:bg-white/5 hover:text-white"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <GitCompare className="h-4 w-4" />
+                    <GitCompare className="h-5 w-5" />
                     {tLanding("hero.goToCompare")}
                   </motion.button>
                 </>
@@ -248,16 +249,16 @@ export default function HomePage() {
                 <>
                   <motion.button
                     onClick={() => router.push("/sign-up")}
-                    className="flex items-center justify-center gap-3 rounded-xl border border-indigo-500/50 bg-indigo-600 px-10 py-4 font-medium text-white transition-colors duration-200 hover:bg-indigo-500"
+                    className="flex items-center justify-center gap-3 rounded-xl border border-amber-500/50 bg-amber-500 px-10 py-4 font-medium text-[#0B0B0F] transition-colors duration-200 hover:bg-amber-400"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     {tCommon("getStarted")}
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-5 w-5" />
                   </motion.button>
                   <motion.button
                     onClick={() => router.push("/sign-in")}
-                    className="flex items-center justify-center gap-3 rounded-xl border border-white/20 bg-transparent px-10 py-4 font-medium text-white transition-colors duration-200 hover:border-white/30 hover:bg-white/5"
+                    className="flex items-center justify-center gap-3 rounded-xl border border-white/[0.12] bg-transparent px-10 py-4 font-medium text-[#9CA3AF] transition-colors duration-200 hover:border-white/20 hover:bg-white/5 hover:text-white"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -318,7 +319,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Section - Bento Grid */}
-      <section className="relative px-6 py-28 md:py-36">
+      <section className="relative px-6 py-20 md:py-28">
         <div className="mx-auto max-w-[1200px]">
           {/* Section Header - Centered */}
           <motion.div
@@ -344,7 +345,7 @@ export default function HomePage() {
             transition={{ ...springPresets.gentle, duration: 1 }}
           >
             <BentoGrid className="md:grid-cols-3">
-              {features.map((feature) => (
+              {features.map((feature, index) => (
                 <BentoCard
                   key={feature.title}
                   name={feature.title}
@@ -356,6 +357,7 @@ export default function HomePage() {
                   description={feature.description}
                   href={user ? "/search" : "/sign-up"}
                   cta={tCommon("learnMore")}
+                  isPrimary={index === 0}
                 />
               ))}
             </BentoGrid>
@@ -371,7 +373,7 @@ export default function HomePage() {
           >
             {features.map((feature) => (
               <div key={feature.techNote} className="text-center">
-                <span className="text-[10px] font-medium tracking-[0.15em] text-[var(--color-text-muted)] uppercase">
+                <span className="text-[11px] font-medium tracking-[0.06em] text-[var(--color-text-muted)]">
                   {feature.techNote}
                 </span>
               </div>
@@ -381,7 +383,7 @@ export default function HomePage() {
       </section>
 
       {/* Multi-Agent Section - Sophisticated Color-Coding */}
-      <section className="relative overflow-hidden px-6 py-28 md:py-36">
+      <section className="relative overflow-hidden px-6 py-20 md:py-28">
         <div className="mx-auto max-w-[1200px]">
           {/* Section Header */}
           <motion.div
@@ -391,7 +393,7 @@ export default function HomePage() {
             transition={{ ...springPresets.gentle, duration: 1 }}
             className="mb-20 text-center"
           >
-            <span className="mb-6 inline-block text-xs font-medium tracking-[0.2em] text-[var(--color-accent-primary)] uppercase">
+            <span className="mb-6 inline-block bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-xs font-semibold tracking-[0.12em] text-transparent uppercase">
               {tLanding("sections.coreFeature")}
             </span>
             <h2 className="mx-auto mb-8 max-w-[700px] font-[family-name:var(--font-serif)] text-5xl leading-tight font-normal tracking-tight text-[var(--color-text-primary)] md:text-6xl">
@@ -419,7 +421,7 @@ export default function HomePage() {
                   }}
                 >
                   <div
-                    className={`group relative h-full rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-transparent p-6 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-500 hover:border-white/[0.15] hover:from-white/[0.06]`}
+                    className={`group relative h-full rounded-2xl border border-white/[0.12] bg-gradient-to-b from-white/[0.05] to-transparent p-6 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-500 hover:border-white/[0.22] hover:from-white/[0.08]`}
                   >
                     {/* Subtle gradient overlay */}
                     <div
@@ -436,15 +438,17 @@ export default function HomePage() {
                       </div>
 
                       {/* Name & Role Badge */}
-                      <h3 className="mb-2 text-base font-semibold text-white">{agent.name}</h3>
+                      <h3 className="mb-1.5 text-lg font-semibold tracking-tight text-white">
+                        {agent.name}
+                      </h3>
                       <span
-                        className={`mb-4 inline-block rounded-full px-2.5 py-1 text-[10px] font-medium tracking-wide uppercase ${colors.badge}`}
+                        className={`mb-5 inline-block rounded-md px-2 py-0.5 text-[11px] font-medium tracking-[0.08em] uppercase ${colors.badge}`}
                       >
                         {agent.role}
                       </span>
 
                       {/* Description */}
-                      <p className="mb-5 text-sm leading-relaxed text-zinc-400">
+                      <p className="mb-5 text-sm leading-relaxed text-zinc-300">
                         {agent.description}
                       </p>
 
@@ -470,27 +474,27 @@ export default function HomePage() {
             transition={{ ...springPresets.gentle, delay: 0.7, duration: 1 }}
             className="mx-auto max-w-[800px]"
           >
-            <div className="group relative rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-transparent p-10 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-500 hover:border-white/[0.15] hover:from-white/[0.06]">
+            <div className="group relative rounded-2xl border border-white/[0.12] bg-gradient-to-b from-white/[0.05] to-transparent p-8 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-500 hover:border-white/[0.22] hover:from-white/[0.08]">
               {/* Subtle gradient overlay */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-indigo-500/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-amber-500/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
               {/* Content */}
               <div className="relative z-10">
                 {/* Icon */}
-                <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10">
-                  <Sparkles className="h-6 w-6 text-indigo-400" />
+                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/10">
+                  <Sparkles className="h-6 w-6 text-amber-300" />
                 </div>
 
                 {/* Name & Role Badge */}
-                <h3 className="mb-3 text-xl font-semibold text-white">
+                <h3 className="mb-2 text-2xl font-semibold tracking-tight text-white">
                   {tLanding("agents.synthesis.name")}
                 </h3>
-                <span className="mb-5 inline-block rounded-full border border-indigo-500/20 bg-indigo-500/15 px-3 py-1.5 text-[10px] font-medium tracking-wide text-indigo-400 uppercase">
+                <span className="mb-5 inline-block rounded-md border border-amber-500/30 px-2.5 py-0.5 text-[11px] font-medium tracking-[0.08em] text-amber-300/80 uppercase">
                   {tLanding("agents.synthesis.role")}
                 </span>
 
                 {/* Description */}
-                <p className="mb-8 max-w-2xl text-base leading-relaxed text-zinc-400">
+                <p className="mb-8 max-w-2xl text-base leading-relaxed text-zinc-300">
                   {tLanding("agents.synthesis.description")}
                 </p>
 
@@ -504,7 +508,7 @@ export default function HomePage() {
                   ].map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-[10px] font-medium tracking-wide text-zinc-400 uppercase transition-colors hover:bg-white/[0.08] hover:text-zinc-300"
+                      className="rounded-lg border border-white/[0.1] bg-white/[0.05] px-3 py-2 text-[11px] font-medium text-zinc-300 capitalize transition-colors hover:bg-white/[0.1] hover:text-zinc-200"
                     >
                       {tag}
                     </span>
@@ -536,7 +540,10 @@ export default function HomePage() {
           </motion.div>
 
           {/* Steps Grid */}
-          <div className="grid grid-cols-1 gap-12 md:grid-cols-4">
+          <div
+            data-testid="how-it-works-grid"
+            className="mx-auto grid max-w-[1120px] grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4 xl:gap-8"
+          >
             {steps.map((step, index) => (
               <motion.div
                 key={step.label}
@@ -548,85 +555,100 @@ export default function HomePage() {
                   delay: 0.2 + index * 0.15,
                   duration: 1,
                 }}
-                className="relative"
+                className="relative h-full"
               >
-                {/* Step Number */}
-                <div className="mb-8">
-                  <span className="font-[family-name:var(--font-serif)] text-6xl text-[var(--color-accent-primary)]/20">
+                <div
+                  data-testid={`how-it-works-step-${index + 1}`}
+                  className="group relative flex h-full flex-col rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-transparent p-6 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-500 hover:border-white/[0.15] hover:from-white/[0.06]"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -top-2.5 -left-2.5 inline-flex h-7 min-w-7 items-center justify-center rounded-lg border border-indigo-500/30 bg-indigo-500/15 px-2 text-[10px] font-semibold tracking-[0.12em] text-indigo-300 tabular-nums"
+                  >
                     {String(index + 1).padStart(2, "0")}
                   </span>
+
+                  {/* Icon */}
+                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl border border-indigo-500/30 bg-indigo-500/10">
+                    <step.icon className="h-6 w-6 text-indigo-300" />
+                  </div>
+
+                  {/* Text Content */}
+                  <h3 className="mb-1 text-xl font-semibold tracking-wide text-white">
+                    {step.label}
+                  </h3>
+                  <p className="mb-4 text-sm font-semibold tracking-wide text-indigo-300">
+                    {step.desc}
+                  </p>
+                  <p className="max-w-[30ch] text-sm leading-relaxed text-zinc-300">
+                    {step.detail}
+                  </p>
+
+                  {index === 2 ? (
+                    <p className="mt-4 inline-flex w-fit items-center rounded-full border border-indigo-500/30 bg-indigo-500/10 px-2.5 py-1 text-[11px] font-medium tracking-wide text-indigo-200 tabular-nums">
+                      {tLanding("cta.versesIndexed")}
+                    </p>
+                  ) : null}
                 </div>
 
-                {/* Icon */}
-                <div className="mb-6 flex h-12 w-12 items-center justify-center border border-[var(--color-border-subtle)]">
-                  <step.icon className="h-5 w-5 text-[var(--color-accent-primary)]" />
-                </div>
-
-                {/* Text Content */}
-                <h3 className="mb-3 text-xl font-medium tracking-wide text-[var(--color-text-primary)]">
-                  {step.label}
-                </h3>
-                <p className="mb-4 text-sm font-light text-[var(--color-text-muted)]">
-                  {step.desc}
-                </p>
-                <p className="text-sm leading-relaxed font-light text-[var(--color-text-secondary)]">
-                  {step.detail}
-                </p>
+                {index < steps.length - 1 ? (
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute top-7 left-[calc(100%-0.5rem)] hidden w-[calc(100%+1.5rem)] xl:block"
+                  >
+                    <div className="h-px bg-gradient-to-r from-indigo-500/40 to-transparent" />
+                  </div>
+                ) : null}
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section - 21st.dev Pattern */}
-      <section className="relative overflow-hidden bg-[var(--color-bg-app)] px-6 py-36">
+      <section className="relative overflow-hidden bg-[var(--color-bg-app)] px-6 py-24 md:py-28">
         <div className="mx-auto max-w-5xl text-center">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ ...springPresets.gentle, duration: 1.2 }}
+            className="relative z-10"
           >
-            <h2 className="mb-8 font-[family-name:var(--font-serif)] text-6xl leading-tight text-[var(--color-text-primary)] md:text-7xl">
-              {tLanding("cta.title")}{" "}
-              <span className="text-[var(--color-accent-primary)]">
-                {user ? tLanding("cta.discovery") : tLanding("cta.insight")}
-              </span>
+            <h2 className="mx-auto mb-4 max-w-4xl bg-gradient-to-r from-[var(--color-text-primary)] via-[var(--color-text-primary)] to-[var(--color-accent-secondary)] bg-clip-text font-[family-name:var(--font-sans)] text-4xl leading-tight font-semibold tracking-tight text-balance text-transparent md:text-6xl">
+              {tLanding("cta.title")}
             </h2>
-            <p className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-[var(--color-text-secondary)] md:text-xl">
+            <p className="mx-auto mb-8 max-w-2xl text-base leading-relaxed font-medium text-[var(--color-text-primary)] md:text-xl">
               {tLanding("cta.description")}
             </p>
-            <div className="inline-block">
-              <motion.button
-                onClick={() => router.push(user ? "/search" : "/sign-up")}
-                className="flex items-center gap-3 rounded-xl border border-indigo-500/50 bg-indigo-600 px-12 py-5 text-lg font-medium text-white transition-colors duration-200 hover:bg-indigo-500"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {user ? tLanding("hero.goToSearch") : tLanding("cta.signUp")}
-                <ArrowRight className="h-5 w-5" />
-              </motion.button>
-            </div>
-            <div className="mt-16 flex items-center justify-center gap-8 text-sm text-[var(--color-text-muted)]">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-[var(--color-accent-primary)]" />
+            <motion.button
+              onClick={() => router.push(user ? "/search" : "/sign-up")}
+              className="mx-auto flex items-center gap-2.5 rounded-xl border border-[var(--color-accent-primary)]/50 bg-[var(--color-accent-primary)] px-10 py-4 text-lg font-semibold text-white shadow-[var(--color-accent-glow)] shadow-lg transition-colors duration-200 hover:bg-[var(--color-accent-hover)]"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {user ? tLanding("cta.goToSearch") : tLanding("cta.signUp")}
+              <ArrowRight className="h-5 w-5" />
+            </motion.button>
+            <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-medium text-[var(--color-text-secondary)]">
+              <li className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-[var(--color-accent-primary)]" />
                 <span>{tLanding("cta.noCreditCard")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-[var(--color-accent-primary)]" />
+              </li>
+              <li className="flex items-center gap-2">
+                <Library className="h-4 w-4 text-[var(--color-accent-primary)]" />
                 <span>{tLanding("cta.versesIndexed")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-[var(--color-accent-primary)]" />
+              </li>
+              <li className="flex items-center gap-2">
+                <Brain className="h-4 w-4 text-[var(--color-accent-primary)]" />
                 <span>{tLanding("cta.agentAnalysis")}</span>
-              </div>
-            </div>
+              </li>
+            </ul>
           </motion.div>
         </div>
         {/* Background blurs */}
-        <div className="pointer-events-none absolute top-0 left-0 h-full w-full opacity-5">
+        <div className="pointer-events-none absolute top-0 left-0 h-full w-full opacity-[0.12]">
           <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-[var(--color-accent-primary)] blur-3xl" />
-          <div className="absolute right-1/4 bottom-1/4 h-96 w-96 rounded-full bg-[var(--color-accent-primary)] blur-3xl" />
+          <div className="absolute right-1/4 bottom-1/4 h-96 w-96 rounded-full bg-[var(--color-accent-secondary)] blur-3xl" />
         </div>
       </section>
     </main>
