@@ -2,7 +2,16 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts"
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  LabelList,
+} from "recharts"
 import { GlowCard } from "@/components/ui/glow-card"
 import { springPresets } from "@/lib/design-system"
 import { useTranslations } from "next-intl"
@@ -54,7 +63,10 @@ function CustomTooltip({ active, payload, occurrencesLabel }: CustomTooltipProps
   if (!active || !payload?.length) return null
   const data = payload[0].payload
   return (
-    <div className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 shadow-xl">
+    <div
+      role="tooltip"
+      className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 shadow-xl"
+    >
       <p className="text-sm text-zinc-100">{data.surah_name}</p>
       <p className="text-xs text-zinc-400">
         {data.count} {occurrencesLabel}
@@ -67,6 +79,7 @@ const xAxisTickStyle = { fill: "#a1a1aa", fontSize: 12 }
 const axisLineStyle = { stroke: "#3f3f46" }
 const tooltipCursorStyle = { fill: "rgba(79, 70, 229, 0.1)" }
 const barRadius: [number, number, number, number] = [0, 4, 4, 0]
+const labelFill = "#a1a1aa"
 
 export function SurahChart({ data, language }: SurahChartProps) {
   const t = useTranslations("KeywordSearch")
@@ -115,7 +128,11 @@ export function SurahChart({ data, language }: SurahChartProps) {
           <BarChart
             layout="vertical"
             data={displayData}
-            margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+            margin={{ top: 5, right: 48, left: 16, bottom: 5 }}
+            role="img"
+            aria-label={
+              language === "quran" ? "Surah distribution chart" : "Book distribution chart"
+            }
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -123,13 +140,14 @@ export function SurahChart({ data, language }: SurahChartProps) {
               horizontal={true}
               vertical={false}
             />
-            <XAxis type="number" tick={xAxisTickStyle} axisLine={axisLineStyle} />
+            <XAxis type="number" tick={xAxisTickStyle} axisLine={axisLineStyle} tickLine={false} />
             <YAxis
               type="category"
               dataKey="surah_name"
               tick={<CustomYAxisTick />}
-              width={90}
+              width={110}
               axisLine={axisLineStyle}
+              tickLine={false}
             />
             <Tooltip
               content={<CustomTooltip occurrencesLabel={t("chart.occurrences")} />}
@@ -142,13 +160,16 @@ export function SurahChart({ data, language }: SurahChartProps) {
               radius={barRadius}
               isAnimationActive={true}
               animationDuration={800}
-            />
+            >
+              <LabelList dataKey="count" position="right" fill={labelFill} fontSize={11} />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
 
         {/* Expand Button */}
         {sortedData.length > 20 && !showAll && (
           <button
+            type="button"
             onClick={() => setShowAll(true)}
             className="mt-4 w-full text-center text-sm text-[var(--color-accent-primary)] hover:underline"
           >
