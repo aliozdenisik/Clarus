@@ -19,23 +19,23 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
   return (
     <div className="flex min-h-screen w-full flex-col bg-[var(--color-bg-app)] lg:flex-row">
       {/* LEFT SIDE — Auth Form */}
-      <div className="flex flex-1 items-center justify-center p-6 sm:p-8 lg:p-12">
-        <div className="w-full max-w-md space-y-8">{children}</div>
+      <div className="flex flex-1 items-center justify-center p-6 sm:p-8 lg:p-10">
+        <div className="w-full max-w-md space-y-6">{children}</div>
       </div>
 
       {/* RIGHT SIDE — Gradient Hero (hidden on mobile) */}
       <div className="relative hidden flex-1 overflow-hidden lg:flex">
         {/* Gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950" />
 
         {/* Animated blobs */}
-        <div className="absolute top-0 -left-4 h-72 w-72 animate-pulse rounded-full bg-indigo-500/20 mix-blend-screen blur-3xl filter" />
+        <div className="absolute top-0 -left-4 h-72 w-72 animate-pulse rounded-full bg-indigo-500/12 mix-blend-screen blur-3xl filter" />
         <div
-          className="absolute top-1/3 -right-4 h-72 w-72 animate-pulse rounded-full bg-purple-500/20 mix-blend-screen blur-3xl filter"
+          className="absolute top-1/3 -right-4 h-72 w-72 animate-pulse rounded-full bg-sky-500/10 mix-blend-screen blur-3xl filter"
           style={{ animationDelay: "2s" }}
         />
         <div
-          className="absolute -bottom-8 left-1/4 h-72 w-72 animate-pulse rounded-full bg-cyan-500/15 mix-blend-screen blur-3xl filter"
+          className="absolute -bottom-8 left-1/4 h-72 w-72 animate-pulse rounded-full bg-indigo-400/10 mix-blend-screen blur-3xl filter"
           style={{ animationDelay: "4s" }}
         />
 
@@ -49,15 +49,16 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
 
         {/* Hero content */}
         <div className="relative z-10 flex w-full items-center justify-center p-8 lg:p-12">
-          <div className="max-w-sm space-y-6 text-center">
+          <div className="max-w-sm space-y-5 text-center">
             {/* Shield icon */}
-            <div className="mb-2 inline-flex rounded-full bg-white/10 p-4 backdrop-blur-sm">
+            <div className="mb-2 inline-flex rounded-full bg-white/8 p-4 backdrop-blur-sm">
               <svg
                 className="h-10 w-10 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
                 strokeWidth={1.5}
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"
@@ -67,22 +68,22 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
               </svg>
             </div>
 
-            <h2 className="text-3xl leading-tight font-bold text-white lg:text-4xl">
+            <h2 className="text-2xl leading-tight font-semibold text-white lg:text-3xl">
               {t("heroTitle")}
               <br />
               {t("heroTitleLine2")}
             </h2>
-            <p className="text-lg leading-relaxed text-white/70">{t("heroDescription")}</p>
+            <p className="text-base leading-relaxed text-white/75">{t("heroDescription")}</p>
 
             {/* Feature pills */}
             <div className="flex flex-wrap justify-center gap-2 pt-2">
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
+              <span className="rounded-full bg-white/8 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
                 {t("pillSemantic")}
               </span>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
+              <span className="rounded-full bg-white/8 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
                 {t("pillAgents")}
               </span>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
+              <span className="rounded-full bg-white/8 px-3 py-1 text-xs font-medium text-white/80 backdrop-blur-sm">
                 {t("pillVerses")}
               </span>
             </div>

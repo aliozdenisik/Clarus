@@ -2,12 +2,20 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useTranslations } from "next-intl"
+import { usePathname } from "next/navigation"
 
 import { Icons } from "@/components/ui/icons"
 import { Button } from "@/components/ui/button"
 
 function Footer() {
   const t = useTranslations("Footer")
+  const pathname = usePathname()
+  const segments = pathname.split("/").filter(Boolean)
+  const page = segments.length > 0 ? segments[segments.length - 1] : ""
+
+  if (page === "sign-in" || page === "sign-up") {
+    return null
+  }
 
   return (
     <footer className="border-border/40 bg-background border-t px-6 py-16 md:px-8">

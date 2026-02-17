@@ -22,28 +22,43 @@ export default function SignUpPage() {
       <div className="flex items-center justify-between">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)]"
+          className="inline-flex items-center gap-2 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-glow)] hover:text-[var(--color-text-primary)]"
         >
-          <ChevronLeft size={16} />
+          <ChevronLeft size={17} />
           <span>{tCommon("back")}</span>
         </Link>
       </div>
 
       {/* Branding */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <span className="bg-gradient-to-r from-indigo-400 to-indigo-600 bg-clip-text text-3xl font-bold text-transparent">
           Clarus
         </span>
-        <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">
-          {t("createAccount")}
-        </h1>
-        <p className="text-[var(--color-text-muted)]">{t("registerSubtitle")}</p>
+        <p className="text-sm text-[var(--color-text-secondary)]">{t("createAccount")}</p>
       </div>
 
-      {/* Better Auth Form */}
-      <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 shadow-sm">
-        <AuthView pathname="sign-up" />
-      </div>
+      <AuthView
+        pathname="sign-up"
+        className="max-w-none border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] shadow-sm"
+        classNames={{
+          header: "gap-2",
+          title: "text-xl font-semibold text-[var(--color-text-primary)]",
+          description: "text-sm text-[var(--color-text-secondary)]",
+          content: "gap-5",
+          footer: "text-[var(--color-text-muted)]",
+          footerLink: "text-[var(--color-accent-secondary)] hover:text-[var(--color-text-primary)]",
+          form: {
+            label: "text-[var(--color-text-secondary)]",
+            input:
+              "border-[var(--color-border-subtle)] bg-[var(--color-bg-app)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)] focus-visible:border-[var(--color-border-glow)]",
+            forgotPasswordLink:
+              "text-[var(--color-accent-secondary)] hover:text-[var(--color-text-primary)]",
+            button: "h-10 font-medium",
+            primaryButton:
+              "bg-[var(--color-accent-primary)] text-white hover:bg-[var(--color-accent-hover)]",
+          },
+        }}
+      />
 
       <p className="text-center text-xs text-[var(--color-text-muted)]">
         {t("termsSignUp")}{" "}
