@@ -65,8 +65,7 @@ export const BentoCard = ({
       "transform-gpu transition-all duration-500 ease-out",
       "hover:-translate-y-1 hover:border-white/[0.18] hover:shadow-[0_12px_48px_rgba(0,0,0,0.5)]",
       // Primary card emphasis
-      isPrimary &&
-        "border-[var(--color-accent-primary)]/30 shadow-[0_0_24px_rgba(99,102,241,0.12)]",
+      isPrimary && "border-[var(--color-accent-primary)]/30 shadow-[0_0_24px_rgba(79,70,229,0.12)]",
       className
     )}
   >
