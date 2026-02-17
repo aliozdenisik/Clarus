@@ -523,7 +523,8 @@
       "title": "Kök Bilgisi",
       "buckwalter": "Buckwalter",
       "definition": "Tanım",
-      "forms": "Morfolojik Formlar"
+      "forms": "Morfolojik Formlar",
+      "dictionaryMeanings": "Sözlük Anlamları"
     },
     "derivedWords": {
       "title": "Türetilmiş Kelimeler",

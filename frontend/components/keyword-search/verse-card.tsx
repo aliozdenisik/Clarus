@@ -70,7 +70,7 @@ function highlightText(
 
     if (isMatch) {
       return (
-        <mark key={wordKey} className="mx-0.5 rounded bg-indigo-500/20 px-0.5 text-indigo-300">
+        <mark key={wordKey} className="mx-0.5 rounded-sm bg-indigo-700 px-1 text-zinc-100">
           {displayWord}
         </mark>
       )
@@ -110,7 +110,7 @@ export const VerseCard = React.memo(function VerseCard({
     <div>
       <GlowCard className="border-l-2 border-l-indigo-500">
         {/* Header: Book/Surah name + Chapter:Verse */}
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <span className="text-sm text-[var(--color-text-muted)]">
             {(isHebrew || isGreek) && chapter
               ? `${surahName} ${chapter}:${ayahNumber}`
@@ -121,7 +121,7 @@ export const VerseCard = React.memo(function VerseCard({
               href={`/quran/${surahId}?verse=${ayahNumber}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-accent-primary)]"
+              className="text-zinc-300 transition-colors hover:text-indigo-400"
               aria-label={tCommon("read")}
             >
               <ExternalLink className="h-4 w-4" />
@@ -161,7 +161,7 @@ export const VerseCard = React.memo(function VerseCard({
             </div>
 
             {/* Separator */}
-            <div className="my-3 border-t border-zinc-800" />
+            <div className="my-4 border-t border-zinc-800" />
 
             {/* Translation */}
             <div className="text-base leading-relaxed text-[var(--color-text-primary)]" dir="ltr">
