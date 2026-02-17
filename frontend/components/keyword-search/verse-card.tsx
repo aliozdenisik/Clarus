@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useMemo } from "react"
-import { GlowCard } from "@/components/ui/glow-card"
+import { MagicCard } from "@/components/ui/magic-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ExternalLink } from "lucide-react"
 import { stripArabicDiacritics } from "@/lib/utils/arabic"
@@ -108,7 +108,7 @@ export const VerseCard = React.memo(function VerseCard({
 
   return (
     <div>
-      <GlowCard className="border-l-2 border-l-indigo-500">
+      <MagicCard className="border-l-2 border-l-indigo-500 rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
         {/* Header: Book/Surah name + Chapter:Verse */}
         <div className="mb-3 flex items-center justify-between">
           <span className="text-sm text-[var(--color-text-muted)]">
@@ -188,7 +188,7 @@ export const VerseCard = React.memo(function VerseCard({
             </div>
           </>
         )}
-      </GlowCard>
+      </MagicCard>
     </div>
   )
 })

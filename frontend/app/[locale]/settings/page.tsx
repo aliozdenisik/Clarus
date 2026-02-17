@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
 import { useSession } from "@/lib/auth-client"
 import { usePreferencesStore } from "@/lib/stores/preferences-store"
-import { GlowCard } from "@/components/ui/glow-card"
+import { MagicCard } from "@/components/ui/magic-card"
 import { Button } from "@/components/ui/button"
 import { DotPattern, RadialGradient } from "@/components/ui/dot-pattern"
 import { toast } from "sonner"
@@ -154,7 +154,7 @@ export default function SettingsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...springPresets.fluid, delay: 0.1 }}
           >
-            <GlowCard className="bg-[var(--color-bg-surface)]/80 p-6 backdrop-blur-xl">
+            <MagicCard className="bg-[var(--color-bg-surface)]/80 p-6 backdrop-blur-xl rounded-lg border border-[var(--color-border-subtle)]" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
               <div className="mb-6 flex items-center gap-2">
                 <Palette className="h-5 w-5 text-[var(--color-accent-primary)]" />
                 <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
@@ -212,7 +212,7 @@ export default function SettingsPage() {
                   </Select>
                 </div>
               </div>
-            </GlowCard>
+            </MagicCard>
           </motion.div>
 
           {/* Search Defaults Card */}
@@ -221,7 +221,7 @@ export default function SettingsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...springPresets.fluid, delay: 0.2 }}
           >
-            <GlowCard className="bg-[var(--color-bg-surface)]/80 p-6 backdrop-blur-xl">
+            <MagicCard className="bg-[var(--color-bg-surface)]/80 p-6 backdrop-blur-xl rounded-lg border border-[var(--color-border-subtle)]" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
               <div className="mb-6 flex items-center gap-2">
                 <Search className="h-5 w-5 text-[var(--color-accent-primary)]" />
                 <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
@@ -287,7 +287,7 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-            </GlowCard>
+            </MagicCard>
           </motion.div>
 
           {/* Advanced Settings Card */}
@@ -296,7 +296,7 @@ export default function SettingsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...springPresets.fluid, delay: 0.3 }}
           >
-            <GlowCard className="bg-[var(--color-bg-surface)]/80 p-6 backdrop-blur-xl">
+            <MagicCard className="bg-[var(--color-bg-surface)]/80 p-6 backdrop-blur-xl rounded-lg border border-[var(--color-border-subtle)]" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
               <div className="mb-6 flex items-center gap-2">
                 <Zap className="h-5 w-5 text-[var(--color-accent-primary)]" />
                 <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
@@ -323,7 +323,7 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
-            </GlowCard>
+            </MagicCard>
           </motion.div>
 
           {/* Actions */}

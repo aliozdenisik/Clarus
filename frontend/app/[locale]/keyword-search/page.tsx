@@ -34,7 +34,7 @@ import {
   getQuranSurahsApiMetadataQuranSurahsGet,
 } from "@/lib/api/sdk.gen"
 import type { KeywordSearchResponse, VerseMatchItem } from "@/lib/api/types.gen"
-import { Tabs as VercelTabs } from "@/components/ui/vercel-tabs"
+import { AnimatedBackground } from "@/components/motion-primitives/animated-background"
 import { LanguageTabs, type LanguageTab } from "@/components/keyword-search/language-tabs"
 import {
   BibleCategoryTabs,
@@ -631,15 +631,30 @@ function KeywordSearchContent() {
       <div className="relative px-6 pb-16">
         <div className="mx-auto max-w-4xl">
           {/* Tab Navigation */}
-          <VercelTabs
-            tabs={[
-              { id: "results", label: t("tabs.results") },
-              ...(activeLanguage === "quran" ? [{ id: "browser", label: t("tabs.browser") }] : []),
-            ]}
-            activeTab={activeTab}
-            onTabChange={(tabId) => setActiveTab(tabId as TabType)}
-            className="mb-8 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/60 p-1"
-          />
+          <div className="mb-8 flex justify-center">
+            <AnimatedBackground
+              defaultValue={activeTab}
+              onValueChange={(id) => id && setActiveTab(id as TabType)}
+              className="rounded-lg bg-white/[0.08]"
+              transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+            >
+              {[
+                { id: "results", label: t("tabs.results") },
+                ...(activeLanguage === "quran"
+                  ? [{ id: "browser", label: t("tabs.browser") }]
+                  : []),
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  data-id={tab.id}
+                  type="button"
+                  className="px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] transition-colors data-[checked=true]:text-white"
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </AnimatedBackground>
+          </div>
 
           {/* Tab Content */}
           {activeTab === "results" && (

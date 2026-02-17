@@ -33,9 +33,9 @@ vi.mock("lucide-react", () => ({
   AlertTriangle: () => <div data-testid="alert-triangle-icon" />,
 }))
 
-// Mock GlowCard
-vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
+// Mock MagicCard
+vi.mock("@/components/ui/magic-card", () => ({
+  MagicCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
 }))
 
 // Mock Skeleton

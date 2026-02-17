@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
 import { useSession, signOut } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
-import { GlowCard } from "@/components/ui/glow-card"
+import { MagicCard } from "@/components/ui/magic-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { ArrowLeft, BookOpen, User, LogOut } from "lucide-react"
@@ -406,7 +406,7 @@ export default function BookDetailPage() {
               exit={{ opacity: 0, y: -20 }}
               transition={springPresets.fluid}
             >
-              <GlowCard className="p-6">
+              <MagicCard className="p-6 rounded-lg border border-[var(--color-border-subtle)]" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
                 <h3 className="mb-4 text-lg font-bold text-[var(--color-text-primary)]">
                   {t("chapterTitle", { chapter: chapterContent.chapter })}
                 </h3>
@@ -428,7 +428,7 @@ export default function BookDetailPage() {
                     </p>
                   ))}
                 </div>
-              </GlowCard>
+              </MagicCard>
             </motion.div>
           ) : (
             <motion.div

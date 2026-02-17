@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { GlowCard } from "@/components/ui/glow-card"
+import { MagicCard } from "@/components/ui/magic-card"
 import { SourceBadge, SourceType } from "./source-badge"
 import { ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -66,7 +66,7 @@ export const SourceReferenceCard = React.memo(function SourceReferenceCard({
           "shadow-[var(--color-accent-primary)]/20 shadow-lg ring-2 ring-[var(--color-accent-primary)]"
       )}
     >
-      <GlowCard className="motion-safe:transition-all motion-safe:duration-500">
+      <MagicCard className="motion-safe:transition-all motion-safe:duration-500 rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
         {/* Header row */}
         <div className="mb-2 flex items-start justify-between">
           <div className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export const SourceReferenceCard = React.memo(function SourceReferenceCard({
 
         {/* Verse text */}
         <p className="text-sm leading-relaxed text-[var(--color-text-primary)]">{verse.text}</p>
-      </GlowCard>
+      </MagicCard>
     </motion.div>
   )
 })

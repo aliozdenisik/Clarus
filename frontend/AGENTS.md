@@ -176,6 +176,21 @@ console.log("Search completed") // Forbidden
 // Auto-injected into API requests for request tracing
 ```
 
+## GOLDEN RULES
+
+- **Hazır component öncelikli**: ALWAYS prefer ready-made components from established libraries (shadcn/ui, Magic UI, Motion Primitives, Luxe, Kokonut UI, etc.) over manual component creation. Manual components should ONLY be created when no suitable ready-made alternative exists.
+
+### Approved Component Libraries (priority order)
+
+| Layer | Library | Use Case |
+|-------|---------|----------|
+| Foundation | shadcn/ui | Core UI primitives (already using) |
+| Motion | Motion Primitives | Tasteful animations, text reveals, transitions |
+| Effects | Magic UI | Hero effects, particles, backgrounds, NumberTicker |
+| Primitives | Luxe | Tailwind v4 + Radix native (magnetic button, shine variants) |
+| Functional | Kokonut UI | AI chat interfaces, functional UI components |
+| Supplemental | Eldora UI, Animata | Page blocks, micro-interactions |
+
 ## ANTI-PATTERNS
 
 - **No `any`** - Types generated from OpenAPI spec
@@ -183,6 +198,7 @@ console.log("Search completed") // Forbidden
 - **No Context for server data** - Use TanStack Query
 - **No inline styles** - Use Tailwind classes
 - **No console.log** - Use structured logger from `lib/logger.ts`
+- **No manual components when a library alternative exists** - Search approved libraries first
 
 ## KEY COMPONENTS
 

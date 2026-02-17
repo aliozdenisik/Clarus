@@ -1,107 +1,7 @@
 "use client"
 
-import { Tabs, Tab } from "@/components/ui/vercel-tabs"
-import { cn } from "@/lib/utils"
-import { AnimatePresence, motion, Transition } from "framer-motion"
+import { AnimatedBackground } from "@/components/motion-primitives/animated-background"
 import { useTranslations } from "next-intl"
-import {
-  Children,
-  cloneElement,
-  ReactElement,
-  useState,
-  useId,
-  useCallback,
-  isValidElement,
-} from "react"
-
-interface ChildProps {
-  "data-id": string
-  className?: string
-  children?: React.ReactNode
-  key?: React.Key
-  "aria-selected"?: boolean
-  "data-checked"?: string
-  onClick?: () => void
-  onMouseEnter?: () => void
-  onMouseLeave?: () => void
-}
-
-type AnimatedBackgroundProps = {
-  children: ReactElement<ChildProps>[] | ReactElement<ChildProps>
-  defaultValue?: string
-  onValueChangeAction?: (newActiveId: string | null) => void
-  className?: string
-  transition?: Transition
-  enableHover?: boolean
-}
-
-export function AnimatedBackground({
-  children,
-  defaultValue,
-  onValueChangeAction,
-  className,
-  transition = { type: "spring", bounce: 0.15, duration: 0.5 },
-  enableHover = false,
-}: AnimatedBackgroundProps) {
-  const [activeId, setActiveId] = useState<string | null>(defaultValue ?? null)
-  const uniqueId = useId()
-
-  const handleSetActiveId = useCallback(
-    (id: string | null) => {
-      setActiveId(id)
-      if (onValueChangeAction) {
-        onValueChangeAction(id)
-      }
-    },
-    [onValueChangeAction]
-  )
-
-  return Children.map(children, (child, index) => {
-    if (!isValidElement<ChildProps>(child)) return child
-
-    const id = child.props["data-id"]
-    const childClassName = child.props.className
-    const childContent = child.props.children
-
-    const interactionProps = enableHover
-      ? {
-          onMouseEnter: () => handleSetActiveId(id),
-          onMouseLeave: () => handleSetActiveId(null),
-        }
-      : {
-          onClick: () => handleSetActiveId(id),
-        }
-
-    const newProps: ChildProps = {
-      "data-id": id,
-      key: index,
-      className: cn("relative inline-flex", childClassName),
-      "aria-selected": activeId === id,
-      "data-checked": activeId === id ? "true" : "false",
-      ...interactionProps,
-    }
-
-    return cloneElement(
-      child,
-      newProps,
-      <>
-        <AnimatePresence initial={false}>
-          {activeId === id && (
-            <motion.div
-              layoutId={`background-${uniqueId}`}
-              className={cn("absolute inset-0", className)}
-              transition={transition}
-              initial={{ opacity: defaultValue ? 1 : 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            />
-          )}
-        </AnimatePresence>
-        <span className="z-10">{childContent}</span>
-      </>
-    )
-  })
-}
 
 // Premium Filter Tabs with Vercel-style underline
 export type FilterType = "all" | "quran" | "old_testament" | "new_testament" | "apocrypha"
@@ -133,7 +33,7 @@ export function AnimatedFilterTabs({
   const t = useTranslations("Compare.filters")
 
   // Only show tabs for sources that have results (count > 0), plus "all"
-  const tabs: Tab[] = FILTERS.filter(
+  const tabs = FILTERS.filter(
     (filter) => filter === "all" || (counts && (counts[filter] ?? 0) > 0)
   ).map((filter) => ({
     id: filter,
@@ -144,11 +44,23 @@ export function AnimatedFilterTabs({
   const effectiveFilter = tabs.some((t) => t.id === activeFilter) ? activeFilter : "all"
 
   return (
-    <Tabs
-      tabs={tabs}
-      activeTab={effectiveFilter}
-      onTabChange={(tabId) => onFilterChange(tabId as FilterType)}
-    />
+    <AnimatedBackground
+      defaultValue={effectiveFilter}
+      onValueChange={(id) => id && onFilterChange(id as FilterType)}
+      className="rounded-lg bg-white/[0.08]"
+      transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+    >
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          data-id={tab.id}
+          type="button"
+          className="px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] transition-colors data-[checked=true]:text-white"
+        >
+          {tab.label}
+        </button>
+      ))}
+    </AnimatedBackground>
   )
 }
 
@@ -166,17 +78,30 @@ export function SegmentedControl<T extends string>({
   options,
   className,
 }: SegmentedControlProps<T>) {
-  const tabs: Tab[] = options.map((opt) => ({
+  const tabs = options.map((opt) => ({
     id: opt.value,
     label: opt.label,
   }))
 
   return (
-    <Tabs
-      tabs={tabs}
-      activeTab={value}
-      onTabChange={(tabId) => onChange(tabId as T)}
-      className={className}
-    />
+    <div className={className}>
+      <AnimatedBackground
+        defaultValue={value}
+        onValueChange={(id) => id && onChange(id as T)}
+        className="rounded-lg bg-white/[0.08]"
+        transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+      >
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            data-id={tab.id}
+            type="button"
+            className="px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)] transition-colors data-[checked=true]:text-white"
+          >
+            {tab.label}
+          </button>
+        ))}
+      </AnimatedBackground>
+    </div>
   )
 }

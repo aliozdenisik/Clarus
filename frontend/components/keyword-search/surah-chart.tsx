@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts"
-import { GlowCard } from "@/components/ui/glow-card"
+import { MagicCard } from "@/components/ui/magic-card"
 import { springPresets } from "@/lib/design-system"
 import { useTranslations } from "next-intl"
 
@@ -80,11 +80,11 @@ export function SurahChart({ data, language }: SurahChartProps) {
         animate={{ opacity: 1 }}
         transition={springPresets.snappy}
       >
-        <GlowCard>
+      <MagicCard className="rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
           <p className="py-8 text-center text-sm text-[var(--color-text-muted)]">
             {language === "quran" ? t("chart.noSurahData") : t("chart.noBookData")}
           </p>
-        </GlowCard>
+        </MagicCard>
       </motion.div>
     )
   }
@@ -99,7 +99,7 @@ export function SurahChart({ data, language }: SurahChartProps) {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={springPresets.snappy}>
-      <GlowCard>
+      <MagicCard className="rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
         {/* Section Header */}
         <div className="mb-6 space-y-4">
           <div className="text-center text-xs tracking-widest text-[var(--color-text-muted)]">
@@ -158,7 +158,7 @@ export function SurahChart({ data, language }: SurahChartProps) {
             })}
           </button>
         )}
-      </GlowCard>
+      </MagicCard>
     </motion.div>
   )
 }
