@@ -211,15 +211,58 @@
       "newTestament": "New Testament",
       "apocrypha": "Apocrypha"
     },
+    "subtitlePrefix": "Explore sacred texts with semantic search across",
+    "verseCounts": {
+      "quran": "6,236 verses",
+      "oldTestament": "23,145 verses",
+      "newTestament": "7,957 verses",
+      "apocrypha": "5,717 verses"
+    },
     "language": "Language",
     "translator": "Translation",
     "autoDetect": "Auto-detect",
     "advancedMode": "Advanced Mode",
+    "advancedSearchHint": "Keyword-based search",
+    "selectAllKeywords": "Select All",
+    "deselectAllKeywords": "Clear All",
+    "selectAtLeastOneKeyword": "Select at least one keyword",
+    "extractKeywords": "Extract keywords for advanced search",
+    "extractingKeywords": "Extracting keywords...",
+    "clearKeywords": "Clear selected keywords",
     "keywordSuggestions": "Keyword Suggestions",
     "enhancing": "Enhancing query...",
     "streaming": "Streaming answer...",
+    "aiInterpretation": "AI Interpretation",
+    "retrievingSources": "Retrieving sources...",
+    "unknownReference": "Unknown Reference",
     "noResultsTitle": "No results found",
     "noResultsMessage": "Try adjusting your search query or filters.",
+    "noResultsQuery": "No results for \"{query}\"",
+    "noResultsHint": "Try broader terms, switch collections, or use advanced mode.",
+    "clearSearch": "Clear search",
+    "emptyState": {
+      "title": "Start with a concept, question, or verse",
+      "description": "Use semantic search to explore links across Quran and Bible collections before running a full comparison.",
+      "suggestions": {
+        "patience": "Patience and prayer",
+        "creation": "Creation story",
+        "justice": "Justice and mercy"
+      },
+      "tips": {
+        "semantic": {
+          "title": "Semantic Search",
+          "description": "Search by meaning, not just exact words."
+        },
+        "compare": {
+          "title": "Switch Sources",
+          "description": "Jump between Quran, OT, NT, and Apocrypha tabs."
+        },
+        "keyword": {
+          "title": "Advanced Mode",
+          "description": "Extract and refine keywords for targeted results."
+        }
+      }
+    },
     "verseDetails": "Verse Details",
     "viewVerse": "View verse",
     "copyReference": "Copy reference",
@@ -227,9 +270,48 @@
   },
   "Compare": {
     "title": "Comparative Analysis",
+    "badge": "5-Agent Multi-Scripture Analysis",
+    "subtitlePrefix": "Comparative analysis across",
+    "subtitleMiddle": "verses from",
+    "subtitleSuffix": "sources",
     "placeholder": "Enter a theological topic or question to compare...",
     "analyzing": "Analyzing...",
     "analyzeButton": "Analyze",
+    "sourcesLabel": "Sources:",
+    "advancedSearch": "Advanced Search",
+    "advancedSearchHint": "Keyword-based search",
+    "quranKeywords": "Quran Keywords:",
+    "bibleKeywords": "Bible Keywords:",
+    "extractingKeywords": "Extracting keywords...",
+    "analysisComplete": "Analysis Complete",
+    "citationsLabel": "Citations:",
+    "citationsCount": "{count} citations",
+    "sourceReferences": "Source References",
+    "categoryNoResults": "No results found for this category.",
+    "clickAllTab": "Click the All tab to view all references.",
+    "allCitationsBySource": "All Citations by Source",
+    "collections": {
+      "quran": "Quran",
+      "oldTestament": "Old Testament",
+      "newTestament": "New Testament",
+      "apocrypha": "Apocrypha"
+    },
+    "emptyState": {
+      "title": "Compare scriptures with guided prompts",
+      "description": "Choose a theological topic and let 5 agents synthesize cross-scripture perspectives with citations.",
+      "stepLabel": "Step {number}",
+      "suggestions": {
+        "creation": "Creation story",
+        "justice": "Justice and mercy",
+        "mercy": "Forgiveness and compassion",
+        "prophets": "Shared teachings of prophets"
+      },
+      "steps": {
+        "input": "Enter a concept, question, or theme.",
+        "analyze": "Agents search selected collections in parallel.",
+        "synthesize": "Receive comparative interpretation with references."
+      }
+    },
     "multiAgent": "Multi-Agent Analysis",
     "selectCollections": "Select Collections",
     "allCollections": "All Collections",

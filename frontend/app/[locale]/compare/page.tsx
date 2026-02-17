@@ -87,6 +87,22 @@ const COLLECTION_VERSE_COUNTS: Record<string, number> = {
   bible_apocrypha: 5717,
 }
 
+const PROGRESS_SKELETON_KEYS = [
+  "compare-progress-skeleton-a",
+  "compare-progress-skeleton-b",
+  "compare-progress-skeleton-c",
+  "compare-progress-skeleton-d",
+  "compare-progress-skeleton-e",
+]
+
+const SUSPENSE_SKELETON_KEYS = [
+  "compare-suspense-skeleton-a",
+  "compare-suspense-skeleton-b",
+  "compare-suspense-skeleton-c",
+  "compare-suspense-skeleton-d",
+  "compare-suspense-skeleton-e",
+]
+
 const isAbortError = (error: unknown): boolean =>
   error instanceof DOMException
     ? error.name === "AbortError"
@@ -142,6 +158,21 @@ function CompareContent() {
 
   const t = useTranslations("Compare")
   const tToast = useTranslations("Toast")
+
+  const suggestedTopics = [
+    t("emptyState.suggestions.creation"),
+    t("emptyState.suggestions.justice"),
+    t("emptyState.suggestions.mercy"),
+    t("emptyState.suggestions.prophets"),
+  ]
+
+  const compareSteps = [
+    t("emptyState.steps.input"),
+    t("emptyState.steps.analyze"),
+    t("emptyState.steps.synthesize"),
+  ]
+
+  const isPreCompareState = !topic.trim() && !isLoading && !isStreaming && !result
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -552,7 +583,9 @@ function CompareContent() {
         // Auto-expand new paragraphs
         setExpandedParagraphs((prevSet) => {
           const newSet = new Set(prevSet)
-          paragraphs.forEach((_, idx) => newSet.add(idx))
+          paragraphs.forEach((_, idx) => {
+            newSet.add(idx)
+          })
           return newSet
         })
 
@@ -709,7 +742,7 @@ function CompareContent() {
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500" />
               </span>
               <span className="text-xs font-medium tracking-wide text-[var(--color-text-secondary)]">
-                5-Agent Multi-Scripture Analysis
+                {t("badge")}
               </span>
             </motion.div>
 
@@ -721,16 +754,16 @@ function CompareContent() {
             </h1>
 
             {/* Subtitle with dynamic verse count */}
-            <p className="mx-auto max-w-md text-base leading-relaxed text-[var(--color-text-muted)] md:text-lg">
-              Comparative analysis across{" "}
+            <p className="mx-auto max-w-md text-base leading-relaxed text-[var(--color-text-secondary)] md:text-lg">
+              {t("subtitlePrefix")}{" "}
               <span className="font-medium text-[var(--color-text-secondary)] tabular-nums">
                 {selectedVerseCount.toLocaleString()}
               </span>{" "}
-              verses from{" "}
+              {t("subtitleMiddle")}{" "}
               <span className="font-medium text-[var(--color-text-secondary)]">
                 {selectedCollections.length}
               </span>{" "}
-              sources
+              {t("subtitleSuffix")}
             </p>
           </motion.div>
 
@@ -767,7 +800,7 @@ function CompareContent() {
                         }
                       }
                     }}
-                    placeholder="Enter a topic to compare..."
+                    placeholder={t("placeholder")}
                     rows={1}
                     className="peer border-input placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-ring/20 relative min-h-12 w-full resize-none overflow-hidden rounded-lg border border-white/10 bg-[var(--color-bg-surface)]/80 py-3 ps-12 pe-28 text-base shadow-sm shadow-black/5 backdrop-blur-sm transition-colors hover:border-white/20 focus:border-violet-500/50 focus-visible:ring-[3px] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                   />
@@ -796,7 +829,7 @@ function CompareContent() {
 
               {/* Collection Selector - compact inline */}
               <div className="mt-3 flex w-full items-center justify-center gap-2">
-                <span className="text-xs text-[var(--color-text-muted)]">Kaynaklar:</span>
+                <span className="text-xs text-[var(--color-text-muted)]">{t("sourcesLabel")}</span>
                 <CollectionSelector
                   selected={selectedCollections}
                   onChange={setSelectedCollections}
@@ -806,7 +839,7 @@ function CompareContent() {
 
               {/* Keyword Selector - Advanced Mode Toggle */}
               <div className="mt-4 w-full">
-                <div className="mb-3 flex items-center justify-between">
+                <div className="mb-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-center">
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -820,11 +853,11 @@ function CompareContent() {
                       htmlFor="advanced-mode"
                       className="cursor-pointer text-sm font-medium text-[var(--color-text-secondary)]"
                     >
-                      Gelişmiş Arama
+                      {t("advancedSearch")}
                     </label>
                   </div>
                   <span className="text-xs text-[var(--color-text-muted)]">
-                    Anahtar kelime bazlı arama
+                    {t("advancedSearchHint")}
                   </span>
                 </div>
 
@@ -835,7 +868,7 @@ function CompareContent() {
                     {quranKeywords.length > 0 && (
                       <div>
                         <p className="mb-2 text-xs font-medium text-[var(--color-text-muted)]">
-                          Kuran Anahtar Kelimeleri:
+                          {t("quranKeywords")}
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {quranKeywords.map((kw) => (
@@ -866,7 +899,7 @@ function CompareContent() {
                     {bibleKeywords.length > 0 && (
                       <div>
                         <p className="mb-2 text-xs font-medium text-[var(--color-text-muted)]">
-                          İncil Anahtar Kelimeleri:
+                          {t("bibleKeywords")}
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {bibleKeywords.map((kw) => (
@@ -899,7 +932,7 @@ function CompareContent() {
                 {isExtractingKeywords && (
                   <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
-                    <span>Anahtar kelimeler çıkarılıyor...</span>
+                    <span>{t("extractingKeywords")}</span>
                   </div>
                 )}
               </div>
@@ -911,6 +944,57 @@ function CompareContent() {
       {/* Content */}
       <div className="relative px-6 pb-16">
         <div className="mx-auto max-w-3xl">
+          {isPreCompareState && (
+            <motion.section
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...springPresets.gentle, duration: 0.45 }}
+              className="mb-10 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/50 p-6 md:p-8"
+            >
+              <div className="mx-auto max-w-xl text-center">
+                <h2 className="mb-3 text-xl font-semibold text-[var(--color-text-primary)] md:text-2xl">
+                  {t("emptyState.title")}
+                </h2>
+                <p className="text-sm leading-relaxed text-[var(--color-text-secondary)] md:text-base">
+                  {t("emptyState.description")}
+                </p>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                {suggestedTopics.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => {
+                      setTopic(suggestion)
+                      if (textareaRef.current) {
+                        textareaRef.current.style.height = "auto"
+                        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
+                      }
+                    }}
+                    className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)] px-3 py-2.5 text-left text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-glow)] hover:text-[var(--color-text-primary)]"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+                {compareSteps.map((step, index) => (
+                  <div
+                    key={step}
+                    className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)]/70 p-3"
+                  >
+                    <p className="text-xs font-semibold tracking-wide text-[var(--color-accent-primary)] uppercase">
+                      {t("emptyState.stepLabel", { number: index + 1 })}
+                    </p>
+                    <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{step}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.section>
+          )}
+
           {/* Loading State & Streaming Progress - Outside Suspense (renders immediately) */}
           {(isLoading || isStreaming) && (
             <motion.div
@@ -939,17 +1023,18 @@ function CompareContent() {
                   <div className="mb-4 flex items-center gap-3 text-[var(--color-text-muted)]">
                     <TypingIndicator />
                     <span className="text-sm">
-                      {result?.paragraphs?.length
-                        ? t("analyzing")
-                        : "Initializing multi-agent analysis..."}
+                      {result?.paragraphs?.length ? t("analyzing") : t("progress.initializing")}
                     </span>
                   </div>
                 )
               })()}
 
               {/* Show remaining skeletons */}
-              {[...Array(Math.max(0, 5 - (result?.paragraphs?.length || 0)))].map((_, i) => (
-                <Skeleton key={`compare-progress-skeleton-${i}`} className="h-32 w-full" />
+              {PROGRESS_SKELETON_KEYS.slice(
+                0,
+                Math.max(0, 5 - (result?.paragraphs?.length || 0))
+              ).map((key) => (
+                <Skeleton key={key} className="h-32 w-full" />
               ))}
             </motion.div>
           )}
@@ -958,8 +1043,8 @@ function CompareContent() {
           <Suspense
             fallback={
               <div className="space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={`compare-suspense-skeleton-${i}`} className="h-32 w-full" />
+                {SUSPENSE_SKELETON_KEYS.map((key) => (
+                  <Skeleton key={key} className="h-32 w-full" />
                 ))}
               </div>
             }
@@ -979,13 +1064,13 @@ function CompareContent() {
                       <div className="flex items-center gap-2">
                         <Sparkles className="h-5 w-5 text-[var(--color-accent-primary)]" />
                         <span className="font-semibold text-[var(--color-text-primary)]">
-                          Analysis Complete
+                          {t("analysisComplete")}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-4 text-sm text-[var(--color-text-muted)]">
                         <div className="flex items-center gap-1">
                           <Quote className="h-4 w-4" />
-                          <span>{result.total_citations} citations</span>
+                          <span>{t("citationsCount", { count: result.total_citations })}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
@@ -1026,6 +1111,7 @@ function CompareContent() {
                           <GlowCard>
                             {/* Paragraph Header */}
                             <button
+                              type="button"
                               onClick={() => toggleParagraph(index)}
                               className="flex w-full items-center justify-between text-left"
                             >
@@ -1089,7 +1175,7 @@ function CompareContent() {
                                     {paragraph.citations.length > 0 && (
                                       <div className="mt-4 border-t border-[var(--color-border-subtle)] pt-4">
                                         <p className="mb-2 text-xs font-medium text-[var(--color-text-muted)]">
-                                          Citations:
+                                          {t("citationsLabel")}
                                         </p>
                                         <div className="flex flex-wrap gap-2">
                                           {(() => {
@@ -1149,7 +1235,7 @@ function CompareContent() {
                           className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]"
                           data-testid="verse-references-heading"
                         >
-                          Kaynak Referanslari
+                          {t("sourceReferences")}
                         </h3>
 
                         <AnimatedFilterTabs
@@ -1171,13 +1257,8 @@ function CompareContent() {
                             ))
                           ) : (
                             <p className="py-8 text-center text-[var(--color-text-muted)]">
-                              Bu kategori icin sonuc bulunamadi.
-                              {activeFilter !== "all" && (
-                                <span>
-                                  {" "}
-                                  Tum sonuclari gormek icin &quot;Tumu&quot; sekmesine tiklayin.
-                                </span>
-                              )}
+                              {t("categoryNoResults")}
+                              {activeFilter !== "all" && <span> {t("clickAllTab")}</span>}
                             </p>
                           )}
                         </div>
@@ -1198,7 +1279,7 @@ function CompareContent() {
                     >
                       <GlowCard>
                         <h3 className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">
-                          All Citations by Source
+                          {t("allCitationsBySource")}
                         </h3>
                         <div className="space-y-4">
                           {Object.entries(result.citations).map(

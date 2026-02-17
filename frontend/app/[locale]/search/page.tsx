@@ -66,6 +66,7 @@ const isAbortError = (error: unknown): boolean =>
 function SearchContent() {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<SearchResult[]>([])
+  const [hasSearched, setHasSearched] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
   const [activeTab, setActiveTab] = useState<SearchSource>("quran")
   const [streamedAnswer, setStreamedAnswer] = useState("")
@@ -215,6 +216,7 @@ function SearchContent() {
 
   const handleTabChange = (tab: SearchSource) => {
     setActiveTab(tab)
+    setHasSearched(false)
     setResults([])
     setStreamedAnswer("")
     setVerseDetails({})
@@ -310,6 +312,56 @@ function SearchContent() {
     }
   }
 
+  const suggestedQueries = [
+    t("emptyState.suggestions.patience"),
+    t("emptyState.suggestions.creation"),
+    t("emptyState.suggestions.justice"),
+  ]
+
+  const quickTips = [
+    {
+      title: t("emptyState.tips.semantic.title"),
+      description: t("emptyState.tips.semantic.description"),
+    },
+    {
+      title: t("emptyState.tips.compare.title"),
+      description: t("emptyState.tips.compare.description"),
+    },
+    {
+      title: t("emptyState.tips.keyword.title"),
+      description: t("emptyState.tips.keyword.description"),
+    },
+  ]
+
+  const isPreSearchState =
+    !query.trim() &&
+    !hasSearched &&
+    !isSearching &&
+    !isStreaming &&
+    results.length === 0 &&
+    !streamedAnswer
+
+  const isNoResultsState =
+    hasSearched && !isSearching && !isStreaming && results.length === 0 && !streamedAnswer
+
+  const suspenseSkeletonKeys = [
+    "search-suspense-skeleton-a",
+    "search-suspense-skeleton-b",
+    "search-suspense-skeleton-c",
+  ]
+
+  const loadingSkeletonKeys = [
+    "search-loading-skeleton-a",
+    "search-loading-skeleton-b",
+    "search-loading-skeleton-c",
+  ]
+
+  const sourceSkeletonKeys = [
+    "search-source-skeleton-a",
+    "search-source-skeleton-b",
+    "search-source-skeleton-c",
+  ]
+
   const enhanceQuery = async (searchQuery: string): Promise<KeywordSuggestion[] | null> => {
     if (enhanceAbortControllerRef.current) {
       enhanceAbortControllerRef.current.abort()
@@ -385,6 +437,8 @@ function SearchContent() {
       return
     }
 
+    setHasSearched(true)
+
     // Perform search with selected keywords
     if (enable_streaming) {
       setIsSearching(true)
@@ -423,7 +477,7 @@ function SearchContent() {
       setResults([])
 
       try {
-        let body: Record<string, unknown> = { query: searchQuery, mode: "semantic", top_k: 10 }
+        const body: Record<string, unknown> = { query: searchQuery, mode: "semantic", top_k: 10 }
         if (selectedLanguage) {
           body.language = selectedLanguage
         }
@@ -436,19 +490,16 @@ function SearchContent() {
           body.keywords = keywordsToUse.map((k) => k.text)
         }
 
-        let response
-        if (activeTab === "quran") {
-          response = await searchQuranApiSearchQuranPost({
-            body: body as never,
-            signal: controller.signal,
-          })
-        } else {
-          body = { ...body, testament: activeTab }
-          response = await searchBibleApiSearchBiblePost({
-            body: body as never,
-            signal: controller.signal,
-          })
-        }
+        const response =
+          activeTab === "quran"
+            ? await searchQuranApiSearchQuranPost({
+                body: body as never,
+                signal: controller.signal,
+              })
+            : await searchBibleApiSearchBiblePost({
+                body: { ...body, testament: activeTab } as never,
+                signal: controller.signal,
+              })
 
         if (controller.signal.aborted) {
           return
@@ -507,6 +558,7 @@ function SearchContent() {
     const q = searchParams?.get("q")
     if (q && q.trim() && !hasAutoExecuted.current) {
       hasAutoExecuted.current = true
+      setHasSearched(true)
       setQuery(q) // Populate input field for display
 
       // Reset state for fresh search
@@ -543,6 +595,8 @@ function SearchContent() {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!query.trim()) return
+
+    setHasSearched(true)
 
     setResults([])
     setStreamedAnswer("")
@@ -631,19 +685,19 @@ function SearchContent() {
             </h1>
 
             {/* Subtitle with dynamic verse count */}
-            <p className="mx-auto max-w-md text-base leading-relaxed text-[var(--color-text-muted)] md:text-lg">
-              Explore sacred texts with semantic search across{" "}
+            <p className="mx-auto max-w-xl text-base leading-relaxed text-[var(--color-text-secondary)] md:text-lg">
+              {t("subtitlePrefix")}{" "}
               <motion.span
                 key={activeTab}
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className="inline-block font-medium text-[var(--color-text-secondary)]"
+                className="inline-block font-semibold text-[var(--color-text-secondary)]"
               >
-                {activeTab === "quran" && "6,236 verses"}
-                {activeTab === "ot" && "23,145 verses"}
-                {activeTab === "nt" && "7,957 verses"}
-                {activeTab === "apocrypha" && "5,717 verses"}
+                {activeTab === "quran" && t("verseCounts.quran")}
+                {activeTab === "ot" && t("verseCounts.oldTestament")}
+                {activeTab === "nt" && t("verseCounts.newTestament")}
+                {activeTab === "apocrypha" && t("verseCounts.apocrypha")}
               </motion.span>
             </p>
           </motion.div>
@@ -657,7 +711,7 @@ function SearchContent() {
             <SearchTabs activeTab={activeTab} onTabChange={handleTabChange} />
 
             {/* Search form with glass effect */}
-            <form onSubmit={handleSearch} className="relative mb-6 w-full max-w-2xl">
+            <form onSubmit={handleSearch} className="relative mb-6 w-full max-w-3xl">
               <div className="relative flex items-center justify-center gap-2">
                 <div className="group relative flex-1">
                   {/* Glow effect on focus */}
@@ -668,7 +722,12 @@ function SearchContent() {
                     type="search"
                     data-testid="search-input"
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={(e) => {
+                      setQuery(e.target.value)
+                      if (!e.target.value.trim()) {
+                        setHasSearched(false)
+                      }
+                    }}
                     placeholder={getPlaceholder()}
                     className="peer relative h-12 border-white/10 bg-[var(--color-bg-surface)]/80 ps-12 pe-24 text-base backdrop-blur-sm transition-colors hover:border-white/20 focus:border-indigo-500/50"
                   />
@@ -704,6 +763,8 @@ function SearchContent() {
             <div className="w-full max-w-2xl space-y-3">
               <KeywordSelector
                 keywords={keywords}
+                advancedMode={advancedMode}
+                onAdvancedModeChange={setAdvancedMode}
                 onSelectionChange={(selected) => {
                   setKeywords(
                     keywords.map((k) => ({
@@ -714,6 +775,13 @@ function SearchContent() {
                 }}
                 isLoading={isEnhancing}
                 onSearch={handleKeywordSearch}
+                labels={{
+                  advancedSearch: t("advancedMode"),
+                  advancedSearchHint: t("advancedSearchHint"),
+                  selectAll: t("selectAllKeywords"),
+                  deselectAll: t("deselectAllKeywords"),
+                  selectAtLeastOne: t("selectAtLeastOneKeyword"),
+                }}
               />
 
               {/* Action buttons */}
@@ -726,9 +794,7 @@ function SearchContent() {
                     disabled={isEnhancing}
                     className="text-xs text-[var(--color-accent-primary)] transition-colors hover:text-[var(--color-accent-primary)]/80 disabled:opacity-50"
                   >
-                    {isEnhancing
-                      ? "Extracting keywords..."
-                      : "Extract keywords for advanced search"}
+                    {isEnhancing ? t("extractingKeywords") : t("extractKeywords")}
                   </button>
                 )}
 
@@ -742,7 +808,7 @@ function SearchContent() {
                     }}
                     className="ml-auto text-xs text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-secondary)]"
                   >
-                    {t("advancedMode")}
+                    {t("clearKeywords")}
                   </button>
                 )}
               </div>
@@ -754,6 +820,79 @@ function SearchContent() {
       {/* Content */}
       <div className="relative px-6 pb-16">
         <div className="mx-auto max-w-3xl">
+          {isPreSearchState && (
+            <motion.section
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...springPresets.gentle, duration: 0.45 }}
+              className="mb-12 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/50 p-6 md:p-8"
+            >
+              <div className="mx-auto max-w-xl text-center">
+                <h2 className="mb-3 text-xl font-semibold text-[var(--color-text-primary)] md:text-2xl">
+                  {t("emptyState.title")}
+                </h2>
+                <p className="text-sm leading-relaxed text-[var(--color-text-secondary)] md:text-base">
+                  {t("emptyState.description")}
+                </p>
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                {suggestedQueries.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => setQuery(suggestion)}
+                    className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)] px-3 py-2.5 text-left text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-glow)] hover:text-[var(--color-text-primary)]"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+                {quickTips.map((tip) => (
+                  <div
+                    key={tip.title}
+                    className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)]/70 p-3"
+                  >
+                    <p className="mb-1 text-sm font-medium text-[var(--color-text-primary)]">
+                      {tip.title}
+                    </p>
+                    <p className="text-xs leading-relaxed text-[var(--color-text-muted)]">
+                      {tip.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </motion.section>
+          )}
+
+          {isNoResultsState && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...springPresets.gentle, duration: 0.35 }}
+              className="mb-10 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/70 p-6 text-center"
+            >
+              <p className="text-lg font-semibold text-[var(--color-text-primary)]">
+                {t("noResultsQuery", { query })}
+              </p>
+              <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                {t("noResultsHint")}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("")
+                  setHasSearched(false)
+                }}
+                className="mt-4 text-sm font-medium text-[var(--color-accent-primary)] transition-colors hover:text-[var(--color-accent-primary)]/80"
+              >
+                {t("clearSearch")}
+              </button>
+            </motion.div>
+          )}
+
           {/* AI Answer Section - Outside Suspense (renders immediately) */}
           <AnimatePresence>
             {streamedAnswer && (
@@ -765,7 +904,7 @@ function SearchContent() {
               >
                 <div className="relative border-l border-[var(--color-accent-primary)]/40 py-1 pl-5">
                   <span className="mb-3 block text-[10px] font-medium tracking-wider text-[var(--color-text-muted)] uppercase">
-                    AI Interpretation
+                    {t("aiInterpretation")}
                   </span>
                   <div className="text-[15px] leading-[1.75] text-[var(--color-text-secondary)]">
                     {(() => {
@@ -802,11 +941,8 @@ function SearchContent() {
           <Suspense
             fallback={
               <div className="space-y-3">
-                {[...Array(3)].map((_, i) => (
-                  <Skeleton
-                    key={`search-suspense-skeleton-${i}`}
-                    className="h-24 w-full rounded-lg"
-                  />
+                {suspenseSkeletonKeys.map((key) => (
+                  <Skeleton key={key} className="h-24 w-full rounded-lg" />
                 ))}
               </div>
             }
@@ -814,11 +950,8 @@ function SearchContent() {
             {/* Loading skeletons - no answer yet */}
             {isSearching && !results.length && !streamedAnswer && (
               <div className="space-y-3">
-                {[...Array(3)].map((_, i) => (
-                  <Skeleton
-                    key={`search-loading-skeleton-${i}`}
-                    className="h-24 w-full rounded-lg"
-                  />
+                {loadingSkeletonKeys.map((key) => (
+                  <Skeleton key={key} className="h-24 w-full rounded-lg" />
                 ))}
               </div>
             )}
@@ -828,13 +961,10 @@ function SearchContent() {
               <div className="space-y-3">
                 <div className="mb-6 h-px bg-[var(--color-border-subtle)]" />
                 <p className="mb-4 text-xs tracking-wide text-[var(--color-text-muted)] uppercase">
-                  Retrieving sources...
+                  {t("retrievingSources")}
                 </p>
-                {[...Array(3)].map((_, i) => (
-                  <Skeleton
-                    key={`search-source-skeleton-${i}`}
-                    className="h-24 w-full rounded-lg"
-                  />
+                {sourceSkeletonKeys.map((key) => (
+                  <Skeleton key={key} className="h-24 w-full rounded-lg" />
                 ))}
               </div>
             )}
@@ -879,7 +1009,7 @@ function SearchContent() {
                           <div className="mb-3 flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <span className="text-sm font-medium text-[var(--color-accent-primary)]">
-                                {result.reference || "Unknown Reference"}
+                                {result.reference || t("unknownReference")}
                               </span>
                               <SourceBadge source={mapSourceToType(result.source)} />
                             </div>
@@ -890,7 +1020,7 @@ function SearchContent() {
                               <button
                                 type="button"
                                 onClick={() => navigateToVerse(result.reference)}
-                                aria-label="Go to verse"
+                                aria-label={t("viewVerse")}
                                 className="rounded text-[var(--color-text-muted)] transition-colors duration-200 hover:text-[var(--color-accent-primary)] focus:ring-2 focus:ring-[var(--color-accent-primary)]/50 focus:outline-none"
                               >
                                 <ExternalLink className="h-3.5 w-3.5" />

@@ -3,6 +3,7 @@
 import { Tabs, Tab } from "@/components/ui/vercel-tabs"
 import { cn } from "@/lib/utils"
 import { AnimatePresence, motion, Transition } from "framer-motion"
+import { useTranslations } from "next-intl"
 import {
   Children,
   cloneElement,
@@ -111,12 +112,15 @@ interface AnimatedFilterTabsProps {
   counts?: Partial<Record<FilterType, number>>
 }
 
-const FILTER_LABELS: Record<FilterType, string> = {
-  all: "All Sources",
-  quran: "Quran",
-  old_testament: "Old Testament",
-  new_testament: "New Testament",
-  apocrypha: "Apocrypha",
+const FILTER_LABEL_KEYS: Record<
+  FilterType,
+  "all" | "quran" | "oldTestament" | "newTestament" | "apocrypha"
+> = {
+  all: "all",
+  quran: "quran",
+  old_testament: "oldTestament",
+  new_testament: "newTestament",
+  apocrypha: "apocrypha",
 }
 
 const FILTERS: FilterType[] = ["all", "quran", "old_testament", "new_testament", "apocrypha"]
@@ -126,12 +130,14 @@ export function AnimatedFilterTabs({
   onFilterChange,
   counts,
 }: AnimatedFilterTabsProps) {
+  const t = useTranslations("Compare.filters")
+
   // Only show tabs for sources that have results (count > 0), plus "all"
   const tabs: Tab[] = FILTERS.filter(
     (filter) => filter === "all" || (counts && (counts[filter] ?? 0) > 0)
   ).map((filter) => ({
     id: filter,
-    label: FILTER_LABELS[filter],
+    label: t(FILTER_LABEL_KEYS[filter]),
   }))
 
   // If active filter was removed (no results for that source), reset to "all"
