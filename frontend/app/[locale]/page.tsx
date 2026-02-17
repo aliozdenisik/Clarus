@@ -29,7 +29,7 @@ const agentColorMap = {
     iconBg: "bg-emerald-500/10",
     iconBorder: "border-emerald-500/20",
     text: "text-emerald-400",
-    badge: "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20",
+    badge: "text-emerald-300/80 border border-emerald-500/30",
     stat: "text-emerald-400/80",
     dot: "bg-emerald-400",
     line: "bg-emerald-600/30",
@@ -39,7 +39,7 @@ const agentColorMap = {
     iconBg: "bg-amber-500/10",
     iconBorder: "border-amber-500/20",
     text: "text-amber-400",
-    badge: "bg-amber-500/15 text-amber-400 border border-amber-500/20",
+    badge: "text-amber-300/80 border border-amber-500/30",
     stat: "text-amber-400/80",
     dot: "bg-amber-400",
     line: "bg-amber-600/30",
@@ -49,7 +49,7 @@ const agentColorMap = {
     iconBg: "bg-sky-500/10",
     iconBorder: "border-sky-500/20",
     text: "text-sky-400",
-    badge: "bg-sky-500/15 text-sky-400 border border-sky-500/20",
+    badge: "text-sky-300/80 border border-sky-500/30",
     stat: "text-sky-400/80",
     dot: "bg-sky-400",
     line: "bg-sky-600/30",
@@ -59,7 +59,7 @@ const agentColorMap = {
     iconBg: "bg-purple-500/10",
     iconBorder: "border-purple-500/20",
     text: "text-purple-400",
-    badge: "bg-purple-500/15 text-purple-400 border border-purple-500/20",
+    badge: "text-purple-300/80 border border-purple-500/30",
     stat: "text-purple-400/80",
     dot: "bg-purple-400",
     line: "bg-purple-600/30",
@@ -419,7 +419,7 @@ export default function HomePage() {
                   }}
                 >
                   <div
-                    className={`group relative h-full rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-transparent p-6 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-500 hover:border-white/[0.15] hover:from-white/[0.06]`}
+                    className={`group relative h-full rounded-2xl border border-white/[0.12] bg-gradient-to-b from-white/[0.05] to-transparent p-6 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-500 hover:border-white/[0.22] hover:from-white/[0.08]`}
                   >
                     {/* Subtle gradient overlay */}
                     <div
@@ -436,15 +436,17 @@ export default function HomePage() {
                       </div>
 
                       {/* Name & Role Badge */}
-                      <h3 className="mb-2 text-base font-semibold text-white">{agent.name}</h3>
+                      <h3 className="mb-1.5 text-lg font-semibold tracking-tight text-white">
+                        {agent.name}
+                      </h3>
                       <span
-                        className={`mb-4 inline-block rounded-full px-2.5 py-1 text-[10px] font-medium tracking-wide uppercase ${colors.badge}`}
+                        className={`mb-5 inline-block rounded-md px-2 py-0.5 text-[11px] font-medium tracking-[0.08em] uppercase ${colors.badge}`}
                       >
                         {agent.role}
                       </span>
 
                       {/* Description */}
-                      <p className="mb-5 text-sm leading-relaxed text-zinc-400">
+                      <p className="mb-5 text-sm leading-relaxed text-zinc-300">
                         {agent.description}
                       </p>
 
@@ -470,27 +472,27 @@ export default function HomePage() {
             transition={{ ...springPresets.gentle, delay: 0.7, duration: 1 }}
             className="mx-auto max-w-[800px]"
           >
-            <div className="group relative rounded-2xl border border-white/[0.08] bg-gradient-to-b from-white/[0.04] to-transparent p-10 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-500 hover:border-white/[0.15] hover:from-white/[0.06]">
+            <div className="group relative rounded-2xl border border-white/[0.12] bg-gradient-to-b from-white/[0.05] to-transparent p-8 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-500 hover:border-white/[0.22] hover:from-white/[0.08]">
               {/* Subtle gradient overlay */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-indigo-500/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-amber-500/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
               {/* Content */}
               <div className="relative z-10">
                 {/* Icon */}
-                <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10">
-                  <Sparkles className="h-6 w-6 text-indigo-400" />
+                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/10">
+                  <Sparkles className="h-6 w-6 text-amber-300" />
                 </div>
 
                 {/* Name & Role Badge */}
-                <h3 className="mb-3 text-xl font-semibold text-white">
+                <h3 className="mb-2 text-2xl font-semibold tracking-tight text-white">
                   {tLanding("agents.synthesis.name")}
                 </h3>
-                <span className="mb-5 inline-block rounded-full border border-indigo-500/20 bg-indigo-500/15 px-3 py-1.5 text-[10px] font-medium tracking-wide text-indigo-400 uppercase">
+                <span className="mb-5 inline-block rounded-md border border-amber-500/30 px-2.5 py-0.5 text-[11px] font-medium tracking-[0.08em] text-amber-300/80 uppercase">
                   {tLanding("agents.synthesis.role")}
                 </span>
 
                 {/* Description */}
-                <p className="mb-8 max-w-2xl text-base leading-relaxed text-zinc-400">
+                <p className="mb-8 max-w-2xl text-base leading-relaxed text-zinc-300">
                   {tLanding("agents.synthesis.description")}
                 </p>
 
@@ -504,7 +506,7 @@ export default function HomePage() {
                   ].map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-[10px] font-medium tracking-wide text-zinc-400 uppercase transition-colors hover:bg-white/[0.08] hover:text-zinc-300"
+                      className="rounded-lg border border-white/[0.1] bg-white/[0.05] px-3 py-2 text-[11px] font-medium text-zinc-300 capitalize transition-colors hover:bg-white/[0.1] hover:text-zinc-200"
                     >
                       {tag}
                     </span>
