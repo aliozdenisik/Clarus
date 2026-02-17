@@ -57,8 +57,8 @@ vi.mock("lucide-react", () => ({
   AlertTriangle: () => <div data-testid="alert-triangle-icon" />,
 }))
 
-vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
+vi.mock("@/components/ui/magic-card", () => ({
+  MagicCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
 }))
 
 vi.mock("@/components/ui/skeleton", () => ({
@@ -115,15 +115,15 @@ vi.mock("react-virtuoso", () => ({
   ),
 }))
 
-vi.mock("@/components/ui/vercel-tabs", () => ({
-  Tabs: ({
+vi.mock("@/components/ui/animated-tabs", () => ({
+  AnimatedFilterTabs: ({
     tabs,
     activeTab,
   }: {
     tabs: Array<{ id: string; label: string }>
     activeTab: string
   }) => (
-    <div data-testid="vercel-tabs">
+    <div data-testid="animated-tabs">
       {tabs.map((tab) => (
         <div key={tab.id} data-active={activeTab === tab.id}>
           {tab.label}

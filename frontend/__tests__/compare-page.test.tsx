@@ -77,8 +77,8 @@ vi.mock("framer-motion", () => {
 })
 
 // Mock components that might be complex or unnecessary to render fully
-vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
+vi.mock("@/components/ui/magic-card", () => ({
+  MagicCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
 }))
 
 // Mock DotPattern + AuroraSectionBackground
@@ -114,6 +114,9 @@ vi.mock("lucide-react", () => ({
   ChevronUp: () => <div data-testid="chevron-up-icon" />,
   Quote: () => <div data-testid="quote-icon" />,
   Search: () => <div data-testid="search-icon" />,
+  ArrowRight: () => <div data-testid="arrow-right-icon" />,
+  Command: () => <div data-testid="command-icon" />,
+  Check: () => <div data-testid="check-icon" />,
 }))
 
 // Mock compare components
@@ -155,10 +158,9 @@ vi.mock("@/components/ui/animated-tabs", () => ({
   FilterType: {},
 }))
 
-// Mock typewriter
-vi.mock("@/components/ui/typewriter", () => ({
+// Mock typing-indicator
+vi.mock("@/components/ui/typing-indicator", () => ({
   TypingIndicator: () => <div data-testid="typing-indicator" />,
-  AIResponse: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
 }))
 
 // Mock citation parser — parseBareReferences receives (citationParts[], citations[])

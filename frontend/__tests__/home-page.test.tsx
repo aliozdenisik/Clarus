@@ -61,7 +61,7 @@ vi.mock("@/components/ui/dot-pattern", () => ({
   RadialGradient: () => null,
 }))
 
-vi.mock("@/components/ui/text-rotate", () => ({
+vi.mock("@/components/ui/luxury-quote", () => ({
   LuxuryQuote: ({
     quotes,
     className,

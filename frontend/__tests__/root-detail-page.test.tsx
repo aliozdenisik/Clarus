@@ -48,8 +48,8 @@ vi.mock("lucide-react", () => ({
   ArrowLeft: () => <div data-testid="arrow-left-icon" />,
 }))
 
-vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, className, ...rest }: MockProps) => (
+vi.mock("@/components/ui/magic-card", () => ({
+  MagicCard: ({ children, className, ...rest }: MockProps) => (
     <div className={className} {...rest}>
       {children}
     </div>

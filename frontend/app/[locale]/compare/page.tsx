@@ -6,29 +6,27 @@ import { springPresets } from "@/lib/design-system"
 import { useSession } from "@/lib/auth-client"
 import { useTranslations } from "next-intl"
 
-import { GlowCard } from "@/components/ui/glow-card"
+import { MagicCard } from "@/components/ui/magic-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useSSE } from "@/lib/hooks/use-sse"
-import { Clock, Sparkles, ChevronDown, ChevronUp, Quote, Search } from "lucide-react"
+import { Clock, Sparkles, ChevronDown, ChevronUp, Quote } from "lucide-react"
 import { usePreferencesStore } from "@/lib/stores/preferences-store"
 import { AnimatedFilterTabs, FilterType } from "@/components/ui/animated-tabs"
-import { TypingIndicator } from "@/components/ui/typewriter"
+import { TypingIndicator } from "@/components/ui/typing-indicator"
 import { DotPattern } from "@/components/ui/dot-pattern"
 import { AuroraSectionBackground } from "@/components/ui/aurora-background"
 
 import { SourceReferenceCard } from "@/components/compare/source-reference-card"
 import { InlineCitation } from "@/components/compare/inline-citation"
+import { AnimatedSearchInput } from "@/components/compare/animated-search-input"
 import {
   parseCitations,
   parseBareReferences,
   stripMarkdownHeaders,
 } from "@/lib/utils/parse-citations"
 import { useLogger } from "@/lib/logger"
-import { LanguageSelector } from "@/components/search/language-selector"
-import { TranslatorSelector } from "@/components/search/translator-selector"
-import { CollectionSelector } from "@/components/compare/collection-selector"
 import { AnalysisProgress } from "@/components/compare/analysis-progress"
 import type { KeywordSuggestion } from "@/lib/stores/keyword-store"
 import type { CompareRequest } from "@/lib/api/types.gen"
@@ -775,92 +773,34 @@ function CompareContent() {
           >
             {/* Search form with glass effect */}
             <form onSubmit={handleCompare} className="relative mb-6 w-full max-w-2xl">
-              <div className="relative flex items-center justify-center gap-2">
-                <div className="group relative flex-1">
-                  {/* Glow effect on focus */}
-                  <div className="absolute -inset-0.5 rounded-xl bg-gradient-to-r from-violet-500/20 via-indigo-500/20 to-violet-500/20 opacity-0 blur transition-opacity duration-300 group-focus-within:opacity-100" />
-
-                  <textarea
-                    ref={textareaRef}
-                    data-testid="compare-topic-input"
-                    value={topic}
-                    onChange={(e) => {
-                      setTopic(e.target.value)
-                      // Auto-resize: reset to auto then set to scrollHeight
-                      const ta = e.target
-                      ta.style.height = "auto"
-                      ta.style.height = `${ta.scrollHeight}px`
-                    }}
-                    onKeyDown={(e) => {
-                      // Submit on Enter (without Shift)
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault()
-                        if (topic.trim() && !isLoading) {
-                          handleCompare(e as unknown as React.FormEvent)
-                        }
-                      }
-                    }}
-                    placeholder={t("placeholder")}
-                    rows={1}
-                    className="peer border-input placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-ring/20 relative min-h-12 w-full resize-none overflow-hidden rounded-lg border border-white/10 bg-[var(--color-bg-surface)]/80 py-3 ps-12 pe-28 text-base shadow-sm shadow-black/5 backdrop-blur-sm transition-colors hover:border-white/20 focus:border-violet-500/50 focus-visible:ring-[3px] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                  />
-                  <div className="text-muted-foreground/60 pointer-events-none absolute start-0 top-0 flex h-12 items-center justify-center ps-4 peer-disabled:opacity-50">
-                    <Search size={20} strokeWidth={1.5} />
-                  </div>
-                  <button
-                    type="submit"
-                    data-testid="compare-analyze-button"
-                    disabled={isLoading || !topic.trim()}
-                    className="focus-visible:outline-ring/70 absolute end-1.5 top-1.5 flex h-9 items-center justify-center rounded-lg bg-gradient-to-r from-violet-500 to-indigo-500 px-4 text-sm font-medium text-white shadow-lg shadow-violet-500/25 transition-all hover:from-violet-600 hover:to-indigo-600 focus:z-10 focus-visible:outline focus-visible:outline-2 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-                    aria-label="Submit analysis"
-                  >
-                    {isLoading ? t("analyzing") : t("analyzeButton")}
-                  </button>
-                </div>
-                <LanguageSelector
-                  value={selectedLanguage}
-                  onChange={setSelectedLanguage}
-                  detectedLanguage={detectedLanguage}
-                />
-                {selectedCollections.includes("quran_tr") && (
-                  <TranslatorSelector value={selectedTranslator} onChange={setSelectedTranslator} />
-                )}
-              </div>
-
-              {/* Collection Selector - compact inline */}
-              <div className="mt-3 flex w-full items-center justify-center gap-2">
-                <span className="text-xs text-[var(--color-text-muted)]">{t("sourcesLabel")}</span>
-                <CollectionSelector
-                  selected={selectedCollections}
-                  onChange={setSelectedCollections}
-                  disabled={isLoading}
-                />
-              </div>
+              <AnimatedSearchInput
+                value={topic}
+                onChange={setTopic}
+                onSubmit={handleCompare}
+                placeholder={t("placeholder")}
+                isLoading={isLoading}
+                selectedLanguage={selectedLanguage}
+                onLanguageChange={setSelectedLanguage}
+                detectedLanguage={detectedLanguage}
+                selectedTranslator={selectedTranslator}
+                onTranslatorChange={setSelectedTranslator}
+                selectedCollections={selectedCollections}
+                onCollectionsChange={setSelectedCollections}
+                showTranslatorSelector={selectedCollections.includes("quran_tr")}
+                suggestedTopics={suggestedTopics}
+                onTopicSelect={(topic) => {
+                  setTopic(topic)
+                }}
+                advancedMode={advancedMode}
+                onAdvancedModeChange={setAdvancedMode}
+                isExtractingKeywords={isExtractingKeywords}
+                submitLabel={t("analyzeButton")}
+                loadingLabel={t("analyzing")}
+                textareaRef={textareaRef}
+              />
 
               {/* Keyword Selector - Advanced Mode Toggle */}
               <div className="mt-4 w-full">
-                <div className="mb-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-center">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="advanced-mode"
-                      checked={advancedMode}
-                      onChange={(e) => setAdvancedMode(e.target.checked)}
-                      disabled={isLoading || isExtractingKeywords}
-                      className="h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-indigo-500 focus:ring-2 focus:ring-indigo-500/40"
-                    />
-                    <label
-                      htmlFor="advanced-mode"
-                      className="cursor-pointer text-sm font-medium text-[var(--color-text-secondary)]"
-                    >
-                      {t("advancedSearch")}
-                    </label>
-                  </div>
-                  <span className="text-xs text-[var(--color-text-muted)]">
-                    {t("advancedSearchHint")}
-                  </span>
-                </div>
-
                 {/* Show keywords after extraction */}
                 {advancedMode && (quranKeywords.length > 0 || bibleKeywords.length > 0) && (
                   <div className="space-y-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/50 p-4">
@@ -967,10 +907,6 @@ function CompareContent() {
                     type="button"
                     onClick={() => {
                       setTopic(suggestion)
-                      if (textareaRef.current) {
-                        textareaRef.current.style.height = "auto"
-                        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
-                      }
                     }}
                     className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)] px-3 py-2.5 text-left text-sm text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-glow)] hover:text-[var(--color-text-primary)]"
                   >
@@ -1059,7 +995,7 @@ function CompareContent() {
                   transition={springPresets.fluid}
                 >
                   {/* Stats Header */}
-                  <GlowCard className="mb-6">
+                  <MagicCard className="mb-6 rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div className="flex items-center gap-2">
                         <Sparkles className="h-5 w-5 text-[var(--color-accent-primary)]" />
@@ -1091,7 +1027,7 @@ function CompareContent() {
                         </div>
                       </div>
                     </div>
-                  </GlowCard>
+                  </MagicCard>
 
                   {/* Paragraphs */}
                   <div className="space-y-4">
@@ -1108,7 +1044,7 @@ function CompareContent() {
                             delay: index * 0.1,
                           }}
                         >
-                          <GlowCard>
+                          <MagicCard className="rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
                             {/* Paragraph Header */}
                             <button
                               type="button"
@@ -1203,7 +1139,7 @@ function CompareContent() {
                                 </motion.div>
                               )}
                             </AnimatePresence>
-                          </GlowCard>
+                          </MagicCard>
                         </motion.div>
                       )
                     })}
@@ -1230,7 +1166,7 @@ function CompareContent() {
                       className="mt-6"
                       data-testid="verse-references-section"
                     >
-                      <GlowCard>
+                      <MagicCard className="rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
                         <h3
                           className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]"
                           data-testid="verse-references-heading"
@@ -1262,7 +1198,7 @@ function CompareContent() {
                             </p>
                           )}
                         </div>
-                      </GlowCard>
+                      </MagicCard>
                     </motion.div>
                   )}
 
@@ -1277,7 +1213,7 @@ function CompareContent() {
                       }}
                       className="mt-6"
                     >
-                      <GlowCard>
+                      <MagicCard className="rounded-lg border border-[var(--color-border-subtle)] p-6" gradientSize={200} gradientColor="#1a1a2e" gradientFrom="#7c3aed" gradientTo="#4f46e5">
                         <h3 className="mb-4 text-lg font-semibold text-[var(--color-text-primary)]">
                           {t("allCitationsBySource")}
                         </h3>
@@ -1313,7 +1249,7 @@ function CompareContent() {
                               )
                           )}
                         </div>
-                      </GlowCard>
+                      </MagicCard>
                     </motion.div>
                   )}
                 </motion.div>

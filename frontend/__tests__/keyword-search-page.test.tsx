@@ -71,9 +71,9 @@ vi.mock("lucide-react", () => ({
   Languages: () => <div data-testid="languages-icon" />,
 }))
 
-// Mock GlowCard
-vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
+// Mock MagicCard
+vi.mock("@/components/ui/magic-card", () => ({
+  MagicCard: ({ children, className }: MockProps) => <div className={className}>{children}</div>,
 }))
 
 // Mock Skeleton
@@ -259,7 +259,7 @@ describe("KeywordSearchPage", () => {
     // Search input
     expect(screen.getByPlaceholderText(/Search for Arabic roots/i)).toBeInTheDocument()
 
-    // Tab navigation - vercel-tabs renders plain divs, not ARIA tabs
+    // Tab navigation - animated-tabs renders plain divs, not ARIA tabs
     expect(screen.getByText("Search Results")).toBeInTheDocument()
     expect(screen.getByText("Root Browser")).toBeInTheDocument()
   })
@@ -683,7 +683,7 @@ describe("KeywordSearchPage", () => {
 
     render(<KeywordSearchPage />)
 
-    // Click Root Browser tab - vercel-tabs renders plain divs
+     // Click Root Browser tab - animated-tabs renders plain divs
     const browserTab = screen.getByText("Root Browser")
     await userEvent.click(browserTab)
 
