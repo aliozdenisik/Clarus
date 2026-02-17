@@ -164,9 +164,10 @@
       }
     },
     "cta": {
-      "title": "Ready to Explore?",
-      "description": "Start your journey through sacred texts with AI-powered insights.",
-      "signUp": "Sign Up Now",
+      "title": "Ready to explore sacred texts?",
+      "description": "Search 43,055 verses across the Quran and Bible with AI-powered insight.",
+      "signUp": "Start exploring",
+      "goToSearch": "Go to search",
       "learnMore": "Learn More",
       "discovery": "Discovery",
       "insight": "Insight",
