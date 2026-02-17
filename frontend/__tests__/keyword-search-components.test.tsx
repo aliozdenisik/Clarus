@@ -125,8 +125,14 @@ describe("StatsBar", () => {
     expect(screen.getByText("5")).toBeInTheDocument()
     expect(screen.getByText("12")).toBeInTheDocument()
     expect(screen.getByText("Total Usage")).toBeInTheDocument()
-    expect(screen.getByText("Unique Word")).toBeInTheDocument()
+    expect(screen.getByText("Unique Words")).toBeInTheDocument()
     expect(screen.getByText("Surahs")).toBeInTheDocument()
+  })
+
+  it("uses singular unique-word label when value is one", () => {
+    render(<StatsBar totalOccurrences={1} uniqueWords={1} surahCount={1} language="quran" />)
+
+    expect(screen.getByText("Unique Word")).toBeInTheDocument()
   })
 })
 
@@ -147,6 +153,39 @@ describe("DerivedWords", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "كتاب" }))
     expect(onWordSelect).toHaveBeenCalledWith("كتاب")
+  })
+
+  it("applies active style to selected word and all-words button states", () => {
+    const { rerender } = render(
+      <DerivedWords words={["كتاب", "كتب"]} selectedWord={null} onWordSelect={vi.fn()} />
+    )
+
+    const allWordsButton = screen.getByRole("button", { name: "All Words" })
+    expect(allWordsButton.className).toContain("bg-indigo-500")
+
+    rerender(<DerivedWords words={["كتاب", "كتب"]} selectedWord="كتاب" onWordSelect={vi.fn()} />)
+
+    const selectedWordButton = screen.getByRole("button", { name: "كتاب" })
+    expect(selectedWordButton.className).toContain("bg-indigo-500")
+  })
+
+  it("resets derived-word filter when words change", () => {
+    const initialWords = Array.from({ length: 13 }, (_, i) => `word${i}`)
+    const nextWords = Array.from({ length: 13 }, (_, i) => `term${i}`)
+
+    const { rerender } = render(
+      <DerivedWords words={initialWords} selectedWord={null} onWordSelect={vi.fn()} />
+    )
+
+    const filterInput = screen.getByRole("searchbox", { name: "Filter derived words" })
+    fireEvent.change(filterInput, { target: { value: "zzz" } })
+    expect(screen.getByText("No derived words match this filter")).toBeInTheDocument()
+
+    rerender(<DerivedWords words={nextWords} selectedWord={null} onWordSelect={vi.fn()} />)
+
+    const updatedFilterInput = screen.getByRole("searchbox", { name: "Filter derived words" })
+    expect(updatedFilterInput).toHaveValue("")
+    expect(screen.queryByText("No derived words match this filter")).not.toBeInTheDocument()
   })
 })
 
@@ -232,6 +271,24 @@ describe("VerseCard", () => {
 
     const link = screen.getByRole("link", { name: /read/i })
     expect(link).toHaveAttribute("href", "/quran/2?verse=2")
+  })
+
+  it("shows translation fallback for blank Greek translation", () => {
+    render(
+      <VerseCard
+        surahId={40}
+        surahName="Matthew"
+        ayahNumber={1}
+        textUthmani="λόγος"
+        textClean="λογος"
+        matchedWords={["λόγος"]}
+        englishTranslation="   "
+        chapter={1}
+        language="greek"
+      />
+    )
+
+    expect(screen.getByText("Translation not available")).toBeInTheDocument()
   })
 })
 
@@ -439,5 +496,12 @@ describe("ExperimentalDisclaimer", () => {
 
     const disclaimer = container.firstChild
     expect(disclaimer).toHaveClass("custom-class")
+  })
+
+  it("can be dismissed", () => {
+    render(<ExperimentalDisclaimer />)
+
+    fireEvent.click(screen.getByRole("button", { name: /Dismiss warning/i }))
+    expect(screen.queryByText(/Experimental Feature/i)).not.toBeInTheDocument()
   })
 })

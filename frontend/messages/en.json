@@ -485,6 +485,8 @@
     "placeholderHebrew": "Search for Hebrew roots (e.g., כתב or H3789)...",
     "placeholderGreek": "Search for Greek roots (e.g., βιβλος or G976)...",
     "helperText": "Supports Arabic (كتب) and Buckwalter Latin (ktb)",
+    "helperTextHebrew": "Supports Strong's numbers (e.g., H3789) or Hebrew script",
+    "helperTextGreek": "Supports Strong's numbers (e.g., G1125) or Greek script",
     "emptyStateHintQuran": "Search by Arabic script, Buckwalter transliteration, or semantic roots.",
     "emptyStateHintHebrew": "Search by Hebrew script or Strong's numbers to find related roots.",
     "emptyStateHintGreek": "Search by Greek script or Strong's numbers to explore New Testament roots.",
@@ -492,6 +494,7 @@
     "browseRoots": "Browse roots",
     "searching": "Searching...",
     "searchButton": "Search Root",
+    "clearSearch": "Clear query",
     "tabs": {
       "results": "Search Results",
       "browser": "Root Browser"
@@ -529,7 +532,10 @@
     "derivedWords": {
       "title": "Derived Words",
       "showing": "Showing {count} derived words",
-      "allWords": "All Words"
+      "allWords": "All Words",
+      "filterLabel": "Filter derived words",
+      "filterPlaceholder": "Filter derived words...",
+      "noMatches": "No derived words match this filter"
     },
     "chart": {
       "title": "Surah Distribution",
@@ -572,7 +578,8 @@
     "experimental": {
       "title": "Experimental Feature",
       "content": "This morphological search is under active development. Results should not be used as the sole basis for academic or theological research. Always verify with authoritative sources.",
-      "understand": "I Understand"
+      "understand": "I Understand",
+      "dismiss": "Dismiss warning"
     },
     "browser": {
       "title": "Browse All Roots",

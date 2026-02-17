@@ -80,6 +80,7 @@ const axisLineStyle = { stroke: "#3f3f46" }
 const tooltipCursorStyle = { fill: "rgba(79, 70, 229, 0.1)" }
 const barRadius: [number, number, number, number] = [0, 4, 4, 0]
 const labelFill = "#a1a1aa"
+const MIN_CHART_HEIGHT = 240
 
 export function SurahChart({ data, language }: SurahChartProps) {
   const t = useTranslations("KeywordSearch")
@@ -93,10 +94,13 @@ export function SurahChart({ data, language }: SurahChartProps) {
         animate={{ opacity: 1 }}
         transition={springPresets.snappy}
       >
-        <GlowCard>
-          <p className="py-8 text-center text-sm text-[var(--color-text-muted)]">
-            {language === "quran" ? t("chart.noSurahData") : t("chart.noBookData")}
-          </p>
+        <GlowCard className="p-4">
+          <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 text-center">
+            <p className="text-sm font-medium text-[var(--color-text-secondary)]">
+              {language === "quran" ? t("chart.noSurahData") : t("chart.noBookData")}
+            </p>
+            <p className="text-xs text-[var(--color-text-muted)]">{t("emptyStateExamples")}</p>
+          </div>
         </GlowCard>
       </motion.div>
     )
@@ -108,7 +112,7 @@ export function SurahChart({ data, language }: SurahChartProps) {
   // Show max 20 initially
   const displayData = showAll ? sortedData : sortedData.slice(0, 20)
   const barHeight = 36
-  const chartHeight = displayData.length * barHeight + 40
+  const chartHeight = Math.max(displayData.length * barHeight + 40, MIN_CHART_HEIGHT)
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={springPresets.snappy}>
