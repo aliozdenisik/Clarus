@@ -11,6 +11,7 @@ interface SearchInputProps {
   onSearch: (query: string) => void
   isLoading: boolean
   placeholder?: string
+  helperText?: string
 }
 
 export function SearchInput({
@@ -19,9 +20,9 @@ export function SearchInput({
   onSearch,
   isLoading,
   placeholder,
+  helperText,
 }: SearchInputProps) {
   const t = useTranslations("KeywordSearch")
-  const tCommon = useTranslations("Common")
 
   const handleClear = () => {
     onChange("")
@@ -61,8 +62,8 @@ export function SearchInput({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute top-1/2 right-20 -translate-y-1/2 text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)]"
-            aria-label={tCommon("search")}
+            className="absolute top-1/2 right-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-primary)] focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none"
+            aria-label={t("clearSearch")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -87,7 +88,9 @@ export function SearchInput({
       </div>
 
       {/* Helper text */}
-      <p className="pl-1 text-xs text-[var(--color-text-secondary)]">{t("helperText")}</p>
+      <p className="pl-1 text-xs text-[var(--color-text-secondary)]">
+        {helperText ?? t("helperText")}
+      </p>
     </div>
   )
 }

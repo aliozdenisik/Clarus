@@ -105,6 +105,7 @@ export const VerseCard = React.memo(function VerseCard({
   )
   const isHebrew = language === "hebrew"
   const isGreek = language === "greek"
+  const normalizedEnglishTranslation = englishTranslation?.trim() || null
 
   return (
     <div>
@@ -117,7 +118,7 @@ export const VerseCard = React.memo(function VerseCard({
       >
         {/* Header: Book/Surah name + Chapter:Verse */}
         <div className="mb-4 flex items-center justify-between">
-          <span className="text-sm text-[var(--color-text-muted)]">
+          <span className="text-sm font-medium text-[var(--color-text-secondary)]">
             {(isHebrew || isGreek) && chapter
               ? `${surahName} ${chapter}:${ayahNumber}`
               : `${surahName} : ${ayahNumber}`}
@@ -144,12 +145,9 @@ export const VerseCard = React.memo(function VerseCard({
             </div>
 
             {/* English translation below */}
-            <div
-              className="text-base leading-relaxed text-[var(--color-text-secondary)] italic"
-              dir="ltr"
-            >
-              {englishTranslation || (
-                <span className="text-[var(--color-text-muted)]">
+            <div className="text-base leading-relaxed text-[var(--color-text-primary)]" dir="ltr">
+              {normalizedEnglishTranslation || (
+                <span className="text-sm text-[var(--color-text-muted)]">
                   {t("translationNotAvailable")}
                 </span>
               )}
@@ -172,8 +170,8 @@ export const VerseCard = React.memo(function VerseCard({
             {/* Translation */}
             <div className="text-base leading-relaxed text-[var(--color-text-primary)]" dir="ltr">
               {isHebrew ? (
-                englishTranslation ? (
-                  englishTranslation
+                normalizedEnglishTranslation ? (
+                  normalizedEnglishTranslation
                 ) : (
                   <span className="text-[var(--color-text-muted)] italic">
                     {t("translationNotAvailable")}
