@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
-import { GlowCard } from "@/components/ui/glow-card"
+import { MagicCard } from "@/components/ui/magic-card"
 import { useTranslations } from "next-intl"
 
 interface StatsBarProps {
@@ -34,10 +34,16 @@ export function StatsBar({ totalOccurrences, uniqueWords, surahCount, language }
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...springPresets.snappy, delay: index * 0.1 }}
         >
-          <GlowCard className="flex flex-col items-center justify-center p-6">
+          <MagicCard
+            className="flex flex-col items-center justify-center rounded-lg border border-[var(--color-border-subtle)] p-6"
+            gradientSize={200}
+            gradientColor="#1a1a2e"
+            gradientFrom="#7c3aed"
+            gradientTo="#4f46e5"
+          >
             <div className="text-3xl font-bold text-[var(--color-text-primary)]">{stat.value}</div>
             <div className="mt-1 text-xs text-[var(--color-text-muted)]">{stat.label}</div>
-          </GlowCard>
+          </MagicCard>
         </motion.div>
       ))}
     </div>

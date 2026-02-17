@@ -2,7 +2,7 @@
 
 ## OVERVIEW
 
-Next.js 15 App Router with Framer Motion animations, Zustand state, and TanStack Query. Generated TypeScript API client from OpenAPI spec. Linear-style dark theme. 17 pages, 60+ components, 21 test files.
+Next.js 16 App Router with Framer Motion animations, Zustand state, and TanStack Query. Generated TypeScript API client from OpenAPI spec. Linear-style dark theme. 17 pages, 60+ components, 35 test files.
 
 ## STRUCTURE
 
@@ -23,10 +23,10 @@ frontend/
 │   ├── bible/[bookNr]/         # Bible book browse
 │   ├── old-testament/          # OT browse
 │   ├── new-testament/          # NT browse
-│   ├── apocrypha/              # Apocrypha browse
-│   └── demo-navbar/            # Navbar demo page
+│   └── apocrypha/              # Apocrypha browse
 ├── components/
-│   ├── ui/                     # Radix + custom primitives (33 files)
+│   ├── ui/                     # Radix + library primitives (26 files)
+│   ├── motion-primitives/      # Motion Primitives components (1 file)
 │   ├── compare/                # Compare domain (7 files)
 │   ├── keyword-search/         # Keyword search domain (12 files)
 │   ├── verse-lookup/           # Verse lookup (2 files)
@@ -63,14 +63,16 @@ frontend/
 │   ├── utils.ts                # cn() + general utils
 │   ├── api-client-setup.ts     # API client initialization
 │   └── api-provider.tsx        # API provider component
-├── __tests__/                  # Vitest + RTL (21 files)
+├── __tests__/                  # Vitest + RTL (35 files)
 │   ├── compare-page.test.tsx
 │   ├── keyword-search-page.test.tsx
 │   ├── keyword-search-components.test.tsx
+│   ├── keyword-search-auth.test.tsx
 │   ├── search-page.test.tsx
-│   ├── auth-context.test.tsx
-│   ├── login.test.tsx
+│   ├── auth-ui-provider.test.tsx
 │   ├── history.test.tsx
+│   ├── home-page.test.tsx
+│   ├── homepage.test.tsx
 │   ├── settings.test.tsx
 │   ├── quran.test.tsx
 │   ├── old-testament.test.tsx
@@ -84,7 +86,15 @@ frontend/
 │   ├── search-tabs.test.tsx
 │   ├── offline-banner.test.tsx
 │   ├── use-sse.test.tsx
-│   └── example.test.tsx
+│   ├── root-browser-virtuoso.test.tsx
+│   ├── root-detail-page.test.tsx
+│   ├── rich-root-card.test.tsx
+│   ├── large-name-footer.test.tsx
+│   ├── etymology-popup.test.tsx
+│   ├── translation-block.test.tsx
+│   ├── verse-detail.test.tsx
+│   ├── example.test.tsx
+│   └── i18n/                   # i18n tests (5 files)
 └── messages/                   # i18n (en.json, tr.json)
 ```
 
@@ -93,7 +103,7 @@ frontend/
 | Task                         | Location                     | Notes                                                    |
 | ---------------------------- | ---------------------------- | -------------------------------------------------------- |
 | Add page                     | `app/[route]/page.tsx`       | App Router convention                                    |
-| Add UI primitive             | `components/ui/`             | Radix + Tailwind (33 files)                              |
+| Add UI primitive             | `components/ui/`             | Radix + library primitives (26 files)                    |
 | Add compare component        | `components/compare/`        | 7 domain components                                      |
 | Add keyword search component | `components/keyword-search/` | 12 domain components                                     |
 | Add verse lookup component   | `components/verse-lookup/`   | 2 files                                                  |
@@ -101,7 +111,7 @@ frontend/
 | Modify API client            | `lib/api/`                   | Regenerate, don't edit manually                          |
 | Add state                    | `lib/stores/`                | Zustand pattern                                          |
 | Add hook                     | `lib/hooks/`                 | Custom React hooks                                       |
-| Add test                     | `__tests__/`                 | Vitest + RTL (21 test files, 228+ passing)               |
+| Add test                     | `__tests__/`                 | Vitest + RTL (35 test files, 378+ passing)               |
 | i18n strings                 | `messages/`                  | en.json, tr.json                                         |
 | Add utility                  | `lib/utils/`                 | Domain-specific utils (verse-url, parse-citations, etc.) |
 | Modify logging               | `lib/logger.ts`              | Structured logger (196 lines)                            |
@@ -176,6 +186,21 @@ console.log("Search completed") // Forbidden
 // Auto-injected into API requests for request tracing
 ```
 
+## GOLDEN RULES
+
+- **Hazır component öncelikli**: ALWAYS prefer ready-made components from established libraries (shadcn/ui, Magic UI, Motion Primitives, Luxe, Kokonut UI, etc.) over manual component creation. Manual components should ONLY be created when no suitable ready-made alternative exists.
+
+### Approved Component Libraries (priority order)
+
+| Layer        | Library            | Use Case                                                     |
+| ------------ | ------------------ | ------------------------------------------------------------ |
+| Foundation   | shadcn/ui          | Core UI primitives (already using)                           |
+| Motion       | Motion Primitives  | Tasteful animations, text reveals, transitions               |
+| Effects      | Magic UI           | Hero effects, particles, backgrounds, NumberTicker           |
+| Primitives   | Luxe               | Tailwind v4 + Radix native (magnetic button, shine variants) |
+| Functional   | Kokonut UI         | AI chat interfaces, functional UI components                 |
+| Supplemental | Eldora UI, Animata | Page blocks, micro-interactions                              |
+
 ## ANTI-PATTERNS
 
 - **No `any`** - Types generated from OpenAPI spec
@@ -183,37 +208,38 @@ console.log("Search completed") // Forbidden
 - **No Context for server data** - Use TanStack Query
 - **No inline styles** - Use Tailwind classes
 - **No console.log** - Use structured logger from `lib/logger.ts`
+- **No manual components when a library alternative exists** - Search approved libraries first
 
 ## KEY COMPONENTS
 
 ### Compare Domain (`components/compare/`)
 
-| Component                   | Lines | Role                                    |
-| --------------------------- | ----- | --------------------------------------- |
-| `analysis-progress.tsx`     | 209   | Multi-agent analysis progress indicator |
-| `collection-selector.tsx`   | 109   | Collection selection for comparison     |
-| `source-reference-card.tsx` | 105   | Verse card with source badge            |
-| `citation-hover-card.tsx`   | 98    | Citation tooltip on hover               |
-| `inline-citation.tsx`       | 53    | Clickable inline citation               |
-| `filter-tabs.tsx`           | 38    | Source filtering tabs                   |
-| `source-badge.tsx`          | 35    | Colored source badge                    |
+| Component                   | Lines | Role                                       |
+| --------------------------- | ----- | ------------------------------------------ |
+| `analysis-progress.tsx`     | 209   | Multi-agent analysis progress indicator    |
+| `collection-selector.tsx`   | 109   | Collection selection for comparison        |
+| `source-reference-card.tsx` | 105   | Verse card with source badge               |
+| `citation-hover-card.tsx`   | 98    | Citation tooltip on hover                  |
+| `inline-citation.tsx`       | 53    | Clickable inline citation                  |
+| `filter-tabs.tsx`           | 40    | Source filtering tabs (AnimatedBackground) |
+| `source-badge.tsx`          | 35    | Colored source badge                       |
 
 ### Keyword Search Domain (`components/keyword-search/`)
 
-| Component                     | Lines | Role                              |
-| ----------------------------- | ----- | --------------------------------- |
-| `root-browser.tsx`            | 234   | Root morphology browser           |
-| `verse-card.tsx`              | 181   | Verse display card                |
-| `surah-chart.tsx`             | 169   | Surah/book distribution chart     |
-| `accuracy-disclaimer.tsx`     | 164   | Accuracy disclaimer modal         |
-| `search-input.tsx`            | 91    | Search input with transliteration |
-| `derived-words.tsx`           | 77    | Derived words display             |
-| `root-card.tsx`               | 54    | Root information card             |
-| `pagination.tsx`              | 54    | Pagination controls               |
-| `stats-bar.tsx`               | 47    | Search statistics bar             |
-| `bible-category-tabs.tsx`     | 40    | Bible category tabs (OT/NT)       |
-| `experimental-disclaimer.tsx` | 28    | Experimental feature disclaimer   |
-| `language-tabs.tsx`           | 26    | Language selection tabs           |
+| Component                     | Lines | Role                                         |
+| ----------------------------- | ----- | -------------------------------------------- |
+| `root-browser.tsx`            | 234   | Root morphology browser                      |
+| `verse-card.tsx`              | 181   | Verse display card                           |
+| `surah-chart.tsx`             | 169   | Surah/book distribution chart                |
+| `accuracy-disclaimer.tsx`     | 164   | Accuracy disclaimer modal                    |
+| `search-input.tsx`            | 91    | Search input with transliteration            |
+| `derived-words.tsx`           | 77    | Derived words display                        |
+| `root-card.tsx`               | 54    | Root information card                        |
+| `pagination.tsx`              | 54    | Pagination controls                          |
+| `stats-bar.tsx`               | 47    | Search statistics bar                        |
+| `bible-category-tabs.tsx`     | 40    | Bible category tabs (AnimatedBackground)     |
+| `experimental-disclaimer.tsx` | 28    | Experimental feature disclaimer              |
+| `language-tabs.tsx`           | 26    | Language selection tabs (AnimatedBackground) |
 
 ## TESTING
 
@@ -234,7 +260,7 @@ await userEvent.type(screen.getByRole('textbox'), 'sabir');
 expect(screen.getByText('Results')).toBeInTheDocument();
 ```
 
-**Coverage**: 21 test files covering pages, components, hooks, and utilities.
+**Coverage**: 35 test files, 378+ passing tests covering pages, components, hooks, utilities, and i18n.
 
 ## COMMANDS
 
@@ -371,8 +397,9 @@ const keywords = useKeywordStore((s) => s.keywords)
 
 - **API client**: Generated from `http://localhost:8000/openapi.json`
 - **Design system**: `lib/design-system.ts` defines theme tokens
-- **GlowCard**: Custom animated card component used throughout
+- **MagicCard**: Magic UI animated card component used throughout (replaced manual GlowCard)
+- **Component libraries**: Magic UI (MagicCard, ShimmerButton, BentoGrid, DotPattern), Motion Primitives (AnimatedBackground)
 - **Script utilities**: Arabic, Hebrew, Greek text utils in `lib/utils/`
 - **Correlation IDs**: Request tracing via `lib/correlation.ts`
 - **Structured logging**: Use `logger.child()` not `console.log` (196 lines in `lib/logger.ts`)
-- **Test coverage**: 21 test files, 228+ passing tests
+- **Test coverage**: 35 test files, 378+ passing tests

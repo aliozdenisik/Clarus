@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
 import { useSession, signOut } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
-import { GlowCard } from "@/components/ui/glow-card"
-import { GlowingButton } from "@/components/ui/glowing-button"
+import { MagicCard } from "@/components/ui/magic-card"
+import { ShimmerButton } from "@/components/ui/shimmer-button"
 import { DotPattern, RadialGradient } from "@/components/ui/dot-pattern"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
@@ -225,7 +225,7 @@ export default function HistoryPage() {
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-app)]">
-        <div className="text-[var(--color-text-secondary)]">{t("loading")}</div>
+        <div className="text-[var(--color-text-secondary)]">{tCommon("loading")}</div>
       </div>
     )
   }
@@ -318,7 +318,7 @@ export default function HistoryPage() {
           <div className="space-y-4">
             <div className="mb-4 text-[var(--color-text-secondary)]">{t("loadingHistory")}</div>
             {[...Array(5)].map((_, i) => (
-              <Skeleton key={`history-skeleton-${i}`} className="h-24 w-full" />
+              <Skeleton key={`skeleton-${i}`} className="h-24 w-full" />
             ))}
           </div>
         ) : !items || items.length === 0 ? (
@@ -341,16 +341,17 @@ export default function HistoryPage() {
             <p className="mb-8 max-w-sm text-center text-sm text-[var(--color-text-muted)]">
               {t("emptyMessage")}
             </p>
-            <GlowingButton
+            <ShimmerButton
               onClick={() => router.push("/search")}
-              glowColor="#4f46e5"
+              shimmerColor="#8b5cf6"
+              background="rgba(15, 15, 25, 1)"
               className="px-8"
             >
               <span className="flex items-center gap-2">
                 <Search className="h-4 w-4" />
                 {t("startSearching")}
               </span>
-            </GlowingButton>
+            </ShimmerButton>
           </motion.div>
         ) : (
           <div className="space-y-4">
@@ -366,7 +367,13 @@ export default function HistoryPage() {
                   onClick={() => handleHistoryClick(item)}
                   className="cursor-pointer"
                 >
-                  <GlowCard className="group relative overflow-hidden">
+                  <MagicCard
+                    className="group relative overflow-hidden rounded-lg border border-[var(--color-border-subtle)] p-6"
+                    gradientSize={200}
+                    gradientColor="#1a1a2e"
+                    gradientFrom="#7c3aed"
+                    gradientTo="#4f46e5"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="mb-1 flex items-center gap-3">
@@ -402,7 +409,7 @@ export default function HistoryPage() {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </GlowCard>
+                  </MagicCard>
                 </motion.div>
               ))}
             </AnimatePresence>

@@ -32,9 +32,9 @@
 **Description:**
 Real API keys and secrets are present in the working directory:
 ```
-OPENROUTER_API_KEY=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
-GOOGLE_CLIENT_SECRET=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
-JWT_SECRET_KEY=holly-search-secret-key-change-in-production-abc123
+OPENROUTER_API_KEY=sk-or-v1-REDACTED_ROTATE_REQUIRED
+GOOGLE_CLIENT_SECRET=REDACTED_ROTATE_REQUIRED
+JWT_SECRET_KEY=REDACTED_ROTATE_REQUIRED
 ```
 
 **Impact:**

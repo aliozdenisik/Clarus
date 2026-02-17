@@ -5,9 +5,9 @@ import SearchPage from "../app/[locale]/search/page"
 import { SearchTabs } from "../components/search/search-tabs"
 
 // Mock components
-vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="glow-card">{children}</div>
+vi.mock("@/components/ui/magic-card", () => ({
+  MagicCard: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="magic-card">{children}</div>
   ),
 }))
 

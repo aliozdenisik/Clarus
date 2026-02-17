@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
-import { GlowCard } from "@/components/ui/glow-card"
+import { MagicCard } from "@/components/ui/magic-card"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import { Search, BookOpen, User, LogOut } from "lucide-react"
@@ -210,7 +210,13 @@ export default function NewTestamentPage() {
                   onClick={() => router.push(`/bible/${book.nr}`)}
                   className="cursor-pointer"
                 >
-                  <GlowCard className="group h-full transition-colors hover:border-[var(--color-accent-glow)]">
+                  <MagicCard
+                    className="group h-full rounded-lg border border-[var(--color-border-subtle)] p-6 transition-colors hover:border-[var(--color-accent-glow)]"
+                    gradientSize={200}
+                    gradientColor="#1a1a2e"
+                    gradientFrom="#7c3aed"
+                    gradientTo="#4f46e5"
+                  >
                     <div className="flex h-full flex-col justify-between">
                       <div>
                         <h3 className="text-xl font-bold text-[var(--color-text-primary)] transition-colors group-hover:text-[var(--color-accent-primary)]">
@@ -227,7 +233,7 @@ export default function NewTestamentPage() {
                         </span>
                       </div>
                     </div>
-                  </GlowCard>
+                  </MagicCard>
                 </motion.div>
               ))}
         </div>

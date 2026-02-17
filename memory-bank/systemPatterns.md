@@ -26,7 +26,7 @@
 - **Hybrid Interface**: CLI for dev/ops, Web App for end users
 - **API-First**: All business logic exposed via REST API
 - **Scalability**: Async architecture supports concurrent requests
-- **Reliability**: Rate limiting prevents abuse (50/day/user)
+- **Reliability**: Layered rate limiting prevents abuse (50/day/user on authenticated heavy endpoints + per-minute limits on auth and public heavy-read endpoints)
 - **Efficiency**: Semantic Caching & SSE streaming
 
 ## Key Technical Decisions
@@ -102,8 +102,8 @@ Used by:
 
 ## Frontend Performance Patterns
 
-- **Batched tab indicator layout**: `frontend/components/ui/vercel-tabs.tsx` reads active/hover geometry and updates indicator state in one `useLayoutEffect` pass.
-- **Virtualized long root lists**: `frontend/components/keyword-search/root-browser.tsx` uses `react-window` `List` for root browsing to avoid rendering all root rows at once.
+- **Batched tab indicator layout**: `frontend/components/ui/animated-tabs.tsx` reads active/hover geometry and updates indicator state in one `useLayoutEffect` pass.
+- **Virtualized long root lists**: `frontend/components/keyword-search/root-browser.tsx` uses `react-virtuoso` for root browsing to avoid rendering all root rows at once.
 - **Mousemove DOM-read caching**: `frontend/components/ui/magnetic-button.tsx` caches button bounds on `mouseenter` and reuses the cached rect during pointer movement.
 
 ## Frontend Async Cancellation Pattern (Issue #88)
@@ -132,13 +132,13 @@ onerror -> schedule reconnect timeout
 
 **Key files:**
 - `frontend/lib/hooks/use-sse.ts`
-- `frontend/app/search/page.tsx`
-- `frontend/app/compare/page.tsx`
-- `frontend/app/keyword-search/page.tsx`
-- `frontend/app/{quran,old-testament,new-testament,apocrypha}/page.tsx`
-- `frontend/app/bible/[bookNr]/page.tsx`
-- `frontend/app/quran/[surahId]/page.tsx`
-- `frontend/app/quran/[surahId]/[verseId]/page.tsx`
+- `frontend/app/[locale]/search/page.tsx`
+- `frontend/app/[locale]/compare/page.tsx`
+- `frontend/app/[locale]/keyword-search/page.tsx`
+- `frontend/app/[locale]/{quran,old-testament,new-testament,apocrypha}/page.tsx`
+- `frontend/app/[locale]/bible/[bookNr]/page.tsx`
+- `frontend/app/[locale]/quran/[surahId]/page.tsx`
+- `frontend/app/[locale]/quran/[surahId]/[verseId]/page.tsx`
 
 ## Verse Display Architecture ("Ana Cadde / Yan Durak")
 
@@ -175,8 +175,8 @@ Surah Page → click verse → Verse Detail Page
 - UI: DM Sans (unchanged)
 
 **Key Files:**
-- `frontend/app/quran/[surahId]/page.tsx` — Surah reading page
-- `frontend/app/quran/[surahId]/[verseId]/page.tsx` — Verse detail page
+- `frontend/app/[locale]/quran/[surahId]/page.tsx` — Surah reading page
+- `frontend/app/[locale]/quran/[surahId]/[verseId]/page.tsx` — Verse detail page
 - `frontend/components/quran/` — verse-block, surah-header, verse-separator, translation-selector, translation-block
 - `frontend/components/keyword-search/rich-root-card.tsx` — Etymology-rich root card
 - `frontend/lib/design-system.ts` — Spring presets and tactile tokens

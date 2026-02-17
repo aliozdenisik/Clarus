@@ -23,6 +23,7 @@ from app.api.compare_helpers import (
     normalize_compare_collections,
     strip_markdown_headers,
 )
+from app.auth.api_key_validator import _resolve_user_by_id, extract_raw_session_token
 from app.db import get_db
 from app.i18n.detector import get_locale
 from app.models import SearchHistory
@@ -58,7 +59,6 @@ async def get_current_user_from_sse(db: AsyncSession, request: Request):
     from fastapi import HTTPException
     from sqlalchemy import select
 
-    from app.auth.api_key_validator import _resolve_user_by_id
     from app.models import BetterAuthSession
 
     cookie_token = (
@@ -70,11 +70,7 @@ async def get_current_user_from_sse(db: AsyncSession, request: Request):
     if not cookie_token:
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    from urllib.parse import unquote
-
-    # Better Auth cookie format: <token>.<hmac-signature> (URL-encoded)
-    # The DB stores only the raw token without the signature.
-    raw_token = unquote(cookie_token).rsplit(".", 1)[0] if "." in unquote(cookie_token) else unquote(cookie_token)
+    raw_token = extract_raw_session_token(cookie_token)
 
     session_result = await db.execute(select(BetterAuthSession).where(BetterAuthSession.token == raw_token))
     session = session_result.scalar_one_or_none()
@@ -92,7 +88,7 @@ async def get_current_user_from_sse(db: AsyncSession, request: Request):
 @router.get("/search")
 async def stream_search(
     request: Request,
-    q: str = Query(..., description="Arama sorgusu"),
+    q: str = Query(..., min_length=1, max_length=500, description="Arama sorgusu"),
     source: Literal["quran", "ot", "nt", "apocrypha"] = Query(
         default="quran", description="Source collection: quran, ot, nt, or apocrypha"
     ),
@@ -277,7 +273,7 @@ async def stream_search(
 @router.get("/compare")
 async def stream_compare(
     request: Request,
-    topic: str = Query(..., description="Karşılaştırma konusu"),
+    topic: str = Query(..., min_length=1, max_length=500, description="Karşılaştırma konusu"),
     collections: str = Query(
         "quran_tr,bible_ot,bible_nt,bible_apocrypha",
         description="Comma-separated list of collections to search (minimum 2)",

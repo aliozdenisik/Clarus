@@ -26,14 +26,14 @@ qdrant/                         # Root (project named after Qdrant DB it uses)
 │   │   ├── db.py               # Database setup
 │   │   └── logging_config.py   # Structured logging
 │   ├── src/                    # RAG pipeline modules (29 files) ← CORE LOGIC
-│   ├── tests/                  # Custom accuracy benchmarks (NOT pytest)
+│   ├── tests/                  # Pytest unit tests + accuracy benchmarks
 │   ├── scripts/                # Setup & dev scripts
 │   └── data/                   # Source JSON (quran_tr.json, bible_kjva.json)
-├── frontend/                   # Next.js 15 + Framer Motion
+├── frontend/                   # Next.js 16 + Framer Motion
 │   ├── app/                    # App Router pages (17 files)
-│   ├── components/             # UI components (Radix + custom, 60+ files)
+│   ├── components/             # UI components (Radix + library, 60+ files)
 │   ├── lib/                    # API client, hooks, stores (35 files)
-│   └── __tests__/              # Vitest + RTL tests (21 files)
+│   └── __tests__/              # Vitest + RTL tests (35 files)
 ├── memory-bank/                # Project context (READ FIRST)
 ├── docker-compose.yml          # PostgreSQL + Qdrant + Redis services
 ├── redis.conf                  # Redis configuration
@@ -48,13 +48,13 @@ qdrant/                         # Root (project named after Qdrant DB it uses)
 | Add CLI command | `backend/main.py` | argparse + Rich formatting |
 | Add API endpoint | `backend/app/api/` | FastAPI router pattern |
 | Modify RAG pipeline | `backend/src/` | See `backend/src/AGENTS.md` |
-| Add UI component | `frontend/components/` | Radix primitives + Framer Motion |
+| Add UI component | `frontend/components/` | Radix + Magic UI + Motion Primitives |
 | Change auth flow | `backend/app/auth/` | JWT + OAuth + token blacklist |
 | Update API client | `frontend/lib/api/` | Generated via @hey-api/openapi-ts |
 | Add Pydantic schema | `backend/app/schemas/` | Organized by domain |
 | Add middleware | `backend/app/middleware/` | CORS, rate limit, error handler |
 | Modify Redis caching | `backend/app/redis_client.py` | Fail-open resilience |
-| Add frontend test | `frontend/__tests__/` | Vitest + RTL (21 files) |
+| Add frontend test | `frontend/__tests__/` | Vitest + RTL (35 files) |
 | Add keyword search component | `frontend/components/keyword-search/` | 12 components |
 | Add compare component | `frontend/components/compare/` | 7 components |
 | Project context | `memory-bank/` | Read `activeContext.md` first |
@@ -173,7 +173,6 @@ qdrant/                         # Root (project named after Qdrant DB it uses)
 ## ANTI-PATTERNS (THIS PROJECT)
 
 - **No `any` in TypeScript** - Types are generated from OpenAPI spec
-- **No pytest** - Backend uses custom accuracy benchmark framework
 - **No hardcoded API keys** - Must use `.env` file
 - **No synchronous LLM calls** - Always async with timeout
 - **No console.log in frontend** - Use structured logger
@@ -211,7 +210,7 @@ Circuit Breaker → External service resilience
 ```
 
 ### Testing Strategy
-- **Frontend**: Standard Vitest + RTL (`npm test`, 21 test files, 228+ passing tests)
+- **Frontend**: Standard Vitest + RTL (`npm test`, 35 test files, 378+ passing tests)
 - **Backend**: Pytest unit tests (`uv run pytest tests/`) + custom accuracy benchmarks
   - Pytest config excludes integration tests (run_*.py, *_verification_test.py)
   - CI runs on every push/PR via `.github/workflows/backend-ci.yml`
@@ -235,7 +234,7 @@ Circuit Breaker → External service resilience
   - Namespaced skeleton keys (`key="root-browser-skeleton-${i}"`)
 - **SSE Single-Pass Aggregation**: Process streaming messages once instead of multiple filter/map passes (Issue #92)
 - **Zustand Selector-Based Subscriptions**: Narrow subscriptions prevent unnecessary re-renders (Issue #90)
-- **React-Window Virtualization**: Render only visible rows for 1,600+ item lists (Issue #91)
+- **React-Virtuoso Virtualization**: Render only visible rows for 1,600+ item lists (Issue #91, #156)
 - **Batched DOM Reads**: useLayoutEffect batches tab indicator geometry reads (Issue #91)
 - **Cached Bounds**: Magnetic button caches getBoundingClientRect on mouseenter (Issue #91)
 - **Bundle Optimization**: DevTools lazy-loaded in dev only, direct date-fns imports, Recharts code-split

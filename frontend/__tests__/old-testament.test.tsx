@@ -3,9 +3,9 @@ import { vi, describe, it, expect, beforeEach } from "vitest"
 import OldTestamentPage from "../app/[locale]/old-testament/page"
 import { getBibleBooksApiMetadataBibleBooksGet } from "@/lib/api/sdk.gen"
 
-vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
-    <div data-testid="glow-card" onClick={onClick}>
+vi.mock("@/components/ui/magic-card", () => ({
+  MagicCard: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
+    <div data-testid="magic-card" onClick={onClick}>
       {children}
     </div>
   ),

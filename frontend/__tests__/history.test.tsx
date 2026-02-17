@@ -33,9 +33,9 @@ vi.mock("next/navigation", () => ({
 }))
 
 // Mock components
-vi.mock("@/components/ui/glow-card", () => ({
-  GlowCard: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <div data-testid="glow-card" className={className}>
+vi.mock("@/components/ui/magic-card", () => ({
+  MagicCard: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+    <div data-testid="magic-card" className={className}>
       {children}
     </div>
   ),
