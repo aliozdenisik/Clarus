@@ -343,7 +343,7 @@ export default function HistoryPage() {
             </p>
             <GlowingButton
               onClick={() => router.push("/search")}
-              glowColor="#6366f1"
+              glowColor="#4f46e5"
               className="px-8"
             >
               <span className="flex items-center gap-2">

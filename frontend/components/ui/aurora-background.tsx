@@ -54,7 +54,7 @@ export function AuroraBackground({
           style={
             {
               "--color-aurora-1": "rgba(59, 130, 246, 0.3)",
-              "--color-aurora-2": "rgba(99, 102, 241, 0.25)",
+              "--color-aurora-2": "rgba(79, 70, 229, 0.25)",
               "--color-aurora-3": "rgba(139, 92, 246, 0.2)",
               "--color-aurora-4": "rgba(168, 85, 247, 0.25)",
               "--color-aurora-5": "rgba(79, 70, 229, 0.3)",

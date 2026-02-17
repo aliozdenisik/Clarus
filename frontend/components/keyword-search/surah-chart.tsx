@@ -65,7 +65,7 @@ function CustomTooltip({ active, payload, occurrencesLabel }: CustomTooltipProps
 
 const xAxisTickStyle = { fill: "#a1a1aa", fontSize: 12 }
 const axisLineStyle = { stroke: "#3f3f46" }
-const tooltipCursorStyle = { fill: "rgba(99, 102, 241, 0.1)" }
+const tooltipCursorStyle = { fill: "rgba(79, 70, 229, 0.1)" }
 const barRadius: [number, number, number, number] = [0, 4, 4, 0]
 
 export function SurahChart({ data, language }: SurahChartProps) {
@@ -137,7 +137,7 @@ export function SurahChart({ data, language }: SurahChartProps) {
             />
             <Bar
               dataKey="count"
-              fill="#6366f1"
+              fill="#4f46e5"
               fillOpacity={0.8}
               radius={barRadius}
               isAnimationActive={true}
