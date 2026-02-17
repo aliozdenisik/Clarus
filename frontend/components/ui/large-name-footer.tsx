@@ -38,7 +38,7 @@ function Footer() {
               </Link>
             </div>
 
-            <p className="mt-8 text-xs text-zinc-400 dark:text-zinc-500">
+            <p className="mt-8 text-xs text-zinc-400 dark:text-zinc-400">
               {t("copyright", { year: new Date().getFullYear() })}
             </p>
           </div>
