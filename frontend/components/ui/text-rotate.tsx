@@ -278,7 +278,7 @@ export function LuxuryQuote({ quotes, rotationInterval = 5000, className }: Luxu
             &quot;{quotes[currentIndex].text}&quot;
           </blockquote>
           <motion.div
-            className="mt-8 flex items-center justify-center gap-4"
+            className="mt-12 flex items-center justify-center gap-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
@@ -293,7 +293,7 @@ export function LuxuryQuote({ quotes, rotationInterval = 5000, className }: Luxu
       </AnimatePresence>
 
       {/* Progress indicators */}
-      <div className="mt-10 flex justify-center gap-2">
+      <div className="mt-14 flex justify-center gap-2">
         {quotes.map((quote, index) => (
           <button
             type="button"
