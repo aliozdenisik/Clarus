@@ -59,8 +59,8 @@
   --color-text-secondary: #a1a1aa; /* Zinc-400 - Body text */
   --color-text-muted: #71717a; /* Zinc-500 - Metadata */
 
-  --color-accent-primary: #6366f1; /* Indigo-500 - CTA, accents */
-  --color-accent-glow: rgba(99, 102, 241, 0.15); /* Indigo glow effect */
+  --color-accent-primary: #4f46e5; /* Indigo-600 - CTA, accents (WCAG AA ≥4.5:1 with white text) */
+  --color-accent-glow: rgba(79, 70, 229, 0.15); /* Indigo glow effect */
   --color-accent-secondary: #818cf8; /* Indigo-400 - Highlights */
   --color-accent-hover: #818cf8; /* Indigo-400 - Hover states */
 
@@ -69,7 +69,7 @@
   --color-bg-tertiary: #1a1a1c; /* For buttons/elevated */
 
   /* Glow effects */
-  --color-glow-primary: rgba(99, 102, 241, 0.4);
+  --color-glow-primary: rgba(79, 70, 229, 0.4);
   --color-glow-secondary: rgba(139, 92, 246, 0.3);
 
   /* shadcn/ui variables */

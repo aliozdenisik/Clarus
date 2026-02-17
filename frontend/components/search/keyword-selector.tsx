@@ -141,7 +141,7 @@ export function KeywordSelector({
                             ? "rgba(39, 39, 42, 1)"
                             : "rgba(39, 39, 42, 0.5)",
                           borderColor: isSelected
-                            ? "rgba(99, 102, 241, 0.6)"
+                            ? "rgba(79, 70, 229, 0.6)"
                             : "rgba(63, 63, 70, 0.4)",
                         }}
                         whileHover={{

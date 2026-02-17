@@ -19,7 +19,7 @@ export const COLLECTION_OPTIONS: CollectionOption[] = [
 
 const collectionButtonVariants = {
   selected: {
-    backgroundColor: "rgba(99, 102, 241, 0.85)",
+    backgroundColor: "rgba(79, 70, 229, 0.85)",
     borderColor: "rgba(129, 140, 248, 0.6)",
   },
   unselected: {
@@ -27,7 +27,7 @@ const collectionButtonVariants = {
     borderColor: "rgba(63, 63, 70, 0.4)",
   },
   selectedHover: {
-    backgroundColor: "rgba(99, 102, 241, 1)",
+    backgroundColor: "rgba(79, 70, 229, 1)",
   },
   unselectedHover: {
     backgroundColor: "rgba(39, 39, 42, 0.9)",
