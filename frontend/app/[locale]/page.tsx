@@ -622,7 +622,7 @@ export default function HomePage() {
             </p>
             <motion.button
               onClick={() => router.push(user ? "/search" : "/sign-up")}
-              className="mx-auto flex items-center gap-2.5 rounded-xl border border-[var(--color-accent-primary)]/50 bg-[var(--color-accent-primary)] px-10 py-4 text-lg font-semibold text-white shadow-[var(--color-accent-glow)] shadow-lg transition-colors duration-200 hover:bg-[var(--color-accent-hover)]"
+              className="mx-auto flex items-center gap-2.5 rounded-xl border border-[#4f46e5]/50 bg-[#4f46e5] px-10 py-4 text-lg font-semibold text-white shadow-lg shadow-[#4f46e526] transition-colors duration-200 hover:bg-[#4338ca]"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
