@@ -219,12 +219,25 @@ Create `frontend/.env.local`:
 
 ```env
 BETTER_AUTH_DATABASE_URL=postgresql://postgres:postgres@localhost:54322/postgres
-BETTER_AUTH_SECRET=your-random-secret
+
+# Generate a random 32+ character secret for session signing
+# Run: openssl rand -base64 32
+BETTER_AUTH_SECRET=your-random-secret-replace-with-generated-value
+
 NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
 
 # Optional: Google OAuth
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
+```
+
+**Generate the auth secret:**
+```bash
+# macOS/Linux
+openssl rand -base64 32
+
+# Or use Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
 ### 3. Start Infrastructure
