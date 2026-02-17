@@ -18,7 +18,7 @@ interface BentoGridProps {
 export const BentoGrid = ({ children, className }: BentoGridProps) => {
   return (
     <div
-      className={cn("grid w-full auto-rows-[22rem] grid-cols-1 gap-4 md:grid-cols-3", className)}
+      className={cn("grid w-full auto-rows-[22rem] grid-cols-1 gap-6 md:grid-cols-3", className)}
     >
       {children}
     </div>
@@ -33,6 +33,7 @@ interface BentoCardProps {
   description: string
   href: string
   cta: string
+  isPrimary?: boolean
 }
 
 /**
@@ -52,14 +53,20 @@ export const BentoCard = ({
   description,
   href,
   cta,
+  isPrimary,
 }: BentoCardProps) => (
   <div
     className={cn(
       "group relative col-span-3 flex flex-col justify-between overflow-hidden rounded-xl md:col-span-1",
-      // Project theme styling
-      "border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/40 backdrop-blur-sm",
-      // Hover state with glow border
-      "transform-gpu transition-all duration-500 hover:border-[var(--color-border-glow)]",
+      // Glassmorphism styling
+      "border border-white/[0.10] bg-white/[0.03] backdrop-blur-xl",
+      "shadow-inner-[inset_0_1px_0_rgba(255,255,255,0.05)] shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
+      // Hover state
+      "transform-gpu transition-all duration-500 ease-out",
+      "hover:-translate-y-1 hover:border-white/[0.18] hover:shadow-[0_12px_48px_rgba(0,0,0,0.5)]",
+      // Primary card emphasis
+      isPrimary &&
+        "border-[var(--color-accent-primary)]/30 shadow-[0_0_24px_rgba(99,102,241,0.12)]",
       className
     )}
   >
@@ -69,7 +76,7 @@ export const BentoCard = ({
     {/* Content section - shifts up on hover */}
     <div
       className={cn(
-        "pointer-events-none z-10 flex transform-gpu flex-col gap-1 p-6",
+        "pointer-events-none z-10 flex transform-gpu flex-col gap-1 p-8",
         "transition-all duration-300 group-hover:-translate-y-10"
       )}
     >
@@ -80,7 +87,17 @@ export const BentoCard = ({
         )}
       />
       <h3 className="text-xl font-semibold text-[var(--color-text-primary)]">{name}</h3>
-      <p className="max-w-lg text-[var(--color-text-secondary)]">{description}</p>
+      <p className="max-w-lg text-[var(--color-text-secondary)]">
+        {description.split(/(\d[\d,]*)/g).map((part) =>
+          /^\d[\d,]*$/.test(part) ? (
+            <span key={`num-${part}`} className="font-semibold text-[var(--color-text-primary)]">
+              {part}
+            </span>
+          ) : (
+            part
+          )
+        )}
+      </p>
     </div>
 
     {/* CTA button - reveals on hover */}
