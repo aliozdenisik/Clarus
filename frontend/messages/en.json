@@ -429,8 +429,8 @@
   },
   "BetterAuth": {
     "SIGN_IN": "Sign In",
-    "SIGN_IN_ACTION": "Login",
-    "SIGN_IN_DESCRIPTION": "Enter your email below to login to your account",
+    "SIGN_IN_ACTION": "Sign In",
+    "SIGN_IN_DESCRIPTION": "Enter your email to sign in to your account",
     "SIGN_UP": "Sign Up",
     "SIGN_UP_ACTION": "Create an account",
     "SIGN_UP_DESCRIPTION": "Enter your information to create an account",
