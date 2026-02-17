@@ -523,7 +523,8 @@
       "title": "Root Information",
       "buckwalter": "Buckwalter",
       "definition": "Definition",
-      "forms": "Morphological Forms"
+      "forms": "Morphological Forms",
+      "dictionaryMeanings": "Dictionary Meanings"
     },
     "derivedWords": {
       "title": "Derived Words",

@@ -69,7 +69,8 @@ vi.mock("recharts", () => ({
       {children}
     </div>
   ),
-  Bar: () => <div data-testid="bar" />,
+  Bar: ({ children }: MockProps) => <div data-testid="bar">{children}</div>,
+  LabelList: () => <div data-testid="label-list" />,
   XAxis: () => <div data-testid="x-axis" />,
   YAxis: () => <div data-testid="y-axis" />,
   Tooltip: () => <div data-testid="tooltip" />,
@@ -159,6 +160,7 @@ describe("SurahChart", () => {
 
     expect(screen.getByText("Surah Distribution")).toBeInTheDocument()
     expect(screen.getByTestId("bar-chart")).toBeInTheDocument()
+    expect(screen.getByTestId("label-list")).toBeInTheDocument()
   })
 
   it("limits to 20 bars initially", () => {
@@ -213,6 +215,9 @@ describe("VerseCard", () => {
     // The highlightArabicText function wraps matched words in <mark> elements
     const marks = container.querySelectorAll("mark")
     expect(marks.length).toBeGreaterThan(0)
+    marks.forEach((mark) => {
+      expect(mark).toHaveClass("bg-indigo-700", "text-zinc-100")
+    })
   })
 
   it("shows skeleton while translation loads", () => {

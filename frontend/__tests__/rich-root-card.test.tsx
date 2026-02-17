@@ -264,6 +264,31 @@ describe("RichRootCard", () => {
     })
   })
 
+  it("renders dictionary meanings link to root detail page", async () => {
+    mockUseQuery.mockReturnValue({
+      data: mockEtymologyData,
+      isLoading: false,
+      isError: false,
+    })
+
+    render(
+      <RichRootCard
+        root="كتب"
+        rootSource="exact_match"
+        rootBuckwalter="ktb"
+        query="كتب"
+        language="arabic"
+      />
+    )
+
+    await waitFor(() => {
+      const link = screen.getByTestId("root-dictionary-link")
+      expect(link).toHaveAttribute("href", "/keyword-search/root/ktb")
+      expect(link).toHaveTextContent("Dictionary Meanings")
+      expect(screen.queryByText("Total Usage")).not.toBeInTheDocument()
+    })
+  })
+
   it("shows loading state with skeletons", () => {
     mockUseQuery.mockReturnValue({
       data: null,
