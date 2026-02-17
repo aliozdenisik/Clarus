@@ -485,6 +485,11 @@
     "placeholderHebrew": "Search for Hebrew roots (e.g., כתב or H3789)...",
     "placeholderGreek": "Search for Greek roots (e.g., βιβλος or G976)...",
     "helperText": "Supports Arabic (كتب) and Buckwalter Latin (ktb)",
+    "emptyStateHintQuran": "Search by Arabic script, Buckwalter transliteration, or semantic roots.",
+    "emptyStateHintHebrew": "Search by Hebrew script or Strong's numbers to find related roots.",
+    "emptyStateHintGreek": "Search by Greek script or Strong's numbers to explore New Testament roots.",
+    "emptyStateExamples": "Try one of these examples",
+    "browseRoots": "Browse roots",
     "searching": "Searching...",
     "searchButton": "Search Root",
     "tabs": {

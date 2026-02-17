@@ -423,10 +423,10 @@ describe("ExperimentalDisclaimer", () => {
     expect(screen.getByText(/Always verify with authoritative sources/i)).toBeInTheDocument()
   })
 
-  it("renders alert triangle icon", () => {
+  it("renders informational icon", () => {
     render(<ExperimentalDisclaimer />)
 
-    expect(screen.getByTestId("alert-triangle-icon")).toBeInTheDocument()
+    expect(screen.getByTestId("info-icon")).toBeInTheDocument()
   })
 
   it("accepts className prop", () => {

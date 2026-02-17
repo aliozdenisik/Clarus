@@ -48,7 +48,7 @@ export function SearchInput({
           disabled={isLoading}
           className={cn(
             "h-12 w-full rounded-xl bg-[var(--color-bg-surface)] pr-24 pl-12",
-            "text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]",
+            "text-[var(--color-text-primary)] placeholder:text-[var(--color-text-secondary)]/80",
             "border border-[var(--color-border-subtle)]",
             "focus:border-[var(--color-border-glow)] focus:outline-none",
             "text-[15px] transition-all duration-300",
@@ -80,14 +80,14 @@ export function SearchInput({
           type="button"
           onClick={() => value.trim() && onSearch(value)}
           disabled={isLoading || !value.trim()}
-          className="absolute top-1/2 right-2 h-8 -translate-y-1/2 rounded-lg bg-[var(--color-accent-primary)] px-5 text-sm font-medium tracking-wide text-[#09090b] hover:bg-[var(--color-accent-hover)] disabled:opacity-40"
+          className="absolute top-1/2 right-2 h-8 -translate-y-1/2 rounded-lg bg-gradient-to-r from-[var(--color-accent-primary)] to-indigo-500 px-5 text-sm font-medium tracking-wide text-[#09090b] shadow-[0_0_16px_rgba(79,70,229,0.28)] transition-all hover:to-indigo-400 hover:shadow-[0_0_24px_rgba(99,102,241,0.4)] disabled:opacity-40"
         >
           {isLoading ? t("searching") : t("searchButton")}
         </Button>
       </div>
 
       {/* Helper text */}
-      <p className="pl-1 text-xs text-[var(--color-text-muted)]">{t("helperText")}</p>
+      <p className="pl-1 text-xs text-[var(--color-text-secondary)]">{t("helperText")}</p>
     </div>
   )
 }
