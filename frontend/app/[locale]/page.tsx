@@ -15,6 +15,7 @@ import {
   BookOpen,
   ArrowRight,
   Brain,
+  ShieldCheck,
   Layers,
   ScrollText,
   BookMarked,
@@ -578,55 +579,50 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section - 21st.dev Pattern */}
-      <section className="relative overflow-hidden bg-[var(--color-bg-app)] px-6 py-36">
+      <section className="relative overflow-hidden bg-[var(--color-bg-app)] px-6 py-24 md:py-28">
         <div className="mx-auto max-w-5xl text-center">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ ...springPresets.gentle, duration: 1.2 }}
+            className="relative z-10"
           >
-            <h2 className="mb-8 font-[family-name:var(--font-serif)] text-6xl leading-tight text-[var(--color-text-primary)] md:text-7xl">
-              {tLanding("cta.title")}{" "}
-              <span className="text-[var(--color-accent-primary)]">
-                {user ? tLanding("cta.discovery") : tLanding("cta.insight")}
-              </span>
+            <h2 className="mx-auto mb-4 max-w-4xl bg-gradient-to-r from-[var(--color-text-primary)] via-[var(--color-text-primary)] to-[var(--color-accent-secondary)] bg-clip-text font-[family-name:var(--font-sans)] text-4xl leading-tight font-semibold tracking-tight text-balance text-transparent md:text-6xl">
+              {tLanding("cta.title")}
             </h2>
-            <p className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-[var(--color-text-secondary)] md:text-xl">
+            <p className="mx-auto mb-8 max-w-2xl text-base leading-relaxed font-medium text-[var(--color-text-primary)] md:text-xl">
               {tLanding("cta.description")}
             </p>
-            <div className="inline-block">
-              <motion.button
-                onClick={() => router.push(user ? "/search" : "/sign-up")}
-                className="flex items-center gap-3 rounded-xl border border-indigo-500/50 bg-indigo-600 px-12 py-5 text-lg font-medium text-white transition-colors duration-200 hover:bg-indigo-500"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {user ? tLanding("hero.goToSearch") : tLanding("cta.signUp")}
-                <ArrowRight className="h-5 w-5" />
-              </motion.button>
-            </div>
-            <div className="mt-16 flex items-center justify-center gap-8 text-sm text-[var(--color-text-muted)]">
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-[var(--color-accent-primary)]" />
+            <motion.button
+              onClick={() => router.push(user ? "/search" : "/sign-up")}
+              className="mx-auto flex items-center gap-2.5 rounded-xl border border-[var(--color-accent-primary)]/50 bg-[var(--color-accent-primary)] px-10 py-4 text-lg font-semibold text-white shadow-[var(--color-accent-glow)] shadow-lg transition-colors duration-200 hover:bg-[var(--color-accent-hover)]"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {user ? tLanding("cta.goToSearch") : tLanding("cta.signUp")}
+              <ArrowRight className="h-5 w-5" />
+            </motion.button>
+            <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm font-medium text-[var(--color-text-secondary)]">
+              <li className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-[var(--color-accent-primary)]" />
                 <span>{tLanding("cta.noCreditCard")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-[var(--color-accent-primary)]" />
+              </li>
+              <li className="flex items-center gap-2">
+                <Library className="h-4 w-4 text-[var(--color-accent-primary)]" />
                 <span>{tLanding("cta.versesIndexed")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-[var(--color-accent-primary)]" />
+              </li>
+              <li className="flex items-center gap-2">
+                <Brain className="h-4 w-4 text-[var(--color-accent-primary)]" />
                 <span>{tLanding("cta.agentAnalysis")}</span>
-              </div>
-            </div>
+              </li>
+            </ul>
           </motion.div>
         </div>
         {/* Background blurs */}
-        <div className="pointer-events-none absolute top-0 left-0 h-full w-full opacity-5">
+        <div className="pointer-events-none absolute top-0 left-0 h-full w-full opacity-[0.12]">
           <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-[var(--color-accent-primary)] blur-3xl" />
-          <div className="absolute right-1/4 bottom-1/4 h-96 w-96 rounded-full bg-[var(--color-accent-primary)] blur-3xl" />
+          <div className="absolute right-1/4 bottom-1/4 h-96 w-96 rounded-full bg-[var(--color-accent-secondary)] blur-3xl" />
         </div>
       </section>
     </main>
