@@ -1,8 +1,6 @@
 "use client"
 
 import React, { useMemo } from "react"
-import { motion } from "framer-motion"
-import { springPresets } from "@/lib/design-system"
 import { GlowCard } from "@/components/ui/glow-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ExternalLink } from "lucide-react"
@@ -21,7 +19,6 @@ interface VerseCardProps {
   turkishTranslation?: string // Optional — may still be loading (Quran only)
   englishTranslation?: string | null // Optional — English translation (Bible only)
   isTranslationLoading?: boolean
-  index?: number // For stagger animation
   language?: "arabic" | "hebrew" | "greek" // Language of the text
   chapter?: number // Chapter number (Bible only)
 }
@@ -97,7 +94,6 @@ export const VerseCard = React.memo(function VerseCard({
   turkishTranslation,
   englishTranslation,
   isTranslationLoading = false,
-  index = 0,
   language = "arabic",
   chapter,
 }: VerseCardProps) {
@@ -111,11 +107,7 @@ export const VerseCard = React.memo(function VerseCard({
   const isGreek = language === "greek"
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ ...springPresets.snappy, delay: index * 0.05 }}
-    >
+    <div>
       <GlowCard className="border-l-2 border-l-indigo-500">
         {/* Header: Book/Surah name + Chapter:Verse */}
         <div className="mb-3 flex items-center justify-between">
@@ -197,6 +189,6 @@ export const VerseCard = React.memo(function VerseCard({
           </>
         )}
       </GlowCard>
-    </motion.div>
+    </div>
   )
 })

@@ -46,7 +46,8 @@ import { API_BASE } from "@/lib/config"
 
 type TabType = "results" | "browser"
 
-const VERSES_PER_PAGE = 50
+const QURAN_VERSES_PER_PAGE = 30
+const BIBLE_VERSES_PER_PAGE = 12
 
 // Bible search response type (not in generated types yet)
 interface BibleSearchResult {
@@ -109,6 +110,7 @@ function KeywordSearchContent() {
   const [translationsLoading, setTranslationsLoading] = useState(false)
   const [surahTransliterations, setSurahTransliterations] = useState<Map<number, string>>(new Map())
   const searchAbortControllerRef = useRef<AbortController | null>(null)
+  const versesPerPage = activeLanguage === "quran" ? QURAN_VERSES_PER_PAGE : BIBLE_VERSES_PER_PAGE
 
   useEffect(() => {
     return () => {
@@ -138,7 +140,9 @@ function KeywordSearchContent() {
           | undefined
         const surahs = body?.data?.surahs || []
         const map = new Map<number, string>()
-        surahs.forEach((s) => map.set(s.id, s.transliteration))
+        surahs.forEach((s) => {
+          map.set(s.id, s.transliteration)
+        })
         setSurahTransliterations(map)
       } catch (error) {
         if (isAbortError(error)) {
@@ -396,7 +400,7 @@ function KeywordSearchContent() {
     return () => {
       controller.abort()
     }
-  }, [searchResult?.query, searchResult?.root, searchResult?.verses])
+  }, [searchResult?.verses])
 
   // Helper to get translation
   const getTranslation = useCallback(
@@ -426,15 +430,14 @@ function KeywordSearchContent() {
     }
   }, [activeLanguage, searchResult?.verses, bibleSearchResult?.verses, selectedWord])
 
-  // Client-side pagination — show VERSES_PER_PAGE at a time
   const totalFilteredPages = useMemo(
-    () => Math.max(1, Math.ceil(filteredVerses.length / VERSES_PER_PAGE)),
-    [filteredVerses.length]
+    () => Math.max(1, Math.ceil(filteredVerses.length / versesPerPage)),
+    [filteredVerses.length, versesPerPage]
   )
 
   const paginatedVerses = useMemo(
-    () => filteredVerses.slice((currentPage - 1) * VERSES_PER_PAGE, currentPage * VERSES_PER_PAGE),
-    [filteredVerses, currentPage]
+    () => filteredVerses.slice((currentPage - 1) * versesPerPage, currentPage * versesPerPage),
+    [filteredVerses, currentPage, versesPerPage]
   )
 
   // Compute chart data based on selected word (client-side)
@@ -775,7 +778,7 @@ function KeywordSearchContent() {
                               {t("verseResults")}
                             </h3>
                             {activeLanguage === "quran"
-                              ? paginatedVerses.map((verse, i) => {
+                              ? paginatedVerses.map((verse) => {
                                   if (!isQuranVerseMatch(verse)) {
                                     return null
                                   }
@@ -794,12 +797,11 @@ function KeywordSearchContent() {
                                         verse.ayah_number
                                       )}
                                       isTranslationLoading={translationsLoading}
-                                      index={i}
                                       language="arabic"
                                     />
                                   )
                                 })
-                              : paginatedVerses.map((verse, i) => {
+                              : paginatedVerses.map((verse) => {
                                   if (!isBibleVerseMatch(verse)) {
                                     return null
                                   }
@@ -815,14 +817,13 @@ function KeywordSearchContent() {
                                       matchedWords={verse.matched_words}
                                       englishTranslation={verse.text_english}
                                       chapter={verse.chapter}
-                                      index={i}
                                       language={activeLanguage === "hebrew_ot" ? "hebrew" : "greek"}
                                     />
                                   )
                                 })}
                           </div>
 
-                          {filteredVerses.length > VERSES_PER_PAGE && (
+                          {filteredVerses.length > versesPerPage && (
                             <Pagination
                               page={currentPage}
                               totalPages={totalFilteredPages}
