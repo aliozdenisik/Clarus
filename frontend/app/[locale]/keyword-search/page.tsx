@@ -751,7 +751,7 @@ function KeywordSearchContent() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={springPresets.fluid}
-                          className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:w-80 lg:shrink-0 lg:overflow-y-auto"
+                          className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:w-80 lg:shrink-0 lg:overflow-y-auto lg:pe-3 lg:[scrollbar-color:#3f3f46_transparent] lg:[scrollbar-width:thin] lg:[&::-webkit-scrollbar]:w-2 lg:[&::-webkit-scrollbar-thumb]:rounded lg:[&::-webkit-scrollbar-thumb]:bg-zinc-700 lg:[&::-webkit-scrollbar-thumb:hover]:bg-zinc-600"
                           data-testid="root-card-panel"
                         >
                           <div className="space-y-6">

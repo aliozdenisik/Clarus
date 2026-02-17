@@ -58,7 +58,7 @@ export function RichRootCard({
         transition={springPresets.fluid}
         data-testid="rich-root-card"
       >
-        <GlowCard className="p-6">
+        <GlowCard className="p-8">
           <div className="flex flex-col items-center gap-3">
             {root ? (
               <>
@@ -94,7 +94,7 @@ export function RichRootCard({
         transition={springPresets.fluid}
         data-testid="rich-root-card"
       >
-        <GlowCard className="p-6">
+        <GlowCard className="p-8">
           <div className="space-y-4">
             <div className="flex flex-col items-center gap-3">
               <Skeleton className="h-12 w-32" />
@@ -116,7 +116,7 @@ export function RichRootCard({
         transition={springPresets.fluid}
         data-testid="rich-root-card"
       >
-        <GlowCard className="p-6">
+        <GlowCard className="p-8">
           <div className="flex flex-col items-center gap-3">
             {root ? (
               <>
@@ -150,15 +150,18 @@ export function RichRootCard({
 
   const sourceColor =
     data.source === "lane"
-      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-      : "bg-blue-500/20 text-blue-300 border-blue-500/30"
+      ? "border-indigo-500/30 bg-indigo-500/20 text-indigo-200"
+      : "border-zinc-700 bg-zinc-800/70 text-zinc-300"
 
   const confidenceColor =
     data.confidence === "high"
-      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+      ? "border-indigo-500/30 bg-indigo-500/20 text-indigo-200"
       : data.confidence === "medium"
-        ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
-        : "bg-red-500/20 text-red-300 border-red-500/30"
+        ? "border-indigo-500/25 bg-indigo-500/15 text-indigo-200"
+        : "border-zinc-700 bg-zinc-800/70 text-zinc-300"
+
+  const actionLinkClassName =
+    "group flex w-full items-center justify-center gap-2 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)]/40 px-3 py-2 text-xs font-medium text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-border-glow)] hover:text-[var(--color-text-primary)]"
 
   return (
     <motion.div
@@ -167,7 +170,7 @@ export function RichRootCard({
       transition={springPresets.fluid}
       data-testid="rich-root-card"
     >
-      <GlowCard className="p-6">
+      <GlowCard className="p-8">
         <div className="space-y-6">
           <div className="flex flex-col items-center gap-3">
             <p
@@ -207,7 +210,7 @@ export function RichRootCard({
               <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
                 {t("rootInfo.title")}
               </h4>
-              <p className="text-sm leading-relaxed text-[var(--color-text-secondary)]">
+              <p className="text-center text-sm leading-relaxed text-[var(--color-text-secondary)]">
                 {data.summary_tr || data.summary_en}
               </p>
             </div>
@@ -219,7 +222,7 @@ export function RichRootCard({
               <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
                 {t("rootInfo.definition")}
               </h4>
-              <p className="line-clamp-3 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+              <p className="line-clamp-3 text-center text-sm leading-relaxed text-[var(--color-text-secondary)]">
                 {data.definition_tr}
               </p>
             </div>
@@ -229,18 +232,6 @@ export function RichRootCard({
             <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
               <p className="text-xs text-amber-300">{t("translationNotAvailable")}</p>
             </div>
-          )}
-
-          {/* Detail page link */}
-          {data.root_buckwalter && (
-            <Link
-              href={`/keyword-search/root/${data.root_buckwalter}`}
-              className="group flex items-center gap-2 rounded-md border border-indigo-500/20 bg-indigo-500/5 px-3 py-2 text-xs text-indigo-400 transition-colors hover:border-indigo-500/40 hover:bg-indigo-500/10 hover:text-indigo-300"
-              data-testid="root-detail-link"
-            >
-              <BookOpen className="h-3.5 w-3.5" />
-              <span>{t("accuracy.verificationTitle")}</span>
-            </Link>
           )}
 
           {morphologicalForms.length > 0 && (
@@ -279,12 +270,12 @@ export function RichRootCard({
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ ...springPresets.snappy, delay: idx * 0.05 }}
-                    className="flex items-baseline gap-2 rounded-md bg-[var(--color-bg-elevated)]/50 p-2"
+                    className="flex items-baseline gap-3 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)]/40 px-3 py-3"
                   >
                     {form.form_arabic && (
                       <span
                         lang="ar"
-                        className="font-arabic text-sm text-[var(--color-text-primary)]"
+                        className="font-arabic text-base leading-loose text-[var(--color-text-primary)]"
                         dir="rtl"
                       >
                         <bdi>{form.form_arabic}</bdi>
@@ -298,7 +289,7 @@ export function RichRootCard({
                     {form.example_word && (
                       <span
                         lang="ar"
-                        className="font-arabic ml-auto text-xs text-[var(--color-text-secondary)]"
+                        className="font-arabic ml-auto pr-1 text-sm leading-loose text-[var(--color-text-secondary)]"
                         dir="rtl"
                       >
                         <bdi>{form.example_word}</bdi>
@@ -310,15 +301,29 @@ export function RichRootCard({
             </div>
           )}
 
-          <motion.a
-            href={`/keyword-search?q=${encodeURIComponent(query)}`}
-            whileHover={tactileScale.hover}
-            whileTap={tactileScale.press}
-            className="flex items-center justify-center gap-2 rounded-md bg-indigo-500/20 px-4 py-2 text-sm font-medium text-indigo-300 transition-colors hover:bg-indigo-500/30"
-          >
-            {t("stats.totalUsage")}
-            <ExternalLink className="h-3.5 w-3.5" />
-          </motion.a>
+          <div className="space-y-2 pt-1">
+            {data.root_buckwalter && (
+              <Link
+                href={`/keyword-search/root/${data.root_buckwalter}`}
+                className={actionLinkClassName}
+                data-testid="root-detail-link"
+              >
+                <BookOpen className="h-3.5 w-3.5" />
+                <span>{t("accuracy.verificationTitle")}</span>
+              </Link>
+            )}
+
+            {data.root_buckwalter && (
+              <Link
+                href={`/keyword-search/root/${data.root_buckwalter}`}
+                className={actionLinkClassName}
+                data-testid="root-dictionary-link"
+              >
+                {t("rootInfo.dictionaryMeanings")}
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Link>
+            )}
+          </div>
         </div>
       </GlowCard>
     </motion.div>
