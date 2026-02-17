@@ -714,4 +714,27 @@ describe("KeywordSearchPage", () => {
       expect(screen.getByText("كتب")).toBeInTheDocument()
     })
   })
+
+  it("resets to results when switching language away from Quran browser", async () => {
+    mockListRoots.mockResolvedValue(mockRootsResponse)
+
+    render(<KeywordSearchPage />)
+
+    await userEvent.click(screen.getByText("Root Browser"))
+
+    await waitFor(() => {
+      expect(mockListRoots).toHaveBeenCalled()
+      expect(screen.getByText("By Frequency")).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByText("Hebrew Old Testament"))
+
+    await waitFor(() => {
+      expect(screen.queryByText("Root Browser")).not.toBeInTheDocument()
+      expect(screen.queryByText("By Frequency")).not.toBeInTheDocument()
+      expect(
+        screen.getByText("Supports Hebrew characters (כתב) and Strong's numbers (H3789)")
+      ).toBeInTheDocument()
+    })
+  })
 })

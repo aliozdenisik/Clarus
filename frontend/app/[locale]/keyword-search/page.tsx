@@ -317,6 +317,7 @@ function KeywordSearchContent() {
 
   const handleLanguageChange = useCallback((language: LanguageTab) => {
     setActiveLanguage(language)
+    setActiveTab((previousTab) => (language === "quran" ? previousTab : "results"))
     setBibleCategoryFilter("all") // Reset category filter when changing language
     setSearchResult(null)
     setBibleSearchResult(null)
