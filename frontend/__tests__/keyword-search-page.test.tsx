@@ -131,6 +131,7 @@ const mockGetSurahDetail = vi.fn()
 const mockListRoots = vi.fn()
 const mockGetEtymology = vi.fn()
 const mockGetQuranSurahs = vi.fn()
+const mockFetch = vi.fn()
 
 vi.mock("@/lib/api/sdk.gen", () => ({
   searchKeywordApiSearchKeywordPost: (...args: unknown[]) => mockSearchKeyword(...args),
@@ -149,13 +150,15 @@ vi.mock("react-virtuoso", () => ({
   }: {
     totalCount: number
     itemContent: (index: number) => React.ReactNode
-  }) => (
-    <div data-testid="virtuoso-mock">
-      {Array.from({ length: totalCount }).map((_, i) => (
-        <div key={i}>{itemContent(i)}</div>
-      ))}
-    </div>
-  ),
+  }) => {
+    const nodes: React.ReactNode[] = []
+    for (let itemIndex = 0; itemIndex < totalCount; itemIndex += 1) {
+      nodes.push(
+        <div key={`virtuoso-item-${totalCount}-${itemIndex}`}>{itemContent(itemIndex)}</div>
+      )
+    }
+    return <div data-testid="virtuoso-mock">{nodes}</div>
+  },
 }))
 
 import KeywordSearchPage from "@/app/[locale]/keyword-search/page"
@@ -245,6 +248,8 @@ const mockRootsResponse = {
 describe("KeywordSearchPage", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockFetch.mockReset()
+    vi.stubGlobal("fetch", mockFetch)
     mockGetSurahDetail.mockResolvedValue({ data: { verses: [] } })
   })
 
@@ -347,8 +352,69 @@ describe("KeywordSearchPage", () => {
     })
   })
 
+  it("Greek NT search paginates compactly to reduce deep-scroll blank regions", async () => {
+    const greekVerses = Array.from({ length: 25 }, (_, i) => ({
+      book_id: 40,
+      book_name: "Matthew",
+      chapter: 1,
+      verse: i + 1,
+      text_original: `λόγος ${i + 1}`,
+      text_english: `Logos ${i + 1}`,
+      matched_words: ["λόγος"],
+      reference: `Matthew 1:${i + 1}`,
+    }))
+
+    const greekSearchResponse = {
+      success: true,
+      query: "G3056",
+      root: "λόγος",
+      root_source: "strong_number",
+      strong_number: "G3056",
+      total_occurrences: 25,
+      unique_words: ["λόγος"],
+      book_distribution: [{ book_id: 40, book_name: "Matthew", count: 25 }],
+      verses: greekVerses,
+      pagination: {
+        page: 1,
+        per_page: 0,
+        total_verses: 25,
+        total_pages: 1,
+        has_next: false,
+        has_prev: false,
+      },
+      transliteration: "logos",
+      word_transliterations: { λόγος: "logos" },
+    }
+
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => greekSearchResponse,
+    } as unknown as Response)
+
+    render(<KeywordSearchPage />)
+
+    fireEvent.click(screen.getByText("Greek New Testament"))
+
+    const input = screen.getByPlaceholderText(/Search for Greek roots/i)
+    await userEvent.type(input, "G3056")
+    fireEvent.keyDown(input, { key: "Enter", code: "Enter" })
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringMatching(/\/api\/keyword-search\/bible\/$/),
+        expect.objectContaining({ method: "POST" })
+      )
+    })
+
+    await waitFor(() => {
+      expect(screen.getByText("Matthew 1:1")).toBeInTheDocument()
+      expect(screen.queryByText("Matthew 1:13")).not.toBeInTheDocument()
+      expect(screen.getByText(/Page 1 of 3/)).toBeInTheDocument()
+    })
+  })
+
   it("pagination controls appear when verses exceed page size", async () => {
-    // Generate 60 verses (> VERSES_PER_PAGE=50) to trigger client-side pagination
+    // Generate 60 verses to trigger client-side pagination
     const manyVerses = Array.from({ length: 60 }, (_, i) => ({
       surah_id: 2,
       surah_name: "البقرة",
@@ -380,7 +446,6 @@ describe("KeywordSearchPage", () => {
     fireEvent.keyDown(input, { key: "Enter", code: "Enter" })
 
     await waitFor(() => {
-      // Client-side pagination: 60 verses / 50 per page = 2 pages
       expect(screen.getByText(/Page 1 of 2/i)).toBeInTheDocument()
       expect(screen.getByRole("button", { name: /Next/i })).toBeInTheDocument()
     })
