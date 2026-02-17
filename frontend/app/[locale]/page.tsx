@@ -211,13 +211,13 @@ export default function HomePage() {
             transition={{ ...springPresets.gentle, delay: 0.2, duration: 1.2 }}
             className="flex max-w-[900px] flex-col items-center"
           >
-            <h1 className="mb-8 font-[family-name:var(--font-serif)] text-6xl leading-[1.1] font-normal tracking-tight md:text-8xl">
+            <h1 className="mb-6 font-[family-name:var(--font-display)] text-5xl leading-[1.2] font-semibold tracking-[-0.02em] md:text-7xl">
               <span className="text-[var(--color-text-primary)]">{tLanding("hero.title")}</span>
               <br />
-              <span className="text-[var(--color-accent-primary)]">{tLanding("hero.titleAI")}</span>
+              <span className="text-amber-400">{tLanding("hero.titleAI")}</span>
             </h1>
 
-            <p className="mx-auto mb-16 max-w-[600px] text-xl leading-relaxed font-light tracking-wide text-[var(--color-text-secondary)] md:text-2xl">
+            <p className="mx-auto mb-10 max-w-[540px] text-lg leading-[1.65] font-light tracking-wide text-[#D1D5DB] md:text-xl">
               {tLanding("hero.subtitle")}
             </p>
 
@@ -227,20 +227,20 @@ export default function HomePage() {
                 <>
                   <motion.button
                     onClick={() => router.push("/search")}
-                    className="flex items-center justify-center gap-3 rounded-xl border border-indigo-500/50 bg-indigo-600 px-10 py-4 font-medium text-white transition-colors duration-200 hover:bg-indigo-500"
+                    className="flex items-center justify-center gap-3 rounded-xl border border-amber-500/50 bg-amber-500 px-10 py-4 font-medium text-[#0B0B0F] transition-colors duration-200 hover:bg-amber-400"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Search className="h-4 w-4" />
+                    <Search className="h-5 w-5" />
                     {tLanding("hero.goToSearch")}
                   </motion.button>
                   <motion.button
                     onClick={() => router.push("/compare")}
-                    className="flex items-center justify-center gap-3 rounded-xl border border-white/20 bg-transparent px-10 py-4 font-medium text-white transition-colors duration-200 hover:border-white/30 hover:bg-white/5"
+                    className="flex items-center justify-center gap-3 rounded-xl border border-white/[0.12] bg-transparent px-10 py-4 font-medium text-[#9CA3AF] transition-colors duration-200 hover:border-white/20 hover:bg-white/5 hover:text-white"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <GitCompare className="h-4 w-4" />
+                    <GitCompare className="h-5 w-5" />
                     {tLanding("hero.goToCompare")}
                   </motion.button>
                 </>
@@ -248,16 +248,16 @@ export default function HomePage() {
                 <>
                   <motion.button
                     onClick={() => router.push("/sign-up")}
-                    className="flex items-center justify-center gap-3 rounded-xl border border-indigo-500/50 bg-indigo-600 px-10 py-4 font-medium text-white transition-colors duration-200 hover:bg-indigo-500"
+                    className="flex items-center justify-center gap-3 rounded-xl border border-amber-500/50 bg-amber-500 px-10 py-4 font-medium text-[#0B0B0F] transition-colors duration-200 hover:bg-amber-400"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     {tCommon("getStarted")}
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-5 w-5" />
                   </motion.button>
                   <motion.button
                     onClick={() => router.push("/sign-in")}
-                    className="flex items-center justify-center gap-3 rounded-xl border border-white/20 bg-transparent px-10 py-4 font-medium text-white transition-colors duration-200 hover:border-white/30 hover:bg-white/5"
+                    className="flex items-center justify-center gap-3 rounded-xl border border-white/[0.12] bg-transparent px-10 py-4 font-medium text-[#9CA3AF] transition-colors duration-200 hover:border-white/20 hover:bg-white/5 hover:text-white"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
