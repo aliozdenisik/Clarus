@@ -4,14 +4,11 @@ import { AuthUIProvider as BetterAuthUIProvider } from "@daveyplate/better-auth-
 import type { AuthLocalization } from "@daveyplate/better-auth-ui"
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
-import { useLocale, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import Link from "next/link"
 
 function useBetterAuthLocalization(): Partial<AuthLocalization> | undefined {
-  const locale = useLocale()
   const t = useTranslations("BetterAuth")
-
-  if (locale === "en") return undefined
 
   return {
     SIGN_IN: t("SIGN_IN"),
