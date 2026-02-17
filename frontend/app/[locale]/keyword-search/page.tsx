@@ -34,7 +34,7 @@ import {
   getQuranSurahsApiMetadataQuranSurahsGet,
 } from "@/lib/api/sdk.gen"
 import type { KeywordSearchResponse, VerseMatchItem } from "@/lib/api/types.gen"
-import { Tabs as VercelTabs } from "@/components/ui/vercel-tabs"
+import { SegmentedControl } from "@/components/ui/animated-tabs"
 import { LanguageTabs, type LanguageTab } from "@/components/keyword-search/language-tabs"
 import {
   BibleCategoryTabs,
@@ -317,6 +317,7 @@ function KeywordSearchContent() {
 
   const handleLanguageChange = useCallback((language: LanguageTab) => {
     setActiveLanguage(language)
+    setActiveTab((previousTab) => (language === "quran" ? previousTab : "results"))
     setBibleCategoryFilter("all") // Reset category filter when changing language
     setSearchResult(null)
     setBibleSearchResult(null)
@@ -638,14 +639,16 @@ function KeywordSearchContent() {
       <div className="relative px-6 pb-16">
         <div className="mx-auto max-w-4xl">
           {/* Tab Navigation */}
-          <VercelTabs
-            tabs={[
-              { id: "results", label: t("tabs.results") },
-              ...(activeLanguage === "quran" ? [{ id: "browser", label: t("tabs.browser") }] : []),
+          <SegmentedControl<TabType>
+            value={activeTab}
+            onChange={(tabId) => setActiveTab(tabId)}
+            options={[
+              { value: "results", label: t("tabs.results") },
+              ...(activeLanguage === "quran"
+                ? ([{ value: "browser", label: t("tabs.browser") }] as const)
+                : []),
             ]}
-            activeTab={activeTab}
-            onTabChange={(tabId) => setActiveTab(tabId as TabType)}
-            className="mb-8 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/60 p-1"
+            className="mb-8"
           />
 
           {/* Tab Content */}
@@ -758,7 +761,7 @@ function KeywordSearchContent() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={springPresets.fluid}
-                          className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:w-80 lg:shrink-0 lg:overflow-y-auto lg:pe-3 lg:[scrollbar-color:#3f3f46_transparent] lg:[scrollbar-width:thin] lg:[&::-webkit-scrollbar]:w-2 lg:[&::-webkit-scrollbar-thumb]:rounded lg:[&::-webkit-scrollbar-thumb]:bg-zinc-700 lg:[&::-webkit-scrollbar-thumb:hover]:bg-zinc-600"
+                          className="lg:sticky lg:top-20 lg:w-80 lg:shrink-0"
                           data-testid="root-card-panel"
                         >
                           <div className="space-y-7">
@@ -836,57 +839,63 @@ function KeywordSearchContent() {
                             language={activeLanguage}
                           />
 
-                          <div className="space-y-4">
-                            <div className="text-center text-xs tracking-widest text-[var(--color-text-muted)]">
-                              ◆
+                          <div className="space-y-6">
+                            <div className="space-y-3">
+                              <div className="text-left text-xs tracking-widest text-[var(--color-text-muted)]">
+                                ◆
+                              </div>
+                              <h3 className="text-left text-lg font-medium text-[var(--color-text-primary)]">
+                                {t("verseResults")}
+                              </h3>
                             </div>
-                            <h3 className="text-center text-lg font-medium text-[var(--color-text-primary)]">
-                              {t("verseResults")}
-                            </h3>
-                            {activeLanguage === "quran"
-                              ? paginatedVerses.map((verse) => {
-                                  if (!isQuranVerseMatch(verse)) {
-                                    return null
-                                  }
+                            <div className="space-y-4">
+                              {activeLanguage === "quran"
+                                ? paginatedVerses.map((verse) => {
+                                    if (!isQuranVerseMatch(verse)) {
+                                      return null
+                                    }
 
-                                  return (
-                                    <VerseCard
-                                      key={`${verse.surah_id}-${verse.ayah_number}`}
-                                      surahId={verse.surah_id}
-                                      surahName={getSurahName(verse.surah_id, verse.surah_name)}
-                                      ayahNumber={verse.ayah_number}
-                                      textUthmani={verse.text_uthmani}
-                                      textClean={verse.text_clean}
-                                      matchedWords={verse.matched_words}
-                                      turkishTranslation={getTranslation(
-                                        verse.surah_id,
-                                        verse.ayah_number
-                                      )}
-                                      isTranslationLoading={translationsLoading}
-                                      language="arabic"
-                                    />
-                                  )
-                                })
-                              : paginatedVerses.map((verse) => {
-                                  if (!isBibleVerseMatch(verse)) {
-                                    return null
-                                  }
+                                    return (
+                                      <VerseCard
+                                        key={`${verse.surah_id}-${verse.ayah_number}`}
+                                        surahId={verse.surah_id}
+                                        surahName={getSurahName(verse.surah_id, verse.surah_name)}
+                                        ayahNumber={verse.ayah_number}
+                                        textUthmani={verse.text_uthmani}
+                                        textClean={verse.text_clean}
+                                        matchedWords={verse.matched_words}
+                                        turkishTranslation={getTranslation(
+                                          verse.surah_id,
+                                          verse.ayah_number
+                                        )}
+                                        isTranslationLoading={translationsLoading}
+                                        language="arabic"
+                                      />
+                                    )
+                                  })
+                                : paginatedVerses.map((verse) => {
+                                    if (!isBibleVerseMatch(verse)) {
+                                      return null
+                                    }
 
-                                  return (
-                                    <VerseCard
-                                      key={`${verse.book_id}-${verse.chapter}-${verse.verse}`}
-                                      surahId={verse.book_id}
-                                      surahName={verse.book_name}
-                                      ayahNumber={verse.verse}
-                                      textUthmani={verse.text_original || ""}
-                                      textClean={verse.text_original || ""}
-                                      matchedWords={verse.matched_words}
-                                      englishTranslation={verse.text_english}
-                                      chapter={verse.chapter}
-                                      language={activeLanguage === "hebrew_ot" ? "hebrew" : "greek"}
-                                    />
-                                  )
-                                })}
+                                    return (
+                                      <VerseCard
+                                        key={`${verse.book_id}-${verse.chapter}-${verse.verse}`}
+                                        surahId={verse.book_id}
+                                        surahName={verse.book_name}
+                                        ayahNumber={verse.verse}
+                                        textUthmani={verse.text_original || ""}
+                                        textClean={verse.text_original || ""}
+                                        matchedWords={verse.matched_words}
+                                        englishTranslation={verse.text_english}
+                                        chapter={verse.chapter}
+                                        language={
+                                          activeLanguage === "hebrew_ot" ? "hebrew" : "greek"
+                                        }
+                                      />
+                                    )
+                                  })}
+                            </div>
                           </div>
 
                           {filteredVerses.length > versesPerPage && (

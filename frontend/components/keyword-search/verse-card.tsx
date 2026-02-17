@@ -7,6 +7,7 @@ import { ExternalLink } from "lucide-react"
 import { stripArabicDiacritics } from "@/lib/utils/arabic"
 import { stripHebrewDiacritics } from "@/lib/utils/hebrew"
 import { stripGreekDiacritics } from "@/lib/utils/greek"
+import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 
 interface VerseCardProps {
@@ -70,7 +71,10 @@ function highlightText(
 
     if (isMatch) {
       return (
-        <mark key={wordKey} className="mx-0.5 rounded-sm bg-indigo-700 px-1 text-zinc-100">
+        <mark
+          key={wordKey}
+          className="mx-0.5 rounded-md bg-indigo-700/80 [box-decoration-break:clone] px-2 py-0.5 text-zinc-100"
+        >
           {displayWord}
         </mark>
       )
@@ -110,14 +114,19 @@ export const VerseCard = React.memo(function VerseCard({
   return (
     <div>
       <MagicCard
-        className="rounded-lg border border-l-2 border-[var(--color-border-subtle)] border-l-indigo-500 p-6"
+        className="group rounded-lg border border-l-2 border-[var(--color-border-subtle)] border-l-transparent p-6 transition-colors hover:border-l-indigo-500/70"
         gradientSize={200}
         gradientColor="#1a1a2e"
         gradientFrom="#7c3aed"
         gradientTo="#4f46e5"
       >
         {/* Header: Book/Surah name + Chapter:Verse */}
-        <div className="mb-4 flex items-center justify-between">
+        <div
+          className={cn(
+            "mb-4 flex items-center",
+            language === "arabic" ? "justify-between" : "justify-end"
+          )}
+        >
           <span className="text-sm font-medium text-[var(--color-text-secondary)]">
             {(isHebrew || isGreek) && chapter
               ? `${surahName} ${chapter}:${ayahNumber}`
@@ -157,7 +166,7 @@ export const VerseCard = React.memo(function VerseCard({
           <>
             {/* Original text with highlighting (Arabic/Hebrew) */}
             <div
-              className={`${isHebrew ? "font-hebrew" : "font-arabic"} mb-4 text-right text-xl leading-loose`}
+              className={`${isHebrew ? "font-hebrew leading-[2.2]" : "font-arabic leading-loose"} mb-4 text-right text-xl`}
               lang={isHebrew ? "he" : "ar"}
               dir="rtl"
             >
@@ -165,7 +174,7 @@ export const VerseCard = React.memo(function VerseCard({
             </div>
 
             {/* Separator */}
-            <div className="my-4 border-t border-zinc-800" />
+            <div className="my-4 border-t border-zinc-700/80" />
 
             {/* Translation */}
             <div className="text-base leading-relaxed text-[var(--color-text-primary)]" dir="ltr">

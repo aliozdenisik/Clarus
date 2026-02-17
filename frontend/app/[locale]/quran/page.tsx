@@ -6,7 +6,7 @@ import { springPresets } from "@/lib/design-system"
 import { useSession, signOut } from "@/lib/auth-client"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { GlowCard } from "@/components/ui/glow-card"
+import { MagicCard } from "@/components/ui/magic-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { VerseLookupInput } from "@/components/verse-lookup"
 import { toast } from "sonner"
@@ -228,7 +228,7 @@ export default function QuranPage() {
                     onClick={() => router.push(`/quran/${surah.id}`)}
                     className="w-full text-left"
                   >
-                    <GlowCard className="h-full transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--color-accent-primary)] hover:shadow-[0_8px_24px_rgba(99,102,241,0.15)]">
+                    <MagicCard className="h-full transition-all duration-300 hover:-translate-y-0.5 hover:border-[var(--color-accent-primary)] hover:shadow-[0_8px_24px_rgba(99,102,241,0.15)]">
                       <div className="flex h-full flex-col gap-4">
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-indigo-500/35 bg-indigo-500/15 text-sm font-bold text-indigo-200">
@@ -254,7 +254,7 @@ export default function QuranPage() {
                           </div>
                         </div>
                       </div>
-                    </GlowCard>
+                    </MagicCard>
                   </button>
                 </motion.div>
               ))}

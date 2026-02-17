@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query"
 import Link from "next/link"
 import { ChevronDown, ChevronRight, ExternalLink, BookOpen } from "lucide-react"
 import { springPresets, tactileScale } from "@/lib/design-system"
-import { GlowCard } from "@/components/ui/glow-card"
+import { MagicCard } from "@/components/ui/magic-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getEtymologyApiEtymologyRootGet } from "@/lib/api/sdk.gen"
 import { cn } from "@/lib/utils"
@@ -58,7 +58,7 @@ export function RichRootCard({
         transition={springPresets.fluid}
         data-testid="rich-root-card"
       >
-        <GlowCard className="p-8">
+        <MagicCard className="p-8">
           <div className="flex flex-col items-center gap-3">
             {root ? (
               <>
@@ -81,7 +81,7 @@ export function RichRootCard({
               </p>
             )}
           </div>
-        </GlowCard>
+        </MagicCard>
       </motion.div>
     )
   }
@@ -94,7 +94,7 @@ export function RichRootCard({
         transition={springPresets.fluid}
         data-testid="rich-root-card"
       >
-        <GlowCard className="p-8">
+        <MagicCard className="p-8">
           <div className="space-y-4">
             <div className="flex flex-col items-center gap-3">
               <Skeleton className="h-12 w-32" />
@@ -103,7 +103,7 @@ export function RichRootCard({
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-16 w-full" />
           </div>
-        </GlowCard>
+        </MagicCard>
       </motion.div>
     )
   }
@@ -116,7 +116,7 @@ export function RichRootCard({
         transition={springPresets.fluid}
         data-testid="rich-root-card"
       >
-        <GlowCard className="p-8">
+        <MagicCard className="p-8">
           <div className="flex flex-col items-center gap-3">
             {root ? (
               <>
@@ -139,7 +139,7 @@ export function RichRootCard({
               </p>
             )}
           </div>
-        </GlowCard>
+        </MagicCard>
       </motion.div>
     )
   }
@@ -170,7 +170,7 @@ export function RichRootCard({
       transition={springPresets.fluid}
       data-testid="rich-root-card"
     >
-      <GlowCard className="p-8">
+      <MagicCard className="p-8">
         <div className="space-y-6">
           <div className="flex flex-col items-center gap-3">
             <p
@@ -325,7 +325,7 @@ export function RichRootCard({
             )}
           </div>
         </div>
-      </GlowCard>
+      </MagicCard>
     </motion.div>
   )
 }

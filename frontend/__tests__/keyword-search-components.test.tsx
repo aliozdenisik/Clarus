@@ -255,7 +255,7 @@ describe("VerseCard", () => {
     const marks = container.querySelectorAll("mark")
     expect(marks.length).toBeGreaterThan(0)
     marks.forEach((mark) => {
-      expect(mark).toHaveClass("bg-indigo-700", "text-zinc-100")
+      expect(mark).toHaveClass("bg-indigo-700/80", "text-zinc-100")
     })
   })
 

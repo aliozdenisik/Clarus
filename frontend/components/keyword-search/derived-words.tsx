@@ -48,11 +48,11 @@ export function DerivedWords({
   return (
     <div className="space-y-5">
       {/* Section Header */}
-      <div className="flex items-center gap-3">
+      <div className="inline-flex items-center gap-2">
         <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
           {t("derivedWords.title")}
         </h3>
-        <span className="text-[var(--color-text-muted)]">◆</span>
+        <span className="leading-none text-[var(--color-text-muted)]">◆</span>
       </div>
 
       {words.length > 12 && (
@@ -113,7 +113,8 @@ export function DerivedWords({
             onClick={() => onWordSelect(selectedWord === word ? null : word)}
             title={transliterations?.[word] ? `${word} (${transliterations[word]})` : word}
             className={cn(
-              "flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-md px-3 py-2 text-sm leading-tight font-medium transition-colors",
+              "flex flex-col items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              "min-h-11 min-w-11 justify-center leading-tight",
               "focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:outline-none",
               selectedWord === word
                 ? "bg-indigo-500 text-white ring-1 ring-indigo-300 ring-inset"
@@ -123,7 +124,11 @@ export function DerivedWords({
             <span
               lang={isGreek ? "el" : isHebrew ? "he" : "ar"}
               className={cn(
-                isGreek ? "font-greek text-base" : isHebrew ? "font-hebrew" : "font-arabic"
+                isGreek
+                  ? "font-greek text-base"
+                  : isHebrew
+                    ? "font-hebrew leading-relaxed"
+                    : "font-arabic"
               )}
               dir={isGreek ? "ltr" : "rtl"}
             >

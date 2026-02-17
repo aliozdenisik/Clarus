@@ -259,6 +259,7 @@ describe("KeywordSearchPage", () => {
 
     // Search input
     expect(screen.getByPlaceholderText(/Search for Arabic roots/i)).toBeInTheDocument()
+    expect(screen.getByText("Supports Arabic (كتب) and Buckwalter Latin (ktb)")).toBeInTheDocument()
 
     // Tab navigation - animated-tabs renders plain divs, not ARIA tabs
     expect(screen.getByText("Search Results")).toBeInTheDocument()
@@ -272,7 +273,12 @@ describe("KeywordSearchPage", () => {
 
     fireEvent.click(screen.getByText("Greek New Testament"))
     await waitFor(() => {
-      expect(screen.getByText(/Supports Strong's numbers \(e\.g\., G1125\)/i)).toBeInTheDocument()
+      expect(screen.getByText(/Supports Strong's numbers/i)).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText("Hebrew Old Testament"))
+    await waitFor(() => {
+      expect(screen.getByText(/Supports Strong's numbers/i)).toBeInTheDocument()
     })
   })
 
@@ -706,6 +712,27 @@ describe("KeywordSearchPage", () => {
     await waitFor(() => {
       // Root items should appear (the RootBrowser component renders them)
       expect(screen.getByText("كتب")).toBeInTheDocument()
+    })
+  })
+
+  it("resets to results when switching language away from Quran browser", async () => {
+    mockListRoots.mockResolvedValue(mockRootsResponse)
+
+    render(<KeywordSearchPage />)
+
+    await userEvent.click(screen.getByText("Root Browser"))
+
+    await waitFor(() => {
+      expect(mockListRoots).toHaveBeenCalled()
+      expect(screen.getByText("By Frequency")).toBeInTheDocument()
+    })
+
+    await userEvent.click(screen.getByText("Hebrew Old Testament"))
+
+    await waitFor(() => {
+      expect(screen.queryByText("Root Browser")).not.toBeInTheDocument()
+      expect(screen.queryByText("By Frequency")).not.toBeInTheDocument()
+      expect(screen.getByText(/Supports Strong's numbers/i)).toBeInTheDocument()
     })
   })
 })
