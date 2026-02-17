@@ -1,6 +1,7 @@
 import {
   DM_Sans,
   DM_Serif_Display,
+  Cormorant_Garamond,
   Amiri,
   Noto_Sans_Hebrew,
   Noto_Serif,
@@ -21,6 +22,13 @@ const dmSerif = DM_Serif_Display({
   subsets: ["latin"],
   weight: ["400"],
   variable: "--font-serif",
+  display: "swap",
+})
+
+const cormorantGaramond = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
   display: "swap",
 })
 
@@ -60,7 +68,7 @@ export default function RootLayout({
   return (
     <html className="dark" suppressHydrationWarning>
       <body
-        className={`${dmSans.variable} ${dmSerif.variable} ${amiri.variable} ${notoSansHebrew.variable} ${notoSerifGreek.variable} ${crimsonText.variable} antialiased`}
+        className={`${dmSans.variable} ${dmSerif.variable} ${cormorantGaramond.variable} ${amiri.variable} ${notoSansHebrew.variable} ${notoSerifGreek.variable} ${crimsonText.variable} antialiased`}
         suppressHydrationWarning
       >
         {children}
