@@ -12,7 +12,7 @@ import {
   CartesianGrid,
   LabelList,
 } from "recharts"
-import { GlowCard } from "@/components/ui/glow-card"
+import { MagicCard } from "@/components/ui/magic-card"
 import { springPresets } from "@/lib/design-system"
 import { useTranslations } from "next-intl"
 
@@ -51,7 +51,7 @@ function CustomYAxisTick({ x, y, payload }: CustomYAxisTickProps) {
       textAnchor="end"
       style={{
         fontSize: 12,
-        fill: "#a1a1aa",
+        fill: "#d4d4d8",
       }}
     >
       {payload?.value}
@@ -75,11 +75,11 @@ function CustomTooltip({ active, payload, occurrencesLabel }: CustomTooltipProps
   )
 }
 
-const xAxisTickStyle = { fill: "#a1a1aa", fontSize: 12 }
-const axisLineStyle = { stroke: "#3f3f46" }
+const xAxisTickStyle = { fill: "#d4d4d8", fontSize: 12 }
+const axisLineStyle = { stroke: "#52525b" }
 const tooltipCursorStyle = { fill: "rgba(79, 70, 229, 0.1)" }
 const barRadius: [number, number, number, number] = [0, 4, 4, 0]
-const labelFill = "#a1a1aa"
+const labelFill = "#e4e4e7"
 const MIN_CHART_HEIGHT = 240
 
 export function SurahChart({ data, language }: SurahChartProps) {
@@ -94,14 +94,14 @@ export function SurahChart({ data, language }: SurahChartProps) {
         animate={{ opacity: 1 }}
         transition={springPresets.snappy}
       >
-        <GlowCard className="p-4">
+        <MagicCard className="p-4">
           <div className="flex min-h-[240px] flex-col items-center justify-center gap-3 text-center">
             <p className="text-sm font-medium text-[var(--color-text-secondary)]">
               {language === "quran" ? t("chart.noSurahData") : t("chart.noBookData")}
             </p>
             <p className="text-xs text-[var(--color-text-muted)]">{t("emptyStateExamples")}</p>
           </div>
-        </GlowCard>
+        </MagicCard>
       </motion.div>
     )
   }
@@ -116,7 +116,7 @@ export function SurahChart({ data, language }: SurahChartProps) {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={springPresets.snappy}>
-      <GlowCard>
+      <MagicCard>
         {/* Section Header */}
         <div className="mb-6 space-y-4">
           <div className="text-center text-xs tracking-widest text-[var(--color-text-muted)]">
@@ -140,7 +140,8 @@ export function SurahChart({ data, language }: SurahChartProps) {
           >
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="#3f3f46"
+              stroke="#52525b"
+              strokeOpacity={0.35}
               horizontal={true}
               vertical={false}
             />
@@ -160,12 +161,12 @@ export function SurahChart({ data, language }: SurahChartProps) {
             <Bar
               dataKey="count"
               fill="#4f46e5"
-              fillOpacity={0.8}
+              fillOpacity={0.9}
               radius={barRadius}
               isAnimationActive={true}
               animationDuration={800}
             >
-              <LabelList dataKey="count" position="right" fill={labelFill} fontSize={11} />
+              <LabelList dataKey="count" position="right" fill={labelFill} fontSize={12} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -183,7 +184,7 @@ export function SurahChart({ data, language }: SurahChartProps) {
             })}
           </button>
         )}
-      </GlowCard>
+      </MagicCard>
     </motion.div>
   )
 }
