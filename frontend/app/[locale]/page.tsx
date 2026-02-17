@@ -319,7 +319,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Section - Bento Grid */}
-      <section className="relative px-6 py-28 md:py-36">
+      <section className="relative px-6 py-20 md:py-28">
         <div className="mx-auto max-w-[1200px]">
           {/* Section Header - Centered */}
           <motion.div
@@ -345,7 +345,7 @@ export default function HomePage() {
             transition={{ ...springPresets.gentle, duration: 1 }}
           >
             <BentoGrid className="md:grid-cols-3">
-              {features.map((feature) => (
+              {features.map((feature, index) => (
                 <BentoCard
                   key={feature.title}
                   name={feature.title}
@@ -357,6 +357,7 @@ export default function HomePage() {
                   description={feature.description}
                   href={user ? "/search" : "/sign-up"}
                   cta={tCommon("learnMore")}
+                  isPrimary={index === 0}
                 />
               ))}
             </BentoGrid>
@@ -372,7 +373,7 @@ export default function HomePage() {
           >
             {features.map((feature) => (
               <div key={feature.techNote} className="text-center">
-                <span className="text-[10px] font-medium tracking-[0.15em] text-[var(--color-text-muted)] uppercase">
+                <span className="text-[11px] font-medium tracking-[0.06em] text-[var(--color-text-muted)]">
                   {feature.techNote}
                 </span>
               </div>
@@ -382,7 +383,7 @@ export default function HomePage() {
       </section>
 
       {/* Multi-Agent Section - Sophisticated Color-Coding */}
-      <section className="relative overflow-hidden px-6 py-28 md:py-36">
+      <section className="relative overflow-hidden px-6 py-20 md:py-28">
         <div className="mx-auto max-w-[1200px]">
           {/* Section Header */}
           <motion.div
@@ -392,7 +393,7 @@ export default function HomePage() {
             transition={{ ...springPresets.gentle, duration: 1 }}
             className="mb-20 text-center"
           >
-            <span className="mb-6 inline-block text-xs font-medium tracking-[0.2em] text-[var(--color-accent-primary)] uppercase">
+            <span className="mb-6 inline-block bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-xs font-semibold tracking-[0.12em] text-transparent uppercase">
               {tLanding("sections.coreFeature")}
             </span>
             <h2 className="mx-auto mb-8 max-w-[700px] font-[family-name:var(--font-serif)] text-5xl leading-tight font-normal tracking-tight text-[var(--color-text-primary)] md:text-6xl">
