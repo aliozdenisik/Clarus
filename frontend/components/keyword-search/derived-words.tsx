@@ -124,7 +124,11 @@ export function DerivedWords({
             <span
               lang={isGreek ? "el" : isHebrew ? "he" : "ar"}
               className={cn(
-                isGreek ? "font-greek text-base" : isHebrew ? "font-hebrew leading-relaxed" : "font-arabic"
+                isGreek
+                  ? "font-greek text-base"
+                  : isHebrew
+                    ? "font-hebrew leading-relaxed"
+                    : "font-arabic"
               )}
               dir={isGreek ? "ltr" : "rtl"}
             >

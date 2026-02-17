@@ -732,9 +732,7 @@ describe("KeywordSearchPage", () => {
     await waitFor(() => {
       expect(screen.queryByText("Root Browser")).not.toBeInTheDocument()
       expect(screen.queryByText("By Frequency")).not.toBeInTheDocument()
-      expect(
-        screen.getByText("Supports Hebrew characters (כתב) and Strong's numbers (H3789)")
-      ).toBeInTheDocument()
+      expect(screen.getByText(/Supports Strong's numbers/i)).toBeInTheDocument()
     })
   })
 })
