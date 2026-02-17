@@ -145,7 +145,7 @@ vi.mock("@/components/ui/animated-tabs", () => ({
     return (
       <div data-testid="filter-tabs">
         {filters.map((f) => (
-          <button key={f.id} role="tab" onClick={() => onFilterChange(f.id)}>
+          <button type="button" key={f.id} role="tab" onClick={() => onFilterChange(f.id)}>
             {f.label}
           </button>
         ))}
@@ -300,8 +300,19 @@ describe("ComparePage", () => {
 
   it("renders search input and analyze button", () => {
     render(<ComparePage />)
-    expect(screen.getByPlaceholderText(/Enter a topic/)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/Enter a theological topic/i)).toBeInTheDocument()
     expect(screen.getByTestId("compare-analyze-button")).toBeInTheDocument()
+  })
+
+  it("shows pre-compare empty state and applies suggested topic", () => {
+    render(<ComparePage />)
+
+    const suggestionButton = screen.getByRole("button", { name: "Creation story" })
+    expect(suggestionButton).toBeInTheDocument()
+
+    fireEvent.click(suggestionButton)
+
+    expect(screen.getByTestId("compare-topic-input")).toHaveValue("Creation story")
   })
 
   it("starts streaming when form is submitted and streaming is enabled", async () => {
@@ -330,7 +341,7 @@ describe("ComparePage", () => {
     })
 
     render(<ComparePage />)
-    expect(screen.getByText(/Initializing multi-agent analysis/)).toBeInTheDocument()
+    expect(screen.getByText(/Initializing analysis/)).toBeInTheDocument()
   })
 
   it("displays results when SSE data is received", async () => {
@@ -404,7 +415,7 @@ describe("ComparePage", () => {
     const { rerender } = render(<ComparePage />)
 
     await waitFor(() => {
-      expect(screen.getByText("Kaynak Referanslari")).toBeInTheDocument()
+      expect(screen.getByText("Source References")).toBeInTheDocument()
     })
 
     // Get the verse references section
