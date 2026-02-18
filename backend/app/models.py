@@ -60,6 +60,10 @@ class UserPreferences(Base):
     enable_streaming: Mapped[bool] = mapped_column(Boolean, default=True)
     enable_multi_agent: Mapped[bool] = mapped_column(Boolean, default=True)
     custom_settings: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    usage_purpose: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    arabic_proficiency: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    interests: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
 
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
