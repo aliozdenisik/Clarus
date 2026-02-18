@@ -135,7 +135,7 @@ export default function OnboardingPage() {
               type="button"
               aria-label={t("back")}
               onClick={goBack}
-              className="inline-flex h-10 items-center rounded-lg border border-white/15 bg-white/[0.03] px-4 text-sm font-medium text-white/85 transition-colors hover:bg-white/[0.08] focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent focus-visible:outline-none"
+              className="inline-flex h-10 items-center rounded-lg border border-white/15 bg-white/[0.03] px-4 text-sm font-medium text-white/85 transition-colors hover:bg-white/[0.08] focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent focus-visible:outline-none"
             >
               {t("back")}
             </button>
@@ -149,7 +149,7 @@ export default function OnboardingPage() {
               aria-label={t("next")}
               onClick={handleNext}
               disabled={isSaving}
-              className="inline-flex h-10 items-center rounded-lg border border-amber-500/35 bg-amber-500/10 px-4 text-sm font-semibold text-amber-100 transition-colors hover:bg-amber-500/20 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-10 items-center rounded-lg border border-indigo-500/35 bg-indigo-500/10 px-4 text-sm font-semibold text-indigo-100 transition-colors hover:bg-indigo-500/20 focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t("next")}
             </button>

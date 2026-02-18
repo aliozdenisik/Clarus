@@ -120,7 +120,7 @@ export function CompletionStep() {
           <NumberTicker
             value={43055}
             className={cn(
-              "font-[family-name:var(--font-display)] font-bold tabular-nums",
+              "font-bold tabular-nums",
               "text-4xl sm:text-5xl",
               "text-[var(--color-accent-secondary)]"
             )}
