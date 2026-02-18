@@ -62,6 +62,71 @@
     "viewProfile": "View profile",
     "signOut": "Sign out"
   },
+  "Onboarding": {
+    "skipSetup": "Skip setup",
+    "back": "Back",
+    "next": "Next",
+    "complete": "Complete setup",
+    "stepOf": "Step {current} of {total}",
+    "welcome": {
+      "title": "Welcome to Clarus",
+      "subtitle": "Sacred text research, reimagined with AI",
+      "description": "Let's personalize your experience in a few quick steps.",
+      "cta": "Let's Begin"
+    },
+    "purpose": {
+      "title": "How will you use Clarus?",
+      "subtitle": "This helps us tailor AI responses to your needs",
+      "academic": "Academic Research",
+      "academicDesc": "Formal citations, footnotes, objective analytical tone",
+      "personal": "Personal Study",
+      "personalDesc": "Conversational language, practical examples",
+      "preaching": "Sermon / Khutbah Preparation",
+      "preachingDesc": "Inspirational, quotable phrases, emphatic expressions",
+      "comparative": "Comparative Religion",
+      "comparativeDesc": "Neutral, analytical, balanced cross-textual perspectives",
+      "textual": "Textual / Philological Study",
+      "textualDesc": "Etymological notes, grammar annotations, technical analysis"
+    },
+    "language": {
+      "title": "Preferred Language",
+      "subtitle": "Choose your primary interface language",
+      "turkish": "Turkish",
+      "english": "English"
+    },
+    "arabic": {
+      "title": "Arabic Proficiency",
+      "subtitle": "This helps us adjust how we show Arabic text and transliterations",
+      "none": "No knowledge",
+      "noneDesc": "Show translations only",
+      "basic": "Basic",
+      "basicDesc": "Can read Arabic script, show transliterations",
+      "intermediate": "Intermediate",
+      "intermediateDesc": "Comfortable with Quranic Arabic",
+      "advanced": "Advanced",
+      "advancedDesc": "Fluent, show full Arabic with diacritics"
+    },
+    "interests": {
+      "title": "Academic Interests",
+      "subtitle": "Select topics you're most interested in",
+      "theology": "Theology",
+      "philology": "Philology",
+      "history": "History",
+      "comparativeReligion": "Comparative Religion",
+      "sociology": "Sociology of Religion",
+      "philosophy": "Philosophy",
+      "ethics": "Ethics & Morality",
+      "eschatology": "Eschatology",
+      "hermeneutics": "Hermeneutics",
+      "mysticism": "Mysticism / Sufism"
+    },
+    "completion": {
+      "title": "You're All Set!",
+      "subtitle": "Your personalized experience awaits",
+      "versesReady": "verses ready for your exploration",
+      "goHome": "Start Exploring"
+    }
+  },
   "Landing": {
     "hero": {
       "title": "Explore Sacred Texts",

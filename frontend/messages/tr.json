@@ -62,6 +62,71 @@
     "viewProfile": "Profili görüntüle",
     "signOut": "Çıkış yap"
   },
+  "Onboarding": {
+    "skipSetup": "Kurulumu atla",
+    "back": "Geri",
+    "next": "İleri",
+    "complete": "Kurulumu tamamla",
+    "stepOf": "{current}. adım / {total}",
+    "welcome": {
+      "title": "Clarus'a Hoş Geldiniz",
+      "subtitle": "Yapay zeka ile yeniden tasarlanan kutsal metin araştırması",
+      "description": "Deneyiminizi kişiselleştirmek için birkaç hızlı adımdan geçelim.",
+      "cta": "Başlayalım"
+    },
+    "purpose": {
+      "title": "Clarus'u nasıl kullanacaksınız?",
+      "subtitle": "Bu, yapay zeka yanıtlarını ihtiyaçlarınıza uyarlamaya yardımcı olur",
+      "academic": "Akademik Araştırma",
+      "academicDesc": "Resmi alıntılar, dipnotlar, nesnel analitik ton",
+      "personal": "Kişisel Çalışma",
+      "personalDesc": "Konuşma dili, pratik örnekler",
+      "preaching": "Vaaz / Hutbe Hazırlığı",
+      "preachingDesc": "İlham verici, alıntılanabilir ifadeler, vurgulu cümleler",
+      "comparative": "Karşılaştırmalı Din Bilimi",
+      "comparativeDesc": "Tarafsız, analitik, dengeli metinlerarası perspektifler",
+      "textual": "Metinsel / Filolojik Çalışma",
+      "textualDesc": "Etimolojik notlar, dilbilgisi açıklamaları, teknik analiz"
+    },
+    "language": {
+      "title": "Tercih Edilen Dil",
+      "subtitle": "Birincil arayüz dilinizi seçin",
+      "turkish": "Türkçe",
+      "english": "İngilizce"
+    },
+    "arabic": {
+      "title": "Arapça Yetkinliği",
+      "subtitle": "Bu, Arapça metni ve transliterasyonları nasıl göstereceğimizi ayarlamaya yardımcı olur",
+      "none": "Bilgim yok",
+      "noneDesc": "Yalnızca çevirileri göster",
+      "basic": "Temel",
+      "basicDesc": "Arapça harfleri okuyabilirim, transliterasyonları göster",
+      "intermediate": "Orta Düzey",
+      "intermediateDesc": "Kur'an Arapçası ile rahatım",
+      "advanced": "İleri Düzey",
+      "advancedDesc": "Akıcı, harekeler ile tam Arapça göster"
+    },
+    "interests": {
+      "title": "Akademik İlgi Alanları",
+      "subtitle": "En ilginizi çeken konuları seçin",
+      "theology": "İlahiyat",
+      "philology": "Filoloji",
+      "history": "Tarih",
+      "comparativeReligion": "Karşılaştırmalı Din Bilimi",
+      "sociology": "Din Sosyolojisi",
+      "philosophy": "Felsefe",
+      "ethics": "Etik & Ahlak",
+      "eschatology": "Ahiret Bilimi",
+      "hermeneutics": "Tefsir Bilimi",
+      "mysticism": "Tasavvuf / Mistisizm"
+    },
+    "completion": {
+      "title": "Hepsi Hazır!",
+      "subtitle": "Kişiselleştirilmiş deneyiminiz sizi bekliyor",
+      "versesReady": "ayet keşfetmeniz için hazır",
+      "goHome": "Keşfetmeye Başla"
+    }
+  },
   "Landing": {
     "hero": {
       "title": "Kutsal Metinleri Keşfedin",
