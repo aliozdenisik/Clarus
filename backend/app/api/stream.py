@@ -12,6 +12,7 @@ from typing import Any, Literal, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import check_rate_limit
@@ -26,7 +27,7 @@ from app.api.compare_helpers import (
 from app.auth.api_key_validator import _resolve_user_by_id, extract_raw_session_token
 from app.db import get_db
 from app.i18n.detector import get_locale
-from app.models import SearchHistory
+from app.models import SearchHistory, UserPreferences
 from app.schemas.common import DEFAULT_TRANSLATOR, TranslatorType
 from src.comparative_rag import ComparativeRAG
 from src.query_translator import QueryTranslator, TranslationError
@@ -106,6 +107,9 @@ async def stream_search(
     """
     current_user = await get_current_user_from_sse(db, request)
     await check_rate_limit(current_user, db)
+    prefs_result = await db.execute(select(UserPreferences).where(UserPreferences.user_id == current_user["id"]))
+    user_preferences = prefs_result.scalar_one_or_none()
+    usage_purpose = user_preferences.usage_purpose if user_preferences else None
 
     # Save to history
     history = SearchHistory(
@@ -133,11 +137,24 @@ async def stream_search(
             logger.info("[SSE /search] Starting ask call (search + answer generation)...")
             quran_translator = translator or DEFAULT_TRANSLATOR
             if source == "quran":
-                ask_result = await rag.ask_quran(q, translator=quran_translator, top_k=10, locale=locale)
+                ask_result = await rag.ask_quran(
+                    q,
+                    translator=quran_translator,
+                    top_k=10,
+                    locale=locale,
+                    usage_purpose=usage_purpose,
+                )
             elif source in ["ot", "nt", "apocrypha"]:
-                ask_result = await rag.ask_bible(q, translation="kjva", testament=source, top_k=10, locale=locale)
+                ask_result = await rag.ask_bible(
+                    q,
+                    translation="kjva",
+                    testament=source,
+                    top_k=10,
+                    locale=locale,
+                    usage_purpose=usage_purpose,
+                )
             else:
-                ask_result = await rag.ask_bible(q, top_k=10, locale=locale)
+                ask_result = await rag.ask_bible(q, top_k=10, locale=locale, usage_purpose=usage_purpose)
 
             # Extract results and answer from ask_result
             results = ask_result.search_results
@@ -306,6 +323,9 @@ async def stream_compare(
         )
     current_user = await get_current_user_from_sse(db, request)
     await check_rate_limit(current_user, db)
+    prefs_result = await db.execute(select(UserPreferences).where(UserPreferences.user_id == current_user["id"]))
+    user_preferences = prefs_result.scalar_one_or_none()
+    usage_purpose = user_preferences.usage_purpose if user_preferences else None
 
     # Save to history
     history = SearchHistory(
@@ -429,6 +449,8 @@ async def stream_compare(
                 search_result.apocrypha,
                 None,  # collection_stats (uses internal)
                 on_progress,
+                usage_purpose,
+                locale,
             ):
                 yield event
             result = _thread_result["value"]

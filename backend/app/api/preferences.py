@@ -22,6 +22,10 @@ class PreferencesUpdate(BaseModel):
     enable_streaming: bool | None = None
     enable_multi_agent: bool | None = None
     custom_settings: dict | None = None
+    usage_purpose: str | None = Field(None, pattern="^(academic|personal|preaching|comparative|textual)$")
+    arabic_proficiency: str | None = Field(None, pattern="^(none|basic|intermediate|advanced)$")
+    interests: list[str] | None = None
+    onboarding_completed: bool | None = None
 
 
 class PreferencesResponse(BaseModel):
@@ -39,6 +43,10 @@ def _preferences_to_dict(prefs: UserPreferences) -> dict:
         "enable_streaming": prefs.enable_streaming,
         "enable_multi_agent": prefs.enable_multi_agent,
         "custom_settings": prefs.custom_settings,
+        "usage_purpose": prefs.usage_purpose,
+        "arabic_proficiency": prefs.arabic_proficiency,
+        "interests": prefs.interests,
+        "onboarding_completed": prefs.onboarding_completed,
         "updated_at": prefs.updated_at.isoformat() if prefs.updated_at else None,
     }
 
@@ -53,6 +61,10 @@ def _get_default_preferences() -> dict:
         "enable_streaming": True,
         "enable_multi_agent": True,
         "custom_settings": None,
+        "usage_purpose": None,
+        "arabic_proficiency": "none",
+        "interests": [],
+        "onboarding_completed": False,
         "updated_at": None,
     }
 

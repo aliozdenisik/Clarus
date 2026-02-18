@@ -1178,6 +1178,8 @@ class UltimateRAG:
         query: str,
         source: str = "quran_tr_diyanet",
         top_k: int | None = None,
+        usage_purpose: str | None = None,
+        language: str = "tr",
     ):
         """
         Full RAG Pipeline: Search + Generate Answer with Citations
@@ -1219,6 +1221,8 @@ class UltimateRAG:
             search_results,
             source=source,
             score_stats=self._last_score_stats,
+            usage_purpose=usage_purpose,
+            language=language,
         )
 
         answer_latency_ms = (time.perf_counter() - answer_start) * 1000
@@ -1250,6 +1254,7 @@ class UltimateRAG:
         top_k: int | None = None,
         detected_language: str | None = None,
         locale: str = "tr",
+        usage_purpose: str | None = None,
     ):
         """
         Shortcut for Quran Q&A - Turkish in, Turkish out
@@ -1283,7 +1288,13 @@ class UltimateRAG:
                 )
                 raise
 
-        return await self.ask(query, source=f"quran_tr_{translator}", top_k=top_k)
+        return await self.ask(
+            query,
+            source=f"quran_tr_{translator}",
+            top_k=top_k,
+            usage_purpose=usage_purpose,
+            language=locale,
+        )
 
     async def ask_bible(
         self,
@@ -1293,6 +1304,7 @@ class UltimateRAG:
         top_k: int | None = None,
         detected_language: str | None = None,
         locale: str = "tr",
+        usage_purpose: str | None = None,
     ):
         """
         Shortcut for Bible Q&A.
@@ -1323,7 +1335,13 @@ class UltimateRAG:
                 raise
 
         source = f"bible_{testament}" if testament else f"bible_{translation}"
-        return await self.ask(query, source=source, top_k=top_k)
+        return await self.ask(
+            query,
+            source=source,
+            top_k=top_k,
+            usage_purpose=usage_purpose,
+            language=locale,
+        )
 
 
 # Convenience function

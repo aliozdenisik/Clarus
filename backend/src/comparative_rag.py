@@ -1014,7 +1014,13 @@ class ComparativeRAG:
 
         return result
 
-    def compare(self, query: str, translator: str = "diyanet", locale: str = "tr"):
+    def compare(
+        self,
+        query: str,
+        translator: str = "diyanet",
+        locale: str = "tr",
+        usage_purpose: str | None = None,
+    ):
         """
         Full comparative pipeline: Search + Generate Comparative Essay
 
@@ -1054,6 +1060,8 @@ class ComparativeRAG:
             quran_chunks=[],  # No chunk search in new architecture
             bible_semantic=bible_verses,
             bible_chunks=[],  # No chunk search in new architecture
+            usage_purpose=usage_purpose,
+            language=locale,
         )
 
         essay_duration = (time.time() - essay_start) * 1000
@@ -1119,6 +1127,7 @@ class ComparativeRAG:
         bible_keywords: list[str] | None = None,
         translator: str = "diyanet",
         locale: str = "tr",
+        usage_purpose: str | None = None,
     ):
         """
         Full comparative pipeline with Multi-Agent answer generation.
@@ -1189,6 +1198,8 @@ class ComparativeRAG:
                 nt_verses=nt_verses,
                 apocrypha_verses=apocrypha_verses,
                 collection_stats=self._last_collection_stats,
+                usage_purpose=usage_purpose,
+                language=locale,
             )
 
             gen_duration = (time.time() - gen_start) * 1000

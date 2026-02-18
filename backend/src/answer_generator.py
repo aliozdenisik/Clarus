@@ -30,6 +30,7 @@ from tenacity import (
 from app.logging_config import get_logger, log_performance
 from src.circuit_breaker import CircuitBreakerError, llm_with_breaker
 from src.confidence_scorer import ConfidenceScorer
+from src.prompt_templates import get_prompt_template
 from src.prompts import PromptManager
 
 logger = get_logger(__name__)
@@ -269,7 +270,14 @@ VERSES:
             "Retrying LLM call", extra={"attempt": rs.attempt_number, "max_attempts": 5}
         ),
     )
-    def _call_llm(self, query: str, context: str, source: str) -> dict:
+    def _call_llm(
+        self,
+        query: str,
+        context: str,
+        source: str,
+        usage_purpose: str | None = None,
+        language: str = "tr",
+    ) -> dict:
         """Call OpenRouter API for answer generation"""
         with sentry_sdk.start_span(op="llm.openrouter.answer", description="Answer generation LLM call") as span:
             start_time = time.perf_counter()
@@ -285,9 +293,11 @@ VERSES:
                 },
             )
 
+            template = get_prompt_template(usage_purpose or "personal", language)
+
             # Select appropriate prompt based on source
             if "quran" in source:
-                system_prompt = self._prompt_manager.get_prompt("answer_generator", "quran_system", self.locale)
+                base_system_prompt = self._prompt_manager.get_prompt("answer_generator", "quran_system", self.locale)
                 examples = self._prompt_manager.get_prompt("answer_generator", "quran_few_shot")
                 user_content = (
                     f"SORU: {query}\n\nAYETLER:\n{context}"
@@ -295,13 +305,15 @@ VERSES:
                     else f"QUESTION: {query}\n\nVERSES:\n{context}"
                 )
             else:
-                system_prompt = self._prompt_manager.get_prompt("answer_generator", "bible_system", self.locale)
+                base_system_prompt = self._prompt_manager.get_prompt("answer_generator", "bible_system", self.locale)
                 examples = self._prompt_manager.get_prompt("answer_generator", "bible_few_shot")
                 user_content = (
                     f"QUESTION: {query}\n\nVERSES:\n{context}"
                     if self.locale == "en"
                     else f"SORU: {query}\n\nAYETLER:\n{context}"
                 )
+
+            system_prompt = f"{template}\n\n{base_system_prompt}"
 
             messages = [{"role": "system", "content": system_prompt}]
             messages.extend(examples)
@@ -409,6 +421,8 @@ VERSES:
         source: str = "quran_tr_diyanet",
         max_context_results: int = 15,
         score_stats: dict[str, float] | None = None,
+        usage_purpose: str | None = None,
+        language: str = "tr",
     ) -> AnswerResult:
         """
         Generate a cited answer from search results.
@@ -446,7 +460,13 @@ VERSES:
         context = self._format_context(search_results, source, max_context_results)
 
         # Call LLM for answer generation
-        llm_result = self._call_llm(query, context, source)
+        llm_result = self._call_llm(
+            query,
+            context,
+            source,
+            usage_purpose=usage_purpose,
+            language=language,
+        )
 
         citations = llm_result.get("cited_references", [])
         logger.info(

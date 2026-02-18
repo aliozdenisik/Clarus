@@ -46,6 +46,7 @@ from tenacity import (
 from app.logging_config import get_logger, log_performance
 from src.circuit_breaker import CircuitBreakerError, llm_with_breaker
 from src.confidence_scorer import ConfidenceScorer
+from src.prompt_templates import get_prompt_template
 from src.prompts import PromptManager
 
 logger = get_logger(__name__)
@@ -116,6 +117,11 @@ class BaseSpecialistAgent:
             "HTTP-Referer": "https://github.com/qdrant/qdrant",
         }
         self._prompt_manager = PromptManager()
+
+    def _build_system_prompt(self, prompt_key: str, usage_purpose: str | None = None, language: str = "tr") -> str:
+        template = get_prompt_template(usage_purpose or "personal", language)
+        base_system_prompt = self._prompt_manager.get_prompt("multi_agent", prompt_key, self.locale)
+        return f"{template}\n\n{base_system_prompt}"
 
     def _extract_reference(self, result, source: str) -> str:
         """Extract reference string from search result"""
@@ -271,13 +277,19 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
     "confidence": 0.0
 }"""
 
-    def generate(self, query: str, verses: list) -> dict[str, Any]:
+    def generate(
+        self,
+        query: str,
+        verses: list,
+        usage_purpose: str | None = None,
+        language: str = "tr",
+    ) -> dict[str, Any]:
         """Generate OT commentary paragraph"""
         if not verses:
             return {"commentary": "", "citations": [], "confidence": 0.0}
 
         context = self._format_verses(verses, "bible")
-        system_prompt = self._prompt_manager.get_prompt("multi_agent", "old_testament", self.locale)
+        system_prompt = self._build_system_prompt("old_testament", usage_purpose=usage_purpose, language=language)
         user_content = (
             f"SORU: {query}\n\nESKİ AHİT AYETLERİ:\n{context}"
             if self.locale == "tr"
@@ -317,13 +329,19 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
     "confidence": 0.0
 }"""
 
-    def generate(self, query: str, verses: list) -> dict[str, Any]:
+    def generate(
+        self,
+        query: str,
+        verses: list,
+        usage_purpose: str | None = None,
+        language: str = "tr",
+    ) -> dict[str, Any]:
         """Generate NT commentary paragraph"""
         if not verses:
             return {"commentary": "", "citations": [], "confidence": 0.0}
 
         context = self._format_verses(verses, "bible")
-        system_prompt = self._prompt_manager.get_prompt("multi_agent", "new_testament", self.locale)
+        system_prompt = self._build_system_prompt("new_testament", usage_purpose=usage_purpose, language=language)
         user_content = (
             f"SORU: {query}\n\nYENİ AHİT AYETLERİ:\n{context}"
             if self.locale == "tr"
@@ -365,13 +383,19 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
     "confidence": 0.0
 }"""
 
-    def generate(self, query: str, verses: list) -> dict[str, Any]:
+    def generate(
+        self,
+        query: str,
+        verses: list,
+        usage_purpose: str | None = None,
+        language: str = "tr",
+    ) -> dict[str, Any]:
         """Generate Apocrypha commentary paragraph"""
         if not verses:
             return {"commentary": "", "citations": [], "confidence": 0.0}
 
         context = self._format_verses(verses, "bible")
-        system_prompt = self._prompt_manager.get_prompt("multi_agent", "apocrypha", self.locale)
+        system_prompt = self._build_system_prompt("apocrypha", usage_purpose=usage_purpose, language=language)
         user_content = (
             f"SORU: {query}\n\nAPOKRİFA AYETLERİ:\n{context}"
             if self.locale == "tr"
@@ -411,13 +435,19 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
     "confidence": 0.0
 }"""
 
-    def generate(self, query: str, verses: list) -> dict[str, Any]:
+    def generate(
+        self,
+        query: str,
+        verses: list,
+        usage_purpose: str | None = None,
+        language: str = "tr",
+    ) -> dict[str, Any]:
         """Generate Quran commentary paragraph"""
         if not verses:
             return {"commentary": "", "citations": [], "confidence": 0.0}
 
         context = self._format_verses(verses, "quran")
-        system_prompt = self._prompt_manager.get_prompt("multi_agent", "quran", self.locale)
+        system_prompt = self._build_system_prompt("quran", usage_purpose=usage_purpose, language=language)
         user_content = (
             f"SORU: {query}\n\nKURAN AYETLERİ:\n{context}"
             if self.locale == "tr"
@@ -461,6 +491,8 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
         nt_commentary: str,
         apocrypha_commentary: str,
         quran_commentary: str,
+        usage_purpose: str | None = None,
+        language: str = "tr",
     ) -> dict[str, Any]:
         """Generate synthesis paragraph from all 4 commentaries"""
         # Build context from available commentaries
@@ -483,7 +515,7 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
             }
 
         context = "\n\n".join(parts)
-        system_prompt = self._prompt_manager.get_prompt("multi_agent", "summary", self.locale)
+        system_prompt = self._build_system_prompt("summary", usage_purpose=usage_purpose, language=language)
         user_content = f"SORU: {query}\n\n{context}" if self.locale == "tr" else f"QUESTION: {query}\n\n{context}"
         messages = [
             {"role": "system", "content": system_prompt},
@@ -569,6 +601,8 @@ class MultiAgentOrchestrator:
         apocrypha_verses: list,
         collection_stats: dict[str, object] | None = None,
         progress_callback: Callable[[str, str], None] | None = None,
+        usage_purpose: str | None = None,
+        language: str = "tr",
     ) -> MultiAgentAnswer:
         """
         Generate 5-paragraph answer using multi-agent architecture.
@@ -633,14 +667,20 @@ class MultiAgentOrchestrator:
 
             with sentry_sdk.start_span(op="rag.agent.oldtestament", description="OT commentary") as span:
                 span.set_data("verse_count", len(ot_verses))
-                return ("ot", self.ot_agent.generate(query, ot_verses))
+                return (
+                    "ot",
+                    self.ot_agent.generate(query, ot_verses, usage_purpose=usage_purpose, language=language),
+                )
 
         def run_nt():
             import sentry_sdk
 
             with sentry_sdk.start_span(op="rag.agent.newtestament", description="NT commentary") as span:
                 span.set_data("verse_count", len(nt_verses))
-                return ("nt", self.nt_agent.generate(query, nt_verses))
+                return (
+                    "nt",
+                    self.nt_agent.generate(query, nt_verses, usage_purpose=usage_purpose, language=language),
+                )
 
         def run_apocrypha():
             import sentry_sdk
@@ -649,7 +689,12 @@ class MultiAgentOrchestrator:
                 span.set_data("verse_count", len(apocrypha_verses))
                 return (
                     "apocrypha",
-                    self.apocrypha_agent.generate(query, apocrypha_verses),
+                    self.apocrypha_agent.generate(
+                        query,
+                        apocrypha_verses,
+                        usage_purpose=usage_purpose,
+                        language=language,
+                    ),
                 )
 
         def run_quran():
@@ -657,7 +702,10 @@ class MultiAgentOrchestrator:
 
             with sentry_sdk.start_span(op="rag.agent.quran", description="Quran commentary") as span:
                 span.set_data("verse_count", len(quran_verses))
-                return ("quran", self.quran_agent.generate(query, quran_verses))
+                return (
+                    "quran",
+                    self.quran_agent.generate(query, quran_verses, usage_purpose=usage_purpose, language=language),
+                )
 
         logger.info(f"Running {agent_count} specialist agents in parallel")
         parallel_start = time.perf_counter()
@@ -716,6 +764,8 @@ class MultiAgentOrchestrator:
             nt_commentary=nt_commentary,
             apocrypha_commentary=apoc_commentary,
             quran_commentary=quran_commentary,
+            usage_purpose=usage_purpose,
+            language=language,
         )
 
         synthesis = summary_result.get("synthesis", "")

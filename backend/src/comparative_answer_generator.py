@@ -29,6 +29,7 @@ from tenacity import (
 
 from src.circuit_breaker import CircuitBreakerError, llm_with_breaker
 from src.confidence_scorer import ConfidenceScorer
+from src.prompt_templates import get_prompt_template
 from src.prompts import PromptManager
 
 logger = logging.getLogger(__name__)
@@ -288,7 +289,13 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         retry=retry_if_exception_type(requests.exceptions.RequestException),
         before_sleep=lambda rs: logger.info(f"Retrying LLM call, attempt {rs.attempt_number}/5"),
     )
-    def _call_llm(self, query: str, context: str) -> dict:
+    def _call_llm(
+        self,
+        query: str,
+        context: str,
+        usage_purpose: str | None = None,
+        language: str = "tr",
+    ) -> dict:
         """Call OpenRouter API for comparative essay generation"""
         with sentry_sdk.start_span(
             op="llm.openrouter.comparative",
@@ -297,7 +304,10 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
             start_time = time.time()
             span.set_data("model", self.model)
 
-            messages = [{"role": "system", "content": self.SYSTEM_PROMPT}]
+            template = get_prompt_template(usage_purpose or "personal", language)
+            system_prompt = f"{template}\n\n{self.SYSTEM_PROMPT}"
+
+            messages = [{"role": "system", "content": system_prompt}]
             messages.extend(self.FEW_SHOT)
             messages.append({"role": "user", "content": f"SORU: {query}\n\n{context}"})
 
@@ -379,6 +389,8 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         bible_chunks: list,
         collection_stats: dict[str, object] | None = None,
         translator: str = "diyanet",
+        usage_purpose: str | None = None,
+        language: str = "tr",
     ) -> ComparativeAnswer:
         """
         Generate a comparative theological essay from multi-scripture results.
@@ -413,7 +425,12 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
 
         # Call LLM for comparative essay generation
         print(f"Generating comparative essay with {total_verses} verses...")
-        llm_result = self._call_llm(query, context)
+        llm_result = self._call_llm(
+            query,
+            context,
+            usage_purpose=usage_purpose,
+            language=language,
+        )
 
         # Compute objective confidence from collection stats
         if collection_stats:

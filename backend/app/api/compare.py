@@ -5,6 +5,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import check_rate_limit
@@ -19,7 +20,7 @@ from app.i18n.detector import get_locale
 from app.i18n.messages import get_error_message
 from app.logging_config import get_logger, log_performance
 from app.middleware.error_handler import ValidationError
-from app.models import SearchHistory
+from app.models import SearchHistory, UserPreferences
 from app.schemas.common import DEFAULT_TRANSLATOR, TranslatorType
 from src.citation_sanitizer import sanitize_citations
 from src.comparative_rag import ComparativeRAG
@@ -200,6 +201,9 @@ async def compare_scriptures(
     rag = get_comparative_rag()
     translator = QueryTranslator()
     quran_translator = request.translator or DEFAULT_TRANSLATOR
+    prefs_result = await db.execute(select(UserPreferences).where(UserPreferences.user_id == current_user["id"]))
+    user_preferences = prefs_result.scalar_one_or_none()
+    usage_purpose = user_preferences.usage_purpose if user_preferences else None
 
     if request.use_multi_agent:
         normalized_collections = normalize_compare_collections(request.collections, quran_translator)
@@ -262,6 +266,8 @@ async def compare_scriptures(
             ot_verses=search_result.ot,
             nt_verses=search_result.nt,
             apocrypha_verses=search_result.apocrypha,
+            usage_purpose=usage_purpose,
+            language=locale,
         )
 
         # Sanitize agent output (defense-in-depth against malformed citations)
@@ -405,7 +411,12 @@ async def compare_scriptures(
         )
     else:
         # Single essay mode (ComparativeAnswer)
-        result = rag.compare(request.topic, translator=quran_translator, locale=locale)
+        result = rag.compare(
+            request.topic,
+            translator=quran_translator,
+            locale=locale,
+            usage_purpose=usage_purpose,
+        )
 
         # Sanitize essay output
         result.essay = sanitize_citations(result.essay)
