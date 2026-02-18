@@ -92,7 +92,9 @@
       "title": "Preferred Language",
       "subtitle": "Choose your primary interface language",
       "turkish": "Turkish",
-      "english": "English"
+      "turkishDesc": "Quran in Turkish, responses in Turkish",
+      "english": "English",
+      "englishDesc": "Bible in English, responses in English"
     },
     "arabic": {
       "title": "Arabic Proficiency",
@@ -118,7 +120,9 @@
       "ethics": "Ethics & Morality",
       "eschatology": "Eschatology",
       "hermeneutics": "Hermeneutics",
-      "mysticism": "Mysticism / Sufism"
+      "mysticism": "Mysticism / Sufism",
+      "selectedCount": "{count} selected",
+      "optional": "Optional — you can skip this step"
     },
     "completion": {
       "title": "You're All Set!",

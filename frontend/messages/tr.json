@@ -92,7 +92,9 @@
       "title": "Tercih Edilen Dil",
       "subtitle": "Birincil arayüz dilinizi seçin",
       "turkish": "Türkçe",
-      "english": "İngilizce"
+      "turkishDesc": "Kuran Türkçe, yanıtlar Türkçe",
+      "english": "İngilizce",
+      "englishDesc": "Kitap-ı Mukaddes İngilizce, yanıtlar İngilizce"
     },
     "arabic": {
       "title": "Arapça Yetkinliği",
@@ -118,7 +120,9 @@
       "ethics": "Etik & Ahlak",
       "eschatology": "Ahiret Bilimi",
       "hermeneutics": "Tefsir Bilimi",
-      "mysticism": "Tasavvuf / Mistisizm"
+      "mysticism": "Tasavvuf / Mistisizm",
+      "selectedCount": "{count} seçildi",
+      "optional": "İsteğe bağlı — bu adımı atlayabilirsiniz"
     },
     "completion": {
       "title": "Hepsi Hazır!",
