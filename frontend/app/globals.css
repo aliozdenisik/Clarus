@@ -92,6 +92,7 @@
   --color-text-primary: #f4f4f5; /* Zinc-100 - Headings */
   --color-text-secondary: #a1a1aa; /* Zinc-400 - Body text */
   --color-text-muted: #71717a; /* Zinc-500 - Metadata */
+  --color-text-tertiary: #71717a; /* Zinc-500 - Labels, low-importance (alias for muted) */
 
   --color-accent-primary: #4f46e5; /* Indigo-600 - CTA, accents (WCAG AA ≥4.5:1 with white text) */
   --color-accent-glow: rgba(79, 70, 229, 0.15); /* Indigo glow effect */

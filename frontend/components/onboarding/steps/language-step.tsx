@@ -48,7 +48,7 @@ export function LanguageStep() {
           delay={0}
           duration={0.5}
           className={cn(
-            "mb-3 font-[family-name:var(--font-display)] leading-tight font-semibold tracking-[-0.02em]",
+            "mb-3 leading-tight font-semibold tracking-[-0.02em]",
             "text-2xl sm:text-3xl",
             "text-[var(--color-text-primary)]"
           )}
@@ -90,7 +90,7 @@ export function LanguageStep() {
                     "transition-colors duration-200",
                     isSelected
                       ? "text-[var(--color-text-primary)]"
-                      : "text-[var(--color-text-secondary)]"
+                      : "text-[var(--color-text-primary)]"
                   )}
                 >
                   {lang.nativeName}
