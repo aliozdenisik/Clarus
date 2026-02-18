@@ -1,12 +1,9 @@
 "use client"
 
-import { useEffect } from "react"
-import { useTranslations, useLocale } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { cn } from "@/lib/utils"
 import { useOnboardingStore } from "@/lib/stores/onboarding-store"
-import { AnimatedBackground } from "@/components/motion-primitives/animated-background"
-import { MagicCard } from "@/components/ui/magic-card"
 import { BlurFade } from "@/components/ui/blur-fade"
 import { TextAnimate } from "@/components/ui/text-animate"
 
@@ -36,16 +33,9 @@ const LANGUAGE_OPTIONS: LanguageOption[] = [
 
 export function LanguageStep() {
   const t = useTranslations("Onboarding")
-  const locale = useLocale()
 
   const language = useOnboardingStore((s) => s.language)
   const setLanguage = useOnboardingStore((s) => s.setLanguage)
-
-  useEffect(() => {
-    if (language === "tr" && locale === "en") {
-      setLanguage("en")
-    }
-  }, [locale, language, setLanguage])
 
   return (
     <div className="flex flex-col gap-8">
@@ -74,75 +64,59 @@ export function LanguageStep() {
       </div>
 
       <BlurFade delay={0.3} duration={0.5}>
-        <MagicCard
-          className="rounded-2xl p-1"
-          gradientFrom="#6366f1"
-          gradientTo="#4f46e5"
-          gradientColor="#0a0a1a"
-          gradientOpacity={0.6}
-        >
-          <div className="flex gap-1 p-1">
-            <AnimatedBackground
-              defaultValue={language}
-              onValueChange={(id) => {
-                if (id === "tr" || id === "en") {
-                  setLanguage(id)
-                }
-              }}
-              className="rounded-xl border border-indigo-500/20 bg-indigo-500/[0.12]"
-              transition={{ type: "spring", bounce: 0.12, duration: 0.45 }}
-            >
-              {LANGUAGE_OPTIONS.map((lang) => (
-                <button
-                  key={lang.id}
-                  data-id={lang.id}
-                  type="button"
-                  aria-pressed={language === lang.id}
+        <div className="flex gap-4">
+          {LANGUAGE_OPTIONS.map((lang) => {
+            const isSelected = language === lang.id
+            return (
+              <button
+                key={lang.id}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => setLanguage(lang.id)}
+                className={cn(
+                  "flex flex-1 flex-col items-start rounded-xl px-6 py-6",
+                  "border transition-all duration-200",
+                  "cursor-pointer text-left select-none",
+                  "focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent focus-visible:outline-none",
+                  isSelected
+                    ? "border-indigo-500/40 bg-indigo-500/[0.08] ring-1 ring-indigo-500/20"
+                    : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]"
+                )}
+              >
+                <span
                   className={cn(
-                    "flex flex-1 flex-col items-center justify-center gap-3 rounded-xl",
-                    "px-6 py-10 sm:px-10 sm:py-12",
-                    "cursor-pointer text-center select-none",
+                    "font-[family-name:var(--font-display)] leading-none font-semibold tracking-tight",
+                    "text-2xl sm:text-3xl",
                     "transition-colors duration-200",
-                    "text-[var(--color-text-secondary)]",
-                    "data-[checked=true]:text-[var(--color-text-primary)]"
+                    isSelected ? "text-indigo-200" : "text-white/90"
                   )}
                 >
-                  <span
-                    className={cn(
-                      "font-[family-name:var(--font-display)] font-bold",
-                      "text-3xl leading-none tracking-tight sm:text-4xl",
-                      "transition-colors duration-200",
-                      "data-[checked=true]:text-indigo-300"
-                    )}
-                  >
-                    {lang.nativeName}
-                  </span>
+                  {lang.nativeName}
+                </span>
 
-                  <span
-                    className={cn(
-                      "text-xs font-medium tracking-widest uppercase",
-                      "opacity-50 transition-opacity duration-200",
-                      "data-[checked=true]:opacity-80"
-                    )}
-                  >
-                    {t(lang.titleKey)}
-                  </span>
+                <span
+                  className={cn(
+                    "mt-1 text-xs font-medium tracking-widest uppercase",
+                    "transition-colors duration-200",
+                    isSelected ? "text-indigo-400" : "text-white/40"
+                  )}
+                >
+                  {t(lang.titleKey)}
+                </span>
 
-                  <span
-                    className={cn(
-                      "mt-1 max-w-[18ch] text-sm leading-relaxed sm:max-w-[22ch]",
-                      "font-light",
-                      "opacity-60 transition-opacity duration-200",
-                      "data-[checked=true]:opacity-100"
-                    )}
-                  >
-                    {t(lang.descKey)}
-                  </span>
-                </button>
-              ))}
-            </AnimatedBackground>
-          </div>
-        </MagicCard>
+                <p
+                  className={cn(
+                    "mt-3 text-sm leading-relaxed",
+                    "transition-colors duration-200",
+                    isSelected ? "text-white/70" : "text-white/40"
+                  )}
+                >
+                  {t(lang.descKey)}
+                </p>
+              </button>
+            )
+          })}
+        </div>
       </BlurFade>
     </div>
   )
