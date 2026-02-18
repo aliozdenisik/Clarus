@@ -101,7 +101,7 @@ export default function OnboardingPage() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6">
       <p className="text-center text-xs font-medium tracking-wide text-white/55 uppercase">
-        {t("nav.step", { current: currentStep + 1, total: totalSteps })}
+        {t("stepOf", { current: currentStep + 1, total: totalSteps })}
       </p>
 
       <div className="min-h-[420px]">
@@ -133,11 +133,11 @@ export default function OnboardingPage() {
           {canGoBack ? (
             <button
               type="button"
-              aria-label={t("nav.back")}
+              aria-label={t("back")}
               onClick={goBack}
               className="inline-flex h-10 items-center rounded-lg border border-white/15 bg-white/[0.03] px-4 text-sm font-medium text-white/85 transition-colors hover:bg-white/[0.08] focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent focus-visible:outline-none"
             >
-              {t("nav.back")}
+              {t("back")}
             </button>
           ) : (
             <span />
@@ -146,12 +146,12 @@ export default function OnboardingPage() {
           {canGoNext ? (
             <button
               type="button"
-              aria-label={t("nav.next")}
+              aria-label={t("next")}
               onClick={handleNext}
               disabled={isSaving}
               className="inline-flex h-10 items-center rounded-lg border border-amber-500/35 bg-amber-500/10 px-4 text-sm font-semibold text-amber-100 transition-colors hover:bg-amber-500/20 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {t("nav.next")}
+              {t("next")}
             </button>
           ) : (
             <span />

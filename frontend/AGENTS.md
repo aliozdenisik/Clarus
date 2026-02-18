@@ -188,7 +188,7 @@ console.log("Search completed") // Forbidden
 
 ## GOLDEN RULES
 
-- **Hazır component öncelikli**: ALWAYS prefer ready-made components from established libraries (shadcn/ui, Magic UI, Motion Primitives, Luxe, Kokonut UI, etc.) over manual component creation. Manual components should ONLY be created when no suitable ready-made alternative exists.
+- **Ready component Priority**: ALWAYS prefer ready-made components from established libraries (shadcn/ui, Magic UI, Motion Primitives, Luxe, Kokonut UI, etc.) over manual component creation. Manual components should ONLY be created when no suitable ready-made alternative exists.
 
 ### Approved Component Libraries (priority order)
 

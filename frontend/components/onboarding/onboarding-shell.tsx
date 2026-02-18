@@ -6,6 +6,7 @@ import { useRouter } from "@/i18n/navigation"
 import { springPresets } from "@/lib/design-system"
 import { useOnboardingStore } from "@/lib/stores/onboarding-store"
 import { updatePreferencesApiPreferencesPut } from "@/lib/api"
+import { logger } from "@/lib/logger"
 import { cn } from "@/lib/utils"
 
 /**
@@ -36,7 +37,7 @@ export default function OnboardingShell({ children }: { children: React.ReactNod
       })
       router.push("/")
     } catch (error) {
-      console.error("Failed to skip onboarding:", error)
+      logger.error("Failed to skip onboarding", { error })
       router.push("/")
     }
   }

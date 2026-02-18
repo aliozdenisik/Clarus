@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import OnboardingShell from "@/components/onboarding/onboarding-shell"
 
 export const metadata: Metadata = {
   title: "Onboarding - Clarus",
@@ -58,8 +59,7 @@ export default async function OnboardingLayout({ children }: { children: React.R
 
       {/* Content layer */}
       <div className="relative z-10 flex flex-1 flex-col">
-        {/* This is where OnboardingShell will inject the progress bar and skip link */}
-        {children}
+        <OnboardingShell>{children}</OnboardingShell>
       </div>
     </div>
   )

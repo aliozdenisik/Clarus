@@ -14,7 +14,7 @@ type LanguageId = "tr" | "en"
 
 interface LanguageOption {
   id: LanguageId
-  emoji: string
+  nativeName: string
   titleKey: "language.turkish" | "language.english"
   descKey: "language.turkishDesc" | "language.englishDesc"
 }
@@ -22,13 +22,13 @@ interface LanguageOption {
 const LANGUAGE_OPTIONS: LanguageOption[] = [
   {
     id: "tr",
-    emoji: "🇹🇷",
+    nativeName: "Türkçe",
     titleKey: "language.turkish",
     descKey: "language.turkishDesc",
   },
   {
     id: "en",
-    emoji: "🇬🇧",
+    nativeName: "English",
     titleKey: "language.english",
     descKey: "language.englishDesc",
   },
@@ -76,9 +76,9 @@ export function LanguageStep() {
       <BlurFade delay={0.3} duration={0.5}>
         <MagicCard
           className="rounded-2xl p-1"
-          gradientFrom="#f59e0b"
-          gradientTo="#d97706"
-          gradientColor="#1a1400"
+          gradientFrom="#6366f1"
+          gradientTo="#4f46e5"
+          gradientColor="#0a0a1a"
           gradientOpacity={0.6}
         >
           <div className="flex gap-1 p-1">
@@ -89,7 +89,7 @@ export function LanguageStep() {
                   setLanguage(id)
                 }
               }}
-              className="rounded-xl border border-amber-500/20 bg-amber-500/[0.12]"
+              className="rounded-xl border border-indigo-500/20 bg-indigo-500/[0.12]"
               transition={{ type: "spring", bounce: 0.12, duration: 0.45 }}
             >
               {LANGUAGE_OPTIONS.map((lang) => (
@@ -99,7 +99,7 @@ export function LanguageStep() {
                   type="button"
                   aria-pressed={language === lang.id}
                   className={cn(
-                    "flex flex-1 flex-col items-center gap-4 rounded-xl",
+                    "flex flex-1 flex-col items-center justify-center gap-3 rounded-xl",
                     "px-6 py-10 sm:px-10 sm:py-12",
                     "cursor-pointer text-center select-none",
                     "transition-colors duration-200",
@@ -109,22 +109,20 @@ export function LanguageStep() {
                 >
                   <span
                     className={cn(
-                      "text-5xl leading-none sm:text-6xl",
-                      "transition-transform duration-200",
-                      "data-[checked=true]:scale-110"
+                      "font-[family-name:var(--font-display)] font-bold",
+                      "text-3xl leading-none tracking-tight sm:text-4xl",
+                      "transition-colors duration-200",
+                      "data-[checked=true]:text-indigo-300"
                     )}
-                    role="img"
-                    aria-label={lang.id === "tr" ? "Turkish flag" : "English flag"}
                   >
-                    {lang.emoji}
+                    {lang.nativeName}
                   </span>
 
                   <span
                     className={cn(
-                      "font-[family-name:var(--font-display)] font-semibold",
-                      "text-xl leading-snug tracking-tight sm:text-2xl",
-                      "transition-colors duration-200",
-                      "data-[checked=true]:text-amber-300"
+                      "text-xs font-medium tracking-widest uppercase",
+                      "opacity-50 transition-opacity duration-200",
+                      "data-[checked=true]:opacity-80"
                     )}
                   >
                     {t(lang.titleKey)}
@@ -132,9 +130,9 @@ export function LanguageStep() {
 
                   <span
                     className={cn(
-                      "max-w-[14ch] text-sm leading-relaxed sm:max-w-[18ch]",
+                      "mt-1 max-w-[18ch] text-sm leading-relaxed sm:max-w-[22ch]",
                       "font-light",
-                      "opacity-70 transition-opacity duration-200",
+                      "opacity-60 transition-opacity duration-200",
                       "data-[checked=true]:opacity-100"
                     )}
                   >

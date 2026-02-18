@@ -95,7 +95,9 @@ export function InterestsStep() {
         transition={{ duration: 0.3, delay: 0.6 }}
         className={cn(
           "text-xs font-medium",
-          interests.length > 0 ? "text-amber-400" : "text-[var(--color-text-secondary)]"
+          interests.length > 0
+            ? "text-[var(--color-accent-secondary)]"
+            : "text-[var(--color-text-secondary)]"
         )}
       >
         {interests.length > 0

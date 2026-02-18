@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils"
 import { useOnboardingStore } from "@/lib/stores/onboarding-store"
 import { BlurFade } from "@/components/ui/blur-fade"
 import { TextAnimate } from "@/components/ui/text-animate"
-import { ShimmerButton } from "@/components/ui/shimmer-button"
 
 export function WelcomeStep() {
   const t = useTranslations("Onboarding")
@@ -50,7 +49,7 @@ export function WelcomeStep() {
           className={cn(
             "font-[family-name:var(--font-display)] font-medium tracking-wide",
             "text-lg sm:text-xl lg:text-2xl",
-            "text-amber-400"
+            "text-[var(--color-accent-secondary)]"
           )}
         >
           {t("welcome.subtitle")}
@@ -70,20 +69,20 @@ export function WelcomeStep() {
       </BlurFade>
 
       <BlurFade delay={0.75} duration={0.5}>
-        <ShimmerButton
+        <button
+          type="button"
           onClick={goNext}
-          background="rgba(180, 120, 0, 0.15)"
-          shimmerColor="#f59e0b"
-          shimmerDuration="2.5s"
-          borderRadius="12px"
           className={cn(
-            "px-8 py-3 text-base font-medium",
-            "border-amber-500/40 text-amber-100",
-            "hover:border-amber-400/60"
+            "rounded-xl px-8 py-3 text-base font-medium",
+            "bg-[var(--color-accent-primary)] text-white",
+            "transition-all duration-200",
+            "hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/25",
+            "focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-app)] focus-visible:outline-none",
+            "active:scale-[0.98]"
           )}
         >
           {t("welcome.cta")}
-        </ShimmerButton>
+        </button>
       </BlurFade>
     </div>
   )

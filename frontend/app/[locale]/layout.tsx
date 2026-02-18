@@ -5,8 +5,7 @@ import { notFound } from "next/navigation"
 import { routing } from "@/i18n/routing"
 import { Providers } from "@/components/providers"
 import { Toaster } from "sonner"
-import Navigation from "@/components/layout/navigation"
-import { Footer } from "@/components/ui/large-name-footer"
+import { LayoutChrome, LayoutFooter } from "@/components/layout/layout-chrome"
 
 type Props = {
   children: React.ReactNode
@@ -53,9 +52,9 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <NextIntlClientProvider messages={messages}>
       <Providers>
-        <Navigation />
+        <LayoutChrome />
         <main className="min-h-screen">{children}</main>
-        <Footer />
+        <LayoutFooter />
         <Toaster position="bottom-right" />
       </Providers>
     </NextIntlClientProvider>

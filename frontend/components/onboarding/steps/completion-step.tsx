@@ -10,7 +10,6 @@ import { Confetti, type ConfettiRef } from "@/components/ui/confetti"
 import { NumberTicker } from "@/components/ui/number-ticker"
 import { BlurFade } from "@/components/ui/blur-fade"
 import { MagicCard } from "@/components/ui/magic-card"
-import { ShimmerButton } from "@/components/ui/shimmer-button"
 
 const PURPOSE_KEYS = ["academic", "personal", "preaching", "comparative", "textual"] as const
 type PurposeKey = (typeof PURPOSE_KEYS)[number]
@@ -49,7 +48,7 @@ export function CompletionStep() {
         particleCount: 90,
         spread: 65,
         origin: { y: 0.55 },
-        colors: ["#f59e0b", "#d97706", "#fbbf24", "#fcd34d", "#fffbeb"],
+        colors: ["#6366f1", "#4f46e5", "#818cf8", "#a5b4fc", "#c7d2fe"],
         gravity: 0.85,
         scalar: 0.9,
         drift: 0,
@@ -123,7 +122,7 @@ export function CompletionStep() {
             className={cn(
               "font-[family-name:var(--font-display)] font-bold tabular-nums",
               "text-4xl sm:text-5xl",
-              "text-amber-400"
+              "text-[var(--color-accent-secondary)]"
             )}
           />
           <p className="text-sm font-light text-[var(--color-text-secondary)]">
@@ -137,9 +136,9 @@ export function CompletionStep() {
           <MagicCard
             className="rounded-xl bg-[var(--color-bg-surface)]/80 backdrop-blur-sm"
             gradientSize={180}
-            gradientColor="#1c1400"
-            gradientFrom="#d97706"
-            gradientTo="#92400e"
+            gradientColor="#0a0a1a"
+            gradientFrom="#6366f1"
+            gradientTo="#312e81"
             gradientOpacity={0.15}
           >
             <div className="space-y-0 divide-y divide-[var(--color-border-subtle)]">
@@ -159,20 +158,20 @@ export function CompletionStep() {
       </BlurFade>
 
       <BlurFade delay={0.56} duration={0.5}>
-        <ShimmerButton
+        <button
+          type="button"
           onClick={handleGoHome}
-          background="rgba(180, 120, 0, 0.15)"
-          shimmerColor="#f59e0b"
-          shimmerDuration="2.5s"
-          borderRadius="12px"
           className={cn(
-            "px-8 py-3 text-base font-medium",
-            "border-amber-500/40 text-amber-100",
-            "hover:border-amber-400/60"
+            "rounded-xl px-8 py-3 text-base font-medium",
+            "bg-[var(--color-accent-primary)] text-white",
+            "transition-all duration-200",
+            "hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/25",
+            "focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg-app)] focus-visible:outline-none",
+            "active:scale-[0.98]"
           )}
         >
           {t("completion.goHome")}
-        </ShimmerButton>
+        </button>
       </BlurFade>
     </div>
   )
