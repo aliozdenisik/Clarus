@@ -37,6 +37,10 @@ describe("SettingsPage", () => {
   const mockSetResultsPerPage = vi.fn()
   const mockSetEnableStreaming = vi.fn()
   const mockSetEnableMultiAgent = vi.fn()
+  const mockSetUsagePurpose = vi.fn()
+  const mockSetArabicProficiency = vi.fn()
+  const mockSetInterests = vi.fn()
+  const mockSetOnboardingCompleted = vi.fn()
   const mockSavePreferences = vi.fn()
   const mockFetchPreferences = vi.fn()
   const mockReset = vi.fn()
@@ -55,6 +59,10 @@ describe("SettingsPage", () => {
     results_per_page: 10,
     enable_streaming: true,
     enable_multi_agent: false,
+    usage_purpose: null,
+    arabic_proficiency: null,
+    interests: [] as string[],
+    onboarding_completed: false,
     isLoading: false,
     error: null,
     setTheme: mockSetTheme,
@@ -64,6 +72,10 @@ describe("SettingsPage", () => {
     setResultsPerPage: mockSetResultsPerPage,
     setEnableStreaming: mockSetEnableStreaming,
     setEnableMultiAgent: mockSetEnableMultiAgent,
+    setUsagePurpose: mockSetUsagePurpose,
+    setArabicProficiency: mockSetArabicProficiency,
+    setInterests: mockSetInterests,
+    setOnboardingCompleted: mockSetOnboardingCompleted,
     savePreferences: mockSavePreferences,
     fetchPreferences: mockFetchPreferences,
     reset: mockReset,

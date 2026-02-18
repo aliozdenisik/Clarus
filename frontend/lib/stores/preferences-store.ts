@@ -15,6 +15,10 @@ export interface UserPreferences {
   results_per_page: number
   enable_streaming: boolean
   enable_multi_agent: boolean
+  usage_purpose: string | null
+  arabic_proficiency: string | null
+  interests: string[]
+  onboarding_completed: boolean
 }
 
 interface PreferencesState extends UserPreferences {
@@ -27,6 +31,10 @@ interface PreferencesState extends UserPreferences {
   setResultsPerPage: (count: number) => void
   setEnableStreaming: (enabled: boolean) => void
   setEnableMultiAgent: (enabled: boolean) => void
+  setUsagePurpose: (purpose: string) => void
+  setArabicProficiency: (level: string) => void
+  setInterests: (interests: string[]) => void
+  setOnboardingCompleted: (completed: boolean) => void
   fetchPreferences: () => Promise<void>
   savePreferences: () => Promise<void>
   reset: () => void
@@ -40,6 +48,10 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   results_per_page: 10,
   enable_streaming: true,
   enable_multi_agent: false,
+  usage_purpose: null,
+  arabic_proficiency: null,
+  interests: [],
+  onboarding_completed: false,
 }
 
 export const usePreferencesStore = create<PreferencesState>()(
@@ -81,6 +93,22 @@ export const usePreferencesStore = create<PreferencesState>()(
         set({ enable_multi_agent: enabled })
       },
 
+      setUsagePurpose: (purpose) => {
+        set({ usage_purpose: purpose })
+      },
+
+      setArabicProficiency: (level) => {
+        set({ arabic_proficiency: level })
+      },
+
+      setInterests: (interests) => {
+        set({ interests })
+      },
+
+      setOnboardingCompleted: (completed) => {
+        set({ onboarding_completed: completed })
+      },
+
       fetchPreferences: async () => {
         set({ isLoading: true, error: null })
         try {
@@ -106,6 +134,10 @@ export const usePreferencesStore = create<PreferencesState>()(
             results_per_page: state.results_per_page,
             enable_streaming: state.enable_streaming,
             enable_multi_agent: state.enable_multi_agent,
+            usage_purpose: state.usage_purpose,
+            arabic_proficiency: state.arabic_proficiency,
+            interests: state.interests,
+            onboarding_completed: state.onboarding_completed,
           }
 
           const response = await updatePreferencesApiPreferencesPut({
@@ -134,6 +166,10 @@ export const usePreferencesStore = create<PreferencesState>()(
         results_per_page: state.results_per_page,
         enable_streaming: state.enable_streaming,
         enable_multi_agent: state.enable_multi_agent,
+        usage_purpose: state.usage_purpose,
+        arabic_proficiency: state.arabic_proficiency,
+        interests: state.interests,
+        onboarding_completed: state.onboarding_completed,
       }),
     }
   )

@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button"
 import { DotPattern, RadialGradient } from "@/components/ui/dot-pattern"
 import { toast } from "sonner"
 import { useTranslations } from "next-intl"
-import { Settings, Save, RotateCcw, Palette, Search, Zap } from "lucide-react"
+import { Settings, Save, RotateCcw, Palette, Search, Zap, User } from "lucide-react"
+import { cn } from "@/lib/utils"
 import {
   Select,
   SelectContent,
@@ -28,6 +29,7 @@ export default function SettingsPage() {
   const router = useRouter()
   const pathname = usePathname()
   const t = useTranslations("Settings")
+  const tOnboarding = useTranslations("Onboarding")
   const tToast = useTranslations("Toast")
   const tCommon = useTranslations("Common")
   const {
@@ -38,6 +40,9 @@ export default function SettingsPage() {
     results_per_page,
     enable_streaming,
     enable_multi_agent,
+    usage_purpose,
+    arabic_proficiency,
+    interests,
     isLoading: storeLoading,
     setTheme,
     setLanguage,
@@ -46,6 +51,9 @@ export default function SettingsPage() {
     setResultsPerPage,
     setEnableStreaming,
     setEnableMultiAgent,
+    setUsagePurpose,
+    setArabicProficiency,
+    setInterests,
     fetchPreferences,
     savePreferences,
     reset,
@@ -100,6 +108,40 @@ export default function SettingsPage() {
       toast.error(t("resetFailed"))
     } finally {
       setIsResetting(false)
+    }
+  }
+
+  const PROFICIENCY_LEVELS = ["none", "basic", "intermediate", "advanced"] as const
+
+  const INTEREST_KEYS = [
+    "theology",
+    "philology",
+    "history",
+    "comparativeReligion",
+    "sociology",
+    "philosophy",
+    "ethics",
+    "eschatology",
+    "hermeneutics",
+    "mysticism",
+  ] as const
+
+  const proficiencyIndex = arabic_proficiency
+    ? Math.max(
+        0,
+        PROFICIENCY_LEVELS.indexOf(arabic_proficiency as (typeof PROFICIENCY_LEVELS)[number])
+      )
+    : 0
+
+  const handleProficiencyChange = (value: number[]) => {
+    setArabicProficiency(PROFICIENCY_LEVELS[value[0]])
+  }
+
+  const toggleInterest = (key: string) => {
+    if (interests.includes(key)) {
+      setInterests(interests.filter((item) => item !== key))
+    } else {
+      setInterests([...interests, key])
     }
   }
 
@@ -344,11 +386,105 @@ export default function SettingsPage() {
             </MagicCard>
           </motion.div>
 
-          {/* Actions */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ ...springPresets.fluid, delay: 0.4 }}
+          >
+            <MagicCard
+              className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/80 p-6 backdrop-blur-xl"
+              gradientSize={200}
+              gradientColor="#1a1a2e"
+              gradientFrom="#7c3aed"
+              gradientTo="#4f46e5"
+            >
+              <div className="mb-6 flex items-center gap-2">
+                <User className="h-5 w-5 text-[var(--color-accent-primary)]" />
+                <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                  Research Profile
+                </h2>
+              </div>
+
+              <div className="space-y-8">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                    {tOnboarding("purpose.title")}
+                  </p>
+                  <Select value={usage_purpose ?? ""} onValueChange={setUsagePurpose}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={tOnboarding("purpose.title")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="academic">{tOnboarding("purpose.academic")}</SelectItem>
+                      <SelectItem value="personal">{tOnboarding("purpose.personal")}</SelectItem>
+                      <SelectItem value="preaching">{tOnboarding("purpose.preaching")}</SelectItem>
+                      <SelectItem value="comparative">
+                        {tOnboarding("purpose.comparative")}
+                      </SelectItem>
+                      <SelectItem value="textual">{tOnboarding("purpose.textual")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                    {tOnboarding("arabic.title")}
+                  </p>
+                  <Slider
+                    min={0}
+                    max={3}
+                    step={1}
+                    value={[proficiencyIndex]}
+                    onValueChange={handleProficiencyChange}
+                  />
+                  <div className="flex justify-between">
+                    {PROFICIENCY_LEVELS.map((level) => (
+                      <span
+                        key={level}
+                        className={cn(
+                          "text-xs transition-colors",
+                          PROFICIENCY_LEVELS[proficiencyIndex] === level
+                            ? "font-semibold text-[var(--color-accent-primary)]"
+                            : "text-[var(--color-text-secondary)]"
+                        )}
+                      >
+                        {tOnboarding(`arabic.${level}`)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                    {tOnboarding("interests.title")}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {INTEREST_KEYS.map((key) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => toggleInterest(key)}
+                        className={cn(
+                          "rounded-full border px-3 py-1 text-xs font-medium transition-all",
+                          interests.includes(key)
+                            ? "border-[var(--color-accent-primary)] bg-[var(--color-accent-primary)]/15 text-[var(--color-accent-primary)]"
+                            : "border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent-primary)]/50 hover:text-[var(--color-text-primary)]"
+                        )}
+                      >
+                        {tOnboarding(`interests.${key}`)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </MagicCard>
+          </motion.div>
+
+          {/* Actions */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...springPresets.fluid, delay: 0.5 }}
             className="flex items-center justify-between pt-2"
           >
             <Button
