@@ -85,10 +85,12 @@ export function LanguageStep() {
               >
                 <span
                   className={cn(
-                    "font-[family-name:var(--font-display)] leading-none font-semibold tracking-tight",
+                    "leading-none font-semibold tracking-tight",
                     "text-2xl sm:text-3xl",
                     "transition-colors duration-200",
-                    isSelected ? "text-indigo-200" : "text-white/90"
+                    isSelected
+                      ? "text-[var(--color-text-primary)]"
+                      : "text-[var(--color-text-secondary)]"
                   )}
                 >
                   {lang.nativeName}
@@ -98,7 +100,9 @@ export function LanguageStep() {
                   className={cn(
                     "mt-1 text-xs font-medium tracking-widest uppercase",
                     "transition-colors duration-200",
-                    isSelected ? "text-indigo-400" : "text-white/40"
+                    isSelected
+                      ? "text-[var(--color-accent-secondary)]"
+                      : "text-[var(--color-text-tertiary)]"
                   )}
                 >
                   {t(lang.titleKey)}
@@ -108,7 +112,9 @@ export function LanguageStep() {
                   className={cn(
                     "mt-3 text-sm leading-relaxed",
                     "transition-colors duration-200",
-                    isSelected ? "text-white/70" : "text-white/40"
+                    isSelected
+                      ? "text-[var(--color-text-secondary)]"
+                      : "text-[var(--color-text-tertiary)]"
                   )}
                 >
                   {t(lang.descKey)}

@@ -30,8 +30,10 @@ export function PurposeStep() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-semibold text-white">{t("purpose.title")}</h2>
-        <p className="mt-2 text-sm text-white/60">{t("purpose.subtitle")}</p>
+        <h2 className="text-2xl font-semibold text-[var(--color-text-primary)]">
+          {t("purpose.title")}
+        </h2>
+        <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{t("purpose.subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -49,7 +51,7 @@ export function PurposeStep() {
                 "focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent focus-visible:outline-none",
                 isSelected
                   ? "border-indigo-500/40 bg-indigo-500/[0.08] text-white"
-                  : "border-white/10 bg-white/[0.03] text-white/70 hover:border-white/20 hover:bg-white/[0.06]"
+                  : "border-white/10 bg-white/[0.03] text-[var(--color-text-secondary)] hover:border-white/20 hover:bg-white/[0.06]"
               )}
             >
               <div
@@ -61,7 +63,7 @@ export function PurposeStep() {
                 <Icon
                   className={cn(
                     "h-5 w-5 transition-colors duration-200",
-                    isSelected ? "text-indigo-300" : "text-white/60"
+                    isSelected ? "text-indigo-300" : "text-[var(--color-text-tertiary)]"
                   )}
                   aria-hidden="true"
                 />
