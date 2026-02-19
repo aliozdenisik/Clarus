@@ -5,7 +5,7 @@ import { routing } from "./i18n/routing"
 
 const handleI18nRouting = createMiddleware(routing)
 
-const protectedRoutes = ["/compare", "/search", "/settings", "/history"]
+const protectedRoutes = ["/compare", "/search", "/settings", "/history", "/hub"]
 
 export function middleware(request: NextRequest) {
   const response = handleI18nRouting(request)
@@ -17,16 +17,25 @@ export function middleware(request: NextRequest) {
   const isBot = botPattern.test(userAgent)
 
   const pathname = request.nextUrl.pathname
+  const locale = pathname.split("/")[1] || "tr"
+  const sessionCookie = request.cookies.get("better-auth.session_token")
+
+  // Redirect authenticated users from root locale paths to /hub
+  const rootLocalePathPattern = /^\/(en|tr)(?:\/|$)/
+  if (rootLocalePathPattern.test(pathname) && pathname === `/${locale}`) {
+    if (sessionCookie && !isBot) {
+      const hubUrl = new URL(`/${locale}/hub`, request.url)
+      return NextResponse.redirect(hubUrl, { headers: response.headers })
+    }
+  }
+
   const isProtectedRoute = protectedRoutes.some((route) => {
     const localePrefix = `/(en|tr)`
     return new RegExp(`^${localePrefix}${route}(/|$)`).test(pathname)
   })
 
   if (isProtectedRoute && !isBot) {
-    const sessionCookie = request.cookies.get("better-auth.session_token")
-
     if (!sessionCookie) {
-      const locale = pathname.split("/")[1] || "tr"
       const signInUrl = new URL(`/${locale}/sign-in`, request.url)
       return NextResponse.redirect(signInUrl, { headers: response.headers })
     }

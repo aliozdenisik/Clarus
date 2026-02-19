@@ -6,6 +6,7 @@ import {
   Noto_Sans_Hebrew,
   Noto_Serif,
   Crimson_Text,
+  JetBrains_Mono,
 } from "next/font/google"
 import "./globals.css"
 import { configureApiClient } from "@/lib/api/config"
@@ -60,6 +61,12 @@ const crimsonText = Crimson_Text({
   display: "swap",
 })
 
+const jetBrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+})
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -68,7 +75,7 @@ export default function RootLayout({
   return (
     <html className="dark" suppressHydrationWarning>
       <body
-        className={`${dmSans.variable} ${dmSerif.variable} ${cormorantGaramond.variable} ${amiri.variable} ${notoSansHebrew.variable} ${notoSerifGreek.variable} ${crimsonText.variable} antialiased`}
+        className={`${dmSans.variable} ${dmSerif.variable} ${cormorantGaramond.variable} ${amiri.variable} ${notoSansHebrew.variable} ${notoSerifGreek.variable} ${crimsonText.variable} ${jetBrainsMono.variable} antialiased`}
         suppressHydrationWarning
       >
         {children}

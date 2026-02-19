@@ -107,6 +107,11 @@
   --color-glow-primary: rgba(79, 70, 229, 0.4);
   --color-glow-secondary: rgba(139, 92, 246, 0.3);
 
+  /* Hub Design Tokens */
+  --hub-card-bg: rgba(255, 255, 255, 0.02);
+  --hub-border: rgba(255, 255, 255, 0.06);
+  --hub-border-hover: rgba(255, 255, 255, 0.12);
+
   /* shadcn/ui variables */
   --radius: 0.625rem;
   --background: oklch(1 0 0);
