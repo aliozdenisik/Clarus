@@ -56,6 +56,11 @@ def main() -> int:
     parser.add_argument(
         "--skip-translation", action="store_true", help="Skip Turkish translation (populate definition_en only)"
     )
+    parser.add_argument(
+        "--allow-translation-regression",
+        action="store_true",
+        help="Allow write even when Turkish translation/summary coverage would decrease",
+    )
     parser.add_argument("--batch-size", type=int, default=100, help="Insert batch size")
     args = parser.parse_args()
 
@@ -71,6 +76,7 @@ def main() -> int:
         dry_run=args.dry_run,
         use_lane=use_lane,
         skip_translation=args.skip_translation,
+        allow_translation_regression=args.allow_translation_regression,
     )
     result = pipeline.run()
 
