@@ -19,7 +19,7 @@ from app.i18n.detector import get_locale
 from app.i18n.messages import get_error_message
 from app.logging_config import get_logger, log_performance
 from app.middleware.error_handler import NotFoundError, ValidationError
-from app.models import SearchHistory
+from app.models import SearchHistory, UserPreferences
 from app.schemas.common import DEFAULT_TRANSLATOR, QueryValidation, TranslatorType
 from src.ultimate_rag import UltimateRAG
 
@@ -118,6 +118,11 @@ async def search_quran(
 
     await check_rate_limit(current_user, db, locale)
 
+    prefs_result = await db.execute(select(UserPreferences).where(UserPreferences.user_id == current_user["id"]))
+    user_preferences = prefs_result.scalar_one_or_none()
+    usage_purpose = user_preferences.usage_purpose if user_preferences else None
+    _ = usage_purpose  # Available for future prompt customization
+
     validated_query = _validate_query(request.query, locale)
 
     rag = get_rag()
@@ -188,6 +193,11 @@ async def search_bible(
     )
 
     await check_rate_limit(current_user, db, locale)
+
+    prefs_result = await db.execute(select(UserPreferences).where(UserPreferences.user_id == current_user["id"]))
+    user_preferences = prefs_result.scalar_one_or_none()
+    usage_purpose = user_preferences.usage_purpose if user_preferences else None
+    _ = usage_purpose  # Available for future prompt customization
 
     validated_query = _validate_query(request.query, locale)
 
