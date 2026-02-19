@@ -1,0 +1,98 @@
+name: 🐛 Bug Report
+description: Report a bug or defect found during production readiness assessment
+title: "[{severity}] {component}: "
+labels: ["bug", "production-readiness"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Bug Report
+        Use this template for general bugs and defects found during the production readiness assessment.
+  
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How critical is this bug?
+      options:
+        - P0 - Critical (blocks production, data loss, security breach)
+        - P1 - High (major functionality broken, significant degradation)
+        - P2 - Medium (feature partially broken, workaround exists)
+        - P3 - Low (minor issue, cosmetic, edge case)
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component is affected?
+      options:
+        - Backend (FastAPI, RAG pipeline)
+        - Frontend (Next.js, React)
+        - RAG Pipeline (search, retrieval, answering)
+        - Authentication (JWT, OAuth, token management)
+        - Database (PostgreSQL, models)
+        - Redis (caching, rate limiting, token blacklist)
+        - Qdrant (vector search, collections)
+        - Infrastructure (Docker, deployment, configuration)
+    validations:
+      required: true
+  
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What is the bug? Be concise and specific.
+      placeholder: "The application crashes when searching with special characters..."
+    validations:
+      required: true
+  
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this bug?
+      placeholder: |
+        1. Navigate to the search page
+        2. Enter query with special characters: "test & <script>"
+        3. Click search
+        4. Application crashes
+    validations:
+      required: true
+  
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead?
+      placeholder: "The search should handle special characters gracefully..."
+  
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happens?
+      placeholder: "The application throws an unhandled exception..."
+  
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Logs, screenshots, error messages, or video
+      placeholder: |
+        ```
+        Error: SyntaxError: Unexpected token <
+          at parseQuery (search.py:42)
+        ```
+  
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Where was this bug found?
+      placeholder: |
+        - OS: Linux / macOS / Windows
+        - Browser: Chrome 120 / Firefox
+        - Backend version: main branch (commit abc123)
+        - Stack: Docker compose on local machine

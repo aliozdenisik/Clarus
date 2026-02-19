@@ -1,0 +1,90 @@
+name: ⚡ Performance Issue
+description: Report a performance regression or bottleneck found during production readiness assessment
+title: "[PERF] [{severity}] "
+labels: ["performance", "production-readiness"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Performance Issue Report
+        Use this template for performance regressions, bottlenecks, and scalability concerns found during the production readiness assessment.
+  
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How critical is this performance issue?
+      options:
+        - P0 - Critical (>10s response time, >50% resource usage, unresponsive)
+        - P1 - High (5-10s response time, >30% resource usage, noticeable slowdown)
+        - P2 - Medium (1-5s response time, 20-30% resource usage, acceptable but slow)
+        - P3 - Low (<1s response time, <20% resource usage, room for optimization)
+    validations:
+      required: true
+  
+  - type: input
+    id: endpoint
+    attributes:
+      label: Endpoint / Page
+      description: Which endpoint or page is slow?
+      placeholder: "POST /api/search or /compare page"
+    validations:
+      required: true
+  
+  - type: input
+    id: baseline
+    attributes:
+      label: Baseline Metric
+      description: Expected performance target
+      placeholder: "Response time: <500ms, Lighthouse Score: >90"
+    validations:
+      required: true
+  
+  - type: input
+    id: observed
+    attributes:
+      label: Observed Metric
+      description: What was actually measured?
+      placeholder: "Response time: 3,500ms, Lighthouse Score: 45"
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: test_type
+    attributes:
+      label: Test Type
+      description: How was this performance issue detected?
+      options:
+        - Load test (e.g., k6, JMeter)
+        - Lighthouse audit (web performance)
+        - Bundle analysis (frontend size)
+        - Profiler analysis (CPU/Memory)
+        - Manual timing (stopwatch/DevTools)
+        - Real user monitoring (RUM)
+    validations:
+      required: true
+  
+  - type: textarea
+    id: conditions
+    attributes:
+      label: Test Conditions
+      description: Under what conditions was this measured?
+      placeholder: |
+        - Load: 100 concurrent users
+        - Data: 50,000 verses in database
+        - Hardware: 2 vCPU, 4GB RAM (Docker)
+        - Network: Simulated 3G connection
+        - Browser: Chrome 120 on MacBook Pro
+  
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Profiler output, Lighthouse report, load test results, flame graphs
+      placeholder: |
+        ![Lighthouse Report](screenshot.png)
+        
+        Query: "sabir" on 50K verses dataset
+        - Elapsed: 3,456ms
+        - CPU: 45% utilization
+        - Memory: 1.2GB peak

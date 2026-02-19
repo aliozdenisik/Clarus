@@ -1,0 +1,91 @@
+name: 📊 Observability Gap
+description: Report missing observability (logging, metrics, alerting, tracing) found during production readiness assessment
+title: "[OBS] [{severity}] "
+labels: ["observability", "production-readiness"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Observability Gap Report
+        Use this template for missing observability, insufficient monitoring, and lack of visibility found during the production readiness assessment.
+  
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How critical is this observability gap?
+      options:
+        - P0 - Critical (cannot detect outages, no incident visibility, blind spot for security)
+        - P1 - High (delayed incident detection, incomplete audit trail)
+        - P2 - Medium (harder to debug, missing nice-to-have metrics)
+        - P3 - Low (optimization opportunity, performance improvement potential)
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: gap_type
+    attributes:
+      label: Gap Type
+      description: What type of observability is missing?
+      options:
+        - Missing logging (events not recorded)
+        - Missing metrics (no performance visibility)
+        - Missing alerting (no proactive notifications)
+        - Missing tracing (request flow not visible)
+        - Missing test coverage (quality not measurable)
+    validations:
+      required: true
+  
+  - type: textarea
+    id: whats_missing
+    attributes:
+      label: What's Missing
+      description: What observability is not in place?
+      placeholder: |
+        - No logging for failed authentication attempts
+        - No metrics for RAG pipeline latency breakdown
+        - No alerts for Redis connection failures
+        - No distributed tracing for multi-service requests
+        - No code coverage reports in CI/CD
+    validations:
+      required: true
+  
+  - type: textarea
+    id: why_matters
+    attributes:
+      label: Why It Matters
+      description: Why is this observability important?
+      placeholder: |
+        - Brute force attacks would go undetected
+        - Cannot identify performance bottlenecks in RAG pipeline
+        - Redis failures would silently degrade functionality
+        - Cannot diagnose cross-service latency issues
+        - Cannot ensure critical code paths are tested
+    validations:
+      required: true
+  
+  - type: textarea
+    id: suggested
+    attributes:
+      label: Suggested Detection
+      description: How should this observability be implemented?
+      placeholder: |
+        **Logging:**
+        - Add structured logging for failed auth attempts with user ID, IP, timestamp
+        - Log each RAG pipeline stage (enhancement, search, fusion, answering) with latency
+        
+        **Metrics:**
+        - Prometheus counter for failed_auth_attempts
+        - Histogram for rag_pipeline_latency_seconds by stage
+        
+        **Alerting:**
+        - Alert if failed_auth_attempts > 5 in 5 minutes
+        - Alert if redis_connection_errors > 0 in 1 minute
+        
+        **Tracing:**
+        - Add OpenTelemetry span for each API request
+        - Trace RAG pipeline stages with parent-child relationships
+        
+        **Testing:**
+        - Add pytest assertions to reach 80% code coverage
+        - Add integration tests for critical paths

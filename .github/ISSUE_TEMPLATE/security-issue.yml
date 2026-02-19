@@ -1,0 +1,88 @@
+name: 🔒 Security Issue
+description: Report a security vulnerability found during production readiness assessment
+title: "[SECURITY] [{severity}] "
+labels: ["security", "production-readiness"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Security Vulnerability Report
+        Use this template for security issues, vulnerabilities, and attack vectors found during the production readiness assessment.
+        
+        **Do NOT disclose sensitive details in public issue. Security issues will be handled confidentially.**
+  
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: Security severity rating
+      options:
+        - P0 - Critical (CVSS 9.0-10.0, immediate exploitation risk)
+        - P1 - High (CVSS 7.0-8.9, significant impact)
+        - P2 - Medium (CVSS 4.0-6.9, moderate impact)
+        - P3 - Low (CVSS 0.1-3.9, minimal impact)
+    validations:
+      required: true
+  
+  - type: dropdown
+    id: owasp
+    attributes:
+      label: OWASP Category
+      description: Which OWASP Top 10 category does this fall under?
+      options:
+        - A01:2021 – Broken Access Control
+        - A02:2021 – Cryptographic Failures
+        - A03:2021 – Injection
+        - A04:2021 – Insecure Design
+        - A05:2021 – Security Misconfiguration
+        - A06:2021 – Vulnerable and Outdated Components
+        - A07:2021 – Identification and Authentication Failures
+        - A08:2021 – Software and Data Integrity Failures
+        - A09:2021 – Logging and Monitoring Failures
+        - A10:2021 – Server-Side Request Forgery
+        - Other (not in Top 10)
+    validations:
+      required: true
+  
+  - type: textarea
+    id: attack_vector
+    attributes:
+      label: Attack Vector
+      description: How can this vulnerability be exploited?
+      placeholder: |
+        An unauthenticated attacker can send a crafted API request to...
+        The vulnerability requires network access and does not require user interaction.
+    validations:
+      required: true
+  
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: What is the impact if this vulnerability is exploited?
+      placeholder: |
+        Confidentiality: An attacker can read sensitive user data...
+        Integrity: An attacker can modify database records...
+        Availability: An attacker can crash the service...
+    validations:
+      required: true
+  
+  - type: textarea
+    id: poc
+    attributes:
+      label: Proof of Concept
+      description: Step-by-step instructions or code to demonstrate the vulnerability
+      placeholder: |
+        1. Start the application with default configuration
+        2. Send: curl -X POST http://localhost:8000/api/admin -H "Content-Type: application/json" -d '{"action":"delete"}'
+        3. The request succeeds without authentication
+  
+  - type: textarea
+    id: mitigation
+    attributes:
+      label: Suggested Mitigation
+      description: How should this vulnerability be fixed?
+      placeholder: |
+        - Add authentication middleware to all /api/* routes
+        - Validate request origin against CORS whitelist
+        - Implement rate limiting per IP address
