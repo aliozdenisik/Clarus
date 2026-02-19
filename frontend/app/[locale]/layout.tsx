@@ -6,6 +6,7 @@ import { routing } from "@/i18n/routing"
 import { Providers } from "@/components/providers"
 import { Toaster } from "sonner"
 import { LayoutChrome, LayoutFooter } from "@/components/layout/layout-chrome"
+import { CommandPalette } from "@/components/command-palette"
 
 type Props = {
   children: React.ReactNode
@@ -55,6 +56,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         <LayoutChrome />
         <main className="min-h-screen">{children}</main>
         <LayoutFooter />
+        <CommandPalette />
         <Toaster position="bottom-right" />
       </Providers>
     </NextIntlClientProvider>

@@ -15,6 +15,7 @@ import {
   ScrollText,
   FileText,
   Search as SearchIcon,
+  Home,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -83,6 +84,17 @@ export default function Navigation() {
             {mounted ? (
               <NavigationMenu>
                 <NavigationMenuList>
+                  {/* Hub Link */}
+                  <Link
+                    href="/hub"
+                    className={`group hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors ${
+                      isActive("/hub") ? "text-purple-400" : "text-gray-300"
+                    }`}
+                  >
+                    <Home className="mr-2 h-4 w-4" />
+                    {t("hub")}
+                  </Link>
+
                   {/* Search Dropdown */}
                   <NavigationMenuItem value="search" className="text-muted-foreground">
                     <NavigationMenuTrigger className="bg-transparent text-gray-300 hover:bg-white/5 hover:text-white data-[state=open]:bg-white/5">
@@ -264,6 +276,14 @@ export default function Navigation() {
               </NavigationMenu>
             ) : (
               <div className="flex items-center gap-1">
+                <Link
+                  href="/hub"
+                  className={`inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:bg-white/5 hover:text-white ${
+                    isActive("/hub") ? "text-purple-400" : "text-gray-300"
+                  }`}
+                >
+                  {t("hub")}
+                </Link>
                 <Link
                   href="/search"
                   className="inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
@@ -450,6 +470,17 @@ export default function Navigation() {
 
               {/* Other Links */}
               <div className="space-y-1 pt-2">
+                <Link
+                  href="/hub"
+                  className={`block rounded-md px-3 py-2 text-base ${
+                    isActive("/hub")
+                      ? "bg-purple-500/20 text-purple-400"
+                      : "text-gray-300 hover:bg-white/5 hover:text-white"
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t("hub")}
+                </Link>
                 <Link
                   href="/compare"
                   className={`block rounded-md px-3 py-2 text-base ${

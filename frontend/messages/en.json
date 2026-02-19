@@ -35,6 +35,7 @@
     "resultPlural": "results"
   },
   "Navigation": {
+    "hub": "Hub",
     "search": "Search",
     "browse": "Browse",
     "compare": "Compare",

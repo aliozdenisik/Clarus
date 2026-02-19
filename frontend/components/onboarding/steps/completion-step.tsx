@@ -61,7 +61,7 @@ export function CompletionStep() {
 
   const handleGoHome = () => {
     markComplete()
-    router.push("/")
+    router.push("/hub" as Parameters<typeof router.push>[0])
   }
 
   const purposeLabel =
