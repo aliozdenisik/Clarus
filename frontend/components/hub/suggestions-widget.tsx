@@ -106,7 +106,8 @@ export function SuggestionsWidget() {
 
       <div
         className={cn(
-          "flex gap-3 overflow-x-auto",
+          "-mx-4 flex gap-3 overflow-x-auto px-4 md:mx-0 md:px-0",
+          "snap-x snap-mandatory",
           "[&::-webkit-scrollbar]:hidden",
           "[-ms-overflow-style:none]",
           "[scrollbar-width:none]"
@@ -121,8 +122,8 @@ export function SuggestionsWidget() {
               type="button"
               onClick={() => router.push(suggestion.href)}
               className={cn(
-                "group",
-                "inline-flex shrink-0 items-center gap-2 px-4 py-2.5",
+                "group snap-start",
+                "inline-flex min-h-[44px] shrink-0 items-center gap-2 px-4 py-2.5",
                 "rounded-full border border-white/[0.08]",
                 "hover:border-white/[0.15] hover:bg-white/[0.03]",
                 "transition-colors duration-200",

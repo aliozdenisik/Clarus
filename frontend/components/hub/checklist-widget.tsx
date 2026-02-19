@@ -95,7 +95,7 @@ export function ChecklistWidget() {
                 if (item.completed) {
                   return (
                     <BlurFade key={item.id} delay={index * 0.05}>
-                      <div className="flex items-center gap-2.5 rounded-md px-1 py-1.5">
+                      <div className="flex min-h-[44px] items-center gap-2.5 rounded-md px-2 py-2">
                         <CheckCircle2 className="size-4 shrink-0 text-emerald-500" />
                         <span className="text-muted-foreground text-sm line-through">{label}</span>
                       </div>
@@ -109,7 +109,7 @@ export function ChecklistWidget() {
                       type="button"
                       onClick={() => router.push(route as Parameters<typeof router.push>[0])}
                       className={cn(
-                        "group flex w-full items-center gap-2.5 rounded-md px-1 py-1.5",
+                        "group flex min-h-[44px] w-full items-center gap-2.5 rounded-md px-2 py-2",
                         "text-left transition-colors duration-150",
                         "cursor-pointer hover:bg-white/[0.04]"
                       )}

@@ -24,7 +24,7 @@ export function DailyVerseWidget({ verse }: DailyVerseWidgetProps) {
   return (
     <MagicCard
       className={cn(
-        "rounded-xl border border-[var(--hub-border)] p-6",
+        "rounded-xl border border-[var(--hub-border)] p-4 md:p-6",
         "transition-colors hover:border-[var(--hub-border-hover)]"
       )}
       gradientSize={300}
@@ -37,7 +37,7 @@ export function DailyVerseWidget({ verse }: DailyVerseWidgetProps) {
       </p>
 
       <blockquote className="mb-5 border-l-2 border-indigo-500/30 pl-4">
-        <p className="font-display text-lg leading-relaxed text-white/90 italic md:text-xl">
+        <p className="font-display text-base leading-relaxed text-white/90 italic md:text-lg lg:text-xl">
           {verse.text}
         </p>
       </blockquote>

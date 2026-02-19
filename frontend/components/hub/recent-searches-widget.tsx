@@ -92,7 +92,7 @@ export function RecentSearchesWidget() {
   }, [session?.user])
 
   return (
-    <MagicCard className="rounded-xl border border-white/[0.06] p-5">
+    <MagicCard className="rounded-xl border border-white/[0.06] p-4 md:p-5">
       <p className="text-muted-foreground mb-4 text-xs font-medium tracking-wider uppercase">
         {t("recentSearches")}
       </p>
@@ -102,7 +102,7 @@ export function RecentSearchesWidget() {
           {SKELETON_KEYS.map((key) => (
             <li
               key={key}
-              className="flex items-center gap-3 border-b border-white/[0.04] py-3 last:border-0"
+              className="flex min-h-[44px] items-center gap-3 border-b border-white/[0.04] py-3 last:border-0"
             >
               <Skeleton className="h-2 w-2 shrink-0 rounded-full" />
               <Skeleton className="h-4 w-40" />
@@ -136,7 +136,7 @@ export function RecentSearchesWidget() {
                 <Link
                   href={url}
                   className={cn(
-                    "flex items-center gap-3 py-3",
+                    "flex min-h-[44px] items-center gap-3 py-3",
                     "border-b border-white/[0.04] last:border-0",
                     "rounded-sm transition-colors hover:bg-white/[0.03]",
                     "-mx-1 px-1"

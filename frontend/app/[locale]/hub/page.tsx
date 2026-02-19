@@ -30,10 +30,10 @@ export default async function HubPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-8 md:py-12">
+    <div className="mx-auto max-w-4xl px-4 py-8 md:px-6 md:py-12">
       <BlurFade delay={0}>
         <div className="mb-8">
-          <h1 className="font-serif text-3xl md:text-4xl">{greeting}</h1>
+          <h1 className="font-serif text-2xl md:text-3xl lg:text-4xl">{greeting}</h1>
           <p className="text-muted-foreground mt-2 text-xs">{t("cmdkHint", { shortcut: "⌘K" })}</p>
         </div>
       </BlurFade>
