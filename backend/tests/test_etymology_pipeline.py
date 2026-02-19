@@ -290,6 +290,86 @@ class TestLaneAdapter:
 class TestEtymologyPipeline:
     """Pipeline integration tests for Issue #128 Task 4."""
 
+    def test_merge_preserves_existing_translation_fields(self) -> None:
+        pipeline_cls = etymology_pipeline.EtymologyPipeline
+        pipeline = pipeline_cls(
+            db_url="sqlite:///:memory:",
+            lane_db_path=None,
+            openrouter_api_key=None,
+            dry_run=True,
+            use_lane=False,
+        )
+        try:
+            new_rows = [
+                {
+                    "root": "كتب",
+                    "root_buckwalter": "ktb",
+                    "definition_tr": None,
+                    "summary_tr": None,
+                    "summary_en": "",
+                    "tr_translation_source": None,
+                    "tr_translation_confidence": None,
+                }
+            ]
+            existing_rows = [
+                {
+                    "root": "كتب",
+                    "root_buckwalter": "ktb",
+                    "definition_tr": "mevcut tanim",
+                    "summary_tr": "mevcut ozet",
+                    "summary_en": "existing summary",
+                    "tr_translation_source": "llm_gemini",
+                    "tr_translation_confidence": 0.93,
+                }
+            ]
+
+            merged_count = pipeline._merge_existing_translation_fields(new_rows, existing_rows)
+
+            assert merged_count == 1
+            assert new_rows[0]["definition_tr"] == "mevcut tanim"
+            assert new_rows[0]["summary_tr"] == "mevcut ozet"
+            assert new_rows[0]["summary_en"] == "existing summary"
+            assert new_rows[0]["tr_translation_source"] == "llm_gemini"
+            assert new_rows[0]["tr_translation_confidence"] == 0.93
+        finally:
+            pipeline.close()
+
+    def test_translation_regression_guard_blocks_loss(self) -> None:
+        pipeline_cls = etymology_pipeline.EtymologyPipeline
+        pipeline = pipeline_cls(
+            db_url="sqlite:///:memory:",
+            lane_db_path=None,
+            openrouter_api_key=None,
+            dry_run=True,
+            use_lane=False,
+        )
+        try:
+            existing_rows = [{"definition_tr": "x", "summary_tr": "y", "summary_en": "z"}]
+            new_rows = [{"definition_tr": None, "summary_tr": None, "summary_en": None}]
+
+            with pytest.raises(RuntimeError, match="translation coverage would regress"):
+                pipeline._assert_translation_regression_safe(existing_rows, new_rows)
+        finally:
+            pipeline.close()
+
+    def test_translation_regression_guard_can_be_overridden(self) -> None:
+        pipeline_cls = etymology_pipeline.EtymologyPipeline
+        pipeline = pipeline_cls(
+            db_url="sqlite:///:memory:",
+            lane_db_path=None,
+            openrouter_api_key=None,
+            dry_run=True,
+            use_lane=False,
+            allow_translation_regression=True,
+        )
+        try:
+            existing_rows = [{"definition_tr": "x", "summary_tr": "y", "summary_en": "z"}]
+            new_rows = [{"definition_tr": None, "summary_tr": None, "summary_en": None}]
+
+            pipeline._assert_translation_regression_safe(existing_rows, new_rows)
+        finally:
+            pipeline.close()
+
     def test_pipeline_runs_corpus_only(self, tmp_path: Path) -> None:
         pipeline_cls = etymology_pipeline.EtymologyPipeline
         pipeline = pipeline_cls(

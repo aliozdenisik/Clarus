@@ -402,6 +402,8 @@ class EtymologyPipeline:
         *,
         use_lane: bool = True,
         skip_translation: bool = False,
+        preserve_existing_translations: bool = True,
+        allow_translation_regression: bool = False,
     ):
         """Initialize pipeline."""
         self.db_url = db_url
@@ -411,6 +413,8 @@ class EtymologyPipeline:
         self.batch_size = batch_size
         self.dry_run = dry_run
         self.skip_translation = skip_translation
+        self.preserve_existing_translations = preserve_existing_translations
+        self.allow_translation_regression = allow_translation_regression
         self.openrouter_api_key = openrouter_api_key
         self.translation_timeout_seconds = _parse_positive_float_env(
             "ETYMOLOGY_TRANSLATION_TIMEOUT_SECONDS",
@@ -501,6 +505,19 @@ class EtymologyPipeline:
                 final_rows = processed_rows
             else:
                 final_rows = self._translate_batch(processed_rows)
+
+            existing_translation_rows: list[dict[str, object]] = []
+            if not self.dry_run:
+                existing_translation_rows = self._fetch_existing_translation_rows()
+                if existing_translation_rows and self.preserve_existing_translations:
+                    merged_count = self._merge_existing_translation_fields(final_rows, existing_translation_rows)
+                    if merged_count:
+                        logger.info(
+                            "Preserved existing translation fields for %d roots before write",
+                            merged_count,
+                        )
+
+                self._assert_translation_regression_safe(existing_translation_rows, final_rows)
 
             inserted_rows = 0
             if not self.dry_run:
@@ -883,6 +900,131 @@ class EtymologyPipeline:
         if 6 <= lane_entry.volume <= 8:
             return "medium"
         return "low"
+
+    @staticmethod
+    def _text_is_missing(value: object) -> bool:
+        return value is None or (isinstance(value, str) and not value.strip())
+
+    @staticmethod
+    def _text_is_present(value: object) -> bool:
+        return isinstance(value, str) and bool(value.strip())
+
+    def _fetch_existing_translation_rows(self) -> list[dict[str, object]]:
+        try:
+            with self._engine.connect() as conn:
+                rows = (
+                    conn.execute(
+                        text(
+                            """
+                            SELECT
+                                root,
+                                root_buckwalter,
+                                definition_tr,
+                                summary_tr,
+                                summary_en,
+                                tr_translation_source,
+                                tr_translation_confidence
+                            FROM qm_root_etymologies
+                            """
+                        )
+                    )
+                    .mappings()
+                    .all()
+                )
+        except Exception as exc:
+            logger.warning("Could not read existing translation snapshot: %s", exc)
+            return []
+
+        return [dict(row) for row in rows]
+
+    @classmethod
+    def _count_translation_coverage(cls, rows: Sequence[Mapping[str, object]]) -> dict[str, int]:
+        fields = ("definition_tr", "summary_tr", "summary_en")
+        return {field: sum(1 for row in rows if cls._text_is_present(row.get(field))) for field in fields}
+
+    def _merge_existing_translation_fields(
+        self,
+        rows: list[dict[str, object]],
+        existing_rows: Sequence[Mapping[str, object]],
+    ) -> int:
+        if not rows or not existing_rows:
+            return 0
+
+        by_root: dict[str, Mapping[str, object]] = {}
+        by_root_buckwalter: dict[str, Mapping[str, object]] = {}
+        for existing in existing_rows:
+            root = existing.get("root")
+            root_buckwalter = existing.get("root_buckwalter")
+            if isinstance(root, str) and root:
+                by_root[root] = existing
+            if isinstance(root_buckwalter, str) and root_buckwalter:
+                by_root_buckwalter[root_buckwalter] = existing
+
+        merged_count = 0
+        text_fields = ("definition_tr", "summary_tr", "summary_en")
+        for row in rows:
+            root_buckwalter = row.get("root_buckwalter")
+            root = row.get("root")
+            existing = None
+            if isinstance(root_buckwalter, str) and root_buckwalter:
+                existing = by_root_buckwalter.get(root_buckwalter)
+            if existing is None and isinstance(root, str) and root:
+                existing = by_root.get(root)
+            if existing is None:
+                continue
+
+            merged_for_row = False
+            for field in text_fields:
+                current_value = row.get(field)
+                existing_value = existing.get(field)
+                if self._text_is_missing(current_value) and self._text_is_present(existing_value):
+                    row[field] = existing_value
+                    merged_for_row = True
+
+            if self._text_is_missing(row.get("tr_translation_source")) and self._text_is_present(
+                existing.get("tr_translation_source")
+            ):
+                row["tr_translation_source"] = existing.get("tr_translation_source")
+                merged_for_row = True
+
+            if row.get("tr_translation_confidence") is None:
+                existing_confidence = existing.get("tr_translation_confidence")
+                if isinstance(existing_confidence, int | float):
+                    row["tr_translation_confidence"] = float(existing_confidence)
+                    merged_for_row = True
+
+            if merged_for_row:
+                merged_count += 1
+
+        return merged_count
+
+    def _assert_translation_regression_safe(
+        self,
+        existing_rows: Sequence[Mapping[str, object]],
+        new_rows: Sequence[Mapping[str, object]],
+    ) -> None:
+        if self.allow_translation_regression:
+            return
+        if not existing_rows:
+            return
+
+        existing_coverage = self._count_translation_coverage(existing_rows)
+        new_coverage = self._count_translation_coverage(new_rows)
+
+        regressions: list[str] = []
+        for field, existing_count in existing_coverage.items():
+            if existing_count <= 0:
+                continue
+            new_count = new_coverage.get(field, 0)
+            if new_count < existing_count:
+                regressions.append(f"{field}: {existing_count} -> {new_count}")
+
+        if regressions:
+            details = "; ".join(regressions)
+            raise RuntimeError(
+                "Refusing to overwrite qm_root_etymologies because translation coverage would regress "
+                f"({details}). Re-run with allow_translation_regression=True only if this is intentional."
+            )
 
     def _insert_batch(self, rows: list[dict[str, object]]) -> int:
         """Batch insert into qm_root_etymologies. Returns count."""
