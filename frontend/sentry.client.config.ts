@@ -4,7 +4,9 @@ Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
   environment: process.env.NODE_ENV,
-  // NO replay integration - explicitly excluded
+  // Replay explicitly disabled — tree-shaker eliminates replay code (#249)
+  replaysSessionSampleRate: 0,
+  replaysOnErrorSampleRate: 0,
 
   // Filter out expected EventSource reconnection errors (SSE compatibility)
   beforeSend(event, hint) {
