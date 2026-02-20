@@ -620,6 +620,7 @@
     "emptyStateExamples": "Bu örneklerden birini deneyin",
     "browseRoots": "Köklere göz at",
     "searching": "Aranıyor...",
+    "searchInputLabel": "Arapça kök arayın",
     "searchButton": "Kökü Ara",
     "clearSearch": "Sorguyu temizle",
     "tabs": {

@@ -52,9 +52,9 @@ function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-6 text-[11px] font-semibold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">
+            <h2 className="mb-6 text-[11px] font-semibold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">
               {t("pages")}
-            </h3>
+            </h2>
             <ul className="space-y-3">
               <li>
                 <Link
@@ -100,9 +100,9 @@ function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-6 text-[11px] font-semibold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">
+            <h2 className="mb-6 text-[11px] font-semibold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">
               {t("scriptures")}
-            </h3>
+            </h2>
             <ul className="space-y-3">
               <li>
                 <Link
@@ -140,9 +140,9 @@ function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-6 text-[11px] font-semibold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">
+            <h2 className="mb-6 text-[11px] font-semibold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">
               {t("links")}
-            </h3>
+            </h2>
             <ul className="space-y-3">
               <li>
                 <Link

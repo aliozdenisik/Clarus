@@ -42,6 +42,7 @@ export function SearchInput({
         <input
           type="text"
           dir="auto"
+          aria-label={t("searchInputLabel")}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}

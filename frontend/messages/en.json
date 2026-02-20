@@ -620,6 +620,7 @@
     "emptyStateExamples": "Try one of these examples",
     "browseRoots": "Browse roots",
     "searching": "Searching...",
+    "searchInputLabel": "Search Arabic roots",
     "searchButton": "Search Root",
     "clearSearch": "Clear query",
     "tabs": {

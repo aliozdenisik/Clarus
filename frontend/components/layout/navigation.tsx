@@ -85,15 +85,17 @@ export default function Navigation() {
               <NavigationMenu>
                 <NavigationMenuList>
                   {/* Hub Link */}
-                  <Link
-                    href="/hub"
-                    className={`group hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors ${
-                      isActive("/hub") ? "text-purple-400" : "text-gray-300"
-                    }`}
-                  >
-                    <Home className="mr-2 h-4 w-4" />
-                    {t("hub")}
-                  </Link>
+                  <NavigationMenuItem>
+                    <Link
+                      href="/hub"
+                      className={`group hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors ${
+                        isActive("/hub") ? "text-purple-400" : "text-gray-300"
+                      }`}
+                    >
+                      <Home className="mr-2 h-4 w-4" />
+                      {t("hub")}
+                    </Link>
+                  </NavigationMenuItem>
 
                   {/* Search Dropdown */}
                   <NavigationMenuItem value="search" className="text-muted-foreground">
@@ -102,76 +104,90 @@ export default function Navigation() {
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
                       <ul className="w-80 p-3">
-                        <NavigationMenuLink asChild>
-                          <Link
-                            href="/search"
-                            className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
-                          >
-                            <Book className="size-5 shrink-0" />
-                            <div>
-                              <div className="text-sm font-semibold">{t("quranSearch")}</div>
-                              <p className="text-muted-foreground text-sm leading-snug">
-                                {t("quranSearchDesc")}
-                              </p>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            href="/search?source=ot"
-                            className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
-                          >
-                            <BookOpen className="size-5 shrink-0" />
-                            <div>
-                              <div className="text-sm font-semibold">{t("oldTestamentSearch")}</div>
-                              <p className="text-muted-foreground text-sm leading-snug">
-                                {t("oldTestamentSearchDesc")}
-                              </p>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            href="/search?source=nt"
-                            className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
-                          >
-                            <ScrollText className="size-5 shrink-0" />
-                            <div>
-                              <div className="text-sm font-semibold">{t("newTestamentSearch")}</div>
-                              <p className="text-muted-foreground text-sm leading-snug">
-                                {t("newTestamentSearchDesc")}
-                              </p>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            href="/search?source=apocrypha"
-                            className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
-                          >
-                            <FileText className="size-5 shrink-0" />
-                            <div>
-                              <div className="text-sm font-semibold">{t("apocryphaSearch")}</div>
-                              <p className="text-muted-foreground text-sm leading-snug">
-                                {t("apocryphaSearchDesc")}
-                              </p>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            href="/keyword-search"
-                            className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
-                          >
-                            <SearchIcon className="size-5 shrink-0" />
-                            <div>
-                              <div className="text-sm font-semibold">{t("wordSearch")}</div>
-                              <p className="text-muted-foreground text-sm leading-snug">
-                                {t("wordSearchDesc")}
-                              </p>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              href="/search"
+                              className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
+                            >
+                              <Book className="size-5 shrink-0" />
+                              <div>
+                                <div className="text-sm font-semibold">{t("quranSearch")}</div>
+                                <p className="text-muted-foreground text-sm leading-snug">
+                                  {t("quranSearchDesc")}
+                                </p>
+                              </div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              href="/search?source=ot"
+                              className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
+                            >
+                              <BookOpen className="size-5 shrink-0" />
+                              <div>
+                                <div className="text-sm font-semibold">
+                                  {t("oldTestamentSearch")}
+                                </div>
+                                <p className="text-muted-foreground text-sm leading-snug">
+                                  {t("oldTestamentSearchDesc")}
+                                </p>
+                              </div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              href="/search?source=nt"
+                              className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
+                            >
+                              <ScrollText className="size-5 shrink-0" />
+                              <div>
+                                <div className="text-sm font-semibold">
+                                  {t("newTestamentSearch")}
+                                </div>
+                                <p className="text-muted-foreground text-sm leading-snug">
+                                  {t("newTestamentSearchDesc")}
+                                </p>
+                              </div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              href="/search?source=apocrypha"
+                              className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
+                            >
+                              <FileText className="size-5 shrink-0" />
+                              <div>
+                                <div className="text-sm font-semibold">{t("apocryphaSearch")}</div>
+                                <p className="text-muted-foreground text-sm leading-snug">
+                                  {t("apocryphaSearchDesc")}
+                                </p>
+                              </div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              href="/keyword-search"
+                              className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
+                            >
+                              <SearchIcon className="size-5 shrink-0" />
+                              <div>
+                                <div className="text-sm font-semibold">{t("wordSearch")}</div>
+                                <p className="text-muted-foreground text-sm leading-snug">
+                                  {t("wordSearchDesc")}
+                                </p>
+                              </div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
                       </ul>
                     </NavigationMenuContent>
                   </NavigationMenuItem>
@@ -183,95 +199,113 @@ export default function Navigation() {
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
                       <ul className="w-80 p-3">
-                        <NavigationMenuLink asChild>
-                          <Link
-                            href="/quran"
-                            className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
-                          >
-                            <Book className="size-5 shrink-0" />
-                            <div>
-                              <div className="text-sm font-semibold">{t("quranBrowse")}</div>
-                              <p className="text-muted-foreground text-sm leading-snug">
-                                {t("quranBrowseDesc")}
-                              </p>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            href="/old-testament"
-                            className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
-                          >
-                            <BookOpen className="size-5 shrink-0" />
-                            <div>
-                              <div className="text-sm font-semibold">{t("oldTestamentBrowse")}</div>
-                              <p className="text-muted-foreground text-sm leading-snug">
-                                {t("oldTestamentBrowseDesc")}
-                              </p>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            href="/new-testament"
-                            className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
-                          >
-                            <ScrollText className="size-5 shrink-0" />
-                            <div>
-                              <div className="text-sm font-semibold">{t("newTestamentBrowse")}</div>
-                              <p className="text-muted-foreground text-sm leading-snug">
-                                {t("newTestamentBrowseDesc")}
-                              </p>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            href="/apocrypha"
-                            className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
-                          >
-                            <FileText className="size-5 shrink-0" />
-                            <div>
-                              <div className="text-sm font-semibold">{t("apocrypha")}</div>
-                              <p className="text-muted-foreground text-sm leading-snug">
-                                {t("apocryphaDesc")}
-                              </p>
-                            </div>
-                          </Link>
-                        </NavigationMenuLink>
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              href="/quran"
+                              className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
+                            >
+                              <Book className="size-5 shrink-0" />
+                              <div>
+                                <div className="text-sm font-semibold">{t("quranBrowse")}</div>
+                                <p className="text-muted-foreground text-sm leading-snug">
+                                  {t("quranBrowseDesc")}
+                                </p>
+                              </div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              href="/old-testament"
+                              className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
+                            >
+                              <BookOpen className="size-5 shrink-0" />
+                              <div>
+                                <div className="text-sm font-semibold">
+                                  {t("oldTestamentBrowse")}
+                                </div>
+                                <p className="text-muted-foreground text-sm leading-snug">
+                                  {t("oldTestamentBrowseDesc")}
+                                </p>
+                              </div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              href="/new-testament"
+                              className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
+                            >
+                              <ScrollText className="size-5 shrink-0" />
+                              <div>
+                                <div className="text-sm font-semibold">
+                                  {t("newTestamentBrowse")}
+                                </div>
+                                <p className="text-muted-foreground text-sm leading-snug">
+                                  {t("newTestamentBrowseDesc")}
+                                </p>
+                              </div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              href="/apocrypha"
+                              className="hover:bg-accent hover:text-accent-foreground flex gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none"
+                            >
+                              <FileText className="size-5 shrink-0" />
+                              <div>
+                                <div className="text-sm font-semibold">{t("apocrypha")}</div>
+                                <p className="text-muted-foreground text-sm leading-snug">
+                                  {t("apocryphaDesc")}
+                                </p>
+                              </div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
                       </ul>
                     </NavigationMenuContent>
                   </NavigationMenuItem>
 
                   {/* Word Search Link */}
-                  <Link
-                    href="/keyword-search"
-                    className={`group hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors ${
-                      isActive("/keyword-search") ? "text-purple-400" : "text-gray-300"
-                    }`}
-                  >
-                    {t("wordSearch")}
-                  </Link>
+                  <NavigationMenuItem>
+                    <Link
+                      href="/keyword-search"
+                      className={`group hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors ${
+                        isActive("/keyword-search") ? "text-purple-400" : "text-gray-300"
+                      }`}
+                    >
+                      {t("wordSearch")}
+                    </Link>
+                  </NavigationMenuItem>
 
                   {/* Compare Link */}
-                  <Link
-                    href="/compare"
-                    className={`group hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors ${
-                      isActive("/compare") ? "text-purple-400" : "text-gray-300"
-                    }`}
-                  >
-                    {t("compare")}
-                  </Link>
+                  <NavigationMenuItem>
+                    <Link
+                      href="/compare"
+                      className={`group hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors ${
+                        isActive("/compare") ? "text-purple-400" : "text-gray-300"
+                      }`}
+                    >
+                      {t("compare")}
+                    </Link>
+                  </NavigationMenuItem>
 
                   {/* History Link */}
-                  <Link
-                    href="/history"
-                    className={`group hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors ${
-                      isActive("/history") ? "text-purple-400" : "text-gray-300"
-                    }`}
-                  >
-                    {t("history")}
-                  </Link>
+                  <NavigationMenuItem>
+                    <Link
+                      href="/history"
+                      className={`group hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors ${
+                        isActive("/history") ? "text-purple-400" : "text-gray-300"
+                      }`}
+                    >
+                      {t("history")}
+                    </Link>
+                  </NavigationMenuItem>
                 </NavigationMenuList>
               </NavigationMenu>
             ) : (
