@@ -61,13 +61,14 @@ class RedisManager:
             )
 
             # Create Redis client from pool
-            self.client = aioredis.Redis(connection_pool=pool)
+            client = aioredis.Redis(connection_pool=pool)
 
             # Test connection with ping
-            ping_result = self.client.ping()
+            ping_result = client.ping()
             if isinstance(ping_result, Awaitable):
                 await ping_result
             logger.info("Redis connection established and verified")
+            self.client = client
 
         except Exception as e:
             # Fail-open: Log warning but don't raise
