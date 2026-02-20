@@ -36,14 +36,27 @@ services:
     container_name: holly-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
-      - "8001:8001"
+      # Bind to 127.0.0.1 only — never expose Redis to all interfaces on the host.
+      # This prevents access from external networks even if the host firewall is misconfigured.
+      - "127.0.0.1:6379:6379"
+      - "127.0.0.1:8001:8001"
     volumes:
       - ./redis_data:/data
       - ./redis.conf:/redis-stack.conf:ro
-    command: redis-server /redis-stack.conf
+    environment:
+      # Set REDIS_PASSWORD in your shell or .env to enable Redis authentication.
+      # Strongly recommended in production: openssl rand -hex 32
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    command: >
+      sh -c '
+        if [ -n "$$REDIS_PASSWORD" ]; then
+          redis-server /redis-stack.conf --requirepass "$$REDIS_PASSWORD";
+        else
+          redis-server /redis-stack.conf --protected-mode no;
+        fi'
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping"]
+      # Use password-aware ping: if REDIS_PASSWORD is set, authenticate first.
+      test: ["CMD-SHELL", "[ -z \"$$REDIS_PASSWORD\" ] && redis-cli ping || redis-cli --no-auth-warning -a \"$$REDIS_PASSWORD\" ping"]
       interval: 10s
       timeout: 5s
       retries: 5

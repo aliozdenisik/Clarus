@@ -107,6 +107,14 @@ class Settings(BaseSettings):
         if self.app_env == "production" and not self.rate_limit_enabled:
             raise RuntimeError("Rate limiting must be enabled in production (set RATE_LIMIT_ENABLED=true)")
 
+        if self.app_env == "production" and not self.redis_password:
+            raise RuntimeError(
+                "REDIS_PASSWORD must be set in production. "
+                "An unauthenticated Redis instance exposes the JWT blacklist, rate-limit counters, "
+                "and cached query data to any network-reachable process. "
+                "Generate a strong password with: openssl rand -hex 32"
+            )
+
         if self.app_env == "production":
             production_urls = {
                 "database_url": self.database_url,
