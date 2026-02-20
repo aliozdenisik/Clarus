@@ -48,7 +48,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
               An unexpected error occurred. Our team has been notified.
             </p>
             {this.state.eventId && (
-              <p className="mb-4 text-xs text-zinc-500">Error ID: {this.state.eventId}</p>
+              <p className="mb-4 text-xs text-zinc-400">Error ID: {this.state.eventId}</p>
             )}
             <button
               onClick={() => window.location.reload()}

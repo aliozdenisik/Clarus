@@ -18,7 +18,7 @@ export default function Error({
         <p className="mb-6 text-zinc-400">
           An unexpected error occurred while searching. Please try again.
         </p>
-        {error.digest && <p className="mb-4 text-xs text-zinc-500">Error ID: {error.digest}</p>}
+        {error.digest && <p className="mb-4 text-xs text-zinc-400">Error ID: {error.digest}</p>}
         <button
           onClick={reset}
           className="rounded bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
