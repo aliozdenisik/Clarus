@@ -4,7 +4,6 @@ import Link from "next/link"
 import { useTranslations } from "next-intl"
 
 import { MagicCard } from "@/components/ui/magic-card"
-import { NumberTicker } from "@/components/ui/number-ticker"
 import { type DailyVerse } from "@/lib/daily-verse"
 import { buildVerseDetailUrl } from "@/lib/utils/verse-url"
 import { cn } from "@/lib/utils"
@@ -17,9 +16,6 @@ export function DailyVerseWidget({ verse }: DailyVerseWidgetProps) {
   const t = useTranslations("Hub")
 
   const verseUrl = buildVerseDetailUrl(verse.surahNumber, verse.ayahNumber)
-  const colonIndex = verse.reference.lastIndexOf(":")
-  const referencePrefix =
-    colonIndex !== -1 ? verse.reference.slice(0, colonIndex + 1) : `${verse.reference}:`
 
   return (
     <MagicCard
@@ -44,16 +40,10 @@ export function DailyVerseWidget({ verse }: DailyVerseWidgetProps) {
 
       <Link
         href={verseUrl}
-        className="text-muted-foreground inline-flex items-baseline gap-0 font-mono text-sm transition-colors hover:text-indigo-400"
+        className="inline-flex items-baseline gap-0 font-mono text-sm text-white transition-colors hover:text-indigo-400"
         aria-label={verse.reference}
       >
-        <span>{referencePrefix}</span>
-        <NumberTicker
-          value={verse.ayahNumber}
-          startValue={0}
-          delay={0.2}
-          className={cn("text-muted-foreground font-mono text-sm tabular-nums")}
-        />
+        <span>{verse.reference}</span>
       </Link>
     </MagicCard>
   )
