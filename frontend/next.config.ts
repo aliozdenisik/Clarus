@@ -34,11 +34,11 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Tree-shake lucide-react imports (Turbopack-compatible)
-  // Automatically converts: import { Search } from 'lucide-react'
-  // Into direct imports for smaller bundle size
+  // Tree-shake lucide-react and recharts imports (Turbopack-compatible)
+  // Automatically converts named imports into direct subpath imports for smaller bundle size
+  // recharts: ensures only used chart components (BarChart, Bar, XAxis, etc.) are bundled (#248)
   experimental: {
-    optimizePackageImports: ["lucide-react"],
+    optimizePackageImports: ["lucide-react", "recharts"],
   },
 }
 
@@ -51,5 +51,15 @@ export default withSentryConfig(withNextIntl(nextConfig), {
 
   sourcemaps: {
     deleteSourcemapsAfterUpload: true,
+  },
+
+  // Reduce Sentry client bundle size (#249)
+  disableLogger: true,
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+    excludeReplayCanvas: true,
+    excludeReplayIframe: true,
+    excludeReplayShadowDom: true,
+    excludeReplayWorker: true,
   },
 })
