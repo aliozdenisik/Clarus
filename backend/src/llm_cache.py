@@ -115,8 +115,8 @@ class SemanticLLMCache:
         return self._encoder
 
     def _get_cache_key(self, query: str, operation: str, locale: str = "tr") -> str:
-        """Generate unique cache key (MD5 hash) including locale."""
-        return hashlib.md5(f"{operation}:{locale}:{query}".encode()).hexdigest()
+        """Generate unique cache key (SHA-256 hash) including locale."""
+        return hashlib.sha256(f"{operation}:{locale}:{query}".encode()).hexdigest()
 
     def _cosine_similarity(self, vec1: list[float], vec2: list[float]) -> float:
         """Compute cosine similarity between two vectors."""

@@ -10,6 +10,8 @@ import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+from defusedxml.ElementTree import parse as defused_parse
+
 logger = logging.getLogger(__name__)
 
 
@@ -156,8 +158,9 @@ class OsisLoader:
             ValueError: If XML parsing fails
         """
         try:
-            tree = ET.parse(self.file_path)
+            tree = defused_parse(self.file_path)
             root = tree.getroot()
+            assert root is not None, "Failed to parse OSIS XML: empty tree"
         except ET.ParseError as e:
             raise ValueError(f"Failed to parse OSIS XML: {e}")
 

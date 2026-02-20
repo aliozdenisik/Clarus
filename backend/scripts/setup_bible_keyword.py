@@ -37,7 +37,7 @@ from sqlalchemy import create_engine, text
 try:
     etree = importlib.import_module("lxml.etree")
 except ModuleNotFoundError:
-    import xml.etree.ElementTree as etree
+    import defusedxml.ElementTree as etree  # type: ignore[no-redef]
 
 from src.hebrew_normalizer import (
     normalize_hebrew,
@@ -538,6 +538,7 @@ def parse_oshb_book(
     """
     tree = etree.parse(str(xml_path))
     root = tree.getroot()
+    assert root is not None, f"Failed to parse {xml_path.name}: empty XML tree"
 
     verse_rows: list[dict] = []
     word_rows: list[dict] = []
