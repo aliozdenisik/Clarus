@@ -1,17 +1,4 @@
-"""
-Security headers middleware for HTTP response hardening.
-
-Adds security headers to all API responses to protect against common web vulnerabilities:
-- HSTS: Enforce HTTPS-only communication
-- X-Content-Type-Options: Prevent MIME type sniffing
-- X-Frame-Options: Prevent clickjacking
-- Referrer-Policy: Control referrer information leakage
-- X-XSS-Protection: Legacy XSS protection (disabled in favor of CSP)
-- Permissions-Policy: Restrict browser features
-- Content-Security-Policy: Prevent injection attacks
-
-This middleware applies to all HTTP responses, including error responses.
-"""
+"""Security headers middleware — addresses #236, #238, #240, #243."""
 
 import logging
 
@@ -22,6 +9,19 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
+_DOCS_PATHS = frozenset({"/docs", "/docs/", "/redoc", "/redoc/", "/openapi.json"})
+
+_DOCS_CSP = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+    "img-src 'self' data: https://cdn.jsdelivr.net; "
+    "font-src 'self' https://cdn.jsdelivr.net; "
+    "frame-ancestors 'none'"
+)
+
+_API_CSP = "default-src 'self'; frame-ancestors 'none'"
+
 
 def _is_https_request(request: Request) -> bool:
     if request.url.scheme == "https":
@@ -30,67 +30,56 @@ def _is_https_request(request: Request) -> bool:
     return forwarded_proto == "https"
 
 
+def _is_docs_path(path: str) -> bool:
+    return path in _DOCS_PATHS
+
+
+def _is_json_response(response) -> bool:
+    content_type = response.headers.get("content-type", "")
+    return content_type.startswith("application/json")
+
+
+def log_hsts_startup_warning() -> None:
+    if settings.is_production:
+        logger.warning(
+            "HSTS is conditional on HTTPS detection. Ensure your reverse proxy "
+            "forwards 'X-Forwarded-Proto: https' to apply Strict-Transport-Security. "
+            "Without this header, HSTS will NOT be sent to browsers.",
+            extra={"app_env": settings.app_env},
+        )
+
+
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """
-    Middleware that adds security headers to all HTTP responses.
-
-    Headers added:
-    - Strict-Transport-Security: Enforce HTTPS for 1 year
-    - X-Content-Type-Options: Prevent MIME type sniffing
-    - X-Frame-Options: Deny framing (prevent clickjacking)
-    - Referrer-Policy: Strict referrer policy
-    - X-XSS-Protection: Disable legacy XSS protection (rely on CSP)
-    - Permissions-Policy: Restrict browser features (camera, microphone, geolocation)
-    - Content-Security-Policy: Minimal CSP for JSON API (no inline scripts)
-
-    Usage:
-        # In main.py, add BEFORE ErrorHandlerMiddleware
-        app.add_middleware(SecurityHeadersMiddleware)
-    """
-
     async def dispatch(self, request: Request, call_next):
-        """
-        Process request and add security headers to response.
-
-        Args:
-            request: Incoming HTTP request
-            call_next: Next middleware/route handler
-
-        Returns:
-            Response with security headers added
-        """
         try:
             response = await call_next(request)
+            path = request.url.path
 
-            # Strict-Transport-Security: Enforce HTTPS for 1 year, include subdomains
-            if settings.is_production and _is_https_request(request):
-                response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+            response.headers["Server"] = "Clarus"
 
-            # X-Content-Type-Options: Prevent MIME type sniffing
+            if _is_https_request(request):
+                if settings.is_production:
+                    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+                else:
+                    response.headers["Strict-Transport-Security"] = "max-age=300"
+
             response.headers["X-Content-Type-Options"] = "nosniff"
-
-            # X-Frame-Options: Deny framing to prevent clickjacking
             response.headers["X-Frame-Options"] = "DENY"
-
-            # Referrer-Policy: Only send referrer for same-origin requests
             response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-
-            # X-XSS-Protection: Disable legacy XSS protection (modern browsers use CSP)
             response.headers["X-XSS-Protection"] = "0"
-
-            # Permissions-Policy: Restrict access to browser features
-            # Deny: camera, microphone, geolocation
             response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
 
-            # Content-Security-Policy: Minimal policy for JSON API
-            # - default-src 'self': Only allow resources from same origin
-            # - frame-ancestors 'none': Prevent framing
-            response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none'"
+            if _is_docs_path(path):
+                response.headers["Content-Security-Policy"] = _DOCS_CSP
+            else:
+                response.headers["Content-Security-Policy"] = _API_CSP
+
+            if _is_json_response(response):
+                response.headers["Cache-Control"] = "no-store, max-age=0"
 
             return response
 
         except Exception as e:
-            # Log security header errors but don't break the request
             logger.error(
                 f"Error adding security headers: {e!s}",
                 extra={"error_type": type(e).__name__},
