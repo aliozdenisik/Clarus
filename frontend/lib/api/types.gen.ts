@@ -306,6 +306,10 @@ export type CompareRequest = {
  */
 export type CompareResponse = {
     /**
+     * Success
+     */
+    success?: boolean;
+    /**
      * Topic
      */
     topic: string;
@@ -1127,9 +1131,9 @@ export type VerseLookupResponse = {
     /**
      * Success
      *
-     * Always true for success
+     * Always true for successful responses
      */
-    success?: true;
+    success?: boolean;
     /**
      * Verses
      *

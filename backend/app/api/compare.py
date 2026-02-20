@@ -116,6 +116,7 @@ class VerseDetail(BaseModel):
 class CompareResponse(BaseModel):
     """Compare response schema - rich format for frontend."""
 
+    success: bool = True
     topic: str
     # Full formatted essay (markdown)
     essay: str

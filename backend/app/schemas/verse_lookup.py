@@ -69,7 +69,7 @@ class VerseLookupResponse(BaseModel):
     }
     """
 
-    success: Literal[True] = Field(default=True, description="Always true for success")
+    success: bool = Field(default=True, description="Always true for successful responses")
     verses: list[LookupVerseResult] = Field(..., description="List of matching verses (empty if none found)")
     query: str = Field(..., description="Original input query")
     count: int = Field(..., ge=0, description="Number of verses returned")
