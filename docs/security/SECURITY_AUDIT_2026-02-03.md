@@ -5,6 +5,11 @@
 **Status:** Pre-Production Assessment  
 **Severity:** CRITICAL - Do not deploy to production without remediation
 
+> **POST-INCIDENT NOTICE (2026-02-20):** An earlier version of this audit report contained real credentials
+> as evidence examples. All secrets have been scrubbed from git history via `git filter-repo` (issues #216, #217, #218).
+> Affected credentials were rotated. This file now contains only redacted placeholder values.
+> **Never include real credentials in any committed file**, including audit reports.
+
 ---
 
 ## Executive Summary

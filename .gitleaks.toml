@@ -13,6 +13,22 @@ description = "Google OAuth Client Secret"
 regex = '''GOCSPX-[a-zA-Z0-9_-]{20,}'''
 keywords = ["gocspx", "google"]
 
+[[rules]]
+id = "weak-jwt-secret"
+description = "Weak or human-readable JWT secret key (contains abc123 suffix or known weak patterns)"
+regex = '''(?i)(jwt[_-]?secret[_-]?key|jwt[_-]?secret)\s*[=:]\s*['""]?[a-z][a-z0-9\-_]*(?:abc123|change.in.production|change.me|replace.me|your.secret|default.secret|development.secret|test.secret)[a-z0-9\-_]*['""]?'''
+keywords = ["jwt_secret", "jwt-secret", "jwt_secret_key"]
+
+[[rules]]
+id = "generic-secret-in-docs"
+description = "Real credentials embedded in documentation or audit files"
+regex = '''(OPENROUTER_API_KEY|GOOGLE_CLIENT_SECRET|JWT_SECRET_KEY|sk-or-v1-|GOCSPX-)\s*[=:]\s*[^\s\[<$REDACTED][^\s]{10,}'''
+keywords = ["OPENROUTER_API_KEY", "GOOGLE_CLIENT_SECRET", "JWT_SECRET_KEY"]
+[rules.allowlist]
+regexes = [
+    '''(REDACTED|ROTATE_REQUIRED|REDACTED_FROM_HISTORY|your-[a-z-]+key|YOUR_[A-Z_]+HERE|<[A-Z_]+>|\$\{[A-Z_]+\})''',
+]
+
 [allowlist]
 paths = [
     '''\.env\.example''',

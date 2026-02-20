@@ -132,15 +132,35 @@ class Settings(BaseSettings):
                 if host in {"localhost", "127.0.0.1", "::1"}:
                     raise RuntimeError("CORS_ORIGINS cannot contain localhost in production")
 
-        if self.app_env == "production" and self.jwt_secret_key in (
+        # JWT secret validation: check for weak/default values
+        _weak_jwt_patterns = (
             "",
             "your-secret-key-change-in-production",
-        ):
+            "holly-search-secret-key-change-in-production-abc123",
+            "change-in-production",
+            "your-secret-key",
+            "secret",
+            "jwt-secret",
+            "jwt_secret",
+            "development",
+            "test",
+            "change-me",
+        )
+        if self.jwt_secret_key:
+            jwt_lower = self.jwt_secret_key.lower()
+            is_weak_pattern = any(p in jwt_lower for p in _weak_jwt_patterns if p)
+            is_too_short = len(self.jwt_secret_key) < 32
+            if is_weak_pattern or is_too_short:
+                raise RuntimeError(
+                    "JWT_SECRET_KEY is set but is too weak or uses a known default pattern. "
+                    "Generate a strong secret with: openssl rand -hex 32"
+                )
+        elif self.app_env == "production":
             import logging
 
             logging.getLogger(__name__).warning(
                 "JWT_SECRET_KEY is not set. Better Auth JWKS is the primary auth mechanism. "
-                "Set JWT_SECRET_KEY if legacy JWT auth is still needed."
+                "Set JWT_SECRET_KEY only if legacy JWT auth is still needed."
             )
 
 
