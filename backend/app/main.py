@@ -3,7 +3,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 from app.api import (
     admin,
@@ -192,6 +194,38 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+def custom_openapi():
+    """Inject security scheme definitions into the OpenAPI spec."""
+    if app.openapi_schema:
+        return app.openapi_schema
+    schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    # Add security schemes
+    schema.setdefault("components", {})["securitySchemes"] = {
+        "SessionCookieAuth": {
+            "type": "apiKey",
+            "in": "cookie",
+            "name": "better-auth.session_token",
+            "description": "Better Auth session cookie (set automatically by browser after login)",
+        },
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-API-Key",
+            "description": "API key for CLI access (generate via POST /api/auth/api-key)",
+        },
+    }
+    app.openapi_schema = schema
+    return schema
+
+
+app.openapi = custom_openapi  # type: ignore[method-assign]
+
 # Middleware order: Last added = first executed
 # Execution order: CorrelationIDMiddleware -> ErrorHandlerMiddleware -> SecurityHeadersMiddleware -> CORSMiddleware -> route
 app.add_middleware(SecurityHeadersMiddleware)
@@ -281,7 +315,32 @@ app.include_router(verse_lookup.router, prefix="/api/verse", tags=["verse"])
 app.include_router(verse_words.router, prefix="/api/quran/verses", tags=["verse-words"])
 
 
-@app.get("/api/health")
+class RedisStatusInfo(BaseModel):
+    status: str
+    used_memory: str | None = None
+    connected_clients: int | None = None
+
+
+class HealthResponse(BaseModel):
+    status: str
+    version: str
+    event_loop: str
+    qdrant: str
+    redis: RedisStatusInfo
+
+
+class PublicConfigData(BaseModel):
+    rate_limit_per_day: int
+    query_max_length: int
+    google_oauth_enabled: bool
+
+
+class PublicConfigResponse(BaseModel):
+    success: bool = True
+    data: PublicConfigData
+
+
+@app.get("/api/health", response_model=HealthResponse)
 async def health_check():
     status = "healthy"
     qdrant_status = "connected"
@@ -348,13 +407,12 @@ async def health_check():
     )
 
 
-@app.get("/api/config")
+@app.get("/api/config", response_model=PublicConfigResponse)
 async def get_public_config():
-    return {
-        "success": True,
-        "data": {
-            "rate_limit_per_day": settings.rate_limit_per_day,
-            "query_max_length": settings.query_max_length,
-            "google_oauth_enabled": bool(settings.google_client_id),
-        },
-    }
+    return PublicConfigResponse(
+        data=PublicConfigData(
+            rate_limit_per_day=settings.rate_limit_per_day,
+            query_max_length=settings.query_max_length,
+            google_oauth_enabled=bool(settings.google_client_id),
+        )
+    )

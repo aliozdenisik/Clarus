@@ -109,7 +109,7 @@ describe("HomePage Agents Section", () => {
     expect(synthesisTitle).toHaveClass("text-2xl", "tracking-tight")
 
     const synthesisRole = screen.getByText("Comparative Theologian")
-    expect(synthesisRole).toHaveClass("rounded-md", "border-amber-500/30", "text-[11px]")
+    expect(synthesisRole).toHaveClass("rounded-md", "border-purple-500/30", "text-[11px]")
 
     const synthesisTag = screen.getByText("5-Paragraph Essay")
     expect(synthesisTag).toHaveClass("capitalize", "text-[11px]", "text-zinc-300")

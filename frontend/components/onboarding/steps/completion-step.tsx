@@ -6,6 +6,8 @@ import { useTranslations } from "next-intl"
 import { cn } from "@/lib/utils"
 import { useOnboardingStore } from "@/lib/stores/onboarding-store"
 import { useRouter } from "@/i18n/navigation"
+import { updatePreferencesApiPreferencesPut } from "@/lib/api"
+import { logger } from "@/lib/logger"
 import { Confetti, type ConfettiRef } from "@/components/ui/confetti"
 import { NumberTicker } from "@/components/ui/number-ticker"
 import { BlurFade } from "@/components/ui/blur-fade"
@@ -59,7 +61,18 @@ export function CompletionStep() {
     return () => clearTimeout(timer)
   }, [])
 
-  const handleGoHome = () => {
+  const handleGoHome = async () => {
+    try {
+      await updatePreferencesApiPreferencesPut({
+        body: {
+          custom_settings: {
+            onboarding_completed: true,
+          },
+        },
+      })
+    } catch (error) {
+      logger.error("Failed to complete onboarding", { error })
+    }
     markComplete()
     router.push("/hub" as Parameters<typeof router.push>[0])
   }
@@ -160,7 +173,7 @@ export function CompletionStep() {
       <BlurFade delay={0.56} duration={0.5}>
         <button
           type="button"
-          onClick={handleGoHome}
+          onClick={() => void handleGoHome()}
           className={cn(
             "rounded-xl px-8 py-3 text-base font-medium",
             "bg-[var(--color-accent-primary)] text-white",

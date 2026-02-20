@@ -15,6 +15,8 @@ from app.i18n.messages import get_error_message
 from app.middleware.error_handler import RateLimitError
 from app.middleware.rate_limit import get_user_rate_limit_info
 from app.models import UserStats
+from app.schemas.errors import UnauthorizedResponse
+from app.schemas.responses import MessageResponse
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +28,27 @@ class ApiKeyResponse(BaseModel):
     api_key: str
     created_at: datetime
     message: str = "Store this key securely. It will not be shown again."
+
+
+class UserProfileResponse(BaseModel):
+    id: str
+    email: str
+    name: str | None = None
+    email_verified: bool = False
+    image: str | None = None
+    created_at: datetime | None = None
+
+
+class RateLimitData(BaseModel):
+    limit: int
+    used: int
+    remaining: int
+    reset_at: str
+
+
+class RateLimitResponse(BaseModel):
+    success: bool = True
+    data: RateLimitData
 
 
 async def check_rate_limit(user: dict, db: AsyncSession, locale: str = "tr") -> None:
@@ -76,7 +99,12 @@ async def check_rate_limit(user: dict, db: AsyncSession, locale: str = "tr") -> 
     await db.commit()
 
 
-@router.get("/me")
+@router.get(
+    "/me",
+    response_model=UserProfileResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={401: {"description": "Not authenticated", "model": UnauthorizedResponse}},
+)
 async def get_me(current_user: dict = Depends(get_current_user_flexible)):
     """Get current user info (from session cookie or API key)."""
     logger.info(
@@ -96,7 +124,12 @@ async def get_me(current_user: dict = Depends(get_current_user_flexible)):
     }
 
 
-@router.post("/logout")
+@router.post(
+    "/logout",
+    response_model=MessageResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={401: {"description": "Not authenticated", "model": UnauthorizedResponse}},
+)
 async def logout(
     current_user: dict = Depends(get_current_user_flexible),
 ):
@@ -115,7 +148,12 @@ async def logout(
     return {"success": True, "message": "Cikis yapildi"}
 
 
-@router.get("/rate-limit")
+@router.get(
+    "/rate-limit",
+    response_model=RateLimitResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={401: {"description": "Not authenticated", "model": UnauthorizedResponse}},
+)
 async def get_rate_limit_status(
     current_user: dict = Depends(get_current_user_flexible),
 ):
@@ -124,7 +162,12 @@ async def get_rate_limit_status(
     return {"success": True, "data": rate_info}
 
 
-@router.post("/api-key", response_model=ApiKeyResponse)
+@router.post(
+    "/api-key",
+    response_model=ApiKeyResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={401: {"description": "Not authenticated", "model": UnauthorizedResponse}},
+)
 async def generate_api_key(
     current_user: dict = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),

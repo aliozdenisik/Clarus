@@ -22,6 +22,7 @@ from app.logging_config import get_logger, log_performance
 from app.middleware.error_handler import ValidationError
 from app.models import SearchHistory, UserPreferences
 from app.schemas.common import DEFAULT_TRANSLATOR, TranslatorType
+from app.schemas.errors import UnauthorizedResponse
 from src.citation_sanitizer import sanitize_citations
 from src.comparative_rag import ComparativeRAG
 from src.query_translator import QueryTranslator, TranslationError
@@ -169,7 +170,12 @@ def extract_bible_verse_detail(result: BibleSearchResult, source: str) -> tuple[
     )
 
 
-@router.post("/", response_model=CompareResponse)
+@router.post(
+    "/",
+    response_model=CompareResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={401: {"description": "Not authenticated", "model": UnauthorizedResponse}},
+)
 async def compare_scriptures(
     request: CompareRequest,
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
