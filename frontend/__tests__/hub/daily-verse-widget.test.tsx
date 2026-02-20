@@ -46,7 +46,7 @@ describe("DailyVerseWidget", () => {
 
   it("renders verse reference (prefix portion)", () => {
     render(<DailyVerseWidget verse={TEST_VERSE} />)
-    expect(screen.getByText("Bakara 2:")).toBeInTheDocument()
+    expect(screen.getByText(/Bakara 2:/)).toBeInTheDocument()
   })
 
   it("contains a link to the verse detail page", () => {
