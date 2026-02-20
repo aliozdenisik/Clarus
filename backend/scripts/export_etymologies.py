@@ -123,7 +123,7 @@ def export_to_xml(data: list[dict[str, Any]], output_path: Path) -> None:
         SubElement(root_elem, "created_at").text = str(root_data.get("created_at", ""))
         SubElement(root_elem, "updated_at").text = str(root_data.get("updated_at", ""))
 
-    xml_str = minidom.parseString(ET.tostring(root, encoding="utf-8")).toprettyxml(indent="  ")
+    xml_str = minidom.parseString(ET.tostring(root, encoding="utf-8")).toprettyxml(indent="  ")  # noqa: S318 – XML is self-generated, not untrusted
 
     with output_path.open("w", encoding="utf-8") as f:
         f.write(xml_str)

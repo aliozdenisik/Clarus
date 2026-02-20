@@ -161,7 +161,7 @@ def _throttle_wait() -> None:
     if sleep_for > 0:
         logger.info("Rate-limit backoff: sleeping %.1fs", sleep_for)
         time.sleep(sleep_for)
-        jitter = random.uniform(0.1, 1.0)
+        jitter = random.uniform(0.1, 1.0)  # noqa: S311 – non-crypto jitter
         time.sleep(jitter)
 
 
@@ -196,7 +196,7 @@ def _call_openrouter(
 ) -> tuple[str | None, float | None]:
     """Single LLM translation call → (translation_text, confidence)."""
     _throttle_wait()
-    time.sleep(random.uniform(0.1, 0.5))
+    time.sleep(random.uniform(0.1, 0.5))  # noqa: S311 – non-crypto jitter
 
     resp = requests.post(
         OPENROUTER_URL,
