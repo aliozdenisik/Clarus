@@ -51,6 +51,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
               <p className="mb-4 text-xs text-zinc-400">Error ID: {this.state.eventId}</p>
             )}
             <button
+              type="button"
               onClick={() => window.location.reload()}
               className="rounded bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
             >

@@ -57,9 +57,8 @@ export default withSentryConfig(withNextIntl(nextConfig), {
   disableLogger: true,
   bundleSizeOptimizations: {
     excludeDebugStatements: true,
-    excludeReplayCanvas: true,
-    excludeReplayIframe: true,
     excludeReplayShadowDom: true,
+    excludeReplayIframe: true,
     excludeReplayWorker: true,
   },
 })

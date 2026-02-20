@@ -1,6 +1,5 @@
 import { render, screen } from "../test-utils"
 import { vi, describe, it, expect, beforeEach } from "vitest"
-import type React from "react"
 
 const mockRouterPush = vi.fn()
 

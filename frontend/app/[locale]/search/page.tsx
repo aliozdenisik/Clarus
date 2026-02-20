@@ -980,7 +980,7 @@ function SearchContent() {
                 {(() => {
                   const seenResultKeys = new Map<string, number>()
 
-                  return results.map((result, i) => {
+                  return results.map((result) => {
                     const baseKey = `${result.source}-${result.reference}`
                     const occurrence = (seenResultKeys.get(baseKey) ?? 0) + 1
                     seenResultKeys.set(baseKey, occurrence)
