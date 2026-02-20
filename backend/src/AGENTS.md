@@ -180,7 +180,6 @@ uv run pytest tests/ -v
 
 **Configuration** (`pyproject.toml`):
 - Excludes benchmark/integration scripts (`run_*.py`, `*_verification_test.py`)
-- Excludes archived tests (`tests/archive/*`)
 - Focuses on unit tests for isolated module behavior
 
 **CI/CD**: Automated via `.github/workflows/backend-ci.yml`
