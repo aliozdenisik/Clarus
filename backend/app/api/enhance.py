@@ -11,6 +11,7 @@ from app.api.auth import check_rate_limit
 from app.auth.api_key_validator import get_current_user_flexible
 from app.db import get_db
 from app.logging_config import get_logger, log_performance
+from app.schemas.errors import UnauthorizedResponse
 from src.query_enhancer import EnhanceResponse, KeywordSuggestion, QueryEnhancer
 
 logger = get_logger(__name__)
@@ -32,7 +33,12 @@ class EnhanceRequest(BaseModel):
     corpus: str = Field(default="quran", pattern="^(quran|bible)$")
 
 
-@router.post("/enhance", response_model=EnhanceResponse)
+@router.post(
+    "/enhance",
+    response_model=EnhanceResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={401: {"description": "Not authenticated", "model": UnauthorizedResponse}},
+)
 async def enhance_query(
     request: EnhanceRequest,
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
