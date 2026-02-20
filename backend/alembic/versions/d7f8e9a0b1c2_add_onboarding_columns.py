@@ -6,8 +6,13 @@ Add onboarding-related columns to user_preferences:
 - interests: JSON array of strings
 - onboarding_completed: boolean flag (default false for new users, true for existing)
 
-This migration sets onboarding_completed=true for all existing rows to prevent
-existing users from being forced through onboarding flow.
+Existing users receive onboarding_completed=true via a two-step server_default
+approach that avoids a full-table UPDATE scan:
+
+1. ADD COLUMN with server_default='true'  — PG 11+ metadata-only operation,
+   existing rows materialise the default lazily on read (zero row locks).
+2. ALTER COLUMN SET DEFAULT 'false'       — future INSERTs get false so new
+   users are routed through the onboarding flow.
 
 Revision ID: d7f8e9a0b1c2
 Revises: c1a2b3c4d5e6
@@ -32,30 +37,47 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     """Upgrade: Add 4 onboarding columns to user_preferences."""
 
-    # Add the 4 new columns
     op.add_column("user_preferences", sa.Column("usage_purpose", sa.String(30), nullable=True))
     op.add_column("user_preferences", sa.Column("arabic_proficiency", sa.String(20), nullable=True))
     op.add_column("user_preferences", sa.Column("interests", sa.JSON(), nullable=True))
+
+    # server_default='true' so existing rows get true via PG 11+ metadata-only fast path
     op.add_column(
-        "user_preferences", sa.Column("onboarding_completed", sa.Boolean(), nullable=False, server_default="false")
+        "user_preferences",
+        sa.Column("onboarding_completed", sa.Boolean(), nullable=False, server_default="true"),
     )
 
-    # Mark all existing user_preferences rows as onboarding_completed=true
-    # This prevents existing users from being redirected to onboarding flow
-    op.execute("UPDATE user_preferences SET onboarding_completed = true")
+    # Switch default to 'false' for future inserts (new users enter onboarding)
+    op.alter_column(
+        "user_preferences",
+        "onboarding_completed",
+        server_default="false",
+        existing_type=sa.Boolean(),
+        existing_nullable=False,
+    )
 
-    # Ensure all Better Auth users have a corresponding user_preferences row
-    # with onboarding_completed=true (for users who haven't set preferences yet)
+    # Backfill preferences for Better Auth users that don't have a row yet
     op.execute(
-        """
-        INSERT INTO user_preferences (user_id, theme, language, default_search_source,
-                                      results_per_page, enable_streaming, enable_multi_agent,
-                                      onboarding_completed, updated_at)
-        SELECT u.id, 'system', 'tr', 'quran', 10, true, true, true, NOW()
-        FROM "user" u
-        WHERE u.id NOT IN (SELECT user_id FROM user_preferences)
-        ON CONFLICT DO NOTHING
-        """
+        sa.text(
+            """
+            INSERT INTO user_preferences (user_id, theme, language, default_search_source,
+                                          results_per_page, enable_streaming, enable_multi_agent,
+                                          onboarding_completed, updated_at)
+            SELECT u.id, :theme, :language, :search_source,
+                   :results_per_page, :streaming, :multi_agent, :onboarded, NOW()
+            FROM "user" u
+            WHERE u.id NOT IN (SELECT user_id FROM user_preferences)
+            ON CONFLICT DO NOTHING
+            """
+        ).bindparams(
+            theme="system",
+            language="tr",
+            search_source="quran",
+            results_per_page=10,
+            streaming=True,
+            multi_agent=True,
+            onboarded=True,
+        )
     )
 
 
