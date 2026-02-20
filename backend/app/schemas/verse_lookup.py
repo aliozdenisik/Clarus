@@ -21,7 +21,7 @@ class VerseLookupRequest(BaseModel):
     )
 
 
-class VerseResult(BaseModel):
+class LookupVerseResult(BaseModel):
     """Single verse result with full metadata.
 
     Contains both Quran and Bible-specific fields. Fields are null
@@ -70,6 +70,6 @@ class VerseLookupResponse(BaseModel):
     """
 
     success: Literal[True] = Field(default=True, description="Always true for success")
-    verses: list[VerseResult] = Field(..., description="List of matching verses (empty if none found)")
+    verses: list[LookupVerseResult] = Field(..., description="List of matching verses (empty if none found)")
     query: str = Field(..., description="Original input query")
     count: int = Field(..., ge=0, description="Number of verses returned")
