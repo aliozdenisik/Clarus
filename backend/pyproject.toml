@@ -65,6 +65,9 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+markers = [
+    "requires_db: test requires a running PostgreSQL database (skipped in CI)",
+]
 collect_ignore_glob = [
     "tests/run_*.py",
     "tests/*_verification_test.py",

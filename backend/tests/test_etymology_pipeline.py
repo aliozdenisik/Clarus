@@ -80,6 +80,7 @@ async def conn() -> AsyncGenerator[asyncpg.Connection, None]:
         await connection.close()
 
 
+@pytest.mark.requires_db
 @pytest.mark.anyio
 async def test_qm_root_etymologies_table_exists(conn: asyncpg.Connection) -> None:
     """qm_root_etymologies table should exist after migration."""
@@ -95,6 +96,7 @@ async def test_qm_root_etymologies_table_exists(conn: asyncpg.Connection) -> Non
     assert exists is True
 
 
+@pytest.mark.requires_db
 @pytest.mark.anyio
 async def test_qm_root_etymologies_has_all_required_columns_and_types(conn: asyncpg.Connection) -> None:
     """qm_root_etymologies should expose all required columns with expected SQL types."""
@@ -162,12 +164,14 @@ async def _has_unique_constraint(conn: asyncpg.Connection, column_name: str) -> 
     return bool(count and count > 0)
 
 
+@pytest.mark.requires_db
 @pytest.mark.anyio
 async def test_qm_root_etymologies_root_is_unique(conn: asyncpg.Connection) -> None:
     """root column should have a unique constraint."""
     assert await _has_unique_constraint(conn, "root") is True
 
 
+@pytest.mark.requires_db
 @pytest.mark.anyio
 async def test_qm_root_etymologies_root_buckwalter_is_unique(conn: asyncpg.Connection) -> None:
     """root_buckwalter column should have a unique constraint."""
@@ -232,6 +236,7 @@ class TestMorphologicalForms:
         assert all("occurrences" in entry for entry in forms)
         assert all(isinstance(entry["occurrences"], int) for entry in forms)
 
+    @pytest.mark.requires_db
     def test_extract_all_roots(self) -> None:
         """Root extraction should return root entries with frequency counts."""
         roots = extract_all_roots_with_frequency()
@@ -244,12 +249,14 @@ class TestMorphologicalForms:
 class TestLaneAdapter:
     """Lane's Lexicon adapter tests against PostgreSQL (Issue #128 Task 2)."""
 
+    @pytest.mark.requires_db
     def test_lane_adapter_opens_database(self) -> None:
         from src.lane_lexicon import LaneLexiconAdapter
 
         adapter = LaneLexiconAdapter(db_url=DATABASE_URL)
         assert adapter._engine is not None
 
+    @pytest.mark.requires_db
     def test_lane_lookup_known_root(self) -> None:
         from src.lane_lexicon import LaneLexiconAdapter
 
@@ -261,12 +268,14 @@ class TestLaneAdapter:
         assert entry.definition_en is not None
         assert len(entry.definition_en.strip()) > 10
 
+    @pytest.mark.requires_db
     def test_lane_lookup_nonexistent_root(self) -> None:
         from src.lane_lexicon import LaneLexiconAdapter
 
         adapter = LaneLexiconAdapter(db_url=DATABASE_URL)
         assert adapter.lookup_by_root("zzzzz") is None
 
+    @pytest.mark.requires_db
     def test_lane_volume_extraction(self) -> None:
         from src.lane_lexicon import LaneLexiconAdapter
 
@@ -370,6 +379,7 @@ class TestEtymologyPipeline:
         finally:
             pipeline.close()
 
+    @pytest.mark.requires_db
     def test_pipeline_runs_corpus_only(self, tmp_path: Path) -> None:
         pipeline_cls = etymology_pipeline.EtymologyPipeline
         pipeline = pipeline_cls(
@@ -385,6 +395,7 @@ class TestEtymologyPipeline:
         assert result.total_roots > 0
         assert result.lane_matches == 0
 
+    @pytest.mark.requires_db
     def test_pipeline_idempotent(self, tmp_path: Path) -> None:
         pipeline_cls = etymology_pipeline.EtymologyPipeline
         pipeline = pipeline_cls(
@@ -403,6 +414,7 @@ class TestEtymologyPipeline:
         assert first.inserted_rows == second.inserted_rows
         assert first.total_roots == second.total_roots
 
+    @pytest.mark.requires_db
     def test_pipeline_exports_validation_files(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         pipeline_cls = etymology_pipeline.EtymologyPipeline
         export_dir = tmp_path / "etymology"
@@ -429,6 +441,7 @@ class TestEtymologyPipeline:
             sample = json.load(file_handle)
         assert isinstance(sample, list)
 
+    @pytest.mark.requires_db
     def test_pipeline_populates_all_roots(self) -> None:
         pipeline_cls = etymology_pipeline.EtymologyPipeline
         pipeline = pipeline_cls(
@@ -443,6 +456,7 @@ class TestEtymologyPipeline:
         assert result.inserted_rows == result.total_roots
         assert result.total_roots >= 1500
 
+    @pytest.mark.requires_db
     def test_pipeline_handles_lane_missing(self, tmp_path: Path) -> None:
         """When SQLite path is missing, pipeline falls back to PostgreSQL lane_entries."""
         pipeline_cls = etymology_pipeline.EtymologyPipeline
