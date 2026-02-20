@@ -1176,28 +1176,44 @@ def main():
 
 
 def cmd_cache_info(args):
-    """Show semantic cache statistics"""
-    console.print("\n[bold blue]Semantic Cache Info[/bold blue]\n")
+    import asyncio
+
+    console.print("\n[bold blue]LLM Cache Info[/bold blue]\n")
+
+    async def _get_info() -> dict | None:
+        from src.llm_cache import SemanticLLMCache
+
+        cache = SemanticLLMCache()
+        await cache.init()
+        if cache._redis is None:
+            return None
+        total_entries = 0
+        cursor = 0
+        while True:
+            cursor, keys = await cache._redis.scan(cursor=cursor, match="llm_cache:*", count=100)
+            total_entries += len(keys)
+            if cursor == 0:
+                break
+        return {"total_entries": total_entries, **cache.get_stats()}
 
     try:
-        from src.semantic_cache import SemanticCache
+        info = asyncio.run(_get_info())
+        if info is None:
+            console.print("[yellow]Redis unavailable — LLM cache is disabled[/yellow]")
+            return 0
 
-        cache = SemanticCache(qdrant_url=args.qdrant_url)
-        stats = cache.get_stats()
-
-        table = Table(title="Cache Statistics")
+        table = Table(title="LLM Cache Statistics")
         table.add_column("Metric", style="cyan")
         table.add_column("Value", style="green", justify="right")
 
-        table.add_row("Total Entries", str(stats.total_entries))
-        table.add_row("Session Hits", str(stats.hits))
-        table.add_row("Session Misses", str(stats.misses))
-        table.add_row("Hit Rate", f"{stats.hit_rate:.1%}")
-        table.add_row("Avg Similarity", f"{stats.avg_similarity:.3f}")
-        table.add_row("Oldest Entry", f"{stats.oldest_entry_hours:.1f} hours")
+        table.add_row("Active Cache Entries (Redis)", str(info["total_entries"]))
+        table.add_row("Session Hits", str(info["hits"]))
+        table.add_row("Session Misses", str(info["misses"]))
+        table.add_row("Session Exact Hits", str(info["exact_hits"]))
+        table.add_row("Session Semantic Hits", str(info["semantic_hits"]))
+        table.add_row("Session Hit Rate", f"{info['hit_rate']:.1%}")
 
         console.print(table)
-
         return 0
 
     except Exception as e:
@@ -1206,23 +1222,27 @@ def cmd_cache_info(args):
 
 
 def cmd_cache_clear(args):
-    """Clear semantic cache"""
-    console.print("\n[bold blue]Clear Semantic Cache[/bold blue]\n")
+    import asyncio
+
+    console.print("\n[bold blue]Clear LLM Cache[/bold blue]\n")
+    console.print("[yellow]Clearing all LLM cache entries...[/yellow]")
+
+    async def _clear() -> bool:
+        from src.llm_cache import SemanticLLMCache
+
+        cache = SemanticLLMCache()
+        await cache.init()
+        if cache._redis is None:
+            return False
+        await cache.clear()
+        return True
 
     try:
-        from src.semantic_cache import SemanticCache
-
-        cache = SemanticCache(qdrant_url=args.qdrant_url)
-        older_than = getattr(args, "older_than", None)
-
-        if older_than:
-            console.print(f"[yellow]Clearing entries older than {older_than} hours...[/yellow]")
+        success = asyncio.run(_clear())
+        if success:
+            console.print("[green][OK][/green] LLM cache cleared")
         else:
-            console.print("[yellow]Clearing all cache entries...[/yellow]")
-
-        deleted = cache.clear(older_than_hours=older_than)
-        console.print(f"[green][OK][/green] Cleared {deleted} cache entries")
-
+            console.print("[yellow]Redis unavailable — nothing to clear[/yellow]")
         return 0
 
     except Exception as e:

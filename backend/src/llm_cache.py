@@ -185,6 +185,14 @@ class SemanticLLMCache:
                     continue
 
             if best_key:
+                verify_key = f"llm_cache:{operation}:{locale}:{best_key}"
+                if not await self._redis.exists(verify_key):
+                    logger.debug(
+                        "Stale index entry removed",
+                        extra={"operation": operation, "locale": locale, "key": best_key[:16]},
+                    )
+                    await self._redis.hdel(index_key, best_key)
+                    return None
                 return (best_key, best_similarity)
             return None
 
@@ -310,10 +318,10 @@ class SemanticLLMCache:
             if embedding is None:
                 embedding = self.encoder.encode(query)
 
-            # Store embedding in Redis hash (locale-aware)
             index_key = f"llm_cache_idx:{operation}:{locale}"
             embedding_json = json.dumps(embedding)
             await self._redis.hset(index_key, cache_key, embedding_json)
+            await self._redis.expire(index_key, self.ttl)
 
             logger.debug(
                 "Cached LLM response",
