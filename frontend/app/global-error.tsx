@@ -15,7 +15,7 @@ export default function GlobalError({
   }, [error])
 
   return (
-    <html>
+    <html lang="en">
       <body className="bg-background flex min-h-screen items-center justify-center">
         <div className="text-center">
           <h1 className="text-foreground text-2xl font-bold">Something went wrong</h1>
@@ -23,6 +23,7 @@ export default function GlobalError({
             We&apos;ve been notified and are working on it.
           </p>
           <button
+            type="button"
             onClick={reset}
             className="bg-primary text-primary-foreground mt-4 rounded px-4 py-2"
           >
