@@ -1,6 +1,10 @@
 """Pydantic schemas for morphological keyword search API."""
 
-from pydantic import BaseModel, Field
+import re
+
+from pydantic import BaseModel, Field, field_validator
+
+_HTML_PATTERN = re.compile(r"<[^>]+>|javascript\s*:", re.IGNORECASE)
 
 
 class KeywordSearchRequest(BaseModel):
@@ -17,6 +21,13 @@ class KeywordSearchRequest(BaseModel):
         max_length=100,
         description="Filter verses to only those containing this specific derived word (token_clean form)",
     )
+
+    @field_validator("query")
+    @classmethod
+    def reject_html_payloads(cls, v: str) -> str:
+        if _HTML_PATTERN.search(v):
+            raise ValueError("Query must not contain HTML or script content")
+        return v
 
 
 class SurahDistItem(BaseModel):

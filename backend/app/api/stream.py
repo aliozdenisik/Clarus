@@ -311,6 +311,11 @@ async def stream_compare(
         collections: Comma-separated collection names (e.g., 'quran_tr,bible_ot').
                     Valid values: quran_tr (alias), quran_tr_*, bible_ot, bible_nt, bible_apocrypha
     """
+    # Auth and rate-limit check MUST come before any resource validation so that
+    # unauthenticated callers always receive 401, never information-leaking 400s.
+    current_user = await get_current_user_from_sse(db, request)
+    await check_rate_limit(current_user, db)
+
     # Parse and validate collections
     quran_translator = translator or DEFAULT_TRANSLATOR
     requested_collections = [c.strip() for c in collections.split(",") if c.strip()]
@@ -321,8 +326,6 @@ async def stream_compare(
             status_code=400,
             detail="At least 2 valid collections required for comparison",
         )
-    current_user = await get_current_user_from_sse(db, request)
-    await check_rate_limit(current_user, db)
     prefs_result = await db.execute(select(UserPreferences).where(UserPreferences.user_id == current_user["id"]))
     user_preferences = prefs_result.scalar_one_or_none()
     usage_purpose = user_preferences.usage_purpose if user_preferences else None
