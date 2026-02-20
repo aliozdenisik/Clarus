@@ -215,7 +215,7 @@ export default function HomePage() {
             <h1 className="mb-6 font-[family-name:var(--font-display)] text-5xl leading-[1.2] font-semibold tracking-[-0.02em] md:text-7xl">
               <span className="text-[var(--color-text-primary)]">{tLanding("hero.title")}</span>
               <br />
-              <span className="text-amber-400">{tLanding("hero.titleAI")}</span>
+              <span className="text-purple-400">{tLanding("hero.titleAI")}</span>
             </h1>
 
             <p className="mx-auto mb-10 max-w-[540px] text-lg leading-[1.65] font-light tracking-wide text-[#D1D5DB] md:text-xl">
@@ -228,7 +228,7 @@ export default function HomePage() {
                 <>
                   <motion.button
                     onClick={() => router.push("/search")}
-                    className="flex items-center justify-center gap-3 rounded-xl border border-amber-500/50 bg-amber-500 px-10 py-4 font-medium text-[#0B0B0F] transition-colors duration-200 hover:bg-amber-400"
+                    className="flex items-center justify-center gap-3 rounded-xl border border-indigo-500/50 bg-indigo-600 px-10 py-4 font-medium text-white transition-colors duration-200 hover:bg-indigo-500"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -249,7 +249,7 @@ export default function HomePage() {
                 <>
                   <motion.button
                     onClick={() => router.push("/sign-up")}
-                    className="flex items-center justify-center gap-3 rounded-xl border border-amber-500/50 bg-amber-500 px-10 py-4 font-medium text-[#0B0B0F] transition-colors duration-200 hover:bg-amber-400"
+                    className="flex items-center justify-center gap-3 rounded-xl border border-indigo-500/50 bg-indigo-600 px-10 py-4 font-medium text-white transition-colors duration-200 hover:bg-indigo-500"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -392,7 +392,7 @@ export default function HomePage() {
             transition={{ ...springPresets.gentle, duration: 1 }}
             className="mb-20 text-center"
           >
-            <span className="mb-6 inline-block bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-xs font-semibold tracking-[0.12em] text-transparent uppercase">
+            <span className="mb-6 inline-block bg-gradient-to-r from-purple-400 to-violet-400 bg-clip-text text-xs font-semibold tracking-[0.12em] text-transparent uppercase">
               {tLanding("sections.coreFeature")}
             </span>
             <h2 className="mx-auto mb-8 max-w-[700px] font-[family-name:var(--font-serif)] text-5xl leading-tight font-normal tracking-tight text-[var(--color-text-primary)] md:text-6xl">
@@ -475,20 +475,20 @@ export default function HomePage() {
           >
             <div className="group relative rounded-2xl border border-white/[0.12] bg-gradient-to-b from-white/[0.05] to-transparent p-8 shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-500 hover:border-white/[0.22] hover:from-white/[0.08]">
               {/* Subtle gradient overlay */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-amber-500/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-purple-500/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
               {/* Content */}
               <div className="relative z-10">
                 {/* Icon */}
-                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl border border-amber-500/25 bg-amber-500/10">
-                  <Sparkles className="h-6 w-6 text-amber-300" />
+                <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-xl border border-purple-500/25 bg-purple-500/10">
+                  <Sparkles className="h-6 w-6 text-purple-300" />
                 </div>
 
                 {/* Name & Role Badge */}
                 <h3 className="mb-2 text-2xl font-semibold tracking-tight text-white">
                   {tLanding("agents.synthesis.name")}
                 </h3>
-                <span className="mb-5 inline-block rounded-md border border-amber-500/30 px-2.5 py-0.5 text-[11px] font-medium tracking-[0.08em] text-amber-300/80 uppercase">
+                <span className="mb-5 inline-block rounded-md border border-purple-500/30 px-2.5 py-0.5 text-[11px] font-medium tracking-[0.08em] text-purple-300/80 uppercase">
                   {tLanding("agents.synthesis.role")}
                 </span>
 
