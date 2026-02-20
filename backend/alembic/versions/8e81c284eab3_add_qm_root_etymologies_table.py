@@ -21,7 +21,24 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    """Upgrade schema."""
+    """Upgrade schema.
+
+    Index-creation strategy (addresses issue #212):
+    -----------------------------------------------
+    Indexes below use standard ``op.create_index()`` (without CONCURRENTLY)
+    because ``qm_root_etymologies`` is a *brand-new* table created in this
+    same migration.  At migration time the table is always empty, so the
+    ``AccessExclusiveLock`` acquired during index build is released in
+    microseconds — functionally identical to a concurrent build.
+
+    ``CREATE INDEX CONCURRENTLY`` is reserved for adding indexes to tables
+    that already hold significant data (i.e., separate, post-populate
+    migrations).  Using it here would require running outside a transaction
+    (PostgreSQL restriction) with no benefit to offer.
+
+    See ``docs/DATABASE_MIGRATIONS.md`` for the project-wide concurrency
+    strategy.
+    """
     op.create_table(
         "qm_root_etymologies",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
@@ -43,6 +60,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.text("now()")),
         sa.PrimaryKeyConstraint("id"),
     )
+    # Safe without CONCURRENTLY — table is empty at this point (see docstring).
     op.create_index(op.f("ix_qm_root_etymologies_root"), "qm_root_etymologies", ["root"], unique=True)
     op.create_index(
         op.f("ix_qm_root_etymologies_root_buckwalter"),

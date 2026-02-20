@@ -146,8 +146,18 @@ class QMRootEtymology(Base):
 
 
 class LaneLexiconEntry(Base):
+    """Lane's Arabic-English Lexicon entry row.
+
+    ``id`` uses ``autoincrement=False`` intentionally (issue #213): the value is
+    the *original* primary key from the upstream LexiconDatabase SQLite file.
+    Preserving source IDs makes the TRUNCATE+INSERT import idempotent and keeps
+    cross-referencing the upstream dataset straightforward.  See
+    ``backend/scripts/import_lane_lexicon.py`` for the import logic.
+    """
+
     __tablename__ = "lane_entries"
 
+    # autoincrement=False: source ID preserved from Lane's Lexicon SQLite — see class docstring.
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
     root: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
     broot: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
@@ -160,8 +170,17 @@ class LaneLexiconEntry(Base):
 
 
 class LaneLexiconRoot(Base):
+    """Lane's Arabic-English Lexicon root row.
+
+    ``id`` uses ``autoincrement=False`` for the same reason as
+    :class:`LaneLexiconEntry`: the value is the original primary key from the
+    upstream LexiconDatabase SQLite file.  IDs are stable, non-overlapping, and
+    assigned explicitly during import.
+    """
+
     __tablename__ = "lane_roots"
 
+    # autoincrement=False: source ID preserved from Lane's Lexicon SQLite — see class docstring.
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
     word: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
     bword: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
