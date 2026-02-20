@@ -1,6 +1,7 @@
 """Redis-based rate limiting middleware."""
 
 import logging
+import time
 from datetime import datetime, timedelta
 
 from fastapi import Request, status
@@ -25,6 +26,47 @@ end
 
 return current
 """
+
+
+# ---------------------------------------------------------------------------
+# In-memory fallback for auth rate limiting (fail-closed)
+# Used when Redis is unavailable so brute-force attacks are still throttled.
+#
+# Structure: {key: (count, window_start_monotonic)}
+# Safe without an asyncio.Lock because asyncio is single-threaded cooperative
+# and every coroutine suspends only at explicit `await` points — none exist
+# inside _memory_auth_check, so updates are atomic from Python's perspective.
+# ---------------------------------------------------------------------------
+_auth_memory_counts: dict[str, tuple[int, float]] = {}
+_AUTH_MEMORY_WINDOW_SECONDS: int = 60
+_AUTH_MEMORY_MAX_ENTRIES: int = 10_000
+
+
+def _memory_auth_check(key: str) -> int:
+    """
+    Apply in-memory sliding-window rate limit for auth paths.
+
+    Called when Redis is unavailable or raised an exception (fail-closed path).
+    Returns the current request count within the 60-second window.
+    """
+    now = time.monotonic()
+
+    if len(_auth_memory_counts) >= _AUTH_MEMORY_MAX_ENTRIES:
+        expired = [k for k, (_, ws) in _auth_memory_counts.items() if now - ws > _AUTH_MEMORY_WINDOW_SECONDS]
+        for k in expired:
+            del _auth_memory_counts[k]
+
+    if key in _auth_memory_counts:
+        count, window_start = _auth_memory_counts[key]
+        if now - window_start > _AUTH_MEMORY_WINDOW_SECONDS:
+            count, window_start = 1, now
+        else:
+            count += 1
+    else:
+        count, window_start = 1, now
+
+    _auth_memory_counts[key] = (count, window_start)
+    return count
 
 
 def _to_int(value: object) -> int:
@@ -119,13 +161,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     """
     Redis-based rate limiting middleware with sliding window.
 
-    Features:
-    - 50 queries/day per user (configurable)
-    - 10 queries/minute for auth endpoints
-    - IP-based limit for public heavy-read endpoints
-    - Calendar day reset (UTC midnight)
-    - Fail-open if Redis unavailable
-    - Atomic increment using Lua script
+    Auth endpoints (/api/auth/) are fail-CLOSED: an in-memory sliding-window
+    counter enforces the per-minute limit even when Redis is unavailable,
+    preventing brute-force attacks from bypassing controls during outages.
+    All other rate-limited paths remain fail-open (graceful degradation).
     """
 
     RATE_LIMITED_PATHS = [
@@ -145,15 +184,48 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         "/api/quran/verses/",
     ]
 
+    async def _check_auth_rate_limit(self, request: Request, now: datetime) -> tuple[int, int]:
+        """
+        Check auth-endpoint rate limit using Redis with in-memory fallback.
+
+        Auth paths are fail-CLOSED: even when Redis is down, the in-memory
+        sliding-window counter keeps enforcing the per-minute limit so that
+        brute-force attacks cannot slip through infrastructure outages.
+
+        Returns (current_count, limit).
+        """
+        client_ip = request.client.host if request.client else "anonymous"
+        minute_key = now.strftime("%Y-%m-%d-%H-%M")
+        key = f"ratelimit:auth:{client_ip}:{minute_key}"
+        limit = self.AUTH_RATE_LIMIT_PER_MINUTE
+
+        try:
+            from app.redis_client import redis_manager
+
+            if redis_manager.client is not None:
+                script = redis_manager.client.register_script(RATE_LIMIT_SCRIPT)
+                current_count_raw = await script(keys=[key], args=[limit, 60])
+                return _to_int(current_count_raw), limit
+
+            logger.warning(
+                "Redis unavailable for auth rate limit — using in-memory fallback (fail-closed)",
+                extra={"operation": "auth_rate_limit", "path": request.url.path},
+            )
+        except Exception:
+            logger.warning(
+                "Redis auth rate limit check raised an exception — using in-memory fallback (fail-closed)",
+                extra={"operation": "auth_rate_limit", "path": request.url.path},
+                exc_info=True,
+            )
+
+        return _memory_auth_check(key), limit
+
     async def dispatch(self, request: Request, call_next):
-        """Apply rate limiting to configured paths."""
-        # Skip if rate limiting disabled
         if not settings.rate_limit_enabled:
             return await call_next(request)
 
         path = request.url.path
 
-        # Check if path should be rate limited
         is_rate_limited_path = any(path.startswith(p) for p in self.RATE_LIMITED_PATHS)
         is_auth_path = any(path.startswith(p) for p in self.AUTH_RATE_LIMITED_PATHS)
         matched_public_path = next((p for p in self.PUBLIC_RATE_LIMITED_PATHS if path.startswith(p)), None)
@@ -162,68 +234,56 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if not is_rate_limited_path and not is_auth_path and not is_public_path:
             return await call_next(request)
 
-        # Get user ID from request state (set by auth middleware)
         user_id = getattr(request.state, "user_id", None)
 
-        # Auth endpoints: rate limit even without user_id (by IP or allow anonymous)
-        # For now, skip rate limiting if no user_id (auth endpoints before login)
         if user_id is None and not is_auth_path and not is_public_path:
             return await call_next(request)
 
-        # For auth endpoints without user_id, use IP-based rate limiting
-        if user_id is None and is_auth_path:
-            # Get client IP for anonymous auth requests
-            user_id = request.client.host if request.client else "anonymous"
+        # -------------------------------------------------------------------
+        # AUTH ENDPOINTS — fail-closed with Redis + in-memory fallback.
+        # Isolated from the outer try/except so Redis exceptions still result
+        # in enforcement via _memory_auth_check rather than silent bypass.
+        # -------------------------------------------------------------------
+        if is_auth_path:
+            now = datetime.utcnow()
+            request_id = getattr(request.state, "request_id", "unknown")
+            current_count, limit = await self._check_auth_rate_limit(request, now)
 
-        # Perform rate limit check
+            if current_count > limit:
+                return JSONResponse(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    content={
+                        "success": False,
+                        "error": {
+                            "code": "RATE_LIMIT_EXCEEDED",
+                            "message": f"Cok fazla giris denemesi. Lutfen 1 dakika bekleyin ({limit}/dakika)",
+                            "details": [],
+                        },
+                        "request_id": request_id,
+                        "timestamp": now.isoformat(),
+                    },
+                    headers={
+                        "X-RateLimit-Limit": str(limit),
+                        "X-RateLimit-Remaining": "0",
+                        "Retry-After": "60",
+                    },
+                )
+
+            return await call_next(request)
+
+        # -------------------------------------------------------------------
+        # PUBLIC & REGULAR ENDPOINTS — fail-open if Redis unavailable.
+        # -------------------------------------------------------------------
         try:
             from app.redis_client import redis_manager
 
             now = datetime.utcnow()
 
-            # If Redis unavailable, fail-open (allow request)
             if redis_manager.client is None:
-                logger.warning("Redis unavailable, allowing request (fail-open)")
-                return await call_next(request)
-
-            # AUTH ENDPOINTS: Per-minute rate limiting
-            if is_auth_path:
-                # Use minute-based key: ratelimit:auth:{user_id}:{timestamp_minute}
-                minute_key = now.strftime("%Y-%m-%d-%H-%M")
-                key = f"ratelimit:auth:{user_id}:{minute_key}"
-                limit = self.AUTH_RATE_LIMIT_PER_MINUTE
-                ttl_seconds = 60  # 1 minute TTL
-
-                # Register and execute Lua script
-                script = redis_manager.client.register_script(RATE_LIMIT_SCRIPT)
-                current_count_raw = await script(
-                    keys=[key],
-                    args=[limit, ttl_seconds],
+                logger.warning(
+                    "Redis unavailable, allowing request (fail-open)",
+                    extra={"operation": "rate_limit_check", "path": path},
                 )
-                current_count = _to_int(current_count_raw)
-
-                if current_count > limit:
-                    request_id = getattr(request.state, "request_id", "unknown")
-                    return JSONResponse(
-                        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        content={
-                            "success": False,
-                            "error": {
-                                "code": "RATE_LIMIT_EXCEEDED",
-                                "message": f"Cok fazla giris denemesi. Lutfen 1 dakika bekleyin ({limit}/dakika)",
-                                "details": [],
-                            },
-                            "request_id": request_id,
-                            "timestamp": now.isoformat(),
-                        },
-                        headers={
-                            "X-RateLimit-Limit": str(limit),
-                            "X-RateLimit-Remaining": str(max(0, limit - current_count)),
-                            "Retry-After": "60",
-                        },
-                    )
-
-                # Auth endpoints: don't add rate limit headers to successful responses
                 return await call_next(request)
 
             if is_public_path:
@@ -235,10 +295,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 ttl_seconds = 60
 
                 script = redis_manager.client.register_script(RATE_LIMIT_SCRIPT)
-                current_count_raw = await script(
-                    keys=[key],
-                    args=[limit, ttl_seconds],
-                )
+                current_count_raw = await script(keys=[key], args=[limit, ttl_seconds])
                 current_count = _to_int(current_count_raw)
 
                 if current_count > limit:
@@ -267,34 +324,18 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 response.headers["X-RateLimit-Remaining"] = str(max(0, limit - current_count))
                 return response
 
-            # REGULAR ENDPOINTS: Per-day rate limiting
-            # Calculate reset time (next UTC midnight)
             tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-
-            # Build Redis key: ratelimit:{user_id}:{date}
             today = now.strftime("%Y-%m-%d")
             key = f"ratelimit:{user_id}:{today}"
-
-            # Calculate TTL (seconds until midnight UTC)
             ttl_seconds = int((tomorrow - now).total_seconds())
 
-            # Register Lua script (idempotent)
             script = redis_manager.client.register_script(RATE_LIMIT_SCRIPT)
-
-            # Execute Lua script atomically
-            current_count_raw = await script(
-                keys=[key],
-                args=[settings.rate_limit_per_day, ttl_seconds],
-            )
+            current_count_raw = await script(keys=[key], args=[settings.rate_limit_per_day, ttl_seconds])
             current_count = _to_int(current_count_raw)
 
-            # Calculate remaining
             remaining = max(0, settings.rate_limit_per_day - current_count)
-
-            # Generate headers
             headers = get_rate_limit_headers(remaining, tomorrow)
 
-            # Check if limit exceeded (BEFORE incrementing, count is already incremented by script)
             if current_count > settings.rate_limit_per_day:
                 request_id = getattr(request.state, "request_id", "unknown")
                 return JSONResponse(
@@ -312,19 +353,15 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                     headers=headers,
                 )
 
-            # Allow request and add headers
             response = await call_next(request)
-
-            # Add rate limit headers to response
             for key, value in headers.items():
                 response.headers[key] = value
-
             return response
 
-        except Exception as e:
-            # Fail-open: log error and allow request
+        except Exception:
             logger.warning(
-                "Rate limit check failed, allowing request",
-                extra={"operation": "rate_limit_check", "error_type": type(e).__name__},
+                "Rate limit check failed, allowing request (fail-open for non-auth path)",
+                extra={"operation": "rate_limit_check", "path": path},
+                exc_info=True,
             )
             return await call_next(request)

@@ -5,6 +5,7 @@ from fastapi.responses import PlainTextResponse
 from starlette.requests import Request
 
 from app.config import settings
+from app.middleware import rate_limit as rl_module
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.redis_client import redis_manager
 
@@ -118,3 +119,91 @@ async def test_public_path_fails_open_when_redis_unavailable(monkeypatch: pytest
 
     assert response.status_code == 200
     assert bytes(response.body).decode("utf-8") == "ok"
+
+
+@pytest.mark.asyncio
+async def test_auth_path_returns_429_when_limit_exceeded_with_redis(monkeypatch: pytest.MonkeyPatch) -> None:
+    middleware = RateLimitMiddleware(app=_dummy_asgi_app)
+    monkeypatch.setattr(settings, "rate_limit_enabled", True)
+    monkeypatch.setattr(redis_manager, "client", _FakeRedisClient([11]))
+
+    request = _build_request("/api/auth/me")
+    called = False
+
+    async def call_next(_request: Request):
+        nonlocal called
+        called = True
+        return PlainTextResponse("unauthorized", status_code=401)
+
+    response = await middleware.dispatch(request, call_next)
+
+    assert response.status_code == 429
+    assert response.headers["X-RateLimit-Limit"] == "10"
+    assert response.headers["X-RateLimit-Remaining"] == "0"
+    assert response.headers["Retry-After"] == "60"
+    assert called is False
+
+
+@pytest.mark.asyncio
+async def test_auth_path_fails_closed_when_redis_unavailable(monkeypatch: pytest.MonkeyPatch) -> None:
+    middleware = RateLimitMiddleware(app=_dummy_asgi_app)
+    monkeypatch.setattr(settings, "rate_limit_enabled", True)
+    monkeypatch.setattr(redis_manager, "client", None)
+    monkeypatch.setattr(rl_module, "_auth_memory_counts", {})
+
+    request = _build_request("/api/auth/sign-in")
+
+    async def call_next(_request: Request):
+        return PlainTextResponse("ok", status_code=200)
+
+    for _ in range(10):
+        response = await middleware.dispatch(request, call_next)
+        assert response.status_code == 200
+
+    response = await middleware.dispatch(request, call_next)
+    assert response.status_code == 429
+    assert response.headers["Retry-After"] == "60"
+
+
+@pytest.mark.asyncio
+async def test_auth_path_fails_closed_on_redis_exception(monkeypatch: pytest.MonkeyPatch) -> None:
+    class _BrokenRedisClient:
+        def register_script(self, _script: str):
+            async def _runner(*, keys: list[str], args: list[int]) -> int:
+                raise RuntimeError("simulated Redis failure")
+
+            return _runner
+
+    middleware = RateLimitMiddleware(app=_dummy_asgi_app)
+    monkeypatch.setattr(settings, "rate_limit_enabled", True)
+    monkeypatch.setattr(redis_manager, "client", _BrokenRedisClient())
+    monkeypatch.setattr(rl_module, "_auth_memory_counts", {})
+
+    request = _build_request("/api/auth/sign-in")
+
+    async def call_next(_request: Request):
+        return PlainTextResponse("ok", status_code=200)
+
+    for _ in range(10):
+        response = await middleware.dispatch(request, call_next)
+        assert response.status_code == 200
+
+    response = await middleware.dispatch(request, call_next)
+    assert response.status_code == 429
+    assert response.headers["Retry-After"] == "60"
+
+
+@pytest.mark.asyncio
+async def test_auth_path_allows_requests_under_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+    middleware = RateLimitMiddleware(app=_dummy_asgi_app)
+    monkeypatch.setattr(settings, "rate_limit_enabled", True)
+    monkeypatch.setattr(redis_manager, "client", _FakeRedisClient([5]))
+
+    request = _build_request("/api/auth/me")
+
+    async def call_next(_request: Request):
+        return PlainTextResponse("unauthorized", status_code=401)
+
+    response = await middleware.dispatch(request, call_next)
+
+    assert response.status_code == 401
