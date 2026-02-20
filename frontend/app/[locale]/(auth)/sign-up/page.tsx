@@ -62,11 +62,11 @@ export default function SignUpPage() {
 
       <p className="text-center text-xs text-[var(--color-text-muted)]">
         {t("termsSignUp")}{" "}
-        <Link href="#" className="text-[var(--color-accent-primary)] hover:underline">
+        <Link href="#" className="text-[var(--color-accent-secondary)] underline underline-offset-2">
           {t("terms")}
         </Link>{" "}
         {t("and")}{" "}
-        <Link href="#" className="text-[var(--color-accent-primary)] hover:underline">
+        <Link href="#" className="text-[var(--color-accent-secondary)] underline underline-offset-2">
           {t("privacyPolicy")}
         </Link>
         .

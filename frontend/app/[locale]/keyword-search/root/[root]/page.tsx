@@ -234,7 +234,7 @@ export default function RootDetailPage() {
               className="top-6 self-start rounded-lg border border-zinc-800/60 bg-zinc-900/40 p-3 lg:sticky"
               data-testid="legend-en-panel"
             >
-              <h3 className="mb-3 text-[10px] font-semibold tracking-widest text-zinc-500 uppercase">
+              <h3 className="mb-3 text-[10px] font-semibold tracking-widest text-zinc-400 uppercase">
                 Abbreviations
               </h3>
               <div className="space-y-3">
@@ -314,7 +314,7 @@ export default function RootDetailPage() {
                         <span className="text-xs text-zinc-400">{form.form_pattern}</span>
                       )}
                       {form.form_name && (
-                        <span className="text-xs text-zinc-500">{form.form_name}</span>
+                        <span className="text-xs text-zinc-400">{form.form_name}</span>
                       )}
                     </div>
                   </div>
@@ -325,7 +325,7 @@ export default function RootDetailPage() {
                       </span>
                     )}
                     {form.occurrences != null && (
-                      <span className="text-xs text-zinc-500">{form.occurrences}×</span>
+                      <span className="text-xs text-zinc-400">{form.occurrences}×</span>
                     )}
                   </div>
                 </div>
@@ -367,7 +367,7 @@ export default function RootDetailPage() {
                     {rel.root}
                   </span>
                   {rel.meaning_hint && (
-                    <span className="ml-2 text-xs text-zinc-500">{rel.meaning_hint}</span>
+                    <span className="ml-2 text-xs text-zinc-400">{rel.meaning_hint}</span>
                   )}
                 </Link>
               ))}

@@ -19,7 +19,7 @@ export default function Error({
         <h2 className="mb-4 text-2xl font-bold text-white">{t("somethingWentWrong")}</h2>
         <p className="mb-6 text-zinc-400">{t("keywordSearchError")}</p>
         {error.digest && (
-          <p className="mb-4 text-xs text-zinc-500">
+          <p className="mb-4 text-xs text-zinc-400">
             {t("errorId")}: {error.digest}
           </p>
         )}
