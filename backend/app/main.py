@@ -29,7 +29,7 @@ from app.logging_config import LoggingConfig, get_logger, setup_logging
 from app.middleware.correlation import CorrelationIDMiddleware
 from app.middleware.error_handler import ErrorHandlerMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
-from app.middleware.security_headers import SecurityHeadersMiddleware
+from app.middleware.security_headers import SecurityHeadersMiddleware, log_hsts_startup_warning
 from app.schemas.sse_events import (
     CompareParagraphEvent,
     CompareProgressEvent,
@@ -59,6 +59,7 @@ async def lifespan(app: FastAPI):
 
     # Validate production settings
     settings.validate_production_settings()
+    log_hsts_startup_warning()
 
     logger.info("Initializing database...")
     await init_db()
@@ -205,7 +206,19 @@ app = FastAPI(
     description="Clarus RAG Search API - Kuran, Incil, Tevrat",
     version="2.0.0",
     lifespan=lifespan,
+    # Disable API documentation in production to prevent attack surface exposure (#241)
+    docs_url=None if settings.is_production else "/docs",
+    redoc_url=None if settings.is_production else "/redoc",
+    openapi_url=None if settings.is_production else "/openapi.json",
 )
+
+if not settings.is_production:
+    logger.info(
+        "API documentation enabled",
+        extra={"docs_url": "/docs", "redoc_url": "/redoc", "openapi_url": "/openapi.json"},
+    )
+else:
+    logger.info("API documentation disabled in production (APP_ENV=production)")
 
 
 def custom_openapi():
