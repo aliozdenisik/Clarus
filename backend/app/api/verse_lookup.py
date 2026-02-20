@@ -13,8 +13,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from app.logging_config import get_logger
 from app.schemas.common import DEFAULT_TRANSLATOR, TranslatorType
 from app.schemas.verse_lookup import (
+    LookupVerseResult,
     VerseLookupResponse,
-    VerseResult,
 )
 from src.verse_parser import (
     SURAH_NAME_MAP,
@@ -60,7 +60,7 @@ async def fetch_quran_verses(
     client: AsyncQdrantClient,
     parsed: ParsedReference,
     translator: str = DEFAULT_TRANSLATOR,
-) -> list[VerseResult]:
+) -> list[LookupVerseResult]:
     """Fetch Quran verses from Qdrant using payload filter.
 
     Args:
@@ -69,7 +69,7 @@ async def fetch_quran_verses(
         translator: Quran translator (default: "diyanet")
 
     Returns:
-        List of VerseResult objects
+        List of LookupVerseResult objects
     """
     results = []
 
@@ -112,7 +112,7 @@ async def fetch_quran_verses(
                 payload = point.payload
                 if payload is not None:
                     results.append(
-                        VerseResult(
+                        LookupVerseResult(
                             reference=f"{surah_id}:{verse_id}",
                             text=payload.get("translation", ""),
                             source="quran",
@@ -131,7 +131,7 @@ async def fetch_quran_verses(
     return results
 
 
-async def fetch_bible_verses(client: AsyncQdrantClient, parsed: ParsedReference) -> list[VerseResult]:
+async def fetch_bible_verses(client: AsyncQdrantClient, parsed: ParsedReference) -> list[LookupVerseResult]:
     """Fetch Bible verses from Qdrant using payload filter.
 
     Args:
@@ -139,7 +139,7 @@ async def fetch_bible_verses(client: AsyncQdrantClient, parsed: ParsedReference)
         parsed: ParsedReference with book_id, chapter, and verses
 
     Returns:
-        List of VerseResult objects
+        List of LookupVerseResult objects
     """
     results = []
 
@@ -194,7 +194,7 @@ async def fetch_bible_verses(client: AsyncQdrantClient, parsed: ParsedReference)
                 payload = point.payload
                 if payload is not None:
                     results.append(
-                        VerseResult(
+                        LookupVerseResult(
                             reference=f"{parsed.book_name} {chapter}:{verse_num}",
                             text=payload.get("text", ""),
                             source=source,
