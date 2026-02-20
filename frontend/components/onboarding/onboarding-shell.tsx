@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { springPresets } from "@/lib/design-system"
 import { useOnboardingStore } from "@/lib/stores/onboarding-store"
+import { usePreferencesStore } from "@/lib/stores/preferences-store"
 import { updatePreferencesApiPreferencesPut } from "@/lib/api"
 import { logger } from "@/lib/logger"
 import { cn } from "@/lib/utils"
@@ -26,6 +27,8 @@ export default function OnboardingShell({ children }: { children: React.ReactNod
 
   const progressPercent = ((currentStep + 1) / totalSteps) * 100
 
+  const setOnboardingCompleted = usePreferencesStore((s) => s.setOnboardingCompleted)
+
   const handleSkipSetup = async () => {
     try {
       await updatePreferencesApiPreferencesPut({
@@ -35,11 +38,11 @@ export default function OnboardingShell({ children }: { children: React.ReactNod
           },
         },
       })
-      router.push("/")
     } catch (error) {
       logger.error("Failed to skip onboarding", { error })
-      router.push("/")
     }
+    setOnboardingCompleted(true)
+    router.push("/hub" as Parameters<typeof router.push>[0])
   }
 
   return (

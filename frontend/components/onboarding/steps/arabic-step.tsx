@@ -150,7 +150,7 @@ export function ArabicStep() {
                   "text-xs transition-colors duration-200",
                   i === safeIndex
                     ? "font-medium text-[var(--color-text-primary)]"
-                    : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
+                    : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
                 )}
               >
                 {t(`arabic.${level}`)}
@@ -169,7 +169,7 @@ export function ArabicStep() {
             gradientFrom={LEVEL_ACCENT_FROM[currentLevel]}
             gradientTo={LEVEL_ACCENT_TO[currentLevel]}
           >
-            <p className="mb-4 text-xs font-medium tracking-widest text-[var(--color-text-tertiary)] uppercase">
+            <p className="mb-4 text-xs font-medium tracking-widest text-[var(--color-text-secondary)] uppercase">
               Preview — {BISMILLAH.reference}
             </p>
 

@@ -190,7 +190,12 @@ export async function consumeDistributedFixedWindow(
       await redis.connect()
     }
 
-    const rawResult = await redis.eval(REDIS_SCRIPT, 1, buildRedisRateLimitKey(key), String(windowMs))
+    const rawResult = await redis.eval(
+      REDIS_SCRIPT,
+      1,
+      buildRedisRateLimitKey(key),
+      String(windowMs)
+    )
     const parsed = parseRedisEvalResult(rawResult)
     if (!parsed) {
       return consumeFixedWindow(key, limit, windowMs, now)

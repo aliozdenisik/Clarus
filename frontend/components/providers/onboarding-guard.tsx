@@ -38,7 +38,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     if (!onboarding_completed && !isOnboardingRoute && !isAuthRoute) {
       router.push("/onboarding")
     } else if (onboarding_completed && isOnboardingRoute) {
-      router.push("/")
+      router.push("/hub" as Parameters<typeof router.push>[0])
     }
   }, [onboarding_completed, isPending, session, prefetchDone, storeError, pathname, router])
 

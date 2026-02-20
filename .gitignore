@@ -59,6 +59,7 @@ wheels/
 # Testing & Quality
 # ----------------
 .pytest_cache/
+.hypothesis/
 .coverage
 htmlcov/
 .tox/
@@ -202,3 +203,4 @@ test_citation_fix.py
 docs/
 !docs/roadmap/
 !docs/roadmap/**
+roadmap.md

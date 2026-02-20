@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 
 import { cn } from "@/lib/utils"
 import { useOnboardingStore } from "@/lib/stores/onboarding-store"
+import { usePreferencesStore } from "@/lib/stores/preferences-store"
 import { useRouter } from "@/i18n/navigation"
 import { updatePreferencesApiPreferencesPut } from "@/lib/api"
 import { logger } from "@/lib/logger"
@@ -41,6 +42,7 @@ export function CompletionStep() {
   const arabicProficiency = useOnboardingStore((s) => s.arabicProficiency)
   const interests = useOnboardingStore((s) => s.interests)
   const markComplete = useOnboardingStore((s) => s.markComplete)
+  const setOnboardingCompleted = usePreferencesStore((s) => s.setOnboardingCompleted)
 
   const confettiRef = useRef<ConfettiRef>(null)
 
@@ -73,6 +75,7 @@ export function CompletionStep() {
     } catch (error) {
       logger.error("Failed to complete onboarding", { error })
     }
+    setOnboardingCompleted(true)
     markComplete()
     router.push("/hub" as Parameters<typeof router.push>[0])
   }
@@ -157,7 +160,7 @@ export function CompletionStep() {
             <div className="space-y-0 divide-y divide-[var(--color-border-subtle)]">
               {summaryRows.map(({ label, value }) => (
                 <div key={label} className="flex items-center justify-between gap-4 px-5 py-3">
-                  <span className="shrink-0 text-xs font-medium tracking-widest text-[var(--color-text-tertiary)] uppercase">
+                  <span className="shrink-0 text-xs font-medium tracking-widest text-[var(--color-text-secondary)] uppercase">
                     {label}
                   </span>
                   <span className="truncate text-right text-sm font-medium text-[var(--color-text-primary)]">

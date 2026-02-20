@@ -987,18 +987,7 @@ function SearchContent() {
                     const resultKey = `${baseKey}-${occurrence}`
 
                     return (
-                      <motion.div
-                        key={resultKey}
-                        data-verse-id={result.reference}
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{
-                          opacity: 1,
-                          y: 0,
-                        }}
-                        exit={{ opacity: 0, scale: 0.98 }}
-                        transition={{ ...springPresets.snappy, delay: i * 0.03 }}
-                        className="mb-3"
-                      >
+                      <div key={resultKey} data-verse-id={result.reference} className="mb-3">
                         <div
                           className={cn(
                             "rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 transition-colors duration-200 hover:border-[var(--color-border-glow)]",
@@ -1008,7 +997,7 @@ function SearchContent() {
                         >
                           <div className="mb-3 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                              <span className="text-sm font-medium text-[var(--color-accent-primary)]">
+                              <span className="text-sm font-medium text-white">
                                 {result.reference || t("unknownReference")}
                               </span>
                               <SourceBadge source={mapSourceToType(result.source)} />
@@ -1031,7 +1020,7 @@ function SearchContent() {
                             {extractVerseText(result.text)}
                           </p>
                         </div>
-                      </motion.div>
+                      </div>
                     )
                   })
                 })()}

@@ -50,20 +50,20 @@ export function PurposeStep() {
                 "cursor-pointer text-center select-none",
                 "focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent focus-visible:outline-none",
                 isSelected
-                  ? "border-indigo-500/40 bg-indigo-500/[0.08] text-white"
-                  : "border-white/10 bg-white/[0.03] text-[var(--color-text-secondary)] hover:border-white/20 hover:bg-white/[0.06]"
+                  ? "border-indigo-500/50 bg-indigo-500/15 text-white"
+                  : "border-white/15 bg-white/[0.06] text-[var(--color-text-secondary)] hover:border-white/25 hover:bg-white/10"
               )}
             >
               <div
                 className={cn(
                   "flex h-10 w-10 items-center justify-center rounded-lg transition-colors duration-200",
-                  isSelected ? "bg-indigo-500/20" : "bg-white/10"
+                  isSelected ? "bg-indigo-500/20" : "bg-white/[0.12]"
                 )}
               >
                 <Icon
                   className={cn(
                     "h-5 w-5 transition-colors duration-200",
-                    isSelected ? "text-indigo-300" : "text-[var(--color-text-tertiary)]"
+                    isSelected ? "text-indigo-300" : "text-[var(--color-text-secondary)]"
                   )}
                   aria-hidden="true"
                 />

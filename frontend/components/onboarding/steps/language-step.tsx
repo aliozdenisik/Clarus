@@ -79,8 +79,8 @@ export function LanguageStep() {
                   "cursor-pointer text-left select-none",
                   "focus-visible:ring-2 focus-visible:ring-[var(--color-accent-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent focus-visible:outline-none",
                   isSelected
-                    ? "border-indigo-500/40 bg-indigo-500/[0.08] ring-1 ring-indigo-500/20"
-                    : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]"
+                    ? "border-indigo-500/50 bg-indigo-500/15 ring-1 ring-indigo-500/30"
+                    : "border-white/15 bg-white/[0.06] hover:border-white/25 hover:bg-white/10"
                 )}
               >
                 <span
@@ -102,7 +102,7 @@ export function LanguageStep() {
                     "transition-colors duration-200",
                     isSelected
                       ? "text-[var(--color-accent-secondary)]"
-                      : "text-[var(--color-text-tertiary)]"
+                      : "text-[var(--color-text-secondary)]"
                   )}
                 >
                   {t(lang.titleKey)}
@@ -114,7 +114,7 @@ export function LanguageStep() {
                     "transition-colors duration-200",
                     isSelected
                       ? "text-[var(--color-text-secondary)]"
-                      : "text-[var(--color-text-tertiary)]"
+                      : "text-[var(--color-text-secondary)]"
                   )}
                 >
                   {t(lang.descKey)}
