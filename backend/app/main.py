@@ -430,8 +430,8 @@ async def health_check():
                     redis_memory = redis_memory.decode()
                 clients_info = await redis_manager.client.info(section="clients")
                 redis_clients = clients_info.get("connected_clients", 0)
-            except Exception:
-                pass  # Memory info is optional
+            except Exception as e:
+                logger.debug("Failed to get Redis memory info: %s", e)  # Memory info is optional
         else:
             if status == "healthy":
                 status = "degraded"

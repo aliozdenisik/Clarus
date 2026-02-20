@@ -210,7 +210,8 @@ class SemanticVerseChunker:
         if self._embeddings is None:
             self.compute_embeddings()
 
-        assert self._embeddings is not None
+        if self._embeddings is None:
+            raise RuntimeError("Embeddings not available after compute_embeddings()")
         embeddings_array = self._embeddings
 
         # Normalize embeddings for cosine similarity
@@ -257,7 +258,8 @@ class SemanticVerseChunker:
         if self._similarities is None:
             self.compute_similarities()
 
-        assert self._similarities is not None
+        if self._similarities is None:
+            raise RuntimeError("Similarities not available after compute_similarities()")
         similarities_array = self._similarities
 
         threshold = threshold if threshold is not None else self.similarity_threshold
@@ -337,7 +339,8 @@ class SemanticVerseChunker:
         Returns:
             Adjusted boundary list
         """
-        assert self._similarities is not None
+        if self._similarities is None:
+            raise RuntimeError("Similarities not available after compute_similarities()")
         similarities_array = self._similarities
 
         adjusted = [0]
@@ -403,7 +406,8 @@ class SemanticVerseChunker:
         # Detect boundaries with specified threshold type
         boundaries = self.detect_boundaries(threshold_type=threshold_type)
 
-        assert self._similarities is not None
+        if self._similarities is None:
+            raise RuntimeError("Similarities not available after compute_similarities()")
         similarities_array = self._similarities
 
         # Apply size constraints

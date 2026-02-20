@@ -91,7 +91,8 @@ class DenseEncoder:
                 from app.config import settings
 
                 redis_module = sync_redis
-                assert redis_module is not None
+                if redis_module is None:
+                    raise RuntimeError("Redis module is not available")
 
                 self._redis = redis_module.Redis(
                     host=settings.redis_host,

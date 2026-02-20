@@ -139,7 +139,8 @@ class BibleDataLoader:
             loaded = json.load(f)
             self._data = loaded if isinstance(loaded, dict) else {}
 
-        assert self._data is not None
+        if self._data is None:
+            raise RuntimeError("Failed to load Bible data")
         return self._data
 
     def create_chunks(self, show_progress: bool = True) -> list[BibleChunk]:

@@ -67,7 +67,8 @@ def _load_quran_data() -> list[dict]:
                 _quran_cache = loaded if isinstance(loaded, list) else []
         else:
             _quran_cache = []
-    assert _quran_cache is not None
+    if _quran_cache is None:
+        raise RuntimeError("Failed to initialize Quran cache")
     return _quran_cache
 
 
@@ -81,7 +82,8 @@ def _load_bible_data() -> dict:
                 _bible_cache = loaded if isinstance(loaded, dict) else {"books": []}
         else:
             _bible_cache = {"books": []}
-    assert _bible_cache is not None
+    if _bible_cache is None:
+        raise RuntimeError("Failed to initialize Bible cache")
     return _bible_cache
 
 
