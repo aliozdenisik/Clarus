@@ -9,6 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.api_key_validator import get_current_user_flexible
 from app.db import get_db
 from app.models import UserPreferences
+from app.schemas.errors import UnauthorizedResponse
+from app.schemas.responses import MessageResponse
 
 router = APIRouter()
 
@@ -69,7 +71,12 @@ def _get_default_preferences() -> dict:
     }
 
 
-@router.get("/", response_model=PreferencesResponse)
+@router.get(
+    "/",
+    response_model=PreferencesResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={401: {"description": "Not authenticated", "model": UnauthorizedResponse}},
+)
 async def get_preferences(
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
@@ -83,7 +90,12 @@ async def get_preferences(
     return PreferencesResponse(data=_get_default_preferences())
 
 
-@router.put("/", response_model=PreferencesResponse)
+@router.put(
+    "/",
+    response_model=PreferencesResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={401: {"description": "Not authenticated", "model": UnauthorizedResponse}},
+)
 async def update_preferences(
     updates: PreferencesUpdate,
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
@@ -108,7 +120,12 @@ async def update_preferences(
     return PreferencesResponse(data=_preferences_to_dict(prefs))
 
 
-@router.delete("/")
+@router.delete(
+    "/",
+    response_model=MessageResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={401: {"description": "Not authenticated", "model": UnauthorizedResponse}},
+)
 async def reset_preferences(
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),

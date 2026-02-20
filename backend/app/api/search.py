@@ -21,6 +21,8 @@ from app.logging_config import get_logger, log_performance
 from app.middleware.error_handler import NotFoundError, ValidationError
 from app.models import SearchHistory, UserPreferences
 from app.schemas.common import DEFAULT_TRANSLATOR, QueryValidation, TranslatorType
+from app.schemas.errors import UnauthorizedResponse
+from app.schemas.responses import MessageResponse, PaginationInfo
 from src.ultimate_rag import UltimateRAG
 
 logger = get_logger(__name__)
@@ -77,6 +79,12 @@ class HistoryItem(BaseModel):
     result_count: int | None = None
 
 
+class SearchHistoryResponse(BaseModel):
+    success: bool = True
+    data: list[HistoryItem]
+    pagination: PaginationInfo
+
+
 def _sanitize_query(query: str) -> str:
     return QueryValidation.sanitize(query)
 
@@ -95,7 +103,12 @@ def _validate_query(query: str, locale: str = "tr") -> str:
     return sanitized
 
 
-@router.post("/quran", response_model=SearchResponse)
+@router.post(
+    "/quran",
+    response_model=SearchResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={401: {"description": "Not authenticated", "model": UnauthorizedResponse}},
+)
 async def search_quran(
     request: SearchRequest,
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
@@ -172,7 +185,12 @@ async def search_quran(
     )
 
 
-@router.post("/bible", response_model=SearchResponse)
+@router.post(
+    "/bible",
+    response_model=SearchResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={401: {"description": "Not authenticated", "model": UnauthorizedResponse}},
+)
 async def search_bible(
     request: SearchRequest,
     testament: str | None = Query(None, pattern="^(ot|nt|apocrypha)$"),
@@ -259,7 +277,12 @@ async def search_bible(
     )
 
 
-@router.get("/history")
+@router.get(
+    "/history",
+    response_model=SearchHistoryResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={401: {"description": "Not authenticated", "model": UnauthorizedResponse}},
+)
 async def get_search_history(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
@@ -294,21 +317,25 @@ async def get_search_history(
 
     total_pages = (total_items + limit - 1) // limit if limit > 0 else 0
 
-    return {
-        "success": True,
-        "data": [item.model_dump() for item in items],
-        "pagination": {
-            "page": page,
-            "limit": limit,
-            "total_items": total_items,
-            "total_pages": total_pages,
-            "has_next": page < total_pages,
-            "has_prev": page > 1,
-        },
-    }
+    return SearchHistoryResponse(
+        data=items,
+        pagination=PaginationInfo(
+            page=page,
+            limit=limit,
+            total_items=total_items,
+            total_pages=total_pages,
+            has_next=page < total_pages,
+            has_prev=page > 1,
+        ),
+    )
 
 
-@router.delete("/history/{history_id}")
+@router.delete(
+    "/history/{history_id}",
+    response_model=MessageResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={401: {"description": "Not authenticated", "model": UnauthorizedResponse}},
+)
 async def delete_history_item(
     history_id: int,
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
@@ -329,7 +356,12 @@ async def delete_history_item(
     return {"success": True, "message": get_error_message("history_deleted", locale)}
 
 
-@router.delete("/history")
+@router.delete(
+    "/history",
+    response_model=MessageResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={401: {"description": "Not authenticated", "model": UnauthorizedResponse}},
+)
 async def clear_history(
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),

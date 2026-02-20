@@ -29,6 +29,7 @@ from app.db import get_db
 from app.i18n.detector import get_locale
 from app.models import SearchHistory, UserPreferences
 from app.schemas.common import DEFAULT_TRANSLATOR, TranslatorType
+from app.schemas.errors import UnauthorizedResponse
 from src.comparative_rag import ComparativeRAG
 from src.query_translator import QueryTranslator, TranslationError
 from src.ultimate_rag import UltimateRAG
@@ -86,7 +87,17 @@ async def get_current_user_from_sse(db: AsyncSession, request: Request):
     return await _resolve_user_by_id(session.user_id, db, "get_current_user_from_sse")
 
 
-@router.get("/search")
+@router.get(
+    "/search",
+    openapi_extra={"security": [{"SessionCookieAuth": []}]},
+    responses={
+        200: {
+            "content": {"text/event-stream": {}},
+            "description": "Server-Sent Events stream of search results and AI answer tokens",
+        },
+        401: {"description": "Not authenticated", "model": UnauthorizedResponse},
+    },
+)
 async def stream_search(
     request: Request,
     q: str = Query(..., min_length=1, max_length=500, description="Arama sorgusu"),
@@ -287,7 +298,17 @@ async def stream_search(
     )
 
 
-@router.get("/compare")
+@router.get(
+    "/compare",
+    openapi_extra={"security": [{"SessionCookieAuth": []}]},
+    responses={
+        200: {
+            "content": {"text/event-stream": {}},
+            "description": "Server-Sent Events stream of multi-agent comparative analysis paragraphs",
+        },
+        401: {"description": "Not authenticated", "model": UnauthorizedResponse},
+    },
+)
 async def stream_compare(
     request: Request,
     topic: str = Query(..., min_length=1, max_length=500, description="Karşılaştırma konusu"),

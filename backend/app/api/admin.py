@@ -4,6 +4,7 @@ from typing import Any
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,8 +15,56 @@ from app.i18n.detector import get_locale
 from app.i18n.messages import get_error_message
 from app.middleware.error_handler import NotFoundError, ValidationError
 from app.models import SearchHistory, User
+from app.schemas.errors import ForbiddenResponse, UnauthorizedResponse
+from app.schemas.responses import MessageResponse, PaginationInfo
 
 router = APIRouter()
+
+
+class AdminStatsData(BaseModel):
+    total_users: int
+    total_searches: int
+    today_searches: int
+    active_users_7d: int
+    search_by_type: dict[str, int]
+
+
+class AdminStatsResponse(BaseModel):
+    success: bool = True
+    data: AdminStatsData
+
+
+class AdminUserItem(BaseModel):
+    id: int
+    name: str | None = None
+    email: str
+    created_at: str | None = None
+    search_count: int = 0
+    has_google: bool = False
+
+
+class AdminUsersResponse(BaseModel):
+    success: bool = True
+    data: list[AdminUserItem]
+    pagination: PaginationInfo
+
+
+class SystemInfoData(BaseModel):
+    python_version: str
+    platform: str
+    qdrant_status: str
+    collections_count: int
+    api_status: str
+
+
+class SystemInfoResponse(BaseModel):
+    success: bool = True
+    data: SystemInfoData
+
+
+class CacheFlushResponse(BaseModel):
+    success: bool = True
+    deleted_keys: int
 
 
 def check_admin(user: dict[str, Any]):
@@ -24,7 +73,15 @@ def check_admin(user: dict[str, Any]):
     return True
 
 
-@router.get("/stats")
+@router.get(
+    "/stats",
+    response_model=AdminStatsResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={
+        401: {"description": "Not authenticated", "model": UnauthorizedResponse},
+        403: {"description": "Admin access required", "model": ForbiddenResponse},
+    },
+)
 async def get_stats(
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
     db: AsyncSession = Depends(get_db),
@@ -47,19 +104,26 @@ async def get_stats(
     )
     search_type_counts = {row[0]: row[1] for row in search_type_counts_result.all()}
 
-    return {
-        "success": True,
-        "data": {
-            "total_users": total_users or 0,
-            "total_searches": total_searches or 0,
-            "today_searches": today_searches or 0,
-            "active_users_7d": active_users or 0,
-            "search_by_type": search_type_counts,
-        },
-    }
+    return AdminStatsResponse(
+        data=AdminStatsData(
+            total_users=total_users or 0,
+            total_searches=total_searches or 0,
+            today_searches=today_searches or 0,
+            active_users_7d=active_users or 0,
+            search_by_type=search_type_counts,
+        )
+    )
 
 
-@router.get("/users")
+@router.get(
+    "/users",
+    response_model=AdminUsersResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={
+        401: {"description": "Not authenticated", "model": UnauthorizedResponse},
+        403: {"description": "Admin access required", "model": ForbiddenResponse},
+    },
+)
 async def get_users(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
@@ -81,34 +145,41 @@ async def get_users(
         user_search_counts[user.id] = count_result.scalar() or 0
 
     items = [
-        {
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "created_at": user.created_at.isoformat() if user.created_at else None,
-            "search_count": user_search_counts.get(user.id, 0),
-            "has_google": user.google_id is not None,
-        }
+        AdminUserItem(
+            id=user.id,
+            name=user.name,
+            email=user.email,
+            created_at=user.created_at.isoformat() if user.created_at else None,
+            search_count=user_search_counts.get(user.id, 0),
+            has_google=user.google_id is not None,
+        )
         for user in users
     ]
 
     total_pages = (total_items + limit - 1) // limit if limit > 0 else 0
 
-    return {
-        "success": True,
-        "data": items,
-        "pagination": {
-            "page": page,
-            "limit": limit,
-            "total_items": total_items,
-            "total_pages": total_pages,
-            "has_next": page < total_pages,
-            "has_prev": page > 1,
-        },
-    }
+    return AdminUsersResponse(
+        data=items,
+        pagination=PaginationInfo(
+            page=page,
+            limit=limit,
+            total_items=total_items,
+            total_pages=total_pages,
+            has_next=page < total_pages,
+            has_prev=page > 1,
+        ),
+    )
 
 
-@router.get("/system")
+@router.get(
+    "/system",
+    response_model=SystemInfoResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={
+        401: {"description": "Not authenticated", "model": UnauthorizedResponse},
+        403: {"description": "Admin access required", "model": ForbiddenResponse},
+    },
+)
 async def get_system_info(
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
 ):
@@ -129,19 +200,26 @@ async def get_system_info(
     except httpx.RequestError:
         qdrant_status = "disconnected"
 
-    return {
-        "success": True,
-        "data": {
-            "python_version": platform.python_version(),
-            "platform": platform.system(),
-            "qdrant_status": qdrant_status,
-            "collections_count": collections_count,
-            "api_status": "running",
-        },
-    }
+    return SystemInfoResponse(
+        data=SystemInfoData(
+            python_version=platform.python_version(),
+            platform=platform.system(),
+            qdrant_status=qdrant_status,
+            collections_count=collections_count,
+            api_status="running",
+        )
+    )
 
 
-@router.delete("/users/{user_id}")
+@router.delete(
+    "/users/{user_id}",
+    response_model=MessageResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={
+        401: {"description": "Not authenticated", "model": UnauthorizedResponse},
+        403: {"description": "Admin access required", "model": ForbiddenResponse},
+    },
+)
 async def delete_user(
     user_id: int,
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
@@ -165,7 +243,15 @@ async def delete_user(
     return {"success": True, "message": get_error_message("user_deleted", locale)}
 
 
-@router.post("/cache/flush")
+@router.post(
+    "/cache/flush",
+    response_model=CacheFlushResponse,
+    openapi_extra={"security": [{"SessionCookieAuth": []}, {"ApiKeyAuth": []}]},
+    responses={
+        401: {"description": "Not authenticated", "model": UnauthorizedResponse},
+        403: {"description": "Admin access required", "model": ForbiddenResponse},
+    },
+)
 async def flush_search_cache(
     current_user: dict[str, Any] = Depends(get_current_user_flexible),
 ):

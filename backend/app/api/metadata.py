@@ -127,7 +127,7 @@ def _get_testament(book_nr: int) -> str:
         return "apocrypha"
 
 
-@router.get("/collections")
+@router.get("/collections", response_model=MetadataResponse)
 async def get_collections():
     try:
         async with httpx.AsyncClient() as client:
@@ -158,7 +158,7 @@ async def get_collections():
         raise HTTPException(status_code=503, detail="Qdrant connection failed")
 
 
-@router.get("/quran/surahs")
+@router.get("/quran/surahs", response_model=MetadataResponse)
 async def get_quran_surahs():
     quran_data = _load_quran_data()
 
@@ -182,7 +182,7 @@ async def get_quran_surahs():
     )
 
 
-@router.get("/quran/surahs/{surah_id}")
+@router.get("/quran/surahs/{surah_id}", response_model=MetadataResponse)
 async def get_surah_detail(
     surah_id: int,
     translator: TranslatorType = Query(
@@ -229,7 +229,7 @@ async def get_surah_detail(
     )
 
 
-@router.get("/bible/books")
+@router.get("/bible/books", response_model=MetadataResponse)
 async def get_bible_books(testament: str | None = None):
     bible_data = _load_bible_data()
 
@@ -258,7 +258,7 @@ async def get_bible_books(testament: str | None = None):
     )
 
 
-@router.get("/bible/books/{book_nr}")
+@router.get("/bible/books/{book_nr}", response_model=MetadataResponse)
 async def get_book_detail(book_nr: int):
     bible_data = _load_bible_data()
 
@@ -287,7 +287,7 @@ async def get_book_detail(book_nr: int):
     )
 
 
-@router.get("/bible/books/{book_nr}/chapters/{chapter_nr}")
+@router.get("/bible/books/{book_nr}/chapters/{chapter_nr}", response_model=MetadataResponse)
 async def get_chapter_verses(book_nr: int, chapter_nr: int):
     bible_data = _load_bible_data()
 
@@ -308,7 +308,7 @@ async def get_chapter_verses(book_nr: int, chapter_nr: int):
     )
 
 
-@router.get("/testaments")
+@router.get("/testaments", response_model=MetadataResponse)
 async def get_testaments():
     return MetadataResponse(
         data={
@@ -335,7 +335,7 @@ async def get_testaments():
     )
 
 
-@router.get("/translators")
+@router.get("/translators", response_model=MetadataResponse)
 async def get_translators():
     """Get list of available Quran translators.
 
