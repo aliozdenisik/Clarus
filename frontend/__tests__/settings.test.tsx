@@ -7,6 +7,7 @@ import * as AuthClient from "@/lib/auth-client"
 // Mock Next.js router
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  usePathname: vi.fn(() => "/en/settings"),
 }))
 
 // Mock next-intl locale-aware navigation (used by settings page)
@@ -134,7 +135,7 @@ describe("SettingsPage", () => {
     // Verify both General and Search Defaults sections render
     expect(screen.getByText("General")).toBeDefined()
     expect(screen.getByText("Search Defaults")).toBeDefined()
-    expect(screen.getByText("Advanced")).toBeDefined()
+    expect(screen.getByRole("heading", { name: "Advanced" })).toBeDefined()
   })
 
   it("calls savePreferences when Save button is clicked", async () => {
