@@ -93,7 +93,19 @@ async def get_current_user_from_sse(db: AsyncSession, request: Request):
     responses={
         200: {
             "content": {"text/event-stream": {}},
-            "description": "Server-Sent Events stream of search results and AI answer tokens",
+            "description": (
+                "Server-Sent Events stream of search results and AI answer tokens.\n\n"
+                "## SSE Event Types\n\n"
+                "Each `data:` line contains a JSON object with one of these shapes:\n\n"
+                "| Event | Discriminator | Description |\n"
+                "|-------|--------------|-------------|\n"
+                "| Status | `status` field | Pipeline progress (`searching` → `found` → `generating` → `translating`) |\n"
+                '| Token | `type: "token"` | Single word of the AI-generated answer |\n'
+                "| Citations | `citations` field | Array of citation reference strings |\n"
+                "| Verse Details | `verse_details` field | Map of reference → verse metadata |\n"
+                '| Complete | `type: "complete"` | Final aggregated result with answer, results, and citations |\n'
+                "| Error | `error` field | Error message string |\n"
+            ),
         },
         401: {"description": "Not authenticated", "model": UnauthorizedResponse},
     },
@@ -304,7 +316,19 @@ async def stream_search(
     responses={
         200: {
             "content": {"text/event-stream": {}},
-            "description": "Server-Sent Events stream of multi-agent comparative analysis paragraphs",
+            "description": (
+                "Server-Sent Events stream of multi-agent comparative analysis.\n\n"
+                "## SSE Event Types\n\n"
+                "Each `data:` line contains a JSON object with one of these shapes:\n\n"
+                "| Event | Discriminator | Description |\n"
+                "|-------|--------------|-------------|\n"
+                '| Progress | `type: "progress"` | Pipeline step updates with machine-readable step ID |\n'
+                "| Verse Details | `verse_details` field | Map of reference → verse metadata |\n"
+                '| Paragraph | `type: "paragraph"` | Structured essay paragraph with title and markdown content |\n'
+                '| Stats | `type: "stats"` | Confidence score, latency, verse/citation counts |\n'
+                '| Complete | `type: "complete"` | Signals end of stream |\n'
+                "| Error | `error` field | Error message string |\n"
+            ),
         },
         401: {"description": "Not authenticated", "model": UnauthorizedResponse},
     },
