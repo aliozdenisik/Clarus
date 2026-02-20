@@ -24,6 +24,9 @@ sys.path.insert(0, "/home/freyja/qdrant/backend")
 from app.db import engine
 from app.main import app
 
+# All tests in this module require a running PostgreSQL database
+pytestmark = pytest.mark.requires_db
+
 
 class TestEtymologyEndpoint:
     """Test GET /api/etymology/{root} endpoint."""

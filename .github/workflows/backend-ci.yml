@@ -46,6 +46,7 @@ jobs:
       - name: Run all tests
         run: >-
           uv run pytest tests/ -v
+          -m "not requires_db"
           --ignore-glob="tests/run_*.py"
           --ignore-glob="tests/*_verification_test.py"
           --ignore-glob="tests/*_comprehensive_test.py"
