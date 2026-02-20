@@ -81,7 +81,7 @@ def _throttle_wait() -> None:
     if sleep_for > 0:
         logger.info("Rate-limit backoff: sleeping %.1fs", sleep_for)
         time.sleep(sleep_for)
-        jitter = random.uniform(0.1, 1.0)
+        jitter = random.uniform(0.1, 1.0)  # noqa: S311 — non-crypto jitter
         time.sleep(jitter)
 
 
@@ -130,7 +130,7 @@ def translate_sections(
     timeout: float = DEFAULT_TIMEOUT,
 ) -> dict[str, str] | None:
     _throttle_wait()
-    time.sleep(random.uniform(0.1, 0.5))
+    time.sleep(random.uniform(0.1, 0.5))  # noqa: S311 — non-crypto jitter
 
     user_content = json.dumps(sections, ensure_ascii=False)
 
@@ -245,7 +245,7 @@ def main() -> int:
 
     def process_row(row):
         nonlocal done_count, success_count, fail_count
-        row_id, root, root_bw, def_en, freq = row
+        row_id, root, root_bw, def_en, _freq = row
 
         if cancel_event.is_set():
             return None
