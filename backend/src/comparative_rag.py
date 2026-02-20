@@ -494,7 +494,8 @@ class ComparativeRAG:
         # Quran searches (one per keyword)
         if quran_vectors:
             searcher = self._get_quran_searcher()
-            assert quran_keywords is not None
+            if quran_keywords is None:
+                raise RuntimeError("quran_keywords must not be None when quran_vectors is non-empty")
             for i, vector in enumerate(quran_vectors):
 
                 def search_quran_keyword(v=vector, kw=quran_keywords[i]):
@@ -514,7 +515,8 @@ class ComparativeRAG:
 
         # Bible searches (each keyword searches only active Bible collections)
         if bible_vectors:
-            assert bible_keywords is not None
+            if bible_keywords is None:
+                raise RuntimeError("bible_keywords must not be None when bible_vectors is non-empty")
 
             bible_searchers: list[tuple[str, BibleSearcher]] = []
             if "ot" in active_keys:
@@ -767,8 +769,8 @@ class ComparativeRAG:
             if progress_callback:
                 try:
                     progress_callback(step_id, message)
-                except Exception:
-                    pass  # Never let callback errors break the pipeline
+                except Exception as e:
+                    logger.debug("Progress callback error (suppressed): %s", e)
 
         mode_label = "Multi-Query" if self.enable_multi_query else "Single-Query"
 

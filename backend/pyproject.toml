@@ -132,7 +132,6 @@ select = [
 
 ignore = [
     "E501",    # Line too long (formatter handles)
-    "S101",    # assert (tests need it — per-file-ignores handles)
     "S104",    # Possible binding to all interfaces (dev servers)
     "S108",    # Probable insecure /tmp usage (false positives)
     "B008",    # Function call in default arg (FastAPI Depends pattern)
@@ -151,7 +150,6 @@ ignore = [
     "S310",    # urllib audit — URL parsing, not user input
     "T201",    # print() — CLI tool uses Rich console + print extensively
     "S608",    # SQL injection via f-string — SQLAlchemy text() patterns
-    "S110",    # try-except-pass — intentional error suppression
     "S324",    # MD5/SHA1 — used for hashing, not security
     "ASYNC230", # open() in async — sync file I/O in data loaders
     "ASYNC221", # sync HTTP call in async — wrapped by aiohttp
@@ -167,8 +165,8 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403"]
-"tests/**/*.py" = ["S101", "S105", "S106", "S311", "S603", "S607", "PLR2004", "T20", "ASYNC"]
-"scripts/**/*.py" = ["T20", "S603", "S607", "B007"]
+"tests/**/*.py" = ["S101", "S105", "S106", "S110", "S311", "S603", "S607", "PLR2004", "T20", "ASYNC"]
+"scripts/**/*.py" = ["S101", "T20", "S603", "S607", "B007"]
 "main.py" = ["T20"]
 
 [tool.ruff.lint.isort]

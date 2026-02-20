@@ -160,7 +160,8 @@ class OsisLoader:
         try:
             tree = defused_parse(self.file_path)
             root = tree.getroot()
-            assert root is not None, "Failed to parse OSIS XML: empty tree"
+            if root is None:
+                raise ValueError("Failed to parse OSIS XML: empty tree")
         except ET.ParseError as e:
             raise ValueError(f"Failed to parse OSIS XML: {e}")
 

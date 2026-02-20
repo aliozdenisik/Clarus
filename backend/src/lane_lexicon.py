@@ -103,7 +103,8 @@ class LaneLexiconAdapter:
             with self._engine.connect() as conn:
                 row = conn.execute(text("SELECT MAX(page) AS max_page FROM lane_entries")).mappings().first()
         else:
-            assert self.connection is not None
+            if self.connection is None:
+                raise RuntimeError("No database connection available (SQLite fallback)")
             row = self.connection.execute("SELECT MAX(page) AS max_page FROM entry").fetchone()
 
         if row is None or row["max_page"] is None:
@@ -183,7 +184,8 @@ class LaneLexiconAdapter:
                 )
                 return self._coerce_row(row) if row is not None else None
 
-        assert self.connection is not None
+        if self.connection is None:
+            raise RuntimeError("No database connection available (SQLite fallback)")
         row = self.connection.execute(
             """
             SELECT root, broot, xml, page
@@ -217,7 +219,8 @@ class LaneLexiconAdapter:
                 )
                 return self._coerce_row(row) if row is not None else None
 
-        assert self.connection is not None
+        if self.connection is None:
+            raise RuntimeError("No database connection available (SQLite fallback)")
         row = self.connection.execute(
             """
             SELECT root, broot, xml, page
@@ -252,7 +255,8 @@ class LaneLexiconAdapter:
                 )
                 candidates = [self._coerce_row(row) for row in rows]
         else:
-            assert self.connection is not None
+            if self.connection is None:
+                raise RuntimeError("No database connection available (SQLite fallback)")
             rows = self.connection.execute(
                 """
                 SELECT root, broot, xml, page

@@ -568,8 +568,8 @@ class UltimateRAG:
                                             )
                                 except CircuitBreakerError:
                                     logger.warning("Qdrant unavailable for Quran semantic chunks, skipping")
-                                except Exception:
-                                    pass
+                                except Exception as e:
+                                    logger.debug("Quran semantic chunk search error (suppressed): %s", e)
                     except Exception:
                         self._log("   Warning: Quran semantic chunks error", "yellow")
 
@@ -612,8 +612,8 @@ class UltimateRAG:
                                             )
                                 except CircuitBreakerError:
                                     logger.warning("Qdrant unavailable for Bible semantic chunks, skipping")
-                                except Exception:
-                                    pass
+                                except Exception as e:
+                                    logger.debug("Bible semantic chunk search error (suppressed): %s", e)
                     except Exception:
                         self._log("   Warning: Bible semantic chunks error", "yellow")
 
@@ -759,8 +759,8 @@ class UltimateRAG:
                                             )
                                 except CircuitBreakerError:
                                     logger.warning("Qdrant unavailable for Quran semantic chunks, skipping")
-                                except Exception:
-                                    pass
+                                except Exception as e:
+                                    logger.debug("Quran semantic chunk search error (suppressed): %s", e)
                     except Exception:
                         self._log("   Warning: Quran semantic chunks error", "yellow")
 
@@ -801,8 +801,8 @@ class UltimateRAG:
                                             )
                                 except CircuitBreakerError:
                                     logger.warning("Qdrant unavailable for Bible semantic chunks, skipping")
-                                except Exception:
-                                    pass
+                                except Exception as e:
+                                    logger.debug("Bible semantic chunk search error (suppressed): %s", e)
                     except Exception:
                         self._log("   Warning: Bible semantic chunks error", "yellow")
 

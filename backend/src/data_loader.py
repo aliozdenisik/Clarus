@@ -84,7 +84,8 @@ class QuranDataLoader:
             loaded = json.load(f)
             self._data = loaded if isinstance(loaded, list) else []
 
-        assert self._data is not None
+        if self._data is None:
+            raise RuntimeError("Failed to load Quran data")
         return self._data
 
     def create_chunks(self, show_progress: bool = True, with_preprocessing: bool = True) -> list[QuranChunk]:
