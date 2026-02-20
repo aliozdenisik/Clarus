@@ -78,7 +78,6 @@ collect_ignore_glob = [
     "tests/*_verification_test.py",
     "tests/*_comprehensive_test.py",
     "tests/test_multi_agent_flow.py",
-    "tests/archive/*",
 ]
 
 [tool.hatch.build.targets.wheel]
