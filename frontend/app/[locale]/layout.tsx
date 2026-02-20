@@ -7,6 +7,8 @@ import { Providers } from "@/components/providers"
 import { Toaster } from "sonner"
 import { LayoutChrome, LayoutFooter } from "@/components/layout/layout-chrome"
 import { CommandPalette } from "@/components/command-palette"
+import { fontVariableClassNames } from "@/lib/fonts"
+import { SkipToContent } from "@/components/layout/skip-to-content"
 
 type Props = {
   children: React.ReactNode
@@ -51,14 +53,24 @@ export default async function LocaleLayout({ children, params }: Props) {
   const messages = await getMessages()
 
   return (
-    <NextIntlClientProvider messages={messages}>
-      <Providers>
-        <LayoutChrome />
-        <main className="min-h-screen">{children}</main>
-        <LayoutFooter />
-        <CommandPalette />
-        <Toaster position="bottom-right" />
-      </Providers>
-    </NextIntlClientProvider>
+    <html lang={locale} className="dark" suppressHydrationWarning>
+      <body
+        className={`${fontVariableClassNames} antialiased`}
+        suppressHydrationWarning
+      >
+        <NextIntlClientProvider messages={messages}>
+          <Providers>
+            <SkipToContent />
+            <LayoutChrome />
+            <main id="main-content" className="min-h-screen">
+              {children}
+            </main>
+            <LayoutFooter />
+            <CommandPalette />
+            <Toaster position="bottom-right" />
+          </Providers>
+        </NextIntlClientProvider>
+      </body>
+    </html>
   )
 }

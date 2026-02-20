@@ -8,18 +8,18 @@ from app.schemas.common import (
     SuccessResponse,
 )
 from app.schemas.verse_lookup import (
+    LookupVerseResult,
     VerseLookupRequest,
     VerseLookupResponse,
-    VerseResult,
 )
 
 __all__ = [
     "ErrorDetail",
     "ErrorResponse",
+    "LookupVerseResult",
     "PaginatedResponse",
     "PaginationParams",
     "SuccessResponse",
     "VerseLookupRequest",
     "VerseLookupResponse",
-    "VerseResult",
 ]

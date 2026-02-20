@@ -55,7 +55,7 @@ class SearchRequest(BaseModel):
     )
 
 
-class VerseResult(BaseModel):
+class SearchVerseResult(BaseModel):
     source: str
     reference: str
     text: str
@@ -65,7 +65,7 @@ class VerseResult(BaseModel):
 class SearchResponse(BaseModel):
     success: bool = True
     query: str
-    results: list[VerseResult]
+    results: list[SearchVerseResult]
     total: int
     verse_details: dict[str, VerseDetail] | None = None  # NEW: Rich verse metadata for citations
     detected_language: str | None = None
@@ -158,7 +158,7 @@ async def search_quran(
     await db.commit()
 
     verses = [
-        VerseResult(
+        SearchVerseResult(
             source="Kuran",
             reference=f"{r.surah_name}:{r.verse_id}",  # FIXED: Match citation format (removed surah_id)
             text=r.translation,
@@ -256,7 +256,7 @@ async def search_bible(
     await db.commit()
 
     verses = [
-        VerseResult(
+        SearchVerseResult(
             source="Incil",
             reference=f"{getattr(r, 'book_name', '')} {getattr(r, 'chapter', '')}:{getattr(r, 'verse', '')}",
             text=getattr(r, "text", getattr(r, "translation", "")),
