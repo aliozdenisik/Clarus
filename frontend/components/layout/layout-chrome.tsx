@@ -15,7 +15,11 @@ export function LayoutChrome() {
     return null
   }
 
-  return <Navigation />
+  return (
+    <header>
+      <Navigation />
+    </header>
+  )
 }
 
 export function LayoutFooter() {
