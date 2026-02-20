@@ -31,7 +31,7 @@ from sqlalchemy import create_engine, text
 try:
     etree = importlib.import_module("lxml.etree")
 except ModuleNotFoundError:
-    import xml.etree.ElementTree as etree
+    import defusedxml.ElementTree as etree  # type: ignore[no-redef]
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -176,6 +176,7 @@ def parse_turkish_bible(xml_path: Path) -> dict[str, str]:
 
     tree = etree.parse(str(xml_path))
     root = tree.getroot()
+    assert root is not None, f"Failed to parse {xml_path}: empty XML tree"
 
     verses: dict[str, str] = {}
     book_count = 0

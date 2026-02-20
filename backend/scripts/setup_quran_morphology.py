@@ -19,9 +19,11 @@ import logging
 import re
 import sys
 import unicodedata
-import xml.etree.ElementTree as ET
 from pathlib import Path
+from urllib.parse import urlparse
 from urllib.request import urlretrieve
+
+from defusedxml.ElementTree import parse as _defused_parse
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -129,6 +131,11 @@ def download_quran_data() -> bool:
         log.info("quran-data.xml already cached at %s", QURAN_DATA_FILE)
         return True
 
+    parsed_url = urlparse(QURAN_DATA_URL)
+    if parsed_url.scheme not in ("http", "https"):
+        log.error("Invalid URL scheme for QURAN_DATA_URL: %s", parsed_url.scheme)
+        return False
+
     log.info("Downloading quran-data.xml from %s ...", QURAN_DATA_URL)
     try:
         TANZIL_DIR.mkdir(parents=True, exist_ok=True)
@@ -147,8 +154,9 @@ def download_quran_data() -> bool:
 
 def parse_surah_metadata() -> list[dict]:
     """Parse quran-data.xml → list of surah dicts."""
-    tree = ET.parse(QURAN_DATA_FILE)
+    tree = _defused_parse(QURAN_DATA_FILE)
     root = tree.getroot()
+    assert root is not None, "Failed to parse quran-data.xml: empty tree"
 
     surahs: list[dict] = []
     for sura_el in root.iter("sura"):
@@ -169,8 +177,9 @@ def parse_surah_metadata() -> list[dict]:
 
 def parse_xml_verses(xml_path: Path) -> dict[tuple[int, int], str]:
     """Parse a Tanzil verse XML → {(surah_index, ayah_index): text}."""
-    tree = ET.parse(xml_path)
+    tree = _defused_parse(xml_path)
     root = tree.getroot()
+    assert root is not None, f"Failed to parse {xml_path}: empty tree"
 
     verses: dict[tuple[int, int], str] = {}
     for sura_el in root.iter("sura"):

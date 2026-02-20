@@ -14,6 +14,8 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 
+from defusedxml.ElementTree import fromstring as defused_fromstring
+
 logger = logging.getLogger(__name__)
 
 # Valid translator keys mapping to XML files
@@ -89,7 +91,7 @@ class TanzilLoader:
             # Remove XML comments (Tanzil files have -- inside comments)
             content_no_comments = re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL)
 
-            root = ET.fromstring(content_no_comments)
+            root = defused_fromstring(content_no_comments)
         except ET.ParseError as e:
             raise ET.ParseError(f"Failed to parse {self.metadata_path}: {e}")
         except FileNotFoundError:
@@ -159,7 +161,7 @@ class TanzilLoader:
             # This is necessary because Tanzil XMLs have -- inside comments which violates XML spec
             content_no_comments = re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL)
 
-            root = ET.fromstring(content_no_comments)
+            root = defused_fromstring(content_no_comments)
         except ET.ParseError as e:
             raise ET.ParseError(f"Failed to parse {xml_path}: {e}")
         except FileNotFoundError:

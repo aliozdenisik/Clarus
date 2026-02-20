@@ -40,8 +40,8 @@ async def get_cached_search_results(collection: str, query: str, limit: int) -> 
         if redis_manager.client is None:
             return None
 
-        # Generate cache key: search:{collection}:{md5(query + str(limit))}
-        cache_key = f"search:{collection}:{hashlib.md5((query + str(limit)).encode()).hexdigest()}"
+        # Generate cache key: search:{collection}:{sha256(query + str(limit))}
+        cache_key = f"search:{collection}:{hashlib.sha256((query + str(limit)).encode()).hexdigest()}"
 
         # Try to get from cache
         cached_value = await redis_manager.client.get(cache_key)
@@ -74,7 +74,7 @@ async def cache_search_results(collection: str, query: str, limit: int, results:
             return
 
         # Generate cache key
-        cache_key = f"search:{collection}:{hashlib.md5((query + str(limit)).encode()).hexdigest()}"
+        cache_key = f"search:{collection}:{hashlib.sha256((query + str(limit)).encode()).hexdigest()}"
 
         # Serialize results to JSON
         cached_value = json.dumps(

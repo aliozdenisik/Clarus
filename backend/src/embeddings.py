@@ -116,8 +116,8 @@ class DenseEncoder:
             print("  Cache: enabled (Redis)")
 
     def _get_cache_key(self, text: str) -> str:
-        """Generate Redis cache key: embedding:{model}:{md5(text)}"""
-        text_hash = hashlib.md5(text.encode()).hexdigest()
+        """Generate Redis cache key: embedding:{model}:{sha256(text)}"""
+        text_hash = hashlib.sha256(text.encode()).hexdigest()
         return f"embedding:{self.model_name}:{text_hash}"
 
     def _rate_limit_wait(self):
@@ -370,8 +370,8 @@ class AsyncDenseEncoder:
             self._use_cache = False
 
     def _get_cache_key(self, text: str) -> str:
-        """Generate Redis cache key: embedding:{model}:{md5(text)}"""
-        text_hash = hashlib.md5(text.encode()).hexdigest()
+        """Generate Redis cache key: embedding:{model}:{sha256(text)}"""
+        text_hash = hashlib.sha256(text.encode()).hexdigest()
         return f"embedding:{self.model_name}:{text_hash}"
 
     async def _check_cache(self, texts: list[str]) -> tuple[list[str], list[int], list[list[float] | None]]:
