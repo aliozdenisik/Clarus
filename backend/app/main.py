@@ -30,6 +30,19 @@ from app.middleware.correlation import CorrelationIDMiddleware
 from app.middleware.error_handler import ErrorHandlerMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
+from app.schemas.sse_events import (
+    CompareParagraphEvent,
+    CompareProgressEvent,
+    CompareStatsEvent,
+    CompareVerseDetailsEvent,
+    SearchCitationsEvent,
+    SearchCompleteEvent,
+    SearchStatusEvent,
+    SearchTokenEvent,
+    SearchVerseDetailsEvent,
+    SSECompleteEvent,
+    SSEErrorEvent,
+)
 
 logger = get_logger(__name__)
 
@@ -220,6 +233,28 @@ def custom_openapi():
             "description": "API key for CLI access (generate via POST /api/auth/api-key)",
         },
     }
+
+    sse_models: list[type[BaseModel]] = [
+        SearchStatusEvent,
+        SearchTokenEvent,
+        SearchCitationsEvent,
+        SearchVerseDetailsEvent,
+        SearchCompleteEvent,
+        CompareProgressEvent,
+        CompareVerseDetailsEvent,
+        CompareParagraphEvent,
+        CompareStatsEvent,
+        SSECompleteEvent,
+        SSEErrorEvent,
+    ]
+    for model in sse_models:
+        model_schema = model.model_json_schema(ref_template="#/components/schemas/{model}")
+        defs = model_schema.pop("$defs", {})
+        schema["components"]["schemas"][model.__name__] = model_schema
+        for def_name, def_schema in defs.items():
+            if def_name not in schema["components"]["schemas"]:
+                schema["components"]["schemas"][def_name] = def_schema
+
     app.openapi_schema = schema
     return schema
 
