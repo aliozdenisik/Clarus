@@ -104,7 +104,7 @@ async def get_current_user_from_sse(db: AsyncSession, request: Request):
                 "| Citations | `citations` field | Array of citation reference strings |\n"
                 "| Verse Details | `verse_details` field | Map of reference → verse metadata |\n"
                 '| Complete | `type: "complete"` | Final aggregated result with answer, results, and citations |\n'
-                "| Error | `error` field | Error message string |\n"
+                '| Error | `type: "error"` | Error message with optional `error_code` (e.g. `auth_required`) |\n'
             ),
         },
         401: {"description": "Not authenticated", "model": UnauthorizedResponse},
@@ -128,7 +128,26 @@ async def stream_search(
 
     Authentication: Uses session cookie.
     """
-    current_user = await get_current_user_from_sse(db, request)
+    # Catch auth errors and emit as SSE events so the EventSource client
+    # can detect them (EventSource.onerror cannot expose HTTP status codes).
+    try:
+        current_user = await get_current_user_from_sse(db, request)
+    except HTTPException as auth_exc:
+        if auth_exc.status_code == 401:
+            error_detail = auth_exc.detail
+            logger.warning("[SSE /search] Auth failed: %s", error_detail)
+
+            async def auth_error():
+                yield f"data: {json.dumps({'type': 'error', 'error': error_detail, 'error_code': 'auth_required'})}\n\n"
+                yield f"data: {json.dumps({'type': 'complete'})}\n\n"
+
+            return StreamingResponse(
+                auth_error(),
+                media_type="text/event-stream",
+                headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
+            )
+        raise
+
     await check_rate_limit(current_user, db)
     prefs_result = await db.execute(select(UserPreferences).where(UserPreferences.user_id == current_user["id"]))
     user_preferences = prefs_result.scalar_one_or_none()
@@ -206,7 +225,7 @@ async def stream_search(
 
         except Exception as e:
             logger.error(f"[SSE /search] Error during ask: {e}")
-            yield f"data: {json.dumps({'error': 'An internal error occurred'})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'error': 'An internal error occurred'})}\n\n"
             yield f"data: {json.dumps({'type': 'complete'})}\n\n"
             return
 
@@ -296,7 +315,7 @@ async def stream_search(
 
         except Exception as e:
             logger.error(f"[SSE /search] Error during generation: {e}")
-            yield f"data: {json.dumps({'error': 'An internal error occurred'})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'error': 'An internal error occurred'})}\n\n"
             yield f"data: {json.dumps({'type': 'complete'})}\n\n"
 
     return StreamingResponse(
@@ -327,7 +346,7 @@ async def stream_search(
                 '| Paragraph | `type: "paragraph"` | Structured essay paragraph with title and markdown content |\n'
                 '| Stats | `type: "stats"` | Confidence score, latency, verse/citation counts |\n'
                 '| Complete | `type: "complete"` | Signals end of stream |\n'
-                "| Error | `error` field | Error message string |\n"
+                '| Error | `type: "error"` | Error message with optional `error_code` (e.g. `auth_required`) |\n'
             ),
         },
         401: {"description": "Not authenticated", "model": UnauthorizedResponse},
@@ -356,9 +375,25 @@ async def stream_compare(
         collections: Comma-separated collection names (e.g., 'quran_tr,bible_ot').
                     Valid values: quran_tr (alias), quran_tr_*, bible_ot, bible_nt, bible_apocrypha
     """
-    # Auth and rate-limit check MUST come before any resource validation so that
-    # unauthenticated callers always receive 401, never information-leaking 400s.
-    current_user = await get_current_user_from_sse(db, request)
+    # Auth check emits SSE error events on 401 (EventSource cannot expose HTTP status).
+    try:
+        current_user = await get_current_user_from_sse(db, request)
+    except HTTPException as auth_exc:
+        if auth_exc.status_code == 401:
+            error_detail = auth_exc.detail
+            logger.warning("[COMPARE] Auth failed: %s", error_detail)
+
+            async def auth_error():
+                yield f"data: {json.dumps({'type': 'error', 'error': error_detail, 'error_code': 'auth_required'})}\n\n"
+                yield f"data: {json.dumps({'type': 'complete'})}\n\n"
+
+            return StreamingResponse(
+                auth_error(),
+                media_type="text/event-stream",
+                headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
+            )
+        raise
+
     await check_rate_limit(current_user, db)
 
     # Parse and validate collections
@@ -442,7 +477,7 @@ async def stream_compare(
         except Exception as e:
             logger.error(f"[COMPARE] Failed to create RAG: {e}")
             logger.error(traceback.format_exc())
-            yield f"data: {json.dumps({'error': 'An internal error occurred'})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'error': 'An internal error occurred'})}\n\n"
             yield f"data: {json.dumps({'type': 'complete'})}\n\n"
             return
 
@@ -569,7 +604,7 @@ async def stream_compare(
         except Exception as e:
             logger.error(f"[COMPARE] Error during compare: {e}")
             logger.error(traceback.format_exc())
-            yield f"data: {json.dumps({'error': 'An internal error occurred'})}\n\n"
+            yield f"data: {json.dumps({'type': 'error', 'error': 'An internal error occurred'})}\n\n"
 
         yield f"data: {json.dumps({'type': 'complete'})}\n\n"
 

@@ -661,6 +661,115 @@ describe("useSSE", () => {
       expect(result.current.error).toBeTruthy()
       expect(result.current.error).toContain("JSON")
     })
+
+    it('should set error and close stream on type: "error" message', () => {
+      const { result } = renderHook(() => useSSE())
+
+      act(() => {
+        result.current.startStream("/api/stream/search?q=test")
+      })
+
+      const mockEventSource = mockEventSourceInstances[0]
+
+      act(() => {
+        mockEventSource.onmessage?.({
+          data: JSON.stringify({ type: "error", error: "An internal error occurred" }),
+        } as MessageEvent)
+      })
+
+      expect(result.current.error).toBe("An internal error occurred")
+      expect(result.current.isStreaming).toBe(false)
+      expect(mockEventSource.readyState).toBe(2)
+    })
+
+    it('should still append type: "error" message to data array', () => {
+      const { result } = renderHook(() => useSSE())
+
+      act(() => {
+        result.current.startStream("/api/stream/search?q=test")
+      })
+
+      const mockEventSource = mockEventSourceInstances[0]
+
+      act(() => {
+        mockEventSource.onmessage?.({
+          data: JSON.stringify({ type: "token", content: "hello" }),
+        } as MessageEvent)
+        mockEventSource.onmessage?.({
+          data: JSON.stringify({ type: "error", error: "Pipeline failed" }),
+        } as MessageEvent)
+      })
+
+      expect(result.current.data).toHaveLength(2)
+      expect(result.current.data[1]).toEqual({ type: "error", error: "Pipeline failed" })
+    })
+
+    it('should use fallback message when type: "error" has no error field', () => {
+      const { result } = renderHook(() => useSSE())
+
+      act(() => {
+        result.current.startStream("/api/stream/search?q=test")
+      })
+
+      const mockEventSource = mockEventSourceInstances[0]
+
+      act(() => {
+        mockEventSource.onmessage?.({
+          data: JSON.stringify({ type: "error" }),
+        } as MessageEvent)
+      })
+
+      expect(result.current.error).toBe("Stream error occurred")
+      expect(result.current.isStreaming).toBe(false)
+    })
+
+    it("should handle auth_required error code from SSE event", () => {
+      const { result } = renderHook(() => useSSE())
+
+      act(() => {
+        result.current.startStream("/api/stream/search?q=test")
+      })
+
+      const mockEventSource = mockEventSourceInstances[0]
+
+      act(() => {
+        mockEventSource.onmessage?.({
+          data: JSON.stringify({
+            type: "error",
+            error: "Authentication required",
+            error_code: "auth_required",
+          }),
+        } as MessageEvent)
+      })
+
+      expect(result.current.error).toBe("Authentication required")
+      expect(result.current.isStreaming).toBe(false)
+      expect(result.current.data).toHaveLength(1)
+      expect(result.current.data[0].error_code).toBe("auth_required")
+    })
+
+    it('should not retry when type: "error" is received (unlike onerror)', () => {
+      const { result } = renderHook(() => useSSE())
+
+      act(() => {
+        result.current.startStream("/api/stream/search?q=test")
+      })
+
+      const mockEventSource = mockEventSourceInstances[0]
+
+      act(() => {
+        mockEventSource.onmessage?.({
+          data: JSON.stringify({ type: "error", error: "Server error" }),
+        } as MessageEvent)
+      })
+
+      act(() => {
+        vi.advanceTimersByTime(10000)
+      })
+
+      expect(constructorCalls).toHaveLength(1)
+      expect(result.current.isStreaming).toBe(false)
+    })
   })
 
   describe("reconnection logic", () => {
