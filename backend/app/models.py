@@ -4,7 +4,6 @@ from typing import Optional
 from sqlalchemy import (
     JSON,
     Boolean,
-    Date,
     DateTime,
     ForeignKey,
     Integer,
@@ -317,7 +316,7 @@ class UserStats(Base):
     id: Mapped[str] = mapped_column(String(255), primary_key=True)
     user_id: Mapped[str] = mapped_column(String(255), ForeignKey("user.id"), nullable=False, unique=True, index=True)
     query_count_today: Mapped[int] = mapped_column(Integer, default=0)
-    last_query_date: Mapped[datetime | None] = mapped_column(Date, nullable=True)
+    last_query_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     api_key: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True, index=True)
     api_key_created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

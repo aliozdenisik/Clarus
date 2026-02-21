@@ -18,7 +18,10 @@ export function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
   const locale = pathname.split("/")[1] || "tr"
-  const sessionCookie = request.cookies.get("better-auth.session_token")
+  // Check both cookie names: HTTPS uses __Secure- prefix, HTTP does not
+  const sessionCookie =
+    request.cookies.get("__Secure-better-auth.session_token") ||
+    request.cookies.get("better-auth.session_token")
 
   // Redirect authenticated users from root locale paths to /hub
   const rootLocalePathPattern = /^\/(en|tr)(?:\/|$)/

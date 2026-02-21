@@ -26,6 +26,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from app.config import get_settings
+
 from .greek_normalizer import (
     normalize_greek_transliteration_for_lookup,
     normalize_user_greek_query,
@@ -40,7 +42,8 @@ from .hebrew_normalizer import (
 
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:54322/postgres"
+settings = get_settings()
+DATABASE_URL = settings.database_url
 
 # Regex for Strong's number input: H or G followed by digits
 STRONGS_PATTERN = re.compile(r"^[HGhg]\d{1,5}$")
