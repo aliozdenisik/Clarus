@@ -238,16 +238,18 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
         bible_semantic: list,
         bible_chunks: list,
         translator: str = "diyanet",
+        language: str = "tr",
     ) -> str:
         """Format all 80 verses as context for LLM"""
         sections = []
+        quran_source = f"quran_{language}_{translator}"
 
         # Quran Semantic (20)
         if quran_semantic:
             sections.append(
                 self._format_verses_section(
                     quran_semantic,
-                    f"quran_tr_{translator}",
+                    quran_source,
                     "KURAN - SEMANTİK ARAMA SONUÇLARI",
                     "QS",
                 )
@@ -258,7 +260,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
             sections.append(
                 self._format_verses_section(
                     quran_chunks,
-                    f"quran_tr_{translator}",
+                    quran_source,
                     "KURAN - SEMANTİK CHUNK SONUÇLARI",
                     "QC",
                 )
@@ -421,7 +423,7 @@ Her iki gelenek de sabrı pasif bir bekleme değil, aktif bir manevi çaba olara
             )
 
         # Format context from all 80 verses
-        context = self._format_context(quran_semantic, quran_chunks, bible_semantic, bible_chunks, translator)
+        context = self._format_context(quran_semantic, quran_chunks, bible_semantic, bible_chunks, translator, language)
 
         # Call LLM for comparative essay generation
         print(f"Generating comparative essay with {total_verses} verses...")

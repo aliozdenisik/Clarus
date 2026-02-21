@@ -19,6 +19,7 @@ export const TRANSLATORS = [
   { key: "vakfi", label: "Diyanet Vakfı" },
   { key: "yildirim", label: "Suat Yıldırım" },
   { key: "yuksel", label: "Edip Yüksel" },
+  { key: "arberry", label: "A.J. Arberry (English)" },
 ] as const
 
 export type TranslatorKey = (typeof TRANSLATORS)[number]["key"]

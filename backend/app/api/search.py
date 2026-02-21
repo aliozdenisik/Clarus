@@ -20,7 +20,7 @@ from app.i18n.messages import get_error_message
 from app.logging_config import get_logger, log_performance
 from app.middleware.error_handler import NotFoundError, ValidationError
 from app.models import SearchHistory, UserPreferences
-from app.schemas.common import DEFAULT_TRANSLATOR, QueryValidation, TranslatorType
+from app.schemas.common import DEFAULT_TRANSLATOR, ENGLISH_TRANSLATORS, QueryValidation, TranslatorType
 from app.schemas.errors import UnauthorizedResponse
 from app.schemas.responses import MessageResponse, PaginationInfo
 from src.ultimate_rag import UltimateRAG
@@ -117,7 +117,8 @@ async def search_quran(
 ):
     start = time.perf_counter()
     translator = request.translator or DEFAULT_TRANSLATOR
-    collection_name = f"quran_tr_{translator}"
+    language = "en" if translator in ENGLISH_TRANSLATORS else "tr"
+    collection_name = f"quran_{language}_{translator}"
     logger.info(
         "Search request received",
         extra={
@@ -139,13 +140,14 @@ async def search_quran(
     validated_query = _validate_query(request.query, locale)
 
     rag = get_rag()
-    results = await rag.search_quran(validated_query, translator=translator, top_k=request.top_k, locale=locale)
+    results = await rag.search_quran(
+        validated_query, translator=translator, top_k=request.top_k, locale=locale, language=language
+    )
 
-    # Build verse_details dict for citation navigation
     verse_details: dict[str, VerseDetail] = {}
     for r in results:
-        ref, detail = extract_quran_verse_detail(r)
-        if ref not in verse_details:  # Deduplicate
+        ref, detail = extract_quran_verse_detail(r, collection=collection_name)
+        if ref not in verse_details:
             verse_details[ref] = detail
 
     history = SearchHistory(

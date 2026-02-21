@@ -147,12 +147,12 @@ class UltimateRAG:
         if source in self._searchers:
             return self._searchers[source]
 
-        if source.startswith("quran_tr_"):
+        if source.startswith(("quran_tr_", "quran_en_")):
             from src.search import QuranSearcher
 
-            # Extract translator from source (e.g., "quran_tr_diyanet" -> "diyanet")
-            translator = source.replace("quran_tr_", "")
-            searcher = QuranSearcher(translator=translator, qdrant_url=self.qdrant_url)
+            lang = "en" if source.startswith("quran_en_") else "tr"
+            translator = source[len(f"quran_{lang}_") :]
+            searcher = QuranSearcher(translator=translator, language=lang, qdrant_url=self.qdrant_url)
         elif source.startswith("bible_"):
             from src.search import BibleSearcher
 
@@ -537,7 +537,7 @@ class UltimateRAG:
             # Parallel search: Semantic chunks (if enabled) — reuse pre-computed vectors
             if self.enable_semantic_chunks:
                 # Handle Quran Semantic Chunks
-                if source.startswith("quran_tr_"):
+                if source.startswith(("quran_tr_", "quran_en_")):
                     try:
                         chunk_searcher = self._get_semantic_chunk_searcher()
                         if chunk_searcher.collection_exists():
@@ -730,7 +730,7 @@ class UltimateRAG:
             # Parallel search: Semantic chunks (if enabled) — reuse pre-computed vectors
             if self.enable_semantic_chunks:
                 # Handle Quran Semantic Chunks
-                if source.startswith("quran_tr_"):
+                if source.startswith(("quran_tr_", "quran_en_")):
                     try:
                         chunk_searcher = self._get_semantic_chunk_searcher()
                         if chunk_searcher.collection_exists():
@@ -934,26 +934,33 @@ class UltimateRAG:
         top_k: int | None = None,
         detected_language: str | None = None,
         locale: str = "tr",
+        language: str = "tr",
     ) -> list:
         """
         Shortcut for Quran search
 
         Args:
             query: Search query
-            translator: Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
+            translator: Quran translator. Turkish: diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel.
+                        English: arberry.
             top_k: Number of results
             detected_language: Detected language of query
+            language: Quran corpus language — "tr" (Turkish) or "en" (English)
         """
         import sentry_sdk
+
+        if language == "en" and translator == "diyanet":
+            translator = "arberry"
 
         with sentry_sdk.start_span(op="rag.pipeline.quran", description="Quran search pipeline") as span:
             span.set_data("query", query[:50])  # Truncate for privacy
             span.set_data("translator", translator)
+            span.set_data("language", language)
 
-            # Translate query to Turkish if needed (Quran corpus is Turkish)
+            corpus_key = f"quran_{language}_{translator}"
             if detected_language is None:
                 try:
-                    result = self.translator.translate_query(query, "quran")
+                    result = self.translator.translate_query(query, corpus_key)
                     detected_language = result.detected_language
                     if result.was_translated:
                         query = result.translated_query
@@ -961,7 +968,7 @@ class UltimateRAG:
                             "Query translated for Quran search",
                             extra={
                                 "from": result.detected_language,
-                                "to": CORPUS_LANGUAGES.get("quran", "tr"),
+                                "to": CORPUS_LANGUAGES.get(corpus_key, language),
                                 "original": query[:50],
                                 "translated": result.translated_query[:50],
                             },
@@ -975,7 +982,7 @@ class UltimateRAG:
 
             return await self.search(
                 query,
-                source=f"quran_tr_{translator}",
+                source=corpus_key,
                 top_k=top_k,
                 detected_language=detected_language,
             )
@@ -1255,20 +1262,26 @@ class UltimateRAG:
         detected_language: str | None = None,
         locale: str = "tr",
         usage_purpose: str | None = None,
+        language: str = "tr",
     ):
         """
-        Shortcut for Quran Q&A - Turkish in, Turkish out
+        Shortcut for Quran Q&A
 
         Args:
             query: Question to ask
-            translator: Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
+            translator: Quran translator. Turkish: diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel.
+                        English: arberry.
             top_k: Number of verses to use as context
             detected_language: Detected language of query
+            language: Quran corpus language — "tr" (Turkish) or "en" (English)
         """
-        # Translate query to Turkish if needed (Quran corpus is Turkish)
+        if language == "en" and translator == "diyanet":
+            translator = "arberry"
+
+        corpus_key = f"quran_{language}_{translator}"
         if detected_language is None:
             try:
-                result = self.translator.translate_query(query, "quran")
+                result = self.translator.translate_query(query, corpus_key)
                 detected_language = result.detected_language
                 if result.was_translated:
                     query = result.translated_query
@@ -1276,7 +1289,7 @@ class UltimateRAG:
                         "Query translated for Quran Q&A",
                         extra={
                             "from": result.detected_language,
-                            "to": CORPUS_LANGUAGES.get("quran", "tr"),
+                            "to": CORPUS_LANGUAGES.get(corpus_key, language),
                             "original": query[:50],
                             "translated": result.translated_query[:50],
                         },
@@ -1290,7 +1303,7 @@ class UltimateRAG:
 
         return await self.ask(
             query,
-            source=f"quran_tr_{translator}",
+            source=corpus_key,
             top_k=top_k,
             usage_purpose=usage_purpose,
             language=locale,

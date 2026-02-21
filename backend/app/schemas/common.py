@@ -18,11 +18,14 @@ VALID_TRANSLATORS = {
     "vakfi",
     "yildirim",
     "yuksel",
+    "arberry",
 }
 DEFAULT_TRANSLATOR = "diyanet"
 
+ENGLISH_TRANSLATORS: set[str] = {"arberry"}
+
 # Type alias for translator validation
-TranslatorType = Literal["diyanet", "yazir", "ates", "bulac", "ozturk", "vakfi", "yildirim", "yuksel"]
+TranslatorType = Literal["diyanet", "yazir", "ates", "bulac", "ozturk", "vakfi", "yildirim", "yuksel", "arberry"]
 
 
 class ErrorDetail(BaseModel):

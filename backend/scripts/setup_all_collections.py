@@ -6,6 +6,7 @@ Unified Collection Setup Script (Multi-Translator)
 
 Creates all Qdrant collections from scratch in a single run:
 - quran_tr_{translator} × 8 translators (~6,236 verses each = 49,888 total)
+- quran_en_{translator} × 1 English translator (~6,236 verses each)
 - bible_tr_ot, bible_tr_nt (Turkish Bible, ~30,182 verses total)
 - bible_ot, bible_nt, bible_apocrypha (English KJVA, ~36,819 verses total)
 
@@ -14,6 +15,7 @@ Usage:
     ./venv/bin/python scripts/setup_all_collections.py --skip-quran
     ./venv/bin/python scripts/setup_all_collections.py --translator diyanet  # Single translator
     ./venv/bin/python scripts/setup_all_collections.py --skip-english-bible
+    ./venv/bin/python scripts/setup_all_collections.py --skip-english-quran
     ./venv/bin/python scripts/setup_all_collections.py --no-flush  # Skip Redis cache flush
     ./venv/bin/python scripts/setup_all_collections.py --yes  # Skip confirmation prompts
 """
@@ -50,7 +52,7 @@ from rich.table import Table
 from src.bible_loader import BibleDataLoader
 from src.embeddings import AsyncDenseEncoder
 from src.indexer import TurkishBibleIndexer
-from src.tanzil_loader import VALID_TRANSLATORS, TanzilLoader
+from src.tanzil_loader import VALID_EN_TRANSLATORS, VALID_TRANSLATORS, TanzilLoader
 
 console = Console()
 QDRANT_URL = "http://localhost:6333"
@@ -211,6 +213,88 @@ async def index_quran_translators(
     return counts
 
 
+async def index_english_quran_translators(
+    client: QdrantClient, encoder: AsyncDenseEncoder, translators: list[str]
+) -> dict[str, int]:
+    """Index all specified English Quran translators."""
+    console.print(f"\n[bold green]📖 Indexing English Quran ({len(translators)} translators)[/bold green]")
+
+    loader = TanzilLoader()
+    counts = {}
+
+    for translator in sorted(translators):
+        console.print(f"\n  [cyan]Translator: en_{translator}[/cyan]")
+
+        verses = loader.load_english_translation(translator)
+        metadata = loader._load_surah_metadata()
+        console.print(f"    Loaded [green]{len(verses)}[/green] verses")
+
+        from src.data_loader import QuranChunk
+
+        chunks = []
+        for verse in verses:
+            surah_num = verse["surah_number"]
+            surah_meta = metadata.get(surah_num, {})
+
+            chunk = QuranChunk(
+                id=f"{surah_num}:{verse['verse_number']}",
+                surah_id=surah_num,
+                surah_name=verse["surah_name"],
+                surah_name_arabic=surah_meta.get("name", ""),
+                surah_transliteration=verse["surah_name"],
+                surah_type=surah_meta.get("type", ""),
+                verse_id=verse["verse_number"],
+                arabic_text="",
+                translation=verse["text"],
+                translation_normalized="",
+                translation_lemma="",
+            )
+            chunks.append(chunk)
+
+        collection_name = f"quran_en_{translator}"
+        dense_dim = 3072
+        create_collection(
+            client,
+            collection_name,
+            dense_dim,
+            [
+                ("surah_number", PayloadSchemaType.INTEGER),
+                ("verse_number", PayloadSchemaType.INTEGER),
+                ("translator", PayloadSchemaType.KEYWORD),
+            ],
+        )
+        console.print(f"    Created collection: [cyan]{collection_name}[/cyan]")
+
+        texts = [chunk.translation for chunk in chunks]
+        console.print("    Encoding verses...")
+        dense_vectors = await encoder.encode_batch_async(texts, batch_size=256, max_concurrent=10, show_progress=True)
+
+        console.print("    Uploading to Qdrant...")
+        batch_size = 500
+        total = 0
+
+        for i in range(0, len(chunks), batch_size):
+            batch_chunks = chunks[i : i + batch_size]
+            batch_dense = dense_vectors[i : i + batch_size]
+
+            points = []
+            for j, chunk in enumerate(batch_chunks):
+                point = PointStruct(
+                    id=hash(chunk.id) % (2**63),
+                    vector={"dense": batch_dense[j]},
+                    payload=chunk.to_dict(),
+                )
+                points.append(point)
+
+            client.upsert(collection_name=collection_name, points=points)
+            total += len(points)
+
+        counts[collection_name] = total
+        console.print(f"    [green]✓[/green] Indexed [bold]{total}[/bold] verses")
+
+    return counts
+
+
 async def index_turkish_bible(client: QdrantClient) -> dict[str, int]:
     """Index Turkish Bible using TurkishBibleIndexer."""
     console.print("\n[bold cyan]📜 Indexing Turkish Bible[/bold cyan]")
@@ -306,6 +390,7 @@ async def main():
 
     parser = argparse.ArgumentParser(description="Setup all Qdrant collections")
     parser.add_argument("--skip-quran", action="store_true", help="Skip Quran indexing")
+    parser.add_argument("--skip-english-quran", action="store_true", help="Skip English Quran indexing")
     parser.add_argument("--skip-bible", action="store_true", help="Skip all Bible indexing")
     parser.add_argument(
         "--skip-english-bible",
@@ -357,6 +442,11 @@ async def main():
         quran_counts = await index_quran_translators(client, encoder, translators)
         results.update(quran_counts)
 
+    # Step 2b: Index English Quran
+    if not args.skip_quran and not args.skip_english_quran:
+        en_quran_counts = await index_english_quran_translators(client, encoder, sorted(VALID_EN_TRANSLATORS))
+        results.update(en_quran_counts)
+
     # Step 3: Index Turkish Bible
     if not args.skip_bible and not args.skip_turkish_bible:
         turkish_bible_counts = await index_turkish_bible(client)
@@ -389,14 +479,20 @@ async def main():
     table.add_column("Type", style="magenta", width=15)
 
     # Sort results by type
-    quran_collections = {k: v for k, v in results.items() if k.startswith("quran_tr_")}
+    quran_tr_collections = {k: v for k, v in results.items() if k.startswith("quran_tr_")}
+    quran_en_collections = {k: v for k, v in results.items() if k.startswith("quran_en_")}
     turkish_bible_collections = {k: v for k, v in results.items() if k.startswith("bible_tr_")}
     english_bible_collections = {k: v for k, v in results.items() if k in TESTAMENT_COLLECTIONS.values()}
 
-    # Add Quran collections
-    for name, count in sorted(quran_collections.items()):
-        translator = name.replace("quran_tr_", "")
-        table.add_row(name, f"{count:,}", f"Quran ({translator})")
+    # Add Turkish Quran collections
+    for name, count in sorted(quran_tr_collections.items()):
+        translator = name[len("quran_tr_") :]
+        table.add_row(name, f"{count:,}", f"Quran TR ({translator})")
+
+    # Add English Quran collections
+    for name, count in sorted(quran_en_collections.items()):
+        translator = name[len("quran_en_") :]
+        table.add_row(name, f"{count:,}", f"Quran EN ({translator})")
 
     # Add Turkish Bible collections
     for name, count in sorted(turkish_bible_collections.items()):

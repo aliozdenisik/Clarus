@@ -28,7 +28,7 @@ from tqdm import tqdm
 
 from .data_loader import QuranChunk
 from .embeddings import DenseEncoder
-from .tanzil_loader import VALID_TRANSLATORS
+from .tanzil_loader import VALID_EN_TRANSLATORS, VALID_TRANSLATORS
 
 
 class QuranIndexer:
@@ -50,27 +50,33 @@ class QuranIndexer:
         qdrant_url: str = "http://localhost:6333",
         in_memory: bool = False,
         encoder: DenseEncoder | None = None,
+        language: str = "tr",
     ):
         """
         Initialize QuranIndexer for a specific translator.
 
         Args:
-            translator: Translator key (default: "diyanet")
-                       Valid: diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel
+            translator: Translator key.
+                        Turkish (language="tr"): diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel
+                        English (language="en"): arberry
             qdrant_url: Qdrant server URL
             in_memory: Use in-memory Qdrant
             encoder: Dense encoder instance
+            language: Language code — "tr" (Turkish) or "en" (English)
 
         Raises:
-            ValueError: If translator is invalid
+            ValueError: If translator is invalid for the given language
         """
-        if translator not in VALID_TRANSLATORS:
+        valid_set = VALID_EN_TRANSLATORS if language == "en" else VALID_TRANSLATORS
+        if translator not in valid_set:
             raise ValueError(
-                f"Invalid translator: {translator}\nValid translators: {', '.join(sorted(VALID_TRANSLATORS))}"
+                f"Invalid translator for language '{language}': {translator}\n"
+                f"Valid translators: {', '.join(sorted(valid_set))}"
             )
 
         self.translator = translator
-        self.collection_name = f"quran_tr_{translator}"
+        self.language = language
+        self.collection_name = f"quran_{language}_{translator}"
 
         if in_memory:
             self.client = QdrantClient(location=":memory:")
@@ -288,7 +294,10 @@ class QuranIndexer:
         from .tanzil_loader import TanzilLoader
 
         loader = TanzilLoader()
-        verses = loader.load_translation(self.translator)
+        if self.language == "en":
+            verses = loader.load_english_translation(self.translator)
+        else:
+            verses = loader.load_translation(self.translator)
         metadata = loader._load_surah_metadata()
 
         # Convert verses to QuranChunk-like structure
@@ -323,24 +332,27 @@ class QuranIndexer:
     def index_all_translators(
         qdrant_url: str = "http://localhost:6333",
         recreate: bool = False,
+        language: str = "tr",
     ) -> None:
         """
-        Index all 8 Turkish Quran translations.
+        Index all Quran translations for the given language.
 
         Args:
             qdrant_url: Qdrant server URL
             recreate: If True, recreate collections
+            language: "tr" for all 8 Turkish translators, "en" for all English translators
         """
-        for translator in sorted(VALID_TRANSLATORS):
+        valid_set = VALID_EN_TRANSLATORS if language == "en" else VALID_TRANSLATORS
+        for translator in sorted(valid_set):
             print(f"\n{'=' * 60}")
-            print(f"Indexing {translator} translation...")
+            print(f"Indexing {language}_{translator} translation...")
             print(f"{'=' * 60}")
 
-            indexer = QuranIndexer(translator=translator, qdrant_url=qdrant_url)
+            indexer = QuranIndexer(translator=translator, qdrant_url=qdrant_url, language=language)
             indexer.create_collection(recreate=recreate)
             count = indexer.index()
 
-            print(f"✓ Indexed {count} verses for {translator}")
+            print(f"✓ Indexed {count} verses for {language}_{translator}")
 
 
 class SemanticChunkIndexer:
