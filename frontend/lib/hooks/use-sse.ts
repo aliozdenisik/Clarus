@@ -20,6 +20,7 @@ interface SSEMessage {
   content?: string
   result?: unknown
   error?: string
+  error_code?: string
   status?: string
   message?: string
   step?: string
@@ -139,7 +140,16 @@ export function useSSE(): UseSSEReturn {
 
           setData((prevData) => [...prevData, message])
 
-          // Close stream on completion
+          if (message.type === "error") {
+            setError(message.error ?? "Stream error occurred")
+            eventSource.close()
+            if (eventSourceRef.current === eventSource) {
+              eventSourceRef.current = null
+            }
+            setIsStreaming(false)
+            return
+          }
+
           if (message.type === "complete") {
             eventSource.close()
             if (eventSourceRef.current === eventSource) {
