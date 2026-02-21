@@ -65,7 +65,9 @@
   },
   "overrides": {
     "minimatch": ">=10.2.1",
-    "ajv": ">=8.18.0"
+    "schema-utils": {
+      "ajv": ">=8.18.0"
+    }
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.91.1",

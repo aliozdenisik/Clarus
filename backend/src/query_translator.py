@@ -55,6 +55,7 @@ CORPUS_LANGUAGES: dict[str, str] = {
     "quran_tr_vakfi": "tr",
     "quran_tr_yildirim": "tr",
     "quran_tr_yuksel": "tr",
+    "quran_en_arberry": "en",
     "bible": "en",
     "bible_ot": "en",
     "bible_nt": "en",

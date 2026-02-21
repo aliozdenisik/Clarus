@@ -16,6 +16,7 @@ from typing import Union, cast
 
 from pydantic import BaseModel
 
+from app.schemas.common import ENGLISH_TRANSLATORS
 from src.multi_agent_answer_generator import MultiAgentAnswer
 from src.search import BibleSearchResult, SearchResult
 
@@ -31,6 +32,7 @@ VALID_COMPARE_COLLECTIONS: set[str] = {
     "quran_tr_vakfi",
     "quran_tr_yildirim",
     "quran_tr_yuksel",
+    "quran_en_arberry",
     "bible_ot",
     "bible_nt",
     "bible_apocrypha",
@@ -40,8 +42,24 @@ VALID_COMPARE_COLLECTIONS: set[str] = {
 
 
 def normalize_compare_collections(collections: list[str], translator: str) -> list[str]:
-    quran_collection = f"quran_tr_{translator}"
-    normalized = [quran_collection if collection == "quran_tr" else collection for collection in collections]
+    """Normalize collection aliases to concrete collection names.
+
+    Handles two aliases:
+    - ``quran_tr`` → ``quran_tr_{translator}`` (e.g. ``quran_tr_diyanet``)
+    - ``quran_en`` → ``quran_en_arberry`` (default English translator)
+    """
+    if translator in ENGLISH_TRANSLATORS:
+        quran_collection = f"quran_en_{translator}"
+    else:
+        quran_collection = f"quran_tr_{translator}"
+    normalized = []
+    for collection in collections:
+        if collection == "quran_tr":
+            normalized.append(quran_collection)
+        elif collection == "quran_en":
+            normalized.append("quran_en_arberry")
+        else:
+            normalized.append(collection)
     return list(dict.fromkeys(normalized))
 
 
@@ -103,11 +121,13 @@ class VerseDetail(BaseModel):
 # =============================================================================
 
 
-def _extract_quran_verse_detail(result: SearchResult) -> tuple[str, VerseDetail]:
+def _extract_quran_verse_detail(result: SearchResult, *, collection: str = "") -> tuple[str, VerseDetail]:
     """Extract citation reference and verse detail from Quran SearchResult.
 
     Args:
         result: Quran search result from ComparativeRAG.search_all()
+        collection: Optional collection name to determine source/translation labels.
+            When empty, defaults to Turkish Quran labels for backward compatibility.
 
     Returns:
         Tuple of (citation_reference, verse_detail)
@@ -115,13 +135,21 @@ def _extract_quran_verse_detail(result: SearchResult) -> tuple[str, VerseDetail]
     """
     reference = f"{result.surah_name}:{result.verse_id}"
 
+    # Determine source and translation labels based on collection language
+    if collection.startswith("quran_en_"):
+        source = "quran_en"
+        translation = "A.J. Arberry"
+    else:
+        source = "quran_tr"
+        translation = "Diyanet Isleri Baskanligi"
+
     return reference, VerseDetail(
         text=result.translation[:400],
         book_name=result.surah_name,
         chapter=result.surah_id,
         verse=result.verse_id,
-        source="quran_tr",  # Generic marker for all Quran translators
-        translation="Diyanet Isleri Baskanligi",
+        source=source,
+        translation=translation,
     )
 
 
@@ -161,6 +189,7 @@ def build_verse_details(
     apocrypha_results: list[BibleSearchResult],
     *,
     as_dict: bool = False,
+    quran_collection: str = "",
 ) -> dict[str, Union[VerseDetail, dict]]:
     """
     Build verse details dictionary from search results.
@@ -174,6 +203,8 @@ def build_verse_details(
         nt_results: New Testament search results
         apocrypha_results: Apocrypha search results
         as_dict: If True, returns dict values; if False, returns VerseDetail objects
+        quran_collection: Collection name for Quran results (e.g. ``quran_en_arberry``).
+            Used to determine source/translation labels.
 
     Returns:
         Dictionary mapping citation references to verse metadata:
@@ -191,9 +222,8 @@ def build_verse_details(
     """
     verse_details: dict[str, VerseDetail] = {}
 
-    # Extract Quran verses
     for result in quran_results:
-        ref, detail = _extract_quran_verse_detail(result)
+        ref, detail = _extract_quran_verse_detail(result, collection=quran_collection)
         if ref not in verse_details:
             verse_details[ref] = detail
 

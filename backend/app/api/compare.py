@@ -74,7 +74,7 @@ class CompareRequest(BaseModel):
     @classmethod
     def validate_collections(cls, v: list[str]) -> list[str]:
         """Validate collections list."""
-        valid_collections = VALID_COMPARE_COLLECTIONS | {"quran_tr"}
+        valid_collections = VALID_COMPARE_COLLECTIONS | {"quran_tr", "quran_en"}
         if not v:
             raise ValueError("At least 2 collections required")
         if len(v) < 2:
@@ -137,21 +137,27 @@ class CompareResponse(BaseModel):
     response_language: str | None = None
 
 
-def extract_quran_verse_detail(result: SearchResult) -> tuple[str, VerseDetail]:
+def extract_quran_verse_detail(result: SearchResult, *, collection: str = "") -> tuple[str, VerseDetail]:
     """Extract citation reference and verse detail from a Quran SearchResult."""
-    # Citation format: "SurahName:VerseId" e.g., "Bakara:153" (NO BRACKETS!)
     reference = f"{result.surah_name}:{result.verse_id}"
 
+    if collection.startswith("quran_en_"):
+        source = "quran_en"
+        translation_label = "A.J. Arberry"
+    else:
+        source = "quran_tr"
+        translation_label = "Diyanet Isleri Baskanligi"
+
     return reference, VerseDetail(
-        text=result.translation[:400],  # Truncate long verses
+        text=result.translation[:400],
         book_name=result.surah_name,
         chapter=result.surah_id,
         verse=result.verse_id,
-        source="quran_tr",  # Generic marker for all Quran translators
-        translation="Diyanet Isleri Baskanligi",
-        surah_id=result.surah_id,  # NEW: Required for Quran URL construction
-        surah_name=result.surah_name,  # NEW: Required for Quran URL construction
-        verse_id=result.verse_id,  # NEW: Required for Quran URL construction
+        source=source,
+        translation=translation_label,
+        surah_id=result.surah_id,
+        surah_name=result.surah_name,
+        verse_id=result.verse_id,
     )
 
 
@@ -241,11 +247,11 @@ async def compare_scriptures(
         verse_details: dict[str, VerseDetail] = {}
 
         # Check if any Quran translator collection is selected
-        has_quran = any(c.startswith("quran_tr_") for c in collections)
-        if has_quran:
+        quran_col = next((c for c in collections if c.startswith(("quran_tr_", "quran_en_"))), "")
+        if quran_col:
             for r in search_result.quran:
-                ref, detail = extract_quran_verse_detail(r)
-                if ref not in verse_details:  # Deduplicate
+                ref, detail = extract_quran_verse_detail(r, collection=quran_col)
+                if ref not in verse_details:
                     verse_details[ref] = detail
 
         if "bible_ot" in collections:

@@ -28,7 +28,7 @@ from app.auth.api_key_validator import _resolve_user_by_id, extract_raw_session_
 from app.db import get_db
 from app.i18n.detector import get_locale
 from app.models import SearchHistory, UserPreferences
-from app.schemas.common import DEFAULT_TRANSLATOR, TranslatorType
+from app.schemas.common import DEFAULT_TRANSLATOR, ENGLISH_TRANSLATORS, TranslatorType
 from app.schemas.errors import UnauthorizedResponse
 from src.comparative_rag import ComparativeRAG
 from src.query_translator import QueryTranslator, TranslationError
@@ -178,6 +178,7 @@ async def stream_search(
         try:
             logger.info("[SSE /search] Starting ask call (search + answer generation)...")
             quran_translator = translator or DEFAULT_TRANSLATOR
+            quran_language = "en" if quran_translator in ENGLISH_TRANSLATORS else "tr"
             if source == "quran":
                 ask_result = await rag.ask_quran(
                     q,
@@ -185,6 +186,7 @@ async def stream_search(
                     top_k=10,
                     locale=locale,
                     usage_purpose=usage_purpose,
+                    language=quran_language,
                 )
             elif source in ["ot", "nt", "apocrypha"]:
                 ask_result = await rag.ask_bible(
@@ -276,9 +278,9 @@ async def stream_search(
             for r in results:
                 # Determine source and build reference string
                 if source == "quran":
-                    # Quran result: use surah_name:verse_id format
                     ref_str = f"{r.surah_name}:{r.verse_id}" if hasattr(r, "surah_name") else ""
-                    ref, detail = extract_quran_verse_detail(r)
+                    quran_col = f"quran_{quran_language}_{quran_translator}"
+                    ref, detail = extract_quran_verse_detail(r, collection=quran_col)
                     if ref not in verse_details:
                         verse_details[ref] = detail.model_dump()
                     result_source = "quran"
@@ -509,12 +511,14 @@ async def stream_compare(
 
             # Step 2: Build verse_details from search results (using shared helper)
             yield f"data: {json.dumps({'type': 'progress', 'step': 'building_verse_details', 'message': 'Extracting verse metadata...'})}\n\n"
+            quran_col = next((c for c in collection_list if c.startswith(("quran_tr_", "quran_en_"))), "")
             verse_details = build_verse_details(
                 quran_results=search_result.quran,
                 ot_results=search_result.ot,
                 nt_results=search_result.nt,
                 apocrypha_results=search_result.apocrypha,
                 as_dict=True,
+                quran_collection=quran_col,
             )
 
             # Send verse_details BEFORE streaming text (so frontend has it ready for lookups)

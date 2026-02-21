@@ -146,9 +146,11 @@ class QuranSearcher:
         in_memory: bool = False,
         client: QdrantClient | None = None,
         dense_encoder: DenseEncoder | None = None,
+        language: str = "tr",
     ):
         self.translator = translator
-        self.collection_name = f"quran_tr_{translator}"
+        self.language = language
+        self.collection_name = f"quran_{language}_{translator}"
 
         if client:
             self.client = client

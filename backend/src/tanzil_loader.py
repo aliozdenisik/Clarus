@@ -1,8 +1,9 @@
 """
 Tanzil XML Quran Loader
 
-Loads Turkish Quran translations from Tanzil XML format.
-Supports 8 translators: diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel.
+Loads Turkish and English Quran translations from Tanzil XML format.
+Supports 8 Turkish translators: diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel.
+Supports 1 English translator: arberry.
 
 Note: Tanzil XML files contain malformed comments (with -- sequences inside comments)
 which violates XML 1.0 spec. This loader strips comments before parsing.
@@ -29,6 +30,9 @@ VALID_TRANSLATORS = {
     "yildirim",
     "yuksel",
 }
+
+# Valid English translator keys
+VALID_EN_TRANSLATORS = {"arberry"}
 
 # Expected verse count per translation
 EXPECTED_VERSE_COUNT = 6236
@@ -60,6 +64,7 @@ class TanzilLoader:
 
         self.data_dir = Path(data_dir)
         self.turkish_quran_dir = self.data_dir / "turkish_quran"
+        self.english_quran_dir = self.data_dir / "english_quran"
         self.metadata_path = self.data_dir / "tanzil" / "quran-data.xml"
 
         # Cache for surah metadata
@@ -239,6 +244,92 @@ class TanzilLoader:
 
         logger.info(f"Loaded {len(translations)} translations")
         return translations
+
+    def load_english_translation(self, translator: str) -> list[dict[str, Any]]:
+        """
+        Load a single English Quran translation.
+
+        Args:
+            translator: Translator key (e.g., "arberry")
+
+        Returns:
+            List of verse dictionaries with keys:
+                - surah_number (int): Surah number (1-114)
+                - verse_number (int): Verse number within surah
+                - text (str): Translated verse text
+                - surah_name (str): Surah transliteration name
+                - translator (str): Translator key prefixed with "en_" (e.g., "en_arberry")
+
+        Raises:
+            ValueError: If translator is invalid
+            FileNotFoundError: If XML file is not found
+            ET.ParseError: If XML is malformed
+        """
+        if translator not in VALID_EN_TRANSLATORS:
+            raise ValueError(
+                f"Invalid English translator: {translator}\nValid translators: {', '.join(sorted(VALID_EN_TRANSLATORS))}"
+            )
+
+        xml_path = self.english_quran_dir / f"en.{translator}.xml"
+        if not xml_path.exists():
+            raise FileNotFoundError(f"Translation XML not found: {xml_path}\nExpected at: {xml_path.absolute()}")
+
+        surah_metadata = self._load_surah_metadata()
+
+        try:
+            with open(xml_path, encoding="utf-8") as f:
+                content = f.read()
+
+            content_no_comments = re.sub(r"<!--.*?-->", "", content, flags=re.DOTALL)
+
+            root = defused_fromstring(content_no_comments)
+        except ET.ParseError as e:
+            raise ET.ParseError(f"Failed to parse {xml_path}: {e}")
+        except FileNotFoundError:
+            raise
+        except Exception as e:
+            raise RuntimeError(f"Unexpected error parsing {xml_path}: {e}")
+
+        verses = []
+
+        for sura in root.findall("sura"):
+            surah_number = int(sura.get("index", 0))
+
+            metadata = surah_metadata.get(surah_number, {})
+            surah_name = metadata.get("tname", f"Surah-{surah_number}")
+
+            for aya in sura.findall("aya"):
+                verse_number = int(aya.get("index", 0))
+                text = aya.get("text", "")
+
+                if not text.strip():
+                    logger.warning(f"Empty verse text: en_{translator} {surah_number}:{verse_number}")
+                    continue
+
+                verses.append(
+                    {
+                        "surah_number": surah_number,
+                        "verse_number": verse_number,
+                        "text": text,
+                        "surah_name": surah_name,
+                        "translator": f"en_{translator}",
+                    }
+                )
+
+        if len(verses) != EXPECTED_VERSE_COUNT:
+            logger.warning(
+                f"English translation en_{translator} has {len(verses)} verses, expected {EXPECTED_VERSE_COUNT}"
+            )
+
+        unique_surahs = len({v["surah_number"] for v in verses})
+        if unique_surahs != EXPECTED_SURAH_COUNT:
+            logger.warning(
+                f"English translation en_{translator} has {unique_surahs} surahs, expected {EXPECTED_SURAH_COUNT}"
+            )
+
+        logger.info(f"Loaded en_{translator}: {len(verses)} verses across {unique_surahs} surahs")
+
+        return verses
 
 
 if __name__ == "__main__":
