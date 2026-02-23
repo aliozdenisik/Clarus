@@ -8,7 +8,7 @@ import logging
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
-from polar_sdk.webhooks import WebhookVerificationError, validate_event
+from polar_sdk.webhooks import WebhookVerificationError, validate_event  # type: ignore[attr-defined]
 from pydantic import ValidationError
 
 from app.config import settings
@@ -46,6 +46,11 @@ async def handle_polar_webhook(request: Request) -> JSONResponse:
                 extra={"webhook_id": webhook_id},
             )
             return JSONResponse(status_code=202, content={"status": "already_processed"})
+
+    # Guard: reject immediately if webhook secret is not configured
+    if not settings.polar_webhook_secret:  # type: ignore[attr-defined]
+        logger.warning("Polar webhook secret not configured, rejecting request")
+        return JSONResponse(status_code=403, content={"error": "Webhook not configured"})
 
     # Signature verification + event parsing (raises on failure)
     try:

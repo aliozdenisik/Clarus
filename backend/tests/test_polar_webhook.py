@@ -33,10 +33,14 @@ class TestPolarWebhookInvalidSignature:
     def test_invalid_signature_returns_403(self) -> None:
         from polar_sdk.webhooks import WebhookVerificationError  # type: ignore[attr-defined]
 
-        with patch(
-            "app.api.webhooks.validate_event",
-            side_effect=WebhookVerificationError("bad signature"),
+        with (
+            patch("app.api.webhooks.settings") as mock_settings,
+            patch(
+                "app.api.webhooks.validate_event",
+                side_effect=WebhookVerificationError("bad signature"),
+            ),
         ):
+            mock_settings.polar_webhook_secret = "test-secret"
             response = self.client.post(
                 "/api/webhooks/polar",
                 content=b'{"type":"test"}',
@@ -53,9 +57,11 @@ class TestPolarWebhookSubscriptionActive:
     def test_subscription_active_calls_set_tier_pro_and_returns_202(self) -> None:
         mock_event = _mock_event("subscription.active", "user_ext_001")
         with (
+            patch("app.api.webhooks.settings") as mock_settings,
             patch("app.api.webhooks.validate_event", return_value=mock_event),
             patch("app.api.webhooks.set_tier", new_callable=AsyncMock) as mock_set,
         ):
+            mock_settings.polar_webhook_secret = "test-secret"
             response = self.client.post(
                 "/api/webhooks/polar",
                 content=b"{}",
@@ -77,9 +83,11 @@ class TestPolarWebhookSubscriptionRevoked:
     def test_subscription_revoked_calls_set_tier_free_and_returns_202(self) -> None:
         mock_event = _mock_event("subscription.revoked", "user_ext_002")
         with (
+            patch("app.api.webhooks.settings") as mock_settings,
             patch("app.api.webhooks.validate_event", return_value=mock_event),
             patch("app.api.webhooks.set_tier", new_callable=AsyncMock) as mock_set,
         ):
+            mock_settings.polar_webhook_secret = "test-secret"
             response = self.client.post(
                 "/api/webhooks/polar",
                 content=b"{}",
@@ -99,10 +107,14 @@ class TestPolarWebhookUnknownEvent:
         self.client = TestClient(app)
 
     def test_unknown_event_type_returns_202_unknown_event(self) -> None:
-        with patch(
-            "app.api.webhooks.validate_event",
-            side_effect=_make_pydantic_error(),
+        with (
+            patch("app.api.webhooks.settings") as mock_settings,
+            patch(
+                "app.api.webhooks.validate_event",
+                side_effect=_make_pydantic_error(),
+            ),
         ):
+            mock_settings.polar_webhook_secret = "test-secret"
             response = self.client.post(
                 "/api/webhooks/polar",
                 content=b"{}",
