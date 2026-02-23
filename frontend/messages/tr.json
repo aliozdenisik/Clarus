@@ -61,7 +61,8 @@
     "apocryphaDesc": "Bilgelik, Sira, Makabiler ve daha fazlası",
     "userMenu": "Kullanıcı menüsü",
     "viewProfile": "Profili görüntüle",
-    "signOut": "Çıkış yap"
+    "signOut": "Çıkış yap",
+    "pricing": "Fiyatlandırma"
   },
   "Onboarding": {
     "skipSetup": "Kurulumu atla",
@@ -891,5 +892,29 @@
     "selectTranslation": "Çeviri Seçin",
     "allSurahs": "Tüm Sureler",
     "browseQuran": "Kuran'a Gözat"
+  },
+  "Pricing": {
+    "title": "Fiyatlandırma",
+    "subtitle": "Size uygun planı seçin",
+    "freePlan": "Ücretsiz",
+    "proPlan": "Pro",
+    "freePrice": "$0",
+    "proPrice": "$9",
+    "perMonth": "/ay",
+    "currentPlan": "Mevcut Plan",
+    "upgrade": "Pro'ya Yükselt",
+    "manageBilling": "Faturalandırmayı Yönet",
+    "freeFeature1": "Günde 50 arama",
+    "freeFeature2": "Kur'an & İncil arama",
+    "freeFeature3": "Çoklu ajan karşılaştırma",
+    "proFeature1": "Günde 500 arama",
+    "proFeature2": "Ücretsiz plandaki her şey",
+    "proFeature3": "Öncelikli destek",
+    "loginRequired": "Abone olmak için giriş yapın",
+    "checkoutSuccess": "Pro'ya hoş geldiniz!",
+    "checkoutSuccessDesc": "Aboneliğiniz aktif. Günde 500 arama keyfini çıkarın.",
+    "backToSearch": "Aramaya Dön",
+    "popular": "En Popüler",
+    "managePortal": "Aboneliğinizi yönetin"
   }
 }

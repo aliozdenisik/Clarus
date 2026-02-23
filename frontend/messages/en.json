@@ -61,7 +61,8 @@
     "apocryphaDesc": "Wisdom, Sirach, Maccabees, and more",
     "userMenu": "User menu",
     "viewProfile": "View profile",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "pricing": "Pricing"
   },
   "Onboarding": {
     "skipSetup": "Skip setup",
@@ -891,5 +892,29 @@
     "selectTranslation": "Select Translation",
     "allSurahs": "All Surahs",
     "browseQuran": "Browse Quran"
+  },
+  "Pricing": {
+    "title": "Pricing",
+    "subtitle": "Choose the plan that works for you",
+    "freePlan": "Free",
+    "proPlan": "Pro",
+    "freePrice": "$0",
+    "proPrice": "$9",
+    "perMonth": "/month",
+    "currentPlan": "Current Plan",
+    "upgrade": "Upgrade to Pro",
+    "manageBilling": "Manage Billing",
+    "freeFeature1": "50 searches per day",
+    "freeFeature2": "Quran & Bible search",
+    "freeFeature3": "Multi-agent comparison",
+    "proFeature1": "500 searches per day",
+    "proFeature2": "Everything in Free",
+    "proFeature3": "Priority support",
+    "loginRequired": "Please sign in to subscribe",
+    "checkoutSuccess": "Welcome to Pro!",
+    "checkoutSuccessDesc": "Your subscription is now active. Enjoy 500 searches per day.",
+    "backToSearch": "Back to Search",
+    "popular": "Most Popular",
+    "managePortal": "Manage your subscription"
   }
 }
