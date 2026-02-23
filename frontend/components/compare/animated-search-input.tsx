@@ -3,7 +3,7 @@
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
-import { Sparkles, Command, ArrowRight, Check } from "lucide-react"
+import { Sparkles, Command, ArrowRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 import { LanguageSelector } from "@/components/search/language-selector"
@@ -61,9 +61,6 @@ export interface AnimatedSearchInputProps {
   showTranslatorSelector: boolean
   suggestedTopics: string[]
   onTopicSelect: (topic: string) => void
-  advancedMode: boolean
-  onAdvancedModeChange: (checked: boolean) => void
-  isExtractingKeywords: boolean
   submitLabel: string
   loadingLabel: string
   textareaRef: React.RefObject<HTMLTextAreaElement | null>
@@ -86,9 +83,6 @@ export function AnimatedSearchInput({
   showTranslatorSelector,
   suggestedTopics,
   onTopicSelect,
-  advancedMode,
-  onAdvancedModeChange,
-  isExtractingKeywords,
   submitLabel,
   loadingLabel,
   textareaRef,
@@ -281,25 +275,7 @@ export function AnimatedSearchInput({
         </div>
       </motion.div>
 
-      <div className="mt-3 flex justify-end px-1">
-        <label className="group flex cursor-pointer items-center gap-2 transition-opacity hover:opacity-100">
-          <div className="relative flex items-center">
-            <input
-              type="checkbox"
-              checked={advancedMode}
-              onChange={(e) => onAdvancedModeChange(e.target.checked)}
-              disabled={disabled || isLoading || isExtractingKeywords}
-              className="peer h-4 w-4 cursor-pointer appearance-none rounded border border-white/20 bg-white/5 transition-all checked:border-violet-500 checked:bg-violet-500 focus:ring-2 focus:ring-violet-500/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            />
-            <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 transition-opacity peer-checked:opacity-100">
-              <Check className="h-3 w-3" />
-            </div>
-          </div>
-          <span className="text-xs font-medium text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)]">
-            Advanced Search
-          </span>
-        </label>
-      </div>
+
     </div>
   )
 }

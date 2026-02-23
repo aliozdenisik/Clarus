@@ -759,60 +759,7 @@ function SearchContent() {
               </div>
             </form>
 
-            {/* Keyword Selector */}
-            <div className="w-full max-w-2xl space-y-3">
-              <KeywordSelector
-                keywords={keywords}
-                advancedMode={advancedMode}
-                onAdvancedModeChange={setAdvancedMode}
-                onSelectionChange={(selected) => {
-                  setKeywords(
-                    keywords.map((k) => ({
-                      ...k,
-                      selected: selected.some((s) => s.text === k.text),
-                    }))
-                  )
-                }}
-                isLoading={isEnhancing}
-                onSearch={handleKeywordSearch}
-                labels={{
-                  advancedSearch: t("advancedMode"),
-                  advancedSearchHint: t("advancedSearchHint"),
-                  selectAll: t("selectAllKeywords"),
-                  deselectAll: t("deselectAllKeywords"),
-                  selectAtLeastOne: t("selectAtLeastOneKeyword"),
-                }}
-              />
 
-              {/* Action buttons */}
-              <div className="flex items-center justify-between">
-                {/* Extract keywords button - shown when no keywords and query exists */}
-                {keywords.length === 0 && query.trim() && (
-                  <button
-                    type="button"
-                    onClick={() => enhanceQuery(query)}
-                    disabled={isEnhancing}
-                    className="text-xs text-[var(--color-accent-primary)] transition-colors hover:text-[var(--color-accent-primary)]/80 disabled:opacity-50"
-                  >
-                    {isEnhancing ? t("extractingKeywords") : t("extractKeywords")}
-                  </button>
-                )}
-
-                {/* Clear keywords button - shown when keywords exist */}
-                {keywords.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      resetKeywordStore()
-                      toast.info(tToast("searchSuccess"))
-                    }}
-                    className="ml-auto text-xs text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-secondary)]"
-                  >
-                    {t("clearKeywords")}
-                  </button>
-                )}
-              </div>
-            </div>
           </motion.div>
         </div>
       </AuroraSectionBackground>

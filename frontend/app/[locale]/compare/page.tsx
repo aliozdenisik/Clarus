@@ -791,91 +791,12 @@ function CompareContent() {
                 onTopicSelect={(topic) => {
                   setTopic(topic)
                 }}
-                advancedMode={advancedMode}
-                onAdvancedModeChange={setAdvancedMode}
-                isExtractingKeywords={isExtractingKeywords}
                 submitLabel={t("analyzeButton")}
                 loadingLabel={t("analyzing")}
                 textareaRef={textareaRef}
               />
 
-              {/* Keyword Selector - Advanced Mode Toggle */}
-              <div className="mt-4 w-full">
-                {/* Show keywords after extraction */}
-                {advancedMode && (quranKeywords.length > 0 || bibleKeywords.length > 0) && (
-                  <div className="space-y-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]/50 p-4">
-                    {/* Quran Keywords */}
-                    {quranKeywords.length > 0 && (
-                      <div>
-                        <p className="mb-2 text-xs font-medium text-[var(--color-text-muted)]">
-                          {t("quranKeywords")}
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {quranKeywords.map((kw) => (
-                            <button
-                              key={kw.text}
-                              type="button"
-                              onClick={() => {
-                                setQuranKeywords((prev) =>
-                                  prev.map((k) =>
-                                    k.text === kw.text ? { ...k, selected: !k.selected } : k
-                                  )
-                                )
-                              }}
-                              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                                kw.selected
-                                  ? "border border-indigo-500/40 bg-indigo-500/20 text-indigo-300"
-                                  : "border border-zinc-700/40 bg-zinc-800/50 text-zinc-400 hover:bg-zinc-800"
-                              }`}
-                            >
-                              {kw.text}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
 
-                    {/* Bible Keywords */}
-                    {bibleKeywords.length > 0 && (
-                      <div>
-                        <p className="mb-2 text-xs font-medium text-[var(--color-text-muted)]">
-                          {t("bibleKeywords")}
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {bibleKeywords.map((kw) => (
-                            <button
-                              key={kw.text}
-                              type="button"
-                              onClick={() => {
-                                setBibleKeywords((prev) =>
-                                  prev.map((k) =>
-                                    k.text === kw.text ? { ...k, selected: !k.selected } : k
-                                  )
-                                )
-                              }}
-                              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                                kw.selected
-                                  ? "border border-indigo-500/40 bg-indigo-500/20 text-indigo-300"
-                                  : "border border-zinc-700/40 bg-zinc-800/50 text-zinc-400 hover:bg-zinc-800"
-                              }`}
-                            >
-                              {kw.text}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Loading state for keyword extraction */}
-                {isExtractingKeywords && (
-                  <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)]">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
-                    <span>{t("extractingKeywords")}</span>
-                  </div>
-                )}
-              </div>
             </form>
           </motion.div>
         </div>
