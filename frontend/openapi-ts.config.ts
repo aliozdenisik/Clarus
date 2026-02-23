@@ -7,5 +7,5 @@ export default defineConfig({
     path: "./lib/api",
   },
   postProcess: ["prettier"],
-  plugins: [],
+  plugins: ["@hey-api/typescript", "@hey-api/sdk"],
 })
