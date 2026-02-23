@@ -191,6 +191,7 @@ yarn-error.log*
 # Claude Code (Local AI Configuration)
 # ----------------
 .claude/
+.opencode/
 
 # ----------------
 # Windows WSL Artifacts
