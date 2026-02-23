@@ -19,9 +19,11 @@ from app.api import (
     preferences,
     search,
     stream,
+    subscription,
     verse_lookup,
     verse_translations,
     verse_words,
+    webhooks,
 )
 from app.config import settings
 from app.db import init_db
@@ -311,6 +313,9 @@ async def csrf_protection(request: Request, call_next):
     Validates Origin against allowed CORS origins for POST/PUT/DELETE/PATCH requests.
     Better Auth handles its own CSRF for /api/auth/* routes.
     """
+    # Exempt webhook endpoints from CSRF (external POST from Polar servers)
+    if request.url.path.startswith("/api/webhooks/"):
+        return await call_next(request)
     if request.method in ("POST", "PUT", "DELETE", "PATCH"):
         origin = request.headers.get("origin")
         # Only validate if Origin header is present (browser requests)
@@ -361,6 +366,8 @@ app.include_router(
 )
 app.include_router(verse_lookup.router, prefix="/api/verse", tags=["verse"])
 app.include_router(verse_words.router, prefix="/api/quran/verses", tags=["verse-words"])
+app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
+app.include_router(subscription.router, prefix="/api/subscription", tags=["subscription"])
 
 
 class RedisStatusInfo(BaseModel):
