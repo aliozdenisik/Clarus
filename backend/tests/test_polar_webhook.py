@@ -56,18 +56,20 @@ class TestPolarWebhookSubscriptionActive:
 
     def test_subscription_active_calls_set_tier_pro_and_returns_202(self) -> None:
         mock_event = _mock_event("subscription.active", "user_ext_001")
+        mock_event.data.product_id = "ebb31859-0ddb-4025-b047-5e7358221400"
         with (
             patch("app.api.webhooks.settings") as mock_settings,
             patch("app.api.webhooks.validate_event", return_value=mock_event),
             patch("app.api.webhooks.set_tier", new_callable=AsyncMock) as mock_set,
         ):
             mock_settings.polar_webhook_secret = "test-secret"
+            mock_settings.polar_pro_product_id = "ebb31859-0ddb-4025-b047-5e7358221400"
+            mock_settings.polar_starter_product_id = "63ef5ef3-d771-42ae-9742-fe185800d255"
             response = self.client.post(
                 "/api/webhooks/polar",
                 content=b"{}",
                 headers={"Content-Type": "application/json"},
             )
-
         assert response.status_code == 202
         assert response.json()["status"] == "ok"
         mock_set.assert_called_once()

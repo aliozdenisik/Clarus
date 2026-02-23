@@ -69,6 +69,7 @@ vi.mock("lucide-react", () => ({
   LogOut: () => <div data-testid="logout-icon" />,
   BookOpen: () => <div data-testid="book-open-icon" />,
   Languages: () => <div data-testid="languages-icon" />,
+  Lock: () => <div data-testid="lock-icon" />,
 }))
 
 // Mock MagicCard
@@ -160,6 +161,23 @@ vi.mock("react-virtuoso", () => ({
     }
     return <div data-testid="virtuoso-mock">{nodes}</div>
   },
+}))
+
+// Mock useSubscription
+vi.mock("@/lib/hooks/use-subscription", () => ({
+  useSubscription: () => ({
+    tier: "free",
+    limit: 5,
+    isPaid: false,
+    isStarter: false,
+    isPro: false,
+  }),
+}))
+
+// Mock UpgradeGate
+vi.mock("@/components/keyword-search/upgrade-gate", () => ({
+  UpgradeGate: ({ children, locked }: { children: React.ReactNode; locked: boolean }) =>
+    locked ? <div data-testid="upgrade-gate">{children}</div> : <>{children}</>,
 }))
 
 import KeywordSearchPage from "@/app/[locale]/keyword-search/page"

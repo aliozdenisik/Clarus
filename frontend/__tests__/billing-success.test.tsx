@@ -23,14 +23,14 @@ describe("BillingSuccessPage", () => {
   it("renders success heading from i18n", () => {
     render(<BillingSuccessPage />)
 
-    expect(screen.getByText("Welcome to Pro!")).toBeInTheDocument()
+    expect(screen.getByText("Subscription activated!")).toBeInTheDocument()
   })
 
   it("renders success description text", () => {
     render(<BillingSuccessPage />)
 
     expect(
-      screen.getByText("Your subscription is now active. Enjoy 500 searches per day.")
+      screen.getByText("Your subscription is now active. Enjoy your plan.")
     ).toBeInTheDocument()
   })
 
@@ -52,11 +52,8 @@ describe("BillingSuccessPage", () => {
 
   it("renders Turkish translations when locale is tr", () => {
     render(<BillingSuccessPage />, "tr", trMessages)
-
-    expect(screen.getByText("Pro'ya ho\u015f geldiniz!")).toBeInTheDocument()
-    expect(
-      screen.getByText("Aboneliğiniz aktif. Günde 500 arama keyfini çıkarın.")
-    ).toBeInTheDocument()
+    expect(screen.getByText("Abonelik aktif!")).toBeInTheDocument()
+    expect(screen.getByText("Aboneliğiniz aktif. Planınızın keyfini çıkarın.")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /Aramaya Dön/i })).toBeInTheDocument()
   })
 })

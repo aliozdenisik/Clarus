@@ -18,6 +18,40 @@ vi.mock("next/navigation", () => ({
   usePathname: vi.fn(() => "/keyword-search"),
 }))
 
+vi.mock("@/i18n/navigation", () => ({
+  useRouter: vi.fn(() => ({ push: vi.fn() })),
+  usePathname: vi.fn(() => "/keyword-search"),
+  Link: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode
+    href: string
+    [key: string]: unknown
+  }) => (
+    <a href={href} {...(props as Record<string, unknown>)}>
+      {children}
+    </a>
+  ),
+  redirect: vi.fn(),
+}))
+
+vi.mock("@/lib/hooks/use-subscription", () => ({
+  useSubscription: () => ({
+    tier: "free",
+    limit: 5,
+    isPaid: false,
+    isStarter: false,
+    isPro: false,
+  }),
+}))
+
+vi.mock("@/components/keyword-search/upgrade-gate", () => ({
+  UpgradeGate: ({ children, locked }: { children: React.ReactNode; locked: boolean }) =>
+    locked ? <div data-testid="upgrade-gate">{children}</div> : <>{children}</>,
+}))
+
 vi.mock("next/link", () => ({
   default: ({ children, href, ...props }: MockProps & { href: string }) => (
     <a href={href} {...props}>
@@ -58,6 +92,7 @@ vi.mock("lucide-react", () => ({
   Info: () => <div data-testid="info-icon" />,
   X: () => <div data-testid="x-icon" />,
   ChevronDown: () => <div data-testid="chevron-down-icon" />,
+  Lock: () => <div data-testid="lock-icon" />,
 }))
 
 vi.mock("@/components/ui/magic-card", () => ({
@@ -133,6 +168,18 @@ vi.mock("@/components/ui/animated-tabs", () => ({
           {tab.label}
         </div>
       ))}
+    </div>
+  ),
+  SegmentedControl: ({
+    children,
+    value,
+  }: {
+    children: React.ReactNode
+    value: string
+    onChange?: (val: string) => void
+  }) => (
+    <div data-testid="segmented-control" data-value={value}>
+      {children}
     </div>
   ),
 }))

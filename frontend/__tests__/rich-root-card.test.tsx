@@ -29,6 +29,7 @@ vi.mock("lucide-react", () => ({
   ChevronRight: () => <div data-testid="chevron-right-icon" />,
   ExternalLink: () => <div data-testid="external-link-icon" />,
   BookOpen: () => <div data-testid="book-open-icon" />,
+  Lock: () => <div data-testid="lock-icon" />,
 }))
 
 vi.mock("@/lib/design-system", () => ({
@@ -64,6 +65,12 @@ const mockUseQuery = vi.fn()
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: (options: unknown) => mockUseQuery(options),
+}))
+
+// Mock UpgradeGate
+vi.mock("@/components/keyword-search/upgrade-gate", () => ({
+  UpgradeGate: ({ children, locked }: { children: React.ReactNode; locked: boolean }) =>
+    locked ? <div data-testid="upgrade-gate">{children}</div> : <>{children}</>,
 }))
 
 import { RichRootCard } from "@/components/keyword-search/rich-root-card"

@@ -22,7 +22,7 @@ vi.mock("@/lib/logger", () => ({
 }))
 vi.mock("lucide-react", () => {
   const Icon = () => <svg aria-hidden="true" />
-  return { Check: Icon, CreditCard: Icon, Sparkles: Icon }
+  return { Check: Icon, CreditCard: Icon, Lock: Icon }
 })
 
 import * as AuthClient from "@/lib/auth-client"
@@ -30,9 +30,10 @@ describe("PricingPage", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
-  it("renders two plan cards (Free and Pro)", () => {
+  it("renders three plan cards (Free, Starter, and Pro)", () => {
     render(<PricingPage />)
     expect(screen.getByText("Free")).toBeInTheDocument()
+    expect(screen.getByText("Starter")).toBeInTheDocument()
     expect(screen.getByText("Pro")).toBeInTheDocument()
   })
   it("renders page title and subtitle from i18n", () => {
@@ -47,8 +48,12 @@ describe("PricingPage", () => {
   })
   it("shows login-required message and upgrade button when not logged in", () => {
     render(<PricingPage />)
-    expect(screen.getByText("Please sign in to subscribe")).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: /Upgrade to Pro/i })).toBeInTheDocument()
+    // Now there are two "Please sign in to subscribe" messages (one for Starter, one for Pro)
+    const signInMessages = screen.getAllByText("Please sign in to subscribe")
+    expect(signInMessages.length).toBeGreaterThanOrEqual(2)
+    // Now there are two upgrade buttons (Starter and Pro)
+    const upgradeButtons = screen.getAllByRole("button", { name: /Upgrade/i })
+    expect(upgradeButtons.length).toBeGreaterThanOrEqual(2)
   })
   it("does not call checkout when unauthenticated user clicks upgrade", () => {
     vi.mocked(AuthClient.useSession).mockReturnValue({ data: null, isPending: false } as never)
@@ -63,8 +68,12 @@ describe("PricingPage", () => {
       isPending: false,
     } as never)
     render(<PricingPage />)
-    expect(screen.getByRole("button", { name: /Upgrade to Pro/i })).toBeInTheDocument()
-    expect(screen.getByText("Manage Billing")).toBeInTheDocument()
+    // There are now two upgrade buttons (Starter and Pro)
+    const upgradeButtons = screen.getAllByRole("button", { name: /Upgrade/i })
+    expect(upgradeButtons.length).toBeGreaterThanOrEqual(2)
+    // There are now two "Manage Billing" links
+    const manageBillingLinks = screen.getAllByText("Manage Billing")
+    expect(manageBillingLinks.length).toBeGreaterThanOrEqual(2)
   })
   it("calls authClient.checkout with slug 'pro' when logged in and upgrade clicked", () => {
     vi.mocked(AuthClient.useSession).mockReturnValue({

@@ -75,8 +75,9 @@ class Settings(BaseSettings):
     polar_webhook_secret: str = ""  # Webhook signing secret
     polar_server: str = "sandbox"  # "sandbox" or "production" — from POLAR_SERVER env var
     polar_pro_product_id: str = ""  # Pro plan product ID (from Polar dashboard)
+    polar_starter_product_id: str = ""  # Starter plan product ID (from Polar dashboard)
     polar_org_slug: str = "claruss"  # Organization slug
-    tier_rate_limits: dict = {"free": 50, "pro": 500}
+    tier_rate_limits: dict = {"free": 5, "starter": 50, "pro": 100}
 
     @property
     def admin_emails_list(self) -> list[str]:

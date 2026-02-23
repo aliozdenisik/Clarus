@@ -81,10 +81,16 @@ async def handle_polar_webhook(request: Request) -> JSONResponse:
     if event_type == "subscription.active":
         external_id: str | None = event.data.customer.external_id  # type: ignore[union-attr]
         if external_id:
-            await set_tier(redis_manager.client, external_id, "pro")
+            product_id = getattr(event.data, "product_id", None)  # type: ignore[union-attr]
+            tier = "free"
+            if product_id == settings.polar_pro_product_id:  # type: ignore[attr-defined]
+                tier = "pro"
+            elif product_id == settings.polar_starter_product_id:  # type: ignore[attr-defined]
+                tier = "starter"
+            await set_tier(redis_manager.client, external_id, tier)
             logger.info(
-                "User upgraded to pro tier",
-                extra={"external_id": external_id, "webhook_id": webhook_id},
+                "User subscription activated",
+                extra={"external_id": external_id, "tier": tier, "webhook_id": webhook_id},
             )
     elif event_type == "subscription.revoked":
         external_id = event.data.customer.external_id  # type: ignore[union-attr]

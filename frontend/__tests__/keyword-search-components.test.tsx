@@ -31,6 +31,7 @@ vi.mock("lucide-react", () => ({
   Info: () => <div data-testid="info-icon" />,
   ChevronDown: () => <div data-testid="chevron-down-icon" />,
   AlertTriangle: () => <div data-testid="alert-triangle-icon" />,
+  Lock: () => <div data-testid="lock-icon" />,
 }))
 
 // Mock MagicCard
@@ -75,6 +76,12 @@ vi.mock("recharts", () => ({
   YAxis: () => <div data-testid="y-axis" />,
   Tooltip: () => <div data-testid="tooltip" />,
   CartesianGrid: () => <div data-testid="cartesian-grid" />,
+}))
+
+// Mock UpgradeGate
+vi.mock("@/components/keyword-search/upgrade-gate", () => ({
+  UpgradeGate: ({ children, locked }: { children: React.ReactNode; locked: boolean }) =>
+    locked ? <div data-testid="upgrade-gate">{children}</div> : <>{children}</>,
 }))
 
 import { RootCard } from "@/components/keyword-search/root-card"

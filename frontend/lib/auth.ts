@@ -62,7 +62,10 @@ export const auth = betterAuth({
       createCustomerOnSignUp: true,
       use: [
         checkout({
-          products: [{ productId: process.env.POLAR_PRO_PRODUCT_ID!, slug: "pro" }],
+          products: [
+            { productId: process.env.POLAR_PRO_PRODUCT_ID!, slug: "pro" },
+            { productId: process.env.POLAR_STARTER_PRODUCT_ID!, slug: "starter" },
+          ],
           successUrl: "/billing/success?checkout_id={CHECKOUT_ID}",
           authenticatedUsersOnly: true,
         }),
