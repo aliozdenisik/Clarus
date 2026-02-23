@@ -70,6 +70,14 @@ class Settings(BaseSettings):
     supported_locales: list[str] = ["tr", "en"]
     default_locale: str = "tr"
 
+    # Polar.sh Configuration
+    polar_access_token: str = ""  # Organization access token
+    polar_webhook_secret: str = ""  # Webhook signing secret
+    polar_server: str = "sandbox"  # "sandbox" or "production" — from POLAR_SERVER env var
+    polar_pro_product_id: str = ""  # Pro plan product ID (from Polar dashboard)
+    polar_org_slug: str = "claruss"  # Organization slug
+    tier_rate_limits: dict = {"free": 50, "pro": 500}
+
     @property
     def admin_emails_list(self) -> list[str]:
         """Parse comma-separated admin emails into list."""

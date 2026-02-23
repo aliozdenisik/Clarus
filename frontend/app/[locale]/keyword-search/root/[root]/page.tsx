@@ -154,9 +154,7 @@ export default function RootDetailPage() {
         transition={springPresets.fluid}
         className="mx-auto max-w-3xl"
       >
-        <div
-          className="space-y-6 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8"
-        >
+        <div className="space-y-6 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8">
           <div className="space-y-3 text-center">
             <h1
               lang="ar"
@@ -250,9 +248,7 @@ export default function RootDetailPage() {
                 ))}
               </div>
             </aside>
-            <div
-              className="space-y-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6"
-            >
+            <div className="space-y-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6">
               <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
                 Lane&apos;s Lexicon &mdash; Original English
               </h2>

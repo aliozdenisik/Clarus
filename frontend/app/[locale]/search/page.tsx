@@ -21,7 +21,6 @@ import { SourceBadge, SourceType } from "@/components/compare/source-badge"
 import { useLogger } from "@/lib/logger"
 import { LanguageSelector } from "@/components/search/language-selector"
 import { TranslatorSelector } from "@/components/search/translator-selector"
-import { KeywordSelector } from "@/components/search/keyword-selector"
 import { useKeywordStore, KeywordSuggestion } from "@/lib/stores/keyword-store"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
@@ -758,8 +757,6 @@ function SearchContent() {
                 )}
               </div>
             </form>
-
-
           </motion.div>
         </div>
       </AuroraSectionBackground>
