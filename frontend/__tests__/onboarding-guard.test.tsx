@@ -71,7 +71,7 @@ describe("OnboardingGuard", () => {
     expect(mockRouterPush).not.toHaveBeenCalled()
   })
 
-  it("redirects to /onboarding when authenticated and onboarding not completed", async () => {
+  it("does not redirect authenticated user to onboarding even when onboarding not completed", async () => {
     pathnameRef.current = "/dashboard"
     setupSession("user-1")
     setupPreferencesStore(false)
@@ -82,12 +82,11 @@ describe("OnboardingGuard", () => {
       </OnboardingGuard>
     )
 
-    await waitFor(() => {
-      expect(mockRouterPush).toHaveBeenCalledWith("/onboarding")
-    })
+    await waitFor(() => expect(mockFetchPreferences).toHaveBeenCalled())
+    expect(mockRouterPush).not.toHaveBeenCalledWith("/onboarding")
   })
 
-  it("does not redirect when authenticated and already on /onboarding", async () => {
+  it("redirects authenticated user away from /onboarding to /hub", async () => {
     pathnameRef.current = "/onboarding"
     setupSession("user-1")
     setupPreferencesStore(false)
@@ -98,11 +97,12 @@ describe("OnboardingGuard", () => {
       </OnboardingGuard>
     )
 
-    await waitFor(() => expect(mockFetchPreferences).toHaveBeenCalled())
-    expect(mockRouterPush).not.toHaveBeenCalled()
+    await waitFor(() => {
+      expect(mockRouterPush).toHaveBeenCalledWith("/hub")
+    })
   })
 
-  it("redirects from /onboarding to / when onboarding is already completed", async () => {
+  it("redirects from /onboarding to /hub when onboarding is already completed", async () => {
     pathnameRef.current = "/onboarding"
     setupSession("user-1")
     setupPreferencesStore(true)
@@ -114,8 +114,23 @@ describe("OnboardingGuard", () => {
     )
 
     await waitFor(() => {
-      expect(mockRouterPush).toHaveBeenCalledWith("/")
+      expect(mockRouterPush).toHaveBeenCalledWith("/hub")
     })
+  })
+
+  it("does not redirect when authenticated and on a normal route", async () => {
+    pathnameRef.current = "/hub"
+    setupSession("user-1")
+    setupPreferencesStore(false)
+
+    render(
+      <OnboardingGuard>
+        <div>Child Content</div>
+      </OnboardingGuard>
+    )
+
+    await waitFor(() => expect(mockFetchPreferences).toHaveBeenCalled())
+    expect(mockRouterPush).not.toHaveBeenCalled()
   })
 
   it("does not redirect when authenticated and on an auth route (/login)", async () => {

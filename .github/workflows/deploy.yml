@@ -1,0 +1,94 @@
+# =============================================================================
+# Clarus — Continuous Deployment to Production VPS
+# Trigger: PR merged to main
+# Strategy: SSH → git pull → build → rolling restart → health check
+# =============================================================================
+
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+# Prevent concurrent deployments
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    # Only deploy on actual merges, not direct pushes (safety net)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 10
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: 22
+          command_timeout: 8m
+          script: |
+            set -euo pipefail
+
+            APP_DIR="/opt/clarus"
+            DEPLOY_LOG="/var/log/clarus-deploy.log"
+            TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+            echo "[$TIMESTAMP] === Deploy started ===" | tee -a "$DEPLOY_LOG"
+
+            # --- 1. Git pull ---
+            cd "$APP_DIR"
+            echo "[$TIMESTAMP] Pulling latest changes..." | tee -a "$DEPLOY_LOG"
+            git fetch origin main
+            git reset --hard origin/main
+            echo "Commit: $(git rev-parse --short HEAD)" | tee -a "$DEPLOY_LOG"
+
+            # --- 2. Backend: check for dependency changes ---
+            if git diff HEAD~1 --name-only | grep -q "backend/pyproject.toml\|backend/uv.lock"; then
+              echo "[$TIMESTAMP] Backend deps changed, syncing..." | tee -a "$DEPLOY_LOG"
+              cd "$APP_DIR/backend"
+              .venv/bin/python -m pip install --upgrade pip -q
+              /root/.local/bin/uv sync --frozen 2>/dev/null || .venv/bin/pip install -r requirements.txt -q
+            fi
+
+            # --- 3. Frontend: install deps if needed + build ---
+            cd "$APP_DIR/frontend"
+            if git diff HEAD~1 --name-only | grep -q "frontend/package.json\|frontend/package-lock.json"; then
+              echo "[$TIMESTAMP] Frontend deps changed, installing..." | tee -a "$DEPLOY_LOG"
+              npm ci --production=false
+            fi
+
+            echo "[$TIMESTAMP] Building frontend..." | tee -a "$DEPLOY_LOG"
+            npm run build
+
+            # --- 4. Rolling restart (backend first, then frontend) ---
+            echo "[$TIMESTAMP] Restarting backend..." | tee -a "$DEPLOY_LOG"
+            systemctl restart clarus-backend
+            sleep 3
+
+            echo "[$TIMESTAMP] Restarting frontend..." | tee -a "$DEPLOY_LOG"
+            systemctl restart clarus-frontend
+            sleep 5
+
+            # --- 5. Health checks ---
+            echo "[$TIMESTAMP] Running health checks..." | tee -a "$DEPLOY_LOG"
+
+            BACKEND_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/api/health || echo "000")
+            FRONTEND_STATUS=$(curl -sf -o /dev/null -w "%{http_code}" http://127.0.0.1:3000 || echo "000")
+
+            if [ "$BACKEND_STATUS" = "200" ] && [ "$FRONTEND_STATUS" = "307" -o "$FRONTEND_STATUS" = "200" ]; then
+              echo "[$TIMESTAMP] ✅ Deploy successful! Backend=$BACKEND_STATUS Frontend=$FRONTEND_STATUS" | tee -a "$DEPLOY_LOG"
+            else
+              echo "[$TIMESTAMP] ❌ Health check FAILED! Backend=$BACKEND_STATUS Frontend=$FRONTEND_STATUS" | tee -a "$DEPLOY_LOG"
+              echo "Checking service logs..." | tee -a "$DEPLOY_LOG"
+              journalctl -u clarus-backend --no-pager -n 10 | tee -a "$DEPLOY_LOG"
+              journalctl -u clarus-frontend --no-pager -n 10 | tee -a "$DEPLOY_LOG"
+              exit 1
+            fi
+
+            echo "[$TIMESTAMP] === Deploy completed ===" | tee -a "$DEPLOY_LOG"

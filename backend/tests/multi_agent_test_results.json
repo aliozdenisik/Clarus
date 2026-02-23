@@ -1,45 +1,75 @@
 {
   "query": "Sabır ve tahammül hakkında kutsal kitaplar ne diyor?",
   "search_stats": {
-    "quran": 0,
-    "old_testament": 0,
-    "new_testament": 0,
-    "apocrypha": 0,
-    "total": 0
+    "quran": 20,
+    "old_testament": 20,
+    "new_testament": 20,
+    "apocrypha": 20,
+    "total": 80
   },
   "agent_input": {
-    "old_testament": 0,
-    "new_testament": 0,
-    "apocrypha": 0,
-    "quran": 0
+    "old_testament": 20,
+    "new_testament": 20,
+    "apocrypha": 20,
+    "quran": 20
   },
   "agent_output": {
     "old_testament": {
-      "has_commentary": false,
-      "commentary_length": 0,
-      "citations": []
+      "has_commentary": true,
+      "commentary_length": 818,
+      "citations": [
+        "Ecclesiastes 7:8",
+        "Lamentations 3:26",
+        "Isaiah 40:31",
+        "Proverbs 14:29",
+        "Psalms 27:14",
+        "Psalms 30:5",
+        "Psalms 130:5"
+      ]
     },
     "new_testament": {
-      "has_commentary": false,
-      "commentary_length": 0,
-      "citations": []
+      "has_commentary": true,
+      "commentary_length": 708,
+      "citations": [
+        "James 1:3",
+        "James 5:7",
+        "James 5:8",
+        "Hebrews 10:36",
+        "James 1:4",
+        "James 5:11",
+        "Luke 21:19"
+      ]
     },
     "apocrypha": {
-      "has_commentary": false,
-      "commentary_length": 0,
-      "citations": []
+      "has_commentary": true,
+      "commentary_length": 745,
+      "citations": [
+        "Sirach 1:23",
+        "Sirach 2:2",
+        "Sirach 2:4",
+        "Sirach 18:11",
+        "Sirach 2:14",
+        "Baruch 4:25"
+      ]
     },
     "quran": {
-      "has_commentary": false,
-      "commentary_length": 0,
-      "citations": []
+      "has_commentary": true,
+      "commentary_length": 686,
+      "citations": [
+        "Bakara:153",
+        "Âl-i İmrân:146",
+        "İnsân:12",
+        "Beled:17",
+        "Âl-i İmrân:186",
+        "Âl-i İmrân:200"
+      ]
     }
   },
-  "synthesis_length": 0,
-  "confidence": 0.15,
+  "synthesis_length": 820,
+  "confidence": 0.9297,
   "timing": {
-    "search_time_s": 8.338995456695557,
-    "generation_time_s": 0.0013647079467773438,
-    "total_time_s": 8.343579769134521
+    "search_time_s": 9.577504396438599,
+    "generation_time_s": 22.731151580810547,
+    "total_time_s": 32.31149101257324
   }
 }

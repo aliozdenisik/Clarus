@@ -6,7 +6,7 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { ArrowLeft } from "lucide-react"
 import { springPresets } from "@/lib/design-system"
-import { MagicCard } from "@/components/ui/magic-card"
+
 import { Skeleton } from "@/components/ui/skeleton"
 import { logger } from "@/lib/logger"
 import { API_BASE } from "@/lib/config"
@@ -154,12 +154,8 @@ export default function RootDetailPage() {
         transition={springPresets.fluid}
         className="mx-auto max-w-3xl"
       >
-        <MagicCard
-          className="space-y-6 rounded-lg border border-[var(--color-border-subtle)] p-8"
-          gradientSize={200}
-          gradientColor="#1a1a2e"
-          gradientFrom="#7c3aed"
-          gradientTo="#4f46e5"
+        <div
+          className="space-y-6 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8"
         >
           <div className="space-y-3 text-center">
             <h1
@@ -191,7 +187,7 @@ export default function RootDetailPage() {
               )}
             </div>
           </div>
-        </MagicCard>
+        </div>
       </motion.div>
 
       {data.definition_tr && (
@@ -200,13 +196,9 @@ export default function RootDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...springPresets.fluid, delay: 0.1 }}
         >
-          <MagicCard
-            className="space-y-3 rounded-lg border border-[var(--color-border-subtle)] p-6"
+          <div
+            className="space-y-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6"
             data-testid="definition-tr-section"
-            gradientSize={200}
-            gradientColor="#1a1a2e"
-            gradientFrom="#7c3aed"
-            gradientTo="#4f46e5"
           >
             <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
               Lane&apos;s Lexicon &mdash; Akademik Türkçe Tercüme
@@ -219,7 +211,7 @@ export default function RootDetailPage() {
               aracılığıyla üretilmiştir. Akademik çalışmalarda orijinal İngilizce metni referans
               almanız önerilir.
             </p>
-          </MagicCard>
+          </div>
         </motion.div>
       )}
 
@@ -258,12 +250,8 @@ export default function RootDetailPage() {
                 ))}
               </div>
             </aside>
-            <MagicCard
-              className="space-y-3 rounded-lg border border-[var(--color-border-subtle)] p-6"
-              gradientSize={200}
-              gradientColor="#1a1a2e"
-              gradientFrom="#7c3aed"
-              gradientTo="#4f46e5"
+            <div
+              className="space-y-3 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6"
             >
               <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
                 Lane&apos;s Lexicon &mdash; Original English
@@ -271,7 +259,7 @@ export default function RootDetailPage() {
               <p className="text-sm leading-relaxed whitespace-pre-line text-zinc-200">
                 {formatLaneDefinition(data.definition_en)}
               </p>
-            </MagicCard>
+            </div>
           </div>
         </motion.div>
       )}
@@ -283,13 +271,9 @@ export default function RootDetailPage() {
           transition={{ ...springPresets.fluid, delay: 0.3 }}
           className="mx-auto max-w-3xl"
         >
-          <MagicCard
-            className="space-y-4 rounded-lg border border-[var(--color-border-subtle)] p-6"
+          <div
+            className="space-y-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6"
             data-testid="morphological-section"
-            gradientSize={200}
-            gradientColor="#1a1a2e"
-            gradientFrom="#7c3aed"
-            gradientTo="#4f46e5"
           >
             <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
               Morfolojik Formlar ({data.morphological_forms.length})
@@ -331,7 +315,7 @@ export default function RootDetailPage() {
                 </div>
               ))}
             </div>
-          </MagicCard>
+          </div>
         </motion.div>
       )}
 
@@ -342,13 +326,9 @@ export default function RootDetailPage() {
           transition={{ ...springPresets.fluid, delay: 0.4 }}
           className="mx-auto max-w-3xl"
         >
-          <MagicCard
-            className="space-y-4 rounded-lg border border-[var(--color-border-subtle)] p-6"
+          <div
+            className="space-y-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6"
             data-testid="related-roots-section"
-            gradientSize={200}
-            gradientColor="#1a1a2e"
-            gradientFrom="#7c3aed"
-            gradientTo="#4f46e5"
           >
             <h2 className="text-sm font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
               İlgili Kökler ({data.related_roots.length})
@@ -372,7 +352,7 @@ export default function RootDetailPage() {
                 </Link>
               ))}
             </div>
-          </MagicCard>
+          </div>
         </motion.div>
       )}
     </div>

@@ -11,6 +11,7 @@
 - [x] Embedding caching (Redis Stack 7.2)
 - [x] LLM Response Caching (Semantic cache)
 - [x] Multi-translator Quran indexing (8 Turkish translations from Tanzil XML)
+- [x] English Quran indexing (Arberry translation from Tanzil XML)
 - [x] Turkish Bible indexing (OT + NT from OSIS XML)
 
 ### Advanced Features
@@ -56,6 +57,7 @@
 - [x] Input validation & XSS prevention
 - [x] Compare API with rich response schema
 - [x] Compare collection alias compatibility fix (2026-02-16) - `quran_tr` is normalized to `quran_tr_{translator}` in both batch and SSE compare endpoints
+- [x] English Quran (Arberry) collection support (2026-02-21) — `quran_en_arberry` fully integrated across search, compare, streaming APIs
 - [x] **SSE streaming format fix** (structured paragraphs + stats)
 - [x] Citation sanitizer for LLM output normalization
 - [x] Strengthened LLM prompts against double-bracket drift
@@ -125,6 +127,7 @@
 - [x] **Issue #157 auth redirect fix** (2026-02-16): Removed triple-layer auth gate from /keyword-search/* routes, added bot detection regex in middleware for SEO crawlability (Googlebot, Bingbot, AI crawlers)
 - [x] **Regression tests** (2026-02-16): 10 new tests — 6 virtualization (root-browser-virtuoso.test.tsx) + 4 auth (keyword-search-auth.test.tsx). Total: 363 tests across 31 files
 - [x] **Component library migration** (2026-02-17): Replaced 5 manual UI components with Magic UI + Motion Primitives library alternatives. Deleted 7 dead files (glow-card, vercel-tabs, typewriter, text-rotate, glowing-button, luxury-components, demo-navbar page). All tests pass (378/378 across 35 files).
+- [x] **English Quran (Arberry)** (2026-02-21): Added A.J. Arberry translator to search/compare dropdowns, fixed ESLint pre-commit ajv override scoping
 
 ### CLI Commands
 
@@ -192,7 +195,8 @@
 - [x] Arabic font optimization (Amiri font + RTL support)
 - [x] Keyword search frontend UI (RFC-007 — `/keyword-search` page, 8 components, 26 tests, 12 commits)
 - [ ] Save/Share functionality
-- [ ] Multi-language support
+- [x] English Quran collection (Arberry) — Issue #134, PR #294
+- [ ] Multi-language support (partial — English Quran done, Turkish Bible done)
 - [ ] Batch query API
 - [ ] History result snapshots (RFC-002 — store search response JSON for instant recall)
 
@@ -223,7 +227,7 @@
 | Frontend | Complete | Next.js 16 + Framer Motion + Magic UI |
 | Docker Setup | Complete | PostgreSQL + Qdrant |
 | Browser Tests | Passed | Login ✅, Search ✅, Compare ✅ (rich refs) |
-| Multi-Translator | Complete | 8 Quran + 2 Turkish Bible |
+| Multi-Translator | Complete | 8 Turkish Quran + 1 English Quran (Arberry) + 2 Turkish Bible |
 | Pre-commit Hooks | Complete | 11 hooks, gitleaks, ruff, eslint, prettier |
 
 ## Known Issues

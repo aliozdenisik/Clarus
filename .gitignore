@@ -2,6 +2,11 @@
 # Holly Search V1 - Git Ignore Configuration
 # ============================================
 
+
+# ----------------
+# SSH Keys (NEVER commit)
+# ----------------
+.ssh/
 # ----------------
 # Python Runtime
 # ----------------

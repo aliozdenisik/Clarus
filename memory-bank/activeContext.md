@@ -2,7 +2,63 @@
 
 ## Current Work Focus
 
-**Date**: 2026-02-17
+**Date**: 2026-02-21
+
+## Issue #134: English Quran (Arberry) Collection — COMPLETED ✅
+
+**Date**: 2026-02-21
+**Branch**: `issue-134/english-quran-collection`
+**PR**: [#294](https://github.com/aliozdenisik/Clarus/pull/294)
+
+Added A.J. Arberry's English Quran translation as `quran_en_arberry` collection (6,236 verses from Tanzil XML), fully integrated across search, compare, and streaming features.
+
+### Implementation Summary
+
+**Backend — RAG Pipeline (7 files):**
+- `tanzil_loader.py` — New `load_english_translation()` method with `VALID_EN_TRANSLATORS`
+- `indexer.py` — Language-aware `QuranIndexer` with `quran_{lang}_{translator}` collection naming
+- `search.py` — Language-aware `QuranSearcher` with `language` parameter
+- `ultimate_rag.py` — `quran_en_*` prefix handling in `_get_searcher()`, `search_quran()`, `ask_quran()`
+- `comparative_rag.py` — `quran_en_arberry` in all 3 collection mapping dicts
+- `query_translator.py` — `quran_en_arberry: "en"` in `CORPUS_LANGUAGES`
+- `comparative_answer_generator.py` — Language parameter in `_format_context()`
+
+**Backend — API Layer (5 files):**
+- `schemas/common.py` — `ENGLISH_TRANSLATORS` constant, "arberry" in `VALID_TRANSLATORS` and `TranslatorType`
+- `api/search.py` — Language detection via `ENGLISH_TRANSLATORS`, constructs correct collection name
+- `api/stream.py` — Language detection for both search and compare SSE streams
+- `api/compare_helpers.py` — `quran_en_arberry` in `VALID_COMPARE_COLLECTIONS`, fix `normalize_compare_collections()` to detect English translators
+- `api/compare.py` — `quran_en_*` support in batch compare endpoint
+
+**Backend — Setup (1 file):**
+- `scripts/setup_all_collections.py` — `index_english_quran_translators()` function, `--skip-english-quran` flag
+
+**Frontend (4 files):**
+- `translator-selector.tsx` — Arberry added to search translator dropdown
+- `translation-selector.tsx` — Arberry added to translation selector
+- `package.json` — Fix ajv override scope to `schema-utils` only (unbreaks ESLint pre-commit hook)
+
+**Data:**
+- `backend/data/english_quran/en.arberry.xml` — Tanzil XML source (6,236 verses)
+
+### Bug Fixed
+- `normalize_compare_collections()` produced `quran_tr_arberry` (WRONG) instead of `quran_en_arberry` when translator is English. Fixed by importing `ENGLISH_TRANSLATORS` and checking before constructing collection name.
+- ESLint pre-commit hook broken by global `"ajv": ">=8.18.0"` override (CVE-2025-69873 fix) conflicting with `@eslint/eslintrc` which needs ajv v6. Fixed by scoping override to `schema-utils` only.
+
+### Verification
+- `ruff check .` ✅ (All checks passed)
+- `ruff format --check .` ✅ (143 files already formatted)
+- `pyright` ✅ (0 errors, 0 warnings)
+- `pytest` ✅ (491 passed, 4 pre-existing etymology DB failures)
+- All 17 pre-commit hooks passed ✅
+
+### Indexing (after merge)
+```bash
+cd backend
+uv run python scripts/setup_all_collections.py --skip-turkish-quran --skip-bible
+```
+
+---
 
 ## Public Repo Security Hardening Follow-up — COMPLETED ✅
 
