@@ -13,6 +13,7 @@ Comparative theological analysis across Quran and Bible with multi-agent LLM syn
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688.svg?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Qdrant](https://img.shields.io/badge/Qdrant-DC382D.svg?style=flat-square&logo=qdrant&logoColor=white)](https://qdrant.tech)
 [![Redis](https://img.shields.io/badge/Redis-DC382D.svg?style=flat-square&logo=redis&logoColor=white)](https://redis.io)
+[![Sponsor](https://img.shields.io/badge/Sponsor-Polar.sh-6366F1.svg?style=flat-square)](https://polar.sh/claruss)
 
 [Features](#-features) · [Quick Start](#-quick-start) · [Architecture](#-architecture) · [Usage](#-usage) · [API](#-api-reference) · [Contributing](#-contributing)
 
