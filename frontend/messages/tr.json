@@ -542,7 +542,20 @@
     "UNKNOWN_ERROR": "Bir şeyler yanlış gitti",
     "REQUEST_FAILED": "İstek başarısız oldu",
     "SIGN_OUT": "Çıkış Yap",
-    "GO_BACK": "Geri dön"
+    "GO_BACK": "Geri dön",
+    "NEW_PASSWORD": "Yeni Şifre",
+    "NEW_PASSWORD_REQUIRED": "Yeni şifre gerekli",
+    "NEW_PASSWORD_PLACEHOLDER": "Yeni şifre",
+    "INVALID_TOKEN": "Geçersiz veya süresi dolmuş token",
+    "INVALID_PASSWORD": "Geçersiz şifre",
+    "PASSWORD_TOO_LONG": "Şifre çok uzun",
+    "IS_INVALID": "geçersiz",
+    "IS_REQUIRED": "gerekli",
+    "EMAIL_VERIFICATION": "E-posta Doğrulama",
+    "EMAIL_VERIFICATION_DESCRIPTION": "E-posta adresinize bir doğrulama bağlantısı gönderdik. Lütfen gelen kutunuzu kontrol edin.",
+    "EMAIL_VERIFICATION_ACTION": "Doğrulama e-postasını yeniden gönder",
+    "VERIFY_YOUR_EMAIL": "E-postanızı Doğrulayın",
+    "VERIFY_YOUR_EMAIL_DESCRIPTION": "Devam etmek için lütfen e-posta adresinizi doğrulayın"
   },
   "Hub": {
     "greeting": {

@@ -5,7 +5,11 @@ import { polar, checkout, portal } from "@polar-sh/better-auth"
 import { Polar } from "@polar-sh/sdk"
 import { Pool } from "pg"
 import bcrypt from "bcryptjs"
+import { render } from "@react-email/render"
+import { VerifyEmailTemplate } from "@/emails/verify-email"
+import { ResetPasswordTemplate } from "@/emails/reset-password"
 import { API_BASE } from "@/lib/config"
+import { sendEmail } from "@/lib/email"
 
 /**
  * Better Auth server instance configuration
@@ -35,6 +39,8 @@ export const auth = betterAuth({
   // Email and password authentication with bcrypt
   emailAndPassword: {
     enabled: true,
+    requireEmailVerification: true,
+    resetPasswordTokenExpiresIn: 3600, // 1 hour (OWASP)
     password: {
       // Use bcrypt with cost=12 (matches backend for migration compatibility)
       hash: async (password) => {
@@ -44,6 +50,15 @@ export const auth = betterAuth({
         return await bcrypt.compare(password, hash)
       },
     },
+    sendResetPassword: async ({ user, url }) => {
+      void sendEmail({
+        to: user.email,
+        subject: "Clarus – Şifrenizi sıfırlayın / Reset your password",
+        html: await render(
+          ResetPasswordTemplate({ userName: user.name || user.email, actionUrl: url, locale: "tr" })
+        ),
+      })
+    },
   },
 
   // Google OAuth social provider
@@ -52,6 +67,22 @@ export const auth = betterAuth({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     },
+  },
+
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url }) => {
+      void sendEmail({
+        to: user.email,
+        subject: "Clarus – E-postanızı doğrulayın / Verify your email",
+        html: await render(
+          VerifyEmailTemplate({ userName: user.name || user.email, actionUrl: url, locale: "tr" })
+        ),
+      })
+    },
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    autoSignInAfterVerification: true,
+    expiresIn: 86400, // 24 hours
   },
 
   // Plugins: JWT for token generation, Polar for billing, nextCookies for Server Actions
