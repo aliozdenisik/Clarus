@@ -120,7 +120,7 @@ class BaseSpecialistAgent:
 
     def _build_system_prompt(self, prompt_key: str, usage_purpose: str | None = None, language: str = "tr") -> str:
         selected_language = language if language in {"tr", "en"} else self.locale
-        template = get_prompt_template("comparative", selected_language)
+        template = get_prompt_template(usage_purpose or "personal", selected_language)
         base_system_prompt = self._prompt_manager.get_prompt("multi_agent", prompt_key, selected_language)
         return f"{template}\n\n{base_system_prompt}"
 

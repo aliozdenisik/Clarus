@@ -197,7 +197,7 @@ class AnswerGenerator:
             )
 
             selected_language = language if language in {"tr", "en"} else self.locale
-            template = get_prompt_template("comparative", selected_language)
+            template = get_prompt_template(usage_purpose or "personal", selected_language)
 
             # Select appropriate prompt based on source
             if "quran" in source:
