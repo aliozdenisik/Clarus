@@ -38,6 +38,7 @@ vi.mock("@/lib/hooks/use-sse", () => ({
     error: null,
     startStream: mockStartStream,
     stopStream: mockStopStream,
+    errorCode: null,
   })),
 }))
 
@@ -280,6 +281,7 @@ describe("ComparePage", () => {
       error: null,
       startStream: mockStartStream,
       stopStream: mockStopStream,
+      errorCode: null,
     })
 
     vi.mocked(usePreferencesStore).mockReturnValue({
@@ -340,6 +342,7 @@ describe("ComparePage", () => {
       error: null,
       startStream: mockStartStream,
       stopStream: mockStopStream,
+      errorCode: null,
     })
 
     render(<ComparePage />)
@@ -357,6 +360,7 @@ describe("ComparePage", () => {
       error: null,
       startStream: mockStartStream,
       stopStream: mockStopStream,
+      errorCode: null,
     })
 
     rerender(<ComparePage />)
@@ -376,6 +380,7 @@ describe("ComparePage", () => {
       error: null,
       startStream: mockStartStream,
       stopStream: mockStopStream,
+      errorCode: null,
     })
 
     render(<ComparePage />)
@@ -412,6 +417,7 @@ describe("ComparePage", () => {
       error: null,
       startStream: mockStartStream,
       stopStream: mockStopStream,
+      errorCode: null,
     })
 
     const { rerender } = render(<ComparePage />)
@@ -489,6 +495,7 @@ describe("ComparePage", () => {
       error: "Connection lost",
       startStream: mockStartStream,
       stopStream: mockStopStream,
+      errorCode: null,
     })
 
     rerender(<ComparePage />)

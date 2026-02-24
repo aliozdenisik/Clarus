@@ -843,6 +843,12 @@
     "rateLimitExceeded": "Rate limit exceeded. Please try again later.",
     "serverError": "Server error. Please try again later."
   },
+  "RateLimit": {
+    "title": "Daily Limit Reached",
+    "description": "You've used all your daily queries. Upgrade your plan for more searches.",
+    "upgradeButton": "View Plans",
+    "resetInfo": "Your limit resets at midnight UTC."
+  },
   "Errors": {
     "notFound": "Page not found",
     "notFoundMessage": "The page you're looking for doesn't exist.",

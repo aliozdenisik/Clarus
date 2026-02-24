@@ -16,7 +16,6 @@ import {
   FileText,
   Search as SearchIcon,
   Home,
-  CreditCard,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -316,7 +315,6 @@ export default function Navigation() {
                         isActive("/pricing") ? "text-purple-400" : "text-gray-300"
                       }`}
                     >
-                      <CreditCard className="mr-1.5 h-4 w-4" />
                       {t("pricing")}
                     </Link>
                   </NavigationMenuItem>
@@ -560,7 +558,6 @@ export default function Navigation() {
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <CreditCard className="mr-2 inline h-4 w-4" />
                   {t("pricing")}
                 </Link>
               </div>
