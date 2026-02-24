@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
 import { LuxuryQuote } from "@/components/ui/luxury-quote"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 
 import { DotPattern, RadialGradient } from "@/components/ui/dot-pattern"
 import { useRouter } from "next/navigation"
@@ -73,6 +73,7 @@ export default function HomePage() {
   const user = session?.user
   const tLanding = useTranslations("Landing")
   const tCommon = useTranslations("Common")
+  const locale = useLocale()
 
   const features = [
     {
@@ -281,36 +282,69 @@ export default function HomePage() {
             transition={{ duration: 1.5 }}
           >
             <LuxuryQuote
-              quotes={[
-                {
-                  text: "Yaratan Rabbinin adıyla oku!",
-                  source: "Al-Alaq 96:1",
-                },
-                {
-                  text: "The heart of the prudent getteth knowledge...",
-                  source: "Proverbs 18:15",
-                },
-                {
-                  text: "Bilenlerle bilmeyenler bir olur mu?",
-                  source: "Az-Zumar 39:9",
-                },
-                {
-                  text: "Charity suffereth long, and is kind...",
-                  source: "1 Corinthians 13:4",
-                },
-                {
-                  text: "Rabbim! ilmimi artır",
-                  source: "Taha 20:114",
-                },
-                {
-                  text: "Wisdom is the principal thing; therefore get wisdom...",
-                  source: "Proverbs 4:7",
-                },
-                {
-                  text: "Wisdom is glorious, and never fadeth away...",
-                  source: "Wisdom 6:12",
-                },
-              ]}
+              quotes={
+                locale === "tr"
+                  ? [
+                      {
+                        text: "Yaratan Rabbinin adıyla oku!",
+                        source: "Al-Alaq 96:1",
+                      },
+                      {
+                        text: "The heart of the prudent getteth knowledge...",
+                        source: "Proverbs 18:15",
+                      },
+                      {
+                        text: "Bilenlerle bilmeyenler bir olur mu?",
+                        source: "Az-Zumar 39:9",
+                      },
+                      {
+                        text: "Charity suffereth long, and is kind...",
+                        source: "1 Corinthians 13:4",
+                      },
+                      {
+                        text: "Rabbim! İlmimi artır.",
+                        source: "Taha 20:114",
+                      },
+                      {
+                        text: "Wisdom is the principal thing; therefore get wisdom...",
+                        source: "Proverbs 4:7",
+                      },
+                      {
+                        text: "Wisdom is glorious, and never fadeth away...",
+                        source: "Wisdom 6:12",
+                      },
+                    ]
+                  : [
+                      {
+                        text: "Recite: In the Name of thy Lord who created.",
+                        source: "Al-Alaq 96:1",
+                      },
+                      {
+                        text: "The heart of the prudent getteth knowledge...",
+                        source: "Proverbs 18:15",
+                      },
+                      {
+                        text: "Are they equal — those who know and those who know not?",
+                        source: "Az-Zumar 39:9",
+                      },
+                      {
+                        text: "Charity suffereth long, and is kind...",
+                        source: "1 Corinthians 13:4",
+                      },
+                      {
+                        text: "O my Lord, increase me in knowledge.",
+                        source: "Taha 20:114",
+                      },
+                      {
+                        text: "Wisdom is the principal thing; therefore get wisdom...",
+                        source: "Proverbs 4:7",
+                      },
+                      {
+                        text: "Wisdom is glorious, and never fadeth away...",
+                        source: "Wisdom 6:12",
+                      },
+                    ]
+              }
               rotationInterval={8000}
               className="py-8"
             />

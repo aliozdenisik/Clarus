@@ -1,6 +1,6 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { getTranslations } from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
 
 import { auth } from "@/lib/auth"
 import { getDailyVerse } from "@/lib/daily-verse"
@@ -17,7 +17,8 @@ export default async function HubPage() {
   }
 
   const t = await getTranslations("Hub")
-  const dailyVerse = getDailyVerse()
+  const locale = await getLocale()
+  const dailyVerse = getDailyVerse(locale)
 
   const hour = new Date().getHours()
   let greeting: string
