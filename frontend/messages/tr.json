@@ -929,6 +929,7 @@
     "lockedForms": "Tüm türemiş formları görmek için yükseltin",
     "lockedLexicon": "Lane's Lexicon'a erişmek için yükseltin",
     "freeLimit": "Günde 5 arama",
-    "upgradePrompt": "Tam erişim için yükseltin"
+    "upgradePrompt": "Tam erişim için yükseltin",
+    "portalError": "Faturalandırma portalı kullanılamıyor. Lütfen önce bir plana abone olun."
   }
 }

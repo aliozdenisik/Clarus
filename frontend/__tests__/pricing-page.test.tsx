@@ -14,7 +14,7 @@ vi.mock("@/lib/auth-client", () => ({
   useSession: vi.fn(() => ({ data: null, isPending: false })),
   authClient: {
     checkout: vi.fn(),
-    customer: { portal: vi.fn() },
+    customer: { portal: vi.fn(), state: vi.fn().mockRejectedValue(new Error("no customer")) },
   },
 }))
 vi.mock("@/lib/logger", () => ({
@@ -62,7 +62,7 @@ describe("PricingPage", () => {
     fireEvent.click(upgradeBtn)
     expect(AuthClient.authClient.checkout).not.toHaveBeenCalled()
   })
-  it("shows checkout and manage billing buttons when logged in", () => {
+  it("shows checkout buttons when logged in (no manage billing for non-subscribers)", () => {
     vi.mocked(AuthClient.useSession).mockReturnValue({
       data: { user: { id: "user_1", name: "Test User", email: "test@example.com" } },
       isPending: false,
@@ -71,9 +71,8 @@ describe("PricingPage", () => {
     // There are now two upgrade buttons (Starter and Pro)
     const upgradeButtons = screen.getAllByRole("button", { name: /Upgrade/i })
     expect(upgradeButtons.length).toBeGreaterThanOrEqual(2)
-    // There are now two "Manage Billing" links
-    const manageBillingLinks = screen.getAllByText("Manage Billing")
-    expect(manageBillingLinks.length).toBeGreaterThanOrEqual(2)
+    // Manage Billing is hidden for users without active subscription
+    expect(screen.queryByText("Manage Billing")).not.toBeInTheDocument()
   })
   it("calls authClient.checkout with slug 'pro' when logged in and upgrade clicked", () => {
     vi.mocked(AuthClient.useSession).mockReturnValue({

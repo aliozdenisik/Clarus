@@ -929,6 +929,7 @@
     "lockedForms": "Upgrade to see all derived forms",
     "lockedLexicon": "Upgrade to access Lane's Lexicon",
     "freeLimit": "5 searches per day",
-    "upgradePrompt": "Upgrade to unlock full access"
+    "upgradePrompt": "Upgrade to unlock full access",
+    "portalError": "Billing portal is not available. Please subscribe first."
   }
 }

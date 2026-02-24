@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "@/i18n/navigation"
 import { useSession, authClient } from "@/lib/auth-client"
 import { useTranslations } from "next-intl"
 import { logger } from "@/lib/logger"
+import { toast } from "sonner"
 import {
   Card,
   CardContent,
@@ -27,6 +28,23 @@ export default function PricingPage() {
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [starterCheckoutLoading, setStarterCheckoutLoading] = useState(false)
   const [portalLoading, setPortalLoading] = useState(false)
+  const [hasSubscription, setHasSubscription] = useState(false)
+
+  useEffect(() => {
+    if (!isLoggedIn) return
+    const checkSubscription = async () => {
+      try {
+        const { data } = await authClient.customer.state()
+        if (data && data.activeSubscriptions && data.activeSubscriptions.length > 0) {
+          setHasSubscription(true)
+        }
+      } catch {
+        // User has no Polar customer record — that's fine, just means free tier
+        setHasSubscription(false)
+      }
+    }
+    checkSubscription()
+  }, [isLoggedIn])
 
   const handleCheckout = async () => {
     if (!isLoggedIn) {
@@ -64,6 +82,7 @@ export default function PricingPage() {
       await authClient.customer.portal()
     } catch (error) {
       logger.error("Portal failed", { error })
+      toast.error(t("portalError"))
     } finally {
       setPortalLoading(false)
     }
@@ -181,14 +200,16 @@ export default function PricingPage() {
                     <CreditCard className="mr-2 h-4 w-4" />
                     {starterCheckoutLoading ? "..." : t("upgradeToStarter")}
                   </Button>
-                  <button
-                    type="button"
-                    onClick={handlePortal}
-                    disabled={portalLoading}
-                    className="w-full text-center text-sm text-zinc-400 underline-offset-4 hover:text-zinc-300 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {portalLoading ? "..." : t("manageBilling")}
-                  </button>
+                  {hasSubscription && (
+                    <button
+                      type="button"
+                      onClick={handlePortal}
+                      disabled={portalLoading}
+                      className="w-full text-center text-sm text-zinc-400 underline-offset-4 hover:text-zinc-300 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {portalLoading ? "..." : t("manageBilling")}
+                    </button>
+                  )}
                 </>
               )}
             </CardFooter>
@@ -236,14 +257,16 @@ export default function PricingPage() {
                     <CreditCard className="mr-2 h-4 w-4" />
                     {checkoutLoading ? "..." : t("upgrade")}
                   </Button>
-                  <button
-                    type="button"
-                    onClick={handlePortal}
-                    disabled={portalLoading}
-                    className="w-full text-center text-sm text-zinc-400 underline-offset-4 hover:text-zinc-300 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {portalLoading ? "..." : t("manageBilling")}
-                  </button>
+                  {hasSubscription && (
+                    <button
+                      type="button"
+                      onClick={handlePortal}
+                      disabled={portalLoading}
+                      className="w-full text-center text-sm text-zinc-400 underline-offset-4 hover:text-zinc-300 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {portalLoading ? "..." : t("manageBilling")}
+                    </button>
+                  )}
                 </>
               )}
             </CardFooter>
