@@ -17,6 +17,7 @@ from app.logging_config import get_logger, log_performance
 
 from .circuit_breaker import qdrant_with_breaker
 from .embeddings import DenseEncoder
+from .surah_names import get_turkish_surah_name
 from .turkish_utils import expand_turkish_query
 
 logger = get_logger(__name__)
@@ -165,11 +166,20 @@ class QuranSearcher:
         search_results = []
         for point in results.points:
             payload = point.payload
+            surah_id = payload.get("surah_id", 0)
+            surah_name = payload.get("surah_name", "")
+
+            # Override with Turkish name for Turkish collections
+            if self.language == "tr":
+                turkish_name = get_turkish_surah_name(surah_id)
+                if turkish_name:
+                    surah_name = turkish_name
+
             result = SearchResult(
                 id=payload.get("id", ""),
                 score=point.score,
-                surah_id=payload.get("surah_id", 0),
-                surah_name=payload.get("surah_name", ""),
+                surah_id=surah_id,
+                surah_name=surah_name,
                 surah_transliteration=payload.get("surah_transliteration", ""),
                 verse_id=payload.get("verse_id", 0),
                 arabic_text=payload.get("arabic_text", ""),
@@ -272,21 +282,32 @@ class QuranSearcher:
         cached = await get_cached_search_results(self.collection_name, query, limit)
         if cached:
             # Reconstruct SearchResult objects from cached data
-            return [
-                SearchResult(
-                    id=r["id"],
-                    score=r["score"],
-                    surah_id=r["surah_id"],
-                    surah_name=r["surah_name"],
-                    surah_transliteration=r["surah_transliteration"],
-                    verse_id=r["verse_id"],
-                    arabic_text=r["arabic_text"],
-                    translation=r["translation"],
-                    surah_type=r["surah_type"],
-                    original_score=r["original_score"],
+            results = []
+            for r in cached:
+                surah_id = r["surah_id"]
+                surah_name = r["surah_name"]
+
+                # Override with Turkish name for Turkish collections
+                if self.language == "tr":
+                    turkish_name = get_turkish_surah_name(surah_id)
+                    if turkish_name:
+                        surah_name = turkish_name
+
+                results.append(
+                    SearchResult(
+                        id=r["id"],
+                        score=r["score"],
+                        surah_id=surah_id,
+                        surah_name=surah_name,
+                        surah_transliteration=r["surah_transliteration"],
+                        verse_id=r["verse_id"],
+                        arabic_text=r["arabic_text"],
+                        translation=r["translation"],
+                        surah_type=r["surah_type"],
+                        original_score=r["original_score"],
+                    )
                 )
-                for r in cached
-            ]
+            return results
 
         # Cache miss: perform actual search
         results = self.semantic_search(query, limit, normalize)
@@ -579,13 +600,21 @@ class SemanticChunkSearcher:
         parsed = []
         for result in results:
             payload = result.payload
+            surah_id = payload.get("surah_id", 0)
+            surah_name = payload.get("surah_name", "")
+
+            # Semantic chunks are always Turkish — override with Turkish name
+            turkish_name = get_turkish_surah_name(surah_id)
+            if turkish_name:
+                surah_name = turkish_name
+
             parsed.append(
                 SemanticChunkSearchResult(
                     chunk_id=payload.get("chunk_id", ""),
                     score=result.score,
                     verse_ids=payload.get("verse_ids", []),
-                    surah_id=payload.get("surah_id", 0),
-                    surah_name=payload.get("surah_name", ""),
+                    surah_id=surah_id,
+                    surah_name=surah_name,
                     surah_transliteration=payload.get("surah_transliteration", ""),
                     start_verse=payload.get("start_verse", 0),
                     end_verse=payload.get("end_verse", 0),

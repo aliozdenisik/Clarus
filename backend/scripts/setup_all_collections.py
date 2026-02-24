@@ -145,16 +145,21 @@ async def index_quran_translators(
 
         # Convert to chunks
         from src.data_loader import QuranChunk
+        from src.surah_names import get_turkish_surah_name
 
         chunks = []
         for verse in verses:
             surah_num = verse["surah_number"]
             surah_meta = metadata.get(surah_num, {})
 
+            # Use Turkish name from mapping instead of Tanzil transliteration
+            turkish_name = get_turkish_surah_name(surah_num)
+            surah_name = turkish_name or verse["surah_name"]
+
             chunk = QuranChunk(
                 id=f"{surah_num}:{verse['verse_number']}",
                 surah_id=surah_num,
-                surah_name=verse["surah_name"],
+                surah_name=surah_name,
                 surah_name_arabic=surah_meta.get("name", ""),
                 surah_transliteration=verse["surah_name"],
                 surah_type=surah_meta.get("type", ""),
