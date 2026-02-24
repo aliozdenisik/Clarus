@@ -32,8 +32,8 @@ import { DailyVerseWidget } from "@/components/hub/daily-verse-widget"
 import type { DailyVerse } from "@/lib/daily-verse"
 
 const TEST_VERSE: DailyVerse = {
-  text: "Ey iman edenler! Sabır ve namazla yardım isteyin.",
-  reference: "Bakara 2:153",
+  text: "O all you who believe, seek you help in patience and prayer; surely God is with the patient.",
+  reference: "Al-Baqarah 2:153",
   surahNumber: 2,
   ayahNumber: 153,
 }
@@ -46,7 +46,7 @@ describe("DailyVerseWidget", () => {
 
   it("renders verse reference (prefix portion)", () => {
     render(<DailyVerseWidget verse={TEST_VERSE} />)
-    expect(screen.getByText(/Bakara 2:/)).toBeInTheDocument()
+    expect(screen.getByText(/Al-Baqarah 2:/)).toBeInTheDocument()
   })
 
   it("contains a link to the verse detail page", () => {
