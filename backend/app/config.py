@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     jwt_jwks_cache_ttl: int = 3600  # 1 hour
 
     rate_limit_per_day: int = 50
-    rate_limit_enabled: bool = False
+    rate_limit_enabled: bool = True
     public_rate_limit_per_minute: int = 120
 
     openrouter_api_key: str = ""
@@ -150,6 +150,12 @@ class Settings(BaseSettings):
 
         if self.app_env != "production":
             return warnings
+
+        if not self.rate_limit_enabled:
+            warnings.append(
+                "Rate limiting is disabled in production (RATE_LIMIT_ENABLED=false). "
+                "This exposes the API to abuse. Enable with RATE_LIMIT_ENABLED=true."
+            )
 
         production_urls = {
             "database_url": self.database_url,
