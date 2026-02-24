@@ -90,6 +90,7 @@ export function AuthUIProvider({ children }: { children: React.ReactNode }) {
       authClient={authClient}
       basePath="/"
       credentials={{ confirmPassword: true }}
+      social={{ providers: ["google"] }}
       navigate={router.push}
       replace={router.replace}
       onSessionChange={() => {

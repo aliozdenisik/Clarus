@@ -98,7 +98,7 @@ jobs:
             # Google OAuth
             GOOGLE_CLIENT_ID=__GOOGLE_CLIENT_ID__
             GOOGLE_CLIENT_SECRET=__GOOGLE_CLIENT_SECRET__
-            GOOGLE_REDIRECT_URI=https://clarus.hollysearch.com/api/auth/google/callback
+            GOOGLE_REDIRECT_URI=https://clarus.hollysearch.com/api/auth/callback/google
 
             # Better Auth
             BETTER_AUTH_JWKS_URL=https://clarus.hollysearch.com/api/auth/jwks
