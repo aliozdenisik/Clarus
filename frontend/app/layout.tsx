@@ -1,16 +1,19 @@
 import "./globals.css"
 import { configureApiClient } from "@/lib/api/config"
 import { fontVariableClassNames } from "@/lib/fonts"
+import { getLocale } from "next-intl/server"
 
 configureApiClient()
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const locale = await getLocale()
+
   return (
-    <html lang="tr" className="dark" suppressHydrationWarning>
+    <html lang={locale} className="dark" suppressHydrationWarning>
       <body className={`${fontVariableClassNames} antialiased`} suppressHydrationWarning>
         {children}
       </body>

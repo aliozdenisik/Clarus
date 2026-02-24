@@ -25,11 +25,7 @@ export function VerifyEmailTemplate({
   return (
     <Html>
       <Head />
-      <Preview>
-        {isTr
-          ? "E-posta adresinizi doğrulayın"
-          : "Verify your email address"}
-      </Preview>
+      <Preview>{isTr ? "E-posta adresinizi doğrulayın" : "Verify your email address"}</Preview>
       <Body style={{ backgroundColor: "#0f0f11", fontFamily: "sans-serif" }}>
         <Container
           style={{

@@ -157,6 +157,14 @@ class Settings(BaseSettings):
                 "This exposes the API to abuse. Enable with RATE_LIMIT_ENABLED=true."
             )
 
+        if not self.redis_password:
+            warnings.append(
+                "REDIS_PASSWORD is not set in production. "
+                "An unauthenticated Redis instance exposes the JWT blacklist, rate-limit counters, "
+                "and cached query data to any network-reachable process. "
+                "Generate a strong password with: openssl rand -hex 32"
+            )
+
         production_urls = {
             "database_url": self.database_url,
             "better_auth_jwks_url": self.better_auth_jwks_url,

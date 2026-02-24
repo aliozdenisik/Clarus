@@ -25,9 +25,7 @@ export function ResetPasswordTemplate({
   return (
     <Html>
       <Head />
-      <Preview>
-        {isTr ? "Şifrenizi sıfırlayın" : "Reset your password"}
-      </Preview>
+      <Preview>{isTr ? "Şifrenizi sıfırlayın" : "Reset your password"}</Preview>
       <Body style={{ backgroundColor: "#0f0f11", fontFamily: "sans-serif" }}>
         <Container
           style={{
@@ -67,9 +65,7 @@ export function ResetPasswordTemplate({
             {isTr ? "Şifremi Sıfırla" : "Reset My Password"}
           </Button>
           <Text style={{ fontSize: "13px", color: "#71717a", marginTop: "16px" }}>
-            {isTr
-              ? "Bu linkin süresi 1 saat sonra dolacak."
-              : "This link expires in 1 hour."}
+            {isTr ? "Bu linkin süresi 1 saat sonra dolacak." : "This link expires in 1 hour."}
           </Text>
           <Text style={{ fontSize: "13px", color: "#71717a", marginTop: "8px" }}>
             {isTr

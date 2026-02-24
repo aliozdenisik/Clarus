@@ -47,7 +47,7 @@ class TestPolarWebhookInvalidSignature:
                 headers={"Content-Type": "application/json"},
             )
         assert response.status_code == 403
-        assert response.json()["error"] == "Invalid signature"
+        assert response.json()["detail"] == "Invalid signature"
 
 
 class TestPolarWebhookSubscriptionActive:
@@ -134,7 +134,16 @@ class TestPolarWebhookIdempotency:
     def test_duplicate_webhook_id_returns_202_already_processed(self) -> None:
         mock_redis = MagicMock()
         mock_redis.set = AsyncMock(return_value=None)
-        with patch("app.api.webhooks.redis_manager") as mock_rm:
+        mock_event = _mock_event("subscription.active", "user_ext_dup")
+        mock_event.data.product_id = "ebb31859-0ddb-4025-b047-5e7358221400"
+        with (
+            patch("app.api.webhooks.settings") as mock_settings,
+            patch("app.api.webhooks.validate_event", return_value=mock_event),
+            patch("app.api.webhooks.redis_manager") as mock_rm,
+        ):
+            mock_settings.polar_webhook_secret = "test-secret"
+            mock_settings.polar_pro_product_id = "ebb31859-0ddb-4025-b047-5e7358221400"
+            mock_settings.polar_starter_product_id = "63ef5ef3-d771-42ae-9742-fe185800d255"
             mock_rm.client = mock_redis
             response = self.client.post(
                 "/api/webhooks/polar",

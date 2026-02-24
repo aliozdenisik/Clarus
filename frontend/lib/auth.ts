@@ -51,11 +51,12 @@ export const auth = betterAuth({
       },
     },
     sendResetPassword: async ({ user, url }) => {
+      const locale = (user as { locale?: string }).locale === "en" ? "en" : "tr"
       void sendEmail({
         to: user.email,
         subject: "Clarus – Şifrenizi sıfırlayın / Reset your password",
         html: await render(
-          ResetPasswordTemplate({ userName: user.name || user.email, actionUrl: url, locale: "tr" })
+          ResetPasswordTemplate({ userName: user.name || user.email, actionUrl: url, locale })
         ),
       })
     },
@@ -71,11 +72,12 @@ export const auth = betterAuth({
 
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
+      const locale = (user as { locale?: string }).locale === "en" ? "en" : "tr"
       void sendEmail({
         to: user.email,
         subject: "Clarus – E-postanızı doğrulayın / Verify your email",
         html: await render(
-          VerifyEmailTemplate({ userName: user.name || user.email, actionUrl: url, locale: "tr" })
+          VerifyEmailTemplate({ userName: user.name || user.email, actionUrl: url, locale })
         ),
       })
     },
