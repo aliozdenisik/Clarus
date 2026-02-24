@@ -278,12 +278,13 @@ async def stream_search(
             for r in results:
                 # Determine source and build reference string
                 if source == "quran":
-                    ref_str = f"{r.surah_name}:{r.verse_id}" if hasattr(r, "surah_name") else ""
                     quran_col = f"quran_{quran_language}_{quran_translator}"
                     ref, detail = extract_quran_verse_detail(r, collection=quran_col)
+                    ref_str = ref
                     if ref not in verse_details:
                         verse_details[ref] = detail.model_dump()
                     result_source = "quran"
+                    result_text = getattr(r, "translation", None) or getattr(r, "combined_translation", None) or str(r)
                 else:
                     # Bible result: use book_name chapter:verse format
                     ref_str = f"{r.book_name} {r.chapter}:{r.verse}" if hasattr(r, "book_name") else ""
@@ -298,12 +299,13 @@ async def stream_search(
                     if ref not in verse_details:
                         verse_details[ref] = detail.model_dump()
                     result_source = bible_source
+                    result_text = r.text if hasattr(r, "text") else str(r)
 
                 results_data.append(
                     {
                         "source": result_source,
                         "reference": ref_str,
-                        "text": r.text if hasattr(r, "text") else str(r),
+                        "text": result_text,
                         "score": r.score if hasattr(r, "score") else 0.0,
                     }
                 )

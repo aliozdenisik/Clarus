@@ -159,15 +159,22 @@ async def search_quran(
     db.add(history)
     await db.commit()
 
-    verses = [
-        SearchVerseResult(
-            source="Kuran",
-            reference=f"{r.surah_name}:{r.verse_id}",  # FIXED: Match citation format (removed surah_id)
-            text=r.translation,
-            score=r.score,
+    verses: list[SearchVerseResult] = []
+    for r in results:
+        verse_id = getattr(r, "verse_id", None)
+        if verse_id is None:
+            verse_id = getattr(r, "start_verse", 0)
+
+        text = getattr(r, "translation", None) or getattr(r, "combined_translation", "")
+
+        verses.append(
+            SearchVerseResult(
+                source="Kuran",
+                reference=f"{r.surah_name}:{verse_id}",
+                text=text,
+                score=r.score,
+            )
         )
-        for r in results
-    ]
 
     latency_ms = (time.perf_counter() - start) * 1000
     log_performance(
@@ -183,7 +190,7 @@ async def search_quran(
         results=verses,
         total=len(verses),
         verse_details=verse_details,  # NEW: Include verse metadata
-        detected_language=request.language or "tr",  # Use provided language or default to Turkish (Quran corpus)
+        detected_language=request.language or language,
     )
 
 
