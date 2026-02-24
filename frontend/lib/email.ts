@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer"
 import { logger } from "@/lib/logger"
+
 // Server-only module - do not import in client components
 // This module handles email delivery via Gmail SMTP
 
