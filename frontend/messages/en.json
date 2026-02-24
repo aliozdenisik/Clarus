@@ -542,7 +542,20 @@
     "UNKNOWN_ERROR": "Something went wrong",
     "REQUEST_FAILED": "Request failed",
     "SIGN_OUT": "Sign Out",
-    "GO_BACK": "Go back"
+    "GO_BACK": "Go back",
+    "NEW_PASSWORD": "New Password",
+    "NEW_PASSWORD_REQUIRED": "New password is required",
+    "NEW_PASSWORD_PLACEHOLDER": "New password",
+    "INVALID_TOKEN": "Invalid or expired token",
+    "INVALID_PASSWORD": "Invalid password",
+    "PASSWORD_TOO_LONG": "Password is too long",
+    "IS_INVALID": "is invalid",
+    "IS_REQUIRED": "is required",
+    "EMAIL_VERIFICATION": "Email Verification",
+    "EMAIL_VERIFICATION_DESCRIPTION": "We sent a verification link to your email. Please check your inbox.",
+    "EMAIL_VERIFICATION_ACTION": "Resend verification email",
+    "VERIFY_YOUR_EMAIL": "Verify Your Email",
+    "VERIFY_YOUR_EMAIL_DESCRIPTION": "Please verify your email address to continue"
   },
   "Hub": {
     "greeting": {
