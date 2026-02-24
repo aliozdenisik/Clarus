@@ -119,8 +119,9 @@ class BaseSpecialistAgent:
         self._prompt_manager = PromptManager()
 
     def _build_system_prompt(self, prompt_key: str, usage_purpose: str | None = None, language: str = "tr") -> str:
-        template = get_prompt_template(usage_purpose or "personal", language)
-        base_system_prompt = self._prompt_manager.get_prompt("multi_agent", prompt_key, self.locale)
+        selected_language = language if language in {"tr", "en"} else self.locale
+        template = get_prompt_template("comparative", selected_language)
+        base_system_prompt = self._prompt_manager.get_prompt("multi_agent", prompt_key, selected_language)
         return f"{template}\n\n{base_system_prompt}"
 
     def _extract_reference(self, result, source: str) -> str:
@@ -253,30 +254,6 @@ class BaseSpecialistAgent:
 class OldTestamentAgent(BaseSpecialistAgent):
     """Specialist agent for Old Testament (Eski Ahit) interpretation"""
 
-    SYSTEM_PROMPT = """Sen uzman bir Eski Ahit (Tevrat/Zebur) alimi ve tefsircisisin.
-Görevin: Kullanıcının sorusunu, sana verilen Eski Ahit ayetlerine dayanarak yorumlamak.
-
-KRİTİK KURALLAR:
-1. SADECE verilen Eski Ahit ayetlerindeki bilgileri kullan
-2. Her iddiayı [Kitap Bölüm:Ayet] formatında kaynak göster. Örnek: [Genesis 1:1], [Psalms 23:1]
-3. Yahudi-Hristiyan tefsir geleneğine uygun yorumla
-4. Tek bir bütünlüklü paragraf yaz (3-5 cümle)
-5. Cevabın TAMAMI Türkçe olmalı
-
-ATIF FORMAT KURALLARI:
-- ASLA çift parantez kullanma — YASAK!
-- SADECE tek köşeli parantez kullan: [Kitap Bölüm:Ayet]
-- Örnek: [Genesis 1:1], [Psalms 23:1]
-
-Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
-
-ÇIKTI FORMATI (JSON):
-{
-    "commentary": "Eski Ahit perspektifinden yorum paragrafı [Genesis 1:1] şeklinde kaynaklarla...",
-    "citations": ["Genesis 1:1", "Psalms 23:1"],
-    "confidence": 0.0
-}"""
-
     def generate(
         self,
         query: str,
@@ -288,11 +265,12 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
         if not verses:
             return {"commentary": "", "citations": [], "confidence": 0.0}
 
+        selected_language = language if language in {"tr", "en"} else self.locale
         context = self._format_verses(verses, "bible")
         system_prompt = self._build_system_prompt("old_testament", usage_purpose=usage_purpose, language=language)
         user_content = (
             f"SORU: {query}\n\nESKİ AHİT AYETLERİ:\n{context}"
-            if self.locale == "tr"
+            if selected_language == "tr"
             else f"QUESTION: {query}\n\nOLD TESTAMENT VERSES:\n{context}"
         )
         messages = [
@@ -305,30 +283,6 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
 class NewTestamentAgent(BaseSpecialistAgent):
     """Specialist agent for New Testament (Yeni Ahit) interpretation"""
 
-    SYSTEM_PROMPT = """Sen uzman bir Yeni Ahit (İncil) alimi ve tefsircisisin.
-Görevin: Kullanıcının sorusunu, sana verilen Yeni Ahit ayetlerine dayanarak yorumlamak.
-
-KRİTİK KURALLAR:
-1. SADECE verilen Yeni Ahit ayetlerindeki bilgileri kullan
-2. Her iddiayı [Kitap Bölüm:Ayet] formatında kaynak göster. Örnek: [John 3:16], [Romans 5:8]
-3. Hristiyan tefsir geleneğine uygun yorumla (Kristolojik perspektif)
-4. Tek bir bütünlüklü paragraf yaz (3-5 cümle)
-5. Cevabın TAMAMI Türkçe olmalı
-
-ATIF FORMAT KURALLARI:
-- ASLA çift parantez kullanma — YASAK!
-- SADECE tek köşeli parantez kullan: [Kitap Bölüm:Ayet]
-- Örnek: [John 3:16], [Romans 5:8]
-
-Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
-
-ÇIKTI FORMATI (JSON):
-{
-    "commentary": "Yeni Ahit perspektifinden yorum paragrafı [John 3:16] şeklinde kaynaklarla...",
-    "citations": ["John 3:16", "Romans 5:8"],
-    "confidence": 0.0
-}"""
-
     def generate(
         self,
         query: str,
@@ -340,11 +294,12 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
         if not verses:
             return {"commentary": "", "citations": [], "confidence": 0.0}
 
+        selected_language = language if language in {"tr", "en"} else self.locale
         context = self._format_verses(verses, "bible")
         system_prompt = self._build_system_prompt("new_testament", usage_purpose=usage_purpose, language=language)
         user_content = (
             f"SORU: {query}\n\nYENİ AHİT AYETLERİ:\n{context}"
-            if self.locale == "tr"
+            if selected_language == "tr"
             else f"QUESTION: {query}\n\nNEW TESTAMENT VERSES:\n{context}"
         )
         messages = [
@@ -357,32 +312,6 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
 class ApocryphaAgent(BaseSpecialistAgent):
     """Specialist agent for Apocryphal/Deuterocanonical texts interpretation"""
 
-    SYSTEM_PROMPT = """Sen uzman bir Apokrifa (Deuterokanonik kitaplar) alimi ve tefsircisisin.
-Görevin: Kullanıcının sorusunu, sana verilen Apokrifa ayetlerine dayanarak yorumlamak.
-
-Bu kitaplar şunları içerir: Tobit, Judith, 1-2 Maccabees, Wisdom of Solomon, Sirach (Ecclesiasticus), Baruch, vb.
-
-KRİTİK KURALLAR:
-1. SADECE verilen Apokrifa ayetlerindeki bilgileri kullan
-2. Her iddiayı [Kitap Bölüm:Ayet] formatında kaynak göster. Örnek: [Wisdom 3:1], [Sirach 2:1]
-3. Katolik/Ortodoks tefsir geleneğine uygun yorumla
-4. Tek bir bütünlüklü paragraf yaz (3-5 cümle)
-5. Cevabın TAMAMI Türkçe olmalı
-
-ATIF FORMAT KURALLARI:
-- ASLA çift parantez kullanma — YASAK!
-- SADECE tek köşeli parantez kullan: [Kitap Bölüm:Ayet]
-- Örnek: [Wisdom 3:1], [Sirach 2:1]
-
-Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
-
-ÇIKTI FORMATI (JSON):
-{
-    "commentary": "Apokrifa perspektifinden yorum paragrafı [Wisdom 3:1] şeklinde kaynaklarla...",
-    "citations": ["Wisdom 3:1", "Sirach 2:1"],
-    "confidence": 0.0
-}"""
-
     def generate(
         self,
         query: str,
@@ -394,11 +323,12 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
         if not verses:
             return {"commentary": "", "citations": [], "confidence": 0.0}
 
+        selected_language = language if language in {"tr", "en"} else self.locale
         context = self._format_verses(verses, "bible")
         system_prompt = self._build_system_prompt("apocrypha", usage_purpose=usage_purpose, language=language)
         user_content = (
             f"SORU: {query}\n\nAPOKRİFA AYETLERİ:\n{context}"
-            if self.locale == "tr"
+            if selected_language == "tr"
             else f"QUESTION: {query}\n\nAPOCRYPHA VERSES:\n{context}"
         )
         messages = [
@@ -411,30 +341,6 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
 class QuranAgent(BaseSpecialistAgent):
     """Specialist agent for Quran interpretation (İslami tefsir)"""
 
-    SYSTEM_PROMPT = """Sen uzman bir İslam Alimi ve Kuran tefsircisisin.
-Görevin: Kullanıcının sorusunu, sana verilen Kuran ayetlerine dayanarak yorumlamak.
-
-KRİTİK KURALLAR:
-1. SADECE verilen Kuran ayetlerindeki bilgileri kullan
-2. Her iddiayı [Sure:Ayet] formatında kaynak göster. Örnek: [Bakara:45], [Fatiha:1-3]
-3. Klasik İslami tefsir geleneğine uygun yorumla
-4. Tek bir bütünlüklü paragraf yaz (3-5 cümle)
-5. Cevabın TAMAMI Türkçe olmalı
-
-ATIF FORMAT KURALLARI:
-- ASLA çift parantez kullanma — YASAK!
-- SADECE tek köşeli parantez kullan: [Sure:Ayet]
-- Örnek: [Bakara:45], [Fatiha:1-3]
-
-Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
-
-ÇIKTI FORMATI (JSON):
-{
-    "commentary": "Kuran perspektifinden yorum paragrafı [Bakara:45] şeklinde kaynaklarla...",
-    "citations": ["Bakara:45", "Bakara:153"],
-    "confidence": 0.0
-}"""
-
     def generate(
         self,
         query: str,
@@ -446,11 +352,12 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
         if not verses:
             return {"commentary": "", "citations": [], "confidence": 0.0}
 
+        selected_language = language if language in {"tr", "en"} else self.locale
         context = self._format_verses(verses, "quran")
         system_prompt = self._build_system_prompt("quran", usage_purpose=usage_purpose, language=language)
         user_content = (
             f"SORU: {query}\n\nKURAN AYETLERİ:\n{context}"
-            if self.locale == "tr"
+            if selected_language == "tr"
             else f"QUESTION: {query}\n\nQURAN VERSES:\n{context}"
         )
         messages = [
@@ -462,27 +369,6 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
 
 class SummaryAgent(BaseSpecialistAgent):
     """Agent for synthesizing all 4 commentaries into a comparative summary"""
-
-    SYSTEM_PROMPT = """Sen uzman bir karşılaştırmalı din bilimci ve teologsun.
-Görevin: Dört farklı kutsal metin yorumunu sentezleyerek karşılaştırmalı bir özet yazmak.
-
-KRİTİK KURALLAR:
-1. Her dört perspektifi (Eski Ahit, Yeni Ahit, Apokrifa, Kuran) dengeli şekilde değerlendir
-2. Ortak temaları ve farklılıkları vurgula
-3. Teolojik açıdan tarafsız ve saygılı ol
-4. Tek bir bütünlüklü paragraf yaz (4-6 cümle)
-5. Cevabın TAMAMI Türkçe olmalı
-6. Yeni kaynak atıfı yapma, sadece sentez yap
-
-Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
-
-ÇIKTI FORMATI (JSON):
-{
-    "synthesis": "Dört kutsal metin geleneğinin karşılaştırmalı özeti...",
-    "common_themes": ["tema1", "tema2"],
-    "key_differences": ["fark1", "fark2"],
-    "confidence": 0.0
-}"""
 
     def generate(
         self,
@@ -515,8 +401,9 @@ Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırak�
             }
 
         context = "\n\n".join(parts)
+        selected_language = language if language in {"tr", "en"} else self.locale
         system_prompt = self._build_system_prompt("summary", usage_purpose=usage_purpose, language=language)
-        user_content = f"SORU: {query}\n\n{context}" if self.locale == "tr" else f"QUESTION: {query}\n\n{context}"
+        user_content = f"SORU: {query}\n\n{context}" if selected_language == "tr" else f"QUESTION: {query}\n\n{context}"
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_content},

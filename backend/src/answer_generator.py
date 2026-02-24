@@ -88,91 +88,6 @@ class AnswerGenerator:
         self.confidence_scorer = ConfidenceScorer()
         self._prompt_manager = PromptManager()
 
-    # --- DEPRECATED: Prompts moved to src/prompts/ ---
-    # Kept for reference only - now loaded via PromptManager
-    SYSTEM_PROMPT_QURAN = """Sen uzman bir İslam Alimi ve Kuran tefsircisisin.
-Görevin: Kullanıcının sorusunu, sana verilen Kuran ayetlerine dayanarak cevaplamak.
-
-KRİTİK KURALLAR:
-1. SADECE sana verilen ayetlerdeki bilgileri kullan - asla uydurma!
-2. Her iddiayı mutlaka [Sure:Ayet] formatında kaynak göster. Örnek: [Bakara:45], [Fatiha:1-3]
-3. Cevabın TAMAMI Türkçe olmalı
-4. Verilen ayetler yeterli değilse, bunu açıkça belirt
-5. Tefsir/yorum yaparken kaynağa bağlı kal
-
-Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
-
-ÇIKTI FORMATI (JSON):
-{
-    "answer": "Cevap metni [Sure:Ayet] şeklinde kaynaklarla...",
-    "cited_references": ["Bakara:45", "Nisa:11"],
-    "confidence": 0.0
-}"""
-
-    FEW_SHOT_QURAN = [
-        {
-            "role": "user",
-            "content": """SORU: Sabır neden önemlidir?
-
-AYETLER:
-[1] Bakara:45 - Sabır ve namazla yardım dileyin. Şüphesiz bu, kalbi Allah'a saygıyla dopdolu olanlardan başkasına ağır gelir.
-[2] Bakara:153 - Ey iman edenler! Sabır ve namazla yardım dileyin. Şüphesiz Allah sabredenlerle beraberdir.""",
-        },
-        {
-            "role": "assistant",
-            "content": json.dumps(
-                {
-                    "answer": "Kuran'a göre sabır, müminin en önemli erdemlerinden biridir. Allah, müminlere zorluklar karşısında sabır ve namazla yardım dilemelerini emretmektedir [Bakara:45]. Sabrın önemi, Allah'ın sabredenlerle beraber olduğu müjdesiyle vurgulanır [Bakara:153]. Bu, sabrın sadece bir erdem değil, aynı zamanda Allah'ın yardımına ulaşmanın bir yolu olduğunu gösterir.",
-                    "cited_references": ["Bakara:45", "Bakara:153"],
-                    "confidence": 0.0,
-                },
-                ensure_ascii=False,
-            ),
-        },
-    ]
-
-    # --- BIBLE PROMPT (English source, Turkish answer) ---
-    SYSTEM_PROMPT_BIBLE = """You are an expert Biblical Scholar and Theologian.
-Your task: Answer the user's question based ONLY on the provided Bible verses.
-
-CRITICAL RULES:
-1. Use ONLY information from the provided verses - never make things up!
-2. Cite every claim with [Book Chapter:Verse] format. Example: [John 3:16], [Romans 5:8]
-3. Answer in TURKISH but keep verse references in English format
-4. If the verses are insufficient, clearly state this
-5. Be faithful to the source text
-
-Note: The "confidence" field will be computed by the system. Leave it as 0.0.
-
-OUTPUT FORMAT (JSON):
-{
-    "answer": "Cevap Türkçe olarak [John 3:16] şeklinde kaynaklarla...",
-    "cited_references": ["John 3:16", "Romans 5:8"],
-    "confidence": 0.0
-}"""
-
-    FEW_SHOT_BIBLE = [
-        {
-            "role": "user",
-            "content": """QUESTION: What does the Bible say about God's love?
-
-VERSES:
-[1] John 3:16 - For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.
-[2] Romans 5:8 - But God commendeth his love toward us, in that, while we were yet sinners, Christ died for us.""",
-        },
-        {
-            "role": "assistant",
-            "content": json.dumps(
-                {
-                    "answer": "İncil'e göre Tanrı'nın sevgisi benzersiz ve koşulsuzdur. Tanrı dünyayı o kadar çok sevdi ki, biricik Oğlu'nu verdi - bu, O'na iman edenlerin mahvolmaması, sonsuz yaşama kavuşması içindir [John 3:16]. Daha da dikkat çekici olan, Tanrı'nın bu sevgiyi biz henüz günahkârken göstermesidir; Mesih bizim için öldü [Romans 5:8]. Bu, ilahi sevginin insan liyakatine değil, Tanrı'nın merhametine dayandığını gösterir.",
-                    "cited_references": ["John 3:16", "Romans 5:8"],
-                    "confidence": 0.0,
-                },
-                ensure_ascii=False,
-            ),
-        },
-    ]
-
     def _extract_reference(self, result, source: str) -> str:
         """Extract reference string from search result based on source"""
         # Try to get from object attributes first
@@ -250,18 +165,6 @@ VERSES:
 
         return "\n".join(context_parts)
 
-    @staticmethod
-    def _is_retryable_error(exception):
-        """Check if exception is retryable (timeout, connection, or rate limit)"""
-        if isinstance(
-            exception,
-            requests.exceptions.Timeout | requests.exceptions.ConnectionError,
-        ):
-            return True
-        if isinstance(exception, requests.exceptions.HTTPError):
-            return exception.response is not None and exception.response.status_code == 429
-        return False
-
     @retry(
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=2, min=2, max=60),
@@ -293,23 +196,28 @@ VERSES:
                 },
             )
 
-            template = get_prompt_template(usage_purpose or "personal", language)
+            selected_language = language if language in {"tr", "en"} else self.locale
+            template = get_prompt_template("comparative", selected_language)
 
             # Select appropriate prompt based on source
             if "quran" in source:
-                base_system_prompt = self._prompt_manager.get_prompt("answer_generator", "quran_system", self.locale)
+                base_system_prompt = self._prompt_manager.get_prompt(
+                    "answer_generator", "quran_system", selected_language
+                )
                 examples = self._prompt_manager.get_prompt("answer_generator", "quran_few_shot")
                 user_content = (
                     f"SORU: {query}\n\nAYETLER:\n{context}"
-                    if self.locale == "tr"
+                    if selected_language == "tr"
                     else f"QUESTION: {query}\n\nVERSES:\n{context}"
                 )
             else:
-                base_system_prompt = self._prompt_manager.get_prompt("answer_generator", "bible_system", self.locale)
+                base_system_prompt = self._prompt_manager.get_prompt(
+                    "answer_generator", "bible_system", selected_language
+                )
                 examples = self._prompt_manager.get_prompt("answer_generator", "bible_few_shot")
                 user_content = (
                     f"QUESTION: {query}\n\nVERSES:\n{context}"
-                    if self.locale == "en"
+                    if selected_language == "en"
                     else f"SORU: {query}\n\nAYETLER:\n{context}"
                 )
 
