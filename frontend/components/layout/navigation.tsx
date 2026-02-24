@@ -316,7 +316,6 @@ export default function Navigation() {
                       }`}
                     >
                       {t("pricing")}
-                      {t("pricing")}
                     </Link>
                   </NavigationMenuItem>
                 </NavigationMenuList>
