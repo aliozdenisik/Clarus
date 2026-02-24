@@ -43,10 +43,13 @@ import {
 import { AccuracyDisclaimer } from "@/components/keyword-search/accuracy-disclaimer"
 import { ExperimentalDisclaimer } from "@/components/keyword-search/experimental-disclaimer"
 import { API_BASE } from "@/lib/config"
+import { useSubscription } from "@/lib/hooks/use-subscription"
+import { UpgradeGate } from "@/components/keyword-search/upgrade-gate"
 
 type TabType = "results" | "browser"
 
 const QURAN_VERSES_PER_PAGE = 30
+const FREE_VERSE_LIMIT = 3
 const BIBLE_VERSES_PER_PAGE = 12
 
 const EMPTY_STATE_SUGGESTIONS: Record<LanguageTab, string[]> = {
@@ -102,6 +105,7 @@ const isAbortError = (error: unknown): boolean =>
 
 function KeywordSearchContent() {
   const t = useTranslations("KeywordSearch")
+  const { isPaid } = useSubscription()
   const [query, setQuery] = useState("")
   const [activeLanguage, setActiveLanguage] = useState<LanguageTab>("quran")
   const [bibleCategoryFilter, setBibleCategoryFilter] = useState<BibleCategoryFilter>("all")
@@ -789,6 +793,7 @@ function KeywordSearchContent() {
                                     ? "hebrew"
                                     : "greek"
                               }
+                              showEtymology={isPaid}
                             />
                             <StatsBar
                               totalOccurrences={filteredStats.totalOccurrences}
@@ -816,6 +821,7 @@ function KeywordSearchContent() {
                                     ? "hebrew"
                                     : "greek"
                               }
+                              lockedAfter={isPaid ? undefined : 3}
                             />
                           </div>
                         </motion.div>
@@ -850,12 +856,12 @@ function KeywordSearchContent() {
                             </div>
                             <div className="space-y-4">
                               {activeLanguage === "quran"
-                                ? paginatedVerses.map((verse) => {
+                                ? paginatedVerses.map((verse, index) => {
                                     if (!isQuranVerseMatch(verse)) {
                                       return null
                                     }
 
-                                    return (
+                                    const verseElement = (
                                       <VerseCard
                                         key={`${verse.surah_id}-${verse.ayah_number}`}
                                         surahId={verse.surah_id}
@@ -872,13 +878,26 @@ function KeywordSearchContent() {
                                         language="arabic"
                                       />
                                     )
+
+                                    if (index >= FREE_VERSE_LIMIT) {
+                                      return (
+                                        <UpgradeGate
+                                          key={`gate-${verse.surah_id}-${verse.ayah_number}`}
+                                          locked={!isPaid}
+                                        >
+                                          {verseElement}
+                                        </UpgradeGate>
+                                      )
+                                    }
+
+                                    return verseElement
                                   })
-                                : paginatedVerses.map((verse) => {
+                                : paginatedVerses.map((verse, index) => {
                                     if (!isBibleVerseMatch(verse)) {
                                       return null
                                     }
 
-                                    return (
+                                    const verseElement = (
                                       <VerseCard
                                         key={`${verse.book_id}-${verse.chapter}-${verse.verse}`}
                                         surahId={verse.book_id}
@@ -894,6 +913,19 @@ function KeywordSearchContent() {
                                         }
                                       />
                                     )
+
+                                    if (index >= FREE_VERSE_LIMIT) {
+                                      return (
+                                        <UpgradeGate
+                                          key={`gate-${verse.book_id}-${verse.chapter}-${verse.verse}`}
+                                          locked={!isPaid}
+                                        >
+                                          {verseElement}
+                                        </UpgradeGate>
+                                      )
+                                    }
+
+                                    return verseElement
                                   })}
                             </div>
                           </div>

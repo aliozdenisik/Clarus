@@ -274,8 +274,6 @@ export function AnimatedSearchInput({
           </div>
         </div>
       </motion.div>
-
-
     </div>
   )
 }

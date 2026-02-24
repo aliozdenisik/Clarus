@@ -1,6 +1,8 @@
 import { betterAuth } from "better-auth"
 import { jwt } from "better-auth/plugins"
 import { nextCookies } from "better-auth/next-js"
+import { polar, checkout, portal } from "@polar-sh/better-auth"
+import { Polar } from "@polar-sh/sdk"
 import { Pool } from "pg"
 import bcrypt from "bcryptjs"
 import { API_BASE } from "@/lib/config"
@@ -18,6 +20,11 @@ import { API_BASE } from "@/lib/config"
  *
  * @see https://better-auth.com/docs
  */
+
+const polarClient = new Polar({
+  accessToken: process.env.POLAR_ACCESS_TOKEN!,
+  server: (process.env.POLAR_SERVER as "sandbox" | "production") || "sandbox",
+})
 export const auth = betterAuth({
   // PostgreSQL connection using pg package
   database: new Pool({
@@ -47,9 +54,24 @@ export const auth = betterAuth({
     },
   },
 
-  // Plugins: JWT for token generation, nextCookies for Server Actions
+  // Plugins: JWT for token generation, Polar for billing, nextCookies for Server Actions
   plugins: [
     jwt(), // Enables /api/auth/jwks and JWT token generation
+    polar({
+      client: polarClient,
+      createCustomerOnSignUp: true,
+      use: [
+        checkout({
+          products: [
+            { productId: process.env.POLAR_PRO_PRODUCT_ID!, slug: "pro" },
+            { productId: process.env.POLAR_STARTER_PRODUCT_ID!, slug: "starter" },
+          ],
+          successUrl: "/billing/success?checkout_id={CHECKOUT_ID}",
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+      ],
+    }),
     nextCookies(), // MUST be last plugin - handles cookies in Server Actions
   ],
 

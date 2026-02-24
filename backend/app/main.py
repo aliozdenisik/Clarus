@@ -19,9 +19,11 @@ from app.api import (
     preferences,
     search,
     stream,
+    subscription,
     verse_lookup,
     verse_translations,
     verse_words,
+    webhooks,
 )
 from app.config import settings
 from app.db import init_db
@@ -57,8 +59,28 @@ async def lifespan(app: FastAPI):
         extra={"log_level": settings.log_level, "log_format": settings.log_format},
     )
 
-    # Validate production settings
-    settings.validate_production_settings()
+    # Validate production settings (hard failures crash, soft issues are warnings)
+    try:
+        validation_warnings = settings.validate_production_settings()
+        for warning in validation_warnings:
+            logger.warning(
+                "Production config warning: %s",
+                warning,
+                extra={"category": "startup_validation", "app_env": settings.app_env},
+            )
+        if validation_warnings:
+            logger.warning(
+                "Startup completed with %d configuration warning(s) — review above",
+                len(validation_warnings),
+                extra={"warning_count": len(validation_warnings)},
+            )
+    except RuntimeError:
+        logger.critical(
+            "Fatal configuration error — server cannot start safely",
+            exc_info=True,
+            extra={"category": "startup_validation", "app_env": settings.app_env},
+        )
+        raise
     log_hsts_startup_warning()
 
     logger.info("Initializing database...")
@@ -311,6 +333,9 @@ async def csrf_protection(request: Request, call_next):
     Validates Origin against allowed CORS origins for POST/PUT/DELETE/PATCH requests.
     Better Auth handles its own CSRF for /api/auth/* routes.
     """
+    # Exempt webhook endpoints from CSRF (external POST from Polar servers)
+    if request.url.path.startswith("/api/webhooks/"):
+        return await call_next(request)
     if request.method in ("POST", "PUT", "DELETE", "PATCH"):
         origin = request.headers.get("origin")
         # Only validate if Origin header is present (browser requests)
@@ -361,6 +386,8 @@ app.include_router(
 )
 app.include_router(verse_lookup.router, prefix="/api/verse", tags=["verse"])
 app.include_router(verse_words.router, prefix="/api/quran/verses", tags=["verse-words"])
+app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
+app.include_router(subscription.router, prefix="/api/subscription", tags=["subscription"])
 
 
 class RedisStatusInfo(BaseModel):

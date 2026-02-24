@@ -5,6 +5,90 @@ export type ClientOptions = {
 };
 
 /**
+ * AdminStatsData
+ */
+export type AdminStatsData = {
+    /**
+     * Total Users
+     */
+    total_users: number;
+    /**
+     * Total Searches
+     */
+    total_searches: number;
+    /**
+     * Today Searches
+     */
+    today_searches: number;
+    /**
+     * Active Users 7D
+     */
+    active_users_7d: number;
+    /**
+     * Search By Type
+     */
+    search_by_type: {
+        [key: string]: number;
+    };
+};
+
+/**
+ * AdminStatsResponse
+ */
+export type AdminStatsResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    data: AdminStatsData;
+};
+
+/**
+ * AdminUserItem
+ */
+export type AdminUserItem = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Search Count
+     */
+    search_count?: number;
+    /**
+     * Has Google
+     */
+    has_google?: boolean;
+};
+
+/**
+ * AdminUsersResponse
+ */
+export type AdminUsersResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Data
+     */
+    data: Array<AdminUserItem>;
+    pagination: AppSchemasResponsesPaginationInfo;
+};
+
+/**
  * ApiKeyResponse
  */
 export type ApiKeyResponse = {
@@ -110,7 +194,7 @@ export type BibleKeywordSearchResponse = {
      * Verses
      */
     verses?: Array<BibleVerseMatchItem>;
-    pagination: PaginationInfo;
+    pagination: AppSchemasBibleKeywordPaginationInfo;
     /**
      * Transliteration
      */
@@ -254,6 +338,20 @@ export type BookDistItem = {
 };
 
 /**
+ * CacheFlushResponse
+ */
+export type CacheFlushResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Deleted Keys
+     */
+    deleted_keys: number;
+};
+
+/**
  * CompareRequest
  *
  * Compare request schema.
@@ -284,7 +382,7 @@ export type CompareRequest = {
      *
      * Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
      */
-    translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | null;
+    translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | 'arberry' | null;
     /**
      * Quran Keywords
      *
@@ -475,6 +573,16 @@ export type EnhanceResponse = {
 };
 
 /**
+ * ForbiddenResponse
+ */
+export type ForbiddenResponse = {
+    /**
+     * Detail
+     */
+    detail?: string;
+};
+
+/**
  * HTTPValidationError
  */
 export type HttpValidationError = {
@@ -482,6 +590,55 @@ export type HttpValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
+};
+
+/**
+ * HealthResponse
+ */
+export type HealthResponse = {
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Version
+     */
+    version: string;
+    /**
+     * Event Loop
+     */
+    event_loop: string;
+    /**
+     * Qdrant
+     */
+    qdrant: string;
+    redis: RedisStatusInfo;
+};
+
+/**
+ * HistoryItem
+ */
+export type HistoryItem = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Query
+     */
+    query: string;
+    /**
+     * Search Type
+     */
+    search_type: string;
+    /**
+     * Created At
+     */
+    created_at: string;
+    /**
+     * Result Count
+     */
+    result_count?: number | null;
 };
 
 /**
@@ -550,7 +707,7 @@ export type KeywordSearchResponse = {
      * Verses
      */
     verses?: Array<VerseMatchItem>;
-    pagination: PaginationInfo;
+    pagination: AppSchemasKeywordSearchPaginationInfo;
     /**
      * Root Buckwalter
      */
@@ -609,6 +766,115 @@ export type KeywordSuggestion = {
 };
 
 /**
+ * LookupVerseResult
+ *
+ * Single verse result with full metadata.
+ *
+ * Contains both Quran and Bible-specific fields. Fields are null
+ * when not applicable to the source (e.g., surah_id is null for Bible verses).
+ */
+export type LookupVerseResult = {
+    /**
+     * Reference
+     *
+     * Canonical reference: '2:183' or 'Genesis 1:1'
+     */
+    reference: string;
+    /**
+     * Text
+     *
+     * Verse text in original language or translation
+     */
+    text: string;
+    /**
+     * Source
+     *
+     * Source collection identifier
+     */
+    source: 'quran' | 'bible_ot' | 'bible_nt' | 'bible_apocrypha';
+    /**
+     * Surah Id
+     *
+     * Surah number 1-114
+     */
+    surah_id?: number | null;
+    /**
+     * Surah Name
+     *
+     * Turkish surah name
+     */
+    surah_name?: string | null;
+    /**
+     * Verse Id
+     *
+     * Verse number within surah
+     */
+    verse_id?: number | null;
+    /**
+     * Arabic Text
+     *
+     * Original Arabic text
+     */
+    arabic_text?: string | null;
+    /**
+     * Book Id
+     *
+     * Book number 1-81
+     */
+    book_id?: number | null;
+    /**
+     * Book Name
+     *
+     * English book name
+     */
+    book_name?: string | null;
+    /**
+     * Chapter
+     *
+     * Chapter number
+     */
+    chapter?: number | null;
+    /**
+     * Verse
+     *
+     * Verse number within chapter
+     */
+    verse?: number | null;
+};
+
+/**
+ * MessageResponse
+ *
+ * Generic success/message response used by delete and simple action endpoints.
+ */
+export type MessageResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Message
+     */
+    message: string;
+};
+
+/**
+ * MetadataResponse
+ */
+export type MetadataResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Data
+     */
+    data: {
+        [key: string]: unknown;
+    };
+};
+
+/**
  * MorphologicalForm
  */
 export type MorphologicalForm = {
@@ -648,36 +914,6 @@ export type MorphologicalForm = {
      * Number of occurrences in Quran
      */
     occurrences?: number | null;
-};
-
-/**
- * PaginationInfo
- */
-export type PaginationInfo = {
-    /**
-     * Page
-     */
-    page: number;
-    /**
-     * Per Page
-     */
-    per_page: number;
-    /**
-     * Total Verses
-     */
-    total_verses: number;
-    /**
-     * Total Pages
-     */
-    total_pages: number;
-    /**
-     * Has Next
-     */
-    has_next: boolean;
-    /**
-     * Has Prev
-     */
-    has_prev: boolean;
 };
 
 /**
@@ -754,6 +990,102 @@ export type PreferencesUpdate = {
     custom_settings?: {
         [key: string]: unknown;
     } | null;
+    /**
+     * Usage Purpose
+     */
+    usage_purpose?: string | null;
+    /**
+     * Arabic Proficiency
+     */
+    arabic_proficiency?: string | null;
+    /**
+     * Interests
+     */
+    interests?: Array<string> | null;
+    /**
+     * Onboarding Completed
+     */
+    onboarding_completed?: boolean | null;
+};
+
+/**
+ * PublicConfigData
+ */
+export type PublicConfigData = {
+    /**
+     * Rate Limit Per Day
+     */
+    rate_limit_per_day: number;
+    /**
+     * Query Max Length
+     */
+    query_max_length: number;
+    /**
+     * Google Oauth Enabled
+     */
+    google_oauth_enabled: boolean;
+};
+
+/**
+ * PublicConfigResponse
+ */
+export type PublicConfigResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    data: PublicConfigData;
+};
+
+/**
+ * RateLimitData
+ */
+export type RateLimitData = {
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Used
+     */
+    used: number;
+    /**
+     * Remaining
+     */
+    remaining: number;
+    /**
+     * Reset At
+     */
+    reset_at: string;
+};
+
+/**
+ * RateLimitResponse
+ */
+export type RateLimitResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    data: RateLimitData;
+};
+
+/**
+ * RedisStatusInfo
+ */
+export type RedisStatusInfo = {
+    /**
+     * Status
+     */
+    status: string;
+    /**
+     * Used Memory
+     */
+    used_memory?: string | null;
+    /**
+     * Connected Clients
+     */
+    connected_clients?: number | null;
 };
 
 /**
@@ -821,13 +1153,13 @@ export type RootEtymologyResponse = {
     /**
      * Summary Tr
      *
-     * Plain Turkish summary (LLM-generated, ≤200 chars)
+     * Plain Turkish summary of Lane's Lexicon definition (≤200 chars)
      */
     summary_tr?: string | null;
     /**
      * Summary En
      *
-     * Plain English summary (LLM-generated, ≤200 chars)
+     * Plain English summary of Lane's Lexicon definition (≤200 chars)
      */
     summary_en?: string | null;
     /**
@@ -949,6 +1281,21 @@ export type RootListResponse = {
 };
 
 /**
+ * SearchHistoryResponse
+ */
+export type SearchHistoryResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    /**
+     * Data
+     */
+    data: Array<HistoryItem>;
+    pagination: AppSchemasResponsesPaginationInfo;
+};
+
+/**
  * SearchRequest
  */
 export type SearchRequest = {
@@ -975,7 +1322,7 @@ export type SearchRequest = {
      *
      * Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
      */
-    translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | null;
+    translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | 'arberry' | null;
 };
 
 /**
@@ -993,7 +1340,7 @@ export type SearchResponse = {
     /**
      * Results
      */
-    results: Array<AppApiSearchVerseResult>;
+    results: Array<SearchVerseResult>;
     /**
      * Total
      */
@@ -1008,6 +1355,28 @@ export type SearchResponse = {
      * Detected Language
      */
     detected_language?: string | null;
+};
+
+/**
+ * SearchVerseResult
+ */
+export type SearchVerseResult = {
+    /**
+     * Source
+     */
+    source: string;
+    /**
+     * Reference
+     */
+    reference: string;
+    /**
+     * Text
+     */
+    text: string;
+    /**
+     * Score
+     */
+    score: number;
 };
 
 /**
@@ -1026,6 +1395,111 @@ export type SurahDistItem = {
      * Count
      */
     count: number;
+};
+
+/**
+ * SystemInfoData
+ */
+export type SystemInfoData = {
+    /**
+     * Python Version
+     */
+    python_version: string;
+    /**
+     * Platform
+     */
+    platform: string;
+    /**
+     * Qdrant Status
+     */
+    qdrant_status: string;
+    /**
+     * Collections Count
+     */
+    collections_count: number;
+    /**
+     * Api Status
+     */
+    api_status: string;
+};
+
+/**
+ * SystemInfoResponse
+ */
+export type SystemInfoResponse = {
+    /**
+     * Success
+     */
+    success?: boolean;
+    data: SystemInfoData;
+};
+
+/**
+ * TranslationItem
+ *
+ * Single translation of a Quran verse.
+ *
+ * Contains the translator identifier, display name, and the actual translation text.
+ */
+export type TranslationItem = {
+    /**
+     * Translator
+     *
+     * Translator identifier (e.g., 'diyanet', 'yazir')
+     */
+    translator: string;
+    /**
+     * Translator Display
+     *
+     * Human-readable translator name (e.g., 'Diyanet İşleri', 'Elmalılı Yazır')
+     */
+    translator_display: string;
+    /**
+     * Text
+     *
+     * Translation text
+     */
+    text: string;
+};
+
+/**
+ * UnauthorizedResponse
+ */
+export type UnauthorizedResponse = {
+    /**
+     * Detail
+     */
+    detail?: string;
+};
+
+/**
+ * UserProfileResponse
+ */
+export type UserProfileResponse = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Email Verified
+     */
+    email_verified?: boolean;
+    /**
+     * Image
+     */
+    image?: string | null;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
 };
 
 /**
@@ -1139,7 +1613,7 @@ export type VerseLookupResponse = {
      *
      * List of matching verses (empty if none found)
      */
-    verses: Array<AppSchemasVerseLookupVerseResult>;
+    verses: Array<LookupVerseResult>;
     /**
      * Query
      *
@@ -1182,6 +1656,67 @@ export type VerseMatchItem = {
      * Matched Words
      */
     matched_words: Array<string>;
+};
+
+/**
+ * VerseTranslationsResponse
+ *
+ * Response containing all 8 Turkish translations for a single Quran verse.
+ *
+ * Example:
+ * {
+ * "success": true,
+ * "surah_id": 2,
+ * "verse_id": 255,
+ * "surah_name": "Bakara",
+ * "arabic_text": "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ...",
+ * "translations": [
+ * {
+ * "translator": "diyanet",
+ * "translator_display": "Diyanet İşleri",
+ * "text": "Allah, kendisinden başka ilah olmayan..."
+ * },
+ * ...
+ * ]
+ * }
+ */
+export type VerseTranslationsResponse = {
+    /**
+     * Success
+     *
+     * Always true for successful responses
+     */
+    success?: boolean;
+    /**
+     * Surah Id
+     *
+     * Surah number (1-114)
+     */
+    surah_id: number;
+    /**
+     * Verse Id
+     *
+     * Verse number within the surah
+     */
+    verse_id: number;
+    /**
+     * Surah Name
+     *
+     * Turkish surah name
+     */
+    surah_name: string;
+    /**
+     * Arabic Text
+     *
+     * Original Arabic text (Uthmani script)
+     */
+    arabic_text: string;
+    /**
+     * Translations
+     *
+     * List of all available translations (up to 8)
+     */
+    translations: Array<TranslationItem>;
 };
 
 /**
@@ -1279,102 +1814,401 @@ export type WordItem = {
 };
 
 /**
- * VerseResult
+ * PaginationInfo
  */
-export type AppApiSearchVerseResult = {
+export type AppSchemasBibleKeywordPaginationInfo = {
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Per Page
+     */
+    per_page: number;
+    /**
+     * Total Verses
+     */
+    total_verses: number;
+    /**
+     * Total Pages
+     */
+    total_pages: number;
+    /**
+     * Has Next
+     */
+    has_next: boolean;
+    /**
+     * Has Prev
+     */
+    has_prev: boolean;
+};
+
+/**
+ * PaginationInfo
+ */
+export type AppSchemasKeywordSearchPaginationInfo = {
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Per Page
+     */
+    per_page: number;
+    /**
+     * Total Verses
+     */
+    total_verses: number;
+    /**
+     * Total Pages
+     */
+    total_pages: number;
+    /**
+     * Has Next
+     */
+    has_next: boolean;
+    /**
+     * Has Prev
+     */
+    has_prev: boolean;
+};
+
+/**
+ * PaginationInfo
+ *
+ * Pagination metadata returned alongside paginated list endpoints.
+ */
+export type AppSchemasResponsesPaginationInfo = {
+    /**
+     * Page
+     */
+    page: number;
+    /**
+     * Limit
+     */
+    limit: number;
+    /**
+     * Total Items
+     */
+    total_items: number;
+    /**
+     * Total Pages
+     */
+    total_pages: number;
+    /**
+     * Has Next
+     */
+    has_next: boolean;
+    /**
+     * Has Prev
+     */
+    has_prev: boolean;
+};
+
+/**
+ * SearchStatusEvent
+ *
+ * Pipeline status update during search processing.
+ */
+export type SearchStatusEvent = {
+    /**
+     * Status
+     *
+     * Current pipeline stage
+     */
+    status: 'searching' | 'found' | 'generating' | 'translating';
+    /**
+     * Message
+     *
+     * Human-readable status message (absent when status='found')
+     */
+    message?: string | null;
+    /**
+     * Count
+     *
+     * Number of search results found (only present when status='found')
+     */
+    count?: number | null;
+};
+
+/**
+ * SearchTokenEvent
+ *
+ * Single answer token streamed word-by-word from the AI answer generation.
+ */
+export type SearchTokenEvent = {
+    /**
+     * Type
+     */
+    type?: 'token';
+    /**
+     * Content
+     *
+     * A single word/token of the generated answer, with trailing space
+     */
+    content: string;
+};
+
+/**
+ * SearchCitationsEvent
+ *
+ * Citation list sent once after all answer tokens have been streamed.
+ */
+export type SearchCitationsEvent = {
+    /**
+     * Citations
+     *
+     * Array of citation reference strings
+     */
+    citations: Array<string>;
+};
+
+/**
+ * SearchVerseDetailsEvent
+ *
+ * Verse metadata map sent before the final complete event.
+ */
+export type SearchVerseDetailsEvent = {
+    /**
+     * Verse Details
+     *
+     * Map of verse reference string to verse metadata object (schema varies by source collection)
+     */
+    verse_details: {
+        [key: string]: unknown;
+    };
+};
+
+/**
+ * SearchCompleteEvent
+ *
+ * Final event for /api/stream/search — signals stream completion with full result data.
+ */
+export type SearchCompleteEvent = {
+    /**
+     * Type
+     */
+    type?: 'complete';
+    /**
+     * Aggregated result; absent in error cases where a preceding error event was sent
+     */
+    result?: SearchCompleteResult | null;
+};
+
+/**
+ * SearchCompleteResult
+ *
+ * Aggregated result payload included in the search stream's final complete event.
+ */
+export type SearchCompleteResult = {
+    /**
+     * Results
+     *
+     * All retrieved search result items
+     */
+    results: Array<SearchResultItem>;
+    /**
+     * Answer
+     *
+     * Complete AI-generated answer text (after optional translation)
+     */
+    answer: string;
+    /**
+     * Citations
+     *
+     * Array of citation reference strings
+     */
+    citations: Array<string>;
+};
+
+/**
+ * SearchResultItem
+ *
+ * A single search result item included in the complete event payload.
+ */
+export type SearchResultItem = {
     /**
      * Source
+     *
+     * Source collection identifier (e.g., 'quran', 'bible_ot', 'bible_nt', 'bible_apocrypha')
      */
     source: string;
     /**
      * Reference
+     *
+     * Verse reference string (e.g., 'Al-Fatiha:1' or 'Genesis 1:1')
      */
     reference: string;
     /**
      * Text
+     *
+     * Verse text content
      */
     text: string;
     /**
      * Score
+     *
+     * Relevance score from the vector search
      */
     score: number;
 };
 
 /**
- * VerseResult
+ * CompareProgressEvent
  *
- * Single verse result with full metadata.
- *
- * Contains both Quran and Bible-specific fields. Fields are null
- * when not applicable to the source (e.g., surah_id is null for Bible verses).
+ * Real-time progress update from the multi-agent comparative analysis pipeline.
  */
-export type AppSchemasVerseLookupVerseResult = {
+export type CompareProgressEvent = {
     /**
-     * Reference
-     *
-     * Canonical reference: '2:183' or 'Genesis 1:1'
+     * Type
      */
-    reference: string;
+    type?: 'progress';
     /**
-     * Text
+     * Step
      *
-     * Verse text in original language or translation
+     * Machine-readable step identifier emitted by the pipeline (e.g., 'pipeline_started', 'building_verse_details', 'translating_response')
      */
-    text: string;
+    step: string;
     /**
-     * Source
+     * Message
      *
-     * Source collection identifier
+     * Human-readable progress message
      */
-    source: 'quran' | 'bible_ot' | 'bible_nt' | 'bible_apocrypha';
+    message: string;
+};
+
+/**
+ * CompareVerseDetailsEvent
+ *
+ * Verse metadata map emitted before paragraph streaming begins.
+ */
+export type CompareVerseDetailsEvent = {
     /**
-     * Surah Id
+     * Verse Details
      *
-     * Surah number 1-114
+     * Map of verse reference string to verse metadata object (schema varies by source collection)
      */
-    surah_id?: number | null;
+    verse_details: {
+        [key: string]: unknown;
+    };
+};
+
+/**
+ * CompareParagraphEvent
+ *
+ * A single structured paragraph streamed from the multi-agent comparative essay.
+ */
+export type CompareParagraphEvent = {
     /**
-     * Surah Name
-     *
-     * Turkish surah name
+     * Type
      */
-    surah_name?: string | null;
+    type?: 'paragraph';
     /**
-     * Verse Id
-     *
-     * Verse number within surah
+     * Paragraph title and markdown content
      */
-    verse_id?: number | null;
+    data: CompareParagraphData;
+};
+
+/**
+ * CompareParagraphData
+ *
+ * Content payload for a single comparative analysis paragraph.
+ */
+export type CompareParagraphData = {
     /**
-     * Arabic Text
+     * Title
      *
-     * Original Arabic text
+     * Section title (e.g., 'Introduction', 'Quran Perspective')
      */
-    arabic_text?: string | null;
+    title: string;
     /**
-     * Book Id
+     * Content
      *
-     * Book number 1-81
+     * Full markdown text content of the paragraph
      */
-    book_id?: number | null;
+    content: string;
+};
+
+/**
+ * CompareStatsEvent
+ *
+ * Statistics event sent after all paragraphs have been streamed.
+ */
+export type CompareStatsEvent = {
     /**
-     * Book Name
-     *
-     * English book name
+     * Type
      */
-    book_name?: string | null;
+    type?: 'stats';
     /**
-     * Chapter
-     *
-     * Chapter number
+     * Pipeline statistics and performance metrics
      */
-    chapter?: number | null;
+    data: CompareStatsData;
+};
+
+/**
+ * CompareStatsData
+ *
+ * Statistical summary collected at the end of the compare pipeline.
+ */
+export type CompareStatsData = {
     /**
-     * Verse
+     * Confidence
      *
-     * Verse number within chapter
+     * Overall confidence score (0.0–1.0)
      */
-    verse?: number | null;
+    confidence: number;
+    /**
+     * Confidence Breakdown
+     *
+     * Per-agent confidence breakdown dict (present when available)
+     */
+    confidence_breakdown?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Latency Ms
+     *
+     * Total pipeline latency in milliseconds
+     */
+    latency_ms: number;
+    /**
+     * Total Verses
+     *
+     * Total number of verses retrieved across all collections
+     */
+    total_verses: number;
+    /**
+     * Total Citations
+     *
+     * Total number of citations in the generated essay
+     */
+    total_citations: number;
+};
+
+/**
+ * SSECompleteEvent
+ *
+ * Signals end of the SSE stream (emitted by /stream/compare and error paths of /stream/search).
+ */
+export type SseCompleteEvent = {
+    /**
+     * Type
+     */
+    type?: 'complete';
+};
+
+/**
+ * SSEErrorEvent
+ *
+ * Error event — the stream should be considered terminated after this.
+ */
+export type SseErrorEvent = {
+    /**
+     * Error
+     *
+     * Human-readable error description
+     */
+    error: string;
 };
 
 /**
@@ -1418,13 +2252,13 @@ export type RootEtymologyResponseWritable = {
     /**
      * Summary Tr
      *
-     * Plain Turkish summary (LLM-generated, ≤200 chars)
+     * Plain Turkish summary of Lane's Lexicon definition (≤200 chars)
      */
     summary_tr?: string | null;
     /**
      * Summary En
      *
-     * Plain English summary (LLM-generated, ≤200 chars)
+     * Plain English summary of Lane's Lexicon definition (≤200 chars)
      */
     summary_en?: string | null;
     /**
@@ -1508,12 +2342,23 @@ export type GetMeApiAuthMeGetData = {
     url: '/api/auth/me';
 };
 
+export type GetMeApiAuthMeGetErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
+};
+
+export type GetMeApiAuthMeGetError = GetMeApiAuthMeGetErrors[keyof GetMeApiAuthMeGetErrors];
+
 export type GetMeApiAuthMeGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: UserProfileResponse;
 };
+
+export type GetMeApiAuthMeGetResponse = GetMeApiAuthMeGetResponses[keyof GetMeApiAuthMeGetResponses];
 
 export type LogoutApiAuthLogoutPostData = {
     body?: never;
@@ -1522,12 +2367,23 @@ export type LogoutApiAuthLogoutPostData = {
     url: '/api/auth/logout';
 };
 
+export type LogoutApiAuthLogoutPostErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
+};
+
+export type LogoutApiAuthLogoutPostError = LogoutApiAuthLogoutPostErrors[keyof LogoutApiAuthLogoutPostErrors];
+
 export type LogoutApiAuthLogoutPostResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MessageResponse;
 };
+
+export type LogoutApiAuthLogoutPostResponse = LogoutApiAuthLogoutPostResponses[keyof LogoutApiAuthLogoutPostResponses];
 
 export type GetRateLimitStatusApiAuthRateLimitGetData = {
     body?: never;
@@ -1536,12 +2392,23 @@ export type GetRateLimitStatusApiAuthRateLimitGetData = {
     url: '/api/auth/rate-limit';
 };
 
+export type GetRateLimitStatusApiAuthRateLimitGetErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
+};
+
+export type GetRateLimitStatusApiAuthRateLimitGetError = GetRateLimitStatusApiAuthRateLimitGetErrors[keyof GetRateLimitStatusApiAuthRateLimitGetErrors];
+
 export type GetRateLimitStatusApiAuthRateLimitGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: RateLimitResponse;
 };
+
+export type GetRateLimitStatusApiAuthRateLimitGetResponse = GetRateLimitStatusApiAuthRateLimitGetResponses[keyof GetRateLimitStatusApiAuthRateLimitGetResponses];
 
 export type GenerateApiKeyApiAuthApiKeyPostData = {
     body?: never;
@@ -1549,6 +2416,15 @@ export type GenerateApiKeyApiAuthApiKeyPostData = {
     query?: never;
     url: '/api/auth/api-key';
 };
+
+export type GenerateApiKeyApiAuthApiKeyPostErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
+};
+
+export type GenerateApiKeyApiAuthApiKeyPostError = GenerateApiKeyApiAuthApiKeyPostErrors[keyof GenerateApiKeyApiAuthApiKeyPostErrors];
 
 export type GenerateApiKeyApiAuthApiKeyPostResponses = {
     /**
@@ -1562,11 +2438,22 @@ export type GenerateApiKeyApiAuthApiKeyPostResponse = GenerateApiKeyApiAuthApiKe
 export type SearchQuranApiSearchQuranPostData = {
     body: SearchRequest;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Lang
+         *
+         * Override locale (tr, en)
+         */
+        lang?: string | null;
+    };
     url: '/api/search/quran';
 };
 
 export type SearchQuranApiSearchQuranPostErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
     /**
      * Validation Error
      */
@@ -1592,11 +2479,21 @@ export type SearchBibleApiSearchBiblePostData = {
          * Testament
          */
         testament?: string | null;
+        /**
+         * Lang
+         *
+         * Override locale (tr, en)
+         */
+        lang?: string | null;
     };
     url: '/api/search/bible';
 };
 
 export type SearchBibleApiSearchBiblePostErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
     /**
      * Validation Error
      */
@@ -1617,16 +2514,38 @@ export type SearchBibleApiSearchBiblePostResponse = SearchBibleApiSearchBiblePos
 export type ClearHistoryApiSearchHistoryDeleteData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Lang
+         *
+         * Override locale (tr, en)
+         */
+        lang?: string | null;
+    };
     url: '/api/search/history';
 };
+
+export type ClearHistoryApiSearchHistoryDeleteErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ClearHistoryApiSearchHistoryDeleteError = ClearHistoryApiSearchHistoryDeleteErrors[keyof ClearHistoryApiSearchHistoryDeleteErrors];
 
 export type ClearHistoryApiSearchHistoryDeleteResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MessageResponse;
 };
+
+export type ClearHistoryApiSearchHistoryDeleteResponse = ClearHistoryApiSearchHistoryDeleteResponses[keyof ClearHistoryApiSearchHistoryDeleteResponses];
 
 export type GetSearchHistoryApiSearchHistoryGetData = {
     body?: never;
@@ -1650,6 +2569,10 @@ export type GetSearchHistoryApiSearchHistoryGetData = {
 
 export type GetSearchHistoryApiSearchHistoryGetErrors = {
     /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
@@ -1661,8 +2584,10 @@ export type GetSearchHistoryApiSearchHistoryGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: SearchHistoryResponse;
 };
+
+export type GetSearchHistoryApiSearchHistoryGetResponse = GetSearchHistoryApiSearchHistoryGetResponses[keyof GetSearchHistoryApiSearchHistoryGetResponses];
 
 export type DeleteHistoryItemApiSearchHistoryHistoryIdDeleteData = {
     body?: never;
@@ -1672,11 +2597,22 @@ export type DeleteHistoryItemApiSearchHistoryHistoryIdDeleteData = {
          */
         history_id: number;
     };
-    query?: never;
+    query?: {
+        /**
+         * Lang
+         *
+         * Override locale (tr, en)
+         */
+        lang?: string | null;
+    };
     url: '/api/search/history/{history_id}';
 };
 
 export type DeleteHistoryItemApiSearchHistoryHistoryIdDeleteErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
     /**
      * Validation Error
      */
@@ -1689,8 +2625,10 @@ export type DeleteHistoryItemApiSearchHistoryHistoryIdDeleteResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MessageResponse;
 };
+
+export type DeleteHistoryItemApiSearchHistoryHistoryIdDeleteResponse = DeleteHistoryItemApiSearchHistoryHistoryIdDeleteResponses[keyof DeleteHistoryItemApiSearchHistoryHistoryIdDeleteResponses];
 
 export type EnhanceQueryApiSearchEnhancePostData = {
     body: EnhanceRequest;
@@ -1700,6 +2638,10 @@ export type EnhanceQueryApiSearchEnhancePostData = {
 };
 
 export type EnhanceQueryApiSearchEnhancePostErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
     /**
      * Validation Error
      */
@@ -1750,11 +2692,22 @@ export type GetEtymologyApiEtymologyRootGetResponse = GetEtymologyApiEtymologyRo
 export type CompareScripturesApiComparePostData = {
     body: CompareRequest;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Lang
+         *
+         * Override locale (tr, en)
+         */
+        lang?: string | null;
+    };
     url: '/api/compare/';
 };
 
 export type CompareScripturesApiComparePostErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
     /**
      * Validation Error
      */
@@ -1799,12 +2752,22 @@ export type StreamSearchApiStreamSearchGetData = {
          *
          * Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
          */
-        translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | null;
+        translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | 'arberry' | null;
+        /**
+         * Lang
+         *
+         * Override locale (tr, en)
+         */
+        lang?: string | null;
     };
     url: '/api/stream/search';
 };
 
 export type StreamSearchApiStreamSearchGetErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
     /**
      * Validation Error
      */
@@ -1815,7 +2778,21 @@ export type StreamSearchApiStreamSearchGetError = StreamSearchApiStreamSearchGet
 
 export type StreamSearchApiStreamSearchGetResponses = {
     /**
-     * Successful Response
+     * Server-Sent Events stream of search results and AI answer tokens.
+     *
+     * ## SSE Event Types
+     *
+     * Each `data:` line contains a JSON object with one of these shapes:
+     *
+     * | Event | Discriminator | Description |
+     * |-------|--------------|-------------|
+     * | Status | `status` field | Pipeline progress (`searching` → `found` → `generating` → `translating`) |
+     * | Token | `type: "token"` | Single word of the AI-generated answer |
+     * | Citations | `citations` field | Array of citation reference strings |
+     * | Verse Details | `verse_details` field | Map of reference → verse metadata |
+     * | Complete | `type: "complete"` | Final aggregated result with answer, results, and citations |
+     * | Error | `type: "error"` | Error message with optional `error_code` (e.g. `auth_required`) |
+     *
      */
     200: unknown;
 };
@@ -1847,12 +2824,22 @@ export type StreamCompareApiStreamCompareGetData = {
          *
          * Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
          */
-        translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | null;
+        translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | 'arberry' | null;
+        /**
+         * Lang
+         *
+         * Override locale (tr, en)
+         */
+        lang?: string | null;
     };
     url: '/api/stream/compare';
 };
 
 export type StreamCompareApiStreamCompareGetErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
     /**
      * Validation Error
      */
@@ -1863,7 +2850,21 @@ export type StreamCompareApiStreamCompareGetError = StreamCompareApiStreamCompar
 
 export type StreamCompareApiStreamCompareGetResponses = {
     /**
-     * Successful Response
+     * Server-Sent Events stream of multi-agent comparative analysis.
+     *
+     * ## SSE Event Types
+     *
+     * Each `data:` line contains a JSON object with one of these shapes:
+     *
+     * | Event | Discriminator | Description |
+     * |-------|--------------|-------------|
+     * | Progress | `type: "progress"` | Pipeline step updates with machine-readable step ID |
+     * | Verse Details | `verse_details` field | Map of reference → verse metadata |
+     * | Paragraph | `type: "paragraph"` | Structured essay paragraph with title and markdown content |
+     * | Stats | `type: "stats"` | Confidence score, latency, verse/citation counts |
+     * | Complete | `type: "complete"` | Signals end of stream |
+     * | Error | `type: "error"` | Error message with optional `error_code` (e.g. `auth_required`) |
+     *
      */
     200: unknown;
 };
@@ -1875,12 +2876,27 @@ export type GetStatsApiAdminStatsGetData = {
     url: '/api/admin/stats';
 };
 
+export type GetStatsApiAdminStatsGetErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
+    /**
+     * Admin access required
+     */
+    403: ForbiddenResponse;
+};
+
+export type GetStatsApiAdminStatsGetError = GetStatsApiAdminStatsGetErrors[keyof GetStatsApiAdminStatsGetErrors];
+
 export type GetStatsApiAdminStatsGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: AdminStatsResponse;
 };
+
+export type GetStatsApiAdminStatsGetResponse = GetStatsApiAdminStatsGetResponses[keyof GetStatsApiAdminStatsGetResponses];
 
 export type GetUsersApiAdminUsersGetData = {
     body?: never;
@@ -1900,6 +2916,14 @@ export type GetUsersApiAdminUsersGetData = {
 
 export type GetUsersApiAdminUsersGetErrors = {
     /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
+    /**
+     * Admin access required
+     */
+    403: ForbiddenResponse;
+    /**
      * Validation Error
      */
     422: HttpValidationError;
@@ -1911,8 +2935,10 @@ export type GetUsersApiAdminUsersGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: AdminUsersResponse;
 };
+
+export type GetUsersApiAdminUsersGetResponse = GetUsersApiAdminUsersGetResponses[keyof GetUsersApiAdminUsersGetResponses];
 
 export type GetSystemInfoApiAdminSystemGetData = {
     body?: never;
@@ -1921,12 +2947,27 @@ export type GetSystemInfoApiAdminSystemGetData = {
     url: '/api/admin/system';
 };
 
+export type GetSystemInfoApiAdminSystemGetErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
+    /**
+     * Admin access required
+     */
+    403: ForbiddenResponse;
+};
+
+export type GetSystemInfoApiAdminSystemGetError = GetSystemInfoApiAdminSystemGetErrors[keyof GetSystemInfoApiAdminSystemGetErrors];
+
 export type GetSystemInfoApiAdminSystemGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: SystemInfoResponse;
 };
+
+export type GetSystemInfoApiAdminSystemGetResponse = GetSystemInfoApiAdminSystemGetResponses[keyof GetSystemInfoApiAdminSystemGetResponses];
 
 export type DeleteUserApiAdminUsersUserIdDeleteData = {
     body?: never;
@@ -1936,11 +2977,26 @@ export type DeleteUserApiAdminUsersUserIdDeleteData = {
          */
         user_id: number;
     };
-    query?: never;
+    query?: {
+        /**
+         * Lang
+         *
+         * Override locale (tr, en)
+         */
+        lang?: string | null;
+    };
     url: '/api/admin/users/{user_id}';
 };
 
 export type DeleteUserApiAdminUsersUserIdDeleteErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
+    /**
+     * Admin access required
+     */
+    403: ForbiddenResponse;
     /**
      * Validation Error
      */
@@ -1953,8 +3009,10 @@ export type DeleteUserApiAdminUsersUserIdDeleteResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MessageResponse;
 };
+
+export type DeleteUserApiAdminUsersUserIdDeleteResponse = DeleteUserApiAdminUsersUserIdDeleteResponses[keyof DeleteUserApiAdminUsersUserIdDeleteResponses];
 
 export type FlushSearchCacheApiAdminCacheFlushPostData = {
     body?: never;
@@ -1963,12 +3021,27 @@ export type FlushSearchCacheApiAdminCacheFlushPostData = {
     url: '/api/admin/cache/flush';
 };
 
+export type FlushSearchCacheApiAdminCacheFlushPostErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
+    /**
+     * Admin access required
+     */
+    403: ForbiddenResponse;
+};
+
+export type FlushSearchCacheApiAdminCacheFlushPostError = FlushSearchCacheApiAdminCacheFlushPostErrors[keyof FlushSearchCacheApiAdminCacheFlushPostErrors];
+
 export type FlushSearchCacheApiAdminCacheFlushPostResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: CacheFlushResponse;
 };
+
+export type FlushSearchCacheApiAdminCacheFlushPostResponse = FlushSearchCacheApiAdminCacheFlushPostResponses[keyof FlushSearchCacheApiAdminCacheFlushPostResponses];
 
 export type GetCollectionsApiMetadataCollectionsGetData = {
     body?: never;
@@ -1981,8 +3054,10 @@ export type GetCollectionsApiMetadataCollectionsGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MetadataResponse;
 };
+
+export type GetCollectionsApiMetadataCollectionsGetResponse = GetCollectionsApiMetadataCollectionsGetResponses[keyof GetCollectionsApiMetadataCollectionsGetResponses];
 
 export type GetQuranSurahsApiMetadataQuranSurahsGetData = {
     body?: never;
@@ -1995,8 +3070,10 @@ export type GetQuranSurahsApiMetadataQuranSurahsGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MetadataResponse;
 };
+
+export type GetQuranSurahsApiMetadataQuranSurahsGetResponse = GetQuranSurahsApiMetadataQuranSurahsGetResponses[keyof GetQuranSurahsApiMetadataQuranSurahsGetResponses];
 
 export type GetSurahDetailApiMetadataQuranSurahsSurahIdGetData = {
     body?: never;
@@ -2006,7 +3083,14 @@ export type GetSurahDetailApiMetadataQuranSurahsSurahIdGetData = {
          */
         surah_id: number;
     };
-    query?: never;
+    query?: {
+        /**
+         * Translator
+         *
+         * Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
+         */
+        translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | 'arberry';
+    };
     url: '/api/metadata/quran/surahs/{surah_id}';
 };
 
@@ -2023,8 +3107,10 @@ export type GetSurahDetailApiMetadataQuranSurahsSurahIdGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MetadataResponse;
 };
+
+export type GetSurahDetailApiMetadataQuranSurahsSurahIdGetResponse = GetSurahDetailApiMetadataQuranSurahsSurahIdGetResponses[keyof GetSurahDetailApiMetadataQuranSurahsSurahIdGetResponses];
 
 export type GetBibleBooksApiMetadataBibleBooksGetData = {
     body?: never;
@@ -2051,8 +3137,10 @@ export type GetBibleBooksApiMetadataBibleBooksGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MetadataResponse;
 };
+
+export type GetBibleBooksApiMetadataBibleBooksGetResponse = GetBibleBooksApiMetadataBibleBooksGetResponses[keyof GetBibleBooksApiMetadataBibleBooksGetResponses];
 
 export type GetBookDetailApiMetadataBibleBooksBookNrGetData = {
     body?: never;
@@ -2079,8 +3167,10 @@ export type GetBookDetailApiMetadataBibleBooksBookNrGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MetadataResponse;
 };
+
+export type GetBookDetailApiMetadataBibleBooksBookNrGetResponse = GetBookDetailApiMetadataBibleBooksBookNrGetResponses[keyof GetBookDetailApiMetadataBibleBooksBookNrGetResponses];
 
 export type GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetData = {
     body?: never;
@@ -2111,8 +3201,10 @@ export type GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetRespo
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MetadataResponse;
 };
+
+export type GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetResponse = GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetResponses[keyof GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetResponses];
 
 export type GetTestamentsApiMetadataTestamentsGetData = {
     body?: never;
@@ -2125,8 +3217,10 @@ export type GetTestamentsApiMetadataTestamentsGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MetadataResponse;
 };
+
+export type GetTestamentsApiMetadataTestamentsGetResponse = GetTestamentsApiMetadataTestamentsGetResponses[keyof GetTestamentsApiMetadataTestamentsGetResponses];
 
 export type GetTranslatorsApiMetadataTranslatorsGetData = {
     body?: never;
@@ -2139,8 +3233,44 @@ export type GetTranslatorsApiMetadataTranslatorsGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MetadataResponse;
 };
+
+export type GetTranslatorsApiMetadataTranslatorsGetResponse = GetTranslatorsApiMetadataTranslatorsGetResponses[keyof GetTranslatorsApiMetadataTranslatorsGetResponses];
+
+export type GetVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGetData = {
+    body?: never;
+    path: {
+        /**
+         * Surah Id
+         */
+        surah_id: number;
+        /**
+         * Verse Id
+         */
+        verse_id: number;
+    };
+    query?: never;
+    url: '/api/metadata/quran/verses/{surah_id}/{verse_id}/translations';
+};
+
+export type GetVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGetError = GetVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGetErrors[keyof GetVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGetErrors];
+
+export type GetVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: VerseTranslationsResponse;
+};
+
+export type GetVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGetResponse = GetVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGetResponses[keyof GetVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGetResponses];
 
 export type ResetPreferencesApiPreferencesDeleteData = {
     body?: never;
@@ -2149,12 +3279,23 @@ export type ResetPreferencesApiPreferencesDeleteData = {
     url: '/api/preferences/';
 };
 
+export type ResetPreferencesApiPreferencesDeleteErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
+};
+
+export type ResetPreferencesApiPreferencesDeleteError = ResetPreferencesApiPreferencesDeleteErrors[keyof ResetPreferencesApiPreferencesDeleteErrors];
+
 export type ResetPreferencesApiPreferencesDeleteResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: MessageResponse;
 };
+
+export type ResetPreferencesApiPreferencesDeleteResponse = ResetPreferencesApiPreferencesDeleteResponses[keyof ResetPreferencesApiPreferencesDeleteResponses];
 
 export type GetPreferencesApiPreferencesGetData = {
     body?: never;
@@ -2162,6 +3303,15 @@ export type GetPreferencesApiPreferencesGetData = {
     query?: never;
     url: '/api/preferences/';
 };
+
+export type GetPreferencesApiPreferencesGetErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
+};
+
+export type GetPreferencesApiPreferencesGetError = GetPreferencesApiPreferencesGetErrors[keyof GetPreferencesApiPreferencesGetErrors];
 
 export type GetPreferencesApiPreferencesGetResponses = {
     /**
@@ -2180,6 +3330,10 @@ export type UpdatePreferencesApiPreferencesPutData = {
 };
 
 export type UpdatePreferencesApiPreferencesPutErrors = {
+    /**
+     * Not authenticated
+     */
+    401: UnauthorizedResponse;
     /**
      * Validation Error
      */
@@ -2454,7 +3608,7 @@ export type LookupVerseApiVerseLookupGetData = {
          *
          * Quran translator (diyanet, yazir, ates, bulac, ozturk, vakfi, yildirim, yuksel)
          */
-        translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | null;
+        translator?: 'diyanet' | 'yazir' | 'ates' | 'bulac' | 'ozturk' | 'vakfi' | 'yildirim' | 'yuksel' | 'arberry' | null;
     };
     url: '/api/verse/lookup';
 };
@@ -2515,6 +3669,34 @@ export type GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetResponses = {
 
 export type GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetResponse = GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetResponses[keyof GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetResponses];
 
+export type HandlePolarWebhookApiWebhooksPolarPostData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/webhooks/polar';
+};
+
+export type HandlePolarWebhookApiWebhooksPolarPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
+export type GetSubscriptionStatusApiSubscriptionStatusGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/subscription/status';
+};
+
+export type GetSubscriptionStatusApiSubscriptionStatusGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: unknown;
+};
+
 export type HealthCheckApiHealthGetData = {
     body?: never;
     path?: never;
@@ -2526,8 +3708,10 @@ export type HealthCheckApiHealthGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: HealthResponse;
 };
+
+export type HealthCheckApiHealthGetResponse = HealthCheckApiHealthGetResponses[keyof HealthCheckApiHealthGetResponses];
 
 export type GetPublicConfigApiConfigGetData = {
     body?: never;
@@ -2540,5 +3724,7 @@ export type GetPublicConfigApiConfigGetResponses = {
     /**
      * Successful Response
      */
-    200: unknown;
+    200: PublicConfigResponse;
 };
+
+export type GetPublicConfigApiConfigGetResponse = GetPublicConfigApiConfigGetResponses[keyof GetPublicConfigApiConfigGetResponses];

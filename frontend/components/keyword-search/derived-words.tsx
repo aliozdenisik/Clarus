@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { springPresets, tactileScale } from "@/lib/design-system"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
+import { UpgradeGate } from "@/components/keyword-search/upgrade-gate"
 
 interface DerivedWordsProps {
   words: string[]
@@ -12,6 +13,7 @@ interface DerivedWordsProps {
   onWordSelect: (word: string | null) => void
   transliterations?: Record<string, string>
   language?: "arabic" | "hebrew" | "greek"
+  lockedAfter?: number
 }
 
 export function DerivedWords({
@@ -20,6 +22,7 @@ export function DerivedWords({
   onWordSelect,
   transliterations,
   language = "arabic",
+  lockedAfter,
 }: DerivedWordsProps) {
   const t = useTranslations("KeywordSearch")
   const isHebrew = language === "hebrew"
@@ -44,6 +47,10 @@ export function DerivedWords({
       return normalizedWord.includes(normalizedFilter) || transliteration.includes(normalizedFilter)
     })
   }, [filterText, transliterations, words])
+
+  const unlockedWords =
+    lockedAfter !== undefined ? visibleWords.slice(0, lockedAfter) : visibleWords
+  const lockedWords = lockedAfter !== undefined ? visibleWords.slice(lockedAfter) : []
 
   return (
     <div className="space-y-5">
@@ -102,7 +109,7 @@ export function DerivedWords({
           {t("derivedWords.allWords")}
         </motion.button>
 
-        {visibleWords.map((word, index) => (
+        {unlockedWords.map((word, index) => (
           <motion.button
             key={word}
             initial={{ opacity: 0, scale: 0.9 }}
@@ -141,6 +148,42 @@ export function DerivedWords({
             )}
           </motion.button>
         ))}
+
+        {lockedWords.length > 0 && (
+          <UpgradeGate locked>
+            <div className="flex flex-wrap gap-2.5">
+              {lockedWords.map((word) => (
+                <div
+                  key={word}
+                  className={cn(
+                    "flex flex-col items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium",
+                    "min-h-11 min-w-11 justify-center leading-tight",
+                    "bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] ring-1 ring-transparent ring-inset"
+                  )}
+                >
+                  <span
+                    lang={isGreek ? "el" : isHebrew ? "he" : "ar"}
+                    className={cn(
+                      isGreek
+                        ? "font-greek text-base"
+                        : isHebrew
+                          ? "font-hebrew leading-relaxed"
+                          : "font-arabic"
+                    )}
+                    dir={isGreek ? "ltr" : "rtl"}
+                  >
+                    {isGreek ? word : <bdi>{word}</bdi>}
+                  </span>
+                  {transliterations?.[word] && (
+                    <span className="font-sans text-[11px] text-[var(--color-text-muted)]">
+                      {transliterations[word]}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </UpgradeGate>
+        )}
       </div>
 
       {visibleWords.length === 0 && (

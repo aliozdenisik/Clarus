@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { ClearHistoryApiSearchHistoryDeleteData, ClearHistoryApiSearchHistoryDeleteResponses, CompareScripturesApiComparePostData, CompareScripturesApiComparePostErrors, CompareScripturesApiComparePostResponses, DeleteHistoryItemApiSearchHistoryHistoryIdDeleteData, DeleteHistoryItemApiSearchHistoryHistoryIdDeleteErrors, DeleteHistoryItemApiSearchHistoryHistoryIdDeleteResponses, DeleteUserApiAdminUsersUserIdDeleteData, DeleteUserApiAdminUsersUserIdDeleteErrors, DeleteUserApiAdminUsersUserIdDeleteResponses, EnhanceQueryApiSearchEnhancePostData, EnhanceQueryApiSearchEnhancePostErrors, EnhanceQueryApiSearchEnhancePostResponses, FlushSearchCacheApiAdminCacheFlushPostData, FlushSearchCacheApiAdminCacheFlushPostResponses, GenerateApiKeyApiAuthApiKeyPostData, GenerateApiKeyApiAuthApiKeyPostResponses, GetBibleBooksApiMetadataBibleBooksGetData, GetBibleBooksApiMetadataBibleBooksGetErrors, GetBibleBooksApiMetadataBibleBooksGetResponses, GetBibleRootInfoApiKeywordSearchBibleRootRootGetData, GetBibleRootInfoApiKeywordSearchBibleRootRootGetErrors, GetBibleRootInfoApiKeywordSearchBibleRootRootGetResponses, GetBibleStatsApiKeywordSearchBibleStatsGetData, GetBibleStatsApiKeywordSearchBibleStatsGetResponses, GetBookDetailApiMetadataBibleBooksBookNrGetData, GetBookDetailApiMetadataBibleBooksBookNrGetErrors, GetBookDetailApiMetadataBibleBooksBookNrGetResponses, GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetData, GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetErrors, GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetResponses, GetCollectionsApiMetadataCollectionsGetData, GetCollectionsApiMetadataCollectionsGetResponses, GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetData, GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetErrors, GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetResponses, GetEtymologyApiEtymologyRootGetData, GetEtymologyApiEtymologyRootGetErrors, GetEtymologyApiEtymologyRootGetResponses, GetMeApiAuthMeGetData, GetMeApiAuthMeGetResponses, GetPreferencesApiPreferencesGetData, GetPreferencesApiPreferencesGetResponses, GetPublicConfigApiConfigGetData, GetPublicConfigApiConfigGetResponses, GetQuranSurahsApiMetadataQuranSurahsGetData, GetQuranSurahsApiMetadataQuranSurahsGetResponses, GetRateLimitStatusApiAuthRateLimitGetData, GetRateLimitStatusApiAuthRateLimitGetResponses, GetRootInfoApiSearchKeywordRootRootGetData, GetRootInfoApiSearchKeywordRootRootGetErrors, GetRootInfoApiSearchKeywordRootRootGetResponses, GetSearchHistoryApiSearchHistoryGetData, GetSearchHistoryApiSearchHistoryGetErrors, GetSearchHistoryApiSearchHistoryGetResponses, GetStatsApiAdminStatsGetData, GetStatsApiAdminStatsGetResponses, GetSurahDetailApiMetadataQuranSurahsSurahIdGetData, GetSurahDetailApiMetadataQuranSurahsSurahIdGetErrors, GetSurahDetailApiMetadataQuranSurahsSurahIdGetResponses, GetSystemInfoApiAdminSystemGetData, GetSystemInfoApiAdminSystemGetResponses, GetTestamentsApiMetadataTestamentsGetData, GetTestamentsApiMetadataTestamentsGetResponses, GetTranslatorsApiMetadataTranslatorsGetData, GetTranslatorsApiMetadataTranslatorsGetResponses, GetUsersApiAdminUsersGetData, GetUsersApiAdminUsersGetErrors, GetUsersApiAdminUsersGetResponses, GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetData, GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetErrors, GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetResponses, HealthCheckApiHealthGetData, HealthCheckApiHealthGetResponses, ListBibleRootsApiKeywordSearchBibleRootsGetData, ListBibleRootsApiKeywordSearchBibleRootsGetErrors, ListBibleRootsApiKeywordSearchBibleRootsGetResponses, ListRootsApiSearchKeywordRootsGetData, ListRootsApiSearchKeywordRootsGetErrors, ListRootsApiSearchKeywordRootsGetResponses, LogoutApiAuthLogoutPostData, LogoutApiAuthLogoutPostResponses, LookupVerseApiVerseLookupGetData, LookupVerseApiVerseLookupGetErrors, LookupVerseApiVerseLookupGetResponses, ResetPreferencesApiPreferencesDeleteData, ResetPreferencesApiPreferencesDeleteResponses, SearchBibleApiSearchBiblePostData, SearchBibleApiSearchBiblePostErrors, SearchBibleApiSearchBiblePostResponses, SearchBibleKeywordApiKeywordSearchBiblePostData, SearchBibleKeywordApiKeywordSearchBiblePostErrors, SearchBibleKeywordApiKeywordSearchBiblePostResponses, SearchKeywordApiSearchKeywordPostData, SearchKeywordApiSearchKeywordPostErrors, SearchKeywordApiSearchKeywordPostResponses, SearchQuranApiSearchQuranPostData, SearchQuranApiSearchQuranPostErrors, SearchQuranApiSearchQuranPostResponses, StreamCompareApiStreamCompareGetData, StreamCompareApiStreamCompareGetErrors, StreamCompareApiStreamCompareGetResponses, StreamSearchApiStreamSearchGetData, StreamSearchApiStreamSearchGetErrors, StreamSearchApiStreamSearchGetResponses, UpdatePreferencesApiPreferencesPutData, UpdatePreferencesApiPreferencesPutErrors, UpdatePreferencesApiPreferencesPutResponses } from './types.gen';
+import type { ClearHistoryApiSearchHistoryDeleteData, ClearHistoryApiSearchHistoryDeleteErrors, ClearHistoryApiSearchHistoryDeleteResponses, CompareScripturesApiComparePostData, CompareScripturesApiComparePostErrors, CompareScripturesApiComparePostResponses, DeleteHistoryItemApiSearchHistoryHistoryIdDeleteData, DeleteHistoryItemApiSearchHistoryHistoryIdDeleteErrors, DeleteHistoryItemApiSearchHistoryHistoryIdDeleteResponses, DeleteUserApiAdminUsersUserIdDeleteData, DeleteUserApiAdminUsersUserIdDeleteErrors, DeleteUserApiAdminUsersUserIdDeleteResponses, EnhanceQueryApiSearchEnhancePostData, EnhanceQueryApiSearchEnhancePostErrors, EnhanceQueryApiSearchEnhancePostResponses, FlushSearchCacheApiAdminCacheFlushPostData, FlushSearchCacheApiAdminCacheFlushPostErrors, FlushSearchCacheApiAdminCacheFlushPostResponses, GenerateApiKeyApiAuthApiKeyPostData, GenerateApiKeyApiAuthApiKeyPostErrors, GenerateApiKeyApiAuthApiKeyPostResponses, GetBibleBooksApiMetadataBibleBooksGetData, GetBibleBooksApiMetadataBibleBooksGetErrors, GetBibleBooksApiMetadataBibleBooksGetResponses, GetBibleRootInfoApiKeywordSearchBibleRootRootGetData, GetBibleRootInfoApiKeywordSearchBibleRootRootGetErrors, GetBibleRootInfoApiKeywordSearchBibleRootRootGetResponses, GetBibleStatsApiKeywordSearchBibleStatsGetData, GetBibleStatsApiKeywordSearchBibleStatsGetResponses, GetBookDetailApiMetadataBibleBooksBookNrGetData, GetBookDetailApiMetadataBibleBooksBookNrGetErrors, GetBookDetailApiMetadataBibleBooksBookNrGetResponses, GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetData, GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetErrors, GetChapterVersesApiMetadataBibleBooksBookNrChaptersChapterNrGetResponses, GetCollectionsApiMetadataCollectionsGetData, GetCollectionsApiMetadataCollectionsGetResponses, GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetData, GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetErrors, GetCrossReferenceApiKeywordSearchBibleCrossReferenceStrongsNumberGetResponses, GetEtymologyApiEtymologyRootGetData, GetEtymologyApiEtymologyRootGetErrors, GetEtymologyApiEtymologyRootGetResponses, GetMeApiAuthMeGetData, GetMeApiAuthMeGetErrors, GetMeApiAuthMeGetResponses, GetPreferencesApiPreferencesGetData, GetPreferencesApiPreferencesGetErrors, GetPreferencesApiPreferencesGetResponses, GetPublicConfigApiConfigGetData, GetPublicConfigApiConfigGetResponses, GetQuranSurahsApiMetadataQuranSurahsGetData, GetQuranSurahsApiMetadataQuranSurahsGetResponses, GetRateLimitStatusApiAuthRateLimitGetData, GetRateLimitStatusApiAuthRateLimitGetErrors, GetRateLimitStatusApiAuthRateLimitGetResponses, GetRootInfoApiSearchKeywordRootRootGetData, GetRootInfoApiSearchKeywordRootRootGetErrors, GetRootInfoApiSearchKeywordRootRootGetResponses, GetSearchHistoryApiSearchHistoryGetData, GetSearchHistoryApiSearchHistoryGetErrors, GetSearchHistoryApiSearchHistoryGetResponses, GetStatsApiAdminStatsGetData, GetStatsApiAdminStatsGetErrors, GetStatsApiAdminStatsGetResponses, GetSubscriptionStatusApiSubscriptionStatusGetData, GetSubscriptionStatusApiSubscriptionStatusGetResponses, GetSurahDetailApiMetadataQuranSurahsSurahIdGetData, GetSurahDetailApiMetadataQuranSurahsSurahIdGetErrors, GetSurahDetailApiMetadataQuranSurahsSurahIdGetResponses, GetSystemInfoApiAdminSystemGetData, GetSystemInfoApiAdminSystemGetErrors, GetSystemInfoApiAdminSystemGetResponses, GetTestamentsApiMetadataTestamentsGetData, GetTestamentsApiMetadataTestamentsGetResponses, GetTranslatorsApiMetadataTranslatorsGetData, GetTranslatorsApiMetadataTranslatorsGetResponses, GetUsersApiAdminUsersGetData, GetUsersApiAdminUsersGetErrors, GetUsersApiAdminUsersGetResponses, GetVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGetData, GetVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGetErrors, GetVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGetResponses, GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetData, GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetErrors, GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetResponses, HandlePolarWebhookApiWebhooksPolarPostData, HandlePolarWebhookApiWebhooksPolarPostResponses, HealthCheckApiHealthGetData, HealthCheckApiHealthGetResponses, ListBibleRootsApiKeywordSearchBibleRootsGetData, ListBibleRootsApiKeywordSearchBibleRootsGetErrors, ListBibleRootsApiKeywordSearchBibleRootsGetResponses, ListRootsApiSearchKeywordRootsGetData, ListRootsApiSearchKeywordRootsGetErrors, ListRootsApiSearchKeywordRootsGetResponses, LogoutApiAuthLogoutPostData, LogoutApiAuthLogoutPostErrors, LogoutApiAuthLogoutPostResponses, LookupVerseApiVerseLookupGetData, LookupVerseApiVerseLookupGetErrors, LookupVerseApiVerseLookupGetResponses, ResetPreferencesApiPreferencesDeleteData, ResetPreferencesApiPreferencesDeleteErrors, ResetPreferencesApiPreferencesDeleteResponses, SearchBibleApiSearchBiblePostData, SearchBibleApiSearchBiblePostErrors, SearchBibleApiSearchBiblePostResponses, SearchBibleKeywordApiKeywordSearchBiblePostData, SearchBibleKeywordApiKeywordSearchBiblePostErrors, SearchBibleKeywordApiKeywordSearchBiblePostResponses, SearchKeywordApiSearchKeywordPostData, SearchKeywordApiSearchKeywordPostErrors, SearchKeywordApiSearchKeywordPostResponses, SearchQuranApiSearchQuranPostData, SearchQuranApiSearchQuranPostErrors, SearchQuranApiSearchQuranPostResponses, StreamCompareApiStreamCompareGetData, StreamCompareApiStreamCompareGetErrors, StreamCompareApiStreamCompareGetResponses, StreamSearchApiStreamSearchGetData, StreamSearchApiStreamSearchGetErrors, StreamSearchApiStreamSearchGetResponses, UpdatePreferencesApiPreferencesPutData, UpdatePreferencesApiPreferencesPutErrors, UpdatePreferencesApiPreferencesPutResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -23,7 +23,15 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
  *
  * Get current user info (from session cookie or API key).
  */
-export const getMeApiAuthMeGet = <ThrowOnError extends boolean = false>(options?: Options<GetMeApiAuthMeGetData, ThrowOnError>) => (options?.client ?? client).get<GetMeApiAuthMeGetResponses, unknown, ThrowOnError>({ url: '/api/auth/me', ...options });
+export const getMeApiAuthMeGet = <ThrowOnError extends boolean = false>(options?: Options<GetMeApiAuthMeGetData, ThrowOnError>) => (options?.client ?? client).get<GetMeApiAuthMeGetResponses, GetMeApiAuthMeGetErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
+    url: '/api/auth/me',
+    ...options
+});
 
 /**
  * Logout
@@ -32,14 +40,30 @@ export const getMeApiAuthMeGet = <ThrowOnError extends boolean = false>(options?
  * Note: Better Auth sessions are managed by the auth server.
  * This endpoint just returns success for client-side cleanup.
  */
-export const logoutApiAuthLogoutPost = <ThrowOnError extends boolean = false>(options?: Options<LogoutApiAuthLogoutPostData, ThrowOnError>) => (options?.client ?? client).post<LogoutApiAuthLogoutPostResponses, unknown, ThrowOnError>({ url: '/api/auth/logout', ...options });
+export const logoutApiAuthLogoutPost = <ThrowOnError extends boolean = false>(options?: Options<LogoutApiAuthLogoutPostData, ThrowOnError>) => (options?.client ?? client).post<LogoutApiAuthLogoutPostResponses, LogoutApiAuthLogoutPostErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
+    url: '/api/auth/logout',
+    ...options
+});
 
 /**
  * Get Rate Limit Status
  *
  * Get current user's rate limit status.
  */
-export const getRateLimitStatusApiAuthRateLimitGet = <ThrowOnError extends boolean = false>(options?: Options<GetRateLimitStatusApiAuthRateLimitGetData, ThrowOnError>) => (options?.client ?? client).get<GetRateLimitStatusApiAuthRateLimitGetResponses, unknown, ThrowOnError>({ url: '/api/auth/rate-limit', ...options });
+export const getRateLimitStatusApiAuthRateLimitGet = <ThrowOnError extends boolean = false>(options?: Options<GetRateLimitStatusApiAuthRateLimitGetData, ThrowOnError>) => (options?.client ?? client).get<GetRateLimitStatusApiAuthRateLimitGetResponses, GetRateLimitStatusApiAuthRateLimitGetErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
+    url: '/api/auth/rate-limit',
+    ...options
+});
 
 /**
  * Generate Api Key
@@ -63,12 +87,25 @@ export const getRateLimitStatusApiAuthRateLimitGet = <ThrowOnError extends boole
  * Raises:
  * HTTPException 401: Not authenticated
  */
-export const generateApiKeyApiAuthApiKeyPost = <ThrowOnError extends boolean = false>(options?: Options<GenerateApiKeyApiAuthApiKeyPostData, ThrowOnError>) => (options?.client ?? client).post<GenerateApiKeyApiAuthApiKeyPostResponses, unknown, ThrowOnError>({ url: '/api/auth/api-key', ...options });
+export const generateApiKeyApiAuthApiKeyPost = <ThrowOnError extends boolean = false>(options?: Options<GenerateApiKeyApiAuthApiKeyPostData, ThrowOnError>) => (options?.client ?? client).post<GenerateApiKeyApiAuthApiKeyPostResponses, GenerateApiKeyApiAuthApiKeyPostErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
+    url: '/api/auth/api-key',
+    ...options
+});
 
 /**
  * Search Quran
  */
 export const searchQuranApiSearchQuranPost = <ThrowOnError extends boolean = false>(options: Options<SearchQuranApiSearchQuranPostData, ThrowOnError>) => (options.client ?? client).post<SearchQuranApiSearchQuranPostResponses, SearchQuranApiSearchQuranPostErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
     url: '/api/search/quran',
     ...options,
     headers: {
@@ -81,6 +118,11 @@ export const searchQuranApiSearchQuranPost = <ThrowOnError extends boolean = fal
  * Search Bible
  */
 export const searchBibleApiSearchBiblePost = <ThrowOnError extends boolean = false>(options: Options<SearchBibleApiSearchBiblePostData, ThrowOnError>) => (options.client ?? client).post<SearchBibleApiSearchBiblePostResponses, SearchBibleApiSearchBiblePostErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
     url: '/api/search/bible',
     ...options,
     headers: {
@@ -92,17 +134,41 @@ export const searchBibleApiSearchBiblePost = <ThrowOnError extends boolean = fal
 /**
  * Clear History
  */
-export const clearHistoryApiSearchHistoryDelete = <ThrowOnError extends boolean = false>(options?: Options<ClearHistoryApiSearchHistoryDeleteData, ThrowOnError>) => (options?.client ?? client).delete<ClearHistoryApiSearchHistoryDeleteResponses, unknown, ThrowOnError>({ url: '/api/search/history', ...options });
+export const clearHistoryApiSearchHistoryDelete = <ThrowOnError extends boolean = false>(options?: Options<ClearHistoryApiSearchHistoryDeleteData, ThrowOnError>) => (options?.client ?? client).delete<ClearHistoryApiSearchHistoryDeleteResponses, ClearHistoryApiSearchHistoryDeleteErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
+    url: '/api/search/history',
+    ...options
+});
 
 /**
  * Get Search History
  */
-export const getSearchHistoryApiSearchHistoryGet = <ThrowOnError extends boolean = false>(options?: Options<GetSearchHistoryApiSearchHistoryGetData, ThrowOnError>) => (options?.client ?? client).get<GetSearchHistoryApiSearchHistoryGetResponses, GetSearchHistoryApiSearchHistoryGetErrors, ThrowOnError>({ url: '/api/search/history', ...options });
+export const getSearchHistoryApiSearchHistoryGet = <ThrowOnError extends boolean = false>(options?: Options<GetSearchHistoryApiSearchHistoryGetData, ThrowOnError>) => (options?.client ?? client).get<GetSearchHistoryApiSearchHistoryGetResponses, GetSearchHistoryApiSearchHistoryGetErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
+    url: '/api/search/history',
+    ...options
+});
 
 /**
  * Delete History Item
  */
-export const deleteHistoryItemApiSearchHistoryHistoryIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteHistoryItemApiSearchHistoryHistoryIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteHistoryItemApiSearchHistoryHistoryIdDeleteResponses, DeleteHistoryItemApiSearchHistoryHistoryIdDeleteErrors, ThrowOnError>({ url: '/api/search/history/{history_id}', ...options });
+export const deleteHistoryItemApiSearchHistoryHistoryIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteHistoryItemApiSearchHistoryHistoryIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteHistoryItemApiSearchHistoryHistoryIdDeleteResponses, DeleteHistoryItemApiSearchHistoryHistoryIdDeleteErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
+    url: '/api/search/history/{history_id}',
+    ...options
+});
 
 /**
  * Enhance Query
@@ -127,6 +193,11 @@ export const deleteHistoryItemApiSearchHistoryHistoryIdDelete = <ThrowOnError ex
  * HTTPException: 401 if not authenticated, 429 if rate limited
  */
 export const enhanceQueryApiSearchEnhancePost = <ThrowOnError extends boolean = false>(options: Options<EnhanceQueryApiSearchEnhancePostData, ThrowOnError>) => (options.client ?? client).post<EnhanceQueryApiSearchEnhancePostResponses, EnhanceQueryApiSearchEnhancePostErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
     url: '/api/search/enhance',
     ...options,
     headers: {
@@ -153,6 +224,11 @@ export const getEtymologyApiEtymologyRootGet = <ThrowOnError extends boolean = f
  * - Comparative synthesis
  */
 export const compareScripturesApiComparePost = <ThrowOnError extends boolean = false>(options: Options<CompareScripturesApiComparePostData, ThrowOnError>) => (options.client ?? client).post<CompareScripturesApiComparePostResponses, CompareScripturesApiComparePostErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
     url: '/api/compare/',
     ...options,
     headers: {
@@ -168,7 +244,15 @@ export const compareScripturesApiComparePost = <ThrowOnError extends boolean = f
  *
  * Authentication: Uses session cookie.
  */
-export const streamSearchApiStreamSearchGet = <ThrowOnError extends boolean = false>(options: Options<StreamSearchApiStreamSearchGetData, ThrowOnError>) => (options.client ?? client).get<StreamSearchApiStreamSearchGetResponses, StreamSearchApiStreamSearchGetErrors, ThrowOnError>({ url: '/api/stream/search', ...options });
+export const streamSearchApiStreamSearchGet = <ThrowOnError extends boolean = false>(options: Options<StreamSearchApiStreamSearchGetData, ThrowOnError>) => (options.client ?? client).get<StreamSearchApiStreamSearchGetResponses, StreamSearchApiStreamSearchGetErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }],
+    url: '/api/stream/search',
+    ...options
+});
 
 /**
  * Stream Compare
@@ -179,29 +263,69 @@ export const streamSearchApiStreamSearchGet = <ThrowOnError extends boolean = fa
  *
  * Args:
  * collections: Comma-separated collection names (e.g., 'quran_tr,bible_ot').
- * Valid values: quran_tr, bible_ot, bible_nt, bible_apocrypha
+ * Valid values: quran_tr (alias), quran_tr_*, bible_ot, bible_nt, bible_apocrypha
  */
-export const streamCompareApiStreamCompareGet = <ThrowOnError extends boolean = false>(options: Options<StreamCompareApiStreamCompareGetData, ThrowOnError>) => (options.client ?? client).get<StreamCompareApiStreamCompareGetResponses, StreamCompareApiStreamCompareGetErrors, ThrowOnError>({ url: '/api/stream/compare', ...options });
+export const streamCompareApiStreamCompareGet = <ThrowOnError extends boolean = false>(options: Options<StreamCompareApiStreamCompareGetData, ThrowOnError>) => (options.client ?? client).get<StreamCompareApiStreamCompareGetResponses, StreamCompareApiStreamCompareGetErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }],
+    url: '/api/stream/compare',
+    ...options
+});
 
 /**
  * Get Stats
  */
-export const getStatsApiAdminStatsGet = <ThrowOnError extends boolean = false>(options?: Options<GetStatsApiAdminStatsGetData, ThrowOnError>) => (options?.client ?? client).get<GetStatsApiAdminStatsGetResponses, unknown, ThrowOnError>({ url: '/api/admin/stats', ...options });
+export const getStatsApiAdminStatsGet = <ThrowOnError extends boolean = false>(options?: Options<GetStatsApiAdminStatsGetData, ThrowOnError>) => (options?.client ?? client).get<GetStatsApiAdminStatsGetResponses, GetStatsApiAdminStatsGetErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
+    url: '/api/admin/stats',
+    ...options
+});
 
 /**
  * Get Users
  */
-export const getUsersApiAdminUsersGet = <ThrowOnError extends boolean = false>(options?: Options<GetUsersApiAdminUsersGetData, ThrowOnError>) => (options?.client ?? client).get<GetUsersApiAdminUsersGetResponses, GetUsersApiAdminUsersGetErrors, ThrowOnError>({ url: '/api/admin/users', ...options });
+export const getUsersApiAdminUsersGet = <ThrowOnError extends boolean = false>(options?: Options<GetUsersApiAdminUsersGetData, ThrowOnError>) => (options?.client ?? client).get<GetUsersApiAdminUsersGetResponses, GetUsersApiAdminUsersGetErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
+    url: '/api/admin/users',
+    ...options
+});
 
 /**
  * Get System Info
  */
-export const getSystemInfoApiAdminSystemGet = <ThrowOnError extends boolean = false>(options?: Options<GetSystemInfoApiAdminSystemGetData, ThrowOnError>) => (options?.client ?? client).get<GetSystemInfoApiAdminSystemGetResponses, unknown, ThrowOnError>({ url: '/api/admin/system', ...options });
+export const getSystemInfoApiAdminSystemGet = <ThrowOnError extends boolean = false>(options?: Options<GetSystemInfoApiAdminSystemGetData, ThrowOnError>) => (options?.client ?? client).get<GetSystemInfoApiAdminSystemGetResponses, GetSystemInfoApiAdminSystemGetErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
+    url: '/api/admin/system',
+    ...options
+});
 
 /**
  * Delete User
  */
-export const deleteUserApiAdminUsersUserIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteUserApiAdminUsersUserIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteUserApiAdminUsersUserIdDeleteResponses, DeleteUserApiAdminUsersUserIdDeleteErrors, ThrowOnError>({ url: '/api/admin/users/{user_id}', ...options });
+export const deleteUserApiAdminUsersUserIdDelete = <ThrowOnError extends boolean = false>(options: Options<DeleteUserApiAdminUsersUserIdDeleteData, ThrowOnError>) => (options.client ?? client).delete<DeleteUserApiAdminUsersUserIdDeleteResponses, DeleteUserApiAdminUsersUserIdDeleteErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
+    url: '/api/admin/users/{user_id}',
+    ...options
+});
 
 /**
  * Flush Search Cache
@@ -212,7 +336,15 @@ export const deleteUserApiAdminUsersUserIdDelete = <ThrowOnError extends boolean
  * Returns:
  * Dictionary with success status and number of deleted keys
  */
-export const flushSearchCacheApiAdminCacheFlushPost = <ThrowOnError extends boolean = false>(options?: Options<FlushSearchCacheApiAdminCacheFlushPostData, ThrowOnError>) => (options?.client ?? client).post<FlushSearchCacheApiAdminCacheFlushPostResponses, unknown, ThrowOnError>({ url: '/api/admin/cache/flush', ...options });
+export const flushSearchCacheApiAdminCacheFlushPost = <ThrowOnError extends boolean = false>(options?: Options<FlushSearchCacheApiAdminCacheFlushPostData, ThrowOnError>) => (options?.client ?? client).post<FlushSearchCacheApiAdminCacheFlushPostResponses, FlushSearchCacheApiAdminCacheFlushPostErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
+    url: '/api/admin/cache/flush',
+    ...options
+});
 
 /**
  * Get Collections
@@ -260,19 +392,45 @@ export const getTestamentsApiMetadataTestamentsGet = <ThrowOnError extends boole
 export const getTranslatorsApiMetadataTranslatorsGet = <ThrowOnError extends boolean = false>(options?: Options<GetTranslatorsApiMetadataTranslatorsGetData, ThrowOnError>) => (options?.client ?? client).get<GetTranslatorsApiMetadataTranslatorsGetResponses, unknown, ThrowOnError>({ url: '/api/metadata/translators', ...options });
 
 /**
+ * Get Verse Translations
+ */
+export const getVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGet = <ThrowOnError extends boolean = false>(options: Options<GetVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGetData, ThrowOnError>) => (options.client ?? client).get<GetVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGetResponses, GetVerseTranslationsApiMetadataQuranVersesSurahIdVerseIdTranslationsGetErrors, ThrowOnError>({ url: '/api/metadata/quran/verses/{surah_id}/{verse_id}/translations', ...options });
+
+/**
  * Reset Preferences
  */
-export const resetPreferencesApiPreferencesDelete = <ThrowOnError extends boolean = false>(options?: Options<ResetPreferencesApiPreferencesDeleteData, ThrowOnError>) => (options?.client ?? client).delete<ResetPreferencesApiPreferencesDeleteResponses, unknown, ThrowOnError>({ url: '/api/preferences/', ...options });
+export const resetPreferencesApiPreferencesDelete = <ThrowOnError extends boolean = false>(options?: Options<ResetPreferencesApiPreferencesDeleteData, ThrowOnError>) => (options?.client ?? client).delete<ResetPreferencesApiPreferencesDeleteResponses, ResetPreferencesApiPreferencesDeleteErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
+    url: '/api/preferences/',
+    ...options
+});
 
 /**
  * Get Preferences
  */
-export const getPreferencesApiPreferencesGet = <ThrowOnError extends boolean = false>(options?: Options<GetPreferencesApiPreferencesGetData, ThrowOnError>) => (options?.client ?? client).get<GetPreferencesApiPreferencesGetResponses, unknown, ThrowOnError>({ url: '/api/preferences/', ...options });
+export const getPreferencesApiPreferencesGet = <ThrowOnError extends boolean = false>(options?: Options<GetPreferencesApiPreferencesGetData, ThrowOnError>) => (options?.client ?? client).get<GetPreferencesApiPreferencesGetResponses, GetPreferencesApiPreferencesGetErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
+    url: '/api/preferences/',
+    ...options
+});
 
 /**
  * Update Preferences
  */
 export const updatePreferencesApiPreferencesPut = <ThrowOnError extends boolean = false>(options: Options<UpdatePreferencesApiPreferencesPutData, ThrowOnError>) => (options.client ?? client).put<UpdatePreferencesApiPreferencesPutResponses, UpdatePreferencesApiPreferencesPutErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'better-auth.session_token',
+            type: 'apiKey'
+        }, { name: 'X-API-Key', type: 'apiKey' }],
     url: '/api/preferences/',
     ...options,
     headers: {
@@ -379,6 +537,29 @@ export const lookupVerseApiVerseLookupGet = <ThrowOnError extends boolean = fals
  * Get Verse Words
  */
 export const getVerseWordsApiQuranVersesSurahIdAyahNumberWordsGet = <ThrowOnError extends boolean = false>(options: Options<GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetData, ThrowOnError>) => (options.client ?? client).get<GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetResponses, GetVerseWordsApiQuranVersesSurahIdAyahNumberWordsGetErrors, ThrowOnError>({ url: '/api/quran/verses/{surah_id}/{ayah_number}/words', ...options });
+
+/**
+ * Handle Polar Webhook
+ *
+ * Handle incoming Polar.sh webhook events.
+ *
+ * Flow:
+ * 1. Read raw body and headers.
+ * 2. Idempotency check via Redis SETNX (24h TTL).
+ * 3. Verify HMAC signature with validate_event().
+ * 4. Route subscription.active / subscription.revoked to tier management.
+ *
+ * Returns 202 Accepted for all responses (Polar canonical response).
+ * Returns 403 for invalid webhook signatures.
+ */
+export const handlePolarWebhookApiWebhooksPolarPost = <ThrowOnError extends boolean = false>(options?: Options<HandlePolarWebhookApiWebhooksPolarPostData, ThrowOnError>) => (options?.client ?? client).post<HandlePolarWebhookApiWebhooksPolarPostResponses, unknown, ThrowOnError>({ url: '/api/webhooks/polar', ...options });
+
+/**
+ * Get Subscription Status
+ *
+ * Return the user's subscription tier and rate limit.
+ */
+export const getSubscriptionStatusApiSubscriptionStatusGet = <ThrowOnError extends boolean = false>(options?: Options<GetSubscriptionStatusApiSubscriptionStatusGetData, ThrowOnError>) => (options?.client ?? client).get<GetSubscriptionStatusApiSubscriptionStatusGetResponses, unknown, ThrowOnError>({ url: '/api/subscription/status', ...options });
 
 /**
  * Health Check

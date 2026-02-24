@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { getEtymologyApiEtymologyRootGet } from "@/lib/api/sdk.gen"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
+import { UpgradeGate } from "@/components/keyword-search/upgrade-gate"
 
 interface RichRootCardProps {
   root: string | null
@@ -18,6 +19,7 @@ interface RichRootCardProps {
   rootBuckwalter?: string | null
   query: string
   language?: "arabic" | "hebrew" | "greek"
+  showEtymology?: boolean
 }
 
 export function RichRootCard({
@@ -26,6 +28,7 @@ export function RichRootCard({
   rootBuckwalter,
   query,
   language = "arabic",
+  showEtymology = true,
 }: RichRootCardProps) {
   const t = useTranslations("KeywordSearch")
   const [showAllForms, setShowAllForms] = useState(false)
@@ -204,126 +207,131 @@ export function RichRootCard({
             </div>
           </div>
 
-          {/* Inline summary (≤200 chars) */}
-          {(data.summary_tr || data.summary_en) && (
-            <div className="space-y-2" data-testid="root-summary">
-              <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-                {t("rootInfo.title")}
-              </h4>
-              <p className="text-center text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                {data.summary_tr || data.summary_en}
-              </p>
-            </div>
-          )}
-
-          {/* Fallback to definition if no summary */}
-          {!data.summary_tr && !data.summary_en && data.definition_tr && (
-            <div className="space-y-2" data-testid="root-definition-tr">
-              <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-                {t("rootInfo.definition")}
-              </h4>
-              <p className="line-clamp-3 text-center text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                {data.definition_tr}
-              </p>
-            </div>
-          )}
-
-          {!data.summary_tr && !data.summary_en && !data.definition_tr && !data.definition_en && (
-            <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
-              <p className="text-xs text-amber-300">{t("translationNotAvailable")}</p>
-            </div>
-          )}
-
-          {morphologicalForms.length > 0 && (
-            <div className="space-y-3" data-testid="morphological-forms">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
-                  {t("rootInfo.forms")}
-                </h4>
-                {hasMoreForms && (
-                  <motion.button
-                    onClick={() => setShowAllForms(!showAllForms)}
-                    whileTap={tactileScale.press}
-                    className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300"
-                  >
-                    {showAllForms ? (
-                      <>
-                        <ChevronDown className="h-3 w-3" />
-                        {t("pagination.previous")}
-                      </>
-                    ) : (
-                      <>
-                        <ChevronRight className="h-3 w-3" />
-                        {t("chart.showAll", {
-                          count: morphologicalForms.length,
-                          type: t("derivedWords.title"),
-                        })}
-                      </>
+          {showEtymology ? (
+            <>
+              {(data.summary_tr || data.summary_en) && (
+                <div className="space-y-2" data-testid="root-summary">
+                  <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
+                    {t("rootInfo.title")}
+                  </h4>
+                  <p className="text-center text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                    {data.summary_tr || data.summary_en}
+                  </p>
+                </div>
+              )}
+              {!data.summary_tr && !data.summary_en && data.definition_tr && (
+                <div className="space-y-2" data-testid="root-definition-tr">
+                  <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
+                    {t("rootInfo.definition")}
+                  </h4>
+                  <p className="line-clamp-3 text-center text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                    {data.definition_tr}
+                  </p>
+                </div>
+              )}
+              {!data.summary_tr &&
+                !data.summary_en &&
+                !data.definition_tr &&
+                !data.definition_en && (
+                  <div className="rounded-md border border-amber-500/30 bg-amber-500/10 p-3">
+                    <p className="text-xs text-amber-300">{t("translationNotAvailable")}</p>
+                  </div>
+                )}
+              {morphologicalForms.length > 0 && (
+                <div className="space-y-3" data-testid="morphological-forms">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold tracking-wide text-[var(--color-text-muted)] uppercase">
+                      {t("rootInfo.forms")}
+                    </h4>
+                    {hasMoreForms && (
+                      <motion.button
+                        onClick={() => setShowAllForms(!showAllForms)}
+                        whileTap={tactileScale.press}
+                        className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300"
+                      >
+                        {showAllForms ? (
+                          <>
+                            <ChevronDown className="h-3 w-3" />
+                            {t("pagination.previous")}
+                          </>
+                        ) : (
+                          <>
+                            <ChevronRight className="h-3 w-3" />
+                            {t("chart.showAll", {
+                              count: morphologicalForms.length,
+                              type: t("derivedWords.title"),
+                            })}
+                          </>
+                        )}
+                      </motion.button>
                     )}
-                  </motion.button>
+                  </div>
+                  <div className="space-y-2">
+                    {displayedForms.map((form, idx) => (
+                      <motion.div
+                        key={`${form.form_arabic}-${idx}`}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ ...springPresets.snappy, delay: idx * 0.05 }}
+                        className="flex items-baseline gap-3 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)]/40 px-3 py-3"
+                      >
+                        {form.form_arabic && (
+                          <span
+                            lang="ar"
+                            className="font-arabic text-base leading-loose text-[var(--color-text-primary)]"
+                            dir="rtl"
+                          >
+                            <bdi>{form.form_arabic}</bdi>
+                          </span>
+                        )}
+                        {form.form_category && (
+                          <span className="text-xs text-[var(--color-text-muted)]">
+                            ({form.form_category})
+                          </span>
+                        )}
+                        {form.example_word && (
+                          <span
+                            lang="ar"
+                            className="font-arabic ml-auto pr-1 text-sm leading-loose text-[var(--color-text-secondary)]"
+                            dir="rtl"
+                          >
+                            <bdi>{form.example_word}</bdi>
+                          </span>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="space-y-2 pt-1">
+                {data.root_buckwalter && (
+                  <Link
+                    href={`/keyword-search/root/${data.root_buckwalter}`}
+                    className={actionLinkClassName}
+                    data-testid="root-detail-link"
+                  >
+                    <BookOpen className="h-3.5 w-3.5" />
+                    <span>{t("accuracy.verificationTitle")}</span>
+                  </Link>
+                )}
+
+                {data.root_buckwalter && (
+                  <Link
+                    href={`/keyword-search/root/${data.root_buckwalter}`}
+                    className={actionLinkClassName}
+                    data-testid="root-dictionary-link"
+                  >
+                    {t("rootInfo.dictionaryMeanings")}
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Link>
                 )}
               </div>
-              <div className="space-y-2">
-                {displayedForms.map((form, idx) => (
-                  <motion.div
-                    key={`${form.form_arabic}-${idx}`}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ ...springPresets.snappy, delay: idx * 0.05 }}
-                    className="flex items-baseline gap-3 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)]/40 px-3 py-3"
-                  >
-                    {form.form_arabic && (
-                      <span
-                        lang="ar"
-                        className="font-arabic text-base leading-loose text-[var(--color-text-primary)]"
-                        dir="rtl"
-                      >
-                        <bdi>{form.form_arabic}</bdi>
-                      </span>
-                    )}
-                    {form.form_category && (
-                      <span className="text-xs text-[var(--color-text-muted)]">
-                        ({form.form_category})
-                      </span>
-                    )}
-                    {form.example_word && (
-                      <span
-                        lang="ar"
-                        className="font-arabic ml-auto pr-1 text-sm leading-loose text-[var(--color-text-secondary)]"
-                        dir="rtl"
-                      >
-                        <bdi>{form.example_word}</bdi>
-                      </span>
-                    )}
-                  </motion.div>
-                ))}
-              </div>
-            </div>
+            </>
+          ) : (
+            <UpgradeGate locked>
+              <div className="h-32 rounded-md bg-zinc-800/50" />
+            </UpgradeGate>
           )}
-
-          <div className="space-y-2 pt-1">
-            {data.root_buckwalter && (
-              <Link
-                href={`/keyword-search/root/${data.root_buckwalter}`}
-                className={actionLinkClassName}
-                data-testid="root-detail-link"
-              >
-                <BookOpen className="h-3.5 w-3.5" />
-                <span>{t("accuracy.verificationTitle")}</span>
-              </Link>
-            )}
-
-            {data.root_buckwalter && (
-              <Link
-                href={`/keyword-search/root/${data.root_buckwalter}`}
-                className={actionLinkClassName}
-                data-testid="root-dictionary-link"
-              >
-                {t("rootInfo.dictionaryMeanings")}
-                <ExternalLink className="h-3.5 w-3.5" />
-              </Link>
-            )}
-          </div>
         </div>
       </MagicCard>
     </motion.div>

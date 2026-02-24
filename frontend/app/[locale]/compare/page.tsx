@@ -126,10 +126,10 @@ function CompareContent() {
   ])
 
   // Keyword state
-  const [advancedMode, setAdvancedMode] = useState(false)
+  const [advancedMode] = useState(false)
   const [quranKeywords, setQuranKeywords] = useState<KeywordSuggestion[]>([])
   const [bibleKeywords, setBibleKeywords] = useState<KeywordSuggestion[]>([])
-  const [isExtractingKeywords, setIsExtractingKeywords] = useState(false)
+  const [, setIsExtractingKeywords] = useState(false)
 
   // Dynamic verse count based on selected collections
   const selectedVerseCount = useMemo(() => {
@@ -795,8 +795,6 @@ function CompareContent() {
                 loadingLabel={t("analyzing")}
                 textareaRef={textareaRef}
               />
-
-
             </form>
           </motion.div>
         </div>

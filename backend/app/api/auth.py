@@ -15,6 +15,8 @@ from app.i18n.messages import get_error_message
 from app.middleware.error_handler import RateLimitError
 from app.middleware.rate_limit import get_user_rate_limit_info
 from app.models import UserStats
+from app.polar_tier import get_tier
+from app.redis_client import redis_manager
 from app.schemas.errors import UnauthorizedResponse
 from app.schemas.responses import MessageResponse
 
@@ -60,6 +62,10 @@ async def check_rate_limit(user: dict, db: AsyncSession, locale: str = "tr") -> 
         return
 
     user_id = user["id"]  # Extract user ID from dict
+
+    # Look up tier from Redis (fail-open to "free")
+    tier = await get_tier(redis_manager.client, user_id)
+    limit = getattr(settings, "tier_rate_limits", {}).get(tier, settings.rate_limit_per_day)
     now = datetime.utcnow()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -89,8 +95,8 @@ async def check_rate_limit(user: dict, db: AsyncSession, locale: str = "tr") -> 
         stats.last_query_date = now
 
     # Check limit
-    if stats.query_count_today >= settings.rate_limit_per_day:
-        message = get_error_message("rate_limit_with_count", locale, limit=settings.rate_limit_per_day)
+    if stats.query_count_today >= limit:
+        message = get_error_message("rate_limit_with_count", locale, limit=limit)
         raise RateLimitError(message=message, locale=locale)
 
     # Increment count

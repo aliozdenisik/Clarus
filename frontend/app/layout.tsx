@@ -1,5 +1,6 @@
 import "./globals.css"
 import { configureApiClient } from "@/lib/api/config"
+import { fontVariableClassNames } from "@/lib/fonts"
 
 configureApiClient()
 
@@ -8,5 +9,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  return children
+  return (
+    <html lang="tr" className="dark" suppressHydrationWarning>
+      <body className={`${fontVariableClassNames} antialiased`} suppressHydrationWarning>
+        {children}
+      </body>
+    </html>
+  )
 }

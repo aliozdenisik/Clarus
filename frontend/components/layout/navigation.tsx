@@ -16,6 +16,7 @@ import {
   FileText,
   Search as SearchIcon,
   Home,
+  CreditCard,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -306,6 +307,19 @@ export default function Navigation() {
                       {t("history")}
                     </Link>
                   </NavigationMenuItem>
+
+                  {/* Pricing Link */}
+                  <NavigationMenuItem>
+                    <Link
+                      href="/pricing"
+                      className={`group hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors ${
+                        isActive("/pricing") ? "text-purple-400" : "text-gray-300"
+                      }`}
+                    >
+                      <CreditCard className="mr-1.5 h-4 w-4" />
+                      {t("pricing")}
+                    </Link>
+                  </NavigationMenuItem>
                 </NavigationMenuList>
               </NavigationMenu>
             ) : (
@@ -536,6 +550,18 @@ export default function Navigation() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {t("history")}
+                </Link>
+                <Link
+                  href="/pricing"
+                  className={`block rounded-md px-3 py-2 text-base ${
+                    isActive("/pricing")
+                      ? "bg-purple-500/20 text-purple-400"
+                      : "text-gray-300 hover:bg-white/5 hover:text-white"
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <CreditCard className="mr-2 inline h-4 w-4" />
+                  {t("pricing")}
                 </Link>
               </div>
 
