@@ -2,6 +2,7 @@
 
 import json
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from importlib import import_module
 from pathlib import Path
 from typing import Any
@@ -70,8 +71,8 @@ class TestTranslationThrottleUtilities:
         assert sleeps == [30.0]
 
 
-@pytest.fixture(scope="module")
-async def conn() -> AsyncGenerator[asyncpg.Connection, None]:
+@asynccontextmanager
+async def _db_conn() -> AsyncGenerator[asyncpg.Connection, None]:
     """Provide an asyncpg connection for schema inspection."""
     connection = await asyncpg.connect(DATABASE_DSN)
     try:
@@ -82,64 +83,66 @@ async def conn() -> AsyncGenerator[asyncpg.Connection, None]:
 
 @pytest.mark.requires_db
 @pytest.mark.anyio
-async def test_qm_root_etymologies_table_exists(conn: asyncpg.Connection) -> None:
+async def test_qm_root_etymologies_table_exists() -> None:
     """qm_root_etymologies table should exist after migration."""
-    exists = await conn.fetchval(
-        """
-        SELECT EXISTS (
-            SELECT 1
-            FROM information_schema.tables
-            WHERE table_schema = 'public' AND table_name = 'qm_root_etymologies'
+    async with _db_conn() as conn:
+        exists = await conn.fetchval(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'qm_root_etymologies'
+            )
+            """
         )
-        """
-    )
-    assert exists is True
+        assert exists is True
 
 
 @pytest.mark.requires_db
 @pytest.mark.anyio
-async def test_qm_root_etymologies_has_all_required_columns_and_types(conn: asyncpg.Connection) -> None:
+async def test_qm_root_etymologies_has_all_required_columns_and_types() -> None:
     """qm_root_etymologies should expose all required columns with expected SQL types."""
-    rows = await conn.fetch(
-        """
-        SELECT column_name, data_type, udt_name
-        FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = 'qm_root_etymologies'
-        """
-    )
-    columns = {
-        row["column_name"]: {
-            "data_type": row["data_type"],
-            "udt_name": row["udt_name"],
+    async with _db_conn() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT column_name, data_type, udt_name
+            FROM information_schema.columns
+            WHERE table_schema = 'public' AND table_name = 'qm_root_etymologies'
+            """
+        )
+        columns = {
+            row["column_name"]: {
+                "data_type": row["data_type"],
+                "udt_name": row["udt_name"],
+            }
+            for row in rows
         }
-        for row in rows
-    }
 
-    required_columns = {
-        "id": {"data_type": {"integer"}, "udt_name": {"int4"}},
-        "root": {"data_type": {"character varying"}, "udt_name": {"varchar"}},
-        "root_buckwalter": {"data_type": {"character varying"}, "udt_name": {"varchar"}},
-        "definition_en": {"data_type": {"text"}, "udt_name": {"text"}},
-        "definition_tr": {"data_type": {"text"}, "udt_name": {"text"}},
-        "semantic_field": {"data_type": {"character varying"}, "udt_name": {"varchar"}},
-        "morphological_forms": {"data_type": {"json"}, "udt_name": {"json"}},
-        "related_roots": {"data_type": {"json"}, "udt_name": {"json"}},
-        "quran_frequency": {"data_type": {"integer"}, "udt_name": {"int4"}},
-        "source": {"data_type": {"character varying"}, "udt_name": {"varchar"}},
-        "lane_match_type": {"data_type": {"character varying"}, "udt_name": {"varchar"}},
-        "lane_volume": {"data_type": {"integer"}, "udt_name": {"int4"}},
-        "confidence": {"data_type": {"character varying"}, "udt_name": {"varchar"}},
-        "tr_translation_source": {"data_type": {"character varying"}, "udt_name": {"varchar"}},
-        "tr_translation_confidence": {"data_type": {"double precision"}, "udt_name": {"float8"}},
-        "created_at": {"data_type": {"timestamp without time zone"}, "udt_name": {"timestamp"}},
-        "updated_at": {"data_type": {"timestamp without time zone"}, "udt_name": {"timestamp"}},
-    }
+        required_columns = {
+            "id": {"data_type": {"integer"}, "udt_name": {"int4"}},
+            "root": {"data_type": {"character varying"}, "udt_name": {"varchar"}},
+            "root_buckwalter": {"data_type": {"character varying"}, "udt_name": {"varchar"}},
+            "definition_en": {"data_type": {"text"}, "udt_name": {"text"}},
+            "definition_tr": {"data_type": {"text"}, "udt_name": {"text"}},
+            "semantic_field": {"data_type": {"character varying"}, "udt_name": {"varchar"}},
+            "morphological_forms": {"data_type": {"json"}, "udt_name": {"json"}},
+            "related_roots": {"data_type": {"json"}, "udt_name": {"json"}},
+            "quran_frequency": {"data_type": {"integer"}, "udt_name": {"int4"}},
+            "source": {"data_type": {"character varying"}, "udt_name": {"varchar"}},
+            "lane_match_type": {"data_type": {"character varying"}, "udt_name": {"varchar"}},
+            "lane_volume": {"data_type": {"integer"}, "udt_name": {"int4"}},
+            "confidence": {"data_type": {"character varying"}, "udt_name": {"varchar"}},
+            "tr_translation_source": {"data_type": {"character varying"}, "udt_name": {"varchar"}},
+            "tr_translation_confidence": {"data_type": {"double precision"}, "udt_name": {"float8"}},
+            "created_at": {"data_type": {"timestamp without time zone"}, "udt_name": {"timestamp"}},
+            "updated_at": {"data_type": {"timestamp without time zone"}, "udt_name": {"timestamp"}},
+        }
 
-    assert set(required_columns).issubset(columns)
+        assert set(required_columns).issubset(columns)
 
-    for column_name, expected_type in required_columns.items():
-        assert columns[column_name]["data_type"] in expected_type["data_type"]
-        assert columns[column_name]["udt_name"] in expected_type["udt_name"]
+        for column_name, expected_type in required_columns.items():
+            assert columns[column_name]["data_type"] in expected_type["data_type"]
+            assert columns[column_name]["udt_name"] in expected_type["udt_name"]
 
 
 async def _has_unique_constraint(conn: asyncpg.Connection, column_name: str) -> bool:
@@ -166,16 +169,18 @@ async def _has_unique_constraint(conn: asyncpg.Connection, column_name: str) -> 
 
 @pytest.mark.requires_db
 @pytest.mark.anyio
-async def test_qm_root_etymologies_root_is_unique(conn: asyncpg.Connection) -> None:
+async def test_qm_root_etymologies_root_is_unique() -> None:
     """root column should have a unique constraint."""
-    assert await _has_unique_constraint(conn, "root") is True
+    async with _db_conn() as conn:
+        assert await _has_unique_constraint(conn, "root") is True
 
 
 @pytest.mark.requires_db
 @pytest.mark.anyio
-async def test_qm_root_etymologies_root_buckwalter_is_unique(conn: asyncpg.Connection) -> None:
+async def test_qm_root_etymologies_root_buckwalter_is_unique() -> None:
     """root_buckwalter column should have a unique constraint."""
-    assert await _has_unique_constraint(conn, "root_buckwalter") is True
+    async with _db_conn() as conn:
+        assert await _has_unique_constraint(conn, "root_buckwalter") is True
 
 
 @pytest.mark.skipif(not ETYMOLOGY_PIPELINE_AVAILABLE, reason="Task 3 etymology pipeline module not yet available")

@@ -74,11 +74,11 @@ python_functions = ["test_*"]
 markers = [
     "requires_db: test requires a running PostgreSQL database (skipped in CI)",
 ]
-collect_ignore_glob = [
-    "tests/run_*.py",
-    "tests/*_verification_test.py",
-    "tests/*_comprehensive_test.py",
-    "tests/test_multi_agent_flow.py",
+addopts = [
+    "--ignore-glob=tests/run_*.py",
+    "--ignore-glob=tests/*_verification_test.py",
+    "--ignore-glob=tests/*_comprehensive_test.py",
+    "--ignore-glob=tests/test_multi_agent_flow.py",
 ]
 
 [tool.hatch.build.targets.wheel]

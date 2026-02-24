@@ -777,7 +777,10 @@
     "translationNotAvailable": "Translation not available",
     "previousVerse": "Previous Verse",
     "nextVerse": "Next Verse",
-    "failedToLoadVerse": "Failed to load verse translations"
+    "failedToLoadVerse": "Failed to load verse translations",
+    "verseLookupTitle": "Look Up Verse",
+    "verseLookupDescription": "Go directly to a verse (e.g., Al-Baqarah 183 or 2:183)",
+    "verseLookupPlaceholder": "Al-Baqarah 183 or 2:183"
   },
   "History": {
     "title": "Search History",

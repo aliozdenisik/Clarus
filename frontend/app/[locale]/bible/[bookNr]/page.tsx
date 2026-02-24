@@ -12,7 +12,8 @@ import { toast } from "sonner"
 import { ArrowLeft, BookOpen, User, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { API_BASE } from "@/lib/config"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
+import { getBibleBookDisplayName } from "@/lib/utils/bible-book-names"
 
 interface ChapterSummary {
   chapter: number
@@ -40,6 +41,7 @@ interface ChapterContent {
 export default function BookDetailPage() {
   const t = useTranslations("BibleBrowse")
   const tCommon = useTranslations("Common")
+  const locale = useLocale()
   const params = useParams()
   const bookNr = params.bookNr as string
   const searchParams = useSearchParams()
@@ -92,10 +94,13 @@ export default function BookDetailPage() {
             credentials: "include",
             signal: controller.signal,
           }),
-          fetch(`${API_BASE}/api/metadata/bible/books/${bookNr}/chapters/${targetChapter}`, {
-            credentials: "include",
-            signal: controller.signal,
-          }),
+          fetch(
+            `${API_BASE}/api/metadata/bible/books/${bookNr}/chapters/${targetChapter}?locale=${locale}`,
+            {
+              credentials: "include",
+              signal: controller.signal,
+            }
+          ),
         ])
 
         if (controller.signal.aborted) {
@@ -148,7 +153,7 @@ export default function BookDetailPage() {
     return () => {
       controller.abort()
     }
-  }, [user, bookNr, searchParams, t])
+  }, [user, bookNr, searchParams, t, locale])
 
   // Fetch chapter content when user switches chapters (after initial load)
   const initialChapterRef = useRef<number | null>(null)
@@ -173,7 +178,7 @@ export default function BookDetailPage() {
       setIsLoadingChapter(true)
       try {
         const response = await fetch(
-          `${API_BASE}/api/metadata/bible/books/${bookNr}/chapters/${selectedChapter}`,
+          `${API_BASE}/api/metadata/bible/books/${bookNr}/chapters/${selectedChapter}?locale=${locale}`,
           { credentials: "include", signal: controller.signal }
         )
 
@@ -210,7 +215,7 @@ export default function BookDetailPage() {
     return () => {
       controller.abort()
     }
-  }, [user, bookNr, selectedChapter, chapterContent?.chapter, t])
+  }, [user, bookNr, selectedChapter, chapterContent?.chapter, t, locale])
 
   // Scroll to verse when chapter content loads and highlightedVerse is set.
   // Uses polling because AnimatePresence mode="wait" delays DOM mounting
@@ -352,10 +357,12 @@ export default function BookDetailPage() {
         >
           <div className="mb-2 flex items-center gap-3">
             <BookOpen className="h-8 w-8 text-[var(--color-accent-primary)]" />
-            <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">{book.name}</h1>
+            <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">
+              {getBibleBookDisplayName(book.name, locale)}
+            </h1>
           </div>
           <p className="text-[var(--color-text-muted)]">
-            {getTestamentLabel()} • {book.chapters.length} chapters
+            {getTestamentLabel()} • {tCommon("chapters", { count: book.chapters.length })}
           </p>
         </motion.div>
 

@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { logger } from "@/lib/logger"
 import { getBibleBooksApiMetadataBibleBooksGet } from "@/lib/api/sdk.gen"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
+import { TURKISH_OT_NAMES, getBibleBookDisplayName } from "@/lib/utils/bible-book-names"
 
 interface Book {
   nr: number
@@ -68,6 +69,7 @@ const HEBREW_NAMES: Record<string, string> = {
 export default function OldTestamentPage() {
   const t = useTranslations("BibleBrowse")
   const tCommon = useTranslations("Common")
+  const locale = useLocale()
   const [books, setBooks] = useState<Book[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -124,7 +126,8 @@ export default function OldTestamentPage() {
   const filteredBooks = books.filter(
     (book) =>
       book.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (HEBREW_NAMES[book.name] || "").toLowerCase().includes(searchQuery.toLowerCase())
+      (HEBREW_NAMES[book.name] || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (TURKISH_OT_NAMES[book.name] || "").toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
@@ -224,7 +227,7 @@ export default function OldTestamentPage() {
                     <div className="flex h-full flex-col justify-between">
                       <div>
                         <h3 className="text-xl font-bold text-[var(--color-text-primary)] transition-colors group-hover:text-[var(--color-accent-primary)]">
-                          {book.name}
+                          {getBibleBookDisplayName(book.name, locale)}
                         </h3>
                         <p className="mt-1 text-sm text-[var(--color-text-secondary)] italic">
                           {HEBREW_NAMES[book.name] || book.name}

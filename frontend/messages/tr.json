@@ -777,7 +777,10 @@
     "translationNotAvailable": "Çeviri mevcut değil",
     "previousVerse": "Önceki Ayet",
     "nextVerse": "Sonraki Ayet",
-    "failedToLoadVerse": "Ayet çevirileri yüklenemedi"
+    "failedToLoadVerse": "Ayet çevirileri yüklenemedi",
+    "verseLookupTitle": "Ayet Ara",
+    "verseLookupDescription": "Doğrudan bir ayete git (örn: Bakara 183 veya 2:183)",
+    "verseLookupPlaceholder": "Bakara 183 veya 2:183"
   },
   "History": {
     "title": "Arama Geçmişi",

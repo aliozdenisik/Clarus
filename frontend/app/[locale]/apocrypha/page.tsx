@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { logger } from "@/lib/logger"
 import { API_BASE } from "@/lib/config"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
+import { TURKISH_APOCRYPHA_NAMES, getBibleBookDisplayName } from "@/lib/utils/bible-book-names"
 
 interface Book {
   nr: number
@@ -25,6 +26,7 @@ interface Book {
 export default function ApocryphaPage() {
   const t = useTranslations("BibleBrowse")
   const tCommon = useTranslations("Common")
+  const locale = useLocale()
   const [books, setBooks] = useState<Book[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -84,8 +86,10 @@ export default function ApocryphaPage() {
     toast.success(tCommon("logoutSuccess"))
   }
 
-  const filteredBooks = books.filter((book) =>
-    book.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredBooks = books.filter(
+    (book) =>
+      book.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (TURKISH_APOCRYPHA_NAMES[book.name] || "").toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
@@ -185,7 +189,7 @@ export default function ApocryphaPage() {
                     <div className="flex h-full flex-col justify-between">
                       <div>
                         <h3 className="text-xl font-bold text-[var(--color-text-primary)] transition-colors group-hover:text-[var(--color-accent-primary)]">
-                          {book.name}
+                          {getBibleBookDisplayName(book.name, locale)}
                         </h3>
                       </div>
                       <div className="mt-4 flex items-center justify-between border-t border-[var(--color-border-subtle)] pt-4 text-xs text-[var(--color-text-muted)]">
