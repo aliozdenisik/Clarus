@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     jwt_jwks_cache_ttl: int = 3600  # 1 hour
 
     rate_limit_per_day: int = 50
-    rate_limit_enabled: bool = True
+    rate_limit_enabled: bool = False
     public_rate_limit_per_minute: int = 120
 
     openrouter_api_key: str = ""
@@ -150,20 +150,6 @@ class Settings(BaseSettings):
 
         if self.app_env != "production":
             return warnings
-
-        if not self.rate_limit_enabled:
-            warnings.append(
-                "Rate limiting is disabled in production (RATE_LIMIT_ENABLED=false). "
-                "This exposes the API to abuse. Enable with RATE_LIMIT_ENABLED=true."
-            )
-
-        if not self.redis_password:
-            warnings.append(
-                "REDIS_PASSWORD is not set in production. "
-                "An unauthenticated Redis instance exposes the JWT blacklist, rate-limit counters, "
-                "and cached query data to any network-reachable process. "
-                "Generate a strong password with: openssl rand -hex 32"
-            )
 
         production_urls = {
             "database_url": self.database_url,

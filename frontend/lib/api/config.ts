@@ -1,7 +1,8 @@
 import { client } from "./client.gen"
+import { API_BASE } from "@/lib/config"
 export function configureApiClient(): void {
   client.setConfig({
-    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000",
+    baseUrl: API_BASE,
     credentials: "include",
   })
 }
