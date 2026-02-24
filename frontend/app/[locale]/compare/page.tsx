@@ -28,6 +28,7 @@ import {
 } from "@/lib/utils/parse-citations"
 import { useLogger } from "@/lib/logger"
 import { AnalysisProgress } from "@/components/compare/analysis-progress"
+import { RateLimitBanner } from "@/components/search/rate-limit-banner"
 import type { KeywordSuggestion } from "@/lib/stores/keyword-store"
 import type { CompareRequest } from "@/lib/api/types.gen"
 import { compareScripturesApiComparePost } from "@/lib/api/sdk.gen"
@@ -130,6 +131,7 @@ function CompareContent() {
   const [quranKeywords, setQuranKeywords] = useState<KeywordSuggestion[]>([])
   const [bibleKeywords, setBibleKeywords] = useState<KeywordSuggestion[]>([])
   const [, setIsExtractingKeywords] = useState(false)
+  const [isRateLimited, setIsRateLimited] = useState(false)
 
   // Dynamic verse count based on selected collections
   const selectedVerseCount = useMemo(() => {
@@ -151,7 +153,13 @@ function CompareContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const { data: sseData, isStreaming, error: sseError, startStream } = useSSE()
+  const {
+    data: sseData,
+    isStreaming,
+    error: sseError,
+    errorCode: sseErrorCode,
+    startStream,
+  } = useSSE()
   const { enable_streaming } = usePreferencesStore()
 
   const t = useTranslations("Compare")
@@ -388,6 +396,18 @@ function CompareContent() {
           return
         }
 
+        if (response.error) {
+          const errorBody = response.error as { error?: { code?: string } }
+          if (errorBody.error?.code === "RATE_LIMIT_EXCEEDED") {
+            setIsRateLimited(true)
+            setIsLoading(false)
+            return
+          }
+          toast.error(tToast("compareFailed"))
+          setIsLoading(false)
+          return
+        }
+
         const data = response.data as CompareResult
 
         if (controller.signal.aborted) {
@@ -435,6 +455,7 @@ function CompareContent() {
       setIsLoading(true)
       setResult(null)
       setExpandedParagraphs(new Set())
+      setIsRateLimited(false)
       lastHandledSseError.current = null
 
       if (enable_streaming) {
@@ -604,10 +625,15 @@ function CompareContent() {
   useEffect(() => {
     if (sseError && sseError !== lastHandledSseError.current) {
       lastHandledSseError.current = sseError
+      if (sseErrorCode === "RATE_LIMIT_EXCEEDED") {
+        setIsRateLimited(true)
+        setIsLoading(false)
+        return
+      }
       toast.error(tToast("compareFailed"))
       performBatchCompare(topic)
     }
-  }, [sseError, topic, performBatchCompare, tToast])
+  }, [sseError, sseErrorCode, topic, performBatchCompare, tToast])
 
   const handleCompare = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -632,6 +658,7 @@ function CompareContent() {
     setIsLoading(true)
     setResult(null)
     setExpandedParagraphs(new Set())
+    setIsRateLimited(false)
     lastHandledSseError.current = null
 
     // If advanced mode is ON, extract keywords first
@@ -850,8 +877,10 @@ function CompareContent() {
             </motion.section>
           )}
 
+          {isRateLimited && <RateLimitBanner />}
+
           {/* Loading State & Streaming Progress - Outside Suspense (renders immediately) */}
-          {(isLoading || isStreaming) && (
+          {(isLoading || isStreaming) && !isRateLimited && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

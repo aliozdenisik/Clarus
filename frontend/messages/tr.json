@@ -843,6 +843,12 @@
     "rateLimitExceeded": "Hız sınırı aşıldı. Lütfen daha sonra tekrar deneyin.",
     "serverError": "Sunucu hatası. Lütfen daha sonra tekrar deneyin."
   },
+  "RateLimit": {
+    "title": "Günlük Limit Doldu",
+    "description": "Günlük sorgu hakkınızı kullandınız. Daha fazla arama için planınızı yükseltin.",
+    "upgradeButton": "Planları Gör",
+    "resetInfo": "Limitiniz gece yarısı (UTC) sıfırlanır."
+  },
   "Errors": {
     "notFound": "Sayfa bulunamadı",
     "notFoundMessage": "Aradığınız sayfa mevcut değil.",

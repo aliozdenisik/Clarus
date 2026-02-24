@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { ExternalLink, Search } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { SearchTabs, SearchSource } from "@/components/search/search-tabs"
+import { RateLimitBanner } from "@/components/search/rate-limit-banner"
 import { useSSE } from "@/lib/hooks/use-sse"
 import { usePreferencesStore } from "@/lib/stores/preferences-store"
 import { parseCitations } from "@/lib/utils/parse-citations"
@@ -75,6 +76,7 @@ function SearchContent() {
   const [detectedLanguage, setDetectedLanguage] = useState<string | undefined>(undefined)
   const [selectedTranslator, setSelectedTranslator] = useState("diyanet")
   const [isEnhancing, setIsEnhancing] = useState(false)
+  const [isRateLimited, setIsRateLimited] = useState(false)
   const resultsContainerRef = useRef<HTMLDivElement>(null)
   const hasHandledSSEError = useRef(false)
   const hasAutoExecuted = useRef(false)
@@ -96,7 +98,13 @@ function SearchContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const { data: sseData, isStreaming, error: sseError, startStream } = useSSE()
+  const {
+    data: sseData,
+    isStreaming,
+    error: sseError,
+    errorCode: sseErrorCode,
+    startStream,
+  } = useSSE()
   const { enable_streaming } = usePreferencesStore()
 
   const t = useTranslations("Search")
@@ -220,6 +228,7 @@ function SearchContent() {
     setStreamedAnswer("")
     setVerseDetails({})
     setHighlightedVerse(null)
+    setIsRateLimited(false)
     resetKeywordStore()
     const params = new URLSearchParams()
     params.set("source", tab)
@@ -341,7 +350,12 @@ function SearchContent() {
     !streamedAnswer
 
   const isNoResultsState =
-    hasSearched && !isSearching && !isStreaming && results.length === 0 && !streamedAnswer
+    hasSearched &&
+    !isSearching &&
+    !isStreaming &&
+    results.length === 0 &&
+    !streamedAnswer &&
+    !isRateLimited
 
   const suspenseSkeletonKeys = [
     "search-suspense-skeleton-a",
@@ -504,6 +518,18 @@ function SearchContent() {
           return
         }
 
+        if (response.error) {
+          const errorBody = response.error as { error?: { code?: string } }
+          if (errorBody.error?.code === "RATE_LIMIT_EXCEEDED") {
+            setIsRateLimited(true)
+            setIsSearching(false)
+            return
+          }
+          toast.error(tToast("searchFailed"))
+          setIsSearching(false)
+          return
+        }
+
         const data = response.data as {
           results: SearchResult[]
           verse_details?: Record<string, VerseDetail>
@@ -547,10 +573,15 @@ function SearchContent() {
   useEffect(() => {
     if (sseError && !hasHandledSSEError.current) {
       hasHandledSSEError.current = true
+      if (sseErrorCode === "RATE_LIMIT_EXCEEDED") {
+        setIsRateLimited(true)
+        setIsSearching(false)
+        return
+      }
       toast.error(tToast("searchFailed"))
       performBatchSearch()
     }
-  }, [sseError, performBatchSearch, tToast])
+  }, [sseError, sseErrorCode, performBatchSearch, tToast])
 
   // Auto-execute search from URL q param (history re-run)
   useEffect(() => {
@@ -564,6 +595,7 @@ function SearchContent() {
       setResults([])
       setStreamedAnswer("")
       setVerseDetails({})
+      setIsRateLimited(false)
       hasHandledSSEError.current = false
 
       if (enable_streaming) {
@@ -601,6 +633,7 @@ function SearchContent() {
     setStreamedAnswer("")
     setVerseDetails({})
     setHighlightedVerse(null)
+    setIsRateLimited(false)
     hasHandledSSEError.current = false
 
     // If keywords are selected, perform keyword-based search
@@ -837,6 +870,8 @@ function SearchContent() {
             </motion.div>
           )}
 
+          {isRateLimited && <RateLimitBanner />}
+
           {/* AI Answer Section - Outside Suspense (renders immediately) */}
           <AnimatePresence>
             {streamedAnswer && (
@@ -892,7 +927,7 @@ function SearchContent() {
             }
           >
             {/* Loading skeletons - no answer yet */}
-            {isSearching && !results.length && !streamedAnswer && (
+            {isSearching && !results.length && !streamedAnswer && !isRateLimited && (
               <div className="space-y-3">
                 {loadingSkeletonKeys.map((key) => (
                   <Skeleton key={key} className="h-24 w-full rounded-lg" />
@@ -901,7 +936,7 @@ function SearchContent() {
             )}
 
             {/* Loading skeletons - answer streaming, waiting for sources */}
-            {isSearching && !results.length && streamedAnswer && (
+            {isSearching && !results.length && streamedAnswer && !isRateLimited && (
               <div className="space-y-3">
                 <div className="mb-6 h-px bg-[var(--color-border-subtle)]" />
                 <p className="mb-4 text-xs tracking-wide text-[var(--color-text-muted)] uppercase">

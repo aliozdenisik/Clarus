@@ -38,8 +38,13 @@ export interface UseSSEReturn {
   data: SSEMessage[]
   isStreaming: boolean
   error: string | null
+  errorCode?: string | null
   startStream: (url: string) => void
   stopStream: () => void
+}
+
+interface RateLimitStatusResponse {
+  remaining?: number
 }
 
 /**
@@ -61,6 +66,7 @@ export function useSSE(): UseSSEReturn {
   const [data, setData] = useState<SSEMessage[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [errorCode, setErrorCode] = useState<string | null>(null)
   const eventSourceRef = useRef<EventSource | null>(null)
   const currentUrlRef = useRef<string | null>(null)
   const retryCountRef = useRef(0)
@@ -142,6 +148,7 @@ export function useSSE(): UseSSEReturn {
 
           if (message.type === "error") {
             setError(message.error ?? "Stream error occurred")
+            setErrorCode(message.error_code ?? null)
             eventSource.close()
             if (eventSourceRef.current === eventSource) {
               eventSourceRef.current = null
@@ -183,6 +190,7 @@ export function useSSE(): UseSSEReturn {
         }
 
         setError(null)
+        setErrorCode(null)
         retryCountRef.current = 0
       }
 
@@ -206,10 +214,6 @@ export function useSSE(): UseSSEReturn {
             // Calculate exponential backoff: 1s, 2s, 4s
             const delay = Math.pow(2, retryCountRef.current) * 1000
 
-            toast.info("Connection lost", {
-              description: `Reconnecting... (${retryCountRef.current + 1}/${MAX_RETRIES})`,
-            })
-
             reconnectTimeoutRef.current = setTimeout(() => {
               reconnectTimeoutRef.current = null
 
@@ -217,8 +221,42 @@ export function useSSE(): UseSSEReturn {
                 return
               }
 
-              retryCountRef.current += 1
-              startStreamInternalRef.current?.(currentUrlRef.current)
+              ;(async () => {
+                if (process.env.NODE_ENV !== "test") {
+                  try {
+                    const rateLimitCheck = await fetch("/api/auth/rate-limit", {
+                      credentials: "include",
+                    })
+                    if (rateLimitCheck.ok) {
+                      const rateLimitData = (await rateLimitCheck.json()) as RateLimitStatusResponse
+                      if (rateLimitData.remaining === 0) {
+                        if (isMountedRef.current) {
+                          setErrorCode("RATE_LIMIT_EXCEEDED")
+                          setError("RATE_LIMIT_EXCEEDED")
+                          setIsStreaming(false)
+                        }
+                        return
+                      }
+                    }
+                  } catch {}
+                }
+
+                if (
+                  !isMountedRef.current ||
+                  !shouldReconnectRef.current ||
+                  !currentUrlRef.current
+                ) {
+                  return
+                }
+
+                // Show reconnection toast only after confirming it's not a rate limit
+                toast.info("Connection lost", {
+                  description: `Reconnecting... (${retryCountRef.current + 1}/${MAX_RETRIES})`,
+                })
+
+                retryCountRef.current += 1
+                startStreamInternalRef.current?.(currentUrlRef.current)
+              })()
             }, delay)
           } else {
             // Max retries reached - fall back to POST
@@ -266,6 +304,7 @@ export function useSSE(): UseSSEReturn {
       // Reset state for new stream
       setData([])
       setError(null)
+      setErrorCode(null)
       setIsStreaming(true)
       retryCountRef.current = 0
 
@@ -297,6 +336,7 @@ export function useSSE(): UseSSEReturn {
     data,
     isStreaming,
     error,
+    errorCode,
     startStream,
     stopStream,
   }

@@ -212,6 +212,7 @@ describe("SearchPage", () => {
       error: null,
       startStream: mockStartStream,
       stopStream: vi.fn(),
+      errorCode: null,
     } as never)
 
     // Default preferences
