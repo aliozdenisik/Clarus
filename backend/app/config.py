@@ -102,8 +102,17 @@ class Settings(BaseSettings):
             return f"redis://:{self.redis_password}@{self.redis_host}:{self.redis_port}/{self.redis_db}"
         return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
 
-    def validate_production_settings(self) -> None:
-        """Raise RuntimeError if dangerous settings are used in production."""
+    def validate_production_settings(self) -> list[str]:
+        """Validate settings for production safety.
+
+        Returns a list of warning messages for non-critical issues.
+        Raises RuntimeError only for truly dangerous misconfigurations
+        that would cause security vulnerabilities or data corruption.
+        """
+        warnings: list[str] = []
+
+        # === HARD FAILURES (always crash — security vulnerabilities) ===
+
         if self.cors_allow_credentials and "*" in self.cors_origins_list:
             raise RuntimeError(
                 "CORS misconfiguration: allow_credentials=true cannot be used with wildcard origins. "
@@ -113,43 +122,7 @@ class Settings(BaseSettings):
         if self.debug and self.app_env == "production":
             raise RuntimeError("Debug mode must be disabled in production (set DEBUG=false)")
 
-        if self.app_env == "production" and not self.rate_limit_enabled:
-            raise RuntimeError("Rate limiting must be enabled in production (set RATE_LIMIT_ENABLED=true)")
-
-        if self.app_env == "production" and not self.redis_password:
-            raise RuntimeError(
-                "REDIS_PASSWORD must be set in production. "
-                "An unauthenticated Redis instance exposes the JWT blacklist, rate-limit counters, "
-                "and cached query data to any network-reachable process. "
-                "Generate a strong password with: openssl rand -hex 32"
-            )
-
-        if self.app_env == "production":
-            production_urls = {
-                "database_url": self.database_url,
-                "better_auth_jwks_url": self.better_auth_jwks_url,
-                "better_auth_issuer": self.better_auth_issuer,
-            }
-
-            for key, value in production_urls.items():
-                parsed = urlparse(value)
-                host = (parsed.hostname or "").lower()
-                if host in {"localhost", "127.0.0.1", "::1"}:
-                    raise RuntimeError(f"{key} cannot point to localhost in production")
-
-            if self.better_auth_jwks_url.startswith("http://"):
-                raise RuntimeError("BETTER_AUTH_JWKS_URL must use HTTPS in production")
-
-            if self.better_auth_issuer.startswith("http://"):
-                raise RuntimeError("BETTER_AUTH_ISSUER must use HTTPS in production")
-
-            for origin in self.cors_origins_list:
-                parsed = urlparse(origin)
-                host = (parsed.hostname or "").lower()
-                if host in {"localhost", "127.0.0.1", "::1"}:
-                    raise RuntimeError("CORS_ORIGINS cannot contain localhost in production")
-
-        # JWT secret validation: check for weak/default values
+        # JWT secret validation: check for weak/default values (applies to all envs)
         _weak_jwt_patterns = (
             "",
             "your-secret-key-change-in-production",
@@ -172,13 +145,60 @@ class Settings(BaseSettings):
                     "JWT_SECRET_KEY is set but is too weak or uses a known default pattern. "
                     "Generate a strong secret with: openssl rand -hex 32"
                 )
-        elif self.app_env == "production":
-            import logging
 
-            logging.getLogger(__name__).warning(
+        # === SOFT WARNINGS (production only — log but don't crash) ===
+
+        if self.app_env != "production":
+            return warnings
+
+        if not self.rate_limit_enabled:
+            warnings.append(
+                "Rate limiting is disabled in production (RATE_LIMIT_ENABLED=false). "
+                "This exposes the API to abuse. Enable with RATE_LIMIT_ENABLED=true."
+            )
+
+        if not self.redis_password:
+            warnings.append(
+                "REDIS_PASSWORD is not set in production. "
+                "An unauthenticated Redis instance exposes the JWT blacklist, rate-limit counters, "
+                "and cached query data to any network-reachable process. "
+                "Generate a strong password with: openssl rand -hex 32"
+            )
+
+        production_urls = {
+            "database_url": self.database_url,
+            "better_auth_jwks_url": self.better_auth_jwks_url,
+            "better_auth_issuer": self.better_auth_issuer,
+        }
+        for key, value in production_urls.items():
+            parsed = urlparse(value)
+            host = (parsed.hostname or "").lower()
+            if host in {"localhost", "127.0.0.1", "::1"}:
+                warnings.append(f"{key} points to localhost in production — update to production host")
+
+        if self.better_auth_jwks_url.startswith("http://"):
+            warnings.append("BETTER_AUTH_JWKS_URL should use HTTPS in production")
+
+        if self.better_auth_issuer.startswith("http://"):
+            warnings.append("BETTER_AUTH_ISSUER should use HTTPS in production")
+
+        for origin in self.cors_origins_list:
+            parsed = urlparse(origin)
+            host = (parsed.hostname or "").lower()
+            if host in {"localhost", "127.0.0.1", "::1"}:
+                warnings.append(
+                    f"CORS_ORIGINS contains localhost origin '{origin}' in production — "
+                    "remove localhost origins for production deployment"
+                )
+                break  # One warning is enough
+
+        if not self.jwt_secret_key:
+            warnings.append(
                 "JWT_SECRET_KEY is not set. Better Auth JWKS is the primary auth mechanism. "
                 "Set JWT_SECRET_KEY only if legacy JWT auth is still needed."
             )
+
+        return warnings
 
 
 @lru_cache
