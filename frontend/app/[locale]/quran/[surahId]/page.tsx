@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
@@ -43,9 +43,11 @@ export default function SurahDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [highlightedVerse, setHighlightedVerse] = useState<number | null>(null)
+  const locale = useLocale()
+  const defaultTranslator: TranslatorKey = locale === "en" ? "arberry" : "diyanet"
   const [selectedTranslator, setSelectedTranslator] = useState<TranslatorKey>(() => {
     if (typeof window === "undefined") {
-      return "diyanet"
+      return defaultTranslator
     }
 
     const storedTranslator = localStorage.getItem(TRANSLATOR_STORAGE_KEY)
@@ -53,7 +55,7 @@ export default function SurahDetailPage() {
       return storedTranslator as TranslatorKey
     }
 
-    return "diyanet"
+    return defaultTranslator
   })
   const hasLoadedSurahRef = useRef(false)
   const router = useRouter()
@@ -201,7 +203,7 @@ export default function SurahDetailPage() {
         <SurahHeader
           id={surah.id}
           nameArabic={surah.name_arabic}
-          transliteration={surah.transliteration}
+          transliteration={locale === "tr" ? surah.name : surah.transliteration}
           type={surah.type}
           totalVerses={surah.total_verses}
         />

@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from pathlib import Path
 
@@ -12,7 +13,66 @@ from src.tanzil_loader import TanzilLoader
 router = APIRouter()
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data")
-QDRANT_URL = "http://localhost:6333"
+QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
+
+logger = logging.getLogger(__name__)
+
+
+# Turkish Bible collection mapping by testament
+_TR_BIBLE_COLLECTIONS: dict[str, str] = {
+    "old_testament": "bible_tr_ot",
+    "new_testament": "bible_tr_nt",
+}
+
+
+async def _fetch_turkish_chapter_verses(book_name: str, chapter_nr: int, testament: str) -> list[dict[str, int | str]]:
+    """Fetch Turkish Bible chapter verses from Qdrant."""
+    collection = _TR_BIBLE_COLLECTIONS.get(testament)
+    if not collection:
+        return []
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{QDRANT_URL}/collections/{collection}/points/scroll",
+                json={
+                    "limit": 200,
+                    "with_payload": True,
+                    "filter": {
+                        "must": [
+                            {"key": "book", "match": {"value": book_name}},
+                            {"key": "chapter", "match": {"value": chapter_nr}},
+                        ]
+                    },
+                },
+                timeout=10.0,
+            )
+            if response.status_code != 200:
+                logger.warning(
+                    "Qdrant scroll failed for Turkish Bible: %s",
+                    response.status_code,
+                )
+                return []
+
+            data = response.json()
+            points = data.get("result", {}).get("points", [])
+
+            verses = []
+            for point in points:
+                payload = point.get("payload", {})
+                verses.append(
+                    {
+                        "verse": payload.get("verse", 0),
+                        "text": payload.get("text", ""),
+                    }
+                )
+
+            verses.sort(key=lambda v: v["verse"])
+            return verses
+
+    except httpx.RequestError as exc:
+        logger.warning("Failed to fetch Turkish Bible verses: %s", exc)
+        return []
 
 
 def safe_path(base: str, filename: str) -> str:
@@ -290,7 +350,11 @@ async def get_book_detail(book_nr: int):
 
 
 @router.get("/bible/books/{book_nr}/chapters/{chapter_nr}", response_model=MetadataResponse)
-async def get_chapter_verses(book_nr: int, chapter_nr: int):
+async def get_chapter_verses(
+    book_nr: int,
+    chapter_nr: int,
+    locale: str = Query(default="en", description="Locale for verse text (en or tr)"),
+):
     bible_data = _load_bible_data()
 
     book = next((b for b in bible_data.get("books", []) if b.get("nr") == book_nr), None)
@@ -301,11 +365,29 @@ async def get_chapter_verses(book_nr: int, chapter_nr: int):
     if not chapter:
         raise HTTPException(status_code=404, detail=f"Chapter {chapter_nr} not found")
 
+    book_name = book.get("name", "")
+    testament = _get_testament(book_nr)
+
+    # When locale is Turkish, try fetching from Qdrant Turkish collections
+    if locale == "tr" and testament in _TR_BIBLE_COLLECTIONS:
+        tr_verses = await _fetch_turkish_chapter_verses(book_name, chapter_nr, testament)
+        if tr_verses:
+            return MetadataResponse(
+                data={
+                    "book_name": book_name,
+                    "chapter": chapter_nr,
+                    "verses": tr_verses,
+                    "locale": "tr",
+                }
+            )
+        # Fall through to English if Turkish not available
+
     return MetadataResponse(
         data={
-            "book_name": book.get("name", ""),
+            "book_name": book_name,
             "chapter": chapter_nr,
             "verses": chapter.get("verses", []),
+            "locale": "en",
         }
     )
 

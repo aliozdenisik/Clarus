@@ -12,6 +12,7 @@ import { VerseLookupInput } from "@/components/verse-lookup"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { useLocale } from "next-intl"
 import { BookOpen, Search, User, LogOut } from "lucide-react"
 import { getQuranSurahsApiMetadataQuranSurahsGet } from "@/lib/api/sdk.gen"
 
@@ -45,6 +46,7 @@ export default function QuranPage() {
   const router = useRouter()
   const t = useTranslations("QuranBrowse")
   const tCommon = useTranslations("Common")
+  const locale = useLocale()
 
   useEffect(() => {
     const controller = new AbortController()
@@ -69,7 +71,10 @@ export default function QuranPage() {
         const mappedSurahs: Surah[] = surahList.map((s: ApiSurah) => ({
           id: s.id,
           name: s.name_arabic || s.name || "",
-          name_transliterated: s.transliteration || s.name_transliterated || s.name || "",
+          name_transliterated:
+            locale === "tr"
+              ? s.name || s.transliteration || s.name_transliterated || ""
+              : s.transliteration || s.name_transliterated || s.name || "",
           verse_count: s.total_verses || s.verse_count || 0,
           revelation_type: s.type || s.revelation_type || "",
         }))
@@ -100,12 +105,12 @@ export default function QuranPage() {
     return () => {
       controller.abort()
     }
-  }, [t])
+  }, [t, locale])
 
   const handleLogout = async () => {
     await signOut()
     router.push("/sign-in")
-    toast.success("Logged out successfully")
+    toast.success(tCommon("logoutSuccess"))
   }
 
   const filteredSurahs = surahs.filter(
@@ -138,7 +143,7 @@ export default function QuranPage() {
               className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
             >
               <Search className="h-4 w-4" />
-              Search
+              {tCommon("search")}
             </Button>
             {user && (
               <Button
@@ -148,7 +153,7 @@ export default function QuranPage() {
                 className="flex items-center gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
               >
                 <LogOut className="h-4 w-4" />
-                Logout
+                {tCommon("logout")}
               </Button>
             )}
           </div>
@@ -163,13 +168,13 @@ export default function QuranPage() {
         >
           <div className="mb-3">
             <h2 className="text-sm font-medium tracking-wide text-[var(--color-text-secondary)] uppercase">
-              Ayet Ara
+              {t("verseLookupTitle")}
             </h2>
             <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-              Doğrudan bir ayete git (örn: Bakara 183 veya 2:183)
+              {t("verseLookupDescription")}
             </p>
           </div>
-          <VerseLookupInput placeholder="Bakara 183 veya 2:183" />
+          <VerseLookupInput placeholder={t("verseLookupPlaceholder")} />
         </motion.div>
 
         {/* Divider */}
