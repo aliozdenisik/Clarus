@@ -2,28 +2,21 @@
 
 import { useQuery } from "@tanstack/react-query"
 import { useSession } from "@/lib/auth-client"
-import { API_BASE } from "@/lib/config"
-
-interface SubscriptionStatus {
-  tier: "free" | "starter" | "pro"
-  limit: number
-}
+import { getSubscriptionStatusApiSubscriptionStatusGet } from "@/lib/api/sdk.gen"
 
 export function useSubscription() {
   const { data: session } = useSession()
   const userId = session?.user?.id
 
-  const { data } = useQuery<SubscriptionStatus>({
+  const { data } = useQuery({
     queryKey: ["subscription-status", userId],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE}/api/subscription/status`, {
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      })
-      if (!response.ok) {
+      try {
+        const response = await getSubscriptionStatusApiSubscriptionStatusGet()
+        return response.data as { tier: "free" | "starter" | "pro"; limit: number }
+      } catch {
         return { tier: "free" as const, limit: 5 }
       }
-      return response.json() as Promise<SubscriptionStatus>
     },
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,

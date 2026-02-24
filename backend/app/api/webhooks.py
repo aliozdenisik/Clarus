@@ -19,14 +19,20 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/polar")
+@router.post(
+    "/polar",
+    responses={
+        202: {"description": "Accepted — event processed, duplicate, or unknown"},
+        403: {"description": "Forbidden — invalid signature or webhook not configured"},
+    },
+)
 async def handle_polar_webhook(request: Request) -> JSONResponse:
     """Handle incoming Polar.sh webhook events.
 
     Flow:
     1. Read raw body and headers.
-    2. Idempotency check via Redis SETNX (24h TTL).
-    3. Verify HMAC signature with validate_event().
+    2. Verify HMAC signature with validate_event().
+    3. Idempotency check via Redis SETNX (24h TTL) — AFTER signature verification.
     4. Route subscription.active / subscription.revoked to tier management.
 
     Returns 202 Accepted for all responses (Polar canonical response).
@@ -34,18 +40,7 @@ async def handle_polar_webhook(request: Request) -> JSONResponse:
     """
     body = await request.body()
     headers = dict(request.headers)
-
-    # Idempotency: skip webhooks already processed within the last 24 hours
     webhook_id = headers.get("webhook-id")
-    if webhook_id and redis_manager.client:
-        idempotency_key = f"polar:webhook:{webhook_id}"
-        was_set = await redis_manager.client.set(idempotency_key, b"1", nx=True, ex=86400)
-        if was_set is None:
-            logger.info(
-                "Duplicate Polar webhook skipped",
-                extra={"webhook_id": webhook_id},
-            )
-            return JSONResponse(status_code=202, content={"status": "already_processed"})
 
     # Guard: reject immediately if webhook secret is not configured
     if not settings.polar_webhook_secret:  # type: ignore[attr-defined]
@@ -72,6 +67,25 @@ async def handle_polar_webhook(request: Request) -> JSONResponse:
         )
         return JSONResponse(status_code=202, content={"status": "unknown_event"})
 
+    # Idempotency: skip webhooks already processed (checked AFTER signature verification)
+    # Wrapped in try/except for fail-open: Redis errors must not block webhook processing
+    if webhook_id and redis_manager.client:
+        try:
+            idempotency_key = f"polar:webhook:{webhook_id}"
+            was_set = await redis_manager.client.set(idempotency_key, b"1", nx=True, ex=86400)
+            if was_set is None:
+                logger.info(
+                    "Duplicate Polar webhook skipped",
+                    extra={"webhook_id": webhook_id},
+                )
+                return JSONResponse(status_code=202, content={"status": "already_processed"})
+        except Exception:
+            logger.warning(
+                "Redis idempotency check failed, proceeding with webhook processing",
+                extra={"webhook_id": webhook_id},
+                exc_info=True,
+            )
+
     event_type: str = event.TYPE  # type: ignore[union-attr]
     logger.info(
         "Polar webhook received",
@@ -82,11 +96,16 @@ async def handle_polar_webhook(request: Request) -> JSONResponse:
         external_id: str | None = event.data.customer.external_id  # type: ignore[union-attr]
         if external_id:
             product_id = getattr(event.data, "product_id", None)  # type: ignore[union-attr]
-            tier = "free"
             if product_id == settings.polar_pro_product_id:  # type: ignore[attr-defined]
                 tier = "pro"
             elif product_id == settings.polar_starter_product_id:  # type: ignore[attr-defined]
                 tier = "starter"
+            else:
+                logger.warning(
+                    "Unknown product_id in subscription.active — skipping tier update",
+                    extra={"product_id": product_id, "external_id": external_id, "webhook_id": webhook_id},
+                )
+                return JSONResponse(status_code=202, content={"status": "unknown_product"})
             await set_tier(redis_manager.client, external_id, tier)
             logger.info(
                 "User subscription activated",

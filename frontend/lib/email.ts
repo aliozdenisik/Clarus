@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer"
-
+import { logger } from "@/lib/logger"
 // Server-only module - do not import in client components
 // This module handles email delivery via Gmail SMTP
 
@@ -37,8 +37,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<void> {
       text: options.text,
     })
   } catch (error) {
-    console.error("[email] Failed to send email", {
-      to: options.to,
+    logger.error("[email] Failed to send email", {
       subject: options.subject,
       error: error instanceof Error ? error.message : String(error),
     })

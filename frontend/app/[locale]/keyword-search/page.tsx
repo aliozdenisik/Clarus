@@ -879,7 +879,10 @@ function KeywordSearchContent() {
                                       />
                                     )
 
-                                    if (index >= FREE_VERSE_LIMIT) {
+                                    if (
+                                      (currentPage - 1) * versesPerPage + index >=
+                                      FREE_VERSE_LIMIT
+                                    ) {
                                       return (
                                         <UpgradeGate
                                           key={`gate-${verse.surah_id}-${verse.ayah_number}`}
@@ -914,7 +917,10 @@ function KeywordSearchContent() {
                                       />
                                     )
 
-                                    if (index >= FREE_VERSE_LIMIT) {
+                                    if (
+                                      (currentPage - 1) * versesPerPage + index >=
+                                      FREE_VERSE_LIMIT
+                                    ) {
                                       return (
                                         <UpgradeGate
                                           key={`gate-${verse.book_id}-${verse.chapter}-${verse.verse}`}
