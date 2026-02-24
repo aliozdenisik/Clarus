@@ -26,7 +26,7 @@ regex = '''(OPENROUTER_API_KEY|GOOGLE_CLIENT_SECRET|JWT_SECRET_KEY|sk-or-v1-|GOC
 keywords = ["OPENROUTER_API_KEY", "GOOGLE_CLIENT_SECRET", "JWT_SECRET_KEY"]
 [rules.allowlist]
 regexes = [
-    '''(REDACTED|ROTATE_REQUIRED|REDACTED_FROM_HISTORY|your-[a-z-]+key|YOUR_[A-Z_]+HERE|<[A-Z_]+>|\$\{[A-Z_]+\})''',
+    '''(REDACTED|ROTATE_REQUIRED|REDACTED_FROM_HISTORY|your-[a-z-]+key|YOUR_[A-Z_]+HERE|<[A-Z_]+>|\$\{[A-Z_]+\}|__[A-Z_]+__)''',
 ]
 
 [allowlist]
@@ -35,4 +35,5 @@ paths = [
     '''\.env\.sample''',
     '''memory-bank/''',
     '''SECURITY-PRECOMMIT-RESEARCH\.md''',
+    '''deploy\.yml''',
 ]

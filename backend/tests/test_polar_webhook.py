@@ -47,7 +47,7 @@ class TestPolarWebhookInvalidSignature:
                 headers={"Content-Type": "application/json"},
             )
         assert response.status_code == 403
-        assert response.json()["error"] == "Invalid signature"
+        assert response.json()["detail"] == "Invalid signature"
 
 
 class TestPolarWebhookSubscriptionActive:

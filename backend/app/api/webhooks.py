@@ -6,10 +6,9 @@ user tiers in Redis via set_tier().
 
 import logging
 
-from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, Request
 from polar_sdk.webhooks import WebhookVerificationError, validate_event  # type: ignore[attr-defined]
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from app.config import settings
 from app.polar_tier import set_tier
@@ -19,14 +18,22 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+class WebhookResponse(BaseModel):
+    """Response model for Polar webhook endpoint."""
+
+    status: str
+
+
 @router.post(
     "/polar",
+    response_model=WebhookResponse,
+    status_code=202,
     responses={
         202: {"description": "Accepted — event processed, duplicate, or unknown"},
         403: {"description": "Forbidden — invalid signature or webhook not configured"},
     },
 )
-async def handle_polar_webhook(request: Request) -> JSONResponse:
+async def handle_polar_webhook(request: Request) -> WebhookResponse:
     """Handle incoming Polar.sh webhook events.
 
     Flow:
@@ -36,7 +43,7 @@ async def handle_polar_webhook(request: Request) -> JSONResponse:
     4. Route subscription.active / subscription.revoked to tier management.
 
     Returns 202 Accepted for all responses (Polar canonical response).
-    Returns 403 for invalid webhook signatures.
+    Raises 403 for invalid webhook signatures.
     """
     body = await request.body()
     headers = dict(request.headers)
@@ -45,7 +52,7 @@ async def handle_polar_webhook(request: Request) -> JSONResponse:
     # Guard: reject immediately if webhook secret is not configured
     if not settings.polar_webhook_secret:  # type: ignore[attr-defined]
         logger.warning("Polar webhook secret not configured, rejecting request")
-        return JSONResponse(status_code=403, content={"error": "Webhook not configured"})
+        raise HTTPException(status_code=403, detail="Webhook not configured")
 
     # Signature verification + event parsing (raises on failure)
     try:
@@ -59,13 +66,13 @@ async def handle_polar_webhook(request: Request) -> JSONResponse:
             "Invalid Polar webhook signature",
             extra={"webhook_id": webhook_id},
         )
-        return JSONResponse(status_code=403, content={"error": "Invalid signature"})
+        raise HTTPException(status_code=403, detail="Invalid signature")
     except ValidationError:
         logger.info(
             "Unknown Polar webhook event type, ignoring",
             extra={"webhook_id": webhook_id},
         )
-        return JSONResponse(status_code=202, content={"status": "unknown_event"})
+        return WebhookResponse(status="unknown_event")
 
     # Idempotency: skip webhooks already processed (checked AFTER signature verification)
     # Wrapped in try/except for fail-open: Redis errors must not block webhook processing
@@ -78,7 +85,7 @@ async def handle_polar_webhook(request: Request) -> JSONResponse:
                     "Duplicate Polar webhook skipped",
                     extra={"webhook_id": webhook_id},
                 )
-                return JSONResponse(status_code=202, content={"status": "already_processed"})
+                return WebhookResponse(status="already_processed")
         except Exception:
             logger.warning(
                 "Redis idempotency check failed, proceeding with webhook processing",
@@ -105,7 +112,7 @@ async def handle_polar_webhook(request: Request) -> JSONResponse:
                     "Unknown product_id in subscription.active — skipping tier update",
                     extra={"product_id": product_id, "external_id": external_id, "webhook_id": webhook_id},
                 )
-                return JSONResponse(status_code=202, content={"status": "unknown_product"})
+                return WebhookResponse(status="unknown_product")
             await set_tier(redis_manager.client, external_id, tier)
             logger.info(
                 "User subscription activated",
@@ -125,4 +132,4 @@ async def handle_polar_webhook(request: Request) -> JSONResponse:
             extra={"event_type": event_type, "webhook_id": webhook_id},
         )
 
-    return JSONResponse(status_code=202, content={"status": "ok"})
+    return WebhookResponse(status="ok")
