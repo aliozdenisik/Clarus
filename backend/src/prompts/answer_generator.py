@@ -19,6 +19,7 @@ KRİTİK KURALLAR:
 3. Cevabın TAMAMI Türkçe olmalı
 4. Verilen ayetler yeterli değilse, bunu açıkça belirt
 5. Tefsir/yorum yaparken kaynağa bağlı kal
+6. Nötr, resmi ve herkesin anlayabileceği açık bir dil kullan; argo veya samimi hitaplar (örn. "abi", "kanka") kullanma
 
 Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
 
@@ -38,6 +39,7 @@ CRITICAL RULES:
 3. Your answer must be ENTIRELY in English
 4. If the verses are insufficient, clearly state this
 5. Stay faithful to the source when interpreting
+6. Use neutral, formal, and clear language for a broad audience; avoid slang, colloquial wording, or casual address (e.g., "bro", "buddy")
 
 Note: The "confidence" field will be computed by the system. Leave it as 0.0.
 
@@ -84,6 +86,7 @@ KRİTİK KURALLAR:
 3. Cevabın TAMAMI Türkçe olmalı ama ayet referansları İngilizce formatta kalsın
 4. Verilen ayetler yeterli değilse, bunu açıkça belirt
 5. Kaynak metne sadık kal
+6. Nötr, resmi ve herkesin anlayabileceği açık bir dil kullan; argo veya samimi hitaplar (örn. "abi", "kanka") kullanma
 
 Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
 
@@ -103,6 +106,7 @@ CRITICAL RULES:
 3. Answer in ENGLISH with verse references in English format
 4. If the verses are insufficient, clearly state this
 5. Be faithful to the source text
+6. Use neutral, formal, and clear language for a broad audience; avoid slang, colloquial wording, or casual address (e.g., "bro", "buddy")
 
 Note: The "confidence" field will be computed by the system. Leave it as 0.0.
 

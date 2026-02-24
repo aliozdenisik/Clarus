@@ -18,6 +18,7 @@ KRİTİK KURALLAR:
 3. Yahudi-Hristiyan tefsir geleneğine uygun yorumla
 4. Tek bir bütünlüklü paragraf yaz (3-5 cümle)
 5. Cevabın TAMAMI Türkçe olmalı
+6. Nötr, resmi ve herkesin anlayabileceği açık bir dil kullan; argo veya samimi hitaplar (örn. "abi", "kanka") kullanma
 
 ATIF FORMAT KURALLARI:
 - ASLA çift parantez kullanma — YASAK!
@@ -42,6 +43,7 @@ CRITICAL RULES:
 3. Interpret according to Jewish-Christian exegetical tradition
 4. Write one cohesive paragraph (3-5 sentences)
 5. Your answer must be ENTIRELY in English
+6. Use neutral, formal, and clear language for a broad audience; avoid slang, colloquial wording, or casual address (e.g., "bro", "buddy")
 
 CITATION FORMAT RULES:
 - NEVER use double brackets — FORBIDDEN!
@@ -70,6 +72,7 @@ KRİTİK KURALLAR:
 3. Hristiyan tefsir geleneğine uygun yorumla (Kristolojik perspektif)
 4. Tek bir bütünlüklü paragraf yaz (3-5 cümle)
 5. Cevabın TAMAMI Türkçe olmalı
+6. Nötr, resmi ve herkesin anlayabileceği açık bir dil kullan; argo veya samimi hitaplar (örn. "abi", "kanka") kullanma
 
 ATIF FORMAT KURALLARI:
 - ASLA çift parantez kullanma — YASAK!
@@ -94,6 +97,7 @@ CRITICAL RULES:
 3. Interpret according to Christian exegetical tradition (Christological perspective)
 4. Write one cohesive paragraph (3-5 sentences)
 5. Your answer must be ENTIRELY in English
+6. Use neutral, formal, and clear language for a broad audience; avoid slang, colloquial wording, or casual address (e.g., "bro", "buddy")
 
 CITATION FORMAT RULES:
 - NEVER use double brackets — FORBIDDEN!
@@ -124,6 +128,7 @@ KRİTİK KURALLAR:
 3. Katolik/Ortodoks tefsir geleneğine uygun yorumla
 4. Tek bir bütünlüklü paragraf yaz (3-5 cümle)
 5. Cevabın TAMAMI Türkçe olmalı
+6. Nötr, resmi ve herkesin anlayabileceği açık bir dil kullan; argo veya samimi hitaplar (örn. "abi", "kanka") kullanma
 
 ATIF FORMAT KURALLARI:
 - ASLA çift parantez kullanma — YASAK!
@@ -150,6 +155,7 @@ CRITICAL RULES:
 3. Interpret according to Catholic/Orthodox exegetical tradition
 4. Write one cohesive paragraph (3-5 sentences)
 5. Your answer must be ENTIRELY in English
+6. Use neutral, formal, and clear language for a broad audience; avoid slang, colloquial wording, or casual address (e.g., "bro", "buddy")
 
 CITATION FORMAT RULES:
 - NEVER use double brackets — FORBIDDEN!
@@ -178,6 +184,7 @@ KRİTİK KURALLAR:
 3. Klasik İslami tefsir geleneğine uygun yorumla
 4. Tek bir bütünlüklü paragraf yaz (3-5 cümle)
 5. Cevabın TAMAMI Türkçe olmalı
+6. Nötr, resmi ve herkesin anlayabileceği açık bir dil kullan; argo veya samimi hitaplar (örn. "abi", "kanka") kullanma
 
 ATIF FORMAT KURALLARI:
 - ASLA çift parantez kullanma — YASAK!
@@ -202,6 +209,7 @@ CRITICAL RULES:
 3. Interpret according to classical Islamic exegetical tradition
 4. Write one cohesive paragraph (3-5 sentences)
 5. Your answer must be ENTIRELY in English
+6. Use neutral, formal, and clear language for a broad audience; avoid slang, colloquial wording, or casual address (e.g., "bro", "buddy")
 
 CITATION FORMAT RULES:
 - NEVER use double brackets — FORBIDDEN!
@@ -231,6 +239,7 @@ KRİTİK KURALLAR:
 4. Tek bir bütünlüklü paragraf yaz (4-6 cümle)
 5. Cevabın TAMAMI Türkçe olmalı
 6. Yeni kaynak atıfı yapma, sadece sentez yap
+7. Nötr, resmi ve herkesin anlayabileceği açık bir dil kullan; argo veya samimi hitaplar (örn. "abi", "kanka") kullanma
 
 Not: "confidence" alanı sistem tarafından hesaplanacaktır. 0.0 olarak bırakın.
 
@@ -252,6 +261,7 @@ CRITICAL RULES:
 4. Write one cohesive paragraph (4-6 sentences)
 5. Your answer must be ENTIRELY in English
 6. Do not add new citations, only synthesize
+7. Use neutral, formal, and clear language for a broad audience; avoid slang, colloquial wording, or casual address (e.g., "bro", "buddy")
 
 Note: The "confidence" field will be computed by the system. Leave it as 0.0.
 

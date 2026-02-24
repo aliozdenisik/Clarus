@@ -214,6 +214,10 @@ DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:54322/postgres
 # Better Auth (for web UI authentication)
 BETTER_AUTH_JWKS_URL=http://localhost:3000/api/auth/jwks
 BETTER_AUTH_ISSUER=http://localhost:3000
+
+# Rate limiting (default in backend config is true)
+# Set to false locally if you need to disable limits during development/testing
+RATE_LIMIT_ENABLED=false
 ```
 
 Create `frontend/.env.local`:
@@ -533,6 +537,7 @@ Clarus/
 | `BETTER_AUTH_ISSUER` | -- | `http://localhost:3000` | JWT issuer |
 | `REDIS_URL` | -- | `redis://localhost:6379` | Redis connection |
 | `RATE_LIMIT_PER_DAY` | -- | `50` | Queries per user per day |
+| `RATE_LIMIT_ENABLED` | -- | `true` | Rate limiting toggle (set `false` for local development if needed) |
 | `LOG_LEVEL` | -- | `INFO` | Logging level |
 | `LOG_FORMAT` | -- | `console` | `console` (dev) or `json` (prod) |
 | `SENTRY_DSN_BACKEND` | -- | -- | Sentry DSN for error tracking |

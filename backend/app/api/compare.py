@@ -1,5 +1,6 @@
 """Compare API routes for multi-scripture comparison."""
 
+import re
 import time as time_module
 from typing import Any
 
@@ -139,7 +140,33 @@ class CompareResponse(BaseModel):
 
 def extract_quran_verse_detail(result: SearchResult, *, collection: str = "") -> tuple[str, VerseDetail]:
     """Extract citation reference and verse detail from a Quran SearchResult."""
-    reference = f"{result.surah_name}:{result.verse_id}"
+    verse_id = getattr(result, "verse_id", None)
+    if verse_id is None:
+        verse_ids = getattr(result, "verse_ids", None)
+        if isinstance(verse_ids, list) and verse_ids:
+            first = str(verse_ids[0])
+            candidate = first
+            if ":" in candidate:
+                candidate = candidate.split(":", 1)[1]
+            if "-" in candidate:
+                candidate = candidate.split("-", 1)[0]
+            match = re.search(r"\d+", candidate)
+            verse_id = int(match.group(0)) if match else getattr(result, "start_verse", 0)
+        else:
+            verse_id = getattr(result, "start_verse", 0)
+
+    if isinstance(verse_id, str):
+        match = re.search(r"\d+", verse_id)
+        verse_id = int(match.group(0)) if match else 0
+
+    if not isinstance(verse_id, int) or verse_id <= 0:
+        fallback = getattr(result, "start_verse", 0)
+        if isinstance(fallback, str):
+            match = re.search(r"\d+", fallback)
+            fallback = int(match.group(0)) if match else 0
+        verse_id = fallback if isinstance(fallback, int) and fallback > 0 else 1
+
+    reference = f"{result.surah_name}:{verse_id}"
 
     if collection.startswith("quran_en_"):
         source = "quran_en"
@@ -148,16 +175,18 @@ def extract_quran_verse_detail(result: SearchResult, *, collection: str = "") ->
         source = "quran_tr"
         translation_label = "Diyanet Isleri Baskanligi"
 
+    verse_text = getattr(result, "translation", None) or getattr(result, "combined_translation", "")
+
     return reference, VerseDetail(
-        text=result.translation[:400],
+        text=verse_text[:400],
         book_name=result.surah_name,
         chapter=result.surah_id,
-        verse=result.verse_id,
+        verse=verse_id,
         source=source,
         translation=translation_label,
         surah_id=result.surah_id,
         surah_name=result.surah_name,
-        verse_id=result.verse_id,
+        verse_id=verse_id,
     )
 
 
