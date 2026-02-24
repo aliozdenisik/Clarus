@@ -86,7 +86,7 @@ class ComparativeAnswerGenerator:
         }
         self.confidence_scorer = ConfidenceScorer()
         self._prompt_manager = PromptManager()
-        print(f"Initialized ComparativeAnswerGenerator with model: {self.model}")
+        logger.info("Initialized ComparativeAnswerGenerator with model: %s", self.model)
 
     def _extract_reference(self, result, source: str) -> str:
         """Extract reference string from search result based on source"""
@@ -356,7 +356,7 @@ class ComparativeAnswerGenerator:
         context = self._format_context(quran_semantic, quran_chunks, bible_semantic, bible_chunks, translator, language)
 
         # Call LLM for comparative essay generation
-        print(f"Generating comparative essay with {total_verses} verses...")
+        logger.info("Generating comparative essay with %d verses", total_verses)
         llm_result = self._call_llm(
             query,
             context,

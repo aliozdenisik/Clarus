@@ -284,7 +284,7 @@ async def stream_search(
                     if ref not in verse_details:
                         verse_details[ref] = detail.model_dump()
                     result_source = "quran"
-                    result_text = getattr(r, "translation", None) or getattr(r, "combined_translation", None) or str(r)
+                    result_text = getattr(r, "translation", None) or getattr(r, "combined_translation", None) or ""
                 else:
                     # Bible result: use book_name chapter:verse format
                     ref_str = f"{r.book_name} {r.chapter}:{r.verse}" if hasattr(r, "book_name") else ""
@@ -299,7 +299,7 @@ async def stream_search(
                     if ref not in verse_details:
                         verse_details[ref] = detail.model_dump()
                     result_source = bible_source
-                    result_text = r.text if hasattr(r, "text") else str(r)
+                    result_text = getattr(r, "text", None) or getattr(r, "translation", None) or ""
 
                 results_data.append(
                     {

@@ -151,9 +151,20 @@ def extract_quran_verse_detail(result: SearchResult, *, collection: str = "") ->
             if "-" in candidate:
                 candidate = candidate.split("-", 1)[0]
             match = re.search(r"\d+", candidate)
-            verse_id = int(match.group(0)) if match else 0
+            verse_id = int(match.group(0)) if match else getattr(result, "start_verse", 0)
         else:
             verse_id = getattr(result, "start_verse", 0)
+
+    if isinstance(verse_id, str):
+        match = re.search(r"\d+", verse_id)
+        verse_id = int(match.group(0)) if match else 0
+
+    if not isinstance(verse_id, int) or verse_id <= 0:
+        fallback = getattr(result, "start_verse", 0)
+        if isinstance(fallback, str):
+            match = re.search(r"\d+", fallback)
+            fallback = int(match.group(0)) if match else 0
+        verse_id = fallback if isinstance(fallback, int) and fallback > 0 else 1
 
     reference = f"{result.surah_name}:{verse_id}"
 

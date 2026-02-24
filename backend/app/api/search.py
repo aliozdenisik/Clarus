@@ -161,16 +161,13 @@ async def search_quran(
 
     verses: list[SearchVerseResult] = []
     for r in results:
-        verse_id = getattr(r, "verse_id", None)
-        if verse_id is None:
-            verse_id = getattr(r, "start_verse", 0)
-
+        reference, _detail = extract_quran_verse_detail(r, collection=collection_name)
         text = getattr(r, "translation", None) or getattr(r, "combined_translation", "")
 
         verses.append(
             SearchVerseResult(
                 source="Kuran",
-                reference=f"{r.surah_name}:{verse_id}",
+                reference=reference,
                 text=text,
                 score=r.score,
             )
