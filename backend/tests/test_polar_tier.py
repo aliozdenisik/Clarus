@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
-from app.polar_tier import TIER_KEY_PREFIX, TIER_TTL, get_tier, set_tier
+from app.polar_tier import TIER_KEY_PREFIX, get_tier, set_tier
 
 
 class TestGetTierNoRedis:
@@ -18,17 +18,14 @@ class TestSetTierNoRedis:
 
 
 class TestSetTierWithMockRedis:
-    async def test_set_tier_calls_redis_set_with_correct_key_value_ttl(self) -> None:
+    async def test_set_tier_calls_redis_set_without_ttl(self) -> None:
         mock_redis = AsyncMock()
         mock_redis.set = AsyncMock(return_value=True)
-
         result = await set_tier(mock_redis, "user_002", "pro")
-
         assert result is True
         mock_redis.set.assert_called_once_with(
             f"{TIER_KEY_PREFIX}user_002",
             "pro",
-            ex=TIER_TTL,
         )
 
 

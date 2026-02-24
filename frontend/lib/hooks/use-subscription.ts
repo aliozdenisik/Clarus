@@ -18,6 +18,7 @@ export function useSubscription() {
     queryFn: async () => {
       const response = await fetch(`${API_BASE}/api/subscription/status`, {
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
       })
       if (!response.ok) {
         return { tier: "free" as const, limit: 5 }
