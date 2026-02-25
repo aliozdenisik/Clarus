@@ -9,7 +9,7 @@ docs/
 ├── README.md                           # This file
 ├── technical/                          # Academic & technical papers (NEW)
 │   ├── README.md                       # Technical docs index
-│   ├── hybrid-search-and-rrf-fusion.md # Dense+sparse search, BM25, RRF math
+│   ├── hybrid-search-and-rrf-fusion.md # Multi-query semantic search, RRF math
 │   ├── confidence-scoring-system.md    # Two-phase sigmoid scoring (Platt scaling)
 │   ├── morphological-analysis-pipeline.md  # Arabic/Hebrew/Greek computational linguistics
 │   ├── multi-agent-rag-architecture.md # 5-agent system design
@@ -61,7 +61,7 @@ Deep-dive papers covering the algorithms and design decisions behind Clarus:
 
 | Paper | Topic |
 |-------|-------|
-| [Hybrid Search & RRF Fusion](technical/hybrid-search-and-rrf-fusion.md) | Dense+sparse vectors, BM25, Reciprocal Rank Fusion math |
+| [Multi-Query Search & RRF Fusion](technical/hybrid-search-and-rrf-fusion.md) | Multi-query semantic search, Reciprocal Rank Fusion math |
 | [Confidence Scoring System](technical/confidence-scoring-system.md) | Two-phase sigmoid calibration, Platt scaling |
 | [Morphological Analysis Pipeline](technical/morphological-analysis-pipeline.md) | Arabic root extraction, Hebrew/Greek Strong's concordance |
 | [Multi-Agent RAG Architecture](technical/multi-agent-rag-architecture.md) | 5-agent parallel search and synthesis |

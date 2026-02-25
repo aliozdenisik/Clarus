@@ -5,7 +5,7 @@
 **Maximum-accuracy RAG search engine for sacred texts**
 
 Comparative theological analysis across the Quran and Bible with multi-agent LLM synthesis,
-morphological keyword search, hybrid dense+sparse retrieval, and full TR/EN localization.
+morphological keyword search, multi-query semantic retrieval with RRF fusion, and full TR/EN localization.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&style=flat-square)](https://github.com/pre-commit/pre-commit)
@@ -29,13 +29,13 @@ morphological keyword search, hybrid dense+sparse retrieval, and full TR/EN loca
 
 ## Overview
 
-Clarus is a production-grade RAG system engineered for **maximum retrieval accuracy** on religious texts. It indexes ~123,000 verse vectors across 13 collections (8 Quran translations + Bible OT/NT/Apocrypha in English and Turkish), then combines dense semantic search, BM25 sparse vectors, and Reciprocal Rank Fusion to surface the most relevant passages before handing them to a 5-agent LLM pipeline for comparative theological synthesis.
+Clarus is a production-grade RAG system engineered for **maximum retrieval accuracy** on religious texts. It indexes ~123,000 verse vectors across 13 collections (8 Quran translations + Bible OT/NT/Apocrypha in English and Turkish), then uses multi-query semantic search with Reciprocal Rank Fusion to surface the most relevant passages before handing them to a 5-agent LLM pipeline for comparative theological synthesis.
 
 The system is built for researchers, developers, and anyone who wants scholarly-quality cross-textual analysis without the noise of naive keyword search.
 
 ### ✦ Key Highlights
 
-- **Hybrid Search** — Dense embeddings (text-embedding-3-large, 3072-dim) + BM25 sparse vectors with RRF fusion (k=60) for recall that neither approach achieves alone
+- **Multi-Query Semantic Search** — Dense embeddings (text-embedding-3-large, 3072-dim) with 3-5 LLM-generated query variants fused via RRF (k=60) for recall that no single query achieves alone
 - **Multi-Agent Synthesis** — 5 specialized agents (Quran, OT, NT, Apocrypha, Summary) run in parallel and converge into a structured comparative essay with inline citations
 - **Morphological Keyword Search** — Arabic root extraction across 1,651 roots and 77,429 words; Hebrew/Greek Strong's concordance for OT and NT
 - **Confidence Scoring** — Two-phase sigmoid-calibrated scoring (Platt scaling) replacing naive weighted averages for calibrated retrieval confidence
@@ -53,10 +53,10 @@ The system is built for researchers, developers, and anyone who wants scholarly-
 | Feature | Description |
 |---------|-------------|
 | **Semantic Search** | Dense embeddings (3072-dim, text-embedding-3-large) for context-aware verse retrieval across all 13 collections |
-| **Hybrid Search** | Dense + BM25 sparse vectors combined via RRF for higher recall than either alone |
+| **Multi-Query Search** | 3-5 LLM-generated query variants searched in parallel and fused via RRF for higher recall than single-query |
 | **Semantic Chunking** | Groups semantically related verses preserving scriptural boundaries; separate implementations for Quran and Bible |
 | **Multi-Query RAG** | 3-5 LLM-generated query variants per request, all fused via RRF for maximum recall |
-| **Query Enhancement** | Grok 4.1 Fast expands queries with synonyms, related concepts, and cross-language terms |
+| **Query Enhancement** | Gemini 2.5 Flash expands queries with synonyms, related concepts, and cross-language terms |
 | **RRF Fusion** | Reciprocal Rank Fusion (k=60) merges multi-query results into a single ranked list |
 | **Semantic Cache** | Redis-backed embedding similarity cache; 60-80% reduction in OpenAI API costs |
 | **Multilingual Queries** | Query in 8 languages (TR, EN, ES, FR, IT, PT, AR, DE) with automatic detection and translation |
@@ -175,7 +175,7 @@ User Query
     │
     ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  1. Query Enhancement (Grok 4.1 Fast)                       │
+│  1. Query Enhancement (Gemini 2.5 Flash)                    │
 │     Expand with synonyms, related concepts, cross-language  │
 └─────────────────────────────────────────────────────────────┘
     │
@@ -187,8 +187,8 @@ User Query
     │
     ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  3. Parallel Hybrid Search (all collections)                │
-│     Dense (text-embedding-3-large) + BM25 sparse            │
+│  3. Parallel Semantic Search (all collections)              │
+│     Dense vectors (text-embedding-3-large, 3072-dim)        │
 └─────────────────────────────────────────────────────────────┘
     │
     ▼
@@ -519,7 +519,7 @@ Full OpenAPI documentation is available at `/docs` when the server is running.
 | Database | PostgreSQL 15 |
 | Cache | Redis Stack 7.2 (LLM semantic cache, search cache, JWT blacklist) |
 | Encoder | OpenAI text-embedding-3-large (3072-dim) |
-| LLM (Enhancement) | Grok 4.1 Fast via OpenRouter |
+| LLM (Enhancement) | Gemini 2.5 Flash via OpenRouter |
 | LLM (Generation) | Gemini 2.5 Flash via OpenRouter |
 | LLM (Translation) | Gemini 2.5 Flash Lite via OpenRouter |
 | Auth | Better Auth (JWT + Google OAuth + JWKS) |
@@ -627,11 +627,11 @@ Clarus/
 │   │   ├── comparative_rag.py      # 4-collection parallel search + RRF (1,414 lines)
 │   │   ├── multi_agent_answer_generator.py  # 5-agent system (805 lines)
 │   │   ├── bible_morphology.py     # Hebrew/Greek Strong's search (1,900 lines)
-│   │   ├── search.py               # Qdrant hybrid search (880 lines)
+│   │   ├── search.py               # Qdrant semantic search (880 lines)
 │   │   ├── quran_morphology.py     # Arabic root-based keyword search (607 lines)
 │   │   ├── query_enhancer.py       # LLM query expansion (729 lines)
 │   │   ├── query_translator.py     # Multilingual translation, 8 languages (613 lines)
-│   │   ├── embeddings.py           # OpenAI + BM25 encoders (570 lines)
+│   │   ├── embeddings.py           # OpenAI dense encoder (570 lines)
 │   │   ├── confidence_scorer.py    # Two-phase sigmoid-calibrated scoring (376 lines)
 │   │   ├── semantic_chunker.py     # Quran verse grouping (638 lines)
 │   │   ├── bible_semantic_chunker.py  # Bible verse grouping (499 lines)
@@ -702,7 +702,7 @@ Deep-dive papers covering the algorithms and design decisions behind Clarus:
 
 | Document | Description |
 |----------|-------------|
-| [Hybrid Search & RRF Fusion](docs/technical/hybrid-search-and-rrf-fusion.md) | Mathematical foundations of dense+sparse vector search and Reciprocal Rank Fusion |
+| [Multi-Query Search & RRF Fusion](docs/technical/hybrid-search-and-rrf-fusion.md) | Mathematical foundations of semantic vector search and Reciprocal Rank Fusion |
 | [Confidence Scoring System](docs/technical/confidence-scoring-system.md) | Two-phase sigmoid-calibrated scoring with Platt scaling |
 | [Morphological Analysis Pipeline](docs/technical/morphological-analysis-pipeline.md) | Computational linguistics for Arabic, Hebrew, and Greek sacred texts |
 | [Multi-Agent RAG Architecture](docs/technical/multi-agent-rag-architecture.md) | 5-agent parallel search and synthesis system design |
