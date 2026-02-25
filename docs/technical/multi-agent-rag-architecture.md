@@ -457,4 +457,4 @@ Network errors and timeouts trigger retries; JSON parse errors and circuit break
 
 - Cormack, G. V., Clarke, C. L. A., & Buettcher, S. (2009). "Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank Learning Methods." *ACM SIGIR Conference on Research and Development in Information Retrieval*.
 
-- Qdrant Documentation. "Hybrid Search." https://qdrant.tech/documentation/concepts/hybrid-queries/
+- Qdrant Documentation. "Vector Search." https://qdrant.tech/documentation/concepts/search/

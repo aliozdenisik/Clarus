@@ -10,7 +10,7 @@ These documents are intended for developers, researchers, and anyone interested 
 
 | Document | Description |
 |----------|-------------|
-| [Hybrid Search and RRF Fusion](hybrid-search-and-rrf-fusion.md) | Mathematical foundations of dense (text-embedding-3-large) + sparse (BM25) vector search and Reciprocal Rank Fusion with k=60 parameter analysis |
+| [Multi-Query Search and RRF Fusion](hybrid-search-and-rrf-fusion.md) | Mathematical foundations of multi-query semantic search (text-embedding-3-large) and Reciprocal Rank Fusion with k=60 parameter analysis |
 | [Confidence Scoring System](confidence-scoring-system.md) | Two-phase sigmoid-calibrated scoring replacing naive weighted averages, based on Platt scaling from machine learning calibration literature |
 
 ### Natural Language Processing

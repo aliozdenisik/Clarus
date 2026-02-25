@@ -548,7 +548,7 @@ def lemmatize_text(text: str) -> str:
 
 Example: `"Sabır ve namazla Allah'a sığınıp yardım isteyin"` → `"sabır ve namaz allah sığın yardım iste"`
 
-This lemmatized form is stored in `combined_lemma` on each semantic chunk and used for BM25 sparse vector indexing, enabling keyword-level recall alongside dense semantic search.
+This lemmatized form is stored in `combined_lemma` on each semantic chunk and used for text normalization during indexing.
 
 ---
 

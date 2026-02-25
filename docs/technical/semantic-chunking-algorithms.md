@@ -297,7 +297,7 @@ The `SemanticVerseChunker` class in `semantic_chunker.py` processes Quran verses
 
 **Data model**: Each verse is a `QuranChunk` object with fields including `surah_id`, `verse_id`, `translation` (Turkish), `arabic_text`, `translation_normalized`, and `translation_lemma`. The chunker embeds the `translation` field (Turkish text).
 
-**Output**: `SemanticChunk` objects with a `chunk_id` in the format `{surah_id}:{start_verse}-{end_verse}_semantic` (e.g., `2:30-33_semantic`). The chunk stores both `combined_translation` (Turkish) and `combined_arabic` (Arabic), as well as `combined_normalized` and `combined_lemma` for BM25 sparse indexing.
+**Output**: `SemanticChunk` objects with a `chunk_id` in the format `{surah_id}:{start_verse}-{end_verse}_semantic` (e.g., `2:30-33_semantic`). The chunk stores both `combined_translation` (Turkish) and `combined_arabic` (Arabic), as well as `combined_normalized` and `combined_lemma` for text processing.
 
 **Embedding caching**: Embeddings are cached to `cache/verse_embeddings.npy` with a metadata file tracking the number of verses. The cache is invalidated if the verse count changes:
 
