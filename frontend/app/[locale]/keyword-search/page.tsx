@@ -30,6 +30,7 @@ import { RootBrowser } from "@/components/keyword-search/root-browser"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   searchKeywordApiSearchKeywordPost,
+  searchBibleKeywordApiKeywordSearchBiblePost,
   getSurahDetailApiMetadataQuranSurahsSurahIdGet,
   getQuranSurahsApiMetadataQuranSurahsGet,
 } from "@/lib/api/sdk.gen"
@@ -42,7 +43,6 @@ import {
 } from "@/components/keyword-search/bible-category-tabs"
 import { AccuracyDisclaimer } from "@/components/keyword-search/accuracy-disclaimer"
 import { ExperimentalDisclaimer } from "@/components/keyword-search/experimental-disclaimer"
-import { API_BASE } from "@/lib/config"
 import { useSubscription } from "@/lib/hooks/use-subscription"
 import { UpgradeGate } from "@/components/keyword-search/upgrade-gate"
 
@@ -219,49 +219,30 @@ function KeywordSearchContent() {
             setBibleSearchResult(null)
           }
         } else {
-          // Bible search via raw fetch (Hebrew OT or Greek NT)
           const languageFilter = activeLanguage === "hebrew_ot" ? "hebrew" : "greek"
 
-          // Build request body with optional category filter
-          const requestBody: Record<string, unknown> = {
-            query: searchQuery.trim(),
-            page: 1,
-            per_page: 0,
-            language_filter: languageFilter,
-          }
-
-          // Add category filter if not "all"
-          if (bibleCategoryFilter !== "all") {
-            requestBody.category_filter = bibleCategoryFilter
-          }
-
-          const res = await fetch(`${API_BASE}/api/keyword-search/bible/`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+          const response = await searchBibleKeywordApiKeywordSearchBiblePost({
             signal: controller.signal,
-            body: JSON.stringify(requestBody),
+            body: {
+              query: searchQuery.trim(),
+              page: 1,
+              per_page: 0,
+              language_filter: languageFilter,
+              ...(bibleCategoryFilter !== "all" ? { category_filter: bibleCategoryFilter } : {}),
+            },
           })
 
           if (controller.signal.aborted) {
             return
           }
 
-          if (!res.ok) {
-            if (res.status === 429) {
-              toast.error(t("rateLimited"))
-            } else {
-              toast.error(t("searchFailed"))
-            }
+          if (!response.data) {
             setError(t("searchFailed"))
+            toast.error(t("searchFailed"))
             return
           }
 
-          const data = (await res.json()) as BibleSearchResult
-          if (controller.signal.aborted) {
-            return
-          }
-
-          setBibleSearchResult(data)
+          setBibleSearchResult(response.data as BibleSearchResult)
           setSearchResult(null)
         }
       } catch (err: unknown) {
