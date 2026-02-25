@@ -204,9 +204,13 @@ yarn-error.log*
 test_citation_fix.py
 
 # ----------------
-# Local Documentation Drafts
+# Documentation (only technical papers & screenshots are public)
 # ----------------
-docs/
-!docs/roadmap/
-!docs/roadmap/**
+docs/*
+!docs/README.md
+!docs/technical/
+!docs/technical/**
+!docs/screenshots/
+docs/screenshots/*
+!docs/screenshots/readme-*.png
 roadmap.md
