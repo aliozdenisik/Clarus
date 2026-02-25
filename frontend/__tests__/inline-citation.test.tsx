@@ -3,6 +3,10 @@ import userEvent from "@testing-library/user-event"
 import { describe, it, expect, vi } from "vitest"
 import { InlineCitation } from "@/components/compare/inline-citation"
 
+vi.mock("next-intl", () => ({
+  useLocale: () => "en",
+}))
+
 const mockVerseDetail = {
   text: "In the beginning God created the heaven and the earth.",
   book_name: "Genesis",
