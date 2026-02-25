@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, Suspense, useMemo, useRef } from "rea
 import dynamic from "next/dynamic"
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { SearchInput } from "@/components/keyword-search/search-input"
 import { RichRootCard } from "@/components/keyword-search/rich-root-card"
@@ -45,6 +45,7 @@ import { AccuracyDisclaimer } from "@/components/keyword-search/accuracy-disclai
 import { ExperimentalDisclaimer } from "@/components/keyword-search/experimental-disclaimer"
 import { useSubscription } from "@/lib/hooks/use-subscription"
 import { UpgradeGate } from "@/components/keyword-search/upgrade-gate"
+import { getBibleBookDisplayName } from "@/lib/utils/bible-book-names"
 
 type TabType = "results" | "browser"
 
@@ -104,6 +105,7 @@ const isAbortError = (error: unknown): boolean =>
     : error instanceof Error && error.name === "AbortError"
 
 function KeywordSearchContent() {
+  const locale = useLocale()
   const t = useTranslations("KeywordSearch")
   const { isPaid } = useSubscription()
   const [query, setQuery] = useState("")
@@ -118,7 +120,9 @@ function KeywordSearchContent() {
   const [selectedWord, setSelectedWord] = useState<string | null>(null)
   const [translations, setTranslations] = useState<Map<string, string>>(new Map())
   const [translationsLoading, setTranslationsLoading] = useState(false)
-  const [surahTransliterations, setSurahTransliterations] = useState<Map<number, string>>(new Map())
+  const [surahNames, setSurahNames] = useState<
+    Map<number, { name: string; transliteration: string }>
+  >(new Map())
   const searchAbortControllerRef = useRef<AbortController | null>(null)
   const versesPerPage = activeLanguage === "quran" ? QURAN_VERSES_PER_PAGE : BIBLE_VERSES_PER_PAGE
 
@@ -146,14 +150,18 @@ function KeywordSearchContent() {
         }
 
         const body = response.data as
-          | { data?: { surahs?: Array<{ id: number; transliteration: string }> } }
+          | {
+              data?: {
+                surahs?: Array<{ id: number; name: string; transliteration: string }>
+              }
+            }
           | undefined
         const surahs = body?.data?.surahs || []
-        const map = new Map<number, string>()
+        const map = new Map<number, { name: string; transliteration: string }>()
         surahs.forEach((s) => {
-          map.set(s.id, s.transliteration)
+          map.set(s.id, { name: s.name, transliteration: s.transliteration })
         })
-        setSurahTransliterations(map)
+        setSurahNames(map)
       } catch (error) {
         if (isAbortError(error)) {
           return
@@ -169,9 +177,19 @@ function KeywordSearchContent() {
 
   // Helper: get Latin surah name, fallback to Arabic
   const getSurahName = useCallback(
-    (surahId: number, arabicFallback: string) =>
-      surahTransliterations.get(surahId) || arabicFallback,
-    [surahTransliterations]
+    (surahId: number, arabicFallback: string) => {
+      const surah = surahNames.get(surahId)
+      if (!surah) {
+        return arabicFallback
+      }
+
+      if (locale === "tr") {
+        return surah.name || surah.transliteration || arabicFallback
+      }
+
+      return surah.transliteration || surah.name || arabicFallback
+    },
+    [surahNames, locale]
   )
 
   const handleSearch = useCallback(
@@ -478,7 +496,7 @@ function KeywordSearchContent() {
         return (
           bibleSearchResult?.book_distribution?.map((b) => ({
             surah_id: b.book_id,
-            surah_name: b.book_name,
+            surah_name: getBibleBookDisplayName(b.book_name, locale),
             count: b.count,
           })) || []
         )
@@ -502,7 +520,7 @@ function KeywordSearchContent() {
         } else {
           bookMap.set(verse.book_id, {
             surah_id: verse.book_id,
-            surah_name: verse.book_name,
+            surah_name: getBibleBookDisplayName(verse.book_name, locale),
             count: 1,
           })
         }
@@ -510,7 +528,7 @@ function KeywordSearchContent() {
 
       return Array.from(bookMap.values())
     }
-  }, [activeLanguage, selectedWord, searchResult, bibleSearchResult])
+  }, [activeLanguage, selectedWord, searchResult, bibleSearchResult, locale])
 
   // Compute filtered stats based on selected word
   const filteredStats = useMemo(() => {
@@ -885,7 +903,7 @@ function KeywordSearchContent() {
                                       <VerseCard
                                         key={`${verse.book_id}-${verse.chapter}-${verse.verse}`}
                                         surahId={verse.book_id}
-                                        surahName={verse.book_name}
+                                        surahName={getBibleBookDisplayName(verse.book_name, locale)}
                                         ayahNumber={verse.verse}
                                         textUthmani={verse.text_original || ""}
                                         textClean={verse.text_original || ""}
