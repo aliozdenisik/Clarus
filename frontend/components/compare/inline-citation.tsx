@@ -2,6 +2,8 @@
 
 import { CitationHoverCard } from "./citation-hover-card"
 import { buildUrlFromReference } from "@/lib/utils/verse-url"
+import { localizeBibleReference } from "@/lib/utils/bible-book-names"
+import { useLocale } from "next-intl"
 
 interface InlineCitationProps {
   reference: string
@@ -21,10 +23,18 @@ interface InlineCitationProps {
 }
 
 export function InlineCitation({ reference, verseDetail, onNavigate }: InlineCitationProps) {
+  const locale = useLocale()
+  const displayReference = localizeBibleReference(reference, locale)
+
   // If verseDetail exists, render full HoverCard with verse preview
   if (verseDetail) {
     return (
-      <CitationHoverCard reference={reference} verseDetail={verseDetail} onNavigate={onNavigate} />
+      <CitationHoverCard
+        reference={reference}
+        displayReference={displayReference}
+        verseDetail={verseDetail}
+        onNavigate={onNavigate}
+      />
     )
   }
 
@@ -39,11 +49,11 @@ export function InlineCitation({ reference, verseDetail, onNavigate }: InlineCit
   return (
     <button
       type="button"
-      aria-label={`View ${reference}`}
+      aria-label={`View ${displayReference}`}
       onClick={handleClick}
       className="font-medium text-[var(--color-accent-primary)] underline decoration-dotted underline-offset-2 transition-all duration-200 hover:text-[var(--color-accent-hover)] hover:decoration-solid"
     >
-      {reference}
+      {displayReference}
     </button>
   )
 }

@@ -129,6 +129,7 @@ vi.mock("recharts", () => ({
 
 // Mock the SDK methods used by the page
 const mockSearchKeyword = vi.fn()
+const mockSearchBibleKeyword = vi.fn()
 const mockGetSurahDetail = vi.fn()
 const mockListRoots = vi.fn()
 const mockGetEtymology = vi.fn()
@@ -137,6 +138,8 @@ const mockFetch = vi.fn()
 
 vi.mock("@/lib/api/sdk.gen", () => ({
   searchKeywordApiSearchKeywordPost: (...args: unknown[]) => mockSearchKeyword(...args),
+  searchBibleKeywordApiKeywordSearchBiblePost: (...args: unknown[]) =>
+    mockSearchBibleKeyword(...args),
   getSurahDetailApiMetadataQuranSurahsSurahIdGet: (...args: unknown[]) =>
     mockGetSurahDetail(...args),
   listRootsApiSearchKeywordRootsGet: (...args: unknown[]) => mockListRoots(...args),
@@ -451,10 +454,7 @@ describe("KeywordSearchPage", () => {
       word_transliterations: { λόγος: "logos" },
     }
 
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => greekSearchResponse,
-    } as unknown as Response)
+    mockSearchBibleKeyword.mockResolvedValue({ data: greekSearchResponse })
 
     render(<KeywordSearchPage />)
 
@@ -465,9 +465,10 @@ describe("KeywordSearchPage", () => {
     fireEvent.keyDown(input, { key: "Enter", code: "Enter" })
 
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringMatching(/\/api\/keyword-search\/bible\/$/),
-        expect.objectContaining({ method: "POST" })
+      expect(mockSearchBibleKeyword).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({ query: "G3056", language_filter: "greek" }),
+        })
       )
     })
 

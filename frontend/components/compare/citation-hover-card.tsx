@@ -9,6 +9,7 @@ import { ExternalLink } from "lucide-react"
 
 interface CitationHoverCardProps {
   reference: string
+  displayReference?: string
   verseDetail: {
     text: string
     book_name?: string
@@ -33,20 +34,22 @@ const SOURCE_MAP: Record<string, SourceType> = {
 
 export const CitationHoverCard = React.memo(function CitationHoverCard({
   reference,
+  displayReference,
   verseDetail,
   onNavigate,
 }: CitationHoverCardProps) {
   const displaySource = SOURCE_MAP[verseDetail.source] || "quran"
+  const visibleReference = displayReference ?? reference
 
   return (
     <HoverCard.Root openDelay={200} closeDelay={100}>
       <HoverCard.Trigger asChild>
         <button
           type="button"
-          aria-label={`View ${reference}`}
+          aria-label={`View ${visibleReference}`}
           className="font-medium text-[var(--color-accent-primary)] underline decoration-dotted underline-offset-2 transition-all duration-200 hover:text-[var(--color-accent-hover)] hover:decoration-solid"
         >
-          {reference}
+          {visibleReference}
         </button>
       </HoverCard.Trigger>
       <HoverCard.Portal>
@@ -63,7 +66,7 @@ export const CitationHoverCard = React.memo(function CitationHoverCard({
               <div className="mb-2 flex items-center gap-2">
                 <SourceBadge source={displaySource} />
                 <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                  {reference}
+                  {visibleReference}
                 </span>
               </div>
 

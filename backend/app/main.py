@@ -384,6 +384,12 @@ app.include_router(
     prefix="/api/keyword-search/bible",
     tags=["bible-keyword"],
 )
+app.include_router(
+    bible_keyword_search.router,
+    prefix="/api/search/keyword/bible",
+    tags=["bible-keyword"],
+    include_in_schema=False,
+)
 app.include_router(verse_lookup.router, prefix="/api/verse", tags=["verse"])
 app.include_router(verse_words.router, prefix="/api/quran/verses", tags=["verse-words"])
 app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])

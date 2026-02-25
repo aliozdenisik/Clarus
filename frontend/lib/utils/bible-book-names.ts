@@ -118,3 +118,20 @@ export function getBibleBookDisplayName(englishName: string, locale: string): st
   }
   return englishName
 }
+
+const BIBLE_REFERENCE_PATTERN = /^(.+?)\s+(\d+:\d+(?:-\d+)?)$/
+
+export function localizeBibleReference(reference: string, locale: string): string {
+  if (locale !== "tr") {
+    return reference
+  }
+
+  const match = reference.trim().match(BIBLE_REFERENCE_PATTERN)
+  if (!match) {
+    return reference
+  }
+
+  const [, bookName, versePart] = match
+  const localizedBookName = getBibleBookDisplayName(bookName, locale)
+  return `${localizedBookName} ${versePart}`
+}

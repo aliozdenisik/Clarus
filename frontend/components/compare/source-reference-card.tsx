@@ -7,6 +7,8 @@ import { ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { springPresets } from "@/lib/design-system"
+import { useLocale } from "next-intl"
+import { localizeBibleReference } from "@/lib/utils/bible-book-names"
 
 interface VerseDetail {
   text: string
@@ -51,8 +53,10 @@ export const SourceReferenceCard = React.memo(function SourceReferenceCard({
   isHighlighted,
   index = 0,
 }: SourceReferenceCardProps) {
+  const locale = useLocale()
   const displaySource = SOURCE_MAP[verse.source] || "quran"
   const verseUrl = buildVerseUrl(verse)
+  const displayReference = localizeBibleReference(reference, locale)
 
   return (
     <motion.div
@@ -78,7 +82,7 @@ export const SourceReferenceCard = React.memo(function SourceReferenceCard({
           <div className="flex items-center gap-2">
             <SourceBadge source={displaySource} />
             <span className="text-sm font-medium text-[var(--color-text-primary)]">
-              {reference}
+              {displayReference}
             </span>
           </div>
           {verseUrl ? (
