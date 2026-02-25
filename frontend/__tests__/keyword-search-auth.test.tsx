@@ -111,6 +111,7 @@ vi.mock("@/lib/design-system", () => ({
 }))
 
 vi.mock("next-intl", () => ({
+  useLocale: vi.fn(() => "en"),
   useTranslations: vi.fn(() => (key: string) => key),
   NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
