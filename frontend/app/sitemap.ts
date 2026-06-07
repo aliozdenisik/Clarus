@@ -20,9 +20,12 @@ const publicPaths = [
   "/pricing",
 ] as const
 
+// Computed once at module load (build/boot time) so static entries don't appear
+// freshly changed on every crawl, which would create noisy recrawl signals.
+const lastModified = new Date()
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = getBaseUrl()
-  const lastModified = new Date()
 
   return publicPaths.flatMap((path) =>
     locales.map((locale) => ({

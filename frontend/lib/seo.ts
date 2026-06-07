@@ -17,13 +17,23 @@ export const siteConfig = {
   defaultUrl: "https://clarus.hollysearch.com",
 } as const
 
-/** Resolve the canonical site origin (no trailing slash). */
+/**
+ * Resolve the canonical site origin (scheme + host, no trailing slash).
+ *
+ * Always returns a valid origin so callers like `new URL(getBaseUrl())` cannot
+ * throw during metadata initialization. Falls back to the configured default if
+ * the environment value is missing or malformed.
+ */
 export function getBaseUrl(): string {
   const raw =
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.NEXT_PUBLIC_BASE_URL ||
     siteConfig.defaultUrl
-  return raw.replace(/\/+$/, "")
+  try {
+    return new URL(raw).origin
+  } catch {
+    return new URL(siteConfig.defaultUrl).origin
+  }
 }
 
 /** OpenGraph locale code for a given app locale. */

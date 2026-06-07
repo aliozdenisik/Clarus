@@ -22,6 +22,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const baseUrl = getBaseUrl()
   const title = t("title")
   const description = t("description")
+  const keywords = t("keywords")
+    .split(",")
+    .map((k) => k.trim())
+    .filter(Boolean)
+  const alternateLocale = routing.locales
+    .filter((l) => l !== locale)
+    .map((l) => ogLocale(l))
 
   return {
     title: {
@@ -29,17 +36,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       template: `%s | ${siteConfig.name}`,
     },
     description,
-    keywords: t("keywords")
-      .split(",")
-      .map((k) => k.trim())
-      .filter(Boolean),
+    keywords: keywords.length ? keywords : undefined,
     alternates: buildAlternates(locale, ""),
     openGraph: {
       title,
       description,
       siteName: siteConfig.name,
       locale: ogLocale(locale),
-      alternateLocale: locale === "tr" ? ["en_US"] : ["tr_TR"],
+      alternateLocale,
       type: "website",
       url: `${baseUrl}/${locale}`,
     },

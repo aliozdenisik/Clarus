@@ -9,7 +9,7 @@ export const contentType = "image/png"
  * [locale] segment. Self-contained (no external assets) so social previews work
  * out of the box.
  */
-export default function OpengraphImage() {
+export default function OpengraphImage(): ImageResponse {
   return new ImageResponse(
     (
       <div
