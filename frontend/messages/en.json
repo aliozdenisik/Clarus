@@ -877,7 +877,18 @@
     "historyTitle": "History - Clarus",
     "keywordSearchTitle": "Keyword Search - Clarus",
     "quranTitle": "Quran - Clarus",
-    "bibleTitle": "Bible - Clarus"
+    "bibleTitle": "Bible - Clarus",
+    "keywords": "Quran, Bible, sacred texts, scripture search, AI Bible study, Quran search, compare religions, Old Testament, New Testament, semantic search, religious studies",
+    "oldTestamentTitle": "Old Testament - Clarus",
+    "oldTestamentDescription": "Read and search the Old Testament with AI. Explore books, chapters and verses and discover connections across scripture.",
+    "newTestamentTitle": "New Testament - Clarus",
+    "newTestamentDescription": "Read and search the New Testament with AI. Explore the Gospels and Epistles and find meaningful connections.",
+    "apocryphaTitle": "Apocrypha - Clarus",
+    "apocryphaDescription": "Explore the Apocrypha with AI-powered search. Read deuterocanonical books and discover their context.",
+    "quranDescription": "Read and search the Quran with AI. Explore surahs and verses, compare translations and find answers.",
+    "keywordSearchDescription": "Search sacred texts by keyword and root. Find every verse where a word appears across the Quran and the Bible.",
+    "pricingTitle": "Pricing - Clarus",
+    "pricingDescription": "Choose the Clarus plan that fits you. AI-powered sacred text search, comparison and discovery."
   },
   "Bible": {
     "oldTestament": "Old Testament",
