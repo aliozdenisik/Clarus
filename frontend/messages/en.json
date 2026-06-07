@@ -888,7 +888,9 @@
     "quranDescription": "Read and search the Quran with AI. Explore surahs and verses, compare translations and find answers.",
     "keywordSearchDescription": "Search sacred texts by keyword and root. Find every verse where a word appears across the Quran and the Bible.",
     "pricingTitle": "Pricing - Clarus",
-    "pricingDescription": "Choose the Clarus plan that fits you. AI-powered sacred text search, comparison and discovery."
+    "pricingDescription": "Choose the Clarus plan that fits you. AI-powered sacred text search, comparison and discovery.",
+    "ogTagline": "AI-Powered Sacred Text Search",
+    "ogSubtitle": "Quran · Bible · Compare · Discover"
   },
   "Bible": {
     "oldTestament": "Old Testament",

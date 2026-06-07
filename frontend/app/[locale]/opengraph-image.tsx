@@ -1,15 +1,25 @@
 import { ImageResponse } from "next/og"
+import { getTranslations } from "next-intl/server"
 
 export const alt = "Clarus - AI-Powered Sacred Text Search"
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
 
+interface Props {
+  params: Promise<{ locale: string }>
+}
+
 /**
  * Dynamically generated OpenGraph / Twitter card image for all pages under the
  * [locale] segment. Self-contained (no external assets) so social previews work
- * out of the box.
+ * out of the box. Tagline and subtitle are localized to match the page locale.
  */
-export default function OpengraphImage(): ImageResponse {
+export default async function OpengraphImage({ params }: Props): Promise<ImageResponse> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: "Metadata" })
+  const tagline = t("ogTagline")
+  const subtitle = t("ogSubtitle")
+
   return new ImageResponse(
     (
       <div
@@ -47,7 +57,7 @@ export default function OpengraphImage(): ImageResponse {
             textAlign: "center",
           }}
         >
-          AI-Powered Sacred Text Search
+          {tagline}
         </div>
         <div
           style={{
@@ -56,7 +66,7 @@ export default function OpengraphImage(): ImageResponse {
             color: "#94a3b8",
           }}
         >
-          Quran · Bible · Compare · Discover
+          {subtitle}
         </div>
       </div>
     ),

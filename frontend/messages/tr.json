@@ -888,7 +888,9 @@
     "quranDescription": "Kuran'ı yapay zeka ile okuyun ve arayın. Sureleri ve ayetleri keşfedin, çevirileri karşılaştırın, cevaplar bulun.",
     "keywordSearchDescription": "Kutsal metinleri anahtar kelime ve köke göre arayın. Bir kelimenin Kuran ve İncil'de geçtiği tüm ayetleri bulun.",
     "pricingTitle": "Fiyatlandırma - Clarus",
-    "pricingDescription": "Size uygun Clarus planını seçin. Yapay zeka destekli kutsal metin arama, karşılaştırma ve keşif."
+    "pricingDescription": "Size uygun Clarus planını seçin. Yapay zeka destekli kutsal metin arama, karşılaştırma ve keşif.",
+    "ogTagline": "Yapay Zeka Destekli Kutsal Metin Arama",
+    "ogSubtitle": "Kuran · İncil · Karşılaştır · Keşfet"
   },
   "Bible": {
     "oldTestament": "Eski Ahit",

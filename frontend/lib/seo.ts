@@ -45,7 +45,7 @@ export function ogLocale(locale: string): string {
  * Build canonical + hreflang alternates for a path that lives under every
  * locale. `path` is the locale-relative path (e.g. "/quran" or "" for home).
  */
-export function buildAlternates(locale: string, path = ""): Metadata["alternates"] {
+export function buildAlternates(locale: Locale, path = ""): Metadata["alternates"] {
   const base = getBaseUrl()
   const clean = path && !path.startsWith("/") ? `/${path}` : path
   return {
@@ -64,7 +64,7 @@ export function buildAlternates(locale: string, path = ""): Metadata["alternates
  * titles that already include it.
  */
 export function buildPageMetadata(args: {
-  locale: string
+  locale: Locale
   path: string
   title: string
   description: string

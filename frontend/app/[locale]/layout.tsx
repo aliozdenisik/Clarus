@@ -9,7 +9,7 @@ import { LayoutChrome, LayoutFooter } from "@/components/layout/layout-chrome"
 import { CommandPalette } from "@/components/command-palette"
 import { SkipToContent } from "@/components/layout/skip-to-content"
 import { LocaleSetter } from "@/components/layout/locale-setter"
-import { buildAlternates, getBaseUrl, ogLocale, siteConfig } from "@/lib/seo"
+import { buildAlternates, getBaseUrl, ogLocale, siteConfig, type Locale } from "@/lib/seo"
 
 type Props = {
   children: React.ReactNode
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     description,
     keywords: keywords.length ? keywords : undefined,
-    alternates: buildAlternates(locale, ""),
+    alternates: buildAlternates(locale as Locale, ""),
     openGraph: {
       title,
       description,
