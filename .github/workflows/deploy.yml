@@ -37,6 +37,8 @@ jobs:
           FRONTEND_DATABASE_URL: ${{ secrets.FRONTEND_DATABASE_URL }}
           # API Keys
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # Rate limiting
+          RATE_LIMIT_EXEMPT_EMAILS: ${{ secrets.RATE_LIMIT_EXEMPT_EMAILS }}
           # Auth
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
           BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
@@ -62,7 +64,7 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: 22
           command_timeout: 8m
-          envs: BACKEND_DATABASE_URL,FRONTEND_DATABASE_URL,OPENROUTER_API_KEY,JWT_SECRET_KEY,BETTER_AUTH_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,POLAR_ACCESS_TOKEN,POLAR_WEBHOOK_SECRET,POLAR_STARTER_PRODUCT_ID,POLAR_PRO_PRODUCT_ID,SENTRY_DSN_BACKEND,SENTRY_DSN_FRONTEND,SMTP_USER,SMTP_PASSWORD,SMTP_FROM,REDIS_PASSWORD
+          envs: BACKEND_DATABASE_URL,FRONTEND_DATABASE_URL,OPENROUTER_API_KEY,RATE_LIMIT_EXEMPT_EMAILS,JWT_SECRET_KEY,BETTER_AUTH_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,POLAR_ACCESS_TOKEN,POLAR_WEBHOOK_SECRET,POLAR_STARTER_PRODUCT_ID,POLAR_PRO_PRODUCT_ID,SENTRY_DSN_BACKEND,SENTRY_DSN_FRONTEND,SMTP_USER,SMTP_PASSWORD,SMTP_FROM,REDIS_PASSWORD
           script: |
             set -euo pipefail
 
@@ -107,6 +109,7 @@ jobs:
             # Rate Limiting
             RATE_LIMIT_PER_DAY=50
             RATE_LIMIT_ENABLED=true
+            RATE_LIMIT_EXEMPT_EMAILS=__RATE_LIMIT_EXEMPT_EMAILS__
 
             # CORS
             CORS_ORIGINS=https://clarus.hollysearch.com
@@ -147,6 +150,7 @@ jobs:
             # Replace placeholders with actual secret values (safe for $, `, \ in values)
             sed -i \
               -e "s|__OPENROUTER_API_KEY__|${OPENROUTER_API_KEY}|g" \
+              -e "s|__RATE_LIMIT_EXEMPT_EMAILS__|${RATE_LIMIT_EXEMPT_EMAILS}|g" \
               -e "s|__BACKEND_DATABASE_URL__|${BACKEND_DATABASE_URL}|g" \
               -e "s|__JWT_SECRET_KEY__|${JWT_SECRET_KEY}|g" \
               -e "s|__GOOGLE_CLIENT_ID__|${GOOGLE_CLIENT_ID}|g" \
