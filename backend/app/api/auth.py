@@ -62,6 +62,10 @@ async def check_rate_limit(user: dict, db: AsyncSession, locale: str = "tr") -> 
         return
 
     user_id = user["id"]  # Extract user ID from dict
+    email = str(user.get("email", "")).strip().casefold()
+    if email and email in settings.rate_limit_exempt_emails_set:
+        logger.info("Rate limit bypassed for exempt user", extra={"user_id": user_id})
+        return
 
     # Look up tier from Redis (fail-open to "free")
     tier = await get_tier(redis_manager.client, user_id)

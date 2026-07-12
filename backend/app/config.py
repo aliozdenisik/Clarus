@@ -30,6 +30,7 @@ class Settings(BaseSettings):
 
     rate_limit_per_day: int = 50
     rate_limit_enabled: bool = True
+    rate_limit_exempt_emails: str = ""
     public_rate_limit_per_minute: int = 120
 
     openrouter_api_key: str = ""
@@ -78,6 +79,11 @@ class Settings(BaseSettings):
     polar_starter_product_id: str = ""  # Starter plan product ID (from Polar dashboard)
     polar_org_slug: str = "claruss"  # Organization slug
     tier_rate_limits: dict = {"free": 5, "starter": 50, "pro": 100}
+
+    @property
+    def rate_limit_exempt_emails_set(self) -> set[str]:
+        """Parse normalized email addresses exempt from per-user query limits."""
+        return {email.strip().casefold() for email in self.rate_limit_exempt_emails.split(",") if email.strip()}
 
     @property
     def admin_emails_list(self) -> list[str]:
