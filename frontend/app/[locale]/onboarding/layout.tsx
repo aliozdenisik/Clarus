@@ -4,6 +4,7 @@ import OnboardingShell from "@/components/onboarding/onboarding-shell"
 export const metadata: Metadata = {
   title: "Onboarding - Clarus",
   description: "Set up your Clarus experience",
+  robots: { index: false, follow: false },
 }
 
 /**
