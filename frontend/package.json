@@ -78,7 +78,8 @@
     "minimatch": ">=10.2.1",
     "schema-utils": {
       "ajv": ">=8.18.0"
-    }
+    },
+    "@swc/helpers": "0.5.23"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.91.1",
