@@ -220,7 +220,16 @@ class BaseSpecialistAgent:
                     raise ValueError("Invalid LLM response: missing message content")
 
                 content = choice["message"]["content"].strip()
-                result = json.loads(content)
+                try:
+                    result = json.loads(content)
+                except json.JSONDecodeError as exc:
+                    if exc.msg != "Extra data":
+                        raise
+                    result, end = json.JSONDecoder().raw_decode(content)
+                    logger.warning(
+                        "Ignored trailing text after valid LLM JSON response",
+                        extra={"trailing_length": len(content[end:]), "model": self.MODEL},
+                    )
                 latency_ms = (time.perf_counter() - start_time) * 1000
                 span.set_data("latency_ms", latency_ms)
                 log_performance(logger, "agent_llm_call", latency_ms, model=self.MODEL)
