@@ -877,7 +877,20 @@
     "historyTitle": "Geçmiş - Clarus",
     "keywordSearchTitle": "Anahtar Kelime Arama - Clarus",
     "quranTitle": "Kuran - Clarus",
-    "bibleTitle": "İncil - Clarus"
+    "bibleTitle": "İncil - Clarus",
+    "keywords": "Kuran, İncil, kutsal metinler, ayet arama, yapay zeka İncil çalışması, Kuran arama, dinleri karşılaştır, Eski Ahit, Yeni Ahit, anlamsal arama, dini çalışmalar",
+    "oldTestamentTitle": "Eski Ahit - Clarus",
+    "oldTestamentDescription": "Eski Ahit'i yapay zeka ile okuyun ve arayın. Kitapları, bölümleri ve ayetleri keşfedin, metinler arası bağlantıları bulun.",
+    "newTestamentTitle": "Yeni Ahit - Clarus",
+    "newTestamentDescription": "Yeni Ahit'i yapay zeka ile okuyun ve arayın. İncilleri ve mektupları keşfedin, anlamlı bağlantıları bulun.",
+    "apocryphaTitle": "Apokrifa - Clarus",
+    "apocryphaDescription": "Apokrifa'yı yapay zeka destekli aramayla keşfedin. Deuterokanonik kitapları okuyun ve bağlamlarını öğrenin.",
+    "quranDescription": "Kuran'ı yapay zeka ile okuyun ve arayın. Sureleri ve ayetleri keşfedin, çevirileri karşılaştırın, cevaplar bulun.",
+    "keywordSearchDescription": "Kutsal metinleri anahtar kelime ve köke göre arayın. Bir kelimenin Kuran ve İncil'de geçtiği tüm ayetleri bulun.",
+    "pricingTitle": "Fiyatlandırma - Clarus",
+    "pricingDescription": "Size uygun Clarus planını seçin. Yapay zeka destekli kutsal metin arama, karşılaştırma ve keşif.",
+    "ogTagline": "Yapay Zeka Destekli Kutsal Metin Arama",
+    "ogSubtitle": "Kuran · İncil · Karşılaştır · Keşfet"
   },
   "Bible": {
     "oldTestament": "Eski Ahit",
