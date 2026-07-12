@@ -22,7 +22,7 @@ dependencies = [
     "rich>=13.0.0",
     "python-dotenv>=1.2.2",
     "pandas>=2.0.0",
-    "pyarrow>=14.0.0",
+    "pyarrow>=23.0.1",
     "tenacity>=8.2.0",
     "pybreaker>=1.0.0",
     "redis[hiredis]>=5.0.0",
@@ -37,7 +37,7 @@ dependencies = [
     "sentry-sdk[fastapi]",
     "sqlalchemy[asyncio]>=2.0.0",
     "asyncpg>=0.29.0",
-    "alembic>=1.18.0",
+    "alembic>=1.18.4",
     "PyJWT[crypto]>=2.8.0",
     "bcrypt>=4.0.0",
     "python-multipart>=0.0.31",
@@ -45,19 +45,19 @@ dependencies = [
     "cachetools>=5.3.0",
     "psycopg2-binary>=2.9.11",
     # Security: Pin minimum secure versions for transitive dependencies
-    "pillow>=12.1.1",
+    "pillow>=12.2.0",
     "cryptography>=46.0.5",
     "defusedxml>=0.7.1",
     # gitpython: previously pulled in by truffleHog (legacy secret scanner, now replaced by gitleaks).
     # Pinned to >=3.1.41 to fix PYSEC-2022-42992, PYSEC-2023-137, PYSEC-2023-161,
     # PYSEC-2023-165, PYSEC-2024-4. truffleHog removed from venv (see pre-commit-config.yaml).
-    "gitpython>=3.1.41",
+    "gitpython>=3.1.50",
     "polar-sdk>=0.28.4",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest>=7.0.0",
+    "pytest>=9.0.3",
     "ruff>=0.8.0",
     "pyright>=1.1.390",
     "pytest-asyncio>=0.24.0",
