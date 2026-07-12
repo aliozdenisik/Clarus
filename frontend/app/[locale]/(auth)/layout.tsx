@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server"
 export const metadata: Metadata = {
   title: "Authentication - Clarus",
   description: "Sign in or create an account to access Clarus",
+  robots: { index: false, follow: false },
 }
 
 /**
