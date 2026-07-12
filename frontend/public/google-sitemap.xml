@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://clarus.hollysearch.com/en</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clarus.hollysearch.com/en" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://clarus.hollysearch.com/tr" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://clarus.hollysearch.com/tr" />
+    <lastmod>2026-06-08T15:40:04Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://clarus.hollysearch.com/tr</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clarus.hollysearch.com/en" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://clarus.hollysearch.com/tr" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://clarus.hollysearch.com/tr" />
+    <lastmod>2026-06-08T15:40:04Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://clarus.hollysearch.com/en/old-testament</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clarus.hollysearch.com/en/old-testament" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://clarus.hollysearch.com/tr/old-testament" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://clarus.hollysearch.com/tr/old-testament" />
+    <lastmod>2026-06-08T15:40:04Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://clarus.hollysearch.com/tr/old-testament</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clarus.hollysearch.com/en/old-testament" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://clarus.hollysearch.com/tr/old-testament" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://clarus.hollysearch.com/tr/old-testament" />
+    <lastmod>2026-06-08T15:40:04Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://clarus.hollysearch.com/en/new-testament</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clarus.hollysearch.com/en/new-testament" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://clarus.hollysearch.com/tr/new-testament" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://clarus.hollysearch.com/tr/new-testament" />
+    <lastmod>2026-06-08T15:40:04Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://clarus.hollysearch.com/tr/new-testament</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clarus.hollysearch.com/en/new-testament" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://clarus.hollysearch.com/tr/new-testament" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://clarus.hollysearch.com/tr/new-testament" />
+    <lastmod>2026-06-08T15:40:04Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://clarus.hollysearch.com/en/apocrypha</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clarus.hollysearch.com/en/apocrypha" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://clarus.hollysearch.com/tr/apocrypha" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://clarus.hollysearch.com/tr/apocrypha" />
+    <lastmod>2026-06-08T15:40:04Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://clarus.hollysearch.com/tr/apocrypha</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clarus.hollysearch.com/en/apocrypha" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://clarus.hollysearch.com/tr/apocrypha" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://clarus.hollysearch.com/tr/apocrypha" />
+    <lastmod>2026-06-08T15:40:04Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://clarus.hollysearch.com/en/quran</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clarus.hollysearch.com/en/quran" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://clarus.hollysearch.com/tr/quran" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://clarus.hollysearch.com/tr/quran" />
+    <lastmod>2026-06-08T15:40:04Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://clarus.hollysearch.com/tr/quran</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clarus.hollysearch.com/en/quran" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://clarus.hollysearch.com/tr/quran" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://clarus.hollysearch.com/tr/quran" />
+    <lastmod>2026-06-08T15:40:04Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://clarus.hollysearch.com/en/keyword-search</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clarus.hollysearch.com/en/keyword-search" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://clarus.hollysearch.com/tr/keyword-search" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://clarus.hollysearch.com/tr/keyword-search" />
+    <lastmod>2026-06-08T15:40:04Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://clarus.hollysearch.com/tr/keyword-search</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clarus.hollysearch.com/en/keyword-search" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://clarus.hollysearch.com/tr/keyword-search" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://clarus.hollysearch.com/tr/keyword-search" />
+    <lastmod>2026-06-08T15:40:04Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://clarus.hollysearch.com/en/pricing</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clarus.hollysearch.com/en/pricing" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://clarus.hollysearch.com/tr/pricing" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://clarus.hollysearch.com/tr/pricing" />
+    <lastmod>2026-06-08T15:40:04Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://clarus.hollysearch.com/tr/pricing</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://clarus.hollysearch.com/en/pricing" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://clarus.hollysearch.com/tr/pricing" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://clarus.hollysearch.com/tr/pricing" />
+    <lastmod>2026-06-08T15:40:04Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>
