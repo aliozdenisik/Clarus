@@ -45,7 +45,7 @@ dependencies = [
     "cachetools>=5.3.0",
     "psycopg2-binary>=2.9.11",
     # Security: Pin minimum secure versions for transitive dependencies
-    "pillow>=12.2.0",
+    "pillow>=12.3.0",
     "cryptography>=46.0.5",
     "defusedxml>=0.7.1",
     # gitpython: previously pulled in by truffleHog (legacy secret scanner, now replaced by gitleaks).
